@@ -1,0 +1,293 @@
+
+NOPEMAN_TALK@1x.png
+size: 1024,512
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+MINIGAME_PLATFORM01
+  rotate: false
+  xy: 194, 2
+  size: 43, 77
+  orig: 43, 77
+  offset: 0, 0
+  index: -1
+MINIGAME_PLATFORM03
+  rotate: false
+  xy: 143, 3
+  size: 49, 76
+  orig: 49, 76
+  offset: 0, 0
+  index: -1
+NOPEMAN00
+  rotate: false
+  xy: 2, 189
+  size: 168, 320
+  orig: 168, 320
+  offset: 0, 0
+  index: -1
+NOPEMAN01
+  rotate: false
+  xy: 321, 270
+  size: 86, 239
+  orig: 86, 239
+  offset: 0, 0
+  index: -1
+NOPEMAN02
+  rotate: false
+  xy: 172, 184
+  size: 147, 325
+  orig: 147, 325
+  offset: 0, 0
+  index: -1
+NOPEMAN03
+  rotate: false
+  xy: 552, 382
+  size: 123, 127
+  orig: 123, 127
+  offset: 0, 0
+  index: -1
+NOPEMAN04
+  rotate: false
+  xy: 774, 310
+  size: 52, 199
+  orig: 52, 199
+  offset: 0, 0
+  index: -1
+NOPEMAN05
+  rotate: false
+  xy: 409, 361
+  size: 141, 148
+  orig: 141, 148
+  offset: 0, 0
+  index: -1
+NOPEMAN06
+  rotate: false
+  xy: 828, 374
+  size: 89, 135
+  orig: 89, 135
+  offset: 0, 0
+  index: -1
+NOPEMAN07
+  rotate: false
+  xy: 321, 158
+  size: 79, 110
+  orig: 79, 110
+  offset: 0, 0
+  index: -1
+NOPEMAN08
+  rotate: false
+  xy: 575, 256
+  size: 57, 21
+  orig: 57, 21
+  offset: 0, 0
+  index: -1
+NOPEMAN09
+  rotate: false
+  xy: 61, 10
+  size: 62, 18
+  orig: 62, 18
+  offset: 0, 0
+  index: -1
+NOPEMAN10
+  rotate: false
+  xy: 503, 182
+  size: 56, 15
+  orig: 56, 15
+  offset: 0, 0
+  index: -1
+NOPEMAN11
+  rotate: false
+  xy: 547, 199
+  size: 52, 11
+  orig: 52, 11
+  offset: 0, 0
+  index: -1
+NOPEMAN12
+  rotate: false
+  xy: 561, 179
+  size: 51, 18
+  orig: 51, 18
+  offset: 0, 0
+  index: -1
+NOPEMAN13
+  rotate: false
+  xy: 991, 466
+  size: 31, 43
+  orig: 31, 43
+  offset: 0, 0
+  index: -1
+NOPEMAN14
+  rotate: false
+  xy: 213, 121
+  size: 99, 61
+  orig: 99, 61
+  offset: 0, 0
+  index: -1
+NOPEMAN15
+  rotate: false
+  xy: 402, 183
+  size: 99, 69
+  orig: 99, 69
+  offset: 0, 0
+  index: -1
+NOPEMAN16
+  rotate: false
+  xy: 919, 386
+  size: 70, 123
+  orig: 70, 123
+  offset: 0, 0
+  index: -1
+NOPEMAN17
+  rotate: false
+  xy: 547, 212
+  size: 55, 20
+  orig: 55, 20
+  offset: 0, 0
+  index: -1
+NOPEMAN18
+  rotate: false
+  xy: 604, 212
+  size: 52, 20
+  orig: 52, 20
+  offset: 0, 0
+  index: -1
+NOPEMAN19
+  rotate: false
+  xy: 677, 329
+  size: 95, 180
+  orig: 95, 180
+  offset: 0, 0
+  index: -1
+NOPEMAN20
+  rotate: false
+  xy: 143, 81
+  size: 68, 101
+  orig: 68, 101
+  offset: 0, 0
+  index: -1
+NOPEMAN21
+  rotate: false
+  xy: 402, 147
+  size: 62, 11
+  orig: 62, 11
+  offset: 0, 0
+  index: -1
+NOPEMAN22
+  rotate: false
+  xy: 213, 89
+  size: 69, 30
+  orig: 69, 30
+  offset: 0, 0
+  index: -1
+NOPEMAN23
+  rotate: false
+  xy: 516, 258
+  size: 57, 101
+  orig: 57, 101
+  offset: 0, 0
+  index: -1
+NOPEMAN24
+  rotate: false
+  xy: 575, 279
+  size: 57, 101
+  orig: 57, 101
+  offset: 0, 0
+  index: -1
+NOPEMAN25
+  rotate: false
+  xy: 2, 30
+  size: 139, 157
+  orig: 139, 157
+  offset: 0, 0
+  index: -1
+NOPEMAN26
+  rotate: false
+  xy: 503, 199
+  size: 42, 34
+  orig: 42, 34
+  offset: 0, 0
+  index: -1
+NOPEMAN27
+  rotate: false
+  xy: 2, 3
+  size: 57, 25
+  orig: 57, 25
+  offset: 0, 0
+  index: -1
+NOPEMAN28
+  rotate: false
+  xy: 614, 190
+  size: 51, 20
+  orig: 51, 20
+  offset: 0, 0
+  index: -1
+NOPEMAN29
+  rotate: false
+  xy: 402, 160
+  size: 65, 21
+  orig: 65, 21
+  offset: 0, 0
+  index: -1
+NOPEMAN30
+  rotate: false
+  xy: 575, 234
+  size: 56, 20
+  orig: 56, 20
+  offset: 0, 0
+  index: -1
+NOPEMAN31
+  rotate: false
+  xy: 213, 81
+  size: 49, 6
+  orig: 49, 6
+  offset: 0, 0
+  index: -1
+NOPEMAN32
+  rotate: false
+  xy: 314, 135
+  size: 57, 21
+  orig: 57, 21
+  offset: 0, 0
+  index: -1
+NOPEMAN33
+  rotate: false
+  xy: 314, 112
+  size: 57, 21
+  orig: 57, 21
+  offset: 0, 0
+  index: -1
+NOPEMAN34
+  rotate: false
+  xy: 929, 305
+  size: 50, 79
+  orig: 50, 79
+  offset: 0, 0
+  index: -1
+NOPEMAN35
+  rotate: false
+  xy: 634, 344
+  size: 37, 36
+  orig: 37, 36
+  offset: 0, 0
+  index: -1
+NOPEMAN36
+  rotate: false
+  xy: 828, 309
+  size: 99, 63
+  orig: 99, 63
+  offset: 0, 0
+  index: -1
+NOPEMAN37
+  rotate: false
+  xy: 409, 254
+  size: 105, 105
+  orig: 105, 105
+  offset: 0, 0
+  index: -1
+NOPEMAN38
+  rotate: false
+  xy: 516, 235
+  size: 57, 21
+  orig: 57, 21
+  offset: 0, 0
+  index: -1
