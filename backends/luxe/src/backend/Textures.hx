@@ -26,31 +26,19 @@ class Textures implements spec.Textures {
 
     inline public function destroy(texture:Texture):Void {
         
-        function(texture:phoenix.Texture) {
-
-            texture.destroy(true);
-
-        }(texture);
+        (texture:phoenix.Texture).destroy(true);
 
     } //destroy
 
     inline public function getWidth(texture:Texture):Int {
 
-        return function(texture:phoenix.Texture) {
-
-            return texture.width_actual;
-
-        }(texture);
+        return (texture:phoenix.Texture).width_actual;
 
     } //getWidth
 
     inline public function getHeight(texture:Texture):Int {
 
-        return function(texture:phoenix.Texture) {
-
-            return texture.height_actual;
-
-        }(texture);
+        return (texture:phoenix.Texture).height_actual;
 
     } //getHeight
 

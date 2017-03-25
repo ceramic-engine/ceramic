@@ -30,34 +30,26 @@ class Audio implements spec.Audio {
 
     inline public function destroy(audio:AudioResource):Void {
 
-        function(audio:luxe.resource.Resource.AudioResource) {
-
-            audio.destroy(true);
-
-        }(audio);
+        (audio:luxe.resource.Resource.AudioResource).destroy(true);
 
     } //unload
 
     inline public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
-        return function(audio:luxe.resource.Resource.AudioResource) {
+        var handle:AudioHandle = null;
+        if (loop) {
+            handle = Luxe.audio.play((audio:luxe.resource.Resource.AudioResource).source, volume, true);
+        } else {
+            handle = Luxe.audio.loop((audio:luxe.resource.Resource.AudioResource).source, volume, true);
+        }
 
-            var handle:AudioHandle = null;
-            if (loop) {
-                handle = Luxe.audio.play(audio.source, volume, true);
-            } else {
-                handle = Luxe.audio.loop(audio.source, volume, true);
-            }
+        Luxe.audio.pan(handle, pan);
+        Luxe.audio.pitch(handle, pitch);
+        Luxe.audio.position(handle, position);
 
-            Luxe.audio.pan(handle, pan);
-            Luxe.audio.pitch(handle, pitch);
-            Luxe.audio.position(handle, position);
+        Luxe.audio.unpause(handle);
 
-            Luxe.audio.unpause(handle);
-
-            return handle;
-
-        }(audio);
+        return handle;
 
     } //play
 
