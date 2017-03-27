@@ -18,9 +18,23 @@ class ShortcutsMacro {
 
         var fields = Context.getBuildFields();
 
+        // Check class fields
         var fieldsByName = new Map<String,Bool>();
         for (field in fields) {
             fieldsByName.set(field.name, true);
+        }
+
+        // Also check parent fields
+        var parentHold = Context.getLocalClass().get().superClass;
+        var parent = parentHold != null ? parentHold.t : null;
+        while (parent != null) {
+
+            for (field in parent.get().fields.get()) {
+                fieldsByName.set(field.name, true);
+            }
+
+            parentHold = parent.get().superClass;
+            parent = parentHold != null ? parentHold.t : null;
         }
 
         // Add app

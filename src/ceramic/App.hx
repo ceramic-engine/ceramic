@@ -2,8 +2,6 @@ package ceramic;
 
 import ceramic.Backend;
 
-import ceramic.components.Hello;
-
 enum ScreenScaling {
     CENTER;
     FIT;
@@ -26,6 +24,7 @@ typedef AppSettings = {
 
 }
 
+@:allow(ceramic.Visual)
 class App extends Entity {
 
 /// Shared instances
@@ -35,9 +34,17 @@ class App extends Entity {
 
 /// Properties
 
+    public var backend(default,null):Backend;
+
     public var screen(default,null):Screen;
 
     public var settings(default,null):AppSettings;
+
+    public var visuals(default,null):Array<Visual> = [];
+
+/// Internal
+
+    var hierarchyDirty:Bool = false;
 
 /// Lifecycle
 
@@ -49,6 +56,8 @@ class App extends Entity {
     } //init
 
     function new(settings:AppSettings, screen:Screen) {
+
+        backend = new Backend();
 
         if (settings == null) {
             settings = {};
@@ -73,6 +82,44 @@ class App extends Entity {
 
         callback(app);
 
+        backend.onUpdate(update);
+
     } //postInit
+
+    function update(delta:Float):Void {
+
+        if (hierarchyDirty) {
+
+            // Sort visuals by z
+            visuals.sort(function(a:Visual, b:Visual):Int {
+
+                if (a.z < b.z) return -1;
+                if (a.z > b.z) return 1;
+                return 0;
+
+            });
+
+            hierarchyDirty = false;
+        }
+
+        // Dispatch visual transforms changes
+        for (visual in visuals) {
+
+            if (visual.transform != null && visual.transform.changed) {
+                visual.transform.emitChange();
+            }
+
+        }
+
+        // Update visuals matrix
+        for (visual in visuals) {
+
+            if (visual.matrixDirty) {
+                visual.computeMatrix();
+            }
+
+        }
+
+    } //update
 
 }

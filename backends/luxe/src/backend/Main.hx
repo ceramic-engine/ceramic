@@ -5,7 +5,7 @@ class Main implements spec.Main extends luxe.Game {
     override function config(config:luxe.GameConfig) {
 
         // Call Main.main()
-        @:privateAccess Main_call.main();
+        @:privateAccess RootMain.main();
 
         var app = ceramic.App.app;
 
@@ -19,5 +19,11 @@ class Main implements spec.Main extends luxe.Game {
         return config;
 
     } //config
+
+    override function update(delta:Float):Void {
+
+        ceramic.App.app.backend.emitUpdate(delta);
+
+    } //update
 
 }
