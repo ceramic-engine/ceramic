@@ -4,12 +4,8 @@ import backend.Draw;
 
 interface Draw {
 
-    function drawQuad(quad:ceramic.Quad):Void;
+    function draw(visuals:Array<ceramic.Visual>):Void;
 
-    function drawMesh(mesh:ceramic.Mesh):Void;
-
-    function drawText(text:ceramic.Text):Void;
-
-    function drawGraphics(graphics:ceramic.Graphics):Void;
+    function drawKind(visual:ceramic.Visual):DrawKind;
 
 } //Draw

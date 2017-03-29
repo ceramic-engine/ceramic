@@ -1,5 +1,7 @@
 package ceramic;
 
+import backend.Draw.DrawKind;
+
 @:allow(ceramic.App)
 class Visual extends Entity {
 
@@ -17,8 +19,30 @@ class Visual extends Entity {
 
 /// Properties
 
+    /** Defines how this visual should be drawn. Depends on the backend. */
+    public var drawKind:DrawKind;
+
     /** Setting this to true will force the visual's matrix to be re-computed */
     public var matrixDirty:Bool = true;
+
+    /** Setting this to true will force the visual to compute it's visility in hierarchy */
+    public var visibilityDirty:Bool = true;
+
+    public var visible(default,set):Bool = true;
+    function set_visible(visible:Bool):Bool {
+        if (this.visible == visible) return visible;
+        this.visible = visible;
+        visibilityDirty = true;
+        return visible;
+    }
+
+    public var alpha(default,set):Float = 1;
+    function set_alpha(alpha:Float):Float {
+        if (this.alpha == alpha) return alpha;
+        this.alpha = alpha;
+        visibilityDirty = true;
+        return alpha;
+    }
 
     public var x(default,set):Float = 0;
     function set_x(x:Float):Float {
@@ -68,7 +92,23 @@ class Visual extends Entity {
         return scaleY;
     }
 
-    public var anchorX(default,set):Float = 1;
+    public var skewX(default,set):Float = 0;
+    function set_skewX(skewX:Float):Float {
+        if (this.skewX == skewX) return skewX;
+        this.skewX = skewX;
+        matrixDirty = true;
+        return skewX;
+    }
+
+    public var skewY(default,set):Float = 0;
+    function set_skewY(skewY:Float):Float {
+        if (this.skewY == skewY) return skewY;
+        this.skewY = skewY;
+        matrixDirty = true;
+        return skewY;
+    }
+
+    public var anchorX(default,set):Float = 0;
     function set_anchorX(anchorX:Float):Float {
         if (this.anchorX == anchorX) return anchorX;
         this.anchorX = anchorX;
@@ -76,7 +116,7 @@ class Visual extends Entity {
         return anchorX;
     }
 
-    public var anchorY(default,set):Float = 1;
+    public var anchorY(default,set):Float = 0;
     function set_anchorY(anchorY:Float):Float {
         if (this.anchorY == anchorY) return anchorY;
         this.anchorY = anchorY;
@@ -128,17 +168,23 @@ class Visual extends Entity {
 
 /// Properties (Matrix)
 
-	public var a:Float;
+	public var a:Float = 1;
 
-	public var b:Float;
+	public var b:Float = 0;
 
-	public var c:Float;
+	public var c:Float = 0;
 
-	public var d:Float;
+	public var d:Float = 1;
 
-	public var tx:Float;
+	public var tx:Float = 0;
 
-	public var ty:Float;
+	public var ty:Float = 0;
+
+/// Properties (Computed)
+
+    public var computedVisible:Bool = true;
+
+    public var computedAlpha:Float = 1;
 
 /// Properties (Children)
 
@@ -173,12 +219,28 @@ class Visual extends Entity {
 
     } //pos
 
+    inline public function scale(scaleX:Float, scaleY:Float = -1):Void {
+
+        this.scaleX = scaleX;
+        this.scaleY = scaleY != -1 ? scaleY : scaleX;
+
+    } //scale
+
+    inline public function skew(skewX:Float, skewY:Float):Void {
+
+        this.skewX = skewX;
+        this.skewY = skewY;
+
+    } //skew
+
 /// Lifecycle
 
     public function new() {
 
         app.visuals.push(this);
         app.hierarchyDirty = true;
+
+        drawKind = app.backend.draw.drawKind(this);
 
     } //new
 
@@ -208,7 +270,10 @@ class Visual extends Entity {
         _matrix.identity();
 
         // Apply local properties (pos, scale, rotation, )
+        //
         _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
+		if (skewX != 0) _matrix.c = skewX * Math.PI / 180.0;
+		if (skewY != 0) _matrix.b = skewY * Math.PI / 180.0;
         if (rotation != 0) _matrix.rotate(rotation * Math.PI / 180.0);
         _matrix.translate(anchorX * w / scaleX, anchorY * h / scaleY);
         if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
@@ -220,7 +285,7 @@ class Visual extends Entity {
         if (transform != null) {
 
             // Concat matrix with transform
-
+            //
     		var a1 = _matrix.a * transform.a + _matrix.b * transform.c;
     		_matrix.b = _matrix.a * transform.b + _matrix.b * transform.d;
     		_matrix.a = a1;
@@ -239,7 +304,7 @@ class Visual extends Entity {
         if (parent != null) {
 
             // Concat matrix with parent's computed matrix data
-
+            //
     		var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
     		_matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
     		_matrix.a = a1;
@@ -255,9 +320,49 @@ class Visual extends Entity {
 
         }
 
+        // Assign final matrix values to visual
+        //
+        a = _matrix.a;
+        b = _matrix.b;
+        c = _matrix.c;
+        d = _matrix.d;
+        tx = _matrix.tx;
+        ty = _matrix.ty;
+
+        // Matrix is up to date
         matrixDirty = false;
 
     } //computeMatrix
+
+/// Visibility / Alpha
+
+    function computeVisibility() {
+
+        if (parent != null && parent.visibilityDirty) {
+            parent.computeVisibility();
+        }
+
+        computedVisible = visible;
+        computedAlpha = alpha;
+        
+        if (computedVisible) {
+
+            if (parent != null) {
+                if (!parent.computedVisible) {
+                    computedVisible = false;
+                }
+                computedAlpha *= parent.computedAlpha;
+            }
+
+            if (computedAlpha == 0) {
+                computedVisible = false;
+            }
+            
+        }
+
+        visibilityDirty = false;
+
+    } //computeVisibility
 
 /// Children
 

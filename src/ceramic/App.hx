@@ -88,6 +88,8 @@ class App extends Entity {
 
     function update(delta:Float):Void {
 
+        screen.emitUpdate(delta);
+
         if (hierarchyDirty) {
 
             // Sort visuals by z
@@ -111,14 +113,21 @@ class App extends Entity {
 
         }
 
-        // Update visuals matrix
+        // Update visuals matrix and visibility
         for (visual in visuals) {
 
             if (visual.matrixDirty) {
                 visual.computeMatrix();
             }
 
+            if (visual.visibilityDirty) {
+                visual.computeVisibility();
+            }
+
         }
+
+        // Draw
+        backend.draw.draw(visuals);
 
     } //update
 

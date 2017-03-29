@@ -1,6 +1,8 @@
 package;
 
 import ceramic.App;
+import ceramic.Quad;
+import ceramic.Color;
 
 class Main extends ceramic.Main implements ceramic.Shortcuts {
 
@@ -17,14 +19,30 @@ class Main extends ceramic.Main implements ceramic.Shortcuts {
 
             trace("APP READY");
 
-            var quad = new ceramic.Quad();
+            var quad1 = new Quad();
+            quad1.color = Color.RED;
+            quad1.z = 2;
+            quad1.size(50, 50);
+            quad1.anchor(0.5, 0.5);
+            quad1.pos(320 * 0.5, 568 * 0.5);
+            quad1.rotation = 30;
+            quad1.scale(2.0, 0.5);
 
-            quad.background = ceramic.Color.RED;
-            quad.size(80, 100);
-            quad.anchor(0.5, 0.5);
-            quad.pos(320 * 0.5, 568 * 0.5);
+            var quad2 = new Quad();
+            quad2.z = 1;
+            quad2.color = Color.YELLOW;
+            quad2.size(50, 50);
+            quad2.anchor(0.5, 0.5);
+            quad2.pos(320 * 0.5, 568 * 0.5 + 20);
+            quad2.rotation = 30;
+            quad2.scale(2.0, 0.5);
 
-            trace(quad);
+            screen.onUpdate(function(delta) {
+
+                quad1.rotation = (quad1.rotation + delta * 100) % 360;
+                quad2.rotation = (quad2.rotation + delta * 100) % 360;
+
+            });
 
         });
 

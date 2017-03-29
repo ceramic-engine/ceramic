@@ -227,8 +227,10 @@ class Transform implements Events {
 
 		_skew.identity();
 
-		_skew.b = x * Math.PI / 180.0;
-		_skew.c = y * Math.PI / 180.0;
+		// TODO check
+
+		_skew.c = x * Math.PI / 180.0;
+		_skew.b = y * Math.PI / 180.0;
 
         concat(_skew);
 
