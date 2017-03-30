@@ -12,14 +12,6 @@ enum VisualItem {
     Graphics;
 }
 
-@:enum abstract DrawKind(Int) from Int to Int {
-    var None = 0;
-    var Quad = 1;
-    var Mesh = 2;
-    var Text = 3;
-    var Graphics = 4;
-}
-
 @:allow(backend.Backend)
 class Draw implements spec.Draw {
 
