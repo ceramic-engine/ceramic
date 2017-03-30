@@ -22,6 +22,9 @@ class Visual extends Entity {
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
 
+    /** Setting this to true will force the visual to recompute its displayed content */
+    public var contentDirty:Bool = true;
+
     /** Setting this to true will force the visual's matrix to be re-computed */
     public var matrixDirty:Bool = true;
 
@@ -369,6 +372,14 @@ class Visual extends Entity {
         visibilityDirty = false;
 
     } //computeVisibility
+
+/// Display
+
+    function computeContent() {
+        
+        contentDirty = false;
+
+    } //computeContent
 
 /// Children
 

@@ -90,6 +90,24 @@ class App extends Entity {
 
         screen.emitUpdate(delta);
 
+        for (visual in visuals) {
+
+            // Compute displayed content
+            if (visual.contentDirty) {
+
+                // Compute content only if visual is currently visible
+                //
+                if (visual.visibilityDirty) {
+                    visual.computeVisibility();
+                }
+
+                if (visual.computedVisible) {
+                    visual.computeContent();
+                }
+            }
+
+        }
+
         if (hierarchyDirty) {
 
             // Compute visuals depth
