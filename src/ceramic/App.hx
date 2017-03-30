@@ -92,11 +92,23 @@ class App extends Entity {
 
         if (hierarchyDirty) {
 
-            // Sort visuals by z
-            visuals.sort(function(a:Visual, b:Visual):Int {
+            // Compute visuals depth
+            for (visual in visuals) {
 
-                if (a.z < b.z) return -1;
-                if (a.z > b.z) return 1;
+                if (visual.parent == null) {
+                    visual.computedDepth = visual.depth;
+
+                    if (visual.children != null) {
+                        visual.computeChildrenDepth();
+                    }
+                }
+            }
+
+            // Sort visuals by (computed) depth
+            haxe.ds.ArraySort.sort(visuals, function(a:Visual, b:Visual):Int {
+
+                if (a.computedDepth < b.computedDepth) return -1;
+                if (a.computedDepth > b.computedDepth) return 1;
                 return 0;
 
             });

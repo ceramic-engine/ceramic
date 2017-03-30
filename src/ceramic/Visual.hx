@@ -1,6 +1,6 @@
 package ceramic;
 
-import backend.Draw.DrawKind;
+import backend.Draw.VisualItem;
 
 @:allow(ceramic.App)
 class Visual extends Entity {
@@ -19,14 +19,18 @@ class Visual extends Entity {
 
 /// Properties
 
-    /** Defines how this visual should be drawn. Depends on the backend. */
-    public var drawKind:DrawKind;
+    /** Allows the backend to keep data associated with this visual. */
+    public var backendItem:VisualItem;
 
     /** Setting this to true will force the visual's matrix to be re-computed */
     public var matrixDirty:Bool = true;
 
     /** Setting this to true will force the visual to compute it's visility in hierarchy */
     public var visibilityDirty:Bool = true;
+
+    /** If set, children will be sort by depth and their computed depth
+        will be within range [parent.depth, parent.depth + childrenDepthRange] */
+    public var childrenDepthRange:Float = -1;
 
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
@@ -60,12 +64,12 @@ class Visual extends Entity {
         return y;
     }
 
-    public var z(default,set):Float = 0;
-    function set_z(z:Float):Float {
-        if (this.z == z) return z;
-        this.z = z;
+    public var depth(default,set):Float = 0;
+    function set_depth(depth:Float):Float {
+        if (this.depth == depth) return depth;
+        this.depth = depth;
         app.hierarchyDirty = true;
-        return z;
+        return depth;
     }
 
     public var rotation(default,set):Float = 0;
@@ -186,6 +190,8 @@ class Visual extends Entity {
 
     public var computedAlpha:Float = 1;
 
+    public var computedDepth:Float = 0;
+
 /// Properties (Children)
 
 	public var children(default,null):Array<Visual> = null;
@@ -240,7 +246,7 @@ class Visual extends Entity {
         app.visuals.push(this);
         app.hierarchyDirty = true;
 
-        drawKind = app.backend.draw.drawKind(this);
+        backendItem = app.backend.draw.getItem(this);
 
     } //new
 
@@ -365,6 +371,64 @@ class Visual extends Entity {
     } //computeVisibility
 
 /// Children
+
+    /** Compute children depth. The result depends on whether
+        a parent defines a custom `childrenDepthRange` value or not. */
+    function computeChildrenDepth(depthRange:Float = -1) {
+
+        if (children != null && children.length > 0) {
+
+            var minDepth = 999999999.0;
+            var maxDepth = -1.0;
+
+            for (child in children) {
+
+                child.computedDepth = child.depth;
+
+                if (child.depth < minDepth) minDepth = child.depth;
+                if (child.depth > maxDepth) maxDepth = child.depth;
+
+            }
+
+            var multDepth:Float = -1;
+
+            if (childrenDepthRange != -1) {
+
+                multDepth = childrenDepthRange / (maxDepth - minDepth);
+
+            }
+
+            if (depthRange != -1) {
+
+                if (multDepth == -1) multDepth = 1;
+
+                multDepth *= depthRange / (maxDepth - minDepth);
+
+            }
+
+            if (multDepth != -1) {
+
+                for (child in children) {
+
+                    child.computedDepth = computedDepth + child.computedDepth * multDepth - minDepth;
+                    
+                    if (child.children != null) {
+                        child.computeChildrenDepth((maxDepth - child.depth) * multDepth);
+                    }
+                }
+
+            } else {
+
+                for (child in children) {
+                    
+                    if (child.children != null) {
+                        child.computeChildrenDepth();
+                    }
+                }
+            }
+        }
+
+    } //computeChildrenDepth
 
     public function add(visual:Visual):Void {
 

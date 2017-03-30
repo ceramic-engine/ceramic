@@ -4,6 +4,14 @@ package backend;
 using cpp.NativeArray;
 #end
 
+enum VisualItem {
+    None;
+    Quad;
+    Mesh;
+    Text;
+    Graphics;
+}
+
 @:enum abstract DrawKind(Int) from Int to Int {
     var None = 0;
     var Quad = 1;
@@ -49,7 +57,7 @@ class Draw implements spec.Draw {
 
     public function new() {}
 
-    inline public function drawKind(visual:ceramic.Visual):DrawKind {
+    inline public function getItem(visual:ceramic.Visual):VisualItem {
 
         // The backend decides how each visual should be drawn.
         // Instead of checking instance type at each draw iteration,
@@ -58,19 +66,19 @@ class Draw implements spec.Draw {
         // at each draw iteration.
 
         if (Std.is(visual, ceramic.Quad)) {
-            return DrawKind.Quad;
+            return Quad;
         }
         else if (Std.is(visual, ceramic.Text)) {
-            return DrawKind.Text;
+            return Text;
         }
         else if (Std.is(visual, ceramic.Graphics)) {
-            return DrawKind.Graphics;
+            return Graphics;
         }
         else if (Std.is(visual, ceramic.Mesh)) {
-            return DrawKind.Mesh;
+            return Mesh;
         }
         else {
-            return DrawKind.None;
+            return None;
         }
 
     } //drawKind
@@ -88,6 +96,8 @@ class Draw implements spec.Draw {
         var w:Float;
         var h:Float;
 
+        var depth:Float = 1;
+
         var m:phoenix.Matrix;
 
         var v:Array<phoenix.geometry.Vertex>;
@@ -97,9 +107,9 @@ class Draw implements spec.Draw {
 
             if (!visual.computedVisible) continue;
 
-            switch (visual.drawKind) {
+            switch (visual.backendItem) {
                 
-                case DrawKind.Quad:
+                case Quad:
                     quad = cast visual;
 
                     // Get or create quad geometry
@@ -150,7 +160,8 @@ class Draw implements spec.Draw {
                     quadGeom.color.b = b;
                     quadGeom.color.a = a;
 
-                    quadGeom.depth = quad.z;
+                    quadGeom.depth = depth;
+                    depth += 0.01;
 
                     m = quadGeom.transform.world.matrix;
 
@@ -162,13 +173,6 @@ class Draw implements spec.Draw {
                     m.M24 = quad.ty;
 
                     quadGeom.transform.dirty = false;
-
-
-                case DrawKind.Text:
-
-                case DrawKind.Graphics:
-
-                case DrawKind.Mesh:
 
                 default:
             }

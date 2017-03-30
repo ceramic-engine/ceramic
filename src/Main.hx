@@ -21,7 +21,7 @@ class Main extends ceramic.Main implements ceramic.Shortcuts {
 
             var quad1 = new Quad();
             quad1.color = Color.RED;
-            quad1.z = 2;
+            quad1.depth = 2;
             quad1.size(50, 50);
             quad1.anchor(0.5, 0.5);
             quad1.pos(320 * 0.5, 568 * 0.5);
@@ -29,7 +29,7 @@ class Main extends ceramic.Main implements ceramic.Shortcuts {
             quad1.scale(2.0, 0.5);
 
             var quad2 = new Quad();
-            quad2.z = 1;
+            quad2.depth = 1;
             quad2.color = Color.YELLOW;
             quad2.size(50, 50);
             quad2.anchor(0.5, 0.5);
