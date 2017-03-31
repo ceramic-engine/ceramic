@@ -53,9 +53,9 @@ class Draw implements spec.Draw {
 
         // The backend decides how each visual should be drawn.
         // Instead of checking instance type at each draw iteration,
-        // The backend provides/computes a DrawKind int value when
+        // The backend provides/computes a VisualItem object when
         // a visual is instanciated that it can later re-use
-        // at each draw iteration.
+        // at each draw iteration to read/store per visual data.
 
         if (Std.is(visual, ceramic.Quad)) {
             return Quad;
@@ -73,7 +73,7 @@ class Draw implements spec.Draw {
             return None;
         }
 
-    } //drawKind
+    } //getItem
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
