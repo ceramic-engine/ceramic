@@ -10,6 +10,7 @@ class Main implements spec.Main extends luxe.Game {
         var app = ceramic.App.app;
 
         // Configure luxe
+        config.render.antialiasing = app.settings.antialiasing != null && app.settings.antialiasing ? 4 : 0;
         config.window.borderless = false;
         config.window.width = cast app.settings.width;
         config.window.height = cast app.settings.height;
