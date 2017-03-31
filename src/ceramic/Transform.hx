@@ -1,7 +1,36 @@
 package ceramic;
 
-// Matrix manipulation code mostly taked from OpenFL's flash.geom.Matrix implementation
+/** Decomposed transform holds rotation, translation, scale, skew and pivot informations.
+    Provided by Transform.decompose() method.
+    Angles are in degrees. */
+class DecomposedTransform {
 
+    inline public function new() {}
+
+    public var pivotX:Float = 0;
+
+    public var pivotY:Float = 0;
+
+    public var x:Float = 0;
+
+    public var y:Float = 0;
+
+    public var rotation:Float = 0;
+
+    public var scaleX:Float = 1;
+
+    public var scaleY:Float = 1;
+
+    public var skewX:Float = 0;
+
+    public var skewY:Float = 0;
+
+}
+
+// Portions of matrix manipulation code taken from OpenFL and PIXI
+
+/** Transform holds matrix data to make 2d rotate, translate, scale and skew transformations.
+    Angles are in degrees. */
 class Transform implements Events {
 
 /// Events
@@ -26,7 +55,7 @@ class Transform implements Events {
 
 /// Internal
 
-    static var _skew = new Transform();
+    static var _tmp = new Transform();
 
 /// Code
 
@@ -85,38 +114,66 @@ class Transform implements Events {
 
     } //copyFrom
 
-    inline public function setRotationScaleTranslation(rotation:Float = 0, scaleX:Float, scaleY:Float, tx:Float = 0, ty:Float = 0):Void {
+    inline public function decompose(?output:DecomposedTransform):DecomposedTransform {
 
-        //identity ();
-        //rotate (rotation);
-        //scale (scaleX, scaleY);
-        //translate (tx, ty);
+        if (output == null) output = new DecomposedTransform();
 
-        if (rotation != 0) {
+        output.pivotX = 0;
+        output.pivotY = 0;
 
-            var cos = Math.cos (rotation);
-            var sin = Math.sin (rotation);
+        output.skewX = -Math.atan2(-c, d);
+        output.skewY = Math.atan2(b, a);
 
-            a = cos * scaleX;
-            b = sin * scaleY;
-            c = -sin * scaleX;
-            d = cos * scaleY;
+        var delta = Math.abs(output.skewX + output.skewY);
 
-        } else {
+        if (delta < 0.00001) {
+            
+            output.rotation = output.skewY;
 
-            a = scaleX;
-            b = 0;
-            c = 0;
-            d = scaleY;
+            if (a < 0 && d >= 0) {
+                output.rotation += output.rotation <= 0 ? Math.PI : -Math.PI;
+            }
+
+            output.skewX = 0;
+            output.skewY = 0;
 
         }
 
-        this.tx = tx;
-        this.ty = ty;
+        output.scaleX = Math.sqrt((a * a) + (b * b));
+        output.scaleY = Math.sqrt((c * c) + (d * d));
 
-        changed = true;
+        output.x = tx;
+        output.y = ty;
 
-    } //setRotationScaleTranslation
+        output.skewX *= 180.0 / Math.PI;
+        output.skewY *= 180.0 / Math.PI;
+        output.rotation *= 180.0 / Math.PI;
+
+        return output;
+
+    } //decompose
+
+    inline public function setFromDecomposed(decomposed:DecomposedTransform):Void {
+
+        setFromValues(decomposed.x, decomposed.y, decomposed.pivotX, decomposed.pivotY, decomposed.scaleX, decomposed.scaleY, decomposed.rotation, decomposed.skewX, decomposed.skewY);
+
+    } //setFromDecomposed
+
+    inline public function setFromValues(x:Float = 0, y:Float = 0, scaleX:Float = 1, scaleY:Float = 1, rotation:Float = 0, skewX:Float = 0, skewY:Float = 0, pivotX:Float = 0, pivotY:Float = 0):Void {
+
+        identity();
+        translate(-pivotX, -pivotY);
+        if (skewX != 0) c = skewX * Math.PI / 180.0;
+        if (skewY != 0) b = skewY * Math.PI / 180.0;
+        if (rotation != 0) rotate(rotation * Math.PI / 180.0);
+        translate(pivotX, pivotY);
+        if (scaleX != 1.0 || scaleY != 1.0) scale(scaleX, scaleY);
+        translate(
+            x - pivotX * scaleX,
+            y - pivotY * scaleY
+        );
+
+    } //setFromValues
 
     inline public function deltaTransformX(x:Float, y:Float):Float {
 
@@ -225,14 +282,12 @@ class Transform implements Events {
 
     inline public function skew(x:Float, y:Float):Void {
 
-        _skew.identity();
+        _tmp.identity();
 
-        // TODO check
+        _tmp.c = x * Math.PI / 180.0;
+        _tmp.b = y * Math.PI / 180.0;
 
-        _skew.c = x * Math.PI / 180.0;
-        _skew.b = y * Math.PI / 180.0;
-
-        concat(_skew);
+        concat(_tmp);
 
     } //translate
 
