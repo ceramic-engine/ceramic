@@ -175,17 +175,17 @@ class Visual extends Entity {
 
 /// Properties (Matrix)
 
-	public var a:Float = 1;
+    public var a:Float = 1;
 
-	public var b:Float = 0;
+    public var b:Float = 0;
 
-	public var c:Float = 0;
+    public var c:Float = 0;
 
-	public var d:Float = 1;
+    public var d:Float = 1;
 
-	public var tx:Float = 0;
+    public var tx:Float = 0;
 
-	public var ty:Float = 0;
+    public var ty:Float = 0;
 
 /// Properties (Computed)
 
@@ -197,7 +197,7 @@ class Visual extends Entity {
 
 /// Properties (Children)
 
-	public var children(default,null):Array<Visual> = null;
+    public var children(default,null):Array<Visual> = null;
 
     public var parent(default,null):Visual = null;
 
@@ -281,8 +281,8 @@ class Visual extends Entity {
         // Apply local properties (pos, scale, rotation, )
         //
         _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
-		if (skewX != 0) _matrix.c = skewX * Math.PI / 180.0;
-		if (skewY != 0) _matrix.b = skewY * Math.PI / 180.0;
+        if (skewX != 0) _matrix.c = skewX * Math.PI / 180.0;
+        if (skewY != 0) _matrix.b = skewY * Math.PI / 180.0;
         if (rotation != 0) _matrix.rotate(rotation * Math.PI / 180.0);
         _matrix.translate(anchorX * w / scaleX, anchorY * h / scaleY);
         if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
@@ -295,18 +295,18 @@ class Visual extends Entity {
 
             // Concat matrix with transform
             //
-    		var a1 = _matrix.a * transform.a + _matrix.b * transform.c;
-    		_matrix.b = _matrix.a * transform.b + _matrix.b * transform.d;
-    		_matrix.a = a1;
+            var a1 = _matrix.a * transform.a + _matrix.b * transform.c;
+            _matrix.b = _matrix.a * transform.b + _matrix.b * transform.d;
+            _matrix.a = a1;
 
-    		var c1 = _matrix.c * transform.a + _matrix.d * transform.c;
-    		_matrix.d = _matrix.c * transform.b + _matrix.d * transform.d;
+            var c1 = _matrix.c * transform.a + _matrix.d * transform.c;
+            _matrix.d = _matrix.c * transform.b + _matrix.d * transform.d;
 
-    		_matrix.c = c1;
+            _matrix.c = c1;
 
-    		var tx1 = _matrix.tx * transform.a + _matrix.ty * transform.c + transform.tx;
-    		_matrix.ty = _matrix.tx * transform.b + _matrix.ty * transform.d + transform.ty;
-    		_matrix.tx = tx1;
+            var tx1 = _matrix.tx * transform.a + _matrix.ty * transform.c + transform.tx;
+            _matrix.ty = _matrix.tx * transform.b + _matrix.ty * transform.d + transform.ty;
+            _matrix.tx = tx1;
 
         }
 
@@ -314,18 +314,18 @@ class Visual extends Entity {
 
             // Concat matrix with parent's computed matrix data
             //
-    		var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
-    		_matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
-    		_matrix.a = a1;
+            var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
+            _matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
+            _matrix.a = a1;
 
-    		var c1 = _matrix.c * parent.a + _matrix.d * parent.c;
-    		_matrix.d = _matrix.c * parent.b + _matrix.d * parent.d;
+            var c1 = _matrix.c * parent.a + _matrix.d * parent.c;
+            _matrix.d = _matrix.c * parent.b + _matrix.d * parent.d;
 
-    		_matrix.c = c1;
+            _matrix.c = c1;
 
-    		var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
-    		_matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
-    		_matrix.tx = tx1;
+            var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
+            _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
+            _matrix.tx = tx1;
 
         }
 
