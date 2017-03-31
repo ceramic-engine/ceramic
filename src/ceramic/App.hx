@@ -1,6 +1,6 @@
 package ceramic;
 
-import ceramic.Backend;
+import backend.Backend;
 
 enum ScreenScaling {
     CENTER;
@@ -24,6 +24,12 @@ typedef AppSettings = {
 
 }
 
+class BaseProject extends Entity {
+
+    @:final function new() {}
+
+} //BaseProject
+
 @:allow(ceramic.Visual)
 class App extends Entity {
 
@@ -32,7 +38,13 @@ class App extends Entity {
     public static var app(get,null):App;
     static inline function get_app():App { return app; }
 
+/// Events
+
+    @event function ready();
+
 /// Properties
+
+    public var project(default,null):Project;
 
     public var backend(default,null):Backend;
 
@@ -48,20 +60,12 @@ class App extends Entity {
 
 /// Lifecycle
 
-    public static function init(settings:AppSettings, callback:App->Void):Void {
+    function new() {
 
-        app = new App(settings, new Screen());
-        app.postInit(callback);
+        app = this;
 
-    } //init
-
-    function new(settings:AppSettings, screen:Screen) {
-
-        backend = new Backend();
-
-        if (settings == null) {
-            settings = {};
-        }
+        settings = {};
+        screen = new Screen();
 
         if (settings.antialiasing == null) {
             settings.antialiasing = true;
@@ -71,20 +75,23 @@ class App extends Entity {
             settings.title = 'App';
         }
 
-        this.settings = settings;
-        this.screen = screen;
+        project = @:privateAccess new Project();
+
+        backend = new Backend();
+        backend.onceReady(backendReady);
+        backend.init(this);
 
     } //new
 
-    function postInit(callback:App->Void):Void {
+    function backendReady():Void {
 
-        screen.postInit();
+        screen.backendReady();
 
-        callback(app);
+        emitReady();
 
         backend.onUpdate(update);
 
-    } //postInit
+    } //backendReady
 
     function update(delta:Float):Void {
 

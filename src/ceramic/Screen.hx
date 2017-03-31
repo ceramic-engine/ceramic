@@ -13,7 +13,7 @@ class Screen extends Entity {
 
     } //new
 
-    function postInit():Void {
+    function backendReady():Void {
 
-    } //postInit
+    } //backendReady
 }

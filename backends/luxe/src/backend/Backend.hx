@@ -1,6 +1,6 @@
 package backend;
 
-@:allow(backend.Main)
+@:allow(Main)
 class Backend implements spec.Backend implements ceramic.Events {
 
     public var audio(default,null) = new backend.Audio();
@@ -15,7 +15,15 @@ class Backend implements spec.Backend implements ceramic.Events {
 
     public function new() {}
 
+    public function init(app:ceramic.App) {
+
+        emitReady();
+
+    } //init
+
 /// Events
+
+    @event function ready();
 
     @event function update(delta:Float);
 
