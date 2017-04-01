@@ -103,6 +103,39 @@ class ShortcutsMacro {
 
         }
 
+        // Add project
+        if (!fieldsByName.exists('project')) {
+
+            fields.push({
+                pos: Context.currentPos(),
+                name: 'project',
+                kind: FProp('get', 'null', TPath({pack: [], name: 'Project'})),
+                access: [APublic, AStatic],
+                doc: 'Project instance',
+                meta: []
+            });
+
+            fields.push({
+                pos: Context.currentPos(),
+                name: 'get_project',
+                kind: FFun({
+                    args: [],
+                    ret: TPath({pack: [], name: 'Project'}),
+                    expr: macro {
+                        return ceramic.App.app.project;
+                    }
+                }),
+                access: [APrivate, AStatic, AInline],
+                doc: '',
+                meta: [{
+                    name: ':noCompletion',
+                    params: [],
+                    pos: Context.currentPos()
+                }]
+            });
+
+        }
+
         return fields;
 
     } //build
