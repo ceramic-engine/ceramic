@@ -4,6 +4,7 @@ import ceramic.Entity;
 import ceramic.Quad;
 import ceramic.Color;
 import ceramic.Assets;
+import ceramic.Blending;
 
 class Project extends Entity {
 
@@ -49,23 +50,22 @@ class Project extends Entity {
         });
 
         trace('loading assets...');
+
         var textureName = 'NOPEMAN_TALK.spine/NOPEMAN_TALK@1x.png';
         assets.addTexture(textureName);
         assets.onceComplete(function(success) {
             trace("ASSETS COMPLETE: success=" + success);
 
             var texture = assets.texture(textureName);
-            trace('texture: ' + texture);
-            trace('texture: width=' + texture.width + ' height=' + texture.height);
+            trace('texture width=' + texture.width + ' height=' + texture.height);
 
             var quad3 = new Quad();
             quad3.texture = texture;
             quad3.frame(0, 0, 100, 200);
-            quad3.pos(20, 20);
+            quad3.pos(20, 220);
             quad3.depth = 4;
-            quad3.color = Color.RED;
             quad3.skewX = 25;
-            quad3.alpha = 0.5;
+            quad3.blending = Blending.Additive;
             
         });
         assets.load();

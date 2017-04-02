@@ -5,14 +5,14 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
 
-/** Shared adds a static `shared` property to get
-    or create an instance of the target class. */
+/** Lazy allows to mark any property as lazy.
+    Lazy properties are initialized only at first access. */
 #if !macro
-@:autoBuild(ceramic.SharedMacro.build())
+@:autoBuild(ceramic.LazyMacro.build())
 #end
-interface Shared {}
+interface Lazy {}
 
-class SharedMacro {
+class LazyMacro {
 #if macro
 
     macro static public function build():Array<Field> {
@@ -36,12 +36,10 @@ class SharedMacro {
             parentHold = parent.get().superClass;
             parent = parentHold != null ? parentHold.t : null;
         }
-
-        var newFields = [];
         
         //
 
-        return newFields;
+        return fields;
 
     } //build
 

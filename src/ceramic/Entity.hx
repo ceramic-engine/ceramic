@@ -8,10 +8,14 @@ import haxe.macro.Expr;
 #if !macro
 @:autoBuild(ceramic.EntityMacro.build())
 #end
-class Entity implements Events implements Shortcuts {
+class Entity implements Events implements Shortcuts implements Lazy {
 #if !macro
 
 /// Properties
+
+    public var id:String = null;
+
+    @lazy public var data:Dynamic<Dynamic> = {};
 
     public var destroyed:Bool;
 
