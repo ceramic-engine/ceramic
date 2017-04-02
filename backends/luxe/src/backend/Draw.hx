@@ -79,6 +79,7 @@ class Draw implements spec.Draw {
 
         var quad:ceramic.Quad;
         var quadGeom:phoenix.geometry.QuadGeometry;
+        var rect = new luxe.Rectangle();
 
         var r:Float;
         var g:Float;
@@ -142,10 +143,17 @@ class Draw implements spec.Draw {
                     //br
                     v[5].pos.set_xy(w  , h  );
 
+                    // Update color
+                    //
                     r = quad.color.redFloat;
                     g = quad.color.greenFloat;
                     b = quad.color.blueFloat;
                     a = quad.computedAlpha;
+
+                    // Multiply alpha because we render premultiplied
+                    r *= a;
+                    g *= a;
+                    b *= a;
 
                     quadGeom.color.r = r;
                     quadGeom.color.g = g;
@@ -155,6 +163,39 @@ class Draw implements spec.Draw {
                     quadGeom.depth = depth;
                     depth += 0.01;
 
+                    // Update blending
+                    //
+                    if (quad.blending == ceramic.Blending.Additive) {
+                        quadGeom.blend_src_alpha = phoenix.Batcher.BlendMode.one;
+                        quadGeom.blend_src_rgb = phoenix.Batcher.BlendMode.one;
+                        quadGeom.blend_dest_alpha = phoenix.Batcher.BlendMode.one;
+                        quadGeom.blend_dest_rgb = phoenix.Batcher.BlendMode.one;
+                    }
+                    else {
+                        quadGeom.blend_src_alpha = phoenix.Batcher.BlendMode.one;
+                        quadGeom.blend_src_rgb = phoenix.Batcher.BlendMode.one;
+                        quadGeom.blend_dest_alpha = phoenix.Batcher.BlendMode.one_minus_src_alpha;
+                        quadGeom.blend_dest_rgb = phoenix.Batcher.BlendMode.one_minus_src_alpha;
+                    }
+
+                    // Update texture
+                    //
+                    if (quad.texture != null) {
+                        quadGeom.texture = quad.texture.backendItem;
+                        rect.set(
+                            quad.frameX * quad.texture.density,
+                            quad.frameY * quad.texture.density,
+                            quad.frameWidth * quad.texture.density,
+                            quad.frameHeight * quad.texture.density
+                        );
+                        quadGeom.uv(rect);
+                    }
+                    else {
+                        quadGeom.texture = null;
+                    }
+
+                    // Update transform
+                    //
                     m = quadGeom.transform.world.matrix;
 
                     m.M11 = quad.a;
@@ -165,6 +206,7 @@ class Draw implements spec.Draw {
                     m.M24 = quad.ty;
 
                     quadGeom.transform.dirty = false;
+                    
 
                 default:
             }

@@ -42,6 +42,8 @@ class App extends Entity {
 
     @event function ready();
 
+    @event function tick();
+
 /// Properties
 
     public var project(default,null):Project;
@@ -94,6 +96,8 @@ class App extends Entity {
     } //backendReady
 
     function update(delta:Float):Void {
+
+        app.emitTick();
 
         screen.emitUpdate(delta);
 

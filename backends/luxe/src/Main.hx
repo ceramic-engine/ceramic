@@ -20,6 +20,12 @@ class Main extends luxe.Game {
 
     } //config
 
+    override function ready():Void {
+
+        App.app.backend.emitReady();
+
+    } //ready
+
     override function update(delta:Float):Void {
 
         App.app.backend.emitUpdate(delta);

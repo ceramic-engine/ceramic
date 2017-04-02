@@ -3,8 +3,11 @@ package;
 import ceramic.Entity;
 import ceramic.Quad;
 import ceramic.Color;
+import ceramic.Assets;
 
 class Project extends Entity {
+
+    var assets:Assets = new Assets();
 
     function new() {
 
@@ -44,6 +47,28 @@ class Project extends Entity {
             quad2.rotation = (quad2.rotation + delta * 100) % 360;
 
         });
+
+        trace('loading assets...');
+        var textureName = 'NOPEMAN_TALK.spine/NOPEMAN_TALK@1x.png';
+        assets.addTexture(textureName);
+        assets.onceComplete(function(success) {
+            trace("ASSETS COMPLETE: success=" + success);
+
+            var texture = assets.texture(textureName);
+            trace('texture: ' + texture);
+            trace('texture: width=' + texture.width + ' height=' + texture.height);
+
+            var quad3 = new Quad();
+            quad3.texture = texture;
+            quad3.frame(0, 0, 100, 200);
+            quad3.pos(20, 20);
+            quad3.depth = 4;
+            quad3.color = Color.RED;
+            quad3.skewX = 25;
+            quad3.alpha = 0.5;
+            
+        });
+        assets.load();
 
     } //ready
 

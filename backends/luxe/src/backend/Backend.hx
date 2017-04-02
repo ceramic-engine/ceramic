@@ -17,8 +17,6 @@ class Backend implements spec.Backend implements ceramic.Events {
 
     public function init(app:ceramic.App) {
 
-        emitReady();
-
     } //init
 
 /// Events

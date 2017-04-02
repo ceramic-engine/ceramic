@@ -12,7 +12,7 @@ class Textures implements spec.Textures {
 
     inline public function load(name:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
 
-        Luxe.resources.load_texture(name, {
+        Luxe.resources.load_texture('assets/' + name, {
             load_premultiply_alpha: true
         })
         .then(function(texture:Texture) {
@@ -32,13 +32,13 @@ class Textures implements spec.Textures {
 
     inline public function getWidth(texture:Texture):Int {
 
-        return (texture:phoenix.Texture).width_actual;
+        return (texture:phoenix.Texture).width;
 
     } //getWidth
 
     inline public function getHeight(texture:Texture):Int {
 
-        return (texture:phoenix.Texture).height_actual;
+        return (texture:phoenix.Texture).height;
 
     } //getHeight
 
