@@ -30,7 +30,8 @@ class LazyMacro {
                         if (newFields == null) newFields = [];
 
                         var fieldName = field.name;
-                        var lazyFieldName = 'lazy_' + field.name;
+                        var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
+                        var lazyFieldName = 'lazy' + capitalName;
 
                         if (expr != null) {
                             // Compute type from expr
@@ -52,7 +53,7 @@ class LazyMacro {
                         // Create lazy flag (true=should lazy load, false=already lazy loaded)
                         var lazyField = {
                             pos: field.pos,
-                            name: 'lazy_' + field.name,
+                            name: lazyFieldName,
                             kind: FVar((macro :Bool), (macro true)),
                             access: field.access,
                             doc: field.doc,
