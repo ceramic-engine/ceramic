@@ -18,30 +18,132 @@ class LazyMacro {
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
 
-        // Check class fields
-        var fieldsByName = new Map<String,Bool>();
+        var newFields:Array<Field> = [];
+
         for (field in fields) {
-            fieldsByName.set(field.name, true);
-        }
 
-        // Also check parent fields
-        var parentHold = Context.getLocalClass().get().superClass;
-        var parent = parentHold != null ? parentHold.t : null;
-        while (parent != null) {
+            if (hasLazyMeta(field)) {
+                
+                switch(field.kind) {
+                    case FieldType.FVar(type, expr):
 
-            for (field in parent.get().fields.get()) {
-                fieldsByName.set(field.name, true);
+                        if (newFields == null) newFields = [];
+
+                        var fieldName = field.name;
+                        var lazyFieldName = 'lazy_' + field.name;
+
+                        if (expr != null) {
+                            // Compute type from expr
+                            switch (expr.expr) {
+                                case ENew(t,p):
+                                    if (type == null) {
+                                        type = TPath(t);
+                                    }
+                                default:
+                                    if (type == null) {
+                                        throw new Error("Cannot resolve lazy variable type", field.pos);
+                                    }
+                            }
+                        }
+                        else {
+                            throw new Error("Lazy variable expression is required", field.pos);
+                        }
+
+                        // Create lazy flag (true=should lazy load, false=already lazy loaded)
+                        var lazyField = {
+                            pos: field.pos,
+                            name: 'lazy_' + field.name,
+                            kind: FVar((macro :Bool), (macro true)),
+                            access: field.access,
+                            doc: field.doc,
+                            meta: [{
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }]
+                        };
+                        newFields.push(lazyField);
+
+                        // Create prop from var
+                        var propField = {
+                            pos: field.pos,
+                            name: field.name,
+                            kind: FProp('get', 'set', type),
+                            access: field.access,
+                            doc: field.doc,
+                            meta: [{
+                                name: ':isVar',
+                                params: [],
+                                pos: field.pos
+                            }]
+                        };
+                        newFields.push(propField);
+
+                        var getField = {
+                            pos: field.pos,
+                            name: 'get_' + field.name,
+                            kind: FFun({
+                                args: [],
+                                ret: type,
+                                expr: macro {
+                                    if (this.$lazyFieldName) {
+                                        this.$lazyFieldName = false;
+                                        this.$fieldName = $expr;
+                                    }
+                                    return this.$fieldName;
+                                }
+                            }),
+                            access: [APrivate],
+                            doc: '',
+                            meta: []
+                        }
+                        newFields.push(getField);
+
+                        var setField = {
+                            pos: field.pos,
+                            name: 'set_' + field.name,
+                            kind: FFun({
+                                args: [
+                                    {name: field.name, type: type}
+                                ],
+                                ret: type,
+                                expr: macro {
+                                    return this.$fieldName = $i{fieldName};
+                                }
+                            }),
+                            access: [APrivate, AInline],
+                            doc: '',
+                            meta: []
+                        }
+                        newFields.push(setField);
+
+                    default:
+                        throw new Error("Invalid lazy variable", field.pos);
+                }
+            }
+            else {
+                newFields.push(field);
             }
 
-            parentHold = parent.get().superClass;
-            parent = parentHold != null ? parentHold.t : null;
         }
-        
-        //
 
-        return fields;
+        return newFields;
 
     } //build
+
+    static function hasLazyMeta(field:Field):Bool {
+
+        if (field.meta == null || field.meta.length == 0) return false;
+
+        for (meta in field.meta) {
+            if (meta.name == 'lazy' || meta.name == ':lazy') {
+                return true;
+            }
+        }
+
+        return false;
+
+    } //hasComponentMeta
 
 #end
 }

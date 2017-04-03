@@ -13,8 +13,6 @@ class Entity implements Events implements Shortcuts implements Lazy {
 
 /// Properties
 
-    public var id:String = null;
-
     @lazy public var data:Dynamic<Dynamic> = {};
 
     public var destroyed:Bool;

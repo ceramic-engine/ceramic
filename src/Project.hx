@@ -66,6 +66,9 @@ class Project extends Entity {
             quad3.depth = 4;
             quad3.skewX = 25;
             quad3.blending = Blending.Additive;
+
+            quad3.data.name = "Patrick";
+            quad3.data.youpi = "bref";
             
         });
         assets.load();
