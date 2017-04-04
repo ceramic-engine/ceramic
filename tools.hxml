@@ -1,0 +1,7 @@
+-cp src
+-main tools.Index
+-lib hxnodejs
+-debug
+-js index.js
+
+-cmd node index.js luxe run web

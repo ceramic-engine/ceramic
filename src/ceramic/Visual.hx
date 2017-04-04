@@ -278,7 +278,7 @@ class Visual extends Entity {
 
         _matrix.identity();
 
-        // Apply local properties (pos, scale, rotation, )
+        // Apply local properties (pos, scale, rotation, skew)
         //
         _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
         if (skewX != 0) _matrix.c = skewX * Math.PI / 180.0;

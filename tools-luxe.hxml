@@ -1,0 +1,8 @@
+-cp src
+-cp backends/luxe/src
+-main tools.Tools
+-lib hxnodejs
+-debug
+-js tools-luxe.js
+
+-cmd node tools-luxe.js luxe run web
