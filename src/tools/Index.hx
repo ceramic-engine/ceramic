@@ -6,8 +6,13 @@ class Index {
 
     static function main():Void {
 
-        var args = Sys.args();
-        var cwd = Sys.getCwd();
+        // Expose run(cwd, args)
+        var module:Dynamic = js.Node.module;
+        module.exports = run;
+    
+    } //main
+
+    static function run(cwd:String, args:Array<String>):Void {
 
         if (args.length > 0) {
 
@@ -27,7 +32,8 @@ class Index {
 
                 // Try module require
                 if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([cwd, 'tools-' + first + '.js']))) {
-                    js.Node.require('./tools-' + first + '.js');
+                    var tools = js.Node.require('./tools-' + first + '.js');
+                    tools();
                 }
                 else {
                     trace('Invalid argument: $first');

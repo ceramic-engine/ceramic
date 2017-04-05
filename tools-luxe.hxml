@@ -5,4 +5,4 @@
 -debug
 -js tools-luxe.js
 
--cmd node tools-luxe.js luxe run web
+-cmd ./ceramic luxe run web

@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+var ceramic = require('./index.js');
+ceramic(process.cwd(), process.argv.slice(2));

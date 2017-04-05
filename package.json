@@ -1,0 +1,40 @@
+{
+  "name": "ceramic-tools",
+  "version": "0.2.0",
+  "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremyfa/ceramic.git"
+  },
+  "bin": {
+    "ceramic": "./ceramic"
+  },
+  "author": "Jeremy Faivre <contact@jeremyfa.com>",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/jeremyfa/ceramic/issues"
+  },
+  "homepage": "https://github.com/jeremyfa/ceramic#readme",
+  "dependencies": {
+    "applescript": "^1.0.0",
+    "colors": "^1.1.2",
+    "fibers": "^1.0.15",
+    "glob": "^7.1.1",
+    "handlebars": "^4.0.6",
+    "ip": "^1.1.4",
+    "istextorbinary": "^2.1.0",
+    "lockfile": "^1.0.2",
+    "ncp": "^2.0.0",
+    "plist": "^2.0.1",
+    "portscanner": "^2.1.0",
+    "sharp": "^0.16.2",
+    "shell-quote": "^1.6.1",
+    "source-map-support": "^0.4.3",
+    "tree-kill": "^1.1.0",
+    "xcode": "^0.8.9",
+    "yamljs": "^0.2.9"
+  }
+}

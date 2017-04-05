@@ -4,4 +4,4 @@
 -debug
 -js index.js
 
--cmd node index.js luxe run web
+-cmd ./ceramic luxe run web

@@ -8,9 +8,18 @@ class Tools {
 
     static function main():Void {
 
-        tools = new Tools(Sys.getCwd(), Sys.args());
+        // Expose new Tools(cwd, args).run()
+        var module:Dynamic = js.Node.module;
+        module.exports = boot;
 
     } //main
+
+    static function boot(cwd:String, args:Array<String>):Void {
+
+        tools = new Tools(Sys.getCwd(), Sys.args());
+        tools.run();
+
+    } //boot
 
 /// Properties
 
@@ -25,8 +34,12 @@ class Tools {
         this.cwd = cwd;
         this.args = args;
 
-        trace('cwd=$cwd args=$args');
-
     } //new
+
+    function run():Void {
+
+        trace('run with cwd=$cwd args=$args');
+        
+    } //run
 
 } //Tools
