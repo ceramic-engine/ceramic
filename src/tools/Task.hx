@@ -18,7 +18,13 @@ class Task implements Events {
 
     } //new
 
-    public function run():Void {
+    public function info(cwd:String):String {
+
+        return null;
+
+    } //info
+
+    public function run(cwd:String, args:Array<String>):Void {
 
         emitErr('This task has no implementation.');
         emitComplete(false);

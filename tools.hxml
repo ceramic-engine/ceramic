@@ -1,7 +1,8 @@
 -cp src
 -main tools.Index
 -lib hxnodejs
+-lib hscript
 -debug
 -js index.js
 
--cmd ./ceramic luxe run web
+-cmd ./ceramic info --cwd sample

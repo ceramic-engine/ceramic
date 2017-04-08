@@ -1,8 +1,9 @@
 -cp src
 -cp backends/luxe/src
+-D use_backend
 -main tools.Tools
 -lib hxnodejs
 -debug
 -js tools-luxe.js
 
--cmd ./ceramic luxe run web
+-cmd ./ceramic init

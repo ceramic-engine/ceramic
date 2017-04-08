@@ -2,6 +2,10 @@ package backend.tools;
 
 class BackendTools implements tools.spec.BackendTools {
 
+    public function new() {
+
+    } //new
+
     public function getBuildTargets():Array<tools.BuildTarget> {
 
         var targets:Array<tools.BuildTarget> = [];
@@ -48,7 +52,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getSetupTask(target:tools.BuildTarget):tools.Task {
 
-        return null;
+        return new backend.tools.tasks.Setup(target);
 
     } //getSetupTask
 

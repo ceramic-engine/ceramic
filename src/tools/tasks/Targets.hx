@@ -1,10 +1,27 @@
 package tools.tasks;
 
-class Targets extends Task {
+import tools.Tools.*;
 
-    override function run():Void {
+class Targets extends tools.Task {
 
-        //
+    override public function info(cwd:String):String {
+
+        return "List available targets with current backend.";
+
+    } //info
+
+    override function run(cwd:String, args:Array<String>):Void {
+
+        for (target in backend.getBuildTargets()) {
+
+            var configs = [];
+            for (config in target.configs) {
+                configs.push(config.getName().toLowerCase());
+            }
+
+            print(target.name + ' (' + configs.join(', ') + ')');
+
+        }
 
     } //run
 

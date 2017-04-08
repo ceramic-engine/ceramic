@@ -18,28 +18,17 @@ class Index {
 
             var first = args[0];
 
-            if (first == 'run') {
-
-                // Run something?
-
-            }
-            else if (first == 'help') {
-
-                // Show help
-
+            // Try module require
+            if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([cwd, 'tools-' + first + '.js']))) {
+                var tools = js.Node.require('./tools-' + first + '.js');
+                tools(cwd, args);
             }
             else {
-
-                // Try module require
-                if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([cwd, 'tools-' + first + '.js']))) {
-                    var tools = js.Node.require('./tools-' + first + '.js');
-                    tools();
-                }
-                else {
-                    trace('Invalid argument: $first');
-                }
+                @:privateAccess Tools.boot(cwd, ['default'].concat(args));
             }
 
+        } else {
+            @:privateAccess Tools.boot(cwd, ['default', 'help']);
         }
 
     } //main

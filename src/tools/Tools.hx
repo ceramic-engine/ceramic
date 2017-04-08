@@ -1,10 +1,16 @@
 package tools;
 
+import npm.Colors;
+import sys.FileSystem;
+import haxe.io.Path;
+
+using StringTools;
+
 class Tools {
 
 /// Global
 
-    public static var tools(default,null):Tools;
+    public static var shared(default,null):Tools;
 
     static function main():Void {
 
@@ -16,16 +22,29 @@ class Tools {
 
     static function boot(cwd:String, args:Array<String>):Void {
 
-        tools = new Tools(Sys.getCwd(), Sys.args());
-        tools.run();
+        shared = new Tools(cwd, args);
+        shared.run();
 
     } //boot
+
+    public static var settings = {
+        colors: true,
+        defines: new Map<String,String>()
+    };
+
+#if use_backend
+
+    public static var backend:backend.tools.BackendTools = new backend.tools.BackendTools();
+
+#end
 
 /// Properties
 
     public var cwd:String;
 
     public var args:Array<String>;
+
+    public var tasks(default,null):Map<String,tools.Task> = new Map<String,tools.Task>();
 
 /// Lifecycle
 
@@ -34,12 +53,153 @@ class Tools {
         this.cwd = cwd;
         this.args = args;
 
+        #if use_backend
+
+        tasks.set('targets', new tools.tasks.Targets());
+        tasks.set('setup', new tools.tasks.Setup());
+
+        #else
+
+        tasks.set('init', new tools.tasks.Init());
+        tasks.set('info', new tools.tasks.Info());
+
+        #end
+
     } //new
+
+    function loadRootArgs():Void {
+
+        // Colors
+        var index:Int = args.indexOf('--no-colors');
+        if (index != -1) {
+            settings.colors = false;
+            args.splice(index, 1);
+        }
+
+        // Custom CWD
+        index = args.indexOf('--cwd');
+        if (index != -1) {
+            if (index + 1 >= args.length) {
+                fail('A value is required for --cwd argument.');
+            }
+            var newCwd = args[index + 1];
+            if (!Path.isAbsolute(newCwd)) {
+                newCwd = Path.normalize(Path.join([cwd, newCwd]));
+            }
+            if (!FileSystem.exists(newCwd)) {
+                fail('Provided cwd path doesn\'t exist.');
+            }
+            if (!FileSystem.isDirectory(newCwd)) {
+                fail('Provided cwd path exists but is not a directory.');
+            }
+            cwd = newCwd;
+            args.splice(index, 2);
+        }
+
+        // Defines
+        var newArgs = [];
+        var i = 0;
+        while (i < args.length) {
+            var arg = args[i];
+            if (arg.trim() != '') {
+                // Add custom defines?
+                if (arg.trim().startsWith('-D')) {
+                    var val = null;
+                    if (arg.trim() == '-D') {
+                        if (i < args.length - 1) {
+                            i++;
+                            val = args[i].trim();
+                        }
+                    } else {
+                        val = arg.trim().substr(2);
+                    }
+                    if (val != null && val.length > 0) {
+                        var equalIndex = val.indexOf('=');
+                        if (equalIndex == -1) {
+                            // Simple flag
+                            settings.defines.set(val, '');
+                        } else {
+                            // Flag with custom value
+                            settings.defines.set(val.substring(0, equalIndex), val.substring(equalIndex + 1));
+                        }
+                    }
+                }
+                else {
+                    newArgs.push(arg);
+                }
+            }
+            i++;
+        }
+        args = newArgs;
+
+    } //updateSettings
 
     function run():Void {
 
-        trace('run with cwd=$cwd args=$args');
+        loadRootArgs();
+
+        if (args.length < 2) {
+            fail('Invalid arguments.');
+        }
+        else {
+            var taskName = args[1];
+
+            if (tasks.exists(taskName)) {
+
+                // Run task
+                var task = tasks.get(taskName);
+                task.run(cwd, args);
+
+            } else {
+                fail('Unknown task: $taskName');
+            }
+        }
         
     } //run
+
+/// Utils
+
+    public static function print(message:String):Void {
+
+        js.Node.process.stdout.write(''+message+"\n");
+
+    } //log
+
+    public static function success(message:String):Void {
+
+        if (settings.colors) {
+            js.Node.process.stdout.write(''+Colors.green(message)+"\n");
+        } else {
+            js.Node.process.stdout.write(''+message+"\n");
+        }
+
+    } //success
+
+    public static function error(message:String):Void {
+
+        if (settings.colors) {
+            js.Node.process.stderr.write(''+Colors.red(message)+"\n");
+        } else {
+            js.Node.process.stderr.write(''+message+"\n");
+        }
+
+    } //error
+
+    public static function warning(message:String):Void {
+
+        if (settings.colors) {
+            js.Node.process.stderr.write(''+Colors.yellow(message)+"\n");
+        } else {
+            js.Node.process.stderr.write(''+message+"\n");
+        }
+
+    } //warning
+
+    public static function fail(message:String):Void {
+
+        error(message);
+        js.Node.process.exit(1);
+
+    } //fail
 
 } //Tools
