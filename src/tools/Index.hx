@@ -6,6 +6,10 @@ class Index {
 
     static function main():Void {
 
+        // Better source map support for node
+        var sourceMapSupport:Dynamic = js.Node.require('source-map-support');
+        sourceMapSupport.install();
+
         // Expose run(cwd, args)
         var module:Dynamic = js.Node.module;
         module.exports = run;
