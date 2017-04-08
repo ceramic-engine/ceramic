@@ -80,7 +80,7 @@ class Tools {
         index = args.indexOf('--cwd');
         if (index != -1) {
             if (index + 1 >= args.length) {
-                fail('A value is required for --cwd argument.');
+                fail('A value is required after --cwd argument.');
             }
             var newCwd = args[index + 1];
             if (!Path.isAbsolute(newCwd)) {
