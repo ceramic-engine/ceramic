@@ -1,0 +1,30 @@
+
+{
+
+  project: {
+    name: "Sample",
+    version: "1.0",
+    author: "My Company",
+
+    app: {
+      name: "Sample",
+      package: "mycompany.sample",
+      codepaths: [
+        "/Users/jeremyfa/Developer/ceramic-luxe/src",
+        "/Users/jeremyfa/Developer/ceramic-luxe/backends/luxe/src",
+        "../../../src"]
+    },
+
+    build : {
+      dependencies : {
+        luxe : '*'
+      }
+    },
+
+    files : {
+      assets : 'assets/'
+    }
+
+  }
+
+}

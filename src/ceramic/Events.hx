@@ -12,7 +12,7 @@ import haxe.macro.Expr;
 #end
 interface Events {}
 
-@:keep class EventsMacro {
+class EventsMacro {
 #if macro
 
     macro static public function build():Array<Field> {

@@ -6,7 +6,7 @@ class Setup extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Setup a backend target.";
+        return "Setup a backend target on current project.";
 
     } //info
 
@@ -18,6 +18,8 @@ class Setup extends tools.Task {
             fail('You must provide a target to setup.');
         }
 
+        // Find target from name
+        //
         var target = null;
         for (aTarget in backend.getBuildTargets()) {
 

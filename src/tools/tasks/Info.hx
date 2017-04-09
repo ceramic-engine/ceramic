@@ -16,7 +16,6 @@ class Info extends tools.Task {
 
         var project = new Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
-
         project.loadAppFile(projectPath);
 
         print(Json.stringify(project.app, null, '    '));

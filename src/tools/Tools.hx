@@ -3,6 +3,7 @@ package tools;
 import npm.Colors;
 import sys.FileSystem;
 import haxe.io.Path;
+import js.node.ChildProcess;
 
 using StringTools;
 
@@ -29,7 +30,8 @@ class Tools {
 
     public static var settings = {
         colors: true,
-        defines: new Map<String,String>()
+        defines: new Map<String,String>(),
+        ceramicPath: js.Node.__dirname
     };
 
 #if use_backend
@@ -201,5 +203,27 @@ class Tools {
         js.Node.process.exit(1);
 
     } //fail
+
+    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+        
+        if (options == null) {
+            options = { cwd: null, mute: false };
+        }
+
+        if (options.cwd == null) options.cwd = shared.cwd;
+
+        if (options.mute) {
+            if (args == null) {
+                return ChildProcess.spawnSync(name, {cwd: options.cwd});
+            }
+            return ChildProcess.spawnSync(name, args, {cwd: options.cwd});
+        } else {
+            if (args == null) {
+                return ChildProcess.spawnSync(name, {stdio: "inherit", cwd: options.cwd});
+            }
+            return ChildProcess.spawnSync(name, args, {stdio: "inherit", cwd: options.cwd});
+        }
+
+    } //command
 
 } //Tools

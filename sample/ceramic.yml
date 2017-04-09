@@ -2,7 +2,7 @@ app:
     package: mycompany.sample
     name: Sample
     displayName: Sample App
-    company: My Company
+    author: My Company
     version: '1.0'
 
     libs:

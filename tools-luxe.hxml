@@ -3,7 +3,8 @@
 -D use_backend
 -main tools.Tools
 -lib hxnodejs
+-lib hscript
 -debug
 -js tools-luxe.js
 
--cmd ./ceramic init
+-cmd ./ceramic luxe setup web --overwrite --cwd sample

@@ -69,7 +69,7 @@ app:
     package: mycompany.$projectName
     name: $projectName
     displayName: $projectName
-    company: My Company
+    author: My Company
     version: \'1.0\'
 
     libs: []
