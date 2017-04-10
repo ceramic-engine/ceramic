@@ -49,6 +49,24 @@ class Setup extends tools.Task {
                 fail('Error when creating directory: ' + e);
             }
         }
+
+        var libs = ['"luxe": "*"'];
+
+        var appLibs:Array<Dynamic> = project.app.libs;
+        for (lib in appLibs) {
+            var libName:String = null;
+            var libVersion:String = "*";
+            if (Std.is(lib, String)) {
+                libName = lib;
+            } else {
+                for (k in Reflect.fields(lib)) {
+                    libName = k;
+                    libVersion = Reflect.field(lib, k);
+                    break;
+                }
+            }
+            libs.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
+        }
     
         var content = '
 {
@@ -70,7 +88,7 @@ class Setup extends tools.Task {
 
     build : {
       dependencies : {
-        luxe : \'*\'
+        ${libs.join(',\n        ')}
       }
     },
 

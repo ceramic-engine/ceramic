@@ -17,7 +17,7 @@
 
     build : {
       dependencies : {
-        luxe : '*'
+        "luxe": "*"
       }
     },
 

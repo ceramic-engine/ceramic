@@ -7,4 +7,5 @@
 -debug
 -js tools-luxe.js
 
--cmd ./ceramic luxe setup web --overwrite --cwd sample
+#-cmd ./ceramic luxe setup web --overwrite --cwd sample -D luxe -D ios
+-cmd ./ceramic info --cwd sample -D luxe -D ios
