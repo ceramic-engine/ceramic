@@ -179,10 +179,11 @@ class ProjectLoader {
                 key = key.substring(1);
             }
             else if (key.startsWith('-')) {
+                modifier = '-';
                 key = key.substring(1);
             }
             var orig = Reflect.field(app, key);
-            var value = Reflect.field(extra, modifier + key);
+            var value = Reflect.field(extra, (modifier != null ? modifier : '') + key);
 
             if (orig != null && modifier == '+') {
                 // Add in array
