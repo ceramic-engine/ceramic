@@ -2,11 +2,11 @@ package tools.tasks;
 
 import tools.Tools.*;
 
-class Setup extends tools.Task {
+class Build extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Setup a backend target on current project.";
+        return "Build/Run project for the given backend and target.";
 
     } //info
 
@@ -39,10 +39,12 @@ class Setup extends tools.Task {
             settings.defines.set(target.name, '');
         }
 
-        // Get and run backend's setup task
+        // TODO
+
+        // Get and run backend's build task
         var task = backend.getSetupTask(target);
         task.run(cwd, args);
 
     } //run
 
-} //Setup
+} //Buildup

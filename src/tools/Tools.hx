@@ -1,6 +1,7 @@
 package tools;
 
 import npm.Colors;
+import npm.Fiber;
 import sys.FileSystem;
 import haxe.io.Path;
 import js.node.ChildProcess;
@@ -59,6 +60,7 @@ class Tools {
 
         tasks.set('targets', new tools.tasks.Targets());
         tasks.set('setup', new tools.tasks.Setup());
+        tasks.set('hxml', new tools.tasks.Hxml());
 
         #else
 
@@ -148,9 +150,16 @@ class Tools {
 
             if (tasks.exists(taskName)) {
 
-                // Run task
+                // Get task
                 var task = tasks.get(taskName);
-                task.run(cwd, args);
+
+                // Wrap it inside a fiber to allow calling
+                // Async code pseudo-synchronously
+                Fiber.fiber(function() {
+                    // Run task
+                    task.run(cwd, args);
+
+                }).run();
 
             } else {
                 fail('Unknown task: $taskName');
@@ -225,5 +234,43 @@ class Tools {
         }
 
     } //command
+
+    public static function extractArgValue(args:Array<String>, name:String, remove:Bool = false):String {
+
+        var index = args.indexOf('--$name');
+
+        if (index == -1) {
+            return null;
+        }
+
+        if (index + 1 >= args.length) {
+            fail('A value is required after --$name argument.');
+        }
+
+        var value = args[index + 1];
+
+        if (remove) {
+            args.splice(index, 2);
+        }
+
+        return value;
+
+    } //extractArgValue
+
+    public static function extractArgFlag(args:Array<String>, name:String, remove:Bool = false):Bool {
+        
+        var index = args.indexOf('--$name');
+
+        if (index == -1) {
+            return false;
+        }
+
+        if (remove) {
+            args.splice(index, 1);
+        }
+
+        return true;
+
+    } //extractArgFlag
 
 } //Tools

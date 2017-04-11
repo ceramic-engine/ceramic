@@ -62,7 +62,7 @@ class Init extends tools.Task {
             fail('Project path is not a directory at: $projectPath');
         }
         
-        // Save content
+        // Save ceramic.yml content
         //
         var content = '
 app:
@@ -76,6 +76,44 @@ app:
 '.ltrim();
 
         File.saveContent(Path.join([projectPath, 'ceramic.yml']), content);
+
+        // Save Project.hx content
+        //
+        content = '
+package;
+
+import ceramic.Entity;
+import ceramic.Color;
+
+class Project extends Entity {
+
+    function new() {
+
+        app.settings.antialiasing = true;
+        app.settings.background = Color.GRAY;
+        app.settings.width = 640;
+        app.settings.height = 480;
+        app.settings.scaling = FILL;
+
+        app.onReady(ready);
+
+    } //new
+
+    function ready() {
+
+        // Hello World?
+
+    } //ready
+
+}
+'.ltrim();
+
+        var srcPath = Path.join([projectPath, 'src']);
+        if (!FileSystem.exists(srcPath)) {
+            FileSystem.createDirectory(srcPath);
+        }
+
+        File.saveContent(Path.join([srcPath, 'Project.hx']), content);
 
         success('Project created at path: ' + projectPath);
 

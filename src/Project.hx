@@ -13,7 +13,7 @@ class Project extends Entity {
     function new() {
 
         app.settings.antialiasing = true;
-        app.settings.background = ceramic.Color.CYAN;
+        app.settings.background = Color.CYAN;
         app.settings.width = 320;
         app.settings.height = 568;
         app.settings.scaling = FILL;

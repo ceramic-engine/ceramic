@@ -1,5 +1,8 @@
 package backend.tools;
 
+import tools.Tools.*;
+import haxe.io.Path;
+
 class BackendTools implements tools.spec.BackendTools {
 
     public function new() {
@@ -50,6 +53,32 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //getBuildConfigs
 
+    public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget):String {
+
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name]);
+        
+        var cmdArgs = ['run', 'flow', 'info', target.name, '--hxml'];
+        var debug = extractArgFlag(args, 'debug');
+        if (debug) cmdArgs.push('--debug');
+
+        var res = command('haxelib', cmdArgs, { mute: true, cwd: flowProjectPath });
+        
+        if (res.status != 0) {
+            fail('Error when getting project hxml.');
+        }
+
+        return res.stdout != null ? ''+res.stdout : null;
+
+    } //getHxml
+
+    public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget):String {
+
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name]);
+
+        return flowProjectPath;
+
+    } //getHxmlCwd
+
     public function getSetupTask(target:tools.BuildTarget):tools.Task {
 
         return new backend.tools.tasks.Setup(target);
@@ -58,7 +87,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getBuildTask(target:tools.BuildTarget, configIndex:Int = 0):tools.Task {
 
-        return null;
+        return new backend.tools.tasks.Build(target, configIndex);
 
     } //getBuildTask
 

@@ -68,7 +68,7 @@ class Setup extends tools.Task {
             libs.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
         }
     
-        var content = '
+        var content = ('
 {
 
   project: {
@@ -99,7 +99,7 @@ class Setup extends tools.Task {
   }
 
 }
-'.ltrim();
+').ltrim();
 
         // Save flow file
         var flowPath = Path.join([targetPath, 'project.flow']);

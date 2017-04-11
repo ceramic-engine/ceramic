@@ -8,3 +8,5 @@
 /tools-luxe.js
 /index.js.map
 /node_modules
+/sample/out
+/sample/completion.hxml

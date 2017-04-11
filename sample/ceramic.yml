@@ -1,14 +1,8 @@
 app:
-    package: mycompany.sample
+    package: mycompany.Sample
     name: Sample
-    displayName: Sample App
+    displayName: Sample
     author: My Company
     version: '1.0'
 
-    libs:
-        - nape
-
-    'if luxe && ios':
-        +bind:
-            - AppNativeInterface.h
-            - AppSound.h
+    libs: []

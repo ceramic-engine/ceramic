@@ -23,9 +23,9 @@ class Index {
             var first = args[0];
 
             // Try module require
-            if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([cwd, 'tools-' + first + '.js']))) {
+            if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([js.Node.__dirname, 'tools-' + first + '.js']))) {
                 var tools = js.Node.require('./tools-' + first + '.js');
-                tools(cwd, args);
+                tools(cwd, ['-D$first'].concat(args));
             }
             else {
                 @:privateAccess Tools.boot(cwd, ['default'].concat(args));
