@@ -11,7 +11,7 @@ class Hxml extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Print hxml data for the given target.";
+        return "Print hxml data using " + backend.name + " backend and the given target.";
 
     } //info
 

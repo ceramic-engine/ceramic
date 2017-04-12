@@ -20,7 +20,7 @@ class Build extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return kind + " project for the given backend and target.";
+        return kind + " project with " + backend.name + " backend and given target.";
 
     } //info
 

@@ -5,6 +5,8 @@ import haxe.io.Path;
 
 class BackendTools implements tools.spec.BackendTools {
 
+    public var name(default,null):String = 'luxe';
+
     public function new() {}
 
     public function init(tools:tools.Tools):Void {
@@ -22,7 +24,8 @@ class BackendTools implements tools.spec.BackendTools {
             displayName: 'Web',
             configs: [
                 Build('Build Web', 'flow build web'),
-                Run('Run Web', 'flow run web')
+                Run('Run Web', 'flow run web'),
+                Clean('Clean Web', 'flow clean web')
             ]
         });
 
@@ -31,7 +34,8 @@ class BackendTools implements tools.spec.BackendTools {
             displayName: 'Mac',
             configs: [
                 Build('Build Mac', 'flow build mac'),
-                Run('Run Mac', 'flow run mac')
+                Run('Run Mac', 'flow run mac'),
+                Clean('Clean Mac', 'flow clean mac')
             ]
         });
 
@@ -40,7 +44,8 @@ class BackendTools implements tools.spec.BackendTools {
             displayName: 'iOS',
             configs: [
                 Build('Build iOS', 'flow build ios'),
-                Run('Run iOS', 'flow run ios')
+                Run('Run iOS', 'flow run ios'),
+                Clean('Clean iOS', 'flow clean ios')
             ]
         });
 
@@ -49,7 +54,8 @@ class BackendTools implements tools.spec.BackendTools {
             displayName: 'Android',
             configs: [
                 Build('Build Android', 'flow build android'),
-                Run('Run Android', 'flow run android')
+                Run('Run Android', 'flow run android'),
+                Clean('Clean Android', 'flow clean android')
             ]
         });
 

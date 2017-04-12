@@ -18,21 +18,21 @@ class Index {
 
     static function run(cwd:String, args:Array<String>):Void {
 
-        if (args.length > 0) {
+        if (args.length > 0 && args[0] != '--help') {
 
             var first = args[0];
 
             // Try module require
             if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([js.Node.__dirname, 'tools-' + first + '.js']))) {
                 var tools = js.Node.require('./tools-' + first + '.js');
-                tools(cwd, ['-D$first'].concat(args));
+                tools(cwd, ['-D$first'].concat(args)).run();
             }
             else {
-                @:privateAccess Tools.boot(cwd, ['default'].concat(args));
+                @:privateAccess new Tools(cwd, ['default'].concat(args)).run();
             }
 
         } else {
-            @:privateAccess Tools.boot(cwd, ['default', 'help']);
+            @:privateAccess new Tools(cwd, ['default', 'help']).run();
         }
 
     } //main

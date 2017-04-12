@@ -18,16 +18,15 @@ class Tools {
 
         // Expose new Tools(cwd, args).run()
         var module:Dynamic = js.Node.module;
-        module.exports = boot;
+        module.exports = _tools;
 
     } //main
 
-    static function boot(cwd:String, args:Array<String>):Void {
+    static function _tools(cwd:String, args:Array<String>):Tools {
 
-        shared = new Tools(cwd, args);
-        shared.run();
+        return new Tools(cwd, args);
 
-    } //boot
+    } //_tools
 
     public static var settings = {
         colors: true,
@@ -53,6 +52,8 @@ class Tools {
 
     function new(cwd:String, args:Array<String>) {
 
+        shared = this;
+
         this.cwd = cwd;
         this.args = args;
 
@@ -63,13 +64,16 @@ class Tools {
         tasks.set('hxml', new tools.tasks.Hxml());
         tasks.set('build', new tools.tasks.Build('Build'));
         tasks.set('run', new tools.tasks.Build('Run'));
+        tasks.set('clean', new tools.tasks.Build('Clean'));
 
         backend.init(this);
 
         #else
 
+        tasks.set('help', new tools.tasks.Help());
         tasks.set('init', new tools.tasks.Init());
         tasks.set('info', new tools.tasks.Info());
+        tasks.set('vscode', new tools.tasks.Vscode());
 
         #end
 

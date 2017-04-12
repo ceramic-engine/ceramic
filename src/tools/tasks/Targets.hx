@@ -6,7 +6,7 @@ class Targets extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "List available targets with current backend.";
+        return "List targets available with " + backend.name + " backend.";
 
     } //info
 

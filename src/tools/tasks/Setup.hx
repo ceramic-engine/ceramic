@@ -6,7 +6,7 @@ class Setup extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Setup a backend target on current project.";
+        return "Setup a target using " + backend.name + " backend on current project.";
 
     } //info
 

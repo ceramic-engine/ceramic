@@ -6,4 +6,5 @@
 -js index.js
 
 #-cmd ./ceramic info --cwd sample
--cmd ./ceramic info --cwd sample -D luxe -D ios
+#-cmd ./ceramic info --cwd sample -D luxe -D ios
+-cmd ./ceramic help --cwd sample
