@@ -20,22 +20,22 @@ class BackendTools implements tools.spec.BackendTools {
         var targets:Array<tools.BuildTarget> = [];
 
         targets.push({
-            name: 'web',
-            displayName: 'Web',
+            name: 'mac',
+            displayName: 'Mac',
             configs: [
-                Build('Build Web', 'flow build web'),
-                Run('Run Web', 'flow run web'),
-                Clean('Clean Web', 'flow clean web')
+                Run('Run Mac'),
+                Build('Build Mac'),
+                Clean('Clean Mac')
             ]
         });
 
         targets.push({
-            name: 'mac',
-            displayName: 'Mac',
+            name: 'web',
+            displayName: 'Web',
             configs: [
-                Build('Build Mac', 'flow build mac'),
-                Run('Run Mac', 'flow run mac'),
-                Clean('Clean Mac', 'flow clean mac')
+                Run('Run Web'),
+                Build('Build Web'),
+                Clean('Clean Web')
             ]
         });
 
@@ -43,9 +43,9 @@ class BackendTools implements tools.spec.BackendTools {
             name: 'ios',
             displayName: 'iOS',
             configs: [
-                Build('Build iOS', 'flow build ios'),
-                Run('Run iOS', 'flow run ios'),
-                Clean('Clean iOS', 'flow clean ios')
+                Run('Run iOS'),
+                Build('Build iOS'),
+                Clean('Clean iOS')
             ]
         });
 
@@ -53,9 +53,9 @@ class BackendTools implements tools.spec.BackendTools {
             name: 'android',
             displayName: 'Android',
             configs: [
-                Build('Build Android', 'flow build android'),
-                Run('Run Android', 'flow run android'),
-                Clean('Clean Android', 'flow clean android')
+                Run('Run Android'),
+                Build('Build Android'),
+                Clean('Clean Android')
             ]
         });
 

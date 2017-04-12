@@ -7,4 +7,4 @@
 
 #-cmd ./ceramic info --cwd sample
 #-cmd ./ceramic info --cwd sample -D luxe -D ios
--cmd ./ceramic help --cwd sample
+-cmd ./ceramic vscode --cwd sample --overwrite

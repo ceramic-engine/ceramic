@@ -128,6 +128,9 @@ class Setup extends tools.Task {
         Files.setToSameLastModified(projectPath, flowPath);
         print('Updated luxe project at: $flowPath');
 
+        // Generate files with flow
+        command('haxelib', ['run', 'flow', 'files'], { cwd: flowPath });
+
     } //run
 
     function checkFrameworkSetup(forceSetup:Bool = false):Void {

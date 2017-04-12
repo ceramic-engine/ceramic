@@ -176,7 +176,21 @@ class Tools {
         
     } //run
 
+    public function getBackend():tools.spec.BackendTools {
+#if use_backend
+        return backend;
+#else
+        return null;
+#end
+    } //getBackend
+
 /// Utils
+
+    public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
+
+        return command(Path.join([js.Node.__dirname, 'ceramic']), args, { cwd: cwd, mute: mute });
+
+    } //runCeramic
 
     public static function print(message:String):Void {
 

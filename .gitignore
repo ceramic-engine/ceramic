@@ -10,3 +10,4 @@
 /node_modules
 /sample/out
 /sample/completion.hxml
+/sample/.vscode

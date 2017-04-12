@@ -38,11 +38,11 @@ class Build extends tools.Task {
         var action = null;
 
         switch (config) {
-            case Build(displayName, description):
+            case Build(displayName):
                 action = 'build';
-            case Run(displayName, description):
+            case Run(displayName):
                 action = 'run';
-            case Clean(displayName, description):
+            case Clean(displayName):
                 action = 'clean';
         }
         

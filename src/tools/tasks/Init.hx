@@ -18,6 +18,7 @@ class Init extends tools.Task {
     override function run(cwd:String, args:Array<String>):Void {
 
         var projectPath = cwd;
+        var overwrite = extractArgFlag(args, 'overwrite');
 
         // Extract project name
         //
@@ -47,8 +48,8 @@ class Init extends tools.Task {
         projectPath = newProjectPath;
 
         // Ensure target directory (not necessarily current) is not a project
-        if (FileSystem.exists(Path.join([projectPath, 'ceramic.yml']))) {
-            fail('A project already exist at target path: ' + projectPath);
+        if (!overwrite && FileSystem.exists(Path.join([projectPath, 'ceramic.yml']))) {
+            fail('A project already exist at target path: ' + projectPath + '. Use --overwrite to replace files.');
         }
 
         if (!FileSystem.exists(projectPath)) {
@@ -116,6 +117,26 @@ class Project extends Entity {
         File.saveContent(Path.join([srcPath, 'Project.hx']), content);
 
         success('Project created at path: ' + projectPath);
+
+        // Init backend?
+        for (backendName in ['luxe']) {
+
+            if (extractArgFlag(args, backendName)) {
+
+                runCeramic(projectPath, [backendName, 'setup'].concat(overwrite ? ['--overwrite'] : []));
+
+                break;
+
+            }
+        }
+
+        // Generate vscode files?
+        if (extractArgFlag(args, 'vscode')) {
+
+            var task = new Vscode();
+            task.run(projectPath, [args[0], args[1]].concat(overwrite ? ['--overwrite'] : []));
+
+        }
 
     } //run
 
