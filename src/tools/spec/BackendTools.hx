@@ -2,6 +2,10 @@ package tools.spec;
 
 interface BackendTools {
 
+    /** Init backend. This hook allows backend to add
+        custom tasks and perform any specific setup. */
+    function init(tools:tools.Tools):Void;
+
     /** Get available build configurations for this backend. */
     function getBuildTargets():Array<tools.BuildTarget>;
 

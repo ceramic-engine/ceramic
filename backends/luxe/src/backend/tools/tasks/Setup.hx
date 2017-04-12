@@ -30,6 +30,9 @@ class Setup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        var updateFramework = args.indexOf('--update-framework') != -1;
+        checkFrameworkSetup(updateFramework);
+
         var project = new tools.Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         project.loadAppFile(projectPath);
@@ -41,13 +44,13 @@ class Setup extends tools.Task {
         var targetPath = Path.join([outPath, backendName, target.name]);
         var flowPath = Path.join([targetPath, 'project.flow']);
         var overwrite = args.indexOf('--overwrite') != -1;
-        var updateSetup = args.indexOf('--update') != -1;
+        var updateProject = args.indexOf('--update-project') != -1;
 
         // Compute relative ceramicPath
         var ceramicPathRelative = getRelativePath(ceramicPath, targetPath);
 
         // If ceramic.yml has changed, force setup update
-        if (!overwrite && updateSetup && !Files.haveSameLastModified(projectPath, flowPath)) {
+        if (!overwrite && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
             overwrite = true;
         }
 
@@ -126,5 +129,47 @@ class Setup extends tools.Task {
         print('Updated luxe project at: $flowPath');
 
     } //run
+
+    function checkFrameworkSetup(forceSetup:Bool = false):Void {
+
+        var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        var libs = new Map<String,Bool>();
+        for (line in output.split("\n")) {
+            var libName = line.split(':')[0];
+            libs.set(libName, true);
+        }
+
+        if (libs.exists('luxe')) {
+            // Luxe already available
+            return;
+        }
+
+        // Install luxe (and dependencies)
+        //
+        print('Install luxe\u2026');
+
+        if (!libs.exists('snowfall')) {
+            if (command('haxelib', ['install', 'snowfall']).status != 0) {
+                fail('Error when trying to install snowfall.');
+            }
+        }
+
+        command('haxelib', ['run', 'snowfall', 'update', 'luxe']);
+
+        // Check that luxe is now available
+        //
+        output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        libs = new Map<String,Bool>();
+        for (line in output.split("\n")) {
+            var libName = line.split(':')[0];
+            libs.set(libName, true);
+        }
+
+        if (!libs.exists('luxe')) {
+            // Luxe still not available?
+            fail('Failed to install luxe or some of its dependency. Check log.');
+        }
+
+    } //checkFrameworkSetup
 
 } //Setup

@@ -64,6 +64,8 @@ class Tools {
         tasks.set('build', new tools.tasks.Build('Build'));
         tasks.set('run', new tools.tasks.Build('Run'));
 
+        backend.init(this);
+
         #else
 
         tasks.set('init', new tools.tasks.Init());

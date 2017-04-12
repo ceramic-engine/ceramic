@@ -71,8 +71,8 @@ class Build extends tools.Task {
         }
 
         // Update setup, if neded
-        if (extractArgFlag(args, 'update-setup', true)) {
-            backend.runSetup(cwd, [args[0], args[1], target.name, '--update'], target, true);
+        if (extractArgFlag(args, 'setup', true)) {
+            backend.runSetup(cwd, [args[0], args[1], target.name, '--update-project'], target, true);
         }
 
         // Get and run backend's build task

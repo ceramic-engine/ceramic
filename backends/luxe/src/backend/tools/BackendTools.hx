@@ -5,9 +5,13 @@ import haxe.io.Path;
 
 class BackendTools implements tools.spec.BackendTools {
 
-    public function new() {
+    public function new() {}
 
-    } //new
+    public function init(tools:tools.Tools):Void {
+
+        // Custom setup
+
+    } //init
 
     public function getBuildTargets():Array<tools.BuildTarget> {
 
