@@ -12,7 +12,8 @@ class Setup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var targetName = args[2];
+        var availableTargets = backend.getBuildTargets();
+        var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
             fail('You must specify a target to setup.');
@@ -21,7 +22,7 @@ class Setup extends tools.Task {
         // Find target from name
         //
         var target = null;
-        for (aTarget in backend.getBuildTargets()) {
+        for (aTarget in availableTargets) {
 
             if (aTarget.name == targetName) {
                 target = aTarget;
@@ -40,8 +41,7 @@ class Setup extends tools.Task {
         }
 
         // Get and run backend's setup task
-        var task = backend.getSetupTask(target);
-        task.run(cwd, args);
+        backend.runSetup(cwd, args, target);
 
     } //run
 

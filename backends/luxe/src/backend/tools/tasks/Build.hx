@@ -42,6 +42,8 @@ class Build extends tools.Task {
                 action = 'build';
             case Run(displayName, description):
                 action = 'run';
+            case Clean(displayName, description):
+                action = 'clean';
         }
         
         var cmdArgs = ['run', 'flow', action, target.name];

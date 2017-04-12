@@ -5,6 +5,7 @@ import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Tools.*;
+import tools.Files;
 
 using StringTools;
 
@@ -14,13 +15,16 @@ class Setup extends tools.Task {
 
     var target:tools.BuildTarget;
 
+    var fromBuild:Bool;
+
 /// Lifecycle
 
-    public function new(target:tools.BuildTarget) {
+    public function new(target:tools.BuildTarget, fromBuild:Bool) {
 
         super();
 
         this.target = target;
+        this.fromBuild = fromBuild;
 
     } //new
 
@@ -35,11 +39,26 @@ class Setup extends tools.Task {
 
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name]);
+        var flowPath = Path.join([targetPath, 'project.flow']);
         var overwrite = args.indexOf('--overwrite') != -1;
+        var updateSetup = args.indexOf('--update') != -1;
+
+        // Compute relative ceramicPath
+        var ceramicPathRelative = getRelativePath(ceramicPath, targetPath);
+
+        // If ceramic.yml has changed, force setup update
+        if (!overwrite && updateSetup && !Files.haveSameLastModified(projectPath, flowPath)) {
+            overwrite = true;
+        }
 
         if (FileSystem.exists(targetPath)) {
             if (!overwrite) {
-                fail('Target path already exists: $targetPath\nUse --overwrite to run setup anyway.');
+                if (fromBuild) {
+                    print('No need to update setup.');
+                    return;
+                } else {
+                    fail('Target path already exists: $targetPath\nUse --overwrite to run setup anyway.');
+                }
             }
         }
         else {
@@ -80,8 +99,8 @@ class Setup extends tools.Task {
       name: ' + Json.stringify(project.app.name) + ',
       package: ' + Json.stringify(Reflect.field(project.app, 'package')) + ',
       codepaths: [
-        ' + Json.stringify(Path.join([ceramicPath, 'src'])) + ',
-        ' + Json.stringify(Path.join([ceramicPath, 'backends/luxe/src'])) + ',
+        ' + Json.stringify(Path.join([ceramicPathRelative, 'src'])) + ',
+        ' + Json.stringify(Path.join([ceramicPathRelative, 'backends/luxe/src'])) + ',
         ' + Json.stringify('../../../src') + '
       ]
     },
@@ -102,8 +121,8 @@ class Setup extends tools.Task {
 ').ltrim();
 
         // Save flow file
-        var flowPath = Path.join([targetPath, 'project.flow']);
         File.saveContent(flowPath, content);
+        Files.setToSameLastModified(projectPath, flowPath);
         print('Updated luxe project at: $flowPath');
 
     } //run

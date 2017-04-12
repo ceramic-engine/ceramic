@@ -4,15 +4,30 @@ import tools.Tools.*;
 
 class Build extends tools.Task {
 
+/// Properties
+
+    var kind:String;
+
+/// Lifecycle
+
+    override public function new(kind:String) {
+
+        super();
+
+        this.kind = kind;
+
+    } //new
+
     override public function info(cwd:String):String {
 
-        return "Build/Run project for the given backend and target.";
+        return kind + " project for the given backend and target.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var targetName = args[2];
+        var availableTargets = backend.getBuildTargets();
+        var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
             fail('You must specify a target to setup.');
@@ -21,7 +36,7 @@ class Build extends tools.Task {
         // Find target from name
         //
         var target = null;
-        for (aTarget in backend.getBuildTargets()) {
+        for (aTarget in availableTargets) {
 
             if (aTarget.name == targetName) {
                 target = aTarget;
@@ -39,11 +54,29 @@ class Build extends tools.Task {
             settings.defines.set(target.name, '');
         }
 
-        // TODO
+        // Get build config
+        //
+        var buildConfig = null;
+        var configIndex = 0;
+        for (conf in target.configs) {
+            if (conf.getName() == kind) {
+                buildConfig = conf;
+                break;
+            }
+            configIndex++;
+        }
+
+        if (buildConfig == null) {
+            fail('Invalid configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
+        }
+
+        // Update setup, if neded
+        if (extractArgFlag(args, 'update-setup', true)) {
+            backend.runSetup(cwd, [args[0], args[1], target.name, '--update'], target, true);
+        }
 
         // Get and run backend's build task
-        var task = backend.getSetupTask(target);
-        task.run(cwd, args);
+        backend.runBuild(cwd, args, target, configIndex);
 
     } //run
 

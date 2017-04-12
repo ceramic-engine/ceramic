@@ -3,6 +3,7 @@ package tools;
 enum BuildConfig {
     Build(displayName:String, description:String);
     Run(displayName:String, description:String);
+    Clean(displayName:String, description:String);
 }
 
 @:structInit

@@ -79,17 +79,19 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //getHxmlCwd
 
-    public function getSetupTask(target:tools.BuildTarget):tools.Task {
+    public function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, fromBuild:Bool = false):Void {
 
-        return new backend.tools.tasks.Setup(target);
+        var task = new backend.tools.tasks.Setup(target, fromBuild);
+        task.run(cwd, args);
 
-    } //getSetupTask
+    } //runSetup
 
-    public function getBuildTask(target:tools.BuildTarget, configIndex:Int = 0):tools.Task {
+    public function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, configIndex:Int = 0):Void {
 
-        return new backend.tools.tasks.Build(target, configIndex);
+        var task = new backend.tools.tasks.Build(target, configIndex);
+        task.run(cwd, args);
 
-    } //getBuildTask
+    } //runBuild
 
     public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset> {
 

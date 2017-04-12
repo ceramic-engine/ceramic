@@ -61,6 +61,8 @@ class Tools {
         tasks.set('targets', new tools.tasks.Targets());
         tasks.set('setup', new tools.tasks.Setup());
         tasks.set('hxml', new tools.tasks.Hxml());
+        tasks.set('build', new tools.tasks.Build('Build'));
+        tasks.set('run', new tools.tasks.Build('Run'));
 
         #else
 
@@ -272,5 +274,69 @@ class Tools {
         return true;
 
     } //extractArgFlag
+
+    public static function getRelativePath(absolutePath:String, relativeTo:String):String {
+
+        var fromParts = relativeTo.substr(1).split('/');
+        var toParts = absolutePath.substr(1).split('/');
+
+        var length:Int = cast Math.min(fromParts.length, toParts.length);
+        var samePartsLength = length;
+        for (i in 0...length) {
+            if (fromParts[i] != toParts[i]) {
+                samePartsLength = i;
+                break;
+            }
+        }
+
+        var outputParts = [];
+        for (i in samePartsLength...fromParts.length) {
+            outputParts.push('..');
+        }
+
+        outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+        var result = outputParts.join('/');
+        if (absolutePath.endsWith('/') && !result.endsWith('/')) {
+            result += '/';
+        }
+
+        return result;
+
+    } //getRelativePath
+
+    public static function getTargetName(args:Array<String>, availableTargets:Array<tools.BuildTarget>):String {
+
+        // Compute target from args
+        var targetArg = args[2];
+        if (targetArg != null && !targetArg.startsWith('--')) {
+            return targetArg;
+        }
+
+        // Compute target name from current OS
+        //
+        var os = Sys.systemName();
+        var targetName = null;
+        if (os == 'Mac') {
+            targetName = 'mac';
+        }
+        else if (os == 'Windows') {
+            targetName == 'windows';
+        }
+        else if (os == 'Linux') {
+            targetName == 'linux';
+        }
+
+        // Return it only if available in targets
+        for (target in availableTargets) {
+            if (targetName == target.name) {
+                return targetName;
+            }
+        }
+
+        // Nothing matched
+        return null;
+
+    } //getTargetName
 
 } //Tools

@@ -17,7 +17,8 @@ class Hxml extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var targetName = args[2];
+        var availableTargets = backend.getBuildTargets();
+        var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
             fail('You must specify a target to get hxml from.');
@@ -26,7 +27,7 @@ class Hxml extends tools.Task {
         // Find target from name
         //
         var target = null;
-        for (aTarget in backend.getBuildTargets()) {
+        for (aTarget in availableTargets) {
 
             if (aTarget.name == targetName) {
                 target = aTarget;
@@ -120,7 +121,7 @@ class Hxml extends tools.Task {
         }
         else {
             // Print result
-            print(finalHxml);
+            print(finalHxml.rtrim());
         }
 
     } //run
