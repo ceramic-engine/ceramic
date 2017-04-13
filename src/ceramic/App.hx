@@ -77,6 +77,10 @@ class App extends Entity {
             settings.title = 'App';
         }
 
+        if (settings.background == null) {
+            settings.background = Color.BLACK;
+        }
+
         project = @:privateAccess new Project();
 
         backend = new Backend();

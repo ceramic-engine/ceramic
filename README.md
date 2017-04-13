@@ -34,7 +34,13 @@ Install latest stable version (LTS) of Node.js from [nodejs.org](https://nodejs.
 
 Install latest stable haxe from [haxe.org](http://haxe.org/).
 
-Run `haxelib setup` from a terminal to choose your haxe library directory. Unless you know what you are doing, just choose default.
+Open a terminal an run:
+
+```
+haxelib setup
+```
+
+Unless you know what you are doing, just choose default.
 
 ### Install Xcode (Mac)
 
