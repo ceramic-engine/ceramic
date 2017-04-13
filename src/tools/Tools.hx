@@ -170,7 +170,7 @@ class Tools {
                 }).run();
 
             } else {
-                fail('Unknown task: $taskName');
+                fail('Unknown command: $taskName');
             }
         }
         
