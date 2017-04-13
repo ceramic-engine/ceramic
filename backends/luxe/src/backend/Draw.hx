@@ -142,6 +142,7 @@ class Draw implements spec.Draw {
                     v[4].pos.set_xy(0.0, 0.0);
                     //br
                     v[5].pos.set_xy(w  , h  );
+                    
 
                     // Update color
                     //
@@ -196,6 +197,7 @@ class Draw implements spec.Draw {
 
                     // Update transform
                     //
+                    quadGeom.transform.dirty = false;
                     m = quadGeom.transform.world.matrix;
 
                     m.M11 = quad.a;
@@ -205,7 +207,6 @@ class Draw implements spec.Draw {
                     m.M22 = quad.d;
                     m.M24 = quad.ty;
 
-                    quadGeom.transform.dirty = false;
                     
 
                 default:

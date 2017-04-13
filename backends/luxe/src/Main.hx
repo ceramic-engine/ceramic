@@ -22,6 +22,12 @@ class Main extends luxe.Game {
 
     override function ready():Void {
 
+        // Background color
+        Luxe.renderer.clear_color.rgb(App.app.settings.background);
+
+        // Camera size
+        Luxe.camera.size = new luxe.Vector(App.app.settings.width, App.app.settings.height);
+
         App.app.backend.emitReady();
 
     } //ready
