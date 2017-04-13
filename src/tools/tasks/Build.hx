@@ -72,11 +72,18 @@ class Build extends tools.Task {
 
         // Update setup, if neded
         if (extractArgFlag(args, 'setup', true)) {
-            backend.runSetup(cwd, [args[0], args[1], target.name, '--update-project'], target, true);
+            backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, true);
         }
 
         // Get and run backend's build task
         backend.runBuild(cwd, args, target, configIndex);
+
+        // Generate hxml?
+        var hxmlOutput = extractArgValue(args, 'hxml-output', true);
+        if (hxmlOutput != null) {
+            var task = new Hxml();
+            task.run(cwd, [args[0], 'hxml', target.name, '--output', hxmlOutput]);
+        }
 
     } //run
 

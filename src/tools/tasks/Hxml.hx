@@ -116,8 +116,16 @@ class Hxml extends tools.Task {
                 FileSystem.createDirectory(outputDir);
             }
 
-            // Save result
-            File.saveContent(output, finalHxml);
+            // Compare with existing
+            var prevHxml = null;
+            if (FileSystem.exists(output)) {
+                prevHxml = File.getContent(output);
+            }
+
+            // Save result if changed
+            if (finalHxml != prevHxml) {
+                File.saveContent(output, finalHxml);
+            }
         }
         else {
             // Print result
