@@ -36,14 +36,6 @@ Install latest stable haxe from [haxe.org](http://haxe.org/).
 
 Run `haxelib setup` from a terminal to choose your haxe library directory. Unless you know what you are doing, just choose default.
 
-Then, install haxe libraries required by ceramic:
-
-```
-haxelib install hscript
-haxelib install hxnodejs
-haxelib install hxcpp
-```
-
 ### Install Xcode (Mac)
 
 Xcode is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12)
