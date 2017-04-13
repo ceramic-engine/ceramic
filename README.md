@@ -97,7 +97,7 @@ Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should w
 
 Thanks to the [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extension, you can choose which target to run by selecting it in the status bar.
 
-### Available backends
+## Available backends
 
 At the moment, the only available backend is `luxe` (based on [luxe engine](https://luxeengine.com/)).
 
