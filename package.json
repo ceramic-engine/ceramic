@@ -3,7 +3,8 @@
   "version": "0.2.0",
   "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "haxelib install tools.hxml --always && haxe tools.hxml && haxe tools-luxe.hxml"
   },
   "repository": {
     "type": "git",

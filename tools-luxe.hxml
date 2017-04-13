@@ -6,9 +6,3 @@
 -lib hscript
 -debug
 -js tools-luxe.js
-
-#-cmd ./ceramic luxe setup web --overwrite --cwd sample -D luxe -D ios
-#-cmd ./ceramic info --cwd sample -D luxe -D ios
-#-cmd ./ceramic luxe hxml web --cwd sample -D luxe -D ios
-#-cmd ./ceramic luxe setup --cwd sample
--cmd ./ceramic help --cwd sample
