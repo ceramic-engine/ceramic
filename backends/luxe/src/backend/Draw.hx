@@ -198,6 +198,7 @@ class Draw implements spec.Draw {
                     // Update transform
                     //
                     quadGeom.transform.dirty = false;
+                    quadGeom.transform.manual_update = true;
                     m = quadGeom.transform.world.matrix;
 
                     m.M11 = quad.a;
@@ -206,7 +207,6 @@ class Draw implements spec.Draw {
                     m.M21 = quad.b;
                     m.M22 = quad.d;
                     m.M24 = quad.ty;
-
                     
 
                 default:
