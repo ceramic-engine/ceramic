@@ -52,6 +52,10 @@ class EventsMacro {
                         var handlerType = TFunction([for (arg in fn.args) arg.type], macro :Void);
                         var handlerCallArgs = [for (arg in fn.args) macro $i{arg.name}];
                         var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
+                        var onName = 'on' + capitalName;
+                        var onceName = 'once' + capitalName;
+                        var offName = 'off' + capitalName;
+                        var emitName = 'emit' + capitalName;
                         var cbOnArray = '__cbOn' + capitalName;
                         var cbOnceArray = '__cbOnce' + capitalName;
                         var fnWillEmit = 'willEmit' + capitalName;
@@ -117,7 +121,7 @@ class EventsMacro {
 
                         var emitField = {
                             pos: field.pos,
-                            name: 'emit' + capitalName,
+                            name: emitName,
                             kind: FFun({
                                 args: fn.args,
                                 ret: macro :Void,
@@ -163,16 +167,29 @@ class EventsMacro {
                         // Create on{Name}()
                         var onField = {
                             pos: field.pos,
-                            name: 'on' + capitalName,
+                            name: onName,
                             kind: FFun({
                                 args: [
                                     {
                                         name: handlerName,
                                         type: handlerType
+                                    },
+                                    {
+                                        name: 'owner',
+                                        type: macro :ceramic.Destroyable,
+                                        opt: true
                                     }
                                 ],
                                 ret: macro :Void,
                                 expr: macro {
+                                    if (owner != null) {
+                                        if (owner.destroyed) {
+                                            return;
+                                        }
+                                        owner.onceDestroy(function() {
+                                            this.$offName($i{handlerName});
+                                        });
+                                    }
                                     if (this.$cbOnArray == null) {
                                         this.$cbOnArray = [];
                                     }
@@ -188,16 +205,29 @@ class EventsMacro {
                         // Create once{Name}()
                         var onceField = {
                             pos: field.pos,
-                            name: 'once' + capitalName,
+                            name: onceName,
                             kind: FFun({
                                 args: [
                                     {
                                         name: handlerName,
                                         type: handlerType
+                                    },
+                                    {
+                                        name: 'owner',
+                                        type: macro :ceramic.Destroyable,
+                                        opt: true
                                     }
                                 ],
                                 ret: macro :Void,
                                 expr: macro {
+                                    if (owner != null) {
+                                        if (owner.destroyed) {
+                                            return;
+                                        }
+                                        owner.onceDestroy(function() {
+                                            this.$offName($i{handlerName});
+                                        });
+                                    }
                                     if (this.$cbOnceArray == null) {
                                         this.$cbOnceArray = [];
                                     }
@@ -213,7 +243,7 @@ class EventsMacro {
                         // Create off{Name}()
                         var offField = {
                             pos: field.pos,
-                            name: 'off' + capitalName,
+                            name: offName,
                             kind: FFun({
                                 args: [
                                     {

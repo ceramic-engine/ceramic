@@ -47,7 +47,7 @@ class Project extends Entity {
             quad1.rotation = (quad1.rotation + delta * 100) % 360;
             quad2.rotation = (quad2.rotation + delta * 100) % 360;
 
-        });
+        }, this);
 
         trace('loading assets...');
 
