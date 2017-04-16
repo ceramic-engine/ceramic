@@ -189,7 +189,7 @@ class Assets extends Entity {
         for (name in assetsByName.keys()) {
 
             var asset = assetsByName.get(name);
-            asset.onceComplete(function(success) {
+            asset.onceComplete(this, function(success) {
 
                 if (!success) {
                     allSuccess = false;

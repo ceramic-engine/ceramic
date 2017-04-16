@@ -18,7 +18,7 @@ class Project extends Entity {
         app.settings.height = 568;
         app.settings.scaling = FILL;
 
-        app.onReady(ready);
+        app.onceReady(this, ready);
 
     } //new
 
@@ -42,18 +42,18 @@ class Project extends Entity {
         quad2.rotation = 30;
         quad2.scale(2.0, 0.5);
 
-        screen.onUpdate(function(delta) {
+        screen.onUpdate(this, function(delta) {
 
             quad1.rotation = (quad1.rotation + delta * 100) % 360;
             quad2.rotation = (quad2.rotation + delta * 100) % 360;
 
-        }, this);
+        });
 
         trace('loading assets...');
 
         var textureName = 'NOPEMAN_TALK.spine/NOPEMAN_TALK@1x.png';
         assets.addTexture(textureName);
-        assets.onceComplete(function(success) {
+        assets.onceComplete(this, function(success) {
             trace("ASSETS COMPLETE: success=" + success);
 
             var texture = assets.texture(textureName);

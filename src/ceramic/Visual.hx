@@ -167,7 +167,7 @@ class Visual extends Entity {
         this.transform = transform;
 
         if (this.transform != null) {
-            this.transform.onChange(transformDidChange);
+            this.transform.onChange(this, transformDidChange);
         }
 
         return transform;

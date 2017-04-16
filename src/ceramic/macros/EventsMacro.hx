@@ -219,13 +219,13 @@ class EventsMacro {
                             kind: FFun({
                                 args: [
                                     {
-                                        name: handlerName,
-                                        type: handlerType
-                                    },
-                                    {
                                         name: 'owner',
                                         type: macro :ceramic.Entity,
                                         opt: true
+                                    },
+                                    {
+                                        name: handlerName,
+                                        type: handlerType
                                     }
                                 ],
                                 ret: macro :Void,
@@ -238,7 +238,7 @@ class EventsMacro {
                                         var destroyCb = function() {
                                             this.$offName($i{handlerName});
                                         };
-                                        owner.onceDestroy(destroyCb);
+                                        owner.onceDestroy(null, destroyCb);
                                         if (this.$cbOnOwnerUnbindArray == null) {
                                             this.$cbOnOwnerUnbindArray = [];
                                         }
@@ -272,13 +272,13 @@ class EventsMacro {
                             kind: FFun({
                                 args: [
                                     {
-                                        name: handlerName,
-                                        type: handlerType
-                                    },
-                                    {
                                         name: 'owner',
                                         type: macro :ceramic.Entity,
                                         opt: true
+                                    },
+                                    {
+                                        name: handlerName,
+                                        type: handlerType
                                     }
                                 ],
                                 ret: macro :Void,
@@ -291,7 +291,10 @@ class EventsMacro {
                                         var destroyCb = function() {
                                             this.$offName($i{handlerName});
                                         };
-                                        owner.onceDestroy(destroyCb);
+                                        owner.onceDestroy(null, destroyCb);
+                                        if (this.$cbOnceOwnerUnbindArray == null) {
+                                            this.$cbOnceOwnerUnbindArray = [];
+                                        }
                                         this.$cbOnceOwnerUnbindArray.push(function() {
                                             owner.offDestroy(destroyCb);
                                         });

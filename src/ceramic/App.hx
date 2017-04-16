@@ -84,7 +84,7 @@ class App extends Entity {
         project = @:privateAccess new Project();
 
         backend = new Backend();
-        backend.onceReady(backendReady);
+        backend.onceReady(this, backendReady);
         backend.init(this);
 
     } //new
@@ -95,7 +95,7 @@ class App extends Entity {
 
         emitReady();
 
-        backend.onUpdate(update);
+        backend.onUpdate(this, update);
 
     } //backendReady
 
