@@ -176,7 +176,7 @@ class EventsMacro {
                                     },
                                     {
                                         name: 'owner',
-                                        type: macro :ceramic.Destroyable,
+                                        type: macro :ceramic.Entity,
                                         opt: true
                                     }
                                 ],
@@ -214,7 +214,7 @@ class EventsMacro {
                                     },
                                     {
                                         name: 'owner',
-                                        type: macro :ceramic.Destroyable,
+                                        type: macro :ceramic.Entity,
                                         opt: true
                                     }
                                 ],

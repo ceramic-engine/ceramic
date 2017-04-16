@@ -3,7 +3,7 @@ package ceramic;
 #if !macro
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
-class Entity implements Events implements Shortcuts implements Lazy implements Destroyable {
+class Entity implements Events implements Shortcuts implements Lazy {
 
 /// Properties
 
