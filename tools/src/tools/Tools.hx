@@ -65,7 +65,6 @@ class Tools {
         tasks.set('build', new tools.tasks.Build('Build'));
         tasks.set('run', new tools.tasks.Build('Run'));
         tasks.set('clean', new tools.tasks.Build('Clean'));
-        tasks.set('install', new tools.tasks.Install());
 
         backend.init(this);
 
@@ -78,6 +77,7 @@ class Tools {
         #end
 
         tasks.set('info', new tools.tasks.Info());
+        tasks.set('update', new tools.tasks.Update());
 
     } //new
 

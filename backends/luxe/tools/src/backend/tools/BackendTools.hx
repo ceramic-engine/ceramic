@@ -106,9 +106,9 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runBuild
 
-    public function runInstall(cwd:String, args:Array<String>):Void {
+    public function runUpdate(cwd:String, args:Array<String>):Void {
 
-        // Install/Update luxe (and dependencies)
+        // Update/install luxe (and dependencies)
 
         var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
         var libs = new Map<String,Bool>();
@@ -136,10 +136,10 @@ class BackendTools implements tools.spec.BackendTools {
 
         if (!libs.exists('luxe')) {
             // Luxe not available?
-            fail('Failed to install/update luxe or some of its dependency. Check log.');
+            fail('Failed to update or install luxe or some of its dependency. Check log.');
         }
 
-    } //runInstall
+    } //runUpdate
 
     public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset> {
 

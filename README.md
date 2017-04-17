@@ -57,10 +57,16 @@ npm install
 npm link .
 ```
 
-You can now run **ceramic** from terminal:
+You can now run **ceramic** globally from terminal:
 
 ```
 ceramic help
+```
+
+Or run it locally:
+
+```
+/path/to/ceramic/ceramic help
 ```
 
 ### Install Visual Studio Code
@@ -102,6 +108,15 @@ Open the `MyProject` directory with Visual Studio Code (you can to so by draggin
 Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should work!**
 
 Thanks to the [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extension, you can choose which target to run by selecting it in the status bar.
+
+## Update ceramic and its backends
+
+Open a terminal and run:
+
+```
+ceramic update
+ceramic luxe update
+```
 
 ## Available backends
 
