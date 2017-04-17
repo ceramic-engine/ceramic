@@ -14,6 +14,10 @@ class Info extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+#if use_backend
+        extractTargetDefines(cwd, args);
+#end
+
         var project = new Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         project.loadAppFile(projectPath);

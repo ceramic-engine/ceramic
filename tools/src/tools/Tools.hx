@@ -73,14 +73,20 @@ class Tools {
 
         tasks.set('help', new tools.tasks.Help());
         tasks.set('init', new tools.tasks.Init());
-        tasks.set('info', new tools.tasks.Info());
         tasks.set('vscode', new tools.tasks.Vscode());
 
         #end
 
+        tasks.set('info', new tools.tasks.Info());
+
     } //new
 
     function loadRootArgs():Void {
+
+#if use_backend
+        settings.defines.set('backend', args[0]);
+        settings.defines.set(args[0], '');
+#end
 
         // Colors
         var index:Int = args.indexOf('--no-colors');
@@ -109,42 +115,6 @@ class Tools {
             args.splice(index, 2);
         }
 
-        // Defines
-        var newArgs = [];
-        var i = 0;
-        while (i < args.length) {
-            var arg = args[i];
-            if (arg.trim() != '') {
-                // Add custom defines?
-                if (arg.trim().startsWith('-D')) {
-                    var val = null;
-                    if (arg.trim() == '-D') {
-                        if (i < args.length - 1) {
-                            i++;
-                            val = args[i].trim();
-                        }
-                    } else {
-                        val = arg.trim().substr(2);
-                    }
-                    if (val != null && val.length > 0) {
-                        var equalIndex = val.indexOf('=');
-                        if (equalIndex == -1) {
-                            // Simple flag
-                            settings.defines.set(val, '');
-                        } else {
-                            // Flag with custom value
-                            settings.defines.set(val.substring(0, equalIndex), val.substring(equalIndex + 1));
-                        }
-                    }
-                }
-                else {
-                    newArgs.push(arg);
-                }
-            }
-            i++;
-        }
-        args = newArgs;
-
     } //updateSettings
 
     function run():Void {
@@ -171,6 +141,7 @@ class Tools {
                 }).run();
 
             } else {
+                trace(args);
                 fail('Unknown command: $taskName');
             }
         }
@@ -186,6 +157,39 @@ class Tools {
     } //getBackend
 
 /// Utils
+
+#if use_backend
+
+    public static function extractTargetDefines(cwd:String, args:Array<String>):Void {
+
+        var availableTargets = backend.getBuildTargets();
+        var targetName = getTargetName(args, availableTargets);
+
+        if (targetName == null) {
+            fail('You must specify a target to setup.');
+        }
+
+        // Find target from name
+        //
+        var target = null;
+        for (aTarget in availableTargets) {
+
+            if (aTarget.name == targetName) {
+                target = aTarget;
+                break;
+            }
+
+        }
+
+        // Add defines
+        if (target != null) {
+            settings.defines.set('target', target.name);
+            settings.defines.set(target.name, '');
+        }
+
+    } //extractTargetDefines
+
+#end
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 

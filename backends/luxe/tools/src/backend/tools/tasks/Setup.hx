@@ -89,6 +89,17 @@ class Setup extends tools.Task {
             }
             libs.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
         }
+
+        var haxeflags = [];
+
+        for (key in Reflect.fields(project.app.defines)) {
+            var val = Reflect.field(project.app.defines, key);
+            if (val == true) {
+                haxeflags.push(Json.stringify('-D $key'));
+            } else {
+                haxeflags.push(Json.stringify('-D $key=$val'));
+            }
+        }
     
         var content = ('
 {
@@ -111,7 +122,10 @@ class Setup extends tools.Task {
     build : {
       dependencies : {
         ${libs.join(',\n        ')}
-      }
+      },
+      flags: [
+        ${haxeflags.join(',\n        ')}
+      ]
     },
 
     files : {

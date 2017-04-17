@@ -66,7 +66,7 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
                                              '));
 
         lines.push(tab + b('USAGE'));
-        lines.push(tab + 'ceramic ' + u('command') + ' '+g('[')+'--arg'+g(',')+' --arg value'+g(', \u2026]')+' ' + ''+g('[')+'-D someFlag'+g(',')+' -D someFlag=someValue'+g(', \u2026]')+'');
+        lines.push(tab + 'ceramic ' + u('command') + ' '+g('[')+'--arg'+g(',')+' --arg value'+g(', \u2026]'));
         lines.push('');
 
         lines.push(tab + b('COMMANDS'));

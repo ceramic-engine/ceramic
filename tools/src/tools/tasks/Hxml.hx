@@ -17,6 +17,8 @@ class Hxml extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        extractTargetDefines(cwd, args);
+
         var availableTargets = backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
 
