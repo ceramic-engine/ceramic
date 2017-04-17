@@ -134,6 +134,8 @@ class Setup extends tools.Task {
     } //run
 
     function checkFrameworkSetup(forceSetup:Bool = false):Void {
+        
+        // Almost the same thing as backend.runInstall()
 
         var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
         var libs = new Map<String,Bool>();
@@ -142,7 +144,7 @@ class Setup extends tools.Task {
             libs.set(libName, true);
         }
 
-        if (libs.exists('luxe')) {
+        if (libs.exists('luxe') && !forceSetup) {
             // Luxe already available
             return;
         }

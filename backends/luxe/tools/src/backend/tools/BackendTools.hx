@@ -106,6 +106,41 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runBuild
 
+    public function runInstall(cwd:String, args:Array<String>):Void {
+
+        // Install/Update luxe (and dependencies)
+
+        var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        var libs = new Map<String,Bool>();
+        for (line in output.split("\n")) {
+            var libName = line.split(':')[0];
+            libs.set(libName, true);
+        }
+
+        if (!libs.exists('snowfall')) {
+            if (command('haxelib', ['install', 'snowfall']).status != 0) {
+                fail('Error when trying to install snowfall.');
+            }
+        }
+
+        command('haxelib', ['run', 'snowfall', 'update', 'luxe']);
+
+        // Check that luxe is available
+        //
+        output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        libs = new Map<String,Bool>();
+        for (line in output.split("\n")) {
+            var libName = line.split(':')[0];
+            libs.set(libName, true);
+        }
+
+        if (!libs.exists('luxe')) {
+            // Luxe not available?
+            fail('Failed to install/update luxe or some of its dependency. Check log.');
+        }
+
+    } //runInstall
+
     public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset> {
 
         return assets;

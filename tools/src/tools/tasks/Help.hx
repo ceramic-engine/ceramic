@@ -11,7 +11,7 @@ class Help extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Display help / manual.";
+        return "Display help/manual.";
 
     } //info
 

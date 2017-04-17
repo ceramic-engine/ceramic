@@ -25,6 +25,9 @@ interface BackendTools {
     /** Run build for to the given backend target */
     function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, configIndex:Int = 0):Void;
 
+    /** Run backend framework (dependency) install / update **/
+    function runInstall(cwd:String, args:Array<String>):Void;
+
     /** Get filtered/transformed assets for the given backend and build target */
     function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset>;
 
