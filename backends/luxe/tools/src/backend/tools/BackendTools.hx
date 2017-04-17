@@ -77,7 +77,10 @@ class BackendTools implements tools.spec.BackendTools {
             fail('Error when getting project hxml.');
         }
 
-        return res.stdout != null ? ''+res.stdout : null;
+        var output = res.stdout;
+        if (output == null) return null;
+
+        return output + " --macro server.setModuleCheckPolicy(['luxe','snow','phoenix'], [NoCheckShadowing, NoCheckDependencies], true)";
 
     } //getHxml
 

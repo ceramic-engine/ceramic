@@ -1,4 +1,4 @@
--cp src
+-cp tools/src
 -main tools.Index
 -lib hxnodejs
 -lib hscript
