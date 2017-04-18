@@ -1,12 +1,12 @@
 package;
 
-import ceramic.App;
-
 class Main extends luxe.Game {
 
     override function config(config:luxe.GameConfig) {
 
-        var app = @:privateAccess new App();
+#if (!completion && !display)
+
+        var app = @:privateAccess new ceramic.App();
 
         // Configure luxe
         config.render.antialiasing = app.settings.antialiasing != null && app.settings.antialiasing ? 4 : 0;
@@ -16,25 +16,35 @@ class Main extends luxe.Game {
         config.window.resizable = false;
         config.window.title = cast app.settings.title;
 
+#end
+
         return config;
 
     } //config
 
     override function ready():Void {
 
+#if (!completion && !display)
+
         // Background color
-        Luxe.renderer.clear_color.rgb(App.app.settings.background);
+        Luxe.renderer.clear_color.rgb(ceramic.App.app.settings.background);
 
         // Camera size
-        Luxe.camera.size = new luxe.Vector(App.app.settings.width, App.app.settings.height);
+        Luxe.camera.size = new luxe.Vector(ceramic.App.app.settings.width, ceramic.App.app.settings.height);
 
-        App.app.backend.emitReady();
+        ceramic.App.app.backend.emitReady();
+
+#end
 
     } //ready
 
     override function update(delta:Float):Void {
 
-        App.app.backend.emitUpdate(delta);
+#if (!completion && !display)
+
+        ceramic.App.app.backend.emitUpdate(delta);
+
+#end
 
     } //update
 

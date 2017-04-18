@@ -54,6 +54,9 @@ class Hxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
+
+        // Add completion flag
+        hxmlData.push('-D completion');
         
         // Add required hxml
         var updatedData = [];
