@@ -48,68 +48,16 @@ class Hxml extends tools.Task {
         }
 
         // Get and run backend's setup task
-        var rawHxml = backend.getHxml(cwd, args, target);
-        var hxmlOriginalCwd = backend.getHxmlCwd(cwd, args, target);
+        var rawHxml = backend.getHxml(cwd, args, target, settings.variant);
+        var hxmlOriginalCwd = backend.getHxmlCwd(cwd, args, target, settings.variant);
+
+        // Add completion flag
+        rawHxml += "\n" + '-D completion';
         
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
-
-        // Add completion flag
-        hxmlData.push('-D completion');
-        
-        // Add required hxml
-        var updatedData = [];
-
-        // Convert relative paths to absolute ones
-        var i = 0;
-        while (i < hxmlData.length) {
-
-            var item = hxmlData[i];
-
-            if (item.startsWith('-') || item.endsWith('.hxml')) {
-                updatedData.push("\n");
-            }
-
-            // Update relative path to sub-hxml files
-            if (item.endsWith('.hxml')) {
-                var path = hxmlData[i];
-
-                if (!Path.isAbsolute(path)) {
-                    // Make this path absolute to make it work from project's CWD
-                    path = Path.normalize(Path.join([hxmlOriginalCwd, path]));
-
-                    // Remove path prefix
-                    path = path.substr(cwd.length + 1);
-                }
-
-                updatedData.push(path);
-            }
-            else {
-                updatedData.push(item);
-            }
-
-            if (item == '-cp' || item == '-cpp' || item == '-js' || item == '-swf') {
-                i++;
-
-                var path = hxmlData[i];
-                if (!Path.isAbsolute(path)) {
-                    // Make this path absolute to make it work from project's CWD
-                    path = Path.normalize(Path.join([hxmlOriginalCwd, path]));
-
-                    // Remove path prefix for -cpp/-js/-swf
-                    if (item != '-cp') {
-                        path = path.substr(cwd.length + 1);
-                    }
-                }
-
-                updatedData.push(path);
-            }
-
-            i++;
-        }
-
-        var finalHxml = updatedData.join(" ").replace(" \n ", "\n").trim() + "\n";
+        var finalHxml = tools.Hxml.changeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join("\n");
 
         var output = extractArgValue(args, 'output');
         if (output != null) {
@@ -129,7 +77,7 @@ class Hxml extends tools.Task {
 
             // Save result if changed
             if (finalHxml != prevHxml) {
-                File.saveContent(output, finalHxml);
+                File.saveContent(output, finalHxml.rtrim() + "\n");
             }
         }
         else {

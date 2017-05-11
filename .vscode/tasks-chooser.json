@@ -2,12 +2,12 @@
     "selectDescription": "Select build setting",
     "items": [
         {
-            "displayName": "▷ Tools / index",
+            "displayName": "▷ Tools / all",
             "description": "haxe tools.hxml",
             "tasks": [{
                 "taskName": "build",
                 "command": "haxe",
-                "args": ["tools.hxml"],
+                "args": ["tools-all.hxml"],
                 "problemMatcher": {
                     "owner": "haxe",
                     "pattern": {

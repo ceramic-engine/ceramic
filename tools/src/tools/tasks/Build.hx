@@ -74,11 +74,11 @@ class Build extends tools.Task {
 
         // Update setup, if neded
         if (extractArgFlag(args, 'setup', true)) {
-            backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, true);
+            backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, settings.variant, true);
         }
 
         // Get and run backend's build task
-        backend.runBuild(cwd, args, target, configIndex);
+        backend.runBuild(cwd, args, target, settings.variant, configIndex);
 
         // Generate hxml?
         var hxmlOutput = extractArgValue(args, 'hxml-output', true);

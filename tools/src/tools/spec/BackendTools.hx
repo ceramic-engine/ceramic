@@ -12,23 +12,23 @@ interface BackendTools {
     function getBuildTargets():Array<tools.BuildTarget>;
 
     /** Run setup for the given backend target */
-    function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, fromBuild:Bool = false):Void;
+    function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, continueOnFail:Bool = false):Void;
 
     /** Get hxml data for the given target */
-    function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget):String;
+    function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String;
 
     /** Get hxml working directory used internally by the backend.
         This is needed by tools to then convert hxml data with
         absolute paths, or just change the relative directories. */
-    function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget):String;
+    function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String;
 
     /** Run build for to the given backend target */
-    function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, configIndex:Int = 0):Void;
+    function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, configIndex:Int = 0):Void;
 
     /** Run backend framework (dependency) update/install **/
     function runUpdate(cwd:String, args:Array<String>):Void;
 
     /** Get filtered/transformed assets for the given backend and build target */
-    function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset>;
+    function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset>;
 
 } //Tools

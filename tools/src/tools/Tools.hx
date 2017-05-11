@@ -31,7 +31,8 @@ class Tools {
     public static var settings = {
         colors: true,
         defines: new Map<String,String>(),
-        ceramicPath: js.Node.__dirname
+        ceramicPath: js.Node.__dirname,
+        variant: 'standard'
     };
 
 #if use_backend
@@ -115,6 +116,21 @@ class Tools {
             args.splice(index, 2);
         }
 
+        // Variant
+        index = args.indexOf('--variant');
+        if (index != -1) {
+            if (index + 1 >= args.length) {
+                fail('A value is required after --variant argument.');
+            }
+            var variant = args[index + 1];
+            settings.variant = variant;
+            settings.defines.set('variant', variant);
+            if (!settings.defines.exists(variant)) {
+                settings.defines.set(variant, '');
+            }
+            args.splice(index, 2);
+        }
+
     } //updateSettings
 
     function run():Void {
@@ -141,7 +157,6 @@ class Tools {
                 }).run();
 
             } else {
-                trace(args);
                 fail('Unknown command: $taskName');
             }
         }

@@ -15,16 +15,19 @@ class Setup extends tools.Task {
 
     var target:tools.BuildTarget;
 
-    var fromBuild:Bool;
+    var variant:String;
+
+    var continueOnFail:Bool;
 
 /// Lifecycle
 
-    public function new(target:tools.BuildTarget, fromBuild:Bool) {
+    public function new(target:tools.BuildTarget, variant:String, continueOnFail:Bool) {
 
         super();
 
         this.target = target;
-        this.fromBuild = fromBuild;
+        this.variant = variant;
+        this.continueOnFail = continueOnFail;
 
     } //new
 
@@ -41,7 +44,7 @@ class Setup extends tools.Task {
         var ceramicPath = settings.ceramicPath;
 
         var outPath = Path.join([cwd, 'out']);
-        var targetPath = Path.join([outPath, backendName, target.name]);
+        var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var flowPath = Path.join([targetPath, 'project.flow']);
         var overwrite = args.indexOf('--overwrite') != -1;
         var updateProject = args.indexOf('--update-project') != -1;
@@ -56,7 +59,7 @@ class Setup extends tools.Task {
 
         if (FileSystem.exists(targetPath)) {
             if (!overwrite) {
-                if (fromBuild) {
+                if (continueOnFail) {
                     print('No need to update setup.');
                     return;
                 } else {
@@ -91,6 +94,16 @@ class Setup extends tools.Task {
         }
 
         var haxeflags = [];
+
+        if (project.app.hxml != null) {
+            var parsedHxml = tools.Hxml.parse(project.app.hxml);
+            if (parsedHxml != null && parsedHxml.length > 0) {
+                parsedHxml = tools.Hxml.changeRelativeDir(parsedHxml, cwd, targetPath);
+                for (flag in parsedHxml) {
+                    haxeflags.push(Json.stringify(flag));
+                }
+            }
+        }
 
         for (key in Reflect.fields(project.app.defines)) {
             var val = Reflect.field(project.app.defines, key);

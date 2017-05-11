@@ -14,22 +14,25 @@ class Build extends tools.Task {
 
     var target:tools.BuildTarget;
 
+    var variant:String;
+
     var config:tools.BuildTarget.BuildConfig;
 
 /// Lifecycle
 
-    public function new(target:tools.BuildTarget, configIndex:Int) {
+    public function new(target:tools.BuildTarget, variant:String, configIndex:Int) {
 
         super();
 
         this.target = target;
+        this.variant = variant;
         this.config = target.configs[configIndex];
 
     } //new
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name]);
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
         var backendName = 'luxe';
         var ceramicPath = settings.ceramicPath;
@@ -53,7 +56,7 @@ class Build extends tools.Task {
         var res = command('haxelib', cmdArgs, { mute: false, cwd: flowProjectPath });
         
         if (res.status != 0) {
-            fail('Error when running luxe build.');
+            fail('Error when running luxe build. Did you setup this target?');
         }
 
     } //run

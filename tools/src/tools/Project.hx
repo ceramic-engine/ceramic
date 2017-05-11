@@ -194,6 +194,14 @@ class ProjectLoader {
                         origList.push(entry);
                     }
                 }
+                // Add in string
+                else if (Std.is(orig, String) && Std.is(value, String)) {
+                    var str:String = cast value;
+                    var origStr:String = cast orig;
+                    origStr = origStr.rtrim() + "\n" + str.ltrim();
+                    orig = origStr;
+                    Reflect.setField(app, key, orig);
+                }
                 // Add in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
                     for (subKey in Reflect.fields(value)) {
@@ -213,6 +221,14 @@ class ProjectLoader {
                     for (entry in list) {
                         origList.remove(entry);
                     }
+                }
+                // Remove in string
+                else if (Std.is(orig, String) && Std.is(value, String)) {
+                    var str:String = cast value;
+                    var origStr:String = cast orig;
+                    origStr = origStr.replace(str, '');
+                    orig = origStr;
+                    Reflect.setField(app, key, orig);
                 }
                 // Remove in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {

@@ -63,9 +63,9 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //getBuildConfigs
 
-    public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget):String {
+    public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name]);
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         
         var cmdArgs = ['run', 'flow', 'info', target.name, '--hxml'];
         var debug = extractArgFlag(args, 'debug');
@@ -84,24 +84,24 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //getHxml
 
-    public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget):String {
+    public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name]);
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
         return flowProjectPath;
 
     } //getHxmlCwd
 
-    public function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, fromBuild:Bool = false):Void {
+    public function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, continueOnFail:Bool = false):Void {
 
-        var task = new backend.tools.tasks.Setup(target, fromBuild);
+        var task = new backend.tools.tasks.Setup(target, variant, continueOnFail);
         task.run(cwd, args);
 
     } //runSetup
 
-    public function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, configIndex:Int = 0):Void {
+    public function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, configIndex:Int = 0):Void {
 
-        var task = new backend.tools.tasks.Build(target, configIndex);
+        var task = new backend.tools.tasks.Build(target, variant, configIndex);
         task.run(cwd, args);
 
     } //runBuild
@@ -141,7 +141,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runUpdate
 
-    public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget):Array<tools.Asset> {
+    public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset> {
 
         return assets;
 

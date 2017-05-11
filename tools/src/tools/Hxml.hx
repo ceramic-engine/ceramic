@@ -1,5 +1,7 @@
 package tools;
 
+import haxe.io.Path;
+
 using StringTools;
 
 class Hxml {
@@ -67,6 +69,63 @@ class Hxml {
         }
 
         return args;
+    }
+
+    public static function changeRelativeDir(hxmlData:Array<String>, originalDir:String, targetDir:String):Array<String> {
+
+        // Add required hxml
+        var updatedData = [];
+
+        // Convert relative paths to absolute ones
+        var i = 0;
+        while (i < hxmlData.length) {
+
+            var item = hxmlData[i];
+
+            if (item.startsWith('-') || item.endsWith('.hxml')) {
+                updatedData.push("\n");
+            }
+
+            // Update relative path to sub-hxml files
+            if (item.endsWith('.hxml')) {
+                var path = hxmlData[i];
+
+                if (!Path.isAbsolute(path)) {
+                    // Make this path absolute to make it work from project's CWD
+                    path = Path.normalize(Path.join([originalDir, path]));
+
+                    // Remove path prefix
+                    path = path.substr(targetDir.length + 1);
+                }
+
+                updatedData.push(path);
+            }
+            else {
+                updatedData.push(item);
+            }
+
+            if (item == '-cp' || item == '-cpp' || item == '-js' || item == '-swf') {
+                i++;
+
+                var path = hxmlData[i];
+                if (!Path.isAbsolute(path)) {
+                    // Make this path absolute to make it work from project's CWD
+                    path = Path.normalize(Path.join([originalDir, path]));
+
+                    // Remove path prefix for -cpp/-js/-swf
+                    if (item != '-cp') {
+                        path = path.substr(targetDir.length + 1);
+                    }
+                }
+
+                updatedData.push(path);
+            }
+
+            i++;
+        }
+
+        var finalHxml = updatedData.join(" ").replace(" \n ", "\n").trim();
+        return finalHxml.split("\n");
     }
 
 

@@ -48,7 +48,7 @@ class Setup extends tools.Task {
         }
 
         // Get and run backend's setup task
-        backend.runSetup(cwd, args, target);
+        backend.runSetup(cwd, args, target, settings.variant);
 
     } //run
 
