@@ -47,7 +47,7 @@
         },
         {
             "displayName": "▶︎ Run Mac",
-            "description": "ceramic luxe run mac --setup",
+            "description": "ceramic luxe run mac --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -57,6 +57,7 @@
                         "run",
                         "mac",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -92,7 +93,7 @@
         },
         {
             "displayName": "▶︎ Run Mac (debug)",
-            "description": "ceramic luxe run mac --setup --debug",
+            "description": "ceramic luxe run mac --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -102,6 +103,7 @@
                         "run",
                         "mac",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -139,7 +141,7 @@
         },
         {
             "displayName": "▶︎ Build Mac",
-            "description": "ceramic luxe build mac --setup",
+            "description": "ceramic luxe build mac --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -149,6 +151,7 @@
                         "build",
                         "mac",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -184,7 +187,7 @@
         },
         {
             "displayName": "▶︎ Build Mac (debug)",
-            "description": "ceramic luxe build mac --setup --debug",
+            "description": "ceramic luxe build mac --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -194,6 +197,7 @@
                         "build",
                         "mac",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -231,7 +235,7 @@
         },
         {
             "displayName": "▶︎ Run Web",
-            "description": "ceramic luxe run web --setup",
+            "description": "ceramic luxe run web --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -241,6 +245,7 @@
                         "run",
                         "web",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -276,7 +281,7 @@
         },
         {
             "displayName": "▶︎ Run Web (debug)",
-            "description": "ceramic luxe run web --setup --debug",
+            "description": "ceramic luxe run web --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -286,6 +291,7 @@
                         "run",
                         "web",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -323,7 +329,7 @@
         },
         {
             "displayName": "▶︎ Build Web",
-            "description": "ceramic luxe build web --setup",
+            "description": "ceramic luxe build web --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -333,6 +339,7 @@
                         "build",
                         "web",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -368,7 +375,7 @@
         },
         {
             "displayName": "▶︎ Build Web (debug)",
-            "description": "ceramic luxe build web --setup --debug",
+            "description": "ceramic luxe build web --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -378,6 +385,7 @@
                         "build",
                         "web",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -415,7 +423,7 @@
         },
         {
             "displayName": "▶︎ Run iOS",
-            "description": "ceramic luxe run ios --setup",
+            "description": "ceramic luxe run ios --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -425,6 +433,7 @@
                         "run",
                         "ios",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -460,7 +469,7 @@
         },
         {
             "displayName": "▶︎ Run iOS (debug)",
-            "description": "ceramic luxe run ios --setup --debug",
+            "description": "ceramic luxe run ios --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -470,6 +479,7 @@
                         "run",
                         "ios",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -507,7 +517,7 @@
         },
         {
             "displayName": "▶︎ Build iOS",
-            "description": "ceramic luxe build ios --setup",
+            "description": "ceramic luxe build ios --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -517,6 +527,7 @@
                         "build",
                         "ios",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -552,7 +563,7 @@
         },
         {
             "displayName": "▶︎ Build iOS (debug)",
-            "description": "ceramic luxe build ios --setup --debug",
+            "description": "ceramic luxe build ios --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -562,6 +573,7 @@
                         "build",
                         "ios",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -599,7 +611,7 @@
         },
         {
             "displayName": "▶︎ Run Android",
-            "description": "ceramic luxe run android --setup",
+            "description": "ceramic luxe run android --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -609,6 +621,7 @@
                         "run",
                         "android",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -644,7 +657,7 @@
         },
         {
             "displayName": "▶︎ Run Android (debug)",
-            "description": "ceramic luxe run android --setup --debug",
+            "description": "ceramic luxe run android --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -654,6 +667,7 @@
                         "run",
                         "android",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",
@@ -691,7 +705,7 @@
         },
         {
             "displayName": "▶︎ Build Android",
-            "description": "ceramic luxe build android --setup",
+            "description": "ceramic luxe build android --setup --assets",
             "tasks": [
                 {
                     "taskName": "build",
@@ -701,6 +715,7 @@
                         "build",
                         "android",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--cwd",
@@ -736,7 +751,7 @@
         },
         {
             "displayName": "▶︎ Build Android (debug)",
-            "description": "ceramic luxe build android --setup --debug",
+            "description": "ceramic luxe build android --setup --assets --debug",
             "tasks": [
                 {
                     "taskName": "build",
@@ -746,6 +761,7 @@
                         "build",
                         "android",
                         "--setup",
+                        "--assets",
                         "--hxml-output",
                         "completion.hxml",
                         "--debug",

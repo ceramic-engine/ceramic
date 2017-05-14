@@ -77,7 +77,7 @@ class Vscode extends tools.Task {
                                 {
                                     taskName: "build",
                                     command: "ceramic",
-                                    args: [backendName, kind, target.name, '--setup', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
+                                    args: [backendName, kind, target.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
                                     problemMatcher: {
                                         owner: "haxe",
                                         pattern: {
@@ -96,7 +96,7 @@ class Vscode extends tools.Task {
 
                             chooser.items.push({
                                 displayName: '▶︎ ' + name + (debug ? ' (debug)' : ''),
-                                description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup' + (debug ? ' --debug' : ''),
+                                description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : ''),
                                 tasks: tasksContent,
                                 onSelect: {
                                     command: "ceramic",

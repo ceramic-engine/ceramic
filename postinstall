@@ -1,0 +1,12 @@
+#!/bin/sh
+
+case "$(uname -s)" in
+    Darwin)
+        brew install freetype
+        ;;
+esac
+
+haxelib install hxcpp --always
+haxelib install tools.hxml --always
+haxe tools.hxml
+haxe tools-luxe.hxml
