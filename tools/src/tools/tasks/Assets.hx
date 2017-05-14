@@ -2,7 +2,9 @@ package tools.tasks;
 
 import tools.Tools.*;
 import haxe.io.Path;
+import haxe.Json;
 import sys.FileSystem;
+import sys.io.File;
 
 using StringTools;
 
@@ -58,13 +60,37 @@ class Assets extends tools.Task {
         if (FileSystem.exists(assetsPath)) {
             for (name in Files.getFlatDirectory(assetsPath)) {
 
-                assets.push(new tools.Asset(name, Path.join([assetsPath, name])));
+                assets.push(new tools.Asset(name, assetsPath));
 
             }
         }
 
         // Transform/copy assets
-        backend.transformAssets(cwd, assets, target, settings.variant);
+        var transformedAssets = backend.transformAssets(cwd, assets, target, settings.variant);
+
+        if (transformedAssets.length > 0) {
+
+            var dstAssetsPath = transformedAssets[0].rootDirectory;
+
+            // Add _assets.json listing
+            //
+            var assetsJson:Dynamic = {
+                assets: []
+            };
+
+            for (asset in assets) {
+                assetsJson.assets.push({
+                    name: asset.name
+                });
+            }
+
+            // Save file
+            File.saveContent(
+                Path.join([dstAssetsPath, '_assets.json']),
+                Json.stringify(assetsJson, null, '    ')
+            );
+        }
+
 
         print('Updated project assets.');
 

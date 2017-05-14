@@ -152,7 +152,7 @@ class BackendTools implements tools.spec.BackendTools {
         //
         for (asset in assets) {
 
-            var srcPath = asset.srcPath;
+            var srcPath = asset.absolutePath;
             var dstPath = Path.join([dstAssetsPath, asset.name]);
 
             if (!tools.Files.haveSameLastModified(srcPath, dstPath)) {
@@ -169,7 +169,7 @@ class BackendTools implements tools.spec.BackendTools {
             }
 
             validDstPaths.set(dstPath, true);
-            newAssets.push(asset);
+            newAssets.push(new tools.Asset(asset.name, dstAssetsPath));
         }
 
         // Remove outdated assets

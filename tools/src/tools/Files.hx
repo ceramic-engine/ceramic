@@ -66,7 +66,7 @@ class Files {
             var prefix = Path.normalize(dir);
             if (!prefix.endsWith('/')) prefix += '/';
             for (item in prevResult) {
-                result.push(item.substr(dir.length));
+                result.push(item.substr(prefix.length));
             }
         }
 

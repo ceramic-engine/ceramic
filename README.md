@@ -52,7 +52,7 @@ Some utilities need dependencies that will be managed by Homebrew. You can [inst
 
 ### Install ceramic
 
-While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is installed from Git.
+While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is a Node.js tool installed from Git.
 
 ```
 git clone --recursive https://github.com/jeremyfa/ceramic.git

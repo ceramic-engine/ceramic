@@ -1,18 +1,24 @@
 package tools;
 
+import haxe.io.Path;
+
 @:structInit
 class Asset {
 
     /** Asset name/relative path */
     public var name:String;
 
-    /** Asset full source path */
-    public var srcPath:String;
+    /** Asset root directory */
+    public var rootDirectory:String;
 
-    public function new(name:String, srcPath:String) {
+    /** Asset full absolute path */
+    public var absolutePath:String;
+
+    public function new(name:String, rootDirectory:String) {
 
         this.name = name;
-        this.srcPath = srcPath;
+        this.rootDirectory = rootDirectory;
+        this.absolutePath = Path.join([rootDirectory, name]);
 
     } //new
 
