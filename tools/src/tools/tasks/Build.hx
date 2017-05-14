@@ -72,9 +72,15 @@ class Build extends tools.Task {
             fail('Invalid configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
         }
 
-        // Update setup, if neded
+        // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
             backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, settings.variant, true);
+        }
+
+        // Update assets, if needed
+        if (extractArgFlag(args, 'assets', true)) {
+            var task = new Assets();
+            task.run(cwd, [args[0], 'assets', target.name, '--variant', settings.variant]);
         }
 
         // Get and run backend's build task
@@ -84,7 +90,7 @@ class Build extends tools.Task {
         var hxmlOutput = extractArgValue(args, 'hxml-output', true);
         if (hxmlOutput != null) {
             var task = new Hxml();
-            task.run(cwd, [args[0], 'hxml', target.name, '--output', hxmlOutput]);
+            task.run(cwd, [args[0], 'hxml', target.name, '--variant', settings.variant, '--output', hxmlOutput]);
         }
 
     } //run

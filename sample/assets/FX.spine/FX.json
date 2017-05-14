@@ -1,5 +1,5 @@
 {
-"skeleton": { "hash": "v3+aS0GFa+tDvZMwVxoDPCD5zmk", "spine": "3.4.02", "width": 0, "height": 0, "images": "./Elements/" },
+"skeleton": { "hash": "NV0PIQopC6+8zjgB5fnxRBIpM/c", "spine": "3.4.02", "width": 0, "height": 0, "images": "./Elements/" },
 "bones": [
 	{ "name": "root" },
 	{ "name": "FX_DEFORM", "parent": "root", "length": 173.19 },
@@ -1376,6 +1376,201 @@
 				],
 				"scale": [
 					{ "time": 0, "x": 0.8, "y": 0.8 }
+				]
+			}
+		}
+	},
+	"IMPACT_HAMMER": {
+		"slots": {
+			"FLASH": {
+				"color": [
+					{ "time": 0.0333, "color": "00000040", "curve": "stepped" },
+					{ "time": 0.0666, "color": "ffffff40", "curve": "stepped" },
+					{ "time": 0.1, "color": "00000040" },
+					{ "time": 0.2, "color": "00000000" }
+				],
+				"attachment": [
+					{ "time": 0.0333, "name": "IMPACT05" }
+				]
+			},
+			"IMPACT_ADDITIVE": {
+				"color": [
+					{ "time": 0, "color": "000000ff", "curve": "stepped" },
+					{ "time": 0.0333, "color": "ffffffff", "curve": "stepped" },
+					{ "time": 0.0666, "color": "3b0002ff", "curve": "stepped" },
+					{ "time": 0.1, "color": "ffe745ff" },
+					{ "time": 0.1333, "color": "ffa200ff" },
+					{ "time": 0.1666, "color": "ff9200ff" },
+					{ "time": 0.2333, "color": "ff3200ff" },
+					{ "time": 0.3, "color": "000000ff" }
+				],
+				"attachment": [
+					{ "time": 0, "name": "IMPACT00" },
+					{ "time": 0.0333, "name": "IMPACT01" },
+					{ "time": 0.1333, "name": "IMPACT02" },
+					{ "time": 0.1666, "name": "IMPACT03" },
+					{ "time": 0.2, "name": "IMPACT04" },
+					{ "time": 0.3, "name": null }
+				]
+			},
+			"IMPACT_NORMAL": {
+				"color": [
+					{ "time": 0, "color": "000000ff", "curve": "stepped" },
+					{ "time": 0.0333, "color": "ffffffff", "curve": "stepped" },
+					{ "time": 0.0666, "color": "3b0002ff", "curve": "stepped" },
+					{ "time": 0.1, "color": "ffffffff" },
+					{ "time": 0.1666, "color": "fff45aff" },
+					{ "time": 0.2333, "color": "ffac785c" }
+				],
+				"attachment": [
+					{ "time": 0, "name": "IMPACT00" },
+					{ "time": 0.0333, "name": null },
+					{ "time": 0.0666, "name": "IMPACT01" },
+					{ "time": 0.1, "name": null }
+				]
+			},
+			"SHOCKWAVE": {
+				"color": [
+					{ "time": 0.1333, "color": "55a5ffff" },
+					{ "time": 0.2666, "color": "000000ff" }
+				],
+				"attachment": [
+					{ "time": 0.1333, "name": "IMPACT10" }
+				]
+			},
+			"SPARKLE_DOT_2": {
+				"color": [
+					{ "time": 0.1333, "color": "ffffffff" },
+					{ "time": 0.2, "color": "ffdf00ff" },
+					{ "time": 0.3333, "color": "400b00ff" }
+				],
+				"attachment": [
+					{ "time": 0.1333, "name": "BUTTONS_TITLE66" },
+					{ "time": 0.3666, "name": null }
+				]
+			},
+			"SPARKLE_DOT_5": {
+				"color": [
+					{ "time": 0.1333, "color": "ffffffff" },
+					{ "time": 0.2, "color": "ffdf00ff" },
+					{ "time": 0.3333, "color": "400b00ff" }
+				],
+				"attachment": [
+					{ "time": 0.1333, "name": "BUTTONS_TITLE66" },
+					{ "time": 0.3666, "name": null }
+				]
+			},
+			"SPARK_0": {
+				"color": [
+					{ "time": 0.1, "color": "ffb500ff" },
+					{ "time": 0.1666, "color": "ff5400ff" },
+					{ "time": 0.2333, "color": "380010ff" }
+				],
+				"attachment": [
+					{ "time": 0.1, "name": "IMPACT06" },
+					{ "time": 0.2666, "name": null }
+				]
+			},
+			"SPARK_1": {
+				"color": [
+					{ "time": 0.1, "color": "ffb500ff" },
+					{ "time": 0.1666, "color": "ff5400ff" },
+					{ "time": 0.2333, "color": "380010ff" }
+				],
+				"attachment": [
+					{ "time": 0.1, "name": "IMPACT07" },
+					{ "time": 0.2666, "name": null }
+				]
+			},
+			"SPARK_2": {
+				"color": [
+					{ "time": 0.1, "color": "ffb500ff" },
+					{ "time": 0.1666, "color": "ff5400ff" },
+					{ "time": 0.2333, "color": "380010ff" }
+				],
+				"attachment": [
+					{ "time": 0.1, "name": "IMPACT09" },
+					{ "time": 0.2666, "name": null }
+				]
+			},
+			"SPARK_3": {
+				"color": [
+					{ "time": 0.1, "color": "ffb500ff" },
+					{ "time": 0.1666, "color": "ff5400ff" },
+					{ "time": 0.2333, "color": "380010ff" }
+				],
+				"attachment": [
+					{ "time": 0.1, "name": "IMPACT08" },
+					{ "time": 0.2666, "name": null }
+				]
+			}
+		},
+		"bones": {
+			"LAYER_0": {
+				"rotate": [
+					{ "time": 0, "angle": 0 }
+				],
+				"scale": [
+					{ "time": 0, "x": 1, "y": 1 },
+					{ "time": 0.2666, "x": 1.8, "y": 1.8 }
+				],
+				"shear": [
+					{ "time": 0.0333, "x": -15, "y": 0 }
+				]
+			},
+			"LAYER_1": {
+				"scale": [
+					{
+						"time": 0.1333,
+						"x": 1.2,
+						"y": 1.2,
+						"curve": [ 0, 0.68, 0.485, 1 ]
+					},
+					{ "time": 0.2666, "x": 3.2, "y": 3.2 }
+				]
+			},
+			"LAYER_2": {
+				"rotate": [
+					{ "time": 0.1, "angle": -12.75 }
+				],
+				"scale": [
+					{ "time": 0.1, "x": 0.756, "y": 0.756 },
+					{
+						"time": 0.1333,
+						"x": 1.287,
+						"y": 1.287,
+						"curve": [ 0, 0.68, 0.485, 1 ]
+					},
+					{ "time": 0.2333, "x": 2.6, "y": 2.6 }
+				]
+			},
+			"LAYER_3": {
+				"scale": [
+					{ "time": 0.1, "x": 0.756, "y": 0.756 },
+					{ "time": 0.1333, "x": 1.562, "y": 1.562 },
+					{ "time": 0.2333, "x": 2.4, "y": 2.4 }
+				]
+			},
+			"FX_DEFORM": {
+				"rotate": [
+					{ "time": 0, "angle": 96.21 }
+				],
+				"scale": [
+					{ "time": 0, "x": 1.2, "y": 1.2 }
+				]
+			},
+			"LAYER_4": {
+				"rotate": [
+					{ "time": 0.1333, "angle": 80.92 }
+				],
+				"scale": [
+					{
+						"time": 0.1333,
+						"x": 1,
+						"y": 1,
+						"curve": [ 0, 0.73, 0.686, 1 ]
+					},
+					{ "time": 0.3333, "x": 2, "y": 2 }
 				]
 			}
 		}

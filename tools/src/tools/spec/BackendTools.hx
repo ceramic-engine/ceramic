@@ -28,7 +28,7 @@ interface BackendTools {
     /** Run backend framework (dependency) update/install **/
     function runUpdate(cwd:String, args:Array<String>):Void;
 
-    /** Get filtered/transformed assets for the given backend and build target */
-    function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset>;
+    /** Transform and get assets for the given backend and build target */
+    function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset>;
 
 } //Tools

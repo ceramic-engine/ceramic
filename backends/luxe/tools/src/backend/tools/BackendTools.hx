@@ -141,10 +141,49 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runUpdate
 
-    public function getAssets(assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset> {
+    public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset> {
 
-        return assets;
+        var newAssets:Array<tools.Asset> = [];
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var validDstPaths:Map<String,Bool> = new Map();
+        var dstAssetsPath = Path.join([flowProjectPath, 'assets']);
 
-    } //getAssets
+        // Add/update missing assets
+        //
+        for (asset in assets) {
+
+            var srcPath = asset.srcPath;
+            var dstPath = Path.join([dstAssetsPath, asset.name]);
+
+            if (!tools.Files.haveSameLastModified(srcPath, dstPath)) {
+                // Copy and set to same date
+                if (sys.FileSystem.exists(dstPath)) {
+                    sys.FileSystem.deleteFile(dstPath);
+                }
+                var dir = Path.directory(dstPath);
+                if (!sys.FileSystem.exists(dir)) {
+                    sys.FileSystem.createDirectory(dir);
+                }
+                sys.io.File.copy(srcPath, dstPath);
+                tools.Files.setToSameLastModified(srcPath, dstPath);
+            }
+
+            validDstPaths.set(dstPath, true);
+            newAssets.push(asset);
+        }
+
+        // Remove outdated assets
+        //
+        for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
+            var dstPath = Path.join([dstAssetsPath, name]);
+            if (!validDstPaths.exists(dstPath)) {
+                tools.Files.deleteRecursive(dstPath);
+            }
+        }
+        tools.Files.removeEmptyDirectories(dstAssetsPath);
+
+        return newAssets;
+
+    } //transformAssets
 
 } //Config
