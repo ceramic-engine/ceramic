@@ -46,10 +46,6 @@ Unless you know what you are doing, just choose default.
 
 Xcode is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12)
 
-### Install Homebrew (Mac)
-
-Some utilities need dependencies that will be managed by Homebrew. You can [install it from brew.sh](https://brew.sh/).
-
 ### Install ceramic
 
 While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is a Node.js tool installed from Git.

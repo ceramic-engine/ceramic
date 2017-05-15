@@ -1,12 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+cd "${0%/*}"
 
-case "$(uname -s)" in
-    Darwin)
-        brew install freetype
-        ;;
-esac
-
-haxelib install hxcpp --always
-haxelib install tools.hxml --always
-haxe tools.hxml
-haxe tools-luxe.hxml
+# Install haxe stuff and build ceramic tools
+haxelib install hxcpp --always || exit 1
+haxelib install tools.hxml --always || exit 1
+haxe tools.hxml || exit 1
+haxe tools-luxe.hxml || exit 1
