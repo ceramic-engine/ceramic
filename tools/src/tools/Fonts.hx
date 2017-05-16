@@ -10,7 +10,7 @@ import js.html.Uint8ClampedArray;
 
 class Fonts {
 
-    public static var DEFAULT_CHARSET = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    public static var DEFAULT_CHARSET = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 
     // Implementation strongly inspired from node module `msdf-bmfont`
 
@@ -24,11 +24,13 @@ class Fonts {
         ?fieldType:String
     }) {
 
+        if (options == null) options = {};
+
         var charset = options.charset != null ? options.charset : DEFAULT_CHARSET;
-        var fontSize = options.fontSize != null ? options.fontSize : 20;
+        var fontSize = options.fontSize != null ? options.fontSize : 42;
         var textureWidth = options.textureWidth != null ? options.textureWidth : 512;
         var textureHeight = options.textureHeight != null ? options.textureHeight : 512;
-        var texturePadding = options.texturePadding != null ? options.texturePadding : 2;
+        var texturePadding = options.texturePadding != null ? options.texturePadding : 0;
         var distanceRange = options.distanceRange != null ? options.distanceRange : 3;
         var fieldType = options.fieldType != null ? options.fieldType : 'msdf';
 
@@ -42,6 +44,7 @@ class Fonts {
         var chars:Array<String> = [];
 
         var i = 0;
+        var toAdd = [];
         while (i < charset.length) {
 
             var char = charset.charAt(i);
@@ -50,20 +53,23 @@ class Fonts {
                 font: font,
                 char: char,
                 fontSize: fontSize,
+                fontPath: fontPath,
                 fieldType: fieldType,
                 distanceRange: distanceRange
             });
 
-            packer.add(res.width, res.height, res.data);
+            toAdd.push({width: res.width, height: res.height, data: res.data});
             i++;
         }
+
+        packer.addArray(toAdd);
 
         var textures = [];
         var index = 0;
         while (index < packer.bins.length) {
             
             var bin = packer.bins[index];
-            context.fillStyle = '#ffffff';
+            context.fillStyle = '#000000';
             context.fillRect(0, 0, canvas.width, canvas.height);
             //context.clearRect(0, 0, canvas.width, canvas.height);
             for (rect in bin.rects) {
@@ -143,28 +149,42 @@ class Fonts {
         font:OpenTypeFont,
         char:String,
         fontSize:Int,
+        fontPath:String,
         fieldType:String,
         distanceRange:Int
     }) {
 
+        var fontPath = options.fontPath;
         var font = options.font;
         var char = options.char;
         var fontSize = options.fontSize;
         var fieldType = options.fieldType;
         var distanceRange = options.distanceRange;
         var glyph = font.charToGlyph(char);
-        var commands = glyph.getPath(0, 0, fontSize).commands;
+        var bounds = glyph.getBoundingBox();
+        var unitsPerEm:Float = font.unitsPerEm;
+        //var commands = glyph.getPath(0, 0, fontSize).commands;
 
-        var contours:Array<Array<Dynamic>> = [];
+        /*var contours:Array<Array<Dynamic>> = [];
         var currentContour = [];
         var bBox = {
             left: 0.0,
             bottom: 0.0,
             right: 0.0,
             top: 0.0
+        };*/
+        var bBox = {
+            left: bounds.x1 / unitsPerEm,
+            bottom: bounds.y2 / unitsPerEm,
+            right: bounds.x2 / unitsPerEm,
+            top: bounds.y1 / unitsPerEm,
+            width: (bounds.x2 / unitsPerEm) - (bounds.x1 / unitsPerEm),
+            height: (bounds.y2 / unitsPerEm) - (bounds.y1 / unitsPerEm)
         };
 
-        for (command in commands) {
+        trace(bBox);
+
+        /*for (command in commands) {
             if (command.type == 'M') { // new contour
                 if (currentContour.length > 0) {
                     contours.push(currentContour);
@@ -203,36 +223,39 @@ class Fonts {
                 index++;
             }
             shapeDesc += '}';
-        }
+        }*/
 
-        var normalized = true;
+        /*var normalized = true;
         for (contour in contours) {
             if (contour.length == 1) {
                 normalized = false; // Failed to normalize
                 break;
             }
-        }
+        }*/
 
         var scale = fontSize / font.unitsPerEm;
-        var pad = 5;
-        var width = Math.round(bBox.right - bBox.left) + pad + pad;
-        var height = Math.round(bBox.top - bBox.bottom) + pad + pad;
-        var yOffset = -bBox.bottom + pad;
+        var height = fontSize;
+        var width = Math.round(bBox.height / bBox.width * fontSize);
+        var xOffset = 0;//bBox.left;
+        var yOffset = 0;//bBox.right;
 
         // MSDF
-        var result = msdfgen([fieldType, '-format', 'text', '-stdout', '-size', width, height, '-translate', pad, yOffset, '-pxrange', distanceRange, '-defineShape', shapeDesc]);
+        //var args:Array<Dynamic> = [fieldType, '-format', 'text', '-stdout', '-size', width, height, '-translate', pad, yOffset, '-pxrange', distanceRange, '-defineshape', shapeDesc, '-testrender', 'render'+char.charCodeAt(0)+'.png', 400, 400];
+        var args:Array<Dynamic> = [fieldType, '-format', 'text', '-stdout', '-size', width, height, '-autoframe', '-pxrange', distanceRange, '-font', fontPath, char.charCodeAt(0), '-testrender', 'render'+char.charCodeAt(0)+'.png', 42, 42];
+        //trace(args);
+        var result = msdfgen(args);
         
         if (result.status != 0) {
             fail("Failed to generate glyph: " + result.error);
         }
 
-        var stdout = result.stdout;
+        var stdout = ''+result.stdout;
         var rawImageData:Array<Int> = untyped __js__('stdout.match(/([0-9a-fA-F]+)/g).map(str => parseInt(str, 16))');
         var pixels = [];
         var channelCount:Int = cast rawImageData.length / (width * height);
 
         if (!Math.isNaN(channelCount) && channelCount % 1 != 0) {
-            fail("msdfgen return an image with an invalid length");
+            fail("msdfgen return an image with an invalid length: " + result.stdout);
         }
 
         var i = 0;
@@ -300,8 +323,12 @@ class Fonts {
     static function msdfgen(args:Array<Dynamic>):ChildProcessSpawnSyncResult {
 
         var cmd = Path.join([settings.ceramicPath, 'git/msdfgen/msdfgen.mac']);
+        var args_:Array<String> = [];
+        for (arg in args) {
+            args_.push(''+arg);
+        }
 
-        return ChildProcess.spawnSync(cmd, {cwd: shared.cwd});
+        return ChildProcess.spawnSync(cmd, args_, {cwd: shared.cwd});
 
     } //msdfgen
 
