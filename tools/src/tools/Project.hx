@@ -4,6 +4,7 @@ import npm.Yaml;
 import tools.Tools.*;
 import sys.FileSystem;
 import sys.io.File;
+import haxe.io.Path;
 
 using StringTools;
 
@@ -86,6 +87,13 @@ class ProjectLoader {
             if (app.libs == null) {
                 app.libs = [];
             }
+            if (app.paths == null) {
+                app.paths = [];
+            }
+
+            // Add required class paths
+            app.paths.push(getRelativePath(Path.join([settings.ceramicPath, 'git/unifill']), shared.cwd));
+
             if (app.icon == null) {
                 app.icon = 'resources/AppIcon.png';
             }

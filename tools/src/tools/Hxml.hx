@@ -71,7 +71,7 @@ class Hxml {
         return args;
     }
 
-    public static function changeRelativeDir(hxmlData:Array<String>, originalDir:String, targetDir:String):Array<String> {
+    public static function formatAndchangeRelativeDir(hxmlData:Array<String>, originalDir:String, targetDir:String):Array<String> {
 
         // Add required hxml
         var updatedData = [];
@@ -83,7 +83,7 @@ class Hxml {
             var item = hxmlData[i];
 
             if (item.startsWith('-') || item.endsWith('.hxml')) {
-                updatedData.push("\n");
+                if (updatedData.length > 0) updatedData.push("\n");
             }
 
             // Update relative path to sub-hxml files
@@ -124,8 +124,7 @@ class Hxml {
             i++;
         }
 
-        var finalHxml = updatedData.join(" ").replace(" \n ", "\n").trim();
-        return finalHxml.split("\n");
+        return updatedData;
     }
 
 

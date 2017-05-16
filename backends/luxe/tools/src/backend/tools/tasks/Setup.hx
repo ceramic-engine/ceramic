@@ -98,7 +98,7 @@ class Setup extends tools.Task {
         if (project.app.hxml != null) {
             var parsedHxml = tools.Hxml.parse(project.app.hxml);
             if (parsedHxml != null && parsedHxml.length > 0) {
-                parsedHxml = tools.Hxml.changeRelativeDir(parsedHxml, cwd, targetPath);
+                parsedHxml = tools.Hxml.formatAndchangeRelativeDir(parsedHxml, cwd, targetPath);
                 for (flag in parsedHxml) {
                     haxeflags.push(Json.stringify(flag));
                 }
@@ -111,6 +111,17 @@ class Setup extends tools.Task {
                 haxeflags.push(Json.stringify('-D $key'));
             } else {
                 haxeflags.push(Json.stringify('-D $key=$val'));
+            }
+        }
+
+        var classPaths = '';
+        for (entry in (project.app.paths:Array<String>)) {
+            if (Path.isAbsolute(entry)) {
+                classPaths += Json.stringify(entry) + ',\n        ';
+            }
+            else {
+                var relativePath = getRelativePath(Path.join([cwd, entry]), targetPath);
+                classPaths += Json.stringify(relativePath) + ',\n        ';
             }
         }
     
@@ -126,7 +137,7 @@ class Setup extends tools.Task {
       name: ' + Json.stringify(project.app.name) + ',
       package: ' + Json.stringify(Reflect.field(project.app, 'package')) + ',
       codepaths: [
-        ' + Json.stringify(Path.join([ceramicPathRelative, 'src'])) + ',
+        ' + classPaths + Json.stringify(Path.join([ceramicPathRelative, 'src'])) + ',
         ' + Json.stringify(Path.join([ceramicPathRelative, 'backends/luxe/src'])) + ',
         ' + Json.stringify('../../../src') + '
       ]

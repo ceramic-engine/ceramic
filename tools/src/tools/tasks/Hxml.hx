@@ -57,7 +57,7 @@ class Hxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
-        var finalHxml = tools.Hxml.changeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join("\n");
+        var finalHxml = tools.Hxml.formatAndchangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
 
         var output = extractArgValue(args, 'output');
         if (output != null) {
