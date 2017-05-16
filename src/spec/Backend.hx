@@ -8,8 +8,6 @@ interface Backend {
 
     var draw(default,null):backend.Draw;
 
-    var fonts(default,null):backend.Fonts;
-
     var texts(default,null):backend.Texts;
 
     var textures(default,null):backend.Textures;

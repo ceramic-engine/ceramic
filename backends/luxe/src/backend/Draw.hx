@@ -60,9 +60,6 @@ class Draw implements spec.Draw {
         if (Std.is(visual, ceramic.Quad)) {
             return Quad;
         }
-        else if (Std.is(visual, ceramic.Text)) {
-            return Text;
-        }
         else if (Std.is(visual, ceramic.Graphics)) {
             return Graphics;
         }

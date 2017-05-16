@@ -68,6 +68,9 @@ class FontAsset extends Asset {
 
     override public function load() {
 
+        // TODO use text and textures (bitmap font)
+        emitComplete(false);
+        /*
         app.backend.fonts.load(name, null, function(font) {
 
             if (font != null) {
@@ -79,6 +82,7 @@ class FontAsset extends Asset {
             }
 
         });
+        */
 
     } //load
 

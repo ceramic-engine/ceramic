@@ -7,8 +7,6 @@ class Backend implements spec.Backend implements ceramic.Events {
 
     public var draw(default,null) = new backend.Draw();
 
-    public var fonts(default,null) = new backend.Fonts();
-
     public var texts(default,null) = new backend.Texts();
 
     public var textures(default,null) = new backend.Textures();
