@@ -1,4 +1,0 @@
-[submodule "git/msdfgen"]
-	path = git/msdfgen
-	url = git@github.com:jeremyfa/msdfgen.git
-	branch = master

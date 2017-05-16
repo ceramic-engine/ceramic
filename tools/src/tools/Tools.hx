@@ -75,7 +75,6 @@ class Tools {
         tasks.set('help', new tools.tasks.Help());
         tasks.set('init', new tools.tasks.Init());
         tasks.set('vscode', new tools.tasks.Vscode());
-        tasks.set('font', new tools.tasks.Font());
 
         #end
 
