@@ -259,10 +259,9 @@ extern class CanvasRenderingContext2D {
 
 } //CanvasRenderingContext2D
 
-
+@:jsRequire("canvas-prebuilt", "ImageData")
 extern class ImageData
 {
-	
 	/**
 		Is an `unsigned` `long` representing the actual width, in pixels, of the `ImageData`.
 	**/
