@@ -400,7 +400,9 @@ class Tools {
             if (before.endsWith('.hx')) {
                 if (!Path.isAbsolute(before)) {
                     before = Path.normalize(Path.join([cwd, before]));
-                    return before + ':' + after;
+                    if (FileSystem.exists(before)) {
+                        return before + ':' + after;
+                    }
                 }
             }
         }
