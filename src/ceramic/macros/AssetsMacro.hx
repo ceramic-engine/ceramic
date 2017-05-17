@@ -12,19 +12,18 @@ class AssetsMacro {
 
     static var backendInfo:backend.Info = null;
 
-    static var allAssets:Array<{name:String}> = null;
+    static var allAssets:Array<String> = null;
+
+    static var assetsByBaseName:Map<String,Array<String>> = null;
 
     static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
-    macro static public function build(kind:String):Array<Field> {
+    macro static public function buildNames(kind:String):Array<Field> {
         
-        if (backendInfo == null) backendInfo = new backend.Info();
-        if (allAssets == null) {
-            var assetsPath = Context.definedValue('assets_path');
-            allAssets = Json.parse(File.getContent(Path.join([assetsPath, '_assets.json']))).assets;
-        }
+        initData(Context.definedValue('assets_path'));
 
         var fields = Context.getBuildFields();
+        var pos = Context.currentPos();
 
         var extensions = switch (kind) {
             case 'image': backendInfo.imageExtensions();
@@ -40,9 +39,9 @@ class AssetsMacro {
 
         for (ext in extensions) {
 
-            for (file in allAssets) {
+            for (name in allAssets) {
 
-                var lowerName = file.name.toLowerCase();
+                var lowerName = name.toLowerCase();
                 var dotIndex = lowerName.lastIndexOf('.');
                 var fileExt = null;
                 var baseName = null;
@@ -53,11 +52,11 @@ class AssetsMacro {
 
                     if (fileExt == ext) {
 
-                        var trucatedName = file.name.substr(0, dotIndex);
-                        var baseAtIndex = file.name.lastIndexOf('@');
+                        var truncatedName = name.substr(0, dotIndex);
+                        var baseAtIndex = truncatedName.lastIndexOf('@');
                         if (baseAtIndex == -1) baseAtIndex = dotIndex;
 
-                        baseName = file.name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                        baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
                         fieldName = toAssetConstName(baseName);
                     
                         if (fieldName != null && !used.exists(fieldName) && fileExt != null) {
@@ -68,17 +67,18 @@ class AssetsMacro {
             }
         }
 
+        // Add fields
         for (fieldName in used.keys()) {
             var value = kind + ':' + used.get(fieldName);
 
-            var expr = { expr: ECast({ expr: EConst(CString(value)), pos: Context.currentPos() }, null), pos: Context.currentPos() };
+            var expr = { expr: ECast({ expr: EConst(CString(value)), pos: pos }, null), pos: pos };
 
             var field = {
-                pos: Context.currentPos(),
+                pos: pos,
                 name: fieldName,
                 kind: FProp('default', 'null', macro :ceramic.Assets.AssetId, expr),
                 access: [AStatic, APublic],
-                doc: '',
+                doc: 'Asset(' + kind + '): ' + used.get(fieldName),
                 meta: []
             };
 
@@ -88,6 +88,99 @@ class AssetsMacro {
         return fields;
 
     } //build
+
+    macro static public function buildLists():Array<Field> {
+        
+        initData(Context.definedValue('assets_path'));
+
+        var fields = Context.getBuildFields();
+        var pos = Context.currentPos();
+
+        // All assets
+        //
+        var exprEntries = [];
+        
+        for (name in allAssets) {
+            exprEntries.push({expr: EConst(CString(name)), pos: pos});
+        }
+
+        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+
+        var field = {
+            pos: pos,
+            name: 'all',
+            kind: FProp('default', 'null', macro :Array<String>, expr),
+            access: [AStatic, APublic],
+            doc: 'All asset paths array',
+            meta: []
+        };
+
+        fields.push(field);
+
+        // Assets by base name
+        //
+        var exprEntries = [];
+
+        for (baseName in assetsByBaseName.keys()) {
+            var list = assetsByBaseName.get(baseName);
+            var listExprs = [];
+
+            for (entry in list) {
+                listExprs.push({expr: EConst(CString(entry)), pos: pos});
+            }
+
+            exprEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(baseName)), pos: pos}, {expr: EArrayDecl(listExprs), pos: pos}), pos: pos});
+        }
+
+        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+
+        var field = {
+            pos: pos,
+            name: 'allByName',
+            kind: FProp('default', 'null', macro :Map<String,Array<String>>, expr),
+            access: [AStatic, APublic],
+            doc: 'Assets by base name',
+            meta: []
+        };
+
+        fields.push(field);
+
+        return fields;
+
+    } //buildLists
+
+    static function initData(assetsPath:String):Void {
+
+        if (backendInfo == null) backendInfo = new backend.Info();
+
+        if (allAssets == null) {
+            allAssets = [];
+            var list:Array<{name:String}> = Json.parse(File.getContent(Path.join([assetsPath, '_assets.json']))).assets;
+            for (entry in list) {
+                allAssets.push(entry.name);
+            }
+        }
+
+        if (assetsByBaseName == null) {
+
+            assetsByBaseName = new Map();
+
+            for (name in allAssets) {
+                var dotIndex = name.lastIndexOf('.');
+                var truncatedName = name.substr(0, dotIndex);
+                var baseAtIndex = truncatedName.lastIndexOf('@');
+                if (baseAtIndex == -1) baseAtIndex = dotIndex;
+
+                var baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                if (!assetsByBaseName.exists(baseName)) {
+                    assetsByBaseName.set(baseName, []);
+                }
+                var list = assetsByBaseName.get(baseName);
+                list.push(name);
+            }
+        }
+
+    }
 
     static function toAssetConstName(input:String):String {
 

@@ -139,26 +139,29 @@ class SoundAsset extends Asset {
 } //AudioAsset
 
 #if !macro
-@:build(ceramic.macros.AssetsMacro.build('image'))
+@:build(ceramic.macros.AssetsMacro.buildNames('image'))
 #end
 class Images {}
 
 #if !macro
-@:build(ceramic.macros.AssetsMacro.build('text'))
+@:build(ceramic.macros.AssetsMacro.buildNames('text'))
 #end
 class Texts {}
 
 #if !macro
-@:build(ceramic.macros.AssetsMacro.build('sound'))
+@:build(ceramic.macros.AssetsMacro.buildNames('sound'))
 #end
 class Sounds {}
 
 #if !macro
-@:build(ceramic.macros.AssetsMacro.build('font'))
+@:build(ceramic.macros.AssetsMacro.buildNames('font'))
 #end
 @:allow(ceramic.Assets)
 class Fonts {}
 
+#if !macro
+@:build(ceramic.macros.AssetsMacro.buildLists())
+#end
 class Assets extends Entity {
 
 /// Events
