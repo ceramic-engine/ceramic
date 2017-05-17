@@ -390,4 +390,23 @@ class Tools {
 
     } //getTargetName
 
+    public static function makeHaxePathAbsoluteInLine(cwd:String, input:String):String {
+
+        var commaIndex = input.indexOf(':');
+        if (commaIndex != -1) {
+            var before = input.substr(0, commaIndex);
+            var after = input.substr(commaIndex + 1);
+
+            if (before.endsWith('.hx')) {
+                if (!Path.isAbsolute(before)) {
+                    before = Path.normalize(Path.join([cwd, before]));
+                    return before + ':' + after;
+                }
+            }
+        }
+
+        return input;
+
+    } //makeHaxePathAbsoluteInLine
+
 } //Tools

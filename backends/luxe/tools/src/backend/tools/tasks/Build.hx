@@ -5,6 +5,9 @@ import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Tools.*;
+import tools.Sync;
+import js.node.ChildProcess;
+import npm.StreamSplitter;
 
 using StringTools;
 
@@ -52,11 +55,44 @@ class Build extends tools.Task {
         var cmdArgs = ['run', 'flow', action, target.name];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
+
+        var status = 0;
+
+        Sync.run(function(done) {
+
+            var proc = ChildProcess.spawn('haxelib', cmdArgs, { cwd: flowProjectPath });
+
+            var out = StreamSplitter.splitter("\n");
+            proc.stdout.pipe(untyped out);
+            out.encoding = 'utf8';
+            out.on('token', function(token) {
+                token = makeHaxePathAbsoluteInLine(flowProjectPath, token);
+                js.Node.process.stdout.write(token + "\n");
+            });
+            out.on('done', function() {
+                done();
+            });
+            out.on('error', function(err) {
+                warning(''+err);
+            });
+
+            var err = StreamSplitter.splitter("\n");
+            proc.stderr.pipe(untyped err);
+            err.encoding = 'utf8';
+            err.on('token', function(token) {
+                token = makeHaxePathAbsoluteInLine(flowProjectPath, token);
+                js.Node.process.stderr.write(token + "\n");
+            });
+            err.on('error', function(err) {
+                warning(''+err);
+            });
+
+        });
         
-        var res = command('haxelib', cmdArgs, { mute: false, cwd: flowProjectPath });
+        //var res = command('haxelib', cmdArgs, { mute: false, cwd: flowProjectPath });
         
-        if (res.status != 0) {
-            fail('Error when running luxe build. Did you setup this target?');
+        if (status != 0) {
+            fail('Error when running luxe build.');
         }
 
     } //run
