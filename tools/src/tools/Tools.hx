@@ -152,6 +152,12 @@ class Tools {
                 // Wrap it inside a fiber to allow calling
                 // Async code pseudo-synchronously
                 Fiber.fiber(function() {
+
+                    // Extract target defines
+#if use_backend
+                    extractTargetDefines(cwd, args);
+#end
+
                     // Run task
                     task.run(cwd, args);
 
@@ -199,8 +205,12 @@ class Tools {
 
         // Add defines
         if (target != null) {
-            settings.defines.set('target', target.name);
-            settings.defines.set(target.name, '');
+            var extraDefines = backend.getTargetDefines(cwd, args, target, settings.variant);
+            for (key in extraDefines.keys()) {
+                if (!settings.defines.exists(key)) {
+                    settings.defines.set(key, extraDefines.get(key));
+                }
+            }
         }
 
     } //extractTargetDefines

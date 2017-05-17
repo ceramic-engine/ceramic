@@ -16,7 +16,8 @@ class Project extends Entity {
         app.settings.background = 0x444444;
         app.settings.width = 320;
         app.settings.height = 568;
-        app.settings.scaling = FILL;
+        app.settings.resizable = true;
+        app.settings.scaling = FIT;
 
         app.onceReady(this, ready);
 
@@ -49,6 +50,16 @@ class Project extends Entity {
             this.alpha = v;
         });
         */
+
+        //assets.addFont(te);
+        //assets.addFont(Fonts.BALOO_20);
+        assets.load();
+
+        screen.onResize(this, function() {
+
+            trace('RESIZE width='+screen.width+' height='+screen.height+' density='+screen.density);
+
+        });
 
         screen.onUpdate(this, function(delta) {
 

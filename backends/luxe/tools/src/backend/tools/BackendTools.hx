@@ -92,6 +92,21 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //getHxmlCwd
 
+    public function getTargetDefines(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):Map<String,String> {
+
+        var defines = new Map<String,String>();
+
+        defines.set('target', target.name);
+        defines.set(target.name, '');
+
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        defines.set('target_path', flowProjectPath);
+        defines.set('assets_path', Path.join([flowProjectPath, 'assets']));
+
+        return defines;
+
+    } //getTargetDefines
+
     public function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, continueOnFail:Bool = false):Void {
 
         var task = new backend.tools.tasks.Setup(target, variant, continueOnFail);

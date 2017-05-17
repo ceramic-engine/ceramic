@@ -3,6 +3,8 @@ package backend;
 @:allow(Main)
 class Backend implements spec.Backend implements ceramic.Events {
 
+    public var info(default,null) = new backend.Info();
+
     public var audio(default,null) = new backend.Audio();
 
     public var draw(default,null) = new backend.Draw();
@@ -10,6 +12,8 @@ class Backend implements spec.Backend implements ceramic.Events {
     public var texts(default,null) = new backend.Texts();
 
     public var textures(default,null) = new backend.Textures();
+
+    public var screen(default,null) = new backend.Screen();
 
     public function new() {}
 

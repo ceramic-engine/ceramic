@@ -327,6 +327,25 @@ class Visual extends Entity {
             _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
             _matrix.tx = tx1;
 
+        } else {
+
+            // Concat matrix with screen transform
+            //
+            var m = screen.matrix;
+            
+            var a1 = _matrix.a * m.a + _matrix.b * m.c;
+            _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
+            _matrix.a = a1;
+
+            var c1 = _matrix.c * m.a + _matrix.d * m.c;
+            _matrix.d = _matrix.c * m.b + _matrix.d * m.d;
+
+            _matrix.c = c1;
+
+            var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
+            _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
+            _matrix.tx = tx1;
+
         }
 
         // Assign final matrix values to visual

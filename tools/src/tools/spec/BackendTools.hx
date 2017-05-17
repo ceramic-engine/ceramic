@@ -22,6 +22,9 @@ interface BackendTools {
         absolute paths, or just change the relative directories. */
     function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String;
 
+    /** Get target define specific to this backend and target.*/
+    function getTargetDefines(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):Map<String,String>;
+
     /** Run build for to the given backend target */
     function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, configIndex:Int = 0):Void;
 

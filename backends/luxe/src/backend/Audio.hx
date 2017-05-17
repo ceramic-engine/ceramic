@@ -14,9 +14,9 @@ class Audio implements spec.Audio {
 
     public function new() {}
 
-    inline public function load(name:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
+    inline public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
 
-        Luxe.resources.load_audio(name, {
+        Luxe.resources.load_audio('assets/' + path, {
             is_stream: options != null ? options.stream : false
         })
         .then(function(audio:AudioResource) {

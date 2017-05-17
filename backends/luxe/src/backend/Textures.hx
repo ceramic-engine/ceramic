@@ -10,9 +10,9 @@ class Textures implements spec.Textures {
 
     public function new() {}
 
-    inline public function load(name:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
+    inline public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
 
-        Luxe.resources.load_texture('assets/' + name, {
+        Luxe.resources.load_texture('assets/' + path, {
             load_premultiply_alpha: true
         })
         .then(function(texture:Texture) {

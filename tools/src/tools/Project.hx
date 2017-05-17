@@ -92,7 +92,16 @@ class ProjectLoader {
             }
 
             // Add required class paths
-            app.paths.push(getRelativePath(Path.join([settings.ceramicPath, 'git/unifill']), shared.cwd));
+            for (cp in [
+                'git/unifill',
+                'git/compiletime/src'
+            ]) {
+                app.paths.push(
+                    getRelativePath(
+                        Path.join([settings.ceramicPath, cp]), shared.cwd
+                    )
+                );
+            }
 
             if (app.icon == null) {
                 app.icon = 'resources/AppIcon.png';

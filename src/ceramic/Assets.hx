@@ -1,5 +1,13 @@
 package ceramic;
 
+abstract AssetId(String) {
+
+    inline public function new(string:String) {
+        this = string;
+    }
+
+} //AssetId
+
 class Asset implements Events implements Shortcuts {
 
 /// Events
@@ -26,7 +34,7 @@ class Asset implements Events implements Shortcuts {
 
 } //Asset
 
-class TextureAsset extends Asset {
+class ImageAsset extends Asset {
 
 /// Properties
 
@@ -68,21 +76,11 @@ class FontAsset extends Asset {
 
     override public function load() {
 
-        // TODO use text and textures (bitmap font)
-        emitComplete(false);
-        /*
-        app.backend.fonts.load(name, null, function(font) {
+        app.backend.texts.load(name, null, function(text) {
 
-            if (font != null) {
-                //this.font = new Font(font);
-                emitComplete(true);
-            }
-            else {
-                emitComplete(false);
-            }
+            //trace(text);
 
         });
-        */
 
     } //load
 
@@ -114,7 +112,7 @@ class TextAsset extends Asset {
 
 } //TextAsset
 
-class AudioAsset extends Asset {
+class SoundAsset extends Asset {
 
     override public function new(name:String) {
 
@@ -127,7 +125,7 @@ class AudioAsset extends Asset {
         app.backend.audio.load(name, null, function(audio) {
 
             if (audio != null) {
-                //this.audio = new Audio(audio);
+                //this.audio = new Sound(audio);
                 emitComplete(true);
             }
             else {
@@ -139,6 +137,27 @@ class AudioAsset extends Asset {
     } //load
 
 } //AudioAsset
+
+#if !macro
+@:build(ceramic.macros.AssetsMacro.build('image'))
+#end
+class Images {}
+
+#if !macro
+@:build(ceramic.macros.AssetsMacro.build('text'))
+#end
+class Texts {}
+
+#if !macro
+@:build(ceramic.macros.AssetsMacro.build('sound'))
+#end
+class Sounds {}
+
+#if !macro
+@:build(ceramic.macros.AssetsMacro.build('font'))
+#end
+@:allow(ceramic.Assets)
+class Fonts {}
 
 class Assets extends Entity {
 
@@ -158,9 +177,31 @@ class Assets extends Entity {
 
 /// Add assets to load
 
-    public function addTexture(name:String):Void {
+    public function add(id:AssetId):Void {
 
-        assetsByName.set(name, new TextureAsset(name));
+        var value:String = cast id;
+        var colonIndex = value.indexOf(':');
+
+        if (colonIndex == -1) {
+            throw "Assets: invalid asset id: " + id;
+        }
+
+        var kind = value.substr(0, colonIndex);
+        var name = value.substr(colonIndex + 1);
+
+        switch (kind) {
+            case 'image': addImage(name);
+            case 'text': addText(name);
+            case 'sound': addSound(name);
+            case 'font': addFont(name);
+            default: throw "Assets: invalid asset kind for id: " + id;
+        }
+
+    } //add
+
+    public function addImage(name:String):Void {
+
+        assetsByName.set(name, new ImageAsset(name));
 
     } //addTexture
 
@@ -176,11 +217,11 @@ class Assets extends Entity {
 
     } //addText
 
-    public function addAudio(name:String):Void {
+    public function addSound(name:String):Void {
 
-        assetsByName.set(name, new AudioAsset(name));
+        assetsByName.set(name, new SoundAsset(name));
 
-    } //addAudio
+    } //addSound
 
 /// Load
 
@@ -224,7 +265,7 @@ class Assets extends Entity {
 
     public function texture(name:String):Texture {
 
-        var asset:TextureAsset = cast assetsByName.get(name);
+        var asset:ImageAsset = cast assetsByName.get(name);
         if (asset == null) return null;
         return asset.texture;
 

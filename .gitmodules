@@ -2,3 +2,7 @@
 	path = git/unifill
 	url = git@github.com:mandel59/unifill.git
 	branch = master
+[submodule "git/compiletime"]
+	path = git/compiletime
+	url = git@github.com:jasononeil/compiletime.git
+	branch = master
