@@ -2,32 +2,6 @@ package ceramic;
 
 import backend.Backend;
 
-enum ScreenScaling {
-    FIT;
-    FILL;
-}
-
-class AppSettings {
-
-    @:allow(ceramic.App)
-    private function new() {}
-
-    public var width:Int = 0;
-
-    public var height:Int = 0;
-
-    public var antialiasing:Bool = true;
-
-    public var resizable:Bool = false;
-
-    public var background:Int = Color.BLACK;
-
-    public var scaling:ScreenScaling = FIT;
-
-    public var title:String = 'App';
-
-}
-
 class BaseProject extends Entity {
 
     @:final function new() {}
@@ -56,7 +30,7 @@ class App extends Entity {
 
     public var screen(default,null):Screen;
 
-    public var settings(default,null):AppSettings;
+    public var settings(default,null):Settings;
 
     public var visuals(default,null):Array<Visual> = [];
 
@@ -70,7 +44,7 @@ class App extends Entity {
 
         app = this;
 
-        settings = new AppSettings();
+        settings = new Settings();
         screen = new Screen();
 
         project = @:privateAccess new Project();

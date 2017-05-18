@@ -28,11 +28,13 @@ class ShortcutsMacro {
             parent = parentHold != null ? parentHold.t : null;
         }
 
+        var pos = Context.currentPos();
+
         // Add app
         if (!fieldsByName.exists('app')) {
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'app',
                 kind: FProp('get', 'null', TPath({pack: ['ceramic'], name: 'App'})),
                 access: [APublic, AStatic],
@@ -41,7 +43,7 @@ class ShortcutsMacro {
             });
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'get_app',
                 kind: FFun({
                     args: [],
@@ -55,7 +57,7 @@ class ShortcutsMacro {
                 meta: [{
                     name: ':noCompletion',
                     params: [],
-                    pos: Context.currentPos()
+                    pos: pos
                 }]
             });
 
@@ -65,7 +67,7 @@ class ShortcutsMacro {
         if (!fieldsByName.exists('screen')) {
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'screen',
                 kind: FProp('get', 'null', TPath({pack: ['ceramic'], name: 'Screen'})),
                 access: [APublic, AStatic],
@@ -74,7 +76,7 @@ class ShortcutsMacro {
             });
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'get_screen',
                 kind: FFun({
                     args: [],
@@ -88,7 +90,40 @@ class ShortcutsMacro {
                 meta: [{
                     name: ':noCompletion',
                     params: [],
-                    pos: Context.currentPos()
+                    pos: pos
+                }]
+            });
+
+        }
+
+        // Add screen
+        if (!fieldsByName.exists('settings')) {
+
+            fields.push({
+                pos: pos,
+                name: 'settings',
+                kind: FProp('get', 'null', TPath({pack: ['ceramic'], name: 'Settings'})),
+                access: [APublic, AStatic],
+                doc: 'Settings instance',
+                meta: []
+            });
+
+            fields.push({
+                pos: pos,
+                name: 'get_settings',
+                kind: FFun({
+                    args: [],
+                    ret: TPath({pack: ['ceramic'], name: 'Settings'}),
+                    expr: macro {
+                        return ceramic.App.app.settings;
+                    }
+                }),
+                access: [APrivate, AStatic, AInline],
+                doc: '',
+                meta: [{
+                    name: ':noCompletion',
+                    params: [],
+                    pos: pos
                 }]
             });
 
@@ -98,7 +133,7 @@ class ShortcutsMacro {
         if (!fieldsByName.exists('project')) {
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'project',
                 kind: FProp('get', 'null', TPath({pack: [], name: 'Project'})),
                 access: [APublic, AStatic],
@@ -107,7 +142,7 @@ class ShortcutsMacro {
             });
 
             fields.push({
-                pos: Context.currentPos(),
+                pos: pos,
                 name: 'get_project',
                 kind: FFun({
                     args: [],
@@ -121,7 +156,7 @@ class ShortcutsMacro {
                 meta: [{
                     name: ':noCompletion',
                     params: [],
-                    pos: Context.currentPos()
+                    pos: pos
                 }]
             });
 

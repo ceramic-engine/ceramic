@@ -1,5 +1,7 @@
 package ceramic;
 
+using StringTools;
+
 abstract AssetId(String) {
 
     inline public function new(string:String) {
@@ -16,13 +18,20 @@ class Asset implements Events implements Shortcuts {
 
 /// Properties
 
+    public var kind:String;
+
     public var name:String;
+
+    public var path:String;
 
 /// Lifecycle
 
-    public function new(name:String) {
+    public function new(kind:String, name:String) {
 
+        this.kind = kind;
         this.name = name;
+
+        computePath();
 
     } //name
 
@@ -31,6 +40,34 @@ class Asset implements Events implements Shortcuts {
         emitComplete(false);
 
     } //load
+
+    public function computePath():Void {
+
+        var extensions = switch (kind) {
+            case 'image': app.backend.info.imageExtensions();
+            case 'text': app.backend.info.textExtensions();
+            case 'sound': app.backend.info.soundExtensions();
+            case 'font': ['fnt'];
+            default: [];
+        }
+
+        path = null;
+        if (extensions.length > 0 && Assets.allByName.exists(name)) {
+            var list = Assets.allByName.get(name);
+            for (ext in extensions) {
+                for (item in list) {
+                    var pathInfo = Assets.decodePath(item);
+
+                    // TODO choose depending on density
+                    if (pathInfo.extension == ext) {
+                        path = pathInfo.path;
+                        break;
+                    }
+                }
+            }
+        }
+
+    } //computePath
 
 } //Asset
 
@@ -44,13 +81,13 @@ class ImageAsset extends Asset {
 
     override public function new(name:String) {
 
-        super(name);
+        super('image', name);
 
     } //name
 
     override public function load() {
 
-        app.backend.textures.load(name, null, function(texture) {
+        app.backend.textures.load(path, null, function(texture) {
 
             if (texture != null) {
                 this.texture = new Texture(texture);
@@ -70,13 +107,13 @@ class FontAsset extends Asset {
 
     override public function new(name:String) {
 
-        super(name);
+        super('font', name);
 
     } //name
 
     override public function load() {
 
-        app.backend.texts.load(name, null, function(text) {
+        app.backend.texts.load(path, null, function(text) {
 
             //trace(text);
 
@@ -90,13 +127,13 @@ class TextAsset extends Asset {
 
     override public function new(name:String) {
 
-        super(name);
+        super('text', name);
 
     } //name
 
     override public function load() {
 
-        app.backend.texts.load(name, function(text) {
+        app.backend.texts.load(path, function(text) {
 
             if (text != null) {
                 //this.text = text;
@@ -116,13 +153,13 @@ class SoundAsset extends Asset {
 
     override public function new(name:String) {
 
-        super(name);
+        super('sound', name);
 
     } //name
 
     override public function load() {
 
-        app.backend.audio.load(name, null, function(audio) {
+        app.backend.audio.load(path, null, function(audio) {
 
             if (audio != null) {
                 //this.audio = new Sound(audio);
@@ -159,6 +196,56 @@ class Sounds {}
 @:allow(ceramic.Assets)
 class Fonts {}
 
+class AssetPathInfo {
+
+/// Properties
+
+    public var density:Float;
+
+    public var extension:String;
+
+    public var name:String;
+
+    public var path:String;
+
+/// Constructor
+
+    public function new(path:String) {
+
+        this.path = path;
+
+        var dotIndex = path.lastIndexOf('.');
+        extension = path.substr(dotIndex + 1).toLowerCase();
+
+        var truncatedName = path.substr(0, dotIndex);
+        var baseAtIndex = truncatedName.lastIndexOf('@');
+
+        density = 1;
+        if (baseAtIndex == -1) {
+            baseAtIndex = dotIndex;
+        }
+        else {
+            var afterAt = truncatedName.substr(baseAtIndex + 1);
+            if (afterAt.endsWith('x')) {
+                var flt = Std.parseFloat(afterAt.substr(0, afterAt.length-1));
+                if (!Math.isNaN(flt)) {
+                    density = flt;
+                }
+            }
+        }
+
+        name = path.substr(0, cast Math.min(baseAtIndex, dotIndex));
+
+    }
+
+    function toString():String {
+
+        return '' + {extension: extension, name: name, path: path, density: density};
+
+    } //toString
+
+} //AssetPathInfo
+
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildLists())
 #end
@@ -170,7 +257,9 @@ class Assets extends Entity {
 
 /// Properties
 
-    public var assetsByName:Map<String,Asset> = new Map<String,Asset>();
+    var addedAssets:Array<Asset> = [];
+
+    var assetsByKindAndName:Map<String,Map<String,Asset>> = new Map();
 
 /// Lifecycle
 
@@ -204,27 +293,35 @@ class Assets extends Entity {
 
     public function addImage(name:String):Void {
 
-        assetsByName.set(name, new ImageAsset(name));
+        addAsset(new ImageAsset(name));
 
     } //addTexture
 
     public function addFont(name:String):Void {
 
-        assetsByName.set(name, new FontAsset(name));
+        addAsset(new FontAsset(name));
 
     } //addFont
 
     public function addText(name:String):Void {
 
-        assetsByName.set(name, new TextAsset(name));
+        addAsset(new TextAsset(name));
 
     } //addText
 
     public function addSound(name:String):Void {
 
-        assetsByName.set(name, new SoundAsset(name));
+        addAsset(new SoundAsset(name));
 
     } //addSound
+
+    public function addAsset(asset:Asset):Void {
+
+        if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
+        assetsByKindAndName.get(asset.kind).set(asset.name, asset);
+        addedAssets.push(asset);
+
+    } //addAsset
 
 /// Load
 
@@ -234,14 +331,13 @@ class Assets extends Entity {
         var allSuccess = true;
 
         // Prepare loading
-        for (name in assetsByName.keys()) {
+        for (asset in addedAssets) {
 
-            var asset = assetsByName.get(name);
             asset.onceComplete(this, function(success) {
 
                 if (!success) {
                     allSuccess = false;
-                    trace('Error when loading asset $name ($asset)');
+                    trace('Error when loading asset ${asset.name} ($asset)');
                 }
 
                 pending--;
@@ -255,9 +351,8 @@ class Assets extends Entity {
         }
 
         // Load
-        for (name in assetsByName.keys()) {
+        for (asset in addedAssets) {
 
-            var asset = assetsByName.get(name);
             asset.load();
 
         }
@@ -268,10 +363,19 @@ class Assets extends Entity {
 
     public function texture(name:String):Texture {
 
-        var asset:ImageAsset = cast assetsByName.get(name);
+        if (!assetsByKindAndName.exists('image')) return null;
+        var asset:ImageAsset = cast assetsByKindAndName.get('image').get(name);
         if (asset == null) return null;
         return asset.texture;
 
     } //texture
+
+/// Static helpers
+
+    public static function decodePath(path:String):AssetPathInfo {
+
+        return new AssetPathInfo(path);
+
+    } //decodePath
 
 } //Assets

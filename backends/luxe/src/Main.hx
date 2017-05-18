@@ -11,8 +11,8 @@ class Main extends luxe.Game {
         // Configure luxe
         config.render.antialiasing = app.settings.antialiasing ? 4 : 0;
         config.window.borderless = false;
-        if (app.settings.width > 0) config.window.width = cast app.settings.width;
-        if (app.settings.height > 0) config.window.height = cast app.settings.height;
+        if (app.settings.targetWidth > 0) config.window.width = cast app.settings.targetWidth;
+        if (app.settings.targetHeight > 0) config.window.height = cast app.settings.targetHeight;
         config.window.resizable = app.settings.resizable;
         config.window.title = cast app.settings.title;
 

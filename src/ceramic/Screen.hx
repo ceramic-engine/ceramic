@@ -85,8 +85,8 @@ class Screen extends Entity {
 
         // Update screen scaling
 
-        var targetWidth:Float = app.settings.width > 0 ? app.settings.width : nativeWidth / nativeDensity;
-        var targetHeight:Float = app.settings.height > 0 ? app.settings.height : nativeHeight / nativeDensity;
+        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth / nativeDensity;
+        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight / nativeDensity;
 
         var scale = switch (app.settings.scaling) {
             case FIT:
@@ -105,8 +105,8 @@ class Screen extends Entity {
     /** Recompute transform from screen width, height and density. */
     function updateTransform():Void {
         
-        var targetWidth:Float = app.settings.width > 0 ? app.settings.width : nativeWidth / nativeDensity;
-        var targetHeight:Float = app.settings.height > 0 ? app.settings.height : nativeHeight / nativeDensity;
+        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth / nativeDensity;
+        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight / nativeDensity;
 
         // Update transform
         matrix.identity();

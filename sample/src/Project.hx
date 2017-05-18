@@ -12,12 +12,12 @@ class Project extends Entity {
 
     function new() {
 
-        app.settings.antialiasing = true;
-        app.settings.background = 0x444444;
-        app.settings.width = 320;
-        app.settings.height = 568;
-        app.settings.resizable = true;
-        app.settings.scaling = FIT;
+        settings.antialiasing = true;
+        settings.background = 0x444444;
+        settings.resizable = true;
+        settings.scaling = FIT;
+        settings.targetWidth = 320;
+        settings.targetHeight = 568;
 
         app.onceReady(this, ready);
 
@@ -53,6 +53,14 @@ class Project extends Entity {
 
         //assets.addFont(te);
         //assets.addFont(Fonts.BALOO_20);
+
+        assets.add(Fonts.BALOO_20);
+        assets.add(Images.TILESHEET);
+
+        assets.onceComplete(this, function(success) {
+            trace('success? ' + success);
+        });
+
         assets.load();
 
         screen.onResize(this, function() {
