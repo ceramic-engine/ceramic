@@ -117,6 +117,12 @@ class Screen extends Entity {
         var ty = (nativeHeight - targetHeight * density) * 0.5;
         matrix.translate(tx, ty);
 
+        // Force visuals to recompute their matrix and take
+        // screen matrix in account
+        for (visual in app.visuals) {
+            visual.matrixDirty = true;
+        }
+
     } //updateTransform
 
 }

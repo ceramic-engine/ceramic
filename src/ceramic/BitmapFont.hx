@@ -12,7 +12,7 @@ class BitmapFont {
     /** The map of font texture pages to their id. */
     public var pages:Map<Int,Texture> = new Map();
 
-    /** The bitmap font data */
+    /** The bitmap font data. */
     public var data(default, set):BitmapFontData;
     function set_data(data:BitmapFontData) {
 
@@ -30,6 +30,8 @@ class BitmapFont {
     public var spaceChar:Character;
 
     public function new(data:BitmapFontData, pages:Map<String,Texture>) {
+
+        this.data = data;
 
         if (data == null) {
             throw 'BitmapFont: data is null';

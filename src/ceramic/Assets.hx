@@ -1,6 +1,16 @@
 package ceramic;
 
+import ceramic.internal.BitmapFontParser;
+import ceramic.internal.BitmapFontData;
+
 using StringTools;
+
+enum AssetStatus {
+    NONE;
+    LOADING;
+    READY;
+    BROKEN;
+}
 
 abstract AssetId(String) {
 
@@ -10,7 +20,7 @@ abstract AssetId(String) {
 
 } //AssetId
 
-class Asset implements Events implements Shortcuts {
+class Asset extends Entity {
 
 /// Events
 
@@ -22,7 +32,13 @@ class Asset implements Events implements Shortcuts {
 
     public var name:String;
 
-    public var path:String;
+    public var path(default,set):String;
+
+    public var density:Float = 1.0;
+
+    public var owner:Assets;
+
+    public var status:AssetStatus = NONE;
 
 /// Lifecycle
 
@@ -37,7 +53,8 @@ class Asset implements Events implements Shortcuts {
 
     public function load():Void {
 
-        warning('This asset as no load implementation.');
+        status = BROKEN;
+        error('This asset as no load implementation.');
         emitComplete(false);
 
     } //load
@@ -54,6 +71,7 @@ class Asset implements Events implements Shortcuts {
 
         path = null;
         var targetDensity = Assets.targetTextureDensity();
+        var path = null;
 
         if (extensions.length > 0 && Assets.allByName.exists(name)) {
             var list = Assets.allByName.get(name);
@@ -80,7 +98,24 @@ class Asset implements Events implements Shortcuts {
             }
         }
 
+        this.path = path; // sets density
+
     } //computePath
+
+    function set_path(path:String):String {
+
+        if (this.path == path) return path;
+        this.path = path;
+
+        if (path == null) {
+            density = 1.0;
+        } else {
+            density = Assets.decodePath(path).density;
+        }
+
+        return path;
+
+    } //set_path
 
 } //Asset
 
@@ -100,13 +135,17 @@ class ImageAsset extends Asset {
 
     override public function load() {
 
+        status = LOADING;
+        log('Load $path');
         app.backend.textures.load(path, null, function(texture) {
 
             if (texture != null) {
-                this.texture = new Texture(texture);
+                this.texture = new Texture(texture, density);
+                status = READY;
                 emitComplete(true);
             }
             else {
+                status = BROKEN;
                 error('Failed to load texture at path: $path');
                 emitComplete(false);
             }
@@ -119,6 +158,16 @@ class ImageAsset extends Asset {
 
 class FontAsset extends Asset {
 
+/// Properties
+
+    public var fontData:BitmapFontData = null;
+
+    public var pages:Map<String,Texture> = null;
+
+    public var font:BitmapFont = null;
+
+/// Lifecycle
+
     override public function new(name:String) {
 
         super('font', name);
@@ -127,24 +176,73 @@ class FontAsset extends Asset {
 
     override public function load() {
 
+        // Load font data
+        status = LOADING;
+        log('Load $path');
         app.backend.texts.load(path, null, function(text) {
 
             if (text != null) {
 
                 try {
-                    var fontData = ceramic.internal.BitmapFontParser.parse(text);
+                    fontData = BitmapFontParser.parse(text);
 
-                    trace('font data');
-                    trace(fontData);
+                    // Load pages
+                    var pages = new Map();
+                    var tmpAssets = new Assets();
+                    var assetList:Array<ImageAsset> = [];
+
+                    for (page in fontData.pages) {
+
+                        var pathInfo = Assets.decodePath(page.file);
+                        var asset = new ImageAsset(pathInfo.name);
+                        asset.path = pathInfo.path;
+                        tmpAssets.addAsset(asset);
+                        assetList.push(asset);
+                        
+                    }
+
+                    tmpAssets.onComplete(function(success) {
+
+                        if (success) {
+                            // Change texture assets owner
+                            for (asset in assetList) {
+                                tmpAssets.removeAsset(asset);
+                                if (owner != null) {
+                                    owner.addAsset(asset);
+                                }
+
+                                // Fill pages mapping
+                                pages.set(asset.path, asset.texture);
+                            }
+
+                            // Create bitmap font
+                            font = new BitmapFont(fontData, pages);
+
+                            status = READY;
+                            emitComplete(true);
+
+                        }
+                        else {
+                            status = BROKEN;
+                            error('Failed to load textures for font at path: $path');
+                            emitComplete(false);
+                        }
+
+                        // Destroy temporary assets
+                        tmpAssets.destroy();
+
+                    });
+
+                    tmpAssets.load();
 
                 } catch (e:Dynamic) {
+                    status = BROKEN;
                     error('Failed to decode font data at path: $path');
                     emitComplete(false);
                 }
-
-                emitComplete(true);
             }
             else {
+                status = BROKEN;
                 error('Failed to load font data at path: $path');
                 emitComplete(false);
             }
@@ -165,12 +263,16 @@ class TextAsset extends Asset {
 
     override public function load() {
 
+        status = LOADING;
+        log('Load $path');
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
+                status = READY;
                 emitComplete(true);
             }
             else {
+                status = BROKEN;
                 error('Failed to load text at path: $path');
                 emitComplete(false);
             }
@@ -191,13 +293,17 @@ class SoundAsset extends Asset {
 
     override public function load() {
 
+        status = LOADING;
+        log('Load $path');
         app.backend.audio.load(path, null, function(audio) {
 
             if (audio != null) {
                 //this.audio = new Sound(audio);
+                status = READY;
                 emitComplete(true);
             }
             else {
+                status = BROKEN;
                 error('Failed to load audio at path: $path');
                 emitComplete(false);
             }
@@ -325,7 +431,7 @@ class Assets extends Entity {
     } //add
 
     public function addImage(name:String):Void {
-
+        
         addAsset(new ImageAsset(name));
 
     } //addTexture
@@ -351,10 +457,41 @@ class Assets extends Entity {
     public function addAsset(asset:Asset):Void {
 
         if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
-        assetsByKindAndName.get(asset.kind).set(asset.name, asset);
+        var byName = assetsByKindAndName.get(asset.kind);
+
+        var previousAsset = byName.get(asset.kind);
+        if (previousAsset != null) {
+            if (previousAsset == asset) {
+                warning('Cannot add asset $asset because an asset is already added for its name: ${asset.name} ($previousAsset).');
+            } else {
+                warning('Cannot add asset $asset because it is already added for name: ${asset.name}.');
+            }
+            return;
+        }
+
+        byName.set(asset.name, asset);
+        if (asset.owner != null && asset.owner != this) {
+            asset.owner.removeAsset(asset);
+        }
         addedAssets.push(asset);
+        asset.owner = this;
 
     } //addAsset
+
+    public function removeAsset(asset:Asset):Void {
+
+        var byName = assetsByKindAndName.get(asset.kind);
+        var toRemove = byName.get(asset.name);
+
+        if (asset != toRemove) {
+            throw 'Cannot remove asset $asset if it was not added at the first place.';
+        }
+
+        addedAssets.remove(asset);
+        byName.remove(asset.name);
+        asset.owner = null;
+
+    } //removeAsset
 
 /// Load
 
@@ -366,27 +503,42 @@ class Assets extends Entity {
         // Prepare loading
         for (asset in addedAssets) {
 
-            asset.onceComplete(this, function(success) {
+            if (asset.status == NONE) {
 
-                if (!success) {
-                    allSuccess = false;
-                    error('Failed to load asset ${asset.name} ($asset)');
-                }
+                asset.onceComplete(this, function(success) {
 
-                pending--;
-                if (pending == 0) {
-                    emitComplete(allSuccess);
-                }
+                    if (!success) {
+                        allSuccess = false;
+                        error('Failed to load asset ${asset.name} ($asset)');
+                    }
 
-            });
-            pending++;
+                    pending--;
+                    if (pending == 0) {
+                        emitComplete(allSuccess);
+                    }
+
+                });
+                pending++;
+
+            }
 
         }
 
         // Load
-        for (asset in addedAssets) {
+        if (pending > 0) {
 
-            asset.load();
+            for (asset in addedAssets) {
+
+                if (asset.status == NONE) {
+                    asset.load();
+                }
+
+            }
+
+        } else {
+
+            warning('There was no asset to load.');
+            emitComplete(true);
 
         }
 
@@ -394,14 +546,31 @@ class Assets extends Entity {
 
 /// Get
 
-    public function texture(name:String):Texture {
+    public function texture(name:Either<String,AssetId>):Texture {
+
+        var realName:String = cast name;
+        if (realName.startsWith('image:')) realName = realName.substr(6);
 
         if (!assetsByKindAndName.exists('image')) return null;
-        var asset:ImageAsset = cast assetsByKindAndName.get('image').get(name);
+        var asset:ImageAsset = cast assetsByKindAndName.get('image').get(realName);
         if (asset == null) return null;
+
         return asset.texture;
 
     } //texture
+
+    public function font(name:Either<String,AssetId>):BitmapFont {
+
+        var realName:String = cast name;
+        if (realName.startsWith('font:')) realName = realName.substr(5);
+        
+        if (!assetsByKindAndName.exists('font')) return null;
+        var asset:FontAsset = cast assetsByKindAndName.get('font').get(realName);
+        if (asset == null) return null;
+
+        return asset.font;
+
+    } //font
 
 /// Static helpers
 

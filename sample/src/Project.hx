@@ -5,6 +5,7 @@ import ceramic.Quad;
 import ceramic.Color;
 import ceramic.Assets;
 import ceramic.Blending;
+import ceramic.Text;
 
 class Project extends Entity {
 
@@ -43,6 +44,9 @@ class Project extends Entity {
         quad2.rotation = 30;
         quad2.scale(2.0, 0.5);
 
+        var text = new Text();
+        text.content = "Youpi";
+
         /*
         // Just an idea
         var tween = new Tween(easeInOut, 0.3, 3, 4);
@@ -58,14 +62,22 @@ class Project extends Entity {
         assets.add(Images.TILESHEET);
 
         assets.onceComplete(this, function(success) {
-            trace('success? ' + success);
+            log('success? ' + success);
+            if (!success) return;
+
+            var font = assets.font(Fonts.BALOO_20);
+            trace('font: $font');
+            text.font = font;
+            text.pointSize = 40;
+            text.color = Color.RED;
+
         });
 
         assets.load();
 
         screen.onResize(this, function() {
 
-            trace('RESIZE width='+screen.width+' height='+screen.height+' density='+screen.density);
+            log('RESIZE width='+screen.width+' height='+screen.height+' density='+screen.density);
 
         });
 

@@ -72,13 +72,24 @@ class AssetsMacro {
             var value = kind + ':' + used.get(fieldName);
 
             var expr = { expr: ECast({ expr: EConst(CString(value)), pos: pos }, null), pos: pos };
+            
+            var fieldDoc = [];
+            var files = assetsByBaseName.get(used.get(fieldName));
+            for (file in files) {
+                for (ext in extensions) {
+                    if (file.endsWith('.$ext')) {
+                        fieldDoc.push(file);
+                        break;
+                    }
+                }
+            }
 
             var field = {
                 pos: pos,
                 name: fieldName,
                 kind: FProp('default', 'null', macro :ceramic.Assets.AssetId, expr),
                 access: [AStatic, APublic],
-                doc: 'Asset(' + kind + '): ' + used.get(fieldName),
+                doc: fieldDoc.join(', '),
                 meta: []
             };
 
