@@ -72,7 +72,7 @@ class Assets extends tools.Task {
 
             // Add _assets.json listing
             //
-            var assetsJson:Dynamic = {
+            var assetsJson:{assets:Array<{name:String}>} = {
                 assets: []
             };
 
@@ -81,6 +81,20 @@ class Assets extends tools.Task {
                     name: asset.name
                 });
             }
+
+            // Sort in order to have a predictible order
+            assetsJson.assets.sort(function(a_:{name:String}, b_:{name:String}) {
+                var a = a_.name.toLowerCase();
+                var b = b_.name.toLowerCase();
+                if (a < b) {
+                    return -1;
+                }
+                else if (a > b) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
 
             // Save file
             File.saveContent(
