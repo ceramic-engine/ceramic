@@ -32,6 +32,8 @@ class App extends Entity {
 
     public var settings(default,null):Settings;
 
+    public var logger(default,null):Logger = new Logger();
+
     public var visuals(default,null):Array<Visual> = [];
 
 /// Internal
@@ -60,6 +62,8 @@ class App extends Entity {
         screen.backendReady();
 
         emitReady();
+
+        screen.resize();
 
         backend.onUpdate(this, update);
 

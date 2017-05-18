@@ -37,6 +37,7 @@ class Asset implements Events implements Shortcuts {
 
     public function load():Void {
 
+        warning('This asset as no load implementation.');
         emitComplete(false);
 
     } //load
@@ -52,17 +53,29 @@ class Asset implements Events implements Shortcuts {
         }
 
         path = null;
+        var targetDensity = Assets.targetTextureDensity();
+
         if (extensions.length > 0 && Assets.allByName.exists(name)) {
             var list = Assets.allByName.get(name);
             for (ext in extensions) {
+
+                var bestDensity = 1.0;
+                var bestDensityDiff = 99999999999.0;
+
                 for (item in list) {
                     var pathInfo = Assets.decodePath(item);
 
-                    // TODO choose depending on density
                     if (pathInfo.extension == ext) {
-                        path = pathInfo.path;
-                        break;
+                        var diff = Math.abs(targetDensity - pathInfo.density);
+                        if (diff < bestDensityDiff) {
+                            bestDensityDiff = diff;
+                            bestDensity = pathInfo.density;
+                            path = pathInfo.path;
+                        }
                     }
+                }
+                if (path != null) {
+                    break;
                 }
             }
         }
@@ -94,6 +107,7 @@ class ImageAsset extends Asset {
                 emitComplete(true);
             }
             else {
+                error('Failed to load texture at path: $path');
                 emitComplete(false);
             }
 
@@ -115,7 +129,25 @@ class FontAsset extends Asset {
 
         app.backend.texts.load(path, null, function(text) {
 
-            //trace(text);
+            if (text != null) {
+
+                try {
+                    var fontData = ceramic.internal.BitmapFontParser.parse(text);
+
+                    trace('font data');
+                    trace(fontData);
+
+                } catch (e:Dynamic) {
+                    error('Failed to decode font data at path: $path');
+                    emitComplete(false);
+                }
+
+                emitComplete(true);
+            }
+            else {
+                error('Failed to load font data at path: $path');
+                emitComplete(false);
+            }
 
         });
 
@@ -136,10 +168,10 @@ class TextAsset extends Asset {
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
-                //this.text = text;
                 emitComplete(true);
             }
             else {
+                error('Failed to load text at path: $path');
                 emitComplete(false);
             }
 
@@ -166,6 +198,7 @@ class SoundAsset extends Asset {
                 emitComplete(true);
             }
             else {
+                error('Failed to load audio at path: $path');
                 emitComplete(false);
             }
 
@@ -337,7 +370,7 @@ class Assets extends Entity {
 
                 if (!success) {
                     allSuccess = false;
-                    trace('Error when loading asset ${asset.name} ($asset)');
+                    error('Failed to load asset ${asset.name} ($asset)');
                 }
 
                 pending--;
@@ -377,5 +410,15 @@ class Assets extends Entity {
         return new AssetPathInfo(path);
 
     } //decodePath
+
+    public static function targetTextureDensity():Float {
+
+        return (settings.targetDensity > 0) ?
+            settings.targetDensity
+        :
+            screen.density
+        ;
+
+    } //targetTextureDensity
 
 } //Assets

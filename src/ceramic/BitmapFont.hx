@@ -13,34 +13,32 @@ class BitmapFont {
     public var pages:Map<Int,Texture> = new Map();
 
     /** The bitmap font data */
-    public var info(default, set):BitmapFontData;
-    function set_info(info:BitmapFontData) {
+    public var data(default, set):BitmapFontData;
+    function set_data(data:BitmapFontData) {
 
-        this.info = info;
+        this.data = data;
 
-        if (info != null) {
-            spaceChar = info.chars.get(32);
+        if (data != null) {
+            spaceChar = data.chars.get(32);
         }
 
-        return info;
+        return data;
 
-    } //info
+    } //data
 
     /** Cached reference of the ' '(32) character, for sizing on tabs/spaces */
     public var spaceChar:Character;
 
-    public function new(fontData:String, pages:Map<String,Texture>) {
+    public function new(data:BitmapFontData, pages:Map<String,Texture>) {
 
-        if (fontData == null) {
-            throw 'BitmapFont: fontData is null';
+        if (data == null) {
+            throw 'BitmapFont: data is null';
         }
         if (pages == null) {
             throw 'BitmapFont: pages is null';
         }
 
-        info = BitmapFontParser.parse(fontData);
-
-        for (pageInfo in info.pages) {
+        for (pageInfo in data.pages) {
             var texture = pages.get(pageInfo.file);
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
@@ -56,7 +54,7 @@ class BitmapFont {
         A glyph int id is the value from 'c'.charCodeAt(0) */
     public inline function kerning(first:Int, second:Int) {
 
-        var map = info.kernings.get(first);
+        var map = data.kernings.get(first);
 
         if (map != null && map.exists(second)) {
             return map.get(second);
@@ -136,30 +134,30 @@ class BitmapFont {
 
     /** Returns the width of the given line, which assumes the line is already split up (does not split the string), using the given metrics. */
     public function widthOfLine(string:String, pointSize:Float=1.0, letterSpacing:Float=0.0) {
-        //
-            //current x pos
+
+        // Current x pos
         var curX = 0.0;
-            //current w pos
+        // Current w pos
         var curW = 0.0;
-            //the size ratio between font and given size
-        var ratio = pointSize / info.pointSize;
+        // The size ratio between font and given size
+        var ratio = pointSize / data.pointSize;
 
         var i = 0;
         var len = string.uLength();
 
-        for ( _uglyph in string.uIterator() ) {
+        for (uglyph in string.uIterator()) {
 
-            var index = _uglyph.toInt();
-            var char = info.chars.get(index);
+            var index = uglyph.toInt();
+            var char = data.chars.get(index);
             if (char == null) char = spaceChar;
 
-                //some characters (like spaces) have no width but an advance
-                //which is relevant/needed
+            // Some characters (like spaces) have no width but an advance
+            // which is relevant/needed
             var cw = (char.xOffset + Math.max(char.width, char.xAdvance)) * ratio;
             var cx = curX + (char.xOffset * ratio);
 
             var spacing = char.xAdvance;
-            if ( i < len-1 ) {
+            if (i < len-1) {
                 var nextIndex = string.uCharCodeAt(i+1);
                 spacing += kerning( index, nextIndex );
                 if (nextIndex >= 32) { spacing += letterSpacing; }
@@ -178,8 +176,8 @@ class BitmapFont {
     /** Returns the width of the given string, using the given metrics.
         This will split the string and populate the optional lineWidths array with each line width of the string */
     public inline function widthOf(string:String, pointSize:Float = 1.0, letterSpacing:Float = 0.0, ?lineWidths:Array<Float>):Float {
-        //
-            //if given an array to cache line widths into
+
+        // If given an array to cache line widths into
         var maxW = 0.0;
         var pushWidths = (lineWidths != null);
         var lines = string.uSplit('\n');
@@ -196,7 +194,7 @@ class BitmapFont {
 
         } //each line
 
-            //return the max width found
+        // Return the max width found
         return maxW;
 
     } //widthOf
@@ -211,16 +209,16 @@ class BitmapFont {
     /** Get the height of the given lines with the given metrics. */
     public inline function heightOfLines(lines:Array<String>, pointSize:Float, lineSpacing:Float=0.0):Float {
 
-        var ratio = pointSize / info.pointSize;
+        var ratio = pointSize / data.pointSize;
 
-        return lines.length * ((info.lineHeight + lineSpacing) * ratio);
+        return lines.length * ((data.lineHeight + lineSpacing) * ratio);
 
     } //heightOf
 
     /** Return the point size at which a line of text will occupy a given pixel height. */
     public inline function lineHeightToPointSize(pixelHeight:Float, lineSpacing:Float=0.0):Float {
 
-        return pixelHeight * ( info.pointSize / ( info.lineHeight + lineSpacing ) );
+        return pixelHeight * ( data.pointSize / ( data.lineHeight + lineSpacing ) );
 
     } //lineHeightToPointSize
 

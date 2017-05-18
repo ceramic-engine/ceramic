@@ -8,9 +8,9 @@ class BitmapFontParser {
 
 /// Public API
 
-    public static function parse(fontData:String):BitmapFontData {
+    public static function parse(rawFontData:String):BitmapFontData {
 
-        if (fontData.length == 0) {
+        if (rawFontData.length == 0) {
             throw "BitmapFont: fontData is 0 length";
         }
 
@@ -22,7 +22,7 @@ class BitmapFontParser {
             pages : [], kernings : new Map()
         };
 
-        var lines : Array<String> = fontData.split("\n");
+        var lines : Array<String> = rawFontData.split("\n");
 
         if (lines.length == 0) {
             throw "BitmapFont: invalid font data specified for parser.";
@@ -49,7 +49,7 @@ class BitmapFontParser {
 
 /// Internal
 
-    static function parseToken( token:String, tokens:Array<String>, info:BitmapFontData ) {
+    static function parseToken(token:String, tokens:Array<String>, info:BitmapFontData) {
 
         // Remove the first token
         tokens.shift();

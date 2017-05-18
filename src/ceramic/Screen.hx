@@ -63,7 +63,7 @@ class Screen extends Entity {
         app.backend.screen.onResize(this, resize);
 
         // Trigger resize once at startup
-        onceUpdate(function(delta) resize());
+        resize();
 
     } //backendReady
 

@@ -16,7 +16,7 @@ class ShortcutsMacro {
         }
 
         // Also check parent fields
-        var parentHold = Context.getLocalClass().get().superClass;
+        /*var parentHold = Context.getLocalClass().get().superClass;
         var parent = parentHold != null ? parentHold.t : null;
         while (parent != null) {
 
@@ -26,7 +26,7 @@ class ShortcutsMacro {
 
             parentHold = parent.get().superClass;
             parent = parentHold != null ? parentHold.t : null;
-        }
+        }*/
 
         var pos = Context.currentPos();
 
@@ -158,6 +158,96 @@ class ShortcutsMacro {
                     params: [],
                     pos: pos
                 }]
+            });
+
+        }
+
+        // Add log
+        if (!fieldsByName.exists('log')) {
+
+            fields.push({
+                pos: pos,
+                name: 'log',
+                kind: FFun({
+                    args: [
+                        {
+                            name: 'value',
+                            type: macro :Dynamic
+                        },
+                        {
+                            name: 'pos',
+                            type: macro :haxe.PosInfos,
+                            opt: true
+                        }
+                    ],
+                    ret: macro :Void,
+                    expr: macro {
+                        ceramic.App.app.logger.log($i{'value'}, $i{'pos'});
+                    }
+                }),
+                access: [APublic, AStatic, AInline],
+                doc: 'Log message',
+                meta: []
+            });
+
+        }
+
+        // Add warning
+        if (!fieldsByName.exists('warning')) {
+
+            fields.push({
+                pos: pos,
+                name: 'warning',
+                kind: FFun({
+                    args: [
+                        {
+                            name: 'value',
+                            type: macro :Dynamic
+                        },
+                        {
+                            name: 'pos',
+                            type: macro :haxe.PosInfos,
+                            opt: true
+                        }
+                    ],
+                    ret: macro :Void,
+                    expr: macro {
+                        ceramic.App.app.logger.warning($i{'value'}, $i{'pos'});
+                    }
+                }),
+                access: [APublic, AStatic, AInline],
+                doc: 'Log warning',
+                meta: []
+            });
+
+        }
+
+        // Add error
+        if (!fieldsByName.exists('error')) {
+
+            fields.push({
+                pos: pos,
+                name: 'error',
+                kind: FFun({
+                    args: [
+                        {
+                            name: 'value',
+                            type: macro :Dynamic
+                        },
+                        {
+                            name: 'pos',
+                            type: macro :haxe.PosInfos,
+                            opt: true
+                        }
+                    ],
+                    ret: macro :Void,
+                    expr: macro {
+                        ceramic.App.app.logger.error($i{'value'}, $i{'pos'});
+                    }
+                }),
+                access: [APublic, AStatic, AInline],
+                doc: 'Log error',
+                meta: []
             });
 
         }
