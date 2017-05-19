@@ -26,7 +26,18 @@ class Visual extends Entity {
     public var contentDirty:Bool = true;
 
     /** Setting this to true will force the visual's matrix to be re-computed */
-    public var matrixDirty:Bool = true;
+    public var matrixDirty(default,set):Bool = true;
+    inline function set_matrixDirty(matrixDirty:Bool):Bool {
+        if (!this.matrixDirty && matrixDirty) {
+            this.matrixDirty = true;
+            if (children != null) {
+                for (child in children) {
+                    child.matrixDirty = true;
+                }
+            }
+        }
+        return matrixDirty;
+    }
 
     /** Setting this to true will force the visual to compute it's visility in hierarchy */
     public var visibilityDirty:Bool = true;
@@ -203,7 +214,7 @@ class Visual extends Entity {
 
 /// Internal
 
-    static var _matrix = new Transform();
+    static var _matrix:Transform = new Transform();
 
 /// Helpers
 
@@ -281,8 +292,11 @@ class Visual extends Entity {
         // Apply local properties (pos, scale, rotation, skew)
         //
         _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
-        if (skewX != 0) _matrix.c = skewX * Math.PI / 180.0;
-        if (skewY != 0) _matrix.b = skewY * Math.PI / 180.0;
+
+        if (skewX != 0 || skewY != 0) {
+            _matrix.skew(skewX, skewY);
+        }
+
         if (rotation != 0) _matrix.rotate(rotation * Math.PI / 180.0);
         _matrix.translate(anchorX * w / scaleX, anchorY * h / scaleY);
         if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);

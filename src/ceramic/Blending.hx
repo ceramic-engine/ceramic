@@ -2,8 +2,8 @@ package ceramic;
 
 @:enum abstract Blending(Int) {
     
-    var Normal = 0;
+    var NORMAL = 0;
     
-    var Additive = 1;
+    var ADD = 1;
 
 } //Blending

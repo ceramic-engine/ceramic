@@ -2,7 +2,7 @@ package ceramic;
 
 class Quad extends Visual {
 
-    public var blending:Blending = Blending.Normal;
+    public var blending:Blending = Blending.NORMAL;
 
     public var color:Color = Color.WHITE;
 

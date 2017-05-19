@@ -8,7 +8,6 @@ enum VisualItem {
     None;
     Quad;
     Mesh;
-    Text;
     Graphics;
 }
 
@@ -163,7 +162,7 @@ class Draw implements spec.Draw {
 
                     // Update blending
                     //
-                    if (quad.blending == ceramic.Blending.Additive) {
+                    if (quad.blending == ceramic.Blending.ADD) {
                         quadGeom.blend_src_alpha = phoenix.Batcher.BlendMode.one;
                         quadGeom.blend_src_rgb = phoenix.Batcher.BlendMode.one;
                         quadGeom.blend_dest_alpha = phoenix.Batcher.BlendMode.one;

@@ -4,6 +4,8 @@ class Texture implements Shortcuts {
 
 /// Properties
 
+    public var name(default,null):String;
+
     public var width(default,null):Float;
 
     public var height(default,null):Float;
@@ -21,11 +23,24 @@ class Texture implements Shortcuts {
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Textures.Texture, density:Float = 1) {
+    public function new(backendItem:backend.Textures.Texture, name:String = null, density:Float = 1) {
 
         this.backendItem = backendItem;
+        this.name = name;
         this.density = density; // sets widht/height as well
 
     } //new
+
+/// Print
+
+    function toString():String {
+
+        if (name != null) {
+            return 'Texture($name $width $height $density)';
+        } else {
+            return 'Texture($width $height $density)';
+        }
+
+    } //toString
 
 } //Texture

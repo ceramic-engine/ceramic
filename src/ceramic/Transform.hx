@@ -280,12 +280,28 @@ class Transform implements Events {
 
     } //translate
 
-    inline public function skew(x:Float, y:Float):Void {
+    inline public function skew(skewX:Float, skewY:Float):Void {
 
         _tmp.identity();
 
-        _tmp.c = x * Math.PI / 180.0;
-        _tmp.b = y * Math.PI / 180.0;
+        var degToRad = Math.PI / 180.0;
+
+        var sr = 0; // sin(0)
+        var cr = 1; // cos(0)
+        var cy = Math.cos(skewY * degToRad);
+        var sy = Math.sin(skewY * degToRad);
+        var nsx = -Math.sin(skewX * degToRad);
+        var cx = Math.cos(skewX * degToRad);
+
+        var a = cr;
+        var b = sr;
+        var c = -sr;
+        var d = cr;
+
+        _tmp.a = (cy * a) + (sy * c);
+        _tmp.b = (cy * b) + (sy * d);
+        _tmp.c = (nsx * a) + (cx * c);
+        _tmp.d = (nsx * b) + (cx * d);
 
         concat(_tmp);
 

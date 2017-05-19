@@ -140,7 +140,7 @@ class ImageAsset extends Asset {
         app.backend.textures.load(path, null, function(texture) {
 
             if (texture != null) {
-                this.texture = new Texture(texture, density);
+                this.texture = new Texture(texture, path, density);
                 status = READY;
                 emitComplete(true);
             }

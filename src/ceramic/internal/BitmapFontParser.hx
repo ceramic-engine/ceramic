@@ -87,9 +87,9 @@ class BitmapFontParser {
                     y : Std.parseFloat(items["y"]),
                     width : Std.parseFloat(items["width"]),
                     height : Std.parseFloat(items["height"]),
-                    xOffset : Std.parseFloat(items["xOffset"]),
-                    yOffset : Std.parseFloat(items["yOffset"]),
-                    xAdvance : Std.parseFloat(items["xAdvance"]),
+                    xOffset : Std.parseFloat(items["xoffset"]),
+                    yOffset : Std.parseFloat(items["yoffset"]),
+                    xAdvance : Std.parseFloat(items["xadvance"]),
                     page : Std.parseInt(items["page"])
                 }
 
