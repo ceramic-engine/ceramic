@@ -234,8 +234,8 @@ class Visual extends Entity {
 
     inline public function pos(x:Float, y:Float):Void {
 
-        this.x = Math.round(x);
-        this.y = Math.round(y);
+        this.x = x;
+        this.y = y;
 
     } //pos
 

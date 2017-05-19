@@ -1,12 +1,13 @@
 package ceramic;
 
+import ceramic.BitmapFont;
+
 using unifill.Unifill;
 
 enum TextAlign {
     LEFT;
     RIGHT;
     CENTER;
-    JUSTIFY;
 }
 
 class Text extends Visual {
@@ -21,8 +22,8 @@ class Text extends Visual {
         return content;
     }
 
-    public var pointSize(default,set):Int = 20;
-    function set_pointSize(pointSize:Int):Int {
+    public var pointSize(default,set):Float = 20;
+    function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
         contentDirty = true;
         this.pointSize = pointSize;
@@ -74,6 +75,30 @@ class Text extends Visual {
         return super.set_depth(depth);
     }
 
+    override function get_width():Float {
+        if (contentDirty) computeContent();
+        return super.get_width();
+    }
+    override function set_width(width:Float):Float {
+        // Only adjust scaleX to match requested width
+        if (this.width == width) return width;
+        scaleX = width / realWidth;
+        matrixDirty = true;
+        return width;
+    }
+
+    override function get_height():Float {
+        if (contentDirty) computeContent();
+        return super.get_height();
+    }
+    override function set_height(height:Float):Float {
+        // Only adjust scaleY to match requested height
+        if (this.height == height) return height;
+        scaleX = height / realHeight;
+        matrixDirty = true;
+        return height;
+    }
+
 /// Lifecycle
 
     override public function new() {
@@ -81,6 +106,12 @@ class Text extends Visual {
         super();
 
     } //new
+
+    function destroy() {
+
+        glyphQuads = null;
+
+    } //destroy
 
 /// Display
 
@@ -92,8 +123,6 @@ class Text extends Visual {
             contentDirty = false;
             return;
         }
-
-        var i = 0;
 
         if (children != null) {
             for (child in children) {
@@ -110,6 +139,9 @@ class Text extends Visual {
         var prevChar = null;
         var prevCode = -1;
         var i = 0;
+        var glyph:BitmapFontCharacter = null;
+        var lineWidths:Array<Float> = [];
+        var lineQuads:Array<Array<Quad>> = [[]];
         
         while (i < len) {
 
@@ -117,7 +149,19 @@ class Text extends Visual {
             prevCode = code;
             char = content.uCharAt(i);
             code = char.uCharCodeAt(0);
-            var glyph = font.data.chars.get(code);
+
+            if (char == "\n") {
+                prevChar = null;
+                prevCode = 0;
+                i++;
+                y += pointSize * lineHeight;
+                lineWidths.push(x + (glyph != null ? (glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
+                lineQuads.push([]);
+                x = 0;
+                continue;
+            }
+
+            glyph = font.data.chars.get(code);
 
             if (prevChar != null) {
                 x += font.kerning(prevCode, code) * sizeFactor;
@@ -144,15 +188,47 @@ class Text extends Visual {
             quad.size(glyph.width * sizeFactor, glyph.height * sizeFactor);
 
             x += glyph.xAdvance * sizeFactor + letterSpacing;
+            lineQuads[lineQuads.length-1].push(quad);
 
             i++;
 
+        }
+
+        if (x > 0) {
+            lineWidths.push(x + (glyph != null ? (glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
         }
 
         // Remove unused quads
         while (i < glyphQuads.length) {
             var quad = glyphQuads.pop();
             quad.destroy();
+        }
+
+        // Compute width/height from content
+        var maxLineWidth = 0.0;
+        for (lineWidth in lineWidths) {
+            maxLineWidth = Math.max(lineWidth, maxLineWidth);
+        }
+        realWidth = maxLineWidth;
+        realHeight = lineWidths.length * pointSize * lineHeight;
+
+        // Align quads as requested
+        switch (align) {
+            case CENTER:
+                for (i in 0...lineWidths.length) {
+                    var diffX = (maxLineWidth - lineWidths[i]) * 0.5;
+                    for (quad in lineQuads[i]) {
+                        quad.x += diffX;
+                    }
+                }
+            case RIGHT:
+                for (i in 0...lineWidths.length) {
+                    var diffX = maxLineWidth - lineWidths[i];
+                    for (quad in lineQuads[i]) {
+                        quad.x += diffX;
+                    }
+                }
+            default:
         }
         
         contentDirty = false;

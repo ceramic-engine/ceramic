@@ -45,10 +45,13 @@ class Project extends Entity {
         quad2.scale(2.0, 0.5);
 
         var text = new Text();
-        text.content = "Jérémy.";
+        text.content = "Jérémy.\nligne.";
         //text.rotation = 45;
+        text.pointSize = 20;
         text.color = Color.YELLOW;
-        text.pos(180, 40);
+        text.pos(40, 40);
+
+        trace('text width=${text.width} height=${text.height}');
 
         /*
         // Just an idea
@@ -71,6 +74,8 @@ class Project extends Entity {
             var font = assets.font(Fonts.BALOO_20);
             text.font = font;
 
+            trace('text width=${text.width} height=${text.height}');
+
         });
 
         assets.load();
@@ -86,7 +91,7 @@ class Project extends Entity {
             quad1.rotation = (quad1.rotation + delta * 100) % 360;
             quad2.rotation = (quad2.rotation + delta * 100) % 360;
 
-            text.skewX = (text.skewX + delta * 100) % 360;
+            //text.skewX = (text.skewX + delta * 100) % 360;
 
         });
 

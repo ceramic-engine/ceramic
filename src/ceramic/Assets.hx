@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.internal.BitmapFontParser;
-import ceramic.internal.BitmapFontData;
+import ceramic.BitmapFont;
 
 using StringTools;
 

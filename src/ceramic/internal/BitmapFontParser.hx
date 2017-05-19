@@ -2,7 +2,7 @@ package ceramic.internal;
 
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/luxe/importers/bitmapfont/BitmapFontParser.hx)
 
-import ceramic.internal.BitmapFontData;
+import ceramic.BitmapFont;
 
 class BitmapFontParser {
 
@@ -81,7 +81,7 @@ class BitmapFontParser {
 
             case 'char': {
 
-                var char : Character = {
+                var char : BitmapFontCharacter = {
                     id : Std.parseInt(items["id"]),
                     x : Std.parseFloat(items["x"]),
                     y : Std.parseFloat(items["y"]),
