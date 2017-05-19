@@ -31,12 +31,10 @@ class ObservableMacro {
 
         for (field in fields) {
 
-            if (hasObserveMeta(field)) {
+            if (hasObservableMeta(field)) {
                 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
-
-                        if (newFields == null) newFields = [];
 
                         var fieldName = field.name;
                         var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
@@ -44,10 +42,26 @@ class ObservableMacro {
                         var emitFieldNameChange = 'emit' + capitalName + 'Change';
                         var fieldNameChange = fieldName + 'Change';
 
+                        if (expr != null) {
+                            // Compute type from expr
+                            switch (expr.expr) {
+                                case ENew(t,p):
+                                    if (type == null) {
+                                        type = TPath(t);
+                                    }
+                                default:
+                                    if (type == null) {
+                                        throw new Error("Cannot resolve observable field type", field.pos);
+                                    }
+                            }
+                        } else if (type == null) {
+                            throw new Error("Observable field must define a type", field.pos);
+                        }
+
                         // Create prop from var
                         var propField = {
                             pos: field.pos,
-                            name: field.name,
+                            name: fieldName,
                             kind: FProp('get', 'set', type),
                             access: field.access,
                             doc: field.doc,
@@ -111,7 +125,7 @@ class ObservableMacro {
                                 expr: null
                             }),
                             access: [],
-                            doc: '',
+                            doc: 'Event when $fieldName field changes.',
                             meta: []
                         };
 
@@ -132,12 +146,12 @@ class ObservableMacro {
 
     } //build
 
-    static function hasObserveMeta(field:Field):Bool {
+    static function hasObservableMeta(field:Field):Bool {
 
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'observe' || meta.name == ':observe') {
+            if (meta.name == 'observable' || meta.name == ':observable') {
                 return true;
             }
         }

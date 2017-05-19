@@ -38,7 +38,7 @@ class Asset extends Entity {
 
     public var owner:Assets;
 
-    public var status:AssetStatus = NONE;
+    @observable public var status:AssetStatus = NONE;
 
 /// Lifecycle
 
@@ -70,7 +70,7 @@ class Asset extends Entity {
         }
 
         path = null;
-        var targetDensity = Assets.targetTextureDensity();
+        var targetDensity = screen.texturesDensity;
         var path = null;
 
         if (extensions.length > 0 && Assets.allByName.exists(name)) {
@@ -130,6 +130,10 @@ class ImageAsset extends Asset {
     override public function new(name:String) {
 
         super('image', name);
+
+        screen.onTexturesDensityChange(this, function(newDensity, prevDensity) {
+            log('TEXTURES DENSITY for $name -> new=$newDensity prev=$prevDensity');
+        });
 
     } //name
 
@@ -579,15 +583,5 @@ class Assets extends Entity {
         return new AssetPathInfo(path);
 
     } //decodePath
-
-    public static function targetTextureDensity():Float {
-
-        return (settings.targetDensity > 0) ?
-            settings.targetDensity
-        :
-            screen.density
-        ;
-
-    } //targetTextureDensity
 
 } //Assets

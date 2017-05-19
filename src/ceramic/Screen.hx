@@ -35,6 +35,10 @@ class Screen extends Entity {
         return app.backend.screen.getPixelRatio();
     }
 
+    /** Ideal textures density, computed from settings
+        targetDensity and current screen state. */
+    @observable public var texturesDensity:Float = 1.0;
+
     /** Root matrix applied to every visual.
         This is recomputed on screen resize but
         can be changed otherwise. */
@@ -64,6 +68,25 @@ class Screen extends Entity {
 
         // Trigger resize once at startup
         resize();
+        
+        // Observe visual settings
+        //
+        settings.onAntialiasingChange(this, function(antialiasing, prevAntialiasing) {
+            log('Setting antialiasing=$antialiasing');
+        });
+        settings.onBackgroundChange(this, function(background, prevBackground) {
+            log('Setting background=$background');
+        });
+        settings.onResizableChange(this, function(resizable, prevResizable) {
+            log('Setting resizable=$resizable');
+        });
+        settings.onScalingChange(this, function(scaling, prevScaling) {
+            log('Setting scaling=$scaling');
+        });
+        settings.onTargetDensityChange(this, function(targetDensity, prevtargetDensity) {
+            log('Setting targetDensity=$targetDensity');
+            updateTexturesDensity();
+        });
 
     } //backendReady
 
@@ -78,7 +101,20 @@ class Screen extends Entity {
         // Apply result as transform
         updateTransform();
 
+        // Update textures density
+        updateTexturesDensity();
+
     } //resize
+
+    function updateTexturesDensity():Void {
+
+        texturesDensity = (settings.targetDensity > 0) ?
+            settings.targetDensity
+        :
+            density
+        ;
+
+    } //updateTexturesDensity
 
     /** Recompute screen width, height and density from settings and native state. */
     function updateScaling():Void {

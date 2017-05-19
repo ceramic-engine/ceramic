@@ -120,6 +120,8 @@ class Text extends Visual {
     override function computeContent() {
 
         if (font == null) {
+            realWidth = 0;
+            realHeight = 0;
             contentDirty = false;
             return;
         }

@@ -12,10 +12,18 @@ class Quad extends Visual {
         this.texture = texture;
 
         // Update frame
-        frameX = 0;
-        frameY = 0;
-        frameWidth = texture.width;
-        frameHeight = texture.height;
+        if (texture == null) {
+            frameX = -1;
+            frameY = -1;
+            frameWidth = -1;
+            frameHeight = -1;
+        }
+        else {
+            frameX = 0;
+            frameY = 0;
+            frameWidth = texture.width;
+            frameHeight = texture.height;
+        }
 
         return texture;
     }
