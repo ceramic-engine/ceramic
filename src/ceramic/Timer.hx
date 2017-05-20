@@ -6,7 +6,7 @@ class Timer {
     static var next:Float = 999999999;
 
     /** Current time, relative to app.
-        (number of seconds since app was started) */
+        (number of active seconds since app was started) */
     public static var now:Float = 0;
 
     @:allow(ceramic.App)

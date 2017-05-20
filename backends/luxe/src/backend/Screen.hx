@@ -9,23 +9,35 @@ class Screen implements spec.Screen implements ceramic.Events {
 
     @event function resize();
 
+    @event function mouseDown(button:Int, x:Float, y:Float);
+    @event function mouseUp(button:Int, x:Float, y:Float);
+    @event function mouseWheel(x:Float, y:Float);
+    @event function mouseMove(x:Float, y:Float);
+
+    @event function keyDown();
+    @event function keyUp();
+
+    @event function touchDown();
+    @event function touchUp();
+    @event function touchMove();
+
 /// Public API
 
-    inline public function getPixelWidth():Int {
+    inline public function getWidth():Int {
 
-        return Std.int(Luxe.screen.width * Luxe.screen.device_pixel_ratio);
+        return Luxe.screen.w;
 
     } //getPixelWidth
 
-    inline public function getPixelHeight():Int {
+    inline public function getHeight():Int {
 
-        return Std.int(Luxe.screen.height * Luxe.screen.device_pixel_ratio);
+        return Luxe.screen.h;
 
     } //getPixelHeight
 
-    inline public function getPixelRatio():Float {
+    inline public function getDensity():Float {
 
-        return Luxe.screen.device_pixel_ratio;
+        return @:privateAccess Main.lastDevicePixelRatio;
 
     } //getPixelHeight
 

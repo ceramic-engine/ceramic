@@ -5,34 +5,34 @@ class Screen extends Entity {
 
 /// Properties
 
-    /** Screen density computed from app width/height
+    /** Screen density computed from app's logical width/height
         settings and native width/height. */
     public var density(default,null):Float = 1.0;
 
-    /** Width used in app to position elements.
+    /** Logical width used in app to position elements.
         Updated when the screen is resized. */
     public var width(default,null):Float = 0;
 
-    /** Height used in app to position elements.
+    /** Logical height used in app to position elements.
         Updated when the screen is resized. */
     public var height(default,null):Float = 0;
 
-    /** Native width (in pixels) */
+    /** Native width */
     public var nativeWidth(get,null):Float;
     inline function get_nativeWidth():Float {
-        return app.backend.screen.getPixelWidth();
+        return app.backend.screen.getWidth();
     }
 
-    /** Native height (in pixels) */
+    /** Native height */
     public var nativeHeight(get,null):Float;
     inline function get_nativeHeight():Float {
-        return app.backend.screen.getPixelHeight();
+        return app.backend.screen.getHeight();
     }
 
     /** Native pixel ratio/density. */
     public var nativeDensity(get,null):Float;
     inline function get_nativeDensity():Float {
-        return app.backend.screen.getPixelRatio();
+        return app.backend.screen.getDensity();
     }
 
     /** Ideal textures density, computed from settings
@@ -131,19 +131,19 @@ class Screen extends Entity {
 
         // Update screen scaling
 
-        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth / nativeDensity;
-        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight / nativeDensity;
+        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth;
+        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
 
         var scale = switch (app.settings.scaling) {
             case FIT:
-                Math.max(targetWidth / nativeWidth, targetHeight / nativeHeight);
+                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
             case FILL:
-                Math.min(targetWidth / nativeWidth, targetHeight / nativeHeight);
+                Math.min(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
         }
 
         // Init default values
-        width = nativeWidth * scale;
-        height = nativeHeight * scale;
+        width = nativeWidth * nativeDensity * scale;
+        height = nativeHeight * nativeDensity * scale;
         density = 1.0 / scale;
 
     } //updateScaling
@@ -151,16 +151,16 @@ class Screen extends Entity {
     /** Recompute transform from screen width, height and density. */
     function updateTransform():Void {
         
-        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth / nativeDensity;
-        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight / nativeDensity;
+        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth;
+        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
 
         // Update transform
         matrix.identity();
 
         matrix.scale(density, density);
 
-        var tx = (nativeWidth - targetWidth * density) * 0.5;
-        var ty = (nativeHeight - targetHeight * density) * 0.5;
+        var tx = (nativeWidth * nativeDensity - targetWidth * density) * 0.5;
+        var ty = (nativeHeight * nativeDensity - targetHeight * density) * 0.5;
         matrix.translate(tx, ty);
 
         // Force visuals to recompute their matrix and take

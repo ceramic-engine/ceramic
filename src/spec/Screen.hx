@@ -2,11 +2,11 @@ package spec;
 
 interface Screen {
 
-    function getPixelWidth():Int;
+    function getWidth():Int;
 
-    function getPixelHeight():Int;
+    function getHeight():Int;
 
-    function getPixelRatio():Float;
+    function getDensity():Float;
 
     function setBackground(background:Int):Void;
 

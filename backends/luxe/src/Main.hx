@@ -1,10 +1,12 @@
 package;
 
+import luxe.Input;
+
 class Main extends luxe.Game {
 
-    var prevDevicePixelRatio:Float = -1;
-    var prevWidth:Float = -1;
-    var prevHeight:Float = -1;
+    static var lastDevicePixelRatio:Float = -1;
+    static var lastWidth:Float = -1;
+    static var lastHeight:Float = -1;
 
     override function config(config:luxe.GameConfig) {
 
@@ -32,9 +34,9 @@ class Main extends luxe.Game {
 
         // Keep screen size and density value to trigger
         // resize events that might be skipped by the engine
-        prevDevicePixelRatio = Luxe.screen.device_pixel_ratio;
-        prevWidth = Luxe.screen.width;
-        prevHeight = Luxe.screen.height;
+        lastDevicePixelRatio = Luxe.screen.device_pixel_ratio;
+        lastWidth = Luxe.screen.width;
+        lastHeight = Luxe.screen.height;
 
         // Background color
         Luxe.renderer.clear_color.rgb(ceramic.App.app.settings.background);
@@ -77,6 +79,52 @@ class Main extends luxe.Game {
 
     } //onwindowresized
 
+    override function onmousedown(event:MouseEvent) {
+
+        ceramic.App.app.backend.screen.emitMouseDown(
+            event.button,
+            event.x,
+            event.y
+        );
+
+    } //onmousedown
+
+    override function onmouseup(event:MouseEvent) {
+
+        ceramic.App.app.backend.screen.emitMouseUp(
+            event.button,
+            event.x,
+            event.y
+        );
+
+    } //onmouseup
+
+    override function onmousewheel(event:MouseEvent) {
+
+        ceramic.App.app.backend.screen.emitMouseWheel(
+            event.x,
+            event.y
+        );
+
+    } //onmousewheel
+
+    override function onmousemove(event:MouseEvent) {
+
+        ceramic.App.app.backend.screen.emitMouseMove(
+            event.x,
+            event.y
+        );
+
+    } //onmousemove
+
+    override function onkeydown(event:KeyEvent) {}
+    override function onkeyup(event:KeyEvent) {}
+
+    override function ontouchdown(event:TouchEvent) {}
+    override function ontouchup(event:TouchEvent) {}
+    override function ontouchmove(event:TouchEvent) {}
+
+
 /// Internal
 
     function triggerResizeIfNeeded():Void {
@@ -84,14 +132,14 @@ class Main extends luxe.Game {
 #if (!completion && !display)
 
         // Ensure screen data has changed since last time we emit event
-        if (   Luxe.screen.device_pixel_ratio == prevDevicePixelRatio
-            && Luxe.screen.width == prevWidth
-            && Luxe.screen.height == prevHeight) return;
+        if (   Luxe.screen.device_pixel_ratio == lastDevicePixelRatio
+            && Luxe.screen.width == lastWidth
+            && Luxe.screen.height == lastHeight) return;
 
         // Update values for next compare
-        prevDevicePixelRatio = Luxe.screen.device_pixel_ratio;
-        prevWidth = Luxe.screen.width;
-        prevHeight = Luxe.screen.height;
+        lastDevicePixelRatio = Luxe.screen.device_pixel_ratio;
+        lastWidth = Luxe.screen.width;
+        lastHeight = Luxe.screen.height;
 
         // Emit resize
         ceramic.App.app.backend.screen.emitResize();
