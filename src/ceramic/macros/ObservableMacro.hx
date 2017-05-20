@@ -111,6 +111,9 @@ class ObservableMacro {
 
                         // Rename original field from name to observedName
                         field.name = unobservedFieldName;
+                        field.access = [].concat(field.access);
+                        field.access.remove(APublic);
+                        field.access.remove(APrivate);
                         newFields.push(field);
 
                         var eventField = {
