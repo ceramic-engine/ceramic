@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Settings;
 import backend.Backend;
 
 class BaseProject extends Entity {
@@ -39,7 +40,7 @@ class App extends Entity {
 /// Internal
 
     var hierarchyDirty:Bool = false;
-
+    
 /// Lifecycle
 
     function new() {
@@ -49,7 +50,7 @@ class App extends Entity {
         settings = new Settings();
         screen = new Screen();
 
-        project = @:privateAccess new Project();
+        project = @:privateAccess new Project(new InitSettings(settings));
 
         backend = new Backend();
         backend.onceReady(this, backendReady);

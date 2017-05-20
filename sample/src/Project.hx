@@ -1,5 +1,6 @@
 package;
 
+import ceramic.Settings;
 import ceramic.Entity;
 import ceramic.Quad;
 import ceramic.Color;
@@ -11,7 +12,7 @@ class Project extends Entity {
 
     var assets:Assets = new Assets();
 
-    function new() {
+    function new(settings:InitSettings) {
 
         settings.antialiasing = true;
         settings.background = 0x444444;
