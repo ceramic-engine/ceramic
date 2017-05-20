@@ -6,8 +6,6 @@ class Texture extends Entity {
 
 /// Properties
 
-    public var name(default,null):String;
-
     public var width(default,null):Float;
 
     public var height(default,null):Float;
@@ -27,10 +25,9 @@ class Texture extends Entity {
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Textures.Texture, name:String = null, density:Float = 1) {
+    public function new(backendItem:backend.Textures.Texture, density:Float = 1) {
 
         this.backendItem = backendItem;
-        this.name = name;
         this.density = density; // sets widht/height as well
 
     } //new
@@ -38,7 +35,7 @@ class Texture extends Entity {
     public function destroy() {
 
         if (asset != null) asset.destroy();
-        
+
         app.backend.textures.destroy(backendItem);
         backendItem = null;
 

@@ -50,10 +50,6 @@ class Screen extends Entity {
 
 /// Events
 
-    /** Update event is called as many times as there are frames per seconds.
-        Use this event to update your contents before they get drawn again. */
-    @event function update(delta:Float);
-
     /** Resize event occurs once at startup, then each time any
         of native width, height or density changes. */
     @event function resize();

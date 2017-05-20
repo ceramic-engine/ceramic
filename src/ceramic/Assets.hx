@@ -30,8 +30,6 @@ class Asset extends Entity {
 
     public var kind:String;
 
-    public var name:String;
-
     public var path(default,set):String;
 
     public var density:Float = 1.0;
@@ -167,7 +165,8 @@ class ImageAsset extends Asset {
             if (texture != null) {
 
                 var prevTexture = this.texture;
-                this.texture = new Texture(texture, path, density);
+                this.texture = new Texture(texture, density);
+                this.texture.name = path;
 
                 // Link the texture to this asset so that
                 // destroying one will destroy the other
@@ -322,7 +321,8 @@ class FontAsset extends Asset {
 
                             // Create bitmap font
                             var prevFont = this.font;
-                            font = new BitmapFont(fontData, pages);
+                            this.font = new BitmapFont(fontData, pages);
+                            this.font.name = path;
 
                             // Link the font to this asset so that
                             // destroying one will destroy the other

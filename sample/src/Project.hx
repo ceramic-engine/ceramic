@@ -92,7 +92,7 @@ class Project extends Entity {
 
         });
 
-        screen.onUpdate(this, function(delta) {
+        app.onUpdate(this, function(delta) {
 
             quad1.rotation = (quad1.rotation + delta * 100) % 360;
             quad2.rotation = (quad2.rotation + delta * 100) % 360;

@@ -19,9 +19,15 @@ class App extends Entity {
 
 /// Events
 
+    /** Ready event is called when the app is ready and
+        the game logic can be started. */
     @event function ready();
 
-    @event function tick();
+    /** Update event is called as many times as there are frames per seconds.
+        It is in sync with screen FPS but used for everything that needs
+        to get updated depending on time (ceramic.Timer relies on it).
+        Use this event to update your contents before they get drawn again. */
+    @event function update(delta:Float);
 
 /// Properties
 
@@ -72,9 +78,9 @@ class App extends Entity {
 
     function update(delta:Float):Void {
 
-        app.emitTick();
+        app.emitUpdate(delta);
 
-        screen.emitUpdate(delta);
+        Timer.update(delta);
 
         for (visual in visuals) {
 

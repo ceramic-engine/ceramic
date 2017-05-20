@@ -169,6 +169,13 @@ class EntityMacro {
                     }
                 }
             }
+            else if (field.name == 'toString') {
+                
+                if (field.access.indexOf(AOverride) == -1) {
+                    field.access.push(AOverride);
+                }
+
+            }
         }
 
         return newFields;

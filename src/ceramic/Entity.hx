@@ -9,6 +9,8 @@ class Entity implements Events implements Shortcuts implements Lazy implements O
 
     @lazy public var data:Dynamic<Dynamic> = {};
 
+    public var name:String = null;
+
     public var destroyed:Bool = false;
 
 /// Events
@@ -25,6 +27,22 @@ class Entity implements Events implements Shortcuts implements Lazy implements O
         emitDestroy();
 
     } //destroy
+
+/// Print
+
+    function toString():String {
+
+        var className = Type.getClassName(Type.getClass(this));
+        var dotIndex = className.lastIndexOf('.');
+        if (dotIndex != -1) className = className.substr(dotIndex + 1);
+
+        if (name != null) {
+            return '$className($name)';
+        } else {
+            return '$className';
+        }
+
+    } //toString
 
 }
 
