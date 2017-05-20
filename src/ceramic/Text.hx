@@ -126,16 +126,10 @@ class Text extends Visual {
             return;
         }
 
-        if (children != null) {
-            for (child in children) {
-                child.destroy();
-            }
-        }
-
         var x = 0.0;
         var y = 0.0;
         var len = content.uLength();
-        var sizeFactor = pointSize / font.data.pointSize;
+        var sizeFactor = pointSize / font.pointSize;
         var char = null;
         var code = -1;
         var prevChar = null;
@@ -144,6 +138,7 @@ class Text extends Visual {
         var glyph:BitmapFontCharacter = null;
         var lineWidths:Array<Float> = [];
         var lineQuads:Array<Array<Quad>> = [[]];
+        var usedQuads = 0;
         
         while (i < len) {
 
@@ -163,19 +158,21 @@ class Text extends Visual {
                 continue;
             }
 
-            glyph = font.data.chars.get(code);
+            glyph = font.chars.get(code);
 
             if (prevChar != null) {
                 x += font.kerning(prevCode, code) * sizeFactor;
             }
 
             // Reuse or create quad
-            var quad:Quad = i < glyphQuads.length ? glyphQuads[i] : null;
+            var quad:Quad = usedQuads < glyphQuads.length ? glyphQuads[usedQuads] : null;
             if (quad == null) {
                 quad = new Quad();
                 glyphQuads.push(quad);
                 add(quad);
             }
+            usedQuads++;
+
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;
             quad.depth = depth;
@@ -201,7 +198,8 @@ class Text extends Visual {
         }
 
         // Remove unused quads
-        while (i < glyphQuads.length) {
+        while (usedQuads < glyphQuads.length) {
+            usedQuads++;
             var quad = glyphQuads.pop();
             quad.destroy();
         }

@@ -29,4 +29,10 @@ class Screen implements spec.Screen implements ceramic.Events {
 
     } //getPixelHeight
 
+    public function setBackground(background:Int):Void {
+
+        Luxe.renderer.clear_color.rgb(background);
+
+    } //setBackground
+
 } //Screen

@@ -73,9 +73,14 @@ class Project extends Entity {
             if (!success) return;
 
             var font = assets.font(Fonts.BALOO_20);
+            trace('font = $font');
             text.font = font;
 
             trace('text width=${text.width} height=${text.height}');
+
+            var tilesheet = new Quad();
+            tilesheet.pos(150, 200);
+            tilesheet.texture = assets.texture(Images.TILESHEET);
 
         });
 

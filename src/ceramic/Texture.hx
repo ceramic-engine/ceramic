@@ -1,6 +1,8 @@
 package ceramic;
 
-class Texture implements Shortcuts {
+import ceramic.Assets;
+
+class Texture extends Entity {
 
 /// Properties
 
@@ -21,6 +23,8 @@ class Texture implements Shortcuts {
 
     public var backendItem:backend.Textures.Texture;
 
+    public var asset:Asset;
+
 /// Lifecycle
 
     public function new(backendItem:backend.Textures.Texture, name:String = null, density:Float = 1) {
@@ -30,6 +34,15 @@ class Texture implements Shortcuts {
         this.density = density; // sets widht/height as well
 
     } //new
+
+    public function destroy() {
+
+        if (asset != null) asset.destroy();
+        
+        app.backend.textures.destroy(backendItem);
+        backendItem = null;
+
+    } //destroy
 
 /// Print
 

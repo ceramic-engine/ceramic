@@ -45,6 +45,9 @@ class Screen extends Entity {
     @:allow(ceramic.Visual)
     private var matrix:Transform = new Transform();
 
+    /** In order to prevent nested resizes. */
+    private var resizing:Bool = false;
+
 /// Events
 
     /** Update event is called as many times as there are frames per seconds.
@@ -71,17 +74,21 @@ class Screen extends Entity {
         
         // Observe visual settings
         //
-        settings.onAntialiasingChange(this, function(antialiasing, prevAntialiasing) {
-            log('Setting antialiasing=$antialiasing');
-        });
         settings.onBackgroundChange(this, function(background, prevBackground) {
             log('Setting background=$background');
-        });
-        settings.onResizableChange(this, function(resizable, prevResizable) {
-            log('Setting resizable=$resizable');
+            app.backend.screen.setBackground(background);
         });
         settings.onScalingChange(this, function(scaling, prevScaling) {
             log('Setting scaling=$scaling');
+            resize();
+        });
+        settings.onTargetWidthChange(this, function(targetWidth, prevTargetWidth) {
+            log('Setting targetWidth=$targetWidth');
+            resize();
+        });
+        settings.onTargetHeightChange(this, function(targetHeight, prevTargetWidth) {
+            log('Setting targetHeight=$targetHeight');
+            resize();
         });
         settings.onTargetDensityChange(this, function(targetDensity, prevtargetDensity) {
             log('Setting targetDensity=$targetDensity');
@@ -91,6 +98,10 @@ class Screen extends Entity {
     } //backendReady
 
     function resize():Void {
+
+        // Already resizing?
+        if (resizing) return;
+        resizing = true;
 
         // Update scaling
         updateScaling();
@@ -103,6 +114,9 @@ class Screen extends Entity {
 
         // Update textures density
         updateTexturesDensity();
+
+        // Resize finished
+        resizing = false;
 
     } //resize
 

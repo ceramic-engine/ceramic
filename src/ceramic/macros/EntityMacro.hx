@@ -153,6 +153,7 @@ class EntityMacro {
                                     // Add if destroyed check at the top
                                     exprs.unshift(macro {
                                         if (destroyed) return;
+                                        super.destroy();
                                     });
 
                                     // Destroy each linked component
@@ -160,9 +161,6 @@ class EntityMacro {
                                         var fieldName = compField.name;
                                         exprs.push(macro this.$fieldName = null);
                                     }
-
-                                    // Add super.destroy() call at the bottom
-                                    exprs.push(macro super.destroy());
 
                                 default:
                             }

@@ -8,4 +8,6 @@ interface Screen {
 
     function getPixelRatio():Float;
 
+    function setBackground(background:Int):Void;
+
 } //Screen

@@ -1,45 +1,79 @@
 package ceramic;
 
+import ceramic.Assets;
+
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/phoenix/BitmapFont.hx)
 
 import ceramic.internal.BitmapFontParser;
 
 using unifill.Unifill;
 
-class BitmapFont {
+class BitmapFont extends Entity {
 
     /** The map of font texture pages to their id. */
     public var pages:Map<Int,Texture> = new Map();
 
-    /** The bitmap font data. */
-    public var data(default, set):BitmapFontData;
-    function set_data(data:BitmapFontData) {
+    /** The bitmap font fontData. */
+    private var fontData(default, set):BitmapFontData;
+    function set_fontData(fontData:BitmapFontData) {
 
-        this.data = data;
+        this.fontData = fontData;
 
-        if (data != null) {
-            spaceChar = data.chars.get(32);
+        if (fontData != null) {
+            spaceChar = fontData.chars.get(32);
         }
 
-        return data;
+        return fontData;
 
-    } //data
+    } //fontData
+
+    public var face(get,set):String;
+    inline function get_face():String { return fontData.face; }
+    inline function set_face(face:String):String { return fontData.face = face; }
+
+    public var pointSize(get,set):Float;
+    inline function get_pointSize():Float { return fontData.pointSize; }
+    inline function set_pointSize(pointSize:Float):Float { return fontData.pointSize = pointSize; }
+
+    public var baseSize(get,set):Float;
+    inline function get_baseSize():Float { return fontData.baseSize; }
+    inline function set_baseSize(baseSize:Float):Float { return fontData.baseSize = baseSize; }
+
+    public var chars(get,set):Map<Int,BitmapFontCharacter>;
+    inline function get_chars():Map<Int,BitmapFontCharacter> { return fontData.chars; }
+    inline function set_chars(chars:Map<Int,BitmapFontCharacter>):Map<Int,BitmapFontCharacter> { return fontData.chars = chars; }
+
+    public var charCount(get,set):Int;
+    inline function get_charCount():Int { return fontData.charCount; }
+    inline function set_charCount(charCount:Int):Int { return fontData.charCount = charCount; }
+
+    public var lineHeight(get,set):Float;
+    inline function get_lineHeight():Float { return fontData.lineHeight; }
+    inline function set_lineHeight(lineHeight:Float):Float { return fontData.lineHeight = lineHeight; }
+
+    public var kernings(get,set):Map<Int,Map<Int,Float>>;
+    inline function get_kernings():Map<Int,Map<Int,Float>> { return fontData.kernings; }
+    inline function set_kernings(kernings:Map<Int,Map<Int,Float>>):Map<Int,Map<Int,Float>> { return fontData.kernings = kernings; }
 
     /** Cached reference of the ' '(32) character, for sizing on tabs/spaces */
     public var spaceChar:BitmapFontCharacter;
+    
+    public var asset:Asset;
 
-    public function new(data:BitmapFontData, pages:Map<String,Texture>) {
+/// Lifecycle
 
-        this.data = data;
+    public function new(fontData:BitmapFontData, pages:Map<String,Texture>) {
 
-        if (data == null) {
-            throw 'BitmapFont: data is null';
+        this.fontData = fontData;
+
+        if (fontData == null) {
+            throw 'BitmapFont: fontData is null';
         }
         if (pages == null) {
             throw 'BitmapFont: pages is null';
         }
 
-        for (pageInfo in data.pages) {
+        for (pageInfo in fontData.pages) {
             var texture = pages.get(pageInfo.file);
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
@@ -49,13 +83,24 @@ class BitmapFont {
 
     } //new
 
+    public function destroy() {
+
+        if (asset != null) asset.destroy();
+        
+        for (texture in pages) {
+            texture.destroy();
+        }
+        pages = null;
+
+    } //destroy
+
 /// Public API
 
     /** Returns the kerning between two glyphs, or 0 if none.
         A glyph int id is the value from 'c'.charCodeAt(0) */
     public inline function kerning(first:Int, second:Int) {
 
-        var map = data.kernings.get(first);
+        var map = fontData.kernings.get(first);
 
         if (map != null && map.exists(second)) {
             return map.get(second);

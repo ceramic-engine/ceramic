@@ -40,6 +40,8 @@ class Asset extends Entity {
 
     @observable public var status:AssetStatus = NONE;
 
+    var handleTexturesDensityChange(default,set):Bool = false;
+
 /// Lifecycle
 
     public function new(kind:String, name:String) {
@@ -117,6 +119,28 @@ class Asset extends Entity {
 
     } //set_path
 
+    function set_handleTexturesDensityChange(value:Bool):Bool {
+
+        if (handleTexturesDensityChange == value) return value;
+        handleTexturesDensityChange = value;
+
+        if (value) {
+            screen.onTexturesDensityChange(this, texturesDensityDidChange);
+        }
+        else {
+            screen.offTexturesDensityChange(texturesDensityDidChange);
+        }
+
+        return value;
+
+    } //set_handleTexturesDensityChange
+
+    function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
+
+        // Override
+
+    } //texturesDensityDidChange
+
 } //Asset
 
 class ImageAsset extends Asset {
@@ -130,10 +154,7 @@ class ImageAsset extends Asset {
     override public function new(name:String) {
 
         super('image', name);
-
-        screen.onTexturesDensityChange(this, function(newDensity, prevDensity) {
-            log('TEXTURES DENSITY for $name -> new=$newDensity prev=$prevDensity');
-        });
+        handleTexturesDensityChange = true;
 
     } //name
 
@@ -144,9 +165,52 @@ class ImageAsset extends Asset {
         app.backend.textures.load(path, null, function(texture) {
 
             if (texture != null) {
+
+                var prevTexture = this.texture;
                 this.texture = new Texture(texture, path, density);
+
+                // Link the texture to this asset so that
+                // destroying one will destroy the other
+                this.texture.asset = this;
+
+                if (prevTexture != null) {
+                    // Texture was reloaded. Update related visuals
+                    for (visual in app.visuals) {
+                        if (Std.is(visual, Quad)) {
+                            var quad:Quad = cast visual;
+                            if (quad.texture == prevTexture) {
+
+                                // Update texture but keep same frame
+                                //
+                                var frameX = quad.frameX;
+                                var frameY = quad.frameY;
+                                var frameWidth = quad.frameWidth;
+                                var frameHeight = quad.frameHeight;
+
+                                quad.texture = this.texture;
+
+                                // Frame was reset by texture assign.
+                                // Put it back to what it was.
+                                quad.frameX = frameX;
+                                quad.frameY = frameY;
+                                quad.frameWidth = frameWidth;
+                                quad.frameHeight = frameHeight;
+                            }
+                        }
+                    }
+
+                    // Set asset to null because we don't want it
+                    // to be destroyed when destroying the texture.
+                    prevTexture.asset = null;
+                    // Destroy texture
+                    prevTexture.destroy();
+                }
+
                 status = READY;
                 emitComplete(true);
+                if (handleTexturesDensityChange) {
+                    checkTexturesDensity();
+                }
             }
             else {
                 status = BROKEN;
@@ -157,6 +221,38 @@ class ImageAsset extends Asset {
         });
 
     } //load
+
+    override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
+
+        if (status == READY) {
+            // Only check if the asset is already loaded.
+            // If it is currently loading, it will check
+            // at load end anyway.
+            checkTexturesDensity();
+        }
+
+    } //texturesDensityDidChange
+
+    function checkTexturesDensity():Void {
+
+        var prevPath = path;
+        computePath();
+
+        if (prevPath != path) {
+            log('Reload texture ($prevPath -> $path)');
+            load();
+        }
+
+    } //checkTexturesDensity
+
+    function destroy():Void {
+
+        if (texture != null) {
+            texture.destroy();
+            texture = null;
+        }
+
+    } //destroy
 
 } //TextureAsset
 
@@ -175,6 +271,7 @@ class FontAsset extends Asset {
     override public function new(name:String) {
 
         super('font', name);
+        handleTexturesDensityChange = true;
 
     } //name
 
@@ -199,6 +296,10 @@ class FontAsset extends Asset {
 
                         var pathInfo = Assets.decodePath(page.file);
                         var asset = new ImageAsset(pathInfo.name);
+
+                        // Because it is handled at font level
+                        asset.handleTexturesDensityChange = false;
+
                         asset.path = pathInfo.path;
                         tmpAssets.addAsset(asset);
                         assetList.push(asset);
@@ -220,7 +321,30 @@ class FontAsset extends Asset {
                             }
 
                             // Create bitmap font
+                            var prevFont = this.font;
                             font = new BitmapFont(fontData, pages);
+
+                            // Link the font to this asset so that
+                            // destroying one will destroy the other
+                            this.font.asset = this;
+
+                            if (prevFont != null) {
+                                // Font was reloaded. Update related visuals
+                                for (visual in app.visuals) {
+                                    if (Std.is(visual, Text)) {
+                                        var text:Text = cast visual;
+                                        if (text.font == prevFont) {
+                                            text.font = this.font;
+                                        }
+                                    }
+                                }
+
+                                // Set asset to null because we don't want it
+                                // to be destroyed when destroying the font.
+                                prevFont.asset = null;
+                                // Destroy texture
+                                prevFont.destroy();
+                            }
 
                             status = READY;
                             emitComplete(true);
@@ -254,6 +378,38 @@ class FontAsset extends Asset {
         });
 
     } //load
+
+    override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
+
+        if (status == READY) {
+            // Only check if the asset is already loaded.
+            // If it is currently loading, it will check
+            // at load end anyway.
+            checkTexturesDensity();
+        }
+
+    } //texturesDensityDidChange
+
+    function checkTexturesDensity():Void {
+
+        var prevPath = path;
+        computePath();
+
+        if (prevPath != path) {
+            log('Reload font ($prevPath -> $path)');
+            load();
+        }
+
+    } //checkTexturesDensity
+
+    function destroy():Void {
+
+        if (font != null) {
+            font.destroy();
+            font = null;
+        }
+
+    } //destroy
 
 } //FontAsset
 
@@ -409,6 +565,16 @@ class Assets extends Entity {
     public function new() {
 
     } //new
+
+    public function destroy() {
+
+        for (asset in addedAssets) {
+            asset.destroy();
+        }
+        addedAssets = null;
+        assetsByKindAndName = null;
+
+    } //destroy
 
 /// Add assets to load
 
