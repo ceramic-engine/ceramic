@@ -78,6 +78,10 @@ class EventsMacro {
                 var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
                 var fnWillEmit = 'willEmit' + capitalName;
                 var fnDidEmit = 'didEmit' + capitalName;
+                var doc = field.doc;
+                if (doc == null || doc == '') {
+                    doc = field.name + ' event';
+                }
 
                 // Create __cbOn{Name}
                 var cbOnField = {
@@ -93,7 +97,7 @@ class EventsMacro {
                         ]
                     })),
                     access: [APrivate],
-                    doc: field.doc,
+                    doc: doc,
                     meta: [{
                         name: ':noCompletion',
                         params: [],
@@ -116,7 +120,7 @@ class EventsMacro {
                         ]
                     })),
                     access: [APrivate],
-                    doc: field.doc,
+                    doc: doc,
                     meta: [{
                         name: ':noCompletion',
                         params: [],
@@ -139,7 +143,7 @@ class EventsMacro {
                         ]
                     })),
                     access: [APrivate],
-                    doc: field.doc,
+                    doc: doc,
                     meta: [{
                         name: ':noCompletion',
                         params: [],
@@ -162,7 +166,7 @@ class EventsMacro {
                         ]
                     })),
                     access: [APrivate],
-                    doc: field.doc,
+                    doc: doc,
                     meta: [{
                         name: ':noCompletion',
                         params: [],
@@ -219,7 +223,7 @@ class EventsMacro {
                         }
                     }),
                     access: [hasPublicModifier ? APublic : APrivate],
-                    doc: field.doc,
+                    doc: doc,
                     meta: hasPrivateModifier ? [{
                         name: ':noCompletion',
                         params: [],
@@ -276,7 +280,7 @@ class EventsMacro {
                         }
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: field.doc,
+                    doc: doc,
                     meta: []
                 };
                 newFields.push(onField);
@@ -329,7 +333,7 @@ class EventsMacro {
                         }
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: field.doc,
+                    doc: doc,
                     meta: []
                 };
                 newFields.push(onceField);
@@ -384,7 +388,7 @@ class EventsMacro {
                         }
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: field.doc,
+                    doc: doc,
                     meta: []
                 };
                 newFields.push(offField);
