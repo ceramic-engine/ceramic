@@ -27,6 +27,9 @@ class Backend implements spec.Backend implements ceramic.Events {
 
     @event function update(delta:Float);
 
+    @event function keyDown(key:ceramic.Key);
+    @event function keyUp(key:ceramic.Key);
+
 /// Internal update logic
 
     inline function willEmitUpdate(delta:Float) {

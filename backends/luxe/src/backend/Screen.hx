@@ -14,9 +14,6 @@ class Screen implements spec.Screen implements ceramic.Events {
     @event function mouseWheel(x:Float, y:Float);
     @event function mouseMove(x:Float, y:Float);
 
-    @event function keyDown(key:ceramic.Key);
-    @event function keyUp(key:ceramic.Key);
-
     @event function touchDown(touchId:Int, x:Float, y:Float);
     @event function touchUp(touchId:Int, x:Float, y:Float);
     @event function touchMove(touchId:Int, x:Float, y:Float);

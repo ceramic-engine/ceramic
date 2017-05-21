@@ -4,6 +4,7 @@ import ceramic.Settings;
 import backend.Backend;
 
 @:allow(ceramic.Visual)
+@:allow(ceramic.Screen)
 class App extends Entity {
 
 /// Shared instances
@@ -23,6 +24,9 @@ class App extends Entity {
         Use this event to update your contents before they get drawn again. */
     @event function update(delta:Float);
 
+    @event function keyDown(key:Key);
+    @event function keyUp(key:Key);
+
 /// Properties
 
     public var project(default,null):Project;
@@ -40,6 +44,10 @@ class App extends Entity {
 /// Internal
 
     var hierarchyDirty:Bool = false;
+
+    /** List of functions that will be called and purged when update iteration begins.
+        Useful to run some specific code once exactly before update event is sent. */
+    var beginUpdateCallbacks:Array<Void->Void> = [];
     
 /// Lifecycle
 
@@ -68,13 +76,37 @@ class App extends Entity {
 
         backend.onUpdate(this, update);
 
+        // Forward key events
+        //
+        backend.onKeyDown(this, function(key) {
+            beginUpdateCallbacks.push(function() emitKeyDown(key));
+        });
+        backend.onKeyUp(this, function(key) {
+            beginUpdateCallbacks.push(function() emitKeyUp(key));
+        });
+
     } //backendReady
 
     function update(delta:Float):Void {
 
+        Timer.update(delta);
+
+        // Run 'begin update' callbacks, like touch/mouse/key events etc...
+        if (beginUpdateCallbacks.length > 0) {
+            var callbacks = beginUpdateCallbacks;
+            beginUpdateCallbacks = [];
+            for (callback in callbacks) {
+                callback();
+            }
+        }
+
+        // Then update
         app.emitUpdate(delta);
 
-        Timer.update(delta);
+        // Notify if screen matrix has changed
+        if (screen.matrix.changed) {
+            screen.matrix.emitChange();
+        }
 
         for (visual in visuals) {
 

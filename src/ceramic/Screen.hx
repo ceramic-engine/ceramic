@@ -45,6 +45,9 @@ class Screen extends Entity {
     @:allow(ceramic.Visual)
     private var matrix:Transform = new Transform();
 
+    /** Internal inverted matrix computed from root matrix. */
+    private var reverseMatrix:Transform = new Transform();
+
     /** In order to prevent nested resizes. */
     private var resizing:Bool = false;
 
@@ -53,6 +56,15 @@ class Screen extends Entity {
     /** Resize event occurs once at startup, then each time any
         of native width, height or density changes. */
     @event function resize();
+
+    @event function mouseDown(buttonId:Int, x:Float, y:Float);
+    @event function mouseUp(buttonId:Int, x:Float, y:Float);
+    @event function mouseWheel(x:Float, y:Float);
+    @event function mouseMove(x:Float, y:Float);
+
+    @event function touchDown(touchId:Int, x:Float, y:Float);
+    @event function touchUp(touchId:Int, x:Float, y:Float);
+    @event function touchMove(touchId:Int, x:Float, y:Float);
 
 /// Lifecycle
 
@@ -89,6 +101,84 @@ class Screen extends Entity {
         settings.onTargetDensityChange(this, function(targetDensity, prevtargetDensity) {
             log('Setting targetDensity=$targetDensity');
             updateTexturesDensity();
+        });
+
+        // Update inverted matrix when root one changes
+        //
+        matrix.onChange(this, function() {
+            reverseMatrix.identity();
+            reverseMatrix.concat(matrix);
+            reverseMatrix.invert();
+            reverseMatrix.emitChange();
+        });
+
+        // Handle mouse events
+        //
+        app.backend.screen.onMouseDown(this, function(buttonId, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitMouseDown(buttonId, x1, y1);
+            });
+        });
+        app.backend.screen.onMouseUp(this, function(buttonId, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitMouseUp(buttonId, x1, y1);
+            });
+        });
+        app.backend.screen.onMouseMove(this, function(x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitMouseMove(x1, y1);
+            });
+        });
+        app.backend.screen.onMouseWheel(this, function(x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitMouseWheel(x1, y1);
+            });
+        });
+
+        // Handle touch events
+        //
+        app.backend.screen.onTouchDown(this, function(touchId, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitTouchDown(touchId, x1, y1);
+            });
+        });
+        app.backend.screen.onTouchUp(this, function(touchId, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitTouchUp(touchId, x1, y1);
+            });
+        });
+        app.backend.screen.onTouchMove(this, function(touchId, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+                emitTouchMove(touchId, x1, y1);
+            });
         });
 
     } //backendReady
@@ -170,5 +260,13 @@ class Screen extends Entity {
         }
 
     } //updateTransform
+
+/// Touch/Mouse events
+
+    inline function didEmitMouseDown(buttonId:Int, x:Float, y:Float):Void {
+
+
+
+    } //didEmitMouseDown
 
 }

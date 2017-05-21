@@ -120,7 +120,7 @@ class Main extends luxe.Game {
 
     override function onkeydown(event:KeyEvent) {
 
-        ceramic.App.app.backend.screen.emitKeyDown({
+        ceramic.App.app.backend.emitKeyDown({
             keyCode: event.keycode,
             scanCode: event.scancode
         });
@@ -129,7 +129,7 @@ class Main extends luxe.Game {
 
     override function onkeyup(event:KeyEvent) {
 
-        ceramic.App.app.backend.screen.emitKeyUp({
+        ceramic.App.app.backend.emitKeyUp({
             keyCode: event.keycode,
             scanCode: event.scancode
         });

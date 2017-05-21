@@ -54,6 +54,13 @@ class Project extends Entity {
 
         trace('text width=${text.width} height=${text.height}');
 
+        app.onKeyDown(this, function(key) {
+            trace('KEY DOWN: $key');
+        });
+        app.onKeyUp(this, function(key) {
+            trace('KEY UP: $key');
+        });
+
         /*
         // Just an idea
         var tween = new Tween(easeInOut, 0.3, 3, 4);
