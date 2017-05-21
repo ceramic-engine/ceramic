@@ -1,6 +1,7 @@
 package;
 
 import luxe.Input;
+import snow.systems.input.Keycodes;
 
 class Main extends luxe.Game {
 
@@ -117,12 +118,53 @@ class Main extends luxe.Game {
 
     } //onmousemove
 
-    override function onkeydown(event:KeyEvent) {}
-    override function onkeyup(event:KeyEvent) {}
+    override function onkeydown(event:KeyEvent) {
 
-    override function ontouchdown(event:TouchEvent) {}
-    override function ontouchup(event:TouchEvent) {}
-    override function ontouchmove(event:TouchEvent) {}
+        ceramic.App.app.backend.screen.emitKeyDown({
+            keyCode: event.keycode,
+            scanCode: event.scancode
+        });
+
+    } //onkeydown
+
+    override function onkeyup(event:KeyEvent) {
+
+        ceramic.App.app.backend.screen.emitKeyUp({
+            keyCode: event.keycode,
+            scanCode: event.scancode
+        });
+
+    } //onkeyup
+
+    override function ontouchdown(event:TouchEvent) {
+
+        ceramic.App.app.backend.screen.emitTouchDown(
+            event.touch_id,
+            event.x,
+            event.y
+        );
+
+    } //ontouchdown
+
+    override function ontouchup(event:TouchEvent) {
+
+        ceramic.App.app.backend.screen.emitTouchUp(
+            event.touch_id,
+            event.x,
+            event.y
+        );
+
+    } //ontouchup
+
+    override function ontouchmove(event:TouchEvent) {
+
+        ceramic.App.app.backend.screen.emitTouchMove(
+            event.touch_id,
+            event.x,
+            event.y
+        );
+
+    } //ontouchmove
 
 
 /// Internal

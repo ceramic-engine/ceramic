@@ -3,12 +3,6 @@ package ceramic;
 import ceramic.Settings;
 import backend.Backend;
 
-class BaseProject extends Entity {
-
-    @:final function new() {}
-
-} //BaseProject
-
 @:allow(ceramic.Visual)
 class App extends Entity {
 
