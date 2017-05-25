@@ -45,7 +45,7 @@ class Settings implements Observable {
 }
 
 /** Same as Settings, but for app startup (inside Project.new(settings)).
-    Values that are normally read only can still
+    Read-only values can still
     be edited at that stage. */
 class InitSettings {
 
