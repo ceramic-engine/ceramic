@@ -1,13 +1,15 @@
 package;
 
 import luxe.Input;
-import snow.systems.input.Keycodes;
 
 class Main extends luxe.Game {
 
     static var lastDevicePixelRatio:Float = -1;
     static var lastWidth:Float = -1;
     static var lastHeight:Float = -1;
+
+    static var touches:Map<Int,Int> = new Map();
+    static var touchIndexes:Map<Int,Int> = new Map();
 
     override function config(config:luxe.GameConfig) {
 
@@ -138,8 +140,15 @@ class Main extends luxe.Game {
 
     override function ontouchdown(event:TouchEvent) {
 
+        var index = 0;
+        while (touchIndexes.exists(index)) {
+            index++;
+        }
+        touches.set(event.touch_id, index);
+        touchIndexes.set(index, event.touch_id);
+
         ceramic.App.app.backend.screen.emitTouchDown(
-            event.touch_id,
+            index,
             event.x,
             event.y
         );
@@ -148,18 +157,31 @@ class Main extends luxe.Game {
 
     override function ontouchup(event:TouchEvent) {
 
+        if (!touches.exists(event.touch_id)) {
+            ontouchdown(event);
+        }
+        var index = touches.get(event.touch_id);
+
         ceramic.App.app.backend.screen.emitTouchUp(
-            event.touch_id,
+            index,
             event.x,
             event.y
         );
+
+        touches.remove(event.touch_id);
+        touchIndexes.remove(index);
 
     } //ontouchup
 
     override function ontouchmove(event:TouchEvent) {
 
+        if (!touches.exists(event.touch_id)) {
+            ontouchdown(event);
+        }
+        var index = touches.get(event.touch_id);
+
         ceramic.App.app.backend.screen.emitTouchMove(
-            event.touch_id,
+            index,
             event.x,
             event.y
         );

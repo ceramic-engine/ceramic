@@ -35,6 +35,7 @@ class Project extends Entity {
         quad1.pos(320 * 0.5, 568 * 0.5);
         quad1.rotation = 30;
         quad1.scale(2.0, 0.5);
+        quad1.name = 'quad1';
 
         var quad2 = new Quad();
         quad2.depth = 1;
@@ -44,6 +45,7 @@ class Project extends Entity {
         quad2.pos(320 * 0.5, 568 * 0.5 + 20);
         quad2.rotation = 30;
         quad2.scale(2.0, 0.5);
+        quad2.name = 'quad2';
 
         var text = new Text();
         text.content = "Jérémy.\nligne.";
@@ -59,6 +61,58 @@ class Project extends Entity {
         });
         app.onKeyUp(this, function(key) {
             trace('KEY UP: $key');
+        });
+
+        screen.onMouseDown(this, function(buttonId, x, y) {
+            trace('MOUSE DOWN $buttonId $x,$y');
+        });
+
+        screen.onMouseMove(this, function(x, y) {
+            trace('      MOVE $x,$y');
+        });
+
+        screen.onMouseUp(this, function(buttonId, x, y) {
+            trace('MOUSE UP $buttonId $x,$y');
+        });
+
+        screen.onTouchDown(this, function(touchIndex, x, y) {
+            trace('TOUCH DOWN $touchIndex $x,$y');
+        });
+
+        screen.onTouchMove(this, function(touchIndex, x, y) {
+            trace('TOUCH MOVE $touchIndex $x,$y');
+        });
+
+        screen.onTouchUp(this, function(touchIndex, x, y) {
+            trace('TOUCH UP $touchIndex $x,$y');
+        });
+
+        var itemStartX = 0.0;
+        var itemStartY = 0.0;
+        var dragStartX = 0.0;
+        var dragStartY = 0.0;
+        var dragging = false;
+        function onMove(x:Float, y:Float) {
+            if (dragging) {
+                quad1.pos(itemStartX + x - dragStartX, itemStartY + y - dragStartY);
+            } else {
+                trace('NOT DRAGGING');
+            }
+        }
+        quad1.onDown(this, function(info) {
+            trace('quad1 DOWN ' + info.x + ',' + info.y);
+            itemStartX = quad1.x;
+            itemStartY = quad1.y;
+            dragStartX = info.x;
+            dragStartY = info.y;
+            dragging = true;
+
+            screen.onMouseMove(onMove);
+        });
+
+        quad1.onUp(this, function(info) {
+            dragging = false;
+            screen.offMouseMove(onMove);
         });
 
         /*

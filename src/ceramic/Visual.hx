@@ -3,21 +3,36 @@ package ceramic;
 import backend.Draw.VisualItem;
 
 @:allow(ceramic.App)
+@:allow(ceramic.Screen)
 class Visual extends Entity {
 
 /// Events
 
-    @event function down();
-
-    @event function up();
-
-    @event function click();
-
-    @event function over();
-
-    @event function out();
+    @event function down(info:TouchInfo);
+    @event function up(info:TouchInfo);
+    @event function click(info:TouchInfo);
+    @event function over(info:TouchInfo);
+    @event function out(info:TouchInfo);
 
 /// Properties
+
+    /** When enabled, this visual will receive as many up/down/click/over/out events as
+        there are fingers or mouse pointer interacting with it.
+        Default is `false`, ensuring there is never multiple up/down/click/over/out that
+        overlap each other. In that case, it triggers `down` when the first finger/pointer hits
+        the visual and trigger `up` when the last finger/pointer stops touching it. Behavior is
+        similar for `over` and `out` events. */
+    public var multiTouch:Bool = false;
+
+    /** Whether this visual is between a `down` and an `up` event or not. */
+    public var isDown(get,null):Bool;
+    var _numDown:Int = 0;
+    inline function get_isDown():Bool { return _numDown > 0; }
+
+    /** Whether this visual is between a `over` and an `out` event or not. */
+    public var isOver(get,null):Bool;
+    var _numOver:Int = 0;
+    inline function get_isOver():Bool { return _numOver > 0; }
 
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
@@ -375,6 +390,32 @@ class Visual extends Entity {
         matrixDirty = false;
 
     } //computeMatrix
+
+/// Hit test
+
+    /** Returns true if (testX,testY) hits/intersects this quad visible bounds */
+    public function hits(x:Float, y:Float):Bool {
+
+        if (matrixDirty) {
+            computeMatrix();
+        }
+
+        _matrix.identity();
+        // Apply whole visual transform
+        _matrix.setTo(a, b, c, d, tx, ty);
+        // But remove screen transform from it
+        _matrix.concat(screen.reverseMatrix);
+        _matrix.invert();
+
+        var testX = _matrix.transformX(x, y);
+        var testY = _matrix.transformY(x, y);
+
+        return testX >= 0
+            && testX < width / scaleX
+            && testY >= 0
+            && testY < height / scaleY;
+
+    } //hits
 
 /// Visibility / Alpha
 

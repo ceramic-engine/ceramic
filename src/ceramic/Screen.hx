@@ -35,6 +35,16 @@ class Screen extends Entity {
         return app.backend.screen.getDensity();
     }
 
+    /** Pointer x coordinate, computed from mouse and touch events.
+        When using multiple touch inputs at the same time, x will be
+        the mean value of all touches x value. */
+    public var pointerX(default,null):Float;
+
+    /** Pointer y coordinate, computed from mouse and touch events.
+        When using multiple touch inputs at the same time, y will be
+        the mean value of all touches y value. */
+    public var pointerY(default,null):Float;
+
     /** Ideal textures density, computed from settings
         targetDensity and current screen state. */
     @observable public var texturesDensity:Float = 1.0;
@@ -46,6 +56,7 @@ class Screen extends Entity {
     private var matrix:Transform = new Transform();
 
     /** Internal inverted matrix computed from root matrix. */
+    @:allow(ceramic.Visual)
     private var reverseMatrix:Transform = new Transform();
 
     /** In order to prevent nested resizes. */
@@ -57,14 +68,24 @@ class Screen extends Entity {
         of native width, height or density changes. */
     @event function resize();
 
+    // Mouse events
+    //
     @event function mouseDown(buttonId:Int, x:Float, y:Float);
     @event function mouseUp(buttonId:Int, x:Float, y:Float);
     @event function mouseWheel(x:Float, y:Float);
     @event function mouseMove(x:Float, y:Float);
 
-    @event function touchDown(touchId:Int, x:Float, y:Float);
-    @event function touchUp(touchId:Int, x:Float, y:Float);
-    @event function touchMove(touchId:Int, x:Float, y:Float);
+    // Touch events
+    //
+    @event function touchDown(touchIndex:Int, x:Float, y:Float);
+    @event function touchUp(touchIndex:Int, x:Float, y:Float);
+    @event function touchMove(touchIndex:Int, x:Float, y:Float);
+
+    // Generic (unified) events
+    //
+    @event function down(info:TouchInfo);
+    @event function up(info:TouchInfo);
+    @event function move(info:TouchInfo);
 
 /// Lifecycle
 
@@ -121,6 +142,13 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseDown(buttonId, x1, y1);
+                emitDown({
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
         app.backend.screen.onMouseUp(this, function(buttonId, x, y) {
@@ -130,6 +158,13 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseUp(buttonId, x1, y1);
+                emitUp({
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
         app.backend.screen.onMouseMove(this, function(x, y) {
@@ -139,6 +174,13 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseMove(x1, y1);
+                emitMove({
+                    touchIndex: -1,
+                    buttonId: MouseButton.NONE,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
         app.backend.screen.onMouseWheel(this, function(x, y) {
@@ -153,31 +195,52 @@ class Screen extends Entity {
 
         // Handle touch events
         //
-        app.backend.screen.onTouchDown(this, function(touchId, x, y) {
+        app.backend.screen.onTouchDown(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
-                emitTouchDown(touchId, x1, y1);
+                emitTouchDown(touchIndex, x1, y1);
+                emitDown({
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
-        app.backend.screen.onTouchUp(this, function(touchId, x, y) {
+        app.backend.screen.onTouchUp(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
-                emitTouchUp(touchId, x1, y1);
+                emitTouchUp(touchIndex, x1, y1);
+                emitUp({
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
-        app.backend.screen.onTouchMove(this, function(touchId, x, y) {
+        app.backend.screen.onTouchMove(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
-                emitTouchMove(touchId, x1, y1);
+                emitTouchMove(touchIndex, x1, y1);
+                emitMove({
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                });
             });
         });
 
@@ -261,12 +324,222 @@ class Screen extends Entity {
 
     } //updateTransform
 
+/// Match visuals to x,y
+
+    function matchFirstDownListener(x:Float, y:Float):Visual {
+
+        var visuals = app.visuals;
+        var i = visuals.length - 1;
+        while (i >= 0) {
+
+            var visual = visuals[i];
+            if (visual.listensDown() && visual.hits(x, y)) {
+                return visual;
+            }
+
+            i--;
+        }
+
+        return null;
+
+    } //matchFirstDownListener
+
+    function matchFirstOverListener(x:Float, y:Float):Visual {
+
+        var visuals = app.visuals;
+        var i = visuals.length - 1;
+        while (i >= 0) {
+
+            var visual = visuals[i];
+            if (visual.listensOver() && visual.hits(x, y)) {
+                return visual;
+            }
+
+            i--;
+        }
+
+        return null;
+
+    } //matchFirstOverListener
+
 /// Touch/Mouse events
+
+    var allPointers:Map<Int,ceramic.internal.Point> = new Map();
+
+    inline function willEmitDown(info:TouchInfo):Void {
+
+
+
+    } //willEmitDown
+
+    inline function willEmitUp(info:TouchInfo):Void {
+
+    } //willEmitUp
+
+    inline function willEmitMove(info:TouchInfo):Void {
+
+    } //willEmitMove
+
+    var matchedDownListeners:Map<Int,Visual> = new Map();
+
+    var matchedOverListeners:Map<Int,Visual> = new Map();
 
     inline function didEmitMouseDown(buttonId:Int, x:Float, y:Float):Void {
 
-
+        var matched = matchFirstDownListener(x, y);
+        if (matched != null) {
+            matched._numDown++;
+            if (matched._numDown == 1 || matched.multiTouch) {
+                matched.emitDown({
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x,
+                    y: y,
+                    hits: true
+                });
+            }
+        }
+        var id = 10000 + buttonId;
+        matchedDownListeners.set(id, matched);
 
     } //didEmitMouseDown
+
+    inline function didEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
+
+        var id = 10000 + buttonId;
+        var matched = matchedDownListeners.get(id);
+        if (matched != null && !matched.destroyed && matched._numDown > 0) {
+            matched._numDown--;
+            if (matched._numDown == 0 || matched.multiTouch) {
+                matched.emitUp({
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x,
+                    y: y,
+                    hits: matched.hits(x, y)
+                });
+            }
+        }
+        matchedDownListeners.remove(id);
+
+    } //didEmitMouseUp
+
+    inline function didEmitMouseMove(x:Float, y:Float):Void {
+
+        var id = 10000;
+        var prevMatched = matchedOverListeners.get(id);
+        var matched = matchFirstOverListener(x, y);
+        if (matched != prevMatched) {
+            if (matched != null) {
+                matchedOverListeners.set(id, matched);
+            } else {
+                matchedOverListeners.remove(id);
+            }
+        }
+        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numOver > 0) {
+            prevMatched._numOver--;
+            if (prevMatched._numOver == 0 || prevMatched.multiTouch) {
+                prevMatched.emitOut({
+                    touchIndex: -1,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: false
+                });
+            }
+        }
+        if (matched != null) {
+            matched._numOver++;
+            if (matched._numOver == 1 || matched.multiTouch) {
+                matched.emitOver({
+                    touchIndex: -1,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: true
+                });
+            }
+        }
+
+    } //didEmitMouseMove
+
+    inline function didEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+
+        var matched = matchFirstDownListener(x, y);
+        if (matched != null) {
+            matched._numDown++;
+            if (matched._numDown == 1 || matched.multiTouch) {
+                matched.emitDown({
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: true
+                });
+            }
+        }
+        var id = 20000 + touchIndex;
+        matchedDownListeners.set(id, matched);
+
+    } //didEmitTouchDown
+
+    inline function didEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+
+        var id = 20000 + touchIndex;
+        var matched = matchedDownListeners.get(id);
+        if (matched != null && !matched.destroyed && matched._numDown > 0) {
+            matched._numDown--;
+            if (matched._numDown == 0 || matched.multiTouch) {
+                matched.emitUp({
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: matched.hits(x, y)
+                });
+            }
+        }
+        matchedDownListeners.remove(id);
+
+    } //didEmitTouchUp
+
+    inline function didEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+
+        var id = 20000 + touchIndex;
+        var prevMatched = matchedOverListeners.get(id);
+        var matched = matchFirstOverListener(x, y);
+        if (matched != prevMatched) {
+            if (matched != null) {
+                matchedOverListeners.set(id, matched);
+            } else {
+                matchedOverListeners.remove(id);
+            }
+        }
+        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numOver > 0) {
+            prevMatched._numOver--;
+            if (prevMatched._numOver == 0 || prevMatched.multiTouch) {
+                prevMatched.emitOut({
+                    touchIndex: -1,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: false
+                });
+            }
+        }
+        if (matched != null) {
+            matched._numOver++;
+            if (matched._numOver == 1 || matched.multiTouch) {
+                matched.emitOver({
+                    touchIndex: -1,
+                    buttonId: -1,
+                    x: x,
+                    y: y,
+                    hits: true
+                });
+            }
+        }
+
+    } //didEmitTouchMove
 
 }
