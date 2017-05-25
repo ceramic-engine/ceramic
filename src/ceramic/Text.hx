@@ -235,4 +235,16 @@ class Text extends Visual {
 
     } //computeContent
 
+/// Print
+
+    function toString():String {
+
+        if (name != null) {
+            return 'Text($name $content)';
+        } else {
+            return 'Text($content)';
+        }
+
+    } //toString
+
 } //Text
