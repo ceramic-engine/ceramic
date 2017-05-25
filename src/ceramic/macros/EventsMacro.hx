@@ -72,6 +72,7 @@ class EventsMacro {
                 var onceName = 'once' + capitalName;
                 var offName = 'off' + capitalName;
                 var emitName = 'emit' + capitalName;
+                var listensName = 'listens' + capitalName;
                 var cbOnArray = '__cbOn' + capitalName;
                 var cbOnceArray = '__cbOnce' + capitalName;
                 var cbOnOwnerUnbindArray = '__cbOnOwnerUnbind' + capitalName;
@@ -79,6 +80,7 @@ class EventsMacro {
                 var fnWillEmit = 'willEmit' + capitalName;
                 var fnDidEmit = 'didEmit' + capitalName;
                 var doc = field.doc;
+                var origDoc = field.doc;
                 if (doc == null || doc == '') {
                     doc = field.name + ' event';
                 }
@@ -392,6 +394,24 @@ class EventsMacro {
                     meta: []
                 };
                 newFields.push(offField);
+
+                // Create listens{Name}()
+                var listensField = {
+                    pos: field.pos,
+                    name: listensName,
+                    kind: FFun({
+                        args: [],
+                        ret: macro :Bool,
+                        expr: macro {
+                            return (this.$cbOnArray != null && this.$cbOnArray.length > 0)
+                                || (this.$cbOnceArray != null && this.$cbOnceArray.length > 0);
+                        }
+                    }),
+                    access: [hasPrivateModifier ? APrivate : APublic, AInline],
+                    doc: origDoc != doc ? 'Does it listen to ' + doc : doc,
+                    meta: []
+                };
+                newFields.push(listensField);
 
             default:
                 throw new Error("Invalid event syntax", field.pos);
