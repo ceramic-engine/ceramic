@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.internal.ReadOnlyPoint as Point;
+
 @:allow(ceramic.App)
 class Screen extends Entity {
 
@@ -37,13 +39,24 @@ class Screen extends Entity {
 
     /** Pointer x coordinate, computed from mouse and touch events.
         When using multiple touch inputs at the same time, x will be
-        the mean value of all touches x value. */
-    public var pointerX(default,null):Float;
+        the mean value of all touches x value. Use this as a
+        convenience when you don't want to deal with multiple positions. */
+    public var pointerX(default,null):Float = 0;
 
     /** Pointer y coordinate, computed from mouse and touch events.
         When using multiple touch inputs at the same time, y will be
-        the mean value of all touches y value. */
-    public var pointerY(default,null):Float;
+        the mean value of all touches y value. Use this as a
+        convenience when you don't want to deal with multiple positions. */
+    public var pointerY(default,null):Float = 0;
+
+    /** Mouse x coordinate, computed from mouse events. */
+    public var mouseX(default,null):Float = 0;
+
+    /** Mouse y coordinate, computed from mouse events. */
+    public var mouseY(default,null):Float = 0;
+
+    /** Touches x and y coordinates by touch index. */
+    public var touches(default,null):Touches = new Touches();
 
     /** Ideal textures density, computed from settings
         targetDensity and current screen state. */
@@ -364,21 +377,106 @@ class Screen extends Entity {
 
 /// Touch/Mouse events
 
-    var allPointers:Map<Int,ceramic.internal.Point> = new Map();
-
     inline function willEmitDown(info:TouchInfo):Void {
 
+        if (info.buttonId != -1) {
+            // Mouse
+            mouseX = info.x;
+            mouseY = info.y;
+        }
+        
+        if (info.touchIndex != -1) {
+            // Touch
+            var pointer = touches.get(info.touchIndex);
+            if (pointer == null) {
+                pointer = { x: info.x, y: info.y };
+                touches.set(info.touchIndex, pointer);
+            } else {
+                pointer.x = info.x;
+                pointer.y = info.y;
+            }
+        }
 
+        updatePointer();
 
     } //willEmitDown
 
     inline function willEmitUp(info:TouchInfo):Void {
 
+        if (info.buttonId != -1) {
+            // Mouse
+            mouseX = info.x;
+            mouseY = info.y;
+        }
+
+        if (info.touchIndex != -1) {
+            // Touch
+            var pointer = touches.get(info.touchIndex);
+            if (pointer == null) {
+                pointer = { x: info.x, y: info.y };
+                touches.set(info.touchIndex, pointer);
+            } else {
+                pointer.x = info.x;
+                pointer.y = info.y;
+            }
+        }
+
+        updatePointer();
+
+        if (info.touchIndex != -1) {
+            // Touch
+            touches.remove(info.touchIndex);
+        }
+
     } //willEmitUp
 
     inline function willEmitMove(info:TouchInfo):Void {
 
+        if (info.buttonId != -1) {
+            // Mouse
+            mouseX = info.x;
+            mouseY = info.y;
+        }
+
+        if (info.touchIndex != -1) {
+            // Touch
+            var pointer = touches.get(info.touchIndex);
+            if (pointer == null) {
+                pointer = { x: info.x, y: info.y };
+                touches.set(info.touchIndex, pointer);
+            } else {
+                pointer.x = info.x;
+                pointer.y = info.y;
+            }
+        }
+
+        updatePointer();
+
     } //willEmitMove
+
+    inline function updatePointer():Void {
+
+        // Touches?
+        //
+        var numTouchPointers = 0;
+        var pX = 0.0;
+        var pY = 0.0;
+        for (pointer in touches) {
+            numTouchPointers++;
+            pX += pointer.x;
+            pY += pointer.y;
+        }
+        if (numTouchPointers > 0) {
+            pointerX = pX / numTouchPointers;
+            pointerY = pY / numTouchPointers;
+        }
+
+        // Or mouse
+        //
+        pointerX = mouseX;
+        pointerY = mouseY;
+
+    } //updatePointer
 
     var matchedDownListeners:Map<Int,Visual> = new Map();
 
