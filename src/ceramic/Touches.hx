@@ -2,6 +2,7 @@ package ceramic;
 
 //typedef Touches = ceramic.internal.ReadOnlyMap<Int,Touch>;
 
+@:allow(ceramic.Screen)
 abstract Touches(Map<Int,Touch>) {
     
 	/**
@@ -68,8 +69,8 @@ abstract Touches(Map<Int,Touch>) {
 
 		The order of indexs is undefined.
 	**/
-	public inline function indexs():Iterator<Int> {
-		return this.indexs();
+	public inline function indexes():Iterator<Int> {
+		return this.keys();
 	}
 
 	/**
@@ -95,6 +96,7 @@ abstract Touches(Map<Int,Touch>) {
 		return v;
 	}
 
+    /** Get the number of touches. Each access requires to count the elements in mapping. */
     public var length(get,never):Int;
     inline function get_length():Int { return Lambda.count(this); }
 
