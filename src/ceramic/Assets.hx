@@ -279,16 +279,29 @@ class FontAsset extends Asset {
         // Load font data
         status = LOADING;
         log('Load $path');
-        app.backend.texts.load(path, null, function(text) {
+        var tmpAssets0 = new Assets();
+        var asset = new TextAsset(name);
+        asset.handleTexturesDensityChange = false;
+        asset.path = path;
+        tmpAssets0.addAsset(asset);
+        tmpAssets0.onceComplete(function(success) {
+
+            var text = asset.text;
 
             if (text != null) {
+
+                // Change font data asset owner
+                tmpAssets0.removeAsset(asset);
+                if (owner != null) {
+                    owner.addAsset(asset);
+                }
 
                 try {
                     fontData = BitmapFontParser.parse(text);
 
                     // Load pages
                     var pages = new Map();
-                    var tmpAssets = new Assets();
+                    var tmpAssets1 = new Assets();
                     var assetList:Array<ImageAsset> = [];
 
                     for (page in fontData.pages) {
@@ -300,17 +313,17 @@ class FontAsset extends Asset {
                         asset.handleTexturesDensityChange = false;
 
                         asset.path = pathInfo.path;
-                        tmpAssets.addAsset(asset);
+                        tmpAssets1.addAsset(asset);
                         assetList.push(asset);
                         
                     }
 
-                    tmpAssets.onComplete(function(success) {
+                    tmpAssets1.onceComplete(function(success) {
 
                         if (success) {
                             // Change texture assets owner
                             for (asset in assetList) {
-                                tmpAssets.removeAsset(asset);
+                                tmpAssets1.removeAsset(asset);
                                 if (owner != null) {
                                     owner.addAsset(asset);
                                 }
@@ -357,11 +370,11 @@ class FontAsset extends Asset {
                         }
 
                         // Destroy temporary assets
-                        tmpAssets.destroy();
+                        tmpAssets1.destroy();
 
                     });
 
-                    tmpAssets.load();
+                    tmpAssets1.load();
 
                 } catch (e:Dynamic) {
                     status = BROKEN;
@@ -375,7 +388,11 @@ class FontAsset extends Asset {
                 emitComplete(false);
             }
 
+            // Destroy temporary assets
+            tmpAssets0.destroy();
         });
+
+        tmpAssets0.load();
 
     } //load
 
@@ -415,6 +432,8 @@ class FontAsset extends Asset {
 
 class TextAsset extends Asset {
 
+    public var text:String = null;
+
     override public function new(name:String) {
 
         super('text', name);
@@ -428,6 +447,7 @@ class TextAsset extends Asset {
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
+                this.text = text;
                 status = READY;
                 emitComplete(true);
             }

@@ -191,7 +191,7 @@ class AssetsMacro {
             }
         }
 
-    }
+    } //initData
 
     static function toAssetConstName(input:String):String {
 
