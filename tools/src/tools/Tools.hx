@@ -12,6 +12,8 @@ class Tools {
 
 /// Global
 
+    public static var muted:Bool = false;
+
     public static var shared(default,null):Tools;
 
     static function main():Void {
@@ -203,7 +205,10 @@ class Tools {
 
         }
 
-        // Add defines
+        // Add generic defines
+        settings.defines.set('assets_path', Path.join([cwd, 'assets']));
+
+        // Add target defines
         if (target != null) {
             var extraDefines = backend.getTargetDefines(cwd, args, target, settings.variant);
             for (key in extraDefines.keys()) {
@@ -225,11 +230,15 @@ class Tools {
 
     public static function print(message:String):Void {
 
+        if (muted) return;
+
         js.Node.process.stdout.write(''+message+"\n");
 
     } //log
 
     public static function success(message:String):Void {
+
+        if (muted) return;
 
         if (settings.colors) {
             js.Node.process.stdout.write(''+Colors.green(message)+"\n");
@@ -241,6 +250,8 @@ class Tools {
 
     public static function error(message:String):Void {
 
+        if (muted) return;
+
         if (settings.colors) {
             js.Node.process.stderr.write(''+Colors.red(message)+"\n");
         } else {
@@ -250,6 +261,8 @@ class Tools {
     } //error
 
     public static function warning(message:String):Void {
+
+        if (muted) return;
 
         if (settings.colors) {
             js.Node.process.stderr.write(''+Colors.yellow(message)+"\n");
@@ -271,6 +284,8 @@ class Tools {
         if (options == null) {
             options = { cwd: null, mute: false };
         }
+
+        if (muted) options.mute = true;
 
         if (options.cwd == null) options.cwd = shared.cwd;
 

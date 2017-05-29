@@ -51,6 +51,9 @@ class Assets extends tools.Task {
             fail('Unknown target: $targetName');
         }
 
+        // Are we only computing the json list or really processing all assets?
+        var listOnly = extractArgFlag(args, 'list-only', true);
+
         // Compute all assets list
         var assets:Array<tools.Asset> = [];
         var assetsPath = Path.join([cwd, 'assets']);
@@ -64,7 +67,7 @@ class Assets extends tools.Task {
         }
 
         // Transform/copy assets
-        var transformedAssets = backend.transformAssets(cwd, assets, target, settings.variant);
+        var transformedAssets = backend.transformAssets(cwd, assets, target, settings.variant, listOnly);
 
         if (transformedAssets.length > 0) {
 
@@ -96,11 +99,21 @@ class Assets extends tools.Task {
                 }
             });
 
-            // Save file
-            File.saveContent(
-                Path.join([dstAssetsPath, '_assets.json']),
-                Json.stringify(assetsJson, null, '    ')
-            );
+            // Compare with previous file
+            var assetsJsonPath = Path.join([dstAssetsPath, '_assets.json']);
+            var assetsJsonString = Json.stringify(assetsJson, null, '    ');
+            var prevAssetsJsonString = null;
+            if (FileSystem.exists(assetsJsonPath)) {
+                prevAssetsJsonString = File.getContent(assetsJsonPath);
+            }
+
+            // Save file if different
+            if (assetsJsonString != prevAssetsJsonString) {
+                File.saveContent(
+                    assetsJsonPath,
+                    assetsJsonString
+                );
+            }
         }
 
 
