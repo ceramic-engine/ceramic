@@ -51,7 +51,19 @@ class Build extends tools.Task {
             case Clean(displayName):
                 action = 'clean';
         }
+
+        if (action == 'clean') {
+            // Remove generated assets on this target if cleaning
+            //
+            var targetAssetsPath = Path.join([flowProjectPath, 'assets']);
+            if (FileSystem.exists(targetAssetsPath)) {
+                print('Remove generated assets.');
+                tools.Files.deleteRecursive(targetAssetsPath);
+            }
+        }
         
+        // Clean with flow command
+        //
         var cmdArgs = ['run', 'flow', action, target.name];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
@@ -89,10 +101,8 @@ class Build extends tools.Task {
 
         });
         
-        //var res = command('haxelib', cmdArgs, { mute: false, cwd: flowProjectPath });
-        
         if (status != 0) {
-            fail('Error when running luxe build.');
+            fail('Error when running luxe $action.');
         }
 
     } //run
