@@ -2,9 +2,8 @@ package ceramic.macros;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.Json;
 import haxe.io.Path;
-import sys.io.File;
+import sys.FileSystem;
 
 using StringTools;
 
@@ -165,10 +164,10 @@ class AssetsMacro {
         if (backendInfo == null) backendInfo = new backend.Info();
 
         if (allAssets == null) {
-            allAssets = [];
-            var list:Array<{name:String}> = Json.parse(File.getContent(Path.join([assetsPath, '_assets.json']))).assets;
-            for (entry in list) {
-                allAssets.push(entry.name);
+            if (FileSystem.exists(assetsPath)) {
+                allAssets = getFlatDirectory(assetsPath);
+            } else {
+                allAssets = [];
             }
         }
 
@@ -232,8 +231,41 @@ class AssetsMacro {
             i++;
         }
 
-        return res.toString();
+        var str = res.toString();
+        if (str.endsWith('_')) str = str.substr(0, str.length - 1);
+
+        return str;
 
     } //toAssetConstName
+    
+    static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
+
+        var result:Array<String> = [];
+
+        for (name in FileSystem.readDirectory(dir)) {
+
+            if (excludeSystemFiles && name == '.DS_Store') continue;
+
+            var path = Path.join([dir, name]);
+            if (FileSystem.isDirectory(path)) {
+                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
+            } else {
+                result.push(path);
+            }
+        }
+
+        if (!subCall) {
+            var prevResult = result;
+            result = [];
+            var prefix = Path.normalize(dir);
+            if (!prefix.endsWith('/')) prefix += '/';
+            for (item in prevResult) {
+                result.push(item.substr(prefix.length));
+            }
+        }
+
+        return result;
+
+    } //getFlatDirectory
 
 }
