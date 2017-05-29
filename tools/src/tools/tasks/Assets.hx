@@ -56,13 +56,24 @@ class Assets extends tools.Task {
 
         // Compute all assets list
         var assets:Array<tools.Asset> = [];
+        var ceramicAssetsPath = Path.join([settings.ceramicPath, 'assets']);
         var assetsPath = Path.join([cwd, 'assets']);
+        var names:Map<String,Bool> = new Map();
 
+        // Add project assets
         if (FileSystem.exists(assetsPath)) {
             for (name in Files.getFlatDirectory(assetsPath)) {
-
                 assets.push(new tools.Asset(name, assetsPath));
+                names.set(name, true);
+            }
+        }
 
+        // Add ceramic default assets (if not overrided by project assets)
+        if (FileSystem.exists(ceramicAssetsPath)) {
+            for (name in Files.getFlatDirectory(ceramicAssetsPath)) {
+                if (!names.exists(name)) {
+                    assets.push(new tools.Asset(name, ceramicAssetsPath));
+                }
             }
         }
 
