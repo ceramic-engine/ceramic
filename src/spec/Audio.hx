@@ -16,9 +16,19 @@ interface Audio {
 
     function stop(handle:AudioHandle):Void;
 
+    function getVolume(handle:AudioHandle):Float;
+
     function setVolume(handle:AudioHandle, volume:Float):Void;
 
+    function getPan(handle:AudioHandle):Float;
+
+    function setPan(handle:AudioHandle, pan:Float):Void;
+
+    function getPitch(handle:AudioHandle):Float;
+
     function setPitch(handle:AudioHandle, pitch:Float):Void;
+
+    function getPosition(handle:AudioHandle):Float;
 
     function setPosition(handle:AudioHandle, position:Float):Void;
 

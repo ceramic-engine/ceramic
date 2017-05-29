@@ -101,7 +101,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         defines.set('target_path', flowProjectPath);
-        defines.set('assets_path', Path.join([flowProjectPath, 'assets']));
+        defines.set('target_assets_path', Path.join([flowProjectPath, 'assets']));
 
         return defines;
 
@@ -156,7 +156,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runUpdate
 
-    public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String):Array<tools.Asset> {
+    public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
@@ -170,7 +170,7 @@ class BackendTools implements tools.spec.BackendTools {
             var srcPath = asset.absolutePath;
             var dstPath = Path.join([dstAssetsPath, asset.name]);
 
-            if (!tools.Files.haveSameLastModified(srcPath, dstPath)) {
+            if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
                 // Copy and set to same date
                 if (sys.FileSystem.exists(dstPath)) {
                     sys.FileSystem.deleteFile(dstPath);
@@ -187,15 +187,17 @@ class BackendTools implements tools.spec.BackendTools {
             newAssets.push(new tools.Asset(asset.name, dstAssetsPath));
         }
 
-        // Remove outdated assets
-        //
-        for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
-            var dstPath = Path.join([dstAssetsPath, name]);
-            if (!validDstPaths.exists(dstPath)) {
-                tools.Files.deleteRecursive(dstPath);
+        if (!listOnly) {
+            // Remove outdated assets
+            //
+            for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
+                var dstPath = Path.join([dstAssetsPath, name]);
+                if (!validDstPaths.exists(dstPath)) {
+                    tools.Files.deleteRecursive(dstPath);
+                }
             }
+            tools.Files.removeEmptyDirectories(dstAssetsPath);
         }
-        tools.Files.removeEmptyDirectories(dstAssetsPath);
 
         return newAssets;
 

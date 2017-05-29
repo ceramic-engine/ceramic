@@ -56,7 +56,7 @@ class Project extends Entity {
 
         trace('text width=${text.width} height=${text.height}');
 
-        app.onKeyDown(this, function(key) {
+        /*app.onKeyDown(this, function(key) {
             trace('KEY DOWN: $key');
         });
         app.onKeyUp(this, function(key) {
@@ -85,7 +85,7 @@ class Project extends Entity {
 
         screen.onTouchUp(this, function(touchIndex, x, y) {
             trace('TOUCH UP $touchIndex $x,$y');
-        });
+        });*/
 
         var itemStartX = 0.0;
         var itemStartY = 0.0;
@@ -128,6 +128,8 @@ class Project extends Entity {
 
         assets.add(Fonts.BALOO_20);
         assets.add(Images.TILESHEET);
+        assets.add(Sounds.LASER_4);
+        assets.add(Sounds.MISCHIEF_STROLL);
 
         assets.onceComplete(this, function(success) {
             log('success? ' + success);
@@ -142,6 +144,16 @@ class Project extends Entity {
             var tilesheet = new Quad();
             tilesheet.pos(150, 200);
             tilesheet.texture = assets.texture(Images.TILESHEET);
+
+            var laser = assets.sound(Sounds.LASER_4);
+            var music = assets.sound(Sounds.MISCHIEF_STROLL);
+
+            quad2.onDown(this, function(info) {
+                trace('PLAY laser');
+                laser.play();
+            });
+
+            music.play(0, true);
 
         });
 

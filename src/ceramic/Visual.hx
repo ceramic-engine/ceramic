@@ -10,7 +10,6 @@ class Visual extends Entity {
 
     @event function down(info:TouchInfo);
     @event function up(info:TouchInfo);
-    @event function click(info:TouchInfo);
     @event function over(info:TouchInfo);
     @event function out(info:TouchInfo);
 

@@ -138,6 +138,9 @@ class Main extends luxe.Game {
 
     } //onkeyup
 
+// Don't handle touch on desktop, for now
+#if !(mac || windows || linux)
+
     override function ontouchdown(event:TouchEvent) {
 
         var index = 0;
@@ -188,6 +191,7 @@ class Main extends luxe.Game {
 
     } //ontouchmove
 
+#end
 
 /// Internal
 

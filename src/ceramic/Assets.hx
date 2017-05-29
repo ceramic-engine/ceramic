@@ -5,6 +5,8 @@ import ceramic.BitmapFont;
 
 using StringTools;
 
+typedef AssetOptions = Dynamic;
+
 enum AssetStatus {
     NONE;
     LOADING;
@@ -36,16 +38,19 @@ class Asset extends Entity {
 
     public var owner:Assets;
 
+    public var options:AssetOptions;
+
     @observable public var status:AssetStatus = NONE;
 
     var handleTexturesDensityChange(default,set):Bool = false;
 
 /// Lifecycle
 
-    public function new(kind:String, name:String) {
+    public function new(kind:String, name:String, ?options:AssetOptions) {
 
         this.kind = kind;
         this.name = name;
+        this.options = options != null ? options : {};
 
         computePath();
 
@@ -69,9 +74,9 @@ class Asset extends Entity {
             default: [];
         }
 
-        path = null;
         var targetDensity = screen.texturesDensity;
         var path = null;
+        var bestPathInfo = null;
 
         if (extensions.length > 0 && Assets.allByName.exists(name)) {
             var list = Assets.allByName.get(name);
@@ -89,6 +94,7 @@ class Asset extends Entity {
                             bestDensityDiff = diff;
                             bestDensity = pathInfo.density;
                             path = pathInfo.path;
+                            bestPathInfo = pathInfo;
                         }
                     }
                 }
@@ -99,6 +105,15 @@ class Asset extends Entity {
         }
 
         this.path = path; // sets density
+
+        // Set additional options
+        if (bestPathInfo != null && bestPathInfo.flags != null) {
+            for (flag in bestPathInfo.flags.keys()) {
+                if (!Reflect.hasField(options, flag)) {
+                    Reflect.setField(options, flag, bestPathInfo.flags.get(flag));
+                }
+            }
+        }
 
     } //computePath
 
@@ -149,9 +164,9 @@ class ImageAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String) {
+    override public function new(name:String, ?options:AssetOptions) {
 
-        super('image', name);
+        super('image', name, options);
         handleTexturesDensityChange = true;
 
     } //name
@@ -267,9 +282,9 @@ class FontAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String) {
+    override public function new(name:String, ?options:AssetOptions) {
 
-        super('font', name);
+        super('font', name, options);
         handleTexturesDensityChange = true;
 
     } //name
@@ -434,9 +449,9 @@ class TextAsset extends Asset {
 
     public var text:String = null;
 
-    override public function new(name:String) {
+    override public function new(name:String, ?options:AssetOptions) {
 
-        super('text', name);
+        super('text', name, options);
 
     } //name
 
@@ -461,13 +476,23 @@ class TextAsset extends Asset {
 
     } //load
 
+    function destroy():Void {
+
+        text = null;
+
+    } //destroy
+
 } //TextAsset
 
 class SoundAsset extends Asset {
 
-    override public function new(name:String) {
+    public var stream:Bool = false;
 
-        super('sound', name);
+    public var sound:Sound = null;
+
+    override public function new(name:String, ?options:AssetOptions) {
+
+        super('sound', name, options);
 
     } //name
 
@@ -475,10 +500,11 @@ class SoundAsset extends Asset {
 
         status = LOADING;
         log('Load $path');
-        app.backend.audio.load(path, null, function(audio) {
+        app.backend.audio.load(path, { stream: options.stream }, function(audio) {
 
             if (audio != null) {
-                //this.audio = new Sound(audio);
+                this.sound = new Sound(audio);
+                this.sound.asset = this;
                 status = READY;
                 emitComplete(true);
             }
@@ -492,7 +518,17 @@ class SoundAsset extends Asset {
 
     } //load
 
-} //AudioAsset
+    function destroy():Void {
+
+        if (sound != null) {
+            sound.destroy();
+            sound = null;
+        }
+
+    } //destroy
+
+
+} //SoundAsset
 
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('image'))
@@ -527,6 +563,8 @@ class AssetPathInfo {
 
     public var path:String;
 
+    public var flags:Map<String,Dynamic>;
+
 /// Constructor
 
     public function new(path:String) {
@@ -544,11 +582,26 @@ class AssetPathInfo {
             baseAtIndex = dotIndex;
         }
         else {
-            var afterAt = truncatedName.substr(baseAtIndex + 1);
-            if (afterAt.endsWith('x')) {
-                var flt = Std.parseFloat(afterAt.substr(0, afterAt.length-1));
-                if (!Math.isNaN(flt)) {
-                    density = flt;
+            var afterAtParts = truncatedName.substr(baseAtIndex + 1);
+            for (afterAt in afterAtParts.split('+')) {
+                var isFlag = true;
+                if (afterAt.endsWith('x')) {
+                    var flt = Std.parseFloat(afterAt.substr(0, afterAt.length-1));
+                    if (!Math.isNaN(flt)) {
+                        density = flt;
+                        isFlag = false;
+                    }
+                }
+                if (isFlag) {
+                    if (flags == null) flags = new Map();
+                    var equalIndex = afterAt.indexOf('=');
+                    if (equalIndex == -1) {
+                        flags.set(afterAt, true);
+                    } else {
+                        var key = afterAt.substr(0, equalIndex);
+                        var val = afterAt.substr(equalIndex + 1);
+                        flags.set(key, val);
+                    }
                 }
             }
         }
@@ -598,7 +651,7 @@ class Assets extends Entity {
 
 /// Add assets to load
 
-    public function add(id:AssetId):Void {
+    public function add(id:AssetId, ?options:AssetOptions):Void {
 
         var value:String = cast id;
         var colonIndex = value.indexOf(':');
@@ -611,36 +664,36 @@ class Assets extends Entity {
         var name = value.substr(colonIndex + 1);
 
         switch (kind) {
-            case 'image': addImage(name);
-            case 'text': addText(name);
-            case 'sound': addSound(name);
-            case 'font': addFont(name);
+            case 'image': addImage(name, options);
+            case 'text': addText(name, options);
+            case 'sound': addSound(name, options);
+            case 'font': addFont(name, options);
             default: throw "Assets: invalid asset kind for id: " + id;
         }
 
     } //add
 
-    public function addImage(name:String):Void {
+    public function addImage(name:String, ?options:AssetOptions):Void {
         
-        addAsset(new ImageAsset(name));
+        addAsset(new ImageAsset(name, options));
 
     } //addTexture
 
-    public function addFont(name:String):Void {
+    public function addFont(name:String, ?options:AssetOptions):Void {
 
-        addAsset(new FontAsset(name));
+        addAsset(new FontAsset(name, options));
 
     } //addFont
 
-    public function addText(name:String):Void {
+    public function addText(name:String, ?options:AssetOptions):Void {
 
-        addAsset(new TextAsset(name));
+        addAsset(new TextAsset(name, options));
 
     } //addText
 
-    public function addSound(name:String):Void {
+    public function addSound(name:String, ?options:AssetOptions):Void {
 
-        addAsset(new SoundAsset(name));
+        addAsset(new SoundAsset(name, options));
 
     } //addSound
 
@@ -761,6 +814,32 @@ class Assets extends Entity {
         return asset.font;
 
     } //font
+
+    public function sound(name:Either<String,AssetId>):Sound {
+
+        var realName:String = cast name;
+        if (realName.startsWith('sound:')) realName = realName.substr(6);
+        
+        if (!assetsByKindAndName.exists('sound')) return null;
+        var asset:SoundAsset = cast assetsByKindAndName.get('sound').get(realName);
+        if (asset == null) return null;
+
+        return asset.sound;
+
+    } //font
+
+    public function text(name:Either<String,AssetId>):String {
+
+        var realName:String = cast name;
+        if (realName.startsWith('text:')) realName = realName.substr(5);
+        
+        if (!assetsByKindAndName.exists('text')) return null;
+        var asset:TextAsset = cast assetsByKindAndName.get('text').get(realName);
+        if (asset == null) return null;
+
+        return asset.text;
+
+    } //text
 
 /// Static helpers
 

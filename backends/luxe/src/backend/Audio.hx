@@ -12,7 +12,16 @@ abstract AudioHandle(luxe.Audio.AudioHandle) from luxe.Audio.AudioHandle to luxe
 
 class Audio implements spec.Audio {
 
+/// Internal
+
+    var loopingStreams:Map<AudioHandle,Bool> = new Map();
+    var loopHandles:Map<AudioHandle,AudioHandle> = new Map();
+
+/// Lifecycle
+
     public function new() {}
+
+/// Public API
 
     inline public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
 
@@ -34,56 +43,186 @@ class Audio implements spec.Audio {
 
     } //unload
 
-    inline public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
+    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
+
+        var audioResource:luxe.resource.Resource.AudioResource = audio;
 
         var handle:AudioHandle = null;
         if (loop) {
-            handle = Luxe.audio.play((audio:luxe.resource.Resource.AudioResource).source, volume, true);
+
+            var isStream = audioResource.source.data.is_stream;
+
+            if (isStream) {
+
+                // At the moment, looping a stream doesn't seem reliable in luxe/snow/openal.
+                // When looping a stream, let's manage ourselve the loop by
+                // checking the position and playing again from start.
+
+                var duration = audioResource.source.duration();
+                handle = Luxe.audio.play(audioResource.source, volume, false);
+                var firstHandle = handle;
+                loopingStreams.set(handle, true);
+
+                var onUpdate = null;
+                onUpdate = function(delta) {
+
+                    if (loopingStreams.exists(handle)) {
+
+                        var playing = loopingStreams.get(handle);
+                        if (playing) {
+
+                            var pos = Luxe.audio.position_of(handle);
+                            if (pos < duration) volume = Luxe.audio.volume_of(handle);
+
+                            if (pos >= duration - 1.0/60) {
+                                loopingStreams.remove(handle);
+                                Luxe.audio.stop(handle);
+                                handle = Luxe.audio.play(audioResource.source, volume, false);
+                                loopingStreams.set(handle, true);
+                                loopHandles.set(firstHandle, handle);
+                            }
+                        }
+
+                    } else {
+                        ceramic.App.app.offUpdate(onUpdate);
+                    }
+
+                };
+                ceramic.App.app.onUpdate(onUpdate);
+
+            } else {
+                handle = Luxe.audio.loop(audioResource.source, volume, false);
+            }
+
         } else {
-            handle = Luxe.audio.loop((audio:luxe.resource.Resource.AudioResource).source, volume, true);
+            handle = Luxe.audio.play(audioResource.source, volume, false);
         }
 
-        Luxe.audio.pan(handle, pan);
-        Luxe.audio.pitch(handle, pitch);
-        Luxe.audio.position(handle, position);
-
-        Luxe.audio.unpause(handle);
+        if (pan != 0) Luxe.audio.pan(handle, pan);
+        if (pitch != 1) Luxe.audio.pitch(handle, pitch);
+        if (position != 0) Luxe.audio.position(handle, position);
 
         return handle;
 
     } //play
 
-    inline public function pause(handle:AudioHandle):Void {
+    public function pause(handle:AudioHandle):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        if (loopingStreams.exists(handle)) {
+            loopingStreams.set(handle, false);
+        }
 
         Luxe.audio.pause(handle);
 
     } //pause
 
-    inline public function resume(handle:AudioHandle):Void {
+    public function resume(handle:AudioHandle):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        if (loopingStreams.exists(handle)) {
+            loopingStreams.set(handle, true);
+        }
 
         Luxe.audio.unpause(handle);
 
     } //resume
 
-    inline public function stop(handle:AudioHandle):Void {
+    public function stop(handle:AudioHandle):Void {
+        
+        if (loopHandles.exists(handle)) {
+            var prevHandle = handle;
+            handle = loopHandles.get(handle);
+            loopHandles.remove(prevHandle);
+        }
+
+        loopingStreams.remove(handle);
 
         Luxe.audio.stop(handle);
 
     } //stop
 
-    inline public function setVolume(handle:AudioHandle, volume:Float):Void {
+    public function getVolume(handle:AudioHandle):Float {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Luxe.audio.volume_of(handle);
+
+    } //getVolume
+
+    public function setVolume(handle:AudioHandle, volume:Float):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
 
         Luxe.audio.volume(handle, volume);
 
     } //setVolume
 
-    inline public function setPitch(handle:AudioHandle, pitch:Float):Void {
+    public function getPan(handle:AudioHandle):Float {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Luxe.audio.pan_of(handle);
+
+    } //getPan
+
+    public function setPan(handle:AudioHandle, pan:Float):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        Luxe.audio.pan(handle, pan);
+
+    } //setPan
+
+    public function getPitch(handle:AudioHandle):Float {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Luxe.audio.pitch_of(handle);
+
+    } //getPitch
+
+    public function setPitch(handle:AudioHandle, pitch:Float):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
 
         Luxe.audio.pitch(handle, pitch);
 
     } //setPitch
 
-    inline public function setPosition(handle:AudioHandle, position:Float):Void {
+    public function getPosition(handle:AudioHandle):Float {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Luxe.audio.position_of(handle);
+
+    } //getPosition
+
+    public function setPosition(handle:AudioHandle, position:Float):Void {
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
 
         Luxe.audio.position(handle, position);
 

@@ -75,6 +75,11 @@ class Screen extends Entity {
     /** In order to prevent nested resizes. */
     private var resizing:Bool = false;
 
+    /** Whether the screen is between a `down` and an `up` event or not. */
+    public var isDown(get,null):Bool;
+    var _numDown:Int = 0;
+    inline function get_isDown():Bool { return _numDown > 0; }
+
 /// Events
 
     /** Resize event occurs once at startup, then each time any
@@ -155,13 +160,16 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseDown(buttonId, x1, y1);
-                emitDown({
-                    touchIndex: -1,
-                    buttonId: buttonId,
-                    x: x1,
-                    y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
-                });
+                _numDown++;
+                if (_numDown == 1) {
+                    emitDown({
+                        touchIndex: -1,
+                        buttonId: buttonId,
+                        x: x1,
+                        y: y1,
+                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    });
+                }
             });
         });
         app.backend.screen.onMouseUp(this, function(buttonId, x, y) {
@@ -171,13 +179,16 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseUp(buttonId, x1, y1);
-                emitUp({
-                    touchIndex: -1,
-                    buttonId: buttonId,
-                    x: x1,
-                    y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
-                });
+                _numDown--;
+                if (_numDown == 0) {
+                    emitUp({
+                        touchIndex: -1,
+                        buttonId: buttonId,
+                        x: x1,
+                        y: y1,
+                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    });
+                }
             });
         });
         app.backend.screen.onMouseMove(this, function(x, y) {
@@ -215,13 +226,16 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchDown(touchIndex, x1, y1);
-                emitDown({
-                    touchIndex: touchIndex,
-                    buttonId: -1,
-                    x: x1,
-                    y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
-                });
+                _numDown++;
+                if (_numDown == 1) {
+                    emitDown({
+                        touchIndex: touchIndex,
+                        buttonId: -1,
+                        x: x1,
+                        y: y1,
+                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    });
+                }
             });
         });
         app.backend.screen.onTouchUp(this, function(touchIndex, x, y) {
@@ -231,13 +245,16 @@ class Screen extends Entity {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchUp(touchIndex, x1, y1);
-                emitUp({
-                    touchIndex: touchIndex,
-                    buttonId: -1,
-                    x: x1,
-                    y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
-                });
+                _numDown--;
+                if (_numDown == 0) {
+                    emitUp({
+                        touchIndex: touchIndex,
+                        buttonId: -1,
+                        x: x1,
+                        y: y1,
+                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    });
+                }
             });
         });
         app.backend.screen.onTouchMove(this, function(touchIndex, x, y) {
@@ -462,6 +479,7 @@ class Screen extends Entity {
         var pX = 0.0;
         var pY = 0.0;
         for (pointer in touches) {
+            if (pointer == null) continue; // Why does this happen?
             numTouchPointers++;
             pX += pointer.x;
             pY += pointer.y;
@@ -475,6 +493,9 @@ class Screen extends Entity {
         //
         pointerX = mouseX;
         pointerY = mouseY;
+
+        // TODO REMOVE
+        //trace('pointer $pointerX, $pointerY');
 
     } //updatePointer
 
