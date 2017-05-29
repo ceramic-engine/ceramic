@@ -42,11 +42,11 @@ class Textures implements spec.Textures {
                     @:privateAccess texture.from_asset(asset);
                     done(texture);
                 }
-#if cpp
+/*#if cpp
                 ceramic.internal.Worker.execInPrimary(doCreate);
-#else
+#else*/
                 doCreate();
-#end
+//#end
             });
             get.error(function(_) {
 
@@ -55,19 +55,19 @@ class Textures implements spec.Textures {
                     texture.destroy(true);
                     done(null);
                 }
-#if cpp
+/*#if cpp
                 ceramic.internal.Worker.execInPrimary(doFail);
-#else
+#else*/
                 doFail();
-#end
+//#end
             });
         }
 
-#if cpp
+/*#if cpp
         ceramic.App.app.backend.worker.enqueue(doLoad);
-#else
+#else*/
         doLoad();
-#end
+//#end
 
     } //load
 
