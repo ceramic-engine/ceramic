@@ -103,7 +103,7 @@ ceramic init --name MyProject --vscode --luxe
 
 A new ceramic project is now created inside a `MyProject` directory, using the `luxe` backend and providing Visual Studio Code project files.
 
-Open the `MyProject` directory with Visual Studio Code (you can to so by dragging the folder onto your VS Code icon).
+Open the `MyProject` directory with Visual Studio Code (you can do so by dragging the folder onto your VS Code icon).
 
 Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should work!**
 
