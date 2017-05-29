@@ -21,7 +21,7 @@ class Texture extends Entity {
 
     public var backendItem:backend.Textures.Texture;
 
-    public var asset:Asset;
+    public var asset:ImageAsset;
 
 /// Lifecycle
 
