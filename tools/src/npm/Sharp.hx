@@ -41,6 +41,12 @@ extern class Sharp {
 
     function toFile(output:String, callback:Dynamic->Dynamic->Void):Sharp;
 
+    function raw():Sharp;
+
+    function png():Sharp;
+
+    function toBuffer(callback:Dynamic->Dynamic->Dynamic->Void):Sharp;
+
     function metadata(callback:Dynamic->SharpMetadata->Void):Sharp;
 
 } //Sharp

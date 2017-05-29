@@ -20,6 +20,7 @@ class Project extends Entity {
         settings.scaling = FIT;
         settings.targetWidth = 320;
         settings.targetHeight = 568;
+        settings.targetDensity = 2;
 
         app.onceReady(this, ready);
 
@@ -55,6 +56,20 @@ class Project extends Entity {
         text.pos(40, 40);
 
         trace('text width=${text.width} height=${text.height}');
+
+        screen.onDown(this, function(info) {
+            //Luxe.audio.suspend();
+            if (settings.targetDensity == 2) {
+                settings.targetDensity = 1;
+            } else {
+                settings.targetDensity = 2;
+            }
+            /*app.onceUpdate(function(delta) {
+                app.onceUpdate(function(delta) {
+                    Luxe.audio.resume();
+                });
+            });*/
+        });
 
         /*app.onKeyDown(this, function(key) {
             trace('KEY DOWN: $key');

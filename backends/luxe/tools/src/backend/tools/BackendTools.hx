@@ -1,7 +1,10 @@
 package backend.tools;
 
 import tools.Tools.*;
+import tools.Images;
 import haxe.io.Path;
+
+using StringTools;
 
 class BackendTools implements tools.spec.BackendTools {
 
@@ -179,7 +182,20 @@ class BackendTools implements tools.spec.BackendTools {
                 if (!sys.FileSystem.exists(dir)) {
                     sys.FileSystem.createDirectory(dir);
                 }
-                sys.io.File.copy(srcPath, dstPath);
+
+                if (srcPath.toLowerCase().endsWith('.png')) {
+                    // If it's a png with alpha channel, premultiply its alpha
+                    var raw = Images.getRaw(srcPath);
+                    if (raw.channels == 4) {
+                        Images.premultiplyAlpha(raw.pixels);
+                    }
+                    Images.saveRaw(dstPath, raw);
+                }
+                else {
+                    // Otherwise just copy the file
+                    sys.io.File.copy(srcPath, dstPath);
+                }
+
                 tools.Files.setToSameLastModified(srcPath, dstPath);
             }
 
