@@ -21,7 +21,6 @@
   "homepage": "https://github.com/jeremyfa/ceramic#readme",
   "dependencies": {
     "applescript": "^1.0.0",
-    "canvas-prebuilt": "^1.6.5-prerelease.1",
     "colors": "^1.1.2",
     "fibers": "^1.0.15",
     "glob": "^7.1.1",
@@ -31,7 +30,6 @@
     "lockfile": "^1.0.2",
     "multi-bin-packer": "^1.1.3",
     "ncp": "^2.0.0",
-    "opentype.js": "^0.7.1",
     "plist": "^2.0.1",
     "portscanner": "^2.1.0",
     "sharp": "^0.16.2",
