@@ -5,10 +5,9 @@ using cpp.NativeArray;
 #end
 
 enum VisualItem {
-    None;
-    Quad;
-    Mesh;
-    Graphics;
+    NONE;
+    QUAD;
+    MESH;
 }
 
 @:allow(backend.Backend)
@@ -57,16 +56,13 @@ class Draw implements spec.Draw {
         // at each draw iteration to read/store per visual data.
 
         if (Std.is(visual, ceramic.Quad)) {
-            return Quad;
-        }
-        else if (Std.is(visual, ceramic.Graphics)) {
-            return Graphics;
+            return QUAD;
         }
         else if (Std.is(visual, ceramic.Mesh)) {
-            return Mesh;
+            return MESH;
         }
         else {
-            return None;
+            return NONE;
         }
 
     } //getItem
@@ -76,6 +72,7 @@ class Draw implements spec.Draw {
         var quad:ceramic.Quad;
         var quadGeom:phoenix.geometry.QuadGeometry;
         var rect = new luxe.Rectangle();
+        var mesh:ceramic.Mesh;
 
         var r:Float;
         var g:Float;
@@ -98,7 +95,7 @@ class Draw implements spec.Draw {
 
             switch (visual.backendItem) {
                 
-                case Quad:
+                case QUAD:
                     quad = cast visual;
 
                     // Get or create quad geometry
@@ -203,7 +200,11 @@ class Draw implements spec.Draw {
                     m.M21 = quad.b;
                     m.M22 = quad.d;
                     m.M24 = quad.ty;
-                    
+                
+                case MESH:
+                    mesh = cast visual;
+
+                    // TODO
 
                 default:
             }

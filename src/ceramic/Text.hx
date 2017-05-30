@@ -100,6 +100,17 @@ class Text extends Visual {
         return height;
     }
 
+    override function set_blending(blending:Blending):Blending {
+        if (this.blending == blending) return blending;
+        this.blending = blending;
+        if (glyphQuads != null) {
+            for (quad in glyphQuads) {
+                quad.blending = blending;
+            }
+        }
+        return blending;
+    }
+
 /// Lifecycle
 
     override public function new() {
@@ -180,6 +191,7 @@ class Text extends Visual {
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;
             quad.depth = depth;
+            quad.blending = blending;
             quad.frame(
                 glyph.x / quad.texture.density,
                 glyph.y / quad.texture.density,

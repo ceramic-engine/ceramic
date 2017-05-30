@@ -60,6 +60,11 @@ class Visual extends Entity {
         will be within range [parent.depth, parent.depth + childrenDepthRange] */
     public var childrenDepthRange:Float = -1;
 
+    public var blending(default,set):Blending = Blending.NORMAL;
+    function set_blending(blending:Blending):Blending {
+        return this.blending = blending;
+    }
+
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
         if (this.visible == visible) return visible;

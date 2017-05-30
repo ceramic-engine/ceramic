@@ -2,8 +2,6 @@ package ceramic;
 
 class Quad extends Visual {
 
-    public var blending:Blending = Blending.NORMAL;
-
     public var color:Color = Color.WHITE;
 
     public var texture(default,set):Texture = null;
