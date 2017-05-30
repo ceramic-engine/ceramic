@@ -127,7 +127,7 @@ class LazyMacro {
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'lazy' || meta.name == ':lazy') {
+            if (meta.name == 'lazy') {
                 return true;
             }
         }

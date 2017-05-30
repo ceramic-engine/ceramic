@@ -424,7 +424,7 @@ class EventsMacro {
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'event' || meta.name == ':event') {
+            if (meta.name == 'event') {
                 return true;
             }
         }

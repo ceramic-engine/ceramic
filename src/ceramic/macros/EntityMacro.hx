@@ -187,7 +187,7 @@ class EntityMacro {
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'component' || meta.name == ':component') {
+            if (meta.name == 'component') {
                 return true;
             }
         }

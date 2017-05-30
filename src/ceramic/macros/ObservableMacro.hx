@@ -154,7 +154,7 @@ class ObservableMacro {
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'observable' || meta.name == ':observable') {
+            if (meta.name == 'observable') {
                 return true;
             }
         }
