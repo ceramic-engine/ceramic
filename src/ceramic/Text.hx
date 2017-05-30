@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.BitmapFont;
+import ceramic.Assets;
 
 using unifill.Unifill;
 
@@ -104,6 +105,9 @@ class Text extends Visual {
     override public function new() {
 
         super();
+
+        // Default font
+        font = app.assets.font(Fonts.ARIAL_20);
 
     } //new
 

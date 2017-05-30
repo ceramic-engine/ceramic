@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.Settings;
+import ceramic.Assets;
 import backend.Backend;
 
 @:allow(ceramic.Visual)
@@ -29,17 +30,26 @@ class App extends Entity {
 
 /// Properties
 
+    /** Project instance */
     public var project(default,null):Project;
 
+    /** Backend instance */
     public var backend(default,null):Backend;
 
+    /** Screen instance */
     public var screen(default,null):Screen;
 
+    /** App settings */
     public var settings(default,null):Settings;
 
+    /** Logger. Used by log() shortcut. */
     public var logger(default,null):Logger = new Logger();
 
+    /** Visuals (ordered). */
     public var visuals(default,null):Array<Visual> = [];
+
+    /** App level assets. Used to load default bitmap font. */
+    public var assets(default,null):Assets = new Assets();
 
 /// Internal
 
@@ -70,6 +80,23 @@ class App extends Entity {
 
         screen.backendReady();
 
+        assets.add(Fonts.ARIAL_20);
+        assets.onceComplete(this, function(success) {
+
+            if (success) {
+                assetsLoaded();
+            } else {
+                error('Failed to load default assets.');
+            }
+
+        });
+
+        assets.load();
+
+    } //backendReady
+
+    function assetsLoaded():Void {
+
         emitReady();
 
         screen.resize();
@@ -85,7 +112,7 @@ class App extends Entity {
             beginUpdateCallbacks.push(function() emitKeyUp(key));
         });
 
-    } //backendReady
+    } //assetsLoaded
 
     function update(delta:Float):Void {
 

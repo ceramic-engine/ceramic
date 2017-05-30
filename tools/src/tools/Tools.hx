@@ -207,6 +207,7 @@ class Tools {
 
         // Add generic defines
         settings.defines.set('assets_path', Path.join([cwd, 'assets']));
+        settings.defines.set('ceramic_assets_path', Path.join([settings.ceramicPath, 'assets']));
         settings.defines.set('HXCPP_STACK_LINE', '');
         settings.defines.set('HXCPP_STACK_TRACE', '');
 

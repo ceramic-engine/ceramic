@@ -19,7 +19,7 @@ class AssetsMacro {
 
     macro static public function buildNames(kind:String):Array<Field> {
         
-        initData(Context.definedValue('assets_path'));
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -101,7 +101,7 @@ class AssetsMacro {
 
     macro static public function buildLists():Array<Field> {
         
-        initData(Context.definedValue('assets_path'));
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -159,15 +159,30 @@ class AssetsMacro {
 
     } //buildLists
 
-    static function initData(assetsPath:String):Void {
+    static function initData(assetsPath:String, ceramicAssetsPath:String):Void {
 
         if (backendInfo == null) backendInfo = new backend.Info();
 
         if (allAssets == null) {
+
+            var usedPaths:Map<String,Bool> = new Map();
+
             if (FileSystem.exists(assetsPath)) {
                 allAssets = getFlatDirectory(assetsPath);
             } else {
                 allAssets = [];
+            }
+
+            for (asset in allAssets) {
+                usedPaths.set(asset, true);
+            }
+
+            if (FileSystem.exists(ceramicAssetsPath)) {
+                for (asset in getFlatDirectory(ceramicAssetsPath)) {
+                    if (!usedPaths.exists(asset)) {
+                        allAssets.push(asset);
+                    }
+                }
             }
         }
 

@@ -152,7 +152,9 @@ class Project extends Entity {
 
             var font = assets.font(Fonts.BALOO_20);
             trace('font = $font');
-            text.font = font;
+            /*ceramic.Timer.delay(1.0, function() {
+                text.font = font;
+            });*/
 
             trace('text width=${text.width} height=${text.height}');
 
