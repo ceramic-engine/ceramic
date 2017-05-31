@@ -2,6 +2,7 @@ package tools.tasks;
 
 import tools.Tools.*;
 import haxe.io.Path;
+import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -51,6 +52,32 @@ class Hxml extends tools.Task {
 
         // Add completion flag
         rawHxml += "\n" + '-D completion';
+
+        // Add some completion cache optims
+        //
+        var pathFilters = [];
+        var ceramicSrcContentPath = Path.join([settings.ceramicPath, 'src/ceramic']);
+        for (name in FileSystem.readDirectory(ceramicSrcContentPath)) {
+            if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
+                if (name.endsWith('.hx')) {
+                    var className = name.substr(0, name.length - 3);
+                    if (className != 'Assets') {
+                        pathFilters.push('ceramic.' + className);
+                    }
+                }
+            }
+        }
+        // We hardcoded nape and spinehaxe/spine classpaths because they are common dependencies that won't change.
+        // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
+        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
+        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
+
+        // Required to ensure assets list gets updated
+        var toInvalidate = [
+            Path.join([ceramicSrcContentPath, 'Assets.hx']),
+            Path.join([ceramicSrcContentPath, 'macros/AssetsMacro.hx'])
+        ];
+        rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";
         
         // Make every hxml paths absolute (to simplify IDE integration)
         //
