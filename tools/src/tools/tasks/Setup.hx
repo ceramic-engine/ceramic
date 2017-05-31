@@ -35,16 +35,6 @@ class Setup extends tools.Task {
             fail('Unknown target: $targetName');
         }
 
-        // Add backend define
-        if (!settings.defines.exists('luxe')) {
-            settings.defines.set('luxe', '');
-        }
-
-        // Add target define
-        if (!settings.defines.exists(target.name)) {
-            settings.defines.set(target.name, '');
-        }
-
         // Get and run backend's setup task
         backend.runSetup(cwd, args, target, settings.variant);
 

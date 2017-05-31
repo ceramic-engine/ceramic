@@ -82,6 +82,7 @@ class Tools {
 
         tasks.set('info', new tools.tasks.Info());
         tasks.set('update', new tools.tasks.Update());
+        tasks.set('libs', new tools.tasks.Libs());
 
     } //new
 
