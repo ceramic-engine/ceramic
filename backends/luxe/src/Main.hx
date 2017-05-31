@@ -82,6 +82,8 @@ class Main extends luxe.Game {
 
     } //onwindowresized
 
+#if (!completion && !display)
+
     override function onmousedown(event:MouseEvent) {
 
         ceramic.App.app.backend.screen.emitMouseDown(
@@ -190,6 +192,8 @@ class Main extends luxe.Game {
         );
 
     } //ontouchmove
+
+#end
 
 #end
 
