@@ -3,7 +3,9 @@ package;
 import ceramic.Settings;
 import ceramic.Entity;
 import ceramic.Quad;
+import ceramic.Mesh;
 import ceramic.Color;
+import ceramic.AlphaColor;
 import ceramic.Assets;
 import ceramic.Blending;
 import ceramic.Text;
@@ -130,6 +132,21 @@ class Project extends Entity {
             screen.offMouseMove(onMove);
         });
 
+        var mesh = new Mesh();
+        mesh.vertices = [
+            10, 10,
+            100, 20,
+            25, 150
+        ];
+        //mesh.indices = [0,1,2,2,3,0];
+        mesh.indices = [0,1,2];
+        var color = new AlphaColor(Color.WHITE);
+        for (i in 0...mesh.vertices.length) {
+            mesh.colors.push(color);
+            mesh.uvs.push(mesh.vertices[i*2] / screen.width);
+            mesh.uvs.push(mesh.vertices[i*2+1] / screen.height);
+        }
+
         /*
         // Just an idea
         var tween = new Tween(easeInOut, 0.3, 3, 4);
@@ -155,6 +172,8 @@ class Project extends Entity {
             /*ceramic.Timer.delay(1.0, function() {
                 text.font = font;
             });*/
+
+            mesh.texture = assets.texture(Images.TILESHEET);
 
             trace('text width=${text.width} height=${text.height}');
 

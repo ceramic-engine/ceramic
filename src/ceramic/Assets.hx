@@ -211,6 +211,12 @@ class ImageAsset extends Asset {
                                 quad.frameHeight = frameHeight;
                             }
                         }
+                        else if (Std.is(visual, Mesh)) {
+                            var mesh:Mesh = cast visual;
+                            if (mesh.texture == prevTexture) {
+                                mesh.texture = this.texture;
+                            }
+                        }
                     }
 
                     // Set asset to null because we don't want it

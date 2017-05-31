@@ -1,8 +1,6 @@
 package backend;
 
-#if cpp
-using cpp.NativeArray;
-#end
+using ceramic.Extensions;
 
 enum VisualItem {
     NONE;
@@ -17,13 +15,21 @@ class Draw implements spec.Draw {
 
     var quadPool:Array<phoenix.geometry.QuadGeometry> = [];
     var quadPoolLength:Int = 0;
-    var prevQuadBatchIndex:Int = 0;
-    var quadBatchIndex:Int = 0;
+    var prevQuadPoolIndex:Int = 0;
+    var quadPoolIndex:Int = 0;
+
+    var meshPool:Array<phoenix.geometry.Geometry> = [];
 
     inline function begin():Void {
 
-        prevQuadBatchIndex = quadBatchIndex;
-        quadBatchIndex = 0;
+        prevQuadPoolIndex = quadPoolIndex;
+        quadPoolIndex = 0;
+
+        // TODO remove
+        for (geom in meshPool) {
+            Luxe.renderer.batcher.remove(geom);
+        }
+        meshPool = [];
 
     } //begin
 
@@ -31,10 +37,10 @@ class Draw implements spec.Draw {
 
         // Remove unused geometries (if needed)
         //
-        var i = quadBatchIndex;
+        var i = quadPoolIndex;
         while (i < quadPool.length) {
 
-            var geom = #if cpp quadPool.unsafeGet(i) #else quadPool[i] #end;
+            var geom = quadPool.unsafeGet(i);
             i++;
 
             Luxe.renderer.batcher.remove(geom);
@@ -72,15 +78,28 @@ class Draw implements spec.Draw {
         var quad:ceramic.Quad;
         var quadGeom:phoenix.geometry.QuadGeometry;
         var rect = new luxe.Rectangle();
+
         var mesh:ceramic.Mesh;
+        var meshGeom:phoenix.geometry.Geometry;
+        var color:ceramic.AlphaColor;
+        var vertex:phoenix.geometry.Vertex;
 
         var r:Float;
         var g:Float;
         var b:Float;
         var a:Float;
 
+        var x:Float;
+        var y:Float;
+        var uvx:Float;
+        var uvy:Float;
+
         var w:Float;
         var h:Float;
+
+        var len:Int;
+        var i:Int;
+        var j:Int;
 
         var depth:Float = 1;
 
@@ -100,9 +119,9 @@ class Draw implements spec.Draw {
 
                     // Get or create quad geometry
                     //
-                    if (quadBatchIndex < quadPoolLength) {
+                    if (quadPoolIndex < quadPoolLength) {
 
-                        quadGeom = #if cpp quadPool.unsafeGet(quadBatchIndex) #else quadPool[quadBatchIndex] #end;
+                        quadGeom = quadPool.unsafeGet(quadPoolIndex);
 
                     }
                     else {
@@ -114,7 +133,7 @@ class Draw implements spec.Draw {
                         Luxe.renderer.batcher.add(quadGeom);
 
                     }
-                    quadBatchIndex++;
+                    quadPoolIndex++;
 
                     // Update geometry values
                     //
@@ -124,17 +143,17 @@ class Draw implements spec.Draw {
                     v = quadGeom.vertices;
 
                     //tl
-                    v[0].pos.set_xy(0.0, 0.0);
+                    v.unsafeGet(0).pos.set_xy(0.0, 0.0);
                     //tr
-                    v[1].pos.set_xy(w  , 0.0);
+                    v.unsafeGet(1).pos.set_xy(w  , 0.0);
                     //br
-                    v[2].pos.set_xy(w  , h  );
+                    v.unsafeGet(2).pos.set_xy(w  , h  );
                     //bl
-                    v[3].pos.set_xy(0.0, h  );
+                    v.unsafeGet(3).pos.set_xy(0.0, h  );
                     //tl
-                    v[4].pos.set_xy(0.0, 0.0);
+                    v.unsafeGet(4).pos.set_xy(0.0, 0.0);
                     //br
-                    v[5].pos.set_xy(w  , h  );
+                    v.unsafeGet(5).pos.set_xy(w  , h  );
                     
 
                     // Update color
@@ -204,7 +223,103 @@ class Draw implements spec.Draw {
                 case MESH:
                     mesh = cast visual;
 
-                    // TODO
+                    meshGeom = new phoenix.geometry.Geometry({
+                        primitive_type: phoenix.Batcher.PrimitiveType.triangles
+                    });
+                    meshPool.push(meshGeom);
+
+                    Luxe.renderer.batcher.add(meshGeom);
+
+                    meshGeom.depth = depth;
+                    depth += 0.01;
+
+                    // Update blending
+                    //
+                    if (mesh.blending == ceramic.Blending.ADD) {
+                        meshGeom.blend_src_alpha = phoenix.Batcher.BlendMode.one;
+                        meshGeom.blend_src_rgb = phoenix.Batcher.BlendMode.one;
+                        meshGeom.blend_dest_alpha = phoenix.Batcher.BlendMode.one;
+                        meshGeom.blend_dest_rgb = phoenix.Batcher.BlendMode.one;
+                    }
+                    else {
+                        meshGeom.blend_src_alpha = phoenix.Batcher.BlendMode.one;
+                        meshGeom.blend_src_rgb = phoenix.Batcher.BlendMode.one;
+                        meshGeom.blend_dest_alpha = phoenix.Batcher.BlendMode.one_minus_src_alpha;
+                        meshGeom.blend_dest_rgb = phoenix.Batcher.BlendMode.one_minus_src_alpha;
+                    }
+
+                    var indices = mesh.indices;
+                    var vertices = mesh.vertices;
+                    var colors = mesh.colors;
+                    var texture = mesh.texture;
+                    var uvs = mesh.uvs;
+                    var uvFactorX:Float = 1;
+                    var uvFactorY:Float = 1;
+
+                    // Set texture
+                    if (texture != null) {
+                        meshGeom.texture = texture.backendItem;
+
+                        // Ensure uv takes in account real texture size
+                        uvFactorX = meshGeom.texture.width / meshGeom.texture.width_actual;
+                        uvFactorY = meshGeom.texture.height / meshGeom.texture.height_actual;
+                    }
+
+                    len = indices.length;
+                    i = 0;
+                    while (i < len) {
+
+                        j = indices.unsafeGet(i);
+                        x = vertices.unsafeGet(j * 2);
+                        y = vertices.unsafeGet(j * 2 + 1);
+                        color = colors.unsafeGet(j);
+
+                        // Update color
+                        r = color.redFloat;
+                        g = color.greenFloat;
+                        b = color.blueFloat;
+                        a = mesh.computedAlpha * color.alphaFloat;
+
+                        // Multiply alpha because we render premultiplied
+                        r *= a;
+                        g *= a;
+                        b *= a;
+
+                        // Set vertex info
+                        // TODO pool
+                        vertex = new phoenix.geometry.Vertex(new phoenix.Vector());
+
+                        vertex.pos.set_xy(x, y);
+                        vertex.color.set(r, g, b, a);
+                        
+                        if (texture != null) {
+                            uvx = uvs.unsafeGet(j) * uvFactorX;
+                            uvy = uvs.unsafeGet(j * 2) * uvFactorY;
+                        } else {
+                            uvx = 0;
+                            uvy = 0;
+                        }
+                        
+                        vertex.uv.uv0.set_uv(uvx, uvy);
+
+                        // Add vertex
+                        meshGeom.vertices.push(vertex);
+
+                        i++;
+                    }
+
+                    // Update transform
+                    //
+                    meshGeom.transform.dirty = false;
+                    meshGeom.transform.manual_update = true;
+                    m = meshGeom.transform.world.matrix;
+
+                    m.M11 = mesh.a;
+                    m.M12 = mesh.c;
+                    m.M14 = mesh.tx;
+                    m.M21 = mesh.b;
+                    m.M22 = mesh.d;
+                    m.M24 = mesh.ty;
 
                 default:
             }
