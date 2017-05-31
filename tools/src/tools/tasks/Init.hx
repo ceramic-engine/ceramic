@@ -18,7 +18,7 @@ class Init extends tools.Task {
     override function run(cwd:String, args:Array<String>):Void {
 
         var projectPath = cwd;
-        var overwrite = extractArgFlag(args, 'overwrite');
+        var force = extractArgFlag(args, 'force');
 
         // Extract project name
         //
@@ -48,8 +48,8 @@ class Init extends tools.Task {
         projectPath = newProjectPath;
 
         // Ensure target directory (not necessarily current) is not a project
-        if (!overwrite && FileSystem.exists(Path.join([projectPath, 'ceramic.yml']))) {
-            fail('A project already exist at target path: ' + projectPath + '. Use --overwrite to replace files.');
+        if (!force && FileSystem.exists(Path.join([projectPath, 'ceramic.yml']))) {
+            fail('A project already exist at target path: ' + projectPath + '. Use --force to replace files.');
         }
 
         if (!FileSystem.exists(projectPath)) {
@@ -150,7 +150,7 @@ class Project extends Entity {
 
             if (extractArgFlag(args, backendName)) {
 
-                runCeramic(projectPath, [backendName, 'setup'].concat(overwrite ? ['--overwrite'] : []));
+                runCeramic(projectPath, [backendName, 'setup'].concat(force ? ['--force'] : []));
 
                 break;
 
@@ -161,7 +161,7 @@ class Project extends Entity {
         if (extractArgFlag(args, 'vscode')) {
 
             var task = new Vscode();
-            task.run(projectPath, [args[0], args[1]].concat(overwrite ? ['--overwrite'] : []));
+            task.run(projectPath, [args[0], args[1]].concat(force ? ['--force'] : []));
 
         }
 

@@ -18,15 +18,15 @@ class Vscode extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var overwrite = extractArgFlag(args, 'overwrite');
+        var force = extractArgFlag(args, 'force');
         var vscodeDir = Path.join([cwd, '.vscode']);
 
-        if (!overwrite) {
+        if (!force) {
             if (FileSystem.exists(Path.join([vscodeDir, 'tasks.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'tasks-chooser.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'settings.json']))) {
 
-                fail('Some Visual Studio Code project files already exist.\nUse --overwrite to generate them again.');
+                fail('Some Visual Studio Code project files already exist.\nUse --force to generate them again.');
             }
         }
 

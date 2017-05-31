@@ -46,24 +46,24 @@ class Setup extends tools.Task {
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var flowPath = Path.join([targetPath, 'project.flow']);
-        var overwrite = args.indexOf('--overwrite') != -1;
+        var force = args.indexOf('--force') != -1;
         var updateProject = args.indexOf('--update-project') != -1;
 
         // Compute relative ceramicPath
         var ceramicPathRelative = getRelativePath(ceramicPath, targetPath);
 
         // If ceramic.yml has changed, force setup update
-        if (!overwrite && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
-            overwrite = true;
+        if (!force && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
+            force = true;
         }
 
         if (FileSystem.exists(targetPath)) {
-            if (!overwrite) {
+            if (!force) {
                 if (continueOnFail) {
                     print('No need to update setup.');
                     return;
                 } else {
-                    fail('Target path already exists: $targetPath\nUse --overwrite to run setup anyway.');
+                    fail('Target path already exists: $targetPath\nUse --force to run setup anyway.');
                 }
             }
         }
