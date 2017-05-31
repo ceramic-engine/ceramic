@@ -86,16 +86,18 @@ package;
 import ceramic.Entity;
 import ceramic.Color;
 import ceramic.Quad;
+import ceramic.Settings;
+import ceramic.Assets;
 
 class Project extends Entity {
 
-    function new() {
+    function new(settings:InitSettings) {
 
-        app.settings.antialiasing = true;
-        app.settings.background = Color.GRAY;
-        app.settings.width = 640;
-        app.settings.height = 480;
-        app.settings.scaling = FILL;
+        settings.antialiasing = true;
+        settings.background = Color.GRAY;
+        settings.targetWidth = 640;
+        settings.targetHeight = 480;
+        settings.scaling = FILL;
 
         app.onReady(ready);
 
@@ -124,7 +126,7 @@ class Project extends Entity {
         quad2.rotation = 30;
         quad2.scale(2.0, 0.5);
 
-        screen.onUpdate(function(delta) {
+        app.onUpdate(this, function(delta) {
 
             quad1.rotation = (quad1.rotation + delta * 100) % 360;
             quad2.rotation = (quad2.rotation + delta * 100) % 360;
