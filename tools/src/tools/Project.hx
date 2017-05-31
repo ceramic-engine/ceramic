@@ -93,8 +93,7 @@ class ProjectLoader {
 
             // Add required class paths
             for (cp in [
-                'git/unifill',
-                'git/compiletime/src'
+                'git/unifill'
             ]) {
                 app.paths.push(
                     getRelativePath(
