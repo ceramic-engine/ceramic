@@ -5,6 +5,4 @@ app:
     author: My Company
     version: '1.0'
 
-    libs:
-        - spinehaxe: 3.5.0
-        - nape: 2.0.20
+    libs: []
