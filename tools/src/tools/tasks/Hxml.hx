@@ -69,15 +69,16 @@ class Hxml extends tools.Task {
         }
         // We hardcoded nape and spinehaxe/spine classpaths because they are common dependencies that won't change.
         // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
-        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
-        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['Project'], [NoCheckShadowing, NoCheckDependencies], true)";
 
         // Required to ensure assets list gets updated
         var toInvalidate = [
             Path.join([ceramicSrcContentPath, 'Assets.hx']),
             Path.join([ceramicSrcContentPath, 'macros/AssetsMacro.hx'])
         ];
-        rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";
+        //rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";
         
         // Make every hxml paths absolute (to simplify IDE integration)
         //
