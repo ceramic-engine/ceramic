@@ -141,6 +141,12 @@ class Vscode extends tools.Task {
             "haxe.displayConfigurations": [
                 ["completion.hxml"]
             ],
+            "search.exclude": {
+                "**/.git": true,
+                "**/node_modules": true,
+                "**/tmp": true,
+                "**/out": true
+            }
         };
         File.saveContent(Path.join([vscodeDir, 'settings.json']), Json.stringify(vscodeSettings, null, '    '));
 
