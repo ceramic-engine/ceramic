@@ -34,7 +34,7 @@ class Vscode extends tools.Task {
             selectDescription: "Select build config",
             items: [],
             baseItem: {
-                version: "0.1.0"
+                version: "2.0.0"
             }
         };
 
