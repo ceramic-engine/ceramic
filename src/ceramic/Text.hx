@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.BitmapFont;
 import ceramic.Assets;
+import ceramic.Shortcuts.*;
 
 using unifill.Unifill;
 

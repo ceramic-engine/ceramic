@@ -1,6 +1,7 @@
 package ceramic;
 
 import backend.Draw.VisualItem;
+import ceramic.Shortcuts.*;
 
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)

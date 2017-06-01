@@ -9,6 +9,7 @@ import ceramic.AlphaColor;
 import ceramic.Assets;
 import ceramic.Blending;
 import ceramic.Text;
+import ceramic.Shortcuts.*;
 
 class Project extends Entity {
 

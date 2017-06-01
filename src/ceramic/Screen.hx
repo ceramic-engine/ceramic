@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.internal.ReadOnlyPoint as Point;
+import ceramic.Shortcuts.*;
 
 @:allow(ceramic.App)
 class Screen extends Entity {

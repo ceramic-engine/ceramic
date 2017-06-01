@@ -13,32 +13,38 @@ class AssetsMacro {
 
     static var allAssets:Array<String> = null;
 
+    static var allAssetDirs:Array<String> = null;
+
     static var assetsByBaseName:Map<String,Array<String>> = null;
+
+    static var assetDirsByBaseName:Map<String,Array<String>> = null;
 
     static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
-    macro static public function buildNames(kind:String):Array<Field> {
+    macro static public function buildNames(kind:String, ?extensions:Array<String>, dirKind:Bool = false):Array<Field> {
         
         initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
 
-        var extensions = switch (kind) {
+        if (extensions == null) extensions = [];
+        extensions = extensions.concat(switch (kind) {
             case 'image': backendInfo.imageExtensions();
             case 'text': backendInfo.textExtensions();
             case 'sound': backendInfo.soundExtensions();
             case 'font': ['fnt'];
             default: [];
-        }
+        });
 
         if (extensions.length == 0) return fields;
 
         var used = new Map<String,String>();
+        var fileList = dirKind ? allAssetDirs : allAssets;
 
         for (ext in extensions) {
 
-            for (name in allAssets) {
+            for (name in fileList) {
 
                 var lowerName = name.toLowerCase();
                 var dotIndex = lowerName.lastIndexOf('.');
@@ -67,13 +73,14 @@ class AssetsMacro {
         }
 
         // Add fields
+        var byBaseName = dirKind ? assetDirsByBaseName : assetsByBaseName;
         for (fieldName in used.keys()) {
             var value = kind + ':' + used.get(fieldName);
 
             var expr = { expr: ECast({ expr: EConst(CString(value)), pos: pos }, null), pos: pos };
             
             var fieldDoc = [];
-            var files = assetsByBaseName.get(used.get(fieldName));
+            var files = byBaseName.get(used.get(fieldName));
             for (file in files) {
                 for (ext in extensions) {
                     if (file.endsWith('.$ext')) {
@@ -181,6 +188,23 @@ class AssetsMacro {
                 for (asset in getFlatDirectory(ceramicAssetsPath)) {
                     if (!usedPaths.exists(asset)) {
                         allAssets.push(asset);
+                        usedPaths.set(asset, true);
+                    }
+                }
+            }
+
+            var usedDirs:Map<String,Bool> = new Map();
+            allAssetDirs = [];
+            for (asset in allAssets) {
+                var lastSlash = asset.lastIndexOf('/');
+                if (lastSlash != -1) {
+                    var dir = asset.substr(0, lastSlash);
+                    while (!usedDirs.exists(dir)) {
+                        allAssetDirs.push(dir);
+                        usedDirs.set(dir, true);
+                        lastSlash = dir.lastIndexOf('/');
+                        if (lastSlash == -1) break;
+                        dir = dir.substr(0, lastSlash);
                     }
                 }
             }
@@ -201,6 +225,25 @@ class AssetsMacro {
                     assetsByBaseName.set(baseName, []);
                 }
                 var list = assetsByBaseName.get(baseName);
+                list.push(name);
+            }
+        }
+
+        if (assetDirsByBaseName == null) {
+
+            assetDirsByBaseName = new Map();
+
+            for (name in allAssetDirs) {
+                var dotIndex = name.lastIndexOf('.');
+                var truncatedName = name.substr(0, dotIndex);
+                var baseAtIndex = truncatedName.lastIndexOf('@');
+                if (baseAtIndex == -1) baseAtIndex = dotIndex;
+
+                var baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                if (!assetDirsByBaseName.exists(baseName)) {
+                    assetDirsByBaseName.set(baseName, []);
+                }
+                var list = assetDirsByBaseName.get(baseName);
                 list.push(name);
             }
         }

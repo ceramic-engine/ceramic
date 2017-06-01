@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.internal.BitmapFontParser;
 import ceramic.BitmapFont;
+import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -174,7 +175,7 @@ class ImageAsset extends Asset {
     override public function load() {
 
         status = LOADING;
-        log('Load $path');
+        log('Load image $path');
         app.backend.textures.load(path, null, function(texture) {
 
             if (texture != null) {
@@ -299,7 +300,7 @@ class FontAsset extends Asset {
 
         // Load font data
         status = LOADING;
-        log('Load $path');
+        log('Load font $path');
         var tmpAssets0 = new Assets();
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
@@ -464,7 +465,7 @@ class TextAsset extends Asset {
     override public function load() {
 
         status = LOADING;
-        log('Load $path');
+        log('Load text $path');
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
@@ -505,7 +506,7 @@ class SoundAsset extends Asset {
     override public function load() {
 
         status = LOADING;
-        log('Load $path');
+        log('Load sound $path');
         app.backend.audio.load(path, { stream: options.stream }, function(audio) {
 
             if (audio != null) {
@@ -554,7 +555,6 @@ class Sounds {}
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('font'))
 #end
-@:allow(ceramic.Assets)
 class Fonts {}
 
 class AssetPathInfo {
@@ -680,25 +680,29 @@ class Assets extends Entity {
     } //add
 
     public function addImage(name:String, ?options:AssetOptions):Void {
-        
+
+        if (name.startsWith('image:')) name = name.substr(6);
         addAsset(new ImageAsset(name, options));
 
     } //addTexture
 
     public function addFont(name:String, ?options:AssetOptions):Void {
-
+        
+        if (name.startsWith('font:')) name = name.substr(5);
         addAsset(new FontAsset(name, options));
 
     } //addFont
 
     public function addText(name:String, ?options:AssetOptions):Void {
-
+        
+        if (name.startsWith('text:')) name = name.substr(5);
         addAsset(new TextAsset(name, options));
 
     } //addText
 
     public function addSound(name:String, ?options:AssetOptions):Void {
-
+        
+        if (name.startsWith('sound:')) name = name.substr(6);
         addAsset(new SoundAsset(name, options));
 
     } //addSound
@@ -854,5 +858,11 @@ class Assets extends Entity {
         return new AssetPathInfo(path);
 
     } //decodePath
+
+    public static function addAssetKind(kind:String, func:Assets->String->?AssetOptions->Void):Void {
+
+
+
+    } //addAssetKind
 
 } //Assets

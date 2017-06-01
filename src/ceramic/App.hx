@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.Settings;
 import ceramic.Assets;
+import ceramic.Shortcuts.*;
 import backend.Backend;
 
 @:allow(ceramic.Visual)
@@ -27,6 +28,14 @@ class App extends Entity {
 
     @event function keyDown(key:Key);
     @event function keyUp(key:Key);
+
+/// Static pre-init code (used to add plugins)
+
+    static var preInitCallbacks:Array<Void->Void>;
+    static function oncePreInit(handle:Void->Void):Void {
+        if (preInitCallbacks == null) preInitCallbacks = [];
+        preInitCallbacks.push(handle);
+    }
 
 /// Properties
 
@@ -79,6 +88,13 @@ class App extends Entity {
     function backendReady():Void {
 
         screen.backendReady();
+
+        if (preInitCallbacks != null) {
+            for (callback in [].concat(preInitCallbacks)) {
+                callback();
+            }
+            preInitCallbacks = null;
+        }
 
         assets.add(Fonts.ARIAL_20);
         assets.onceComplete(this, function(success) {
