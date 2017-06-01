@@ -40,6 +40,14 @@ class Project {
 
         app = ProjectLoader.loadAppConfig(data, settings.defines);
 
+        // Ideally this should be put somewhere else.
+        var hxml = '--remap spine:spinehaxe';
+        if (app.hxml == null) {
+            app.hxml = hxml;
+        } else {
+            app.hxml += "\n" + hxml;
+        }
+
     } //loadFile
 
 /// Utilities
