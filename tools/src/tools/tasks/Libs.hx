@@ -21,6 +21,10 @@ class Libs extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        function g(str:String) {
+            return settings.colors ? str.gray() : str;
+        }
+
 #if use_backend
         var availableTargets = backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
@@ -79,9 +83,9 @@ class Libs extends tools.Task {
             // Library exists
             if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
                 if (libVersion != null) {
-                    success('Use $libName $libVersion ' + '$path'.gray());
+                    success('Use $libName $libVersion ' + g(path));
                 } else {
-                    success('Use $libName ' + '$path'.gray());
+                    success('Use $libName ' + g(path));
                 }
             }
             else {
@@ -98,9 +102,9 @@ class Libs extends tools.Task {
                 if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
                     // Now installed \o/
                     if (libVersion != null) {
-                        success('Installed $libName $libVersion ' + '$path'.gray());
+                        success('Installed $libName $libVersion ' + g(path));
                     } else {
-                        success('Installed $libName ' + '$path'.gray());
+                        success('Installed $libName ' + g(path));
                     }
                 }
                 else {
