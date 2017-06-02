@@ -30,11 +30,18 @@ class Entity implements Events implements Lazy implements Observable {
 
 /// Print
 
-    function toString():String {
+    public function className():String {
 
         var className = Type.getClassName(Type.getClass(this));
         var dotIndex = className.lastIndexOf('.');
         if (dotIndex != -1) className = className.substr(dotIndex + 1);
+        return className;
+
+    } //className
+
+    function toString():String {
+
+        var className = className();
 
         if (name != null) {
             return '$className($name)';

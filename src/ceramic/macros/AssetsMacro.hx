@@ -21,7 +21,7 @@ class AssetsMacro {
 
     static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
-    macro static public function buildNames(kind:String, ?extensions:Array<String>, dirKind:Bool = false):Array<Field> {
+    macro static public function buildNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
         
         initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
 
@@ -40,7 +40,7 @@ class AssetsMacro {
         if (extensions.length == 0) return fields;
 
         var used = new Map<String,String>();
-        var fileList = dirKind ? allAssetDirs : allAssets;
+        var fileList = dir ? allAssetDirs : allAssets;
 
         for (ext in extensions) {
 
@@ -73,7 +73,7 @@ class AssetsMacro {
         }
 
         // Add fields
-        var byBaseName = dirKind ? assetDirsByBaseName : assetsByBaseName;
+        var byBaseName = dir ? assetDirsByBaseName : assetsByBaseName;
         for (fieldName in used.keys()) {
             var value = kind + ':' + used.get(fieldName);
 
@@ -128,7 +128,28 @@ class AssetsMacro {
             name: 'all',
             kind: FProp('default', 'null', macro :Array<String>, expr),
             access: [AStatic, APublic],
-            doc: 'All asset paths array',
+            doc: 'All asset file paths array',
+            meta: []
+        };
+
+        fields.push(field);
+
+        // All asset dirs
+        //
+        var exprEntries = [];
+        
+        for (name in allAssetDirs) {
+            exprEntries.push({expr: EConst(CString(name)), pos: pos});
+        }
+
+        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+
+        var field = {
+            pos: pos,
+            name: 'allDirs',
+            kind: FProp('default', 'null', macro :Array<String>, expr),
+            access: [AStatic, APublic],
+            doc: 'All asset directory paths array',
             meta: []
         };
 
@@ -157,6 +178,34 @@ class AssetsMacro {
             kind: FProp('default', 'null', macro :Map<String,Array<String>>, expr),
             access: [AStatic, APublic],
             doc: 'Assets by base name',
+            meta: []
+        };
+
+        fields.push(field);
+
+        // Asset dirs by base name
+        //
+        var exprEntries = [];
+
+        for (baseName in assetDirsByBaseName.keys()) {
+            var list = assetDirsByBaseName.get(baseName);
+            var listExprs = [];
+
+            for (entry in list) {
+                listExprs.push({expr: EConst(CString(entry)), pos: pos});
+            }
+
+            exprEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(baseName)), pos: pos}, {expr: EArrayDecl(listExprs), pos: pos}), pos: pos});
+        }
+
+        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+
+        var field = {
+            pos: pos,
+            name: 'allDirsByName',
+            kind: FProp('default', 'null', macro :Map<String,Array<String>>, expr),
+            access: [AStatic, APublic],
+            doc: 'Asset directories by base name',
             meta: []
         };
 

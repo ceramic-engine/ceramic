@@ -23,6 +23,7 @@ abstract AssetId(String) {
 
 } //AssetId
 
+@:allow(ceramic.Assets)
 class Asset extends Entity {
 
 /// Events
@@ -31,15 +32,25 @@ class Asset extends Entity {
 
 /// Properties
 
-    public var kind:String;
+    /** Asset kind */
+    public var kind(default,null):String;
 
+    /** Asset path */
     public var path(default,set):String;
 
-    public var density:Float = 1.0;
+    /** Asset target density. Some assets depend on current screen density,
+        like bitmap fonts, textures. Default is 1.0 */
+    public var density(default,null):Float = 1.0;
 
-    public var owner:Assets;
+    /** Asset owner. The owner is a group of assets (Assets instance). When the owner gets
+        destroyed, every asset it owns get destroyed as well. */
+    public var owner(default,null):Assets;
 
-    public var options:AssetOptions;
+    /** Asset options. Depends on asset kind and even backend in some cases. */
+    public var options(default,null):AssetOptions;
+
+    /** Sub assets-list. Defaults to null but some kind of assets (like bitmap fonts) instanciate it to load sub-assets it depends on. */
+    public var assets(default,null):Assets = null;
 
     @observable public var status:AssetStatus = NONE;
 
@@ -65,42 +76,88 @@ class Asset extends Entity {
 
     } //load
 
-    public function computePath():Void {
+    public function destroy():Void {
 
-        var extensions = switch (kind) {
-            case 'image': app.backend.info.imageExtensions();
-            case 'text': app.backend.info.textExtensions();
-            case 'sound': app.backend.info.soundExtensions();
-            case 'font': ['fnt'];
-            default: [];
+        if (owner != null) {
+            owner.removeAsset(this);
+            owner = null;
         }
 
+        if (assets != null) {
+            assets.destroy();
+            assets = null;
+        }
+
+    } //destroy
+
+    public function computePath(?extensions:Array<String>, ?dir:Bool):Void {
+
+        // Compute extensions list and dir flag
+        //
+        if (extensions == null) {
+            extensions = switch (kind) {
+                case 'image': app.backend.info.imageExtensions();
+                case 'text': app.backend.info.textExtensions();
+                case 'sound': app.backend.info.soundExtensions();
+                case 'font': ['fnt'];
+                default: null;
+            }
+        }
+        if (extensions == null || dir == null) {
+            if (Assets.customAssetKinds != null && Assets.customAssetKinds.exists(kind)) {
+                var kindInfo = Assets.customAssetKinds.get(kind);
+                if (extensions == null) extensions = kindInfo.extensions;
+                if (dir == null) dir = kindInfo.dir;
+            }
+        }
+        if (extensions == null) extensions = [];
+        if (dir == null) dir = false;
+
+        // Compute path
+        //
         var targetDensity = screen.texturesDensity;
         var path = null;
         var bestPathInfo = null;
 
-        if (extensions.length > 0 && Assets.allByName.exists(name)) {
-            var list = Assets.allByName.get(name);
+        var byName:Map<String,Array<String>> = dir ? Assets.allDirsByName : Assets.allByName;
+
+        var name = this.name;
+
+        if (extensions.length > 0) {
+
+            // Remove extension in name, if any
             for (ext in extensions) {
+                if (name.endsWith('.' + ext)) {
+                    name = name.substr(0, name.length - ext.length - 1);
+                    break;
+                }
+            }
 
-                var bestDensity = 1.0;
-                var bestDensityDiff = 99999999999.0;
+            if (byName.exists(name)) {
 
-                for (item in list) {
-                    var pathInfo = Assets.decodePath(item);
+                var list = byName.get(name);
 
-                    if (pathInfo.extension == ext) {
-                        var diff = Math.abs(targetDensity - pathInfo.density);
-                        if (diff < bestDensityDiff) {
-                            bestDensityDiff = diff;
-                            bestDensity = pathInfo.density;
-                            path = pathInfo.path;
-                            bestPathInfo = pathInfo;
+                for (ext in extensions) {
+
+                    var bestDensity = 1.0;
+                    var bestDensityDiff = 99999999999.0;
+
+                    for (item in list) {
+                        var pathInfo = Assets.decodePath(item);
+
+                        if (pathInfo.extension == ext) {
+                            var diff = Math.abs(targetDensity - pathInfo.density);
+                            if (diff < bestDensityDiff) {
+                                bestDensityDiff = diff;
+                                bestDensity = pathInfo.density;
+                                path = pathInfo.path;
+                                bestPathInfo = pathInfo;
+                            }
                         }
                     }
-                }
-                if (path != null) {
-                    break;
+                    if (path != null) {
+                        break;
+                    }
                 }
             }
         }
@@ -121,6 +178,10 @@ class Asset extends Entity {
     function set_path(path:String):String {
 
         if (this.path == path) return path;
+
+        // Loaded data doesn't match path anymore
+        if (status == READY) status = NONE;
+
         this.path = path;
 
         if (path == null) {
@@ -154,6 +215,20 @@ class Asset extends Entity {
         // Override
 
     } //texturesDensityDidChange
+
+/// Print
+
+    function toString():String {
+
+        var className = className();
+
+        if (path != null) {
+            return '$className($name $path)';
+        } else {
+            return '$className($name)';
+        }
+
+    } //toString
 
 } //Asset
 
@@ -294,36 +369,36 @@ class FontAsset extends Asset {
         super('font', name, options);
         handleTexturesDensityChange = true;
 
+        assets = new Assets();
+
     } //name
 
     override public function load() {
 
+        // Create array of assets to destroy after load
+        var toDestroy:Array<Asset> = [];
+        for (asset in assets) {
+            toDestroy.push(asset);
+        }
+
         // Load font data
         status = LOADING;
         log('Load font $path');
-        var tmpAssets0 = new Assets();
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
         asset.path = path;
-        tmpAssets0.addAsset(asset);
-        tmpAssets0.onceComplete(function(success) {
+        assets.addAsset(asset);
+        assets.onceComplete(this, function(success) {
 
             var text = asset.text;
 
             if (text != null) {
-
-                // Change font data asset owner
-                tmpAssets0.removeAsset(asset);
-                if (owner != null) {
-                    owner.addAsset(asset);
-                }
 
                 try {
                     fontData = BitmapFontParser.parse(text);
 
                     // Load pages
                     var pages = new Map();
-                    var tmpAssets1 = new Assets();
                     var assetList:Array<ImageAsset> = [];
 
                     for (page in fontData.pages) {
@@ -335,22 +410,16 @@ class FontAsset extends Asset {
                         asset.handleTexturesDensityChange = false;
 
                         asset.path = pathInfo.path;
-                        tmpAssets1.addAsset(asset);
+                        assets.addAsset(asset);
                         assetList.push(asset);
                         
                     }
 
-                    tmpAssets1.onceComplete(function(success) {
+                    assets.onceComplete(this, function(success) {
 
                         if (success) {
-                            // Change texture assets owner
+                            // Fill pages mapping
                             for (asset in assetList) {
-                                tmpAssets1.removeAsset(asset);
-                                if (owner != null) {
-                                    owner.addAsset(asset);
-                                }
-
-                                // Fill pages mapping
                                 pages.set(asset.path, asset.texture);
                             }
 
@@ -381,8 +450,24 @@ class FontAsset extends Asset {
                                 prevFont.destroy();
                             }
 
+                            // Destroy unused assets
+                            for (asset in toDestroy) {
+                                if (Std.is(asset, ImageAsset)) {
+                                    // When it's an image, ensure we don't use it for the updated font, still.
+                                    var imageAsset:ImageAsset = cast asset;
+                                    if (assetList.indexOf(imageAsset) == -1) {
+                                        asset.destroy();
+                                    }
+                                } else {
+                                    asset.destroy();
+                                }
+                            }
+
                             status = READY;
                             emitComplete(true);
+                            if (handleTexturesDensityChange) {
+                                checkTexturesDensity();
+                            }
 
                         }
                         else {
@@ -391,14 +476,12 @@ class FontAsset extends Asset {
                             emitComplete(false);
                         }
 
-                        // Destroy temporary assets
-                        tmpAssets1.destroy();
-
                     });
 
-                    tmpAssets1.load();
+                    assets.load();
 
                 } catch (e:Dynamic) {
+                    trace(e);
                     status = BROKEN;
                     error('Failed to decode font data at path: $path');
                     emitComplete(false);
@@ -409,12 +492,9 @@ class FontAsset extends Asset {
                 error('Failed to load font data at path: $path');
                 emitComplete(false);
             }
-
-            // Destroy temporary assets
-            tmpAssets0.destroy();
         });
 
-        tmpAssets0.load();
+        assets.load();
 
     } //load
 
@@ -624,9 +704,23 @@ class AssetPathInfo {
 
 } //AssetPathInfo
 
+@:structInit
+class CustomAssetKind {
+
+    public var kind:String;
+
+    public var add:Assets->String->?AssetOptions->Void;
+
+    public var extensions:Array<String>;
+
+    public var dir:Bool;
+
+} //CustomAssetKind
+
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildLists())
 #end
+@:allow(ceramic.Asset)
 class Assets extends Entity {
 
 /// Events
@@ -638,6 +732,10 @@ class Assets extends Entity {
     var addedAssets:Array<Asset> = [];
 
     var assetsByKindAndName:Map<String,Map<String,Asset>> = new Map();
+
+/// Internal
+
+    static var customAssetKinds:Map<String,CustomAssetKind>;
 
 /// Lifecycle
 
@@ -674,7 +772,12 @@ class Assets extends Entity {
             case 'text': addText(name, options);
             case 'sound': addSound(name, options);
             case 'font': addFont(name, options);
-            default: throw "Assets: invalid asset kind for id: " + id;
+            default:
+                if (customAssetKinds != null && customAssetKinds.exists(kind)) {
+                    customAssetKinds.get(kind).add(this, name, options);
+                } else {
+                    throw "Assets: invalid asset kind for id: " + id;
+                }
         }
 
     } //add
@@ -707,19 +810,21 @@ class Assets extends Entity {
 
     } //addSound
 
-    public function addAsset(asset:Asset):Void {
+    /** Add the given asset. If a previous asset was replaced, return it. */
+    public function addAsset(asset:Asset):Asset {
 
         if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
         var byName = assetsByKindAndName.get(asset.kind);
 
-        var previousAsset = byName.get(asset.kind);
+        var previousAsset = byName.get(asset.name);
         if (previousAsset != null) {
-            if (previousAsset == asset) {
-                warning('Cannot add asset $asset because an asset is already added for its name: ${asset.name} ($previousAsset).');
+            if (previousAsset != asset) {
+                log('Replace $previousAsset with $asset');
+                removeAsset(previousAsset);
             } else {
                 warning('Cannot add asset $asset because it is already added for name: ${asset.name}.');
+                return previousAsset;
             }
-            return;
         }
 
         byName.set(asset.name, asset);
@@ -728,6 +833,8 @@ class Assets extends Entity {
         }
         addedAssets.push(asset);
         asset.owner = this;
+
+        return previousAsset;
 
     } //addAsset
 
@@ -851,6 +958,22 @@ class Assets extends Entity {
 
     } //text
 
+/// Iterator
+
+    public function iterator():Iterator<Asset> {
+
+        var list:Array<Asset> = [];
+
+        for (byName in assetsByKindAndName) {
+            for (asset in byName) {
+                list.push(asset);
+            }
+        }
+
+        return list.iterator();
+
+    } //iterator
+
 /// Static helpers
 
     public static function decodePath(path:String):AssetPathInfo {
@@ -859,9 +982,17 @@ class Assets extends Entity {
 
     } //decodePath
 
-    public static function addAssetKind(kind:String, func:Assets->String->?AssetOptions->Void):Void {
+    public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool = false):Void {
 
-
+        if (customAssetKinds == null) {
+            customAssetKinds = new Map();
+        }
+        customAssetKinds.set(kind, {
+            kind: kind,
+            add: add,
+            extensions: extensions,
+            dir: dir
+        });
 
     } //addAssetKind
 
