@@ -288,6 +288,8 @@ class Visual extends Entity {
         
         app.visuals.remove(this);
 
+        if (transform != null) transform = null;
+
     } //destroy
 
 /// Matrix
