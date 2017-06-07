@@ -1,5 +1,8 @@
 package ceramic;
 
+import ceramic.Visual._matrix;
+import ceramic.Visual._degToRad;
+
 class Quad extends Visual {
 
     public var color:Color = Color.WHITE;
@@ -24,6 +27,15 @@ class Quad extends Visual {
         }
 
         return texture;
+    }
+
+    public var rotateFrame(default,set):RotateFrame = RotateFrame.NONE;
+    inline function set_rotateFrame(rotateFrame:RotateFrame):RotateFrame {
+        if (this.rotateFrame == rotateFrame) return rotateFrame;
+        
+        this.rotateFrame = rotateFrame;
+        matrixDirty = true;
+        return rotateFrame;
     }
 
     public var frameX:Float = -1;
@@ -58,9 +70,30 @@ class Quad extends Visual {
 
         this.frameX = frameX;
         this.frameY = frameY;
-        this.frameWidth = frameWidth;
-        this.frameHeight = frameHeight;
+        this.frameWidth = frameHeight;
+        this.frameHeight = frameWidth;
 
     } //frame
+
+/// Overrides
+
+    override function computeMatrix() {
+
+        if (parent != null && parent.matrixDirty) {
+            parent.computeMatrix();
+        }
+
+        _matrix.identity();
+
+        if (texture != null) {
+            if (rotateFrame == RotateFrame.ROTATE_90) {
+                _matrix.rotate(90 * _degToRad);
+                _matrix.tx += frameHeight;
+            }
+        }
+
+        doComputeMatrix();
+
+    } //computeMatrix
 
 } //Quad
