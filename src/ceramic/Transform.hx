@@ -30,7 +30,11 @@ class DecomposedTransform {
 // Portions of matrix manipulation code taken from OpenFL and PIXI
 
 /** Transform holds matrix data to make 2d rotate, translate, scale and skew transformations.
-    Angles are in degrees. */
+    Angles are in degrees.
+    Representation:
+    | a | c | tx |
+    | b | d | ty |
+    | 0 | 0 | 1  | */
 class Transform implements Events {
 
 /// Events
