@@ -47,8 +47,6 @@ class SpineData extends Entity {
         atlas.dispose();
         atlas = null;
 
-        
-
     } //destroy
 
 } //SpineData

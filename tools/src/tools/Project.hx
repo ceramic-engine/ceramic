@@ -41,7 +41,31 @@ class Project {
         app = ProjectLoader.loadAppConfig(data, settings.defines);
 
         // Ideally this should be put somewhere else.
-        var hxml = '--remap spine:spinehaxe';
+        var hxml = '';
+        
+        var hasSpineHaxe = false;
+        var appLibs:Array<Dynamic> = app.libs;
+        for (lib in appLibs) {
+            var libName:String = null;
+            var libVersion:String = "*";
+            if (Std.is(lib, String)) {
+                libName = lib;
+            } else {
+                for (k in Reflect.fields(lib)) {
+                    libName = k;
+                    libVersion = Reflect.field(lib, k);
+                    break;
+                }
+            }
+            if (libName == 'spinehaxe') {
+                hasSpineHaxe = true;
+                break;
+            }
+        }
+        if (hasSpineHaxe) {
+            hxml += "\n"+'--remap spine:spinehaxe';
+        }
+
         if (app.hxml == null) {
             app.hxml = hxml;
         } else {

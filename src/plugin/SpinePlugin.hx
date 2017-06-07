@@ -3,11 +3,13 @@ package plugin;
 import ceramic.App;
 import ceramic.Entity;
 import ceramic.Assets;
+import ceramic.Either;
 import ceramic.Shortcuts.*;
 
 using StringTools;
 
 // Expose API
+typedef Spine = plugin.spine.Spine;
 typedef SpineData = plugin.spine.SpineData;
 typedef SpineAsset = plugin.spine.SpineAsset;
 typedef SpineTextureLoader = plugin.spine.SpineTextureLoader;
@@ -42,5 +44,19 @@ class SpinePlugin {
         assets.addAsset(new SpineAsset(name, options));
 
     } //addSpine
+
+    @:access(ceramic.Assets)
+    public static function spine(assets:Assets, name:Either<String,AssetId>):SpineData {
+
+        var realName:String = cast name;
+        if (realName.startsWith('spine:')) realName = realName.substr(6);
+        
+        if (!assets.assetsByKindAndName.exists('spine')) return null;
+        var asset:SpineAsset = cast assets.assetsByKindAndName.get('spine').get(realName);
+        if (asset == null) return null;
+
+        return asset.spineData;
+
+    } //spine
 
 } //SpinePlugin
