@@ -34,9 +34,72 @@ class Spine extends Visual {
     public var spineData(default,set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
+        
+        // Save animation info
+        var prevSpineData = this.spineData;
+        var toResume:Array<Dynamic> = null;
+        if (prevSpineData != null) {
+            toResume = [];
+
+            var i = 0;
+#if spinehaxe
+            var tracks = state.tracks;
+#else //spine-hx
+            var tracks = @:privateAccess state._tracks;
+#end
+            for (track in tracks) {
+
+                if (track.animation != null) {
+
+                    toResume.push([
+                        track.animation.name,
+                        track.timeScale,
+                        track.loop,
+#if spinehaxe
+                        track.trackTime,
+#else //spine-hx
+                        track.time,
+#end
+                    ]);
+                }
+
+                i++;
+            }
+
+        }
+
         this.spineData = spineData;
+
         contentDirty = true;
         computeContent();
+
+        // Restore animation info (if any)
+        if (toResume != null && toResume.length > 0) {
+
+            var i = 0;
+            for (entry in toResume) {
+
+                var animationName:String = entry[0];
+                var timeScale:Float = entry[1];
+                var loop:Bool = entry[2];
+                var trackTime:Float = entry[3];
+
+                var animation = skeletonData.findAnimation(animationName);
+                if (animation != null) {
+                    var track = state.setAnimationByName(i, animationName, loop);
+#if spinehaxe
+                    track.trackTime = trackTime;
+#else //spine-hx
+                    track.time = trackTime;
+#end
+                    track.timeScale = timeScale;
+                }
+
+                i++;
+            }
+
+        }
+
         return spineData;
     }
 
@@ -241,17 +304,17 @@ class Spine extends Visual {
 #if spinehaxe
                     quad.transform.setTo(
                         bone.a,
-                        bone.c * flip,
                         bone.b * flip,
-                        bone.d * -1,
+                        bone.c * flip,
+                        bone.d,
                         tx,
-                        ty * -1
+                        ty
                     );
 #else //spine-hx
                     quad.transform.setTo(
                         bone.a,
-                        bone.c * flip,
                         bone.b * flip,
+                        bone.c * flip,
                         bone.d,
                         tx,
                         ty

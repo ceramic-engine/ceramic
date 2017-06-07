@@ -125,6 +125,9 @@ class SpineAsset extends Asset {
                             page.height = Std.int(asset.texture.height);
                         }
 
+                        // Keep prev spine data to update it
+                        var prevSpineData = spineData;
+
                         // Create final spine data with all info
                         spineData = new SpineData(
                             spineAtlas,
@@ -132,6 +135,18 @@ class SpineAsset extends Asset {
                             name,
                             scale
                         );
+
+                        // Update prev spine data
+                        if (prevSpineData != null) {
+                            for (visual in app.visuals) {
+                                if (Std.is(visual, Spine)) {
+                                    var spine:Spine = cast visual;
+                                    if (spine.spineData == prevSpineData) {
+                                        spine.spineData = spineData;
+                                    }
+                                }
+                            }
+                        }
 
                         // Destroy previous pages
                         if (prevPages != null) {
