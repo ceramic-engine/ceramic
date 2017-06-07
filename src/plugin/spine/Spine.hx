@@ -329,8 +329,17 @@ class Spine extends Visual {
                     quad.texture = texture;
                     quad.frameX = atlasRegion.x / texture.density;
                     quad.frameY = atlasRegion.y / texture.density;
-                    quad.frameWidth = atlasRegion.width / texture.density;
-                    quad.frameHeight = atlasRegion.height / texture.density;
+                    if (atlasRegion.rotate) {
+                        quad.frameWidth = atlasRegion.height / texture.density;
+                        quad.frameHeight = atlasRegion.width / texture.density;
+                        quad.rotation = 90;
+                        quad.x = quad.frameHeight;
+                    } else {
+                        quad.frameWidth = atlasRegion.width / texture.density;
+                        quad.frameHeight = atlasRegion.height / texture.density;
+                        quad.rotation = 0;
+                        quad.x = 0;
+                    }
 
                 }
             }
