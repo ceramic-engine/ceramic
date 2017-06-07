@@ -216,7 +216,6 @@ class Text extends Visual {
 
         // Remove unused quads
         while (usedQuads < glyphQuads.length) {
-            usedQuads++;
             var quad = glyphQuads.pop();
             quad.destroy();
         }
