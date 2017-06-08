@@ -12,6 +12,7 @@ import ceramic.Texture;
 import ceramic.Transform;
 import ceramic.Color;
 import ceramic.Blending;
+import ceramic.RotateFrame;
 import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
@@ -304,17 +305,17 @@ class Spine extends Visual {
 #if spinehaxe
                     quad.transform.setTo(
                         bone.a,
-                        bone.b * flip,
                         bone.c * flip,
-                        bone.d,
+                        bone.b * flip * -1,
+                        bone.d * -1,
                         tx,
-                        ty
+                        ty * -1
                     );
 #else //spine-hx
                     quad.transform.setTo(
                         bone.a,
-                        bone.b * flip,
-                        bone.c * flip,
+                        bone.c * flip * -1,
+                        bone.b * flip * -1,
                         bone.d,
                         tx,
                         ty
@@ -329,17 +330,9 @@ class Spine extends Visual {
                     quad.texture = texture;
                     quad.frameX = atlasRegion.x / texture.density;
                     quad.frameY = atlasRegion.y / texture.density;
-                    if (atlasRegion.rotate) {
-                        quad.frameWidth = atlasRegion.height / texture.density;
-                        quad.frameHeight = atlasRegion.width / texture.density;
-                        quad.rotation = 90;
-                        quad.x = quad.frameHeight;
-                    } else {
-                        quad.frameWidth = atlasRegion.width / texture.density;
-                        quad.frameHeight = atlasRegion.height / texture.density;
-                        quad.rotation = 0;
-                        quad.x = 0;
-                    }
+                    quad.frameWidth = atlasRegion.width / texture.density;
+                    quad.frameHeight = atlasRegion.height / texture.density;
+                    quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
 
                 }
             }
