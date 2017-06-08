@@ -2,7 +2,7 @@ package ceramic;
 
 /** Decomposed transform holds rotation, translation, scale, skew and pivot informations.
     Provided by Transform.decompose() method.
-    Angles are in degrees. */
+    Angles are in radians. */
 class DecomposedTransform {
 
     inline public function new() {}
@@ -149,10 +149,6 @@ class Transform implements Events {
         output.x = tx;
         output.y = ty;
 
-        output.skewX *= 180.0 / Math.PI;
-        output.skewY *= 180.0 / Math.PI;
-        output.rotation *= 180.0 / Math.PI;
-
         return output;
 
     } //decompose
@@ -288,14 +284,12 @@ class Transform implements Events {
 
         _tmp.identity();
 
-        var degToRad = Math.PI / 180.0;
-
         var sr = 0; // sin(0)
         var cr = 1; // cos(0)
-        var cy = Math.cos(skewY * degToRad);
-        var sy = Math.sin(skewY * degToRad);
-        var nsx = -Math.sin(skewX * degToRad);
-        var cx = Math.cos(skewX * degToRad);
+        var cy = Math.cos(skewY);
+        var sy = Math.sin(skewY);
+        var nsx = -Math.sin(skewX);
+        var cx = Math.cos(skewX);
 
         var a = cr;
         var b = sr;
