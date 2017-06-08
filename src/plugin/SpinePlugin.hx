@@ -6,6 +6,8 @@ import ceramic.Assets;
 import ceramic.Either;
 import ceramic.Shortcuts.*;
 
+import spine.Bone;
+
 using StringTools;
 
 // Expose API
@@ -26,6 +28,9 @@ class SpinePlugin {
 
     static function __init__():Void {
         App.oncePreInit(function() {
+
+            // Setting yDown to true because it matches better ceramic positions
+            Bone.yDown = true;
 
             App.app.logger.log('Init spine plugin');
 

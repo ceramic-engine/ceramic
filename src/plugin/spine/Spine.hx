@@ -302,12 +302,16 @@ class Spine extends Visual {
 
                     flip = flipX * flipY;
 
+#if spinehaxe
+                    offsetX = region.offset[2];
+                    offsetY = region.offset[3];
+#else //spine-hx
                     offsetX = region.offset.unsafeGet(2);
                     offsetY = region.offset.unsafeGet(3);
+#end
                     tx = skeleton.x + offsetX * bone.a + offsetY * bone.b + bone.worldX;
                     ty = skeleton.y - (offsetX * bone.c + offsetY * bone.d + bone.worldY);
 
-#if spinehaxe
                     quad.transform.setTo(
                         bone.a,
                         bone.c * flip,
@@ -316,16 +320,6 @@ class Spine extends Visual {
                         tx,
                         ty * -1
                     );
-#else //spine-hx
-                    quad.transform.setTo(
-                        bone.a,
-                        bone.c * flip * -1,
-                        bone.b * flip * -1,
-                        bone.d,
-                        tx,
-                        ty
-                    );
-#end
 
                     quad.anchor(0, 0);
                     quad.color = Color.fromRGBFloat(r, g, b);
