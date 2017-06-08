@@ -254,20 +254,25 @@ class Spine extends Visual {
         var offsetX:Float;
         var offsetY:Float;
         var isAdditive:Bool;
-
+        var region:RegionAttachment;
+        var atlasRegion:AtlasRegion;
+        var texture:Texture;
+        var bone:Bone;
+        var quad:Quad;
+        var slot:Slot;
         var usedQuads = 0;
 
 		for (i in 0...len)
 		{
-			var slot:Slot = drawOrder[i];
+			slot = drawOrder[i];
 			if (slot.attachment != null)
 			{
 				if (Std.is(slot.attachment, RegionAttachment))
 				{
-                    var region:RegionAttachment = cast slot.attachment;
-					var atlasRegion:AtlasRegion = cast region.rendererObject;
-					var texture:Texture = cast atlasRegion.page.rendererObject;
-                    var bone:Bone = slot.bone;
+                    region = cast slot.attachment;
+					atlasRegion = cast region.rendererObject;
+					texture = cast atlasRegion.page.rendererObject;
+                    bone = slot.bone;
 
                     r = skeleton.r * slot.r * region.r;
                     g = skeleton.g * slot.g * region.g;
@@ -281,7 +286,7 @@ class Spine extends Visual {
 #end
                     
                     // Reuse or create quad
-                    var quad:Quad = usedQuads < animQuads.length ? animQuads[usedQuads] : null;
+                    quad = usedQuads < animQuads.length ? animQuads[usedQuads] : null;
                     if (quad == null) {
                         quad = new Quad();
                         quad.transform = new Transform();
@@ -297,8 +302,8 @@ class Spine extends Visual {
 
                     flip = flipX * flipY;
 
-                    offsetX = region.offset[2];
-                    offsetY = region.offset[3];
+                    offsetX = region.offset.unsafeGet(2);
+                    offsetY = region.offset.unsafeGet(3);
                     tx = skeleton.x + offsetX * bone.a + offsetY * bone.b + bone.worldX;
                     ty = skeleton.y - (offsetX * bone.c + offsetY * bone.d + bone.worldY);
 
