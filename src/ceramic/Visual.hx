@@ -236,6 +236,8 @@ class Visual extends Entity {
 
     static var _matrix:Transform = new Transform();
 
+    static var _degToRad:Float = Math.PI / 180.0;
+
 /// Helpers
 
     inline public function size(width:Float, height:Float):Void {
@@ -306,20 +308,26 @@ class Visual extends Entity {
             parent.computeMatrix();
         }
 
+        _matrix.identity();
+
+        doComputeMatrix();
+
+    } //computeMatrix
+
+    inline function doComputeMatrix() {
+
         var w = width;
         var h = height;
-
-        _matrix.identity();
 
         // Apply local properties (pos, scale, rotation, skew)
         //
         _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
 
         if (skewX != 0 || skewY != 0) {
-            _matrix.skew(skewX, skewY);
+            _matrix.skew(skewX * _degToRad, skewY * _degToRad);
         }
 
-        if (rotation != 0) _matrix.rotate(rotation * Math.PI / 180.0);
+        if (rotation != 0) _matrix.rotate(rotation * _degToRad);
         _matrix.translate(anchorX * w / scaleX, anchorY * h / scaleY);
         if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
         _matrix.translate(
@@ -396,7 +404,7 @@ class Visual extends Entity {
         // Matrix is up to date
         matrixDirty = false;
 
-    } //computeMatrix
+    }
 
 /// Hit test
 

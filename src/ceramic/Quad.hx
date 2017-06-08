@@ -70,8 +70,8 @@ class Quad extends Visual {
 
         this.frameX = frameX;
         this.frameY = frameY;
-        this.frameWidth = frameHeight;
-        this.frameHeight = frameWidth;
+        this.frameWidth = frameWidth;
+        this.frameHeight = frameHeight;
 
     } //frame
 
@@ -88,7 +88,7 @@ class Quad extends Visual {
         if (texture != null) {
             if (rotateFrame == RotateFrame.ROTATE_90) {
                 _matrix.rotate(90 * _degToRad);
-                _matrix.tx += frameHeight;
+                _matrix.tx += frameWidth;
             }
         }
 

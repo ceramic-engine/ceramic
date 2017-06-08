@@ -1,5 +1,7 @@
 package backend;
 
+import ceramic.RotateFrame;
+
 using ceramic.Extensions;
 
 enum VisualItem {
@@ -137,8 +139,13 @@ class Draw implements spec.Draw {
 
                     // Update geometry values
                     //
-                    w = quad.width / quad.scaleX;
-                    h = quad.height / quad.scaleY;
+                    if (quad.rotateFrame == RotateFrame.ROTATE_90) {
+                        w = quad.height / quad.scaleY;
+                        h = quad.width / quad.scaleX;
+                    } else {
+                        w = quad.width / quad.scaleX;
+                        h = quad.height / quad.scaleY;
+                    }
                     
                     v = quadGeom.vertices;
 
@@ -195,12 +202,21 @@ class Draw implements spec.Draw {
                     //
                     if (quad.texture != null) {
                         quadGeom.texture = quad.texture.backendItem;
-                        rect.set(
-                            quad.frameX * quad.texture.density,
-                            quad.frameY * quad.texture.density,
-                            quad.frameWidth * quad.texture.density,
-                            quad.frameHeight * quad.texture.density
-                        );
+                        if (quad.rotateFrame == RotateFrame.ROTATE_90) {
+                            rect.set(
+                                quad.frameX * quad.texture.density,
+                                quad.frameY * quad.texture.density,
+                                quad.frameHeight * quad.texture.density,
+                                quad.frameWidth * quad.texture.density
+                            );
+                        } else {
+                            rect.set(
+                                quad.frameX * quad.texture.density,
+                                quad.frameY * quad.texture.density,
+                                quad.frameWidth * quad.texture.density,
+                                quad.frameHeight * quad.texture.density
+                            );
+                        }
                         quadGeom.uv(rect);
                     }
                     else {
