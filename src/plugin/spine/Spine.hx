@@ -107,11 +107,11 @@ class Spine extends Visual {
 
     public var skeleton(default,null):Skeleton;
 
-	public var skeletonData(default, null):SkeletonData;
+    public var skeletonData(default, null):SkeletonData;
 
-	public var state(default, null):AnimationState;
+    public var state(default, null):AnimationState;
 
-	public var stateData(default, null):AnimationStateData;
+    public var stateData(default, null):AnimationStateData;
 
     /** Is this animation paused? Default is `false`. */
     public var paused(default, set):Bool = false;
@@ -150,10 +150,10 @@ class Spine extends Visual {
 
         skeletonData = spineData.skeletonData;
 
-		stateData = new AnimationStateData(skeletonData);
-		state = new AnimationState(stateData);
+        stateData = new AnimationStateData(skeletonData);
+        state = new AnimationState(stateData);
 
-		skeleton = new Skeleton(skeletonData);
+        skeleton = new Skeleton(skeletonData);
 
         // Bind events
 
@@ -226,10 +226,10 @@ class Spine extends Visual {
             if (skeleton != null) skeleton.setToSetupPose();
         }
 
-		if (skeleton != null) skeleton.update(delta);
-		if (state != null) state.update(delta);
-		if (state != null && skeleton != null) state.apply(skeleton);
-		if (skeleton != null) skeleton.updateWorldTransform();
+        if (skeleton != null) skeleton.update(delta);
+        if (state != null) state.update(delta);
+        if (state != null && skeleton != null) state.apply(skeleton);
+        if (skeleton != null) skeleton.updateWorldTransform();
 
         if (visible) {
             render();
@@ -238,12 +238,12 @@ class Spine extends Visual {
     } //update
 
     var animQuads:Array<Quad> = [];
-    var animMeshes:Array<Mesh> = [];
+    var usedMeshes:Map<Mesh,Bool> = null;
 
     function render() {
 
-		var drawOrder:Array<Slot> = skeleton.drawOrder;
-		var len:Int = drawOrder.length;
+        var drawOrder:Array<Slot> = skeleton.drawOrder;
+        var len:Int = drawOrder.length;
         var vertices = new Array<Float>();
 
         var r:Float;
@@ -270,16 +270,24 @@ class Spine extends Visual {
         var colors:Array<AlphaColor>;
         var alphaColor:AlphaColor;
 
-		for (i in 0...len)
-		{
-			slot = drawOrder[i];
-			if (slot.attachment != null)
-			{
-				if (Std.is(slot.attachment, RegionAttachment))
-				{
+        // Mark all meshes as unused, in order to see if
+        // They will be used after
+        if (usedMeshes != null) {
+            for (key in usedMeshes.keys()) {
+                usedMeshes.set(key, false);
+            }
+        }
+
+        for (i in 0...len)
+        {
+            slot = drawOrder[i];
+            if (slot.attachment != null)
+            {
+                if (Std.is(slot.attachment, RegionAttachment))
+                {
                     region = cast slot.attachment;
-					atlasRegion = cast region.rendererObject;
-					texture = cast atlasRegion.page.rendererObject;
+                    atlasRegion = cast region.rendererObject;
+                    texture = cast atlasRegion.page.rendererObject;
                     bone = slot.bone;
 
                     r = skeleton.r * slot.r * region.r;
@@ -344,22 +352,26 @@ class Spine extends Visual {
                 }
                 else if (Std.is(slot.attachment, MeshAttachment)) {
 
-					mesh = cast slot.attachment;
+                    mesh = cast slot.attachment;
 
-					if (Std.is(mesh.rendererObject, Mesh))
-					{
-						wrapper = cast mesh.rendererObject;
-					}
-					else
-					{
-						atlasRegion = cast mesh.rendererObject;
-					    texture = cast atlasRegion.page.rendererObject;
-						wrapper = new Mesh();
-						mesh.rendererObject = wrapper;
+                    if (Std.is(mesh.rendererObject, Mesh))
+                    {
+                        wrapper = cast mesh.rendererObject;
+                    }
+                    else
+                    {
+                        atlasRegion = cast mesh.rendererObject;
+                        texture = cast atlasRegion.page.rendererObject;
+                        wrapper = new Mesh();
+                        add(wrapper);
+                        mesh.rendererObject = wrapper;
                         wrapper.texture = texture;
-					}
+                    }
 
-					verticesLength = mesh.vertices.length;
+                    if (usedMeshes == null) usedMeshes = new Map();
+                    usedMeshes.set(wrapper, true);
+
+                    verticesLength = mesh.vertices.length;
                     if (verticesLength == 0) {
                         wrapper.visible = false;
                     }
@@ -412,6 +424,22 @@ class Spine extends Visual {
         while (usedQuads < animQuads.length) {
             var quad = animQuads.pop();
             quad.destroy();
+        }
+
+        // Remove unused meshes
+        if (usedMeshes != null) {
+            len = 0;
+            for (key in usedMeshes.keys()) {
+                len++;
+                var used = usedMeshes.get(key);
+                if (!used) {
+                    usedMeshes.remove(key);
+                    key.destroy();
+                }
+            }
+            if (len == 0) {
+                usedMeshes = null;
+            }
         }
 
     } //render
