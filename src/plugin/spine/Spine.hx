@@ -105,8 +105,6 @@ class Spine extends Visual {
         return spineData;
     }
 
-    public var animations(default,null):AnimationState;
-
     public var skeleton(default,null):Skeleton;
 
 	public var skeletonData(default, null):SkeletonData;
@@ -166,7 +164,11 @@ class Spine extends Visual {
 
         });
 
+#if spinehaxe
+        state.onComplete.add(function(track) {
+#else //spine-hx
         state.onComplete.add(function(track, count) {
+#end
             
             emitComplete();
 
@@ -342,9 +344,9 @@ class Spine extends Visual {
                 }
                 else if (Std.is(slot.attachment, MeshAttachment)) {
 
-					mesh = cast MeshAttachment;
+					mesh = cast slot.attachment;
 
-					if (mesh.rendererObject != null)
+					if (Std.is(mesh.rendererObject, Mesh))
 					{
 						wrapper = cast mesh.rendererObject;
 					}
@@ -358,42 +360,49 @@ class Spine extends Visual {
 					}
 
 					verticesLength = mesh.vertices.length;
-					mesh.computeWorldVertices(slot, wrapper.vertices);
-                    if (wrapper.vertices.length > verticesLength) {
-                        wrapper.vertices.splice(verticesLength, wrapper.vertices.length - verticesLength);
+                    if (verticesLength == 0) {
+                        wrapper.visible = false;
                     }
-					wrapper.uvs = mesh.uvs;
-					wrapper.indices = mesh.triangles;
+                    else {
+                        wrapper.visible = true;
+
+                        mesh.computeWorldVertices(slot, wrapper.vertices);
+                        if (wrapper.vertices.length > verticesLength) {
+                            wrapper.vertices.splice(verticesLength, wrapper.vertices.length - verticesLength);
+                        }
+                        wrapper.uvs = mesh.uvs;
+                        wrapper.indices = mesh.triangles;
 
 #if spinehaxe
-                    isAdditive = slot.data.blendMode == BlendMode.additive;
+                        isAdditive = slot.data.blendMode == BlendMode.additive;
 #else //spine-hx
-                    isAdditive = slot.data.blendMode == BlendMode.Additive;
+                        isAdditive = slot.data.blendMode == BlendMode.Additive;
 #end
 
-                    r = skeleton.r * slot.r * mesh.r;
-                    g = skeleton.g * slot.g * mesh.g;
-                    b = skeleton.b * slot.b * mesh.b;
-                    a = skeleton.a * slot.a * mesh.a * alpha;
+                        r = skeleton.r * slot.r * mesh.r;
+                        g = skeleton.g * slot.g * mesh.g;
+                        b = skeleton.b * slot.b * mesh.b;
+                        a = skeleton.a * slot.a * mesh.a * alpha;
 
-                    wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                        wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
 
-                    alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
-                    colors = wrapper.colors;
-                    if (colors.length < verticesLength) {
-                        for (j in 0...verticesLength) {
-                            colors[j] = alphaColor;
+                        alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
+                        colors = wrapper.colors;
+                        if (colors.length < verticesLength) {
+                            for (j in 0...verticesLength) {
+                                colors[j] = alphaColor;
+                            }
+                        } else {
+                            for (j in 0...verticesLength) {
+                                colors.unsafeSet(j, alphaColor);
+                            }
+                            if (colors.length > verticesLength) {
+                                colors.splice(verticesLength, colors.length - verticesLength);
+                            }
                         }
-                    } else {
-                        for (j in 0...verticesLength) {
-                            colors.unsafeSet(j, alphaColor);
-                        }
-                        if (colors.length > verticesLength) {
-                            colors.splice(verticesLength, colors.length - verticesLength);
-                        }
+                        wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                        wrapper.depth = z++;
                     }
-                    wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                    wrapper.depth = z++;
 
                 }
             }
