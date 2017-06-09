@@ -309,8 +309,8 @@ class Draw implements spec.Draw {
                         vertex.color.set(r, g, b, a);
                         
                         if (texture != null) {
-                            uvx = uvs.unsafeGet(j) * uvFactorX;
-                            uvy = uvs.unsafeGet(j * 2) * uvFactorY;
+                            uvx = uvs.unsafeGet(j * 2) * uvFactorX;
+                            uvy = uvs.unsafeGet(j * 2 + 1) * uvFactorY;
                         } else {
                             uvx = 0;
                             uvy = 0;
