@@ -11,6 +11,7 @@ import ceramic.Mesh;
 import ceramic.Texture;
 import ceramic.Transform;
 import ceramic.Color;
+import ceramic.AlphaColor;
 import ceramic.Blending;
 import ceramic.RotateFrame;
 import ceramic.Shortcuts.*;
@@ -185,7 +186,6 @@ class Spine extends Visual {
 
 /// Public API
 
-
     public function animate(animationName:String, loop:Bool = false):Void {
         if (destroyed) return;
 
@@ -230,14 +230,15 @@ class Spine extends Visual {
 		if (skeleton != null) skeleton.updateWorldTransform();
 
         if (visible) {
-            renderWithQuads();
+            render();
         }
 
     } //update
 
     var animQuads:Array<Quad> = [];
+    var animMeshes:Array<Mesh> = [];
 
-    function renderWithQuads() {
+    function render() {
 
 		var drawOrder:Array<Slot> = skeleton.drawOrder;
 		var len:Int = drawOrder.length;
@@ -261,6 +262,11 @@ class Spine extends Visual {
         var quad:Quad;
         var slot:Slot;
         var usedQuads = 0;
+        var mesh:MeshAttachment;
+        var wrapper:Mesh;
+        var verticesLength:Int;
+        var colors:Array<AlphaColor>;
+        var alphaColor:AlphaColor;
 
 		for (i in 0...len)
 		{
@@ -332,6 +338,62 @@ class Spine extends Visual {
                     quad.frameWidth = atlasRegion.width / texture.density;
                     quad.frameHeight = atlasRegion.height / texture.density;
                     quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
+
+                }
+                else if (Std.is(slot.attachment, MeshAttachment)) {
+
+					mesh = cast MeshAttachment;
+
+					if (mesh.rendererObject != null)
+					{
+						wrapper = cast mesh.rendererObject;
+					}
+					else
+					{
+						atlasRegion = cast mesh.rendererObject;
+					    texture = cast atlasRegion.page.rendererObject;
+						wrapper = new Mesh();
+						mesh.rendererObject = wrapper;
+                        wrapper.texture = texture;
+					}
+
+					verticesLength = mesh.vertices.length;
+					mesh.computeWorldVertices(slot, wrapper.vertices);
+                    if (wrapper.vertices.length > verticesLength) {
+                        wrapper.vertices.splice(verticesLength, wrapper.vertices.length - verticesLength);
+                    }
+					wrapper.uvs = mesh.uvs;
+					wrapper.indices = mesh.triangles;
+
+#if spinehaxe
+                    isAdditive = slot.data.blendMode == BlendMode.additive;
+#else //spine-hx
+                    isAdditive = slot.data.blendMode == BlendMode.Additive;
+#end
+
+                    r = skeleton.r * slot.r * mesh.r;
+                    g = skeleton.g * slot.g * mesh.g;
+                    b = skeleton.b * slot.b * mesh.b;
+                    a = skeleton.a * slot.a * mesh.a * alpha;
+
+                    wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+
+                    alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
+                    colors = wrapper.colors;
+                    if (colors.length < verticesLength) {
+                        for (j in 0...verticesLength) {
+                            colors[j] = alphaColor;
+                        }
+                    } else {
+                        for (j in 0...verticesLength) {
+                            colors.unsafeSet(j, alphaColor);
+                        }
+                        if (colors.length > verticesLength) {
+                            colors.splice(verticesLength, colors.length - verticesLength);
+                        }
+                    }
+                    wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                    wrapper.depth = z++;
 
                 }
             }

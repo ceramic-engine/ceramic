@@ -77,7 +77,7 @@ class Vscode extends tools.Task {
                                 {
                                     taskName: "build",
                                     command: "ceramic",
-                                    args: [backendName, kind, target.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
+                                    args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
                                     problemMatcher: {
                                         owner: "haxe",
                                         pattern: {

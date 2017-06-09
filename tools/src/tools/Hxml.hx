@@ -95,7 +95,9 @@ class Hxml {
                     path = Path.normalize(Path.join([originalDir, path]));
 
                     // Remove path prefix
-                    path = path.substr(targetDir.length + 1);
+                    if (path.startsWith(targetDir + '/')) {
+                        path = path.substr(targetDir.length + 1);
+                    }
                 }
 
                 updatedData.push(path);
@@ -113,7 +115,7 @@ class Hxml {
                     path = Path.normalize(Path.join([originalDir, path]));
 
                     // Remove path prefix for -cpp/-js/-swf
-                    if (item != '-cp') {
+                    if (item != '-cp' && path.startsWith(targetDir + '/')) {
                         path = path.substr(targetDir.length + 1);
                     }
                 }

@@ -258,7 +258,7 @@ class ImageAsset extends Asset {
                 var prevTexture = this.texture;
                 this.texture = new Texture(texture, density);
                 this.texture.name = path;
-
+                
                 // Link the texture to this asset so that
                 // destroying one will destroy the other
                 this.texture.asset = this;

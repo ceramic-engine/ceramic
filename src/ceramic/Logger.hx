@@ -13,7 +13,13 @@ class Logger {
 
         haxe.Log.trace('[log] ' + value, pos);
 
-    } //trace
+    } //log
+
+    public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
+
+        haxe.Log.trace('[success] ' + value, pos);
+
+    } //success
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
 

@@ -7,6 +7,7 @@ import haxe.io.Path;
 import js.node.ChildProcess;
 
 using StringTools;
+using npm.Colors;
 
 class Tools {
 
@@ -34,7 +35,8 @@ class Tools {
         colors: true,
         defines: new Map<String,String>(),
         ceramicPath: js.Node.__dirname,
-        variant: 'standard'
+        variant: 'standard',
+        vscode: false
     };
 
 #if use_backend
@@ -135,6 +137,13 @@ class Tools {
             args.splice(index, 2);
         }
 
+        // VSCode
+        index = args.indexOf('--vscode-editor');
+        if (index != -1) {
+            settings.vscode = true;
+            args.splice(index, 1);
+        }
+
     } //updateSettings
 
     function run():Void {
@@ -211,6 +220,7 @@ class Tools {
         settings.defines.set('ceramic_assets_path', Path.join([settings.ceramicPath, 'assets']));
         settings.defines.set('HXCPP_STACK_LINE', '');
         settings.defines.set('HXCPP_STACK_TRACE', '');
+        settings.defines.set('absolute-path', '');
 
         // Add target defines
         if (target != null) {
@@ -409,25 +419,72 @@ class Tools {
 
     } //getTargetName
 
-    public static function makeHaxePathAbsoluteInLine(cwd:String, input:String):String {
+    static var RE_STACK_FILE_LINE = ~/Called\s+from\s+([a-zA-Z0-9_:\.]+)\s+(.+?\.hx)\s+line\s+([0-9]+)$/;
+    static var RE_TRACE_FILE_LINE = ~/(.+?\.hx):([0-9]+):\s+/;
+    static var RE_HAXE_ERROR = ~/^(.+):(\d+): (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
 
-        var commaIndex = input.indexOf(':');
-        if (commaIndex != -1) {
-            var before = input.substr(0, commaIndex);
-            var after = input.substr(commaIndex + 1);
+    public static function formatLineOutput(cwd:String, input:String):String {
 
-            if (before.endsWith('.hx')) {
-                if (!Path.isAbsolute(before)) {
-                    before = Path.normalize(Path.join([cwd, before]));
-                    if (FileSystem.exists(before)) {
-                        return before + ':' + after;
-                    }
-                }
+        if (RE_HAXE_ERROR.match(input)) {
+            var relativePath = RE_HAXE_ERROR.matched(1);
+            var lineNumber = RE_HAXE_ERROR.matched(2);
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var newPath = Files.getRelativePath(absolutePath, shared.cwd);
+            if (settings.vscode) {
+                // We need to add 1 to character indexes for vscode to interpret them correctly
+                var charsBefore = 'characters ' + RE_HAXE_ERROR.matched(4) + '-' + RE_HAXE_ERROR.matched(5);
+                var charsAfter = 'characters ' + (Std.parseInt(RE_HAXE_ERROR.matched(4)) + 1) + '-' + (Std.parseInt(RE_HAXE_ERROR.matched(5)) + 1);
+                input = input.replace(charsBefore, charsAfter);
             }
+            input = input.replace(relativePath, newPath);
+            if (settings.colors) {
+                input = '$newPath:$lineNumber: '.gray() + input.substr('$newPath:$lineNumber:'.length + 1).red();
+            } else {
+                input = '$newPath:$lineNumber: ' + input.substr('$newPath:$lineNumber:'.length + 1);
+            }
+        }
+        else if (RE_STACK_FILE_LINE.match(input)) {
+            var symbol = RE_STACK_FILE_LINE.matched(1);
+            var relativePath = RE_STACK_FILE_LINE.matched(2);
+            var lineNumber = RE_STACK_FILE_LINE.matched(3);
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            if (settings.colors) {
+                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol '.red() + '$absolutePath:$lineNumber'.gray());
+            } else {
+                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol $absolutePath:$lineNumber');
+            }
+        }
+        else if (RE_TRACE_FILE_LINE.match(input)) {
+            var relativePath = RE_TRACE_FILE_LINE.matched(1);
+            var lineNumber = RE_TRACE_FILE_LINE.matched(2);
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            input = input.replace(RE_TRACE_FILE_LINE.matched(0), '');
+            if (settings.colors) {
+                if (input.startsWith('[log] ')) {
+                    input = input.substr(6).cyan();
+                } else if (input.startsWith('[warning] ')) {
+                    input = input.substr(10).yellow();
+                } else if (input.startsWith('[error] ')) {
+                    input = input.substr(8).red();
+                } else if (input.startsWith('[success] ')) {
+                    input = input.substr(10).green();
+                } else if (input.startsWith('characters ')) {
+                    input = input.red();
+                }
+                input += ' $absolutePath:$lineNumber'.gray();
+            } else {
+                input += ' $absolutePath:$lineNumber';
+            }
+        }
+        else if (settings.colors && input.startsWith('Error : ')) {
+            input = input.red();
+        }
+        else if (settings.colors && input.startsWith('Called from hxcpp::')) {
+            input = input.red();
         }
 
         return input;
 
-    } //makeHaxePathAbsoluteInLine
+    } //formatLineOutput
 
 } //Tools

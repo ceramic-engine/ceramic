@@ -78,7 +78,7 @@ class Build extends tools.Task {
             proc.stdout.pipe(untyped out);
             out.encoding = 'utf8';
             out.on('token', function(token) {
-                token = makeHaxePathAbsoluteInLine(flowProjectPath, token);
+                token = formatLineOutput(flowProjectPath, token);
                 js.Node.process.stdout.write(token + "\n");
             });
             out.on('done', function() {
@@ -92,7 +92,7 @@ class Build extends tools.Task {
             proc.stderr.pipe(untyped err);
             err.encoding = 'utf8';
             err.on('token', function(token) {
-                token = makeHaxePathAbsoluteInLine(flowProjectPath, token);
+                token = formatLineOutput(flowProjectPath, token);
                 js.Node.process.stderr.write(token + "\n");
             });
             err.on('error', function(err) {

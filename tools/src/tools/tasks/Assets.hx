@@ -6,8 +6,6 @@ import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
 
-using StringTools;
-
 class Assets extends tools.Task {
 
 /// Properties

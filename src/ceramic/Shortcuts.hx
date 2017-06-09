@@ -30,6 +30,11 @@ class Shortcuts {
         App.app.logger.log(value, pos);
     }
 
+    /** Log success */
+    inline public static function success(value:Dynamic, ?pos:PosInfos) {
+        App.app.logger.success(value, pos);
+    }
+
     /** Log warning */
     inline public static function warning(value:Dynamic, ?pos:PosInfos) {
         App.app.logger.warning(value, pos);
