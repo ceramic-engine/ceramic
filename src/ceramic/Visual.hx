@@ -292,6 +292,13 @@ class Visual extends Entity {
 
         if (transform != null) transform = null;
 
+        if (children != null) {
+            for (child in children) {
+                child.destroy();
+            }
+            children = null;
+        }
+
     } //destroy
 
 /// Matrix
