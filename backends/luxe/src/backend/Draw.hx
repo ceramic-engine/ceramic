@@ -21,17 +21,24 @@ class Draw implements spec.Draw {
     var quadPoolIndex:Int = 0;
 
     var meshPool:Array<phoenix.geometry.Geometry> = [];
+    var meshPoolLength:Int = 0;
+    var prevMeshPoolIndex:Int = 0;
+    var meshPoolIndex:Int = 0;
+
+    var vertexPool:Array<phoenix.geometry.Vertex> = [];
+    var vertexPoolLength:Int = 0;
+    var vertexPoolIndex:Int = 0;
 
     inline function begin():Void {
 
         prevQuadPoolIndex = quadPoolIndex;
         quadPoolIndex = 0;
 
-        // TODO remove
-        for (geom in meshPool) {
-            Luxe.renderer.batcher.remove(geom);
-        }
-        meshPool = [];
+        prevMeshPoolIndex = meshPoolIndex;
+        meshPoolIndex = 0;
+
+        vertexPoolIndex = 0;
+
 
     } //begin
 
@@ -40,9 +47,21 @@ class Draw implements spec.Draw {
         // Remove unused geometries (if needed)
         //
         var i = quadPoolIndex;
-        while (i < quadPool.length) {
+        while (i < quadPoolLength) {
 
             var geom = quadPool.unsafeGet(i);
+            i++;
+
+            Luxe.renderer.batcher.remove(geom);
+
+        }
+
+        // Remove unused meshes (if needed)
+        //
+        var i = meshPoolIndex;
+        while (i < meshPoolLength) {
+
+            var geom = meshPool.unsafeGet(i);
             i++;
 
             Luxe.renderer.batcher.remove(geom);
@@ -82,7 +101,6 @@ class Draw implements spec.Draw {
         var rect = new luxe.Rectangle();
 
         var mesh:ceramic.Mesh;
-        var meshGeom:phoenix.geometry.Geometry;
         var color:ceramic.AlphaColor;
         var vertex:phoenix.geometry.Vertex;
 
@@ -108,6 +126,8 @@ class Draw implements spec.Draw {
         var m:phoenix.Matrix;
 
         var v:Array<phoenix.geometry.Vertex>;
+
+        var meshGeom:phoenix.geometry.Geometry;
 
         // Draw visuals
         for (visual in visuals) {
@@ -239,12 +259,25 @@ class Draw implements spec.Draw {
                 case MESH:
                     mesh = cast visual;
 
-                    meshGeom = new phoenix.geometry.Geometry({
-                        primitive_type: phoenix.Batcher.PrimitiveType.triangles
-                    });
-                    meshPool.push(meshGeom);
+                    // Get or create mesh geometry
+                    //
+                    if (meshPoolIndex < meshPoolLength) {
 
-                    Luxe.renderer.batcher.add(meshGeom);
+                        meshGeom = meshPool.unsafeGet(meshPoolIndex);
+
+                    }
+                    else {
+
+                        meshGeom = new phoenix.geometry.Geometry({
+                            primitive_type: phoenix.Batcher.PrimitiveType.triangles
+                        });
+                        meshPool.push(meshGeom);
+                        meshPoolLength++;
+
+                        Luxe.renderer.batcher.add(meshGeom);
+
+                    }
+                    meshPoolIndex++;
 
                     meshGeom.depth = depth;
                     depth += 0.01;
@@ -271,6 +304,8 @@ class Draw implements spec.Draw {
                     var uvs = mesh.uvs;
                     var uvFactorX:Float = 1;
                     var uvFactorY:Float = 1;
+                    var geomLen = meshGeom.vertices.length;
+                    var geomVertices = meshGeom.vertices;
 
                     // Set texture
                     if (texture != null) {
@@ -283,6 +318,16 @@ class Draw implements spec.Draw {
 
                     len = indices.length;
                     i = 0;
+
+                    // Update vertices array size if needed
+                    if (geomLen > len) {
+                        geomVertices.splice(len, geomLen - len);
+                    } else if (geomLen < len) {
+                        for (n in geomLen...len) {
+                            geomVertices[n] = null;
+                        }
+                    }
+
                     while (i < len) {
 
                         j = indices.unsafeGet(i);
@@ -301,9 +346,21 @@ class Draw implements spec.Draw {
                         g *= a;
                         b *= a;
 
-                        // Set vertex info
-                        // TODO pool
-                        vertex = new phoenix.geometry.Vertex(new phoenix.Vector());
+                        // Get or create vertex
+                        //
+                        if (vertexPoolIndex < vertexPoolLength) {
+
+                            vertex = vertexPool.unsafeGet(vertexPoolIndex);
+
+                        }
+                        else {
+
+                            vertex = new phoenix.geometry.Vertex(new phoenix.Vector(0,0,0));
+                            vertexPool.push(vertex);
+                            vertexPoolLength++;
+
+                        }
+                        vertexPoolIndex++;
 
                         vertex.pos.set_xy(x, y);
                         vertex.color.set(r, g, b, a);
@@ -319,7 +376,7 @@ class Draw implements spec.Draw {
                         vertex.uv.uv0.set_uv(uvx, uvy);
 
                         // Add vertex
-                        meshGeom.vertices.push(vertex);
+                        geomVertices.unsafeSet(i, vertex);
 
                         i++;
                     }
