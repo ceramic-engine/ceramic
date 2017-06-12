@@ -36,7 +36,7 @@ class SpineAsset extends Asset {
         super('spine', name, options);
         handleTexturesDensityChange = true;
 
-        if (options.scale != null) {
+        if (this.options.scale != null) {
             scale = Std.parseFloat(options.scale);
             if (Math.isNaN(scale)) {
                 warning('Invalid scale option: ' + options.scale);
