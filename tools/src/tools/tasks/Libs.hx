@@ -21,6 +21,8 @@ class Libs extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        ensureCeramicProject(cwd, args);
+
         function g(str:String) {
             return settings.colors ? str.gray() : str;
         }

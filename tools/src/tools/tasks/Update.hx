@@ -21,8 +21,8 @@ class Update extends tools.Task {
 #if use_backend
         backend.runUpdate(cwd, args);
 #else
-        command('git', ['pull'], { cwd: js.Node.__dirname });
-        command('npm', ['install'], { cwd: js.Node.__dirname });
+        command('git', ['pull'], { cwd: settings.ceramicPath });
+        command('npm', ['install'], { cwd: settings.ceramicPath });
 #end
 
     } //run

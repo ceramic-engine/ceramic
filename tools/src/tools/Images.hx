@@ -14,7 +14,15 @@ typedef RawImageData = {
 
     var channels:Int;
 
-} //ImageData
+} //RawImageData
+
+typedef ImageMetadata = {
+
+    var width:Int;
+
+    var height:Int;
+
+} //ImageMetadata
 
 class Images {
 
@@ -98,5 +106,52 @@ class Images {
         }
 
     } //premultiplyAlpha
+
+    public static function resize(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float):Void {
+
+        Sync.run(function(done) {
+
+            sharp(
+                srcPath
+            ).resize(
+                Math.round(targetWidth), Math.round(targetHeight)
+            ).toFile(
+                dstPath,
+                function(err, info) {
+                    if (err != null) throw err;
+
+                    done();
+                }
+            );
+
+        });
+
+    } //resize
+
+    public function metadata(path:String):ImageMetadata {
+
+        var width:Float = 0;
+        var height:Float = 0;
+
+        Sync.run(function(done) {
+
+            sharp(
+                path
+            ).metadata(function(err, meta) {
+                if (err != null) throw err;
+
+                width = meta.width;
+                height = meta.height;
+
+            });
+
+        });
+
+        return {
+            width: Math.round(width),
+            height: Math.round(height)
+        };
+
+    } //metadata
 
 } //Images

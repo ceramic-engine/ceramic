@@ -7,7 +7,8 @@
     "haxe.displayConfigurations": [
         ["--cwd", "sample", "completion.hxml"],
         ["tools.hxml"],
-        ["tools-luxe.hxml"]
+        ["tools-luxe.hxml"],
+        ["plugins/spine/tools.hxml"]
     ],
     "search.exclude": {
         "**/.git": true,

@@ -18,6 +18,8 @@ class Vscode extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        ensureCeramicProject(cwd, args);
+
         var force = extractArgFlag(args, 'force');
         var vscodeDir = Path.join([cwd, '.vscode']);
 

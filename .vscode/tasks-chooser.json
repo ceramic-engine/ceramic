@@ -46,6 +46,28 @@
             }]
         },
         {
+            "displayName": "▷ Tools / spine",
+            "description": "haxe plugins/spine/tools.hxml",
+            "tasks": [{
+                "taskName": "build",
+                "command": "haxe",
+                "args": ["plugins/spine/tools.hxml", "--cwd", "plugins/spine"],
+                "problemMatcher": {
+                    "owner": "haxe",
+                    "pattern": {
+                        "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "endLine": 3,
+                        "column": 4,
+                        "endColumn": 5,
+                        "severity": 6,
+                        "message": 7
+                    }
+                }
+            }]
+        },
+        {
             "displayName": "▶︎ Run Mac",
             "description": "ceramic luxe run mac --setup --assets",
             "tasks": [

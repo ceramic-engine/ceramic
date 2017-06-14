@@ -1,6 +1,8 @@
 package tools.tasks;
 
 import tools.Tools.*;
+import sys.FileSystem;
+import sys.io.File;
 import haxe.io.Path;
 import haxe.Json;
 
@@ -20,6 +22,13 @@ class Help extends tools.Task {
         var lines = [];
         var tab = '  ';
 
+        // Compute tools version
+        var version = 'v' + js.Node.require(Path.join([settings.ceramicPath, 'package.json'])).version;
+        var versionPath = Path.join([js.Node.__dirname, 'version']);
+        if (FileSystem.exists(versionPath)) {
+            version = File.getContent(versionPath);
+        }
+
         function b(str:String) {
             return settings.colors ? str.bold() : str;
         }
@@ -37,6 +46,10 @@ class Help extends tools.Task {
         }
 
         function bg(str:String) {
+            return settings.colors ? str.green().bold() : str;
+        }
+
+        function green(str:String) {
             return settings.colors ? str.green() : str;
         }
 
@@ -56,14 +69,19 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
   _|_|_|    _|_|_|  _|         _|_|_|  _|    _|    _|  _|    _|_|_|
 
         */
-        lines.push(b('                                              
+        lines.push('                                              
                                                          '+bg('_|')+'            
     '+bg('_|_|_|')+'    '+bg('_|_|')+'    '+bg('_|')+'  '+bg('_|_|')+'   '+bg('_|_|_|')+'  '+bg('_|_|_|')+'  '+bg('_|_|')+'          '+bg('_|_|_|')+'  
   '+bg('_|')+'        '+bg('_|_|_|_|')+'  '+bg('_|_|')+'     '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'        
   '+bg('_|')+'        '+bg('_|')+'        '+bg('_|')+'       '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'        
-    '+bg('_|_|_|')+'    '+bg('_|_|_|')+'  '+bg('_|')+'         '+bg('_|_|_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|_|_|')+'                    
+    '+bg('_|_|_|')+'    '+bg('_|_|_|')+'  '+bg('_|')+'         '+bg('_|_|_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|_|_|'));
+        
+        var logo = lines[lines.length-1];
+        var logoLines = logo.split("\n");
+        logoLines[1] += ' ' + green(version);
+        lines[lines.length-1] = logoLines.join("\n");
 
-                                             '));
+        lines.push("\n");
 
         lines.push(tab + b('USAGE'));
         lines.push(tab + 'ceramic ' + u('command') + ' '+g('[')+'--arg'+g(',')+' --arg value'+g(', \u2026]'));
@@ -80,7 +98,7 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
         for (backendName in ['luxe']) {
 
             if (~/^([a-zA-Z0-9_]+)$/.match(backendName) && sys.FileSystem.exists(Path.join([js.Node.__dirname, 'tools-' + backendName + '.js']))) {
-                var initTools = js.Node.require('./tools-' + backendName + '.js');
+                var initTools = js.Node.require(Path.join([js.Node.__dirname, './tools-' + backendName + '.js']));
                 var tools:tools.Tools = initTools(cwd, ['-D$backendName'].concat(args));
 
                 for (key in tools.tasks.keys()) {

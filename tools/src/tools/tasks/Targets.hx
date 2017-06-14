@@ -12,6 +12,8 @@ class Targets extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        ensureCeramicProject(cwd, args);
+
         for (target in backend.getBuildTargets()) {
 
             var configs = [];

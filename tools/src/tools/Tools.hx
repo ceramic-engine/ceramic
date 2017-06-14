@@ -9,6 +9,12 @@ import js.node.ChildProcess;
 using StringTools;
 using npm.Colors;
 
+interface ToolsPlugin {
+
+    function init(tools:Tools):Void;
+
+} //ToolsPlugin
+
 class Tools {
 
 /// Global
@@ -25,16 +31,25 @@ class Tools {
 
     } //main
 
-    static function _tools(cwd:String, args:Array<String>):Tools {
+    static function _tools(cwd:String, args:Array<String>, ceramicPath:String):Tools {
 
-        return new Tools(cwd, args);
+        return new Tools(cwd, args, ceramicPath);
 
     } //_tools
+
+    public static function addPlugin(plugin:ToolsPlugin):Void {
+
+        if (plugins == null) plugins = [];
+        plugins.push(plugin);
+
+    } //addPlugin
+
+    static var plugins:Array<ToolsPlugin>;
 
     public static var settings = {
         colors: true,
         defines: new Map<String,String>(),
-        ceramicPath: js.Node.__dirname,
+        ceramicPath: '',
         variant: 'standard',
         vscode: false
     };
@@ -55,12 +70,13 @@ class Tools {
 
 /// Lifecycle
 
-    function new(cwd:String, args:Array<String>) {
+    function new(cwd:String, args:Array<String>, ceramicPath:String) {
 
         shared = this;
 
         this.cwd = cwd;
         this.args = args;
+        settings.ceramicPath = ceramicPath;
 
         #if use_backend
 
@@ -79,12 +95,21 @@ class Tools {
         tasks.set('help', new tools.tasks.Help());
         tasks.set('init', new tools.tasks.Init());
         tasks.set('vscode', new tools.tasks.Vscode());
+        tasks.set('local', new tools.tasks.Local());
 
         #end
 
         tasks.set('info', new tools.tasks.Info());
         tasks.set('update', new tools.tasks.Update());
         tasks.set('libs', new tools.tasks.Libs());
+
+        // Init plugins
+        //
+        if (plugins != null) {
+            for (plugin in plugins) {
+                plugin.init(this);
+            }
+        }
 
     } //new
 
@@ -238,7 +263,7 @@ class Tools {
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
-        return command(Path.join([js.Node.__dirname, 'ceramic']), args, { cwd: cwd, mute: mute });
+        return command(Path.join([settings.ceramicPath, 'ceramic']), args, { cwd: cwd, mute: mute });
 
     } //runCeramic
 
@@ -486,5 +511,13 @@ class Tools {
         return input;
 
     } //formatLineOutput
+
+    public static function ensureCeramicProject(cwd:String, args:Array<String>):Void {
+
+        if (!FileSystem.exists(Path.join([cwd, 'ceramic.yml']))) {
+            fail("Current working directory must be a valid ceramic project.");
+        }
+
+    } //ensureCeramicProject
 
 } //Tools

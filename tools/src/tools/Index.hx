@@ -16,7 +16,7 @@ class Index {
     
     } //main
 
-    static function run(cwd:String, args:Array<String>):Void {
+    static function run(cwd:String, args:Array<String>, ceramicPath:String):Void {
 
         if (args.length > 0 && args[0] != '--help') {
 
@@ -25,14 +25,14 @@ class Index {
             // Try module require
             if (~/^([a-zA-Z0-9_]+)$/.match(first) && sys.FileSystem.exists(Path.join([js.Node.__dirname, 'tools-' + first + '.js']))) {
                 var tools = js.Node.require('./tools-' + first + '.js');
-                tools(cwd, args).run();
+                tools(cwd, args, ceramicPath).run();
             }
             else {
-                @:privateAccess new Tools(cwd, ['default'].concat(args)).run();
+                @:privateAccess new Tools(cwd, ['default'].concat(args), ceramicPath).run();
             }
 
         } else {
-            @:privateAccess new Tools(cwd, ['default', 'help']).run();
+            @:privateAccess new Tools(cwd, ['default', 'help'], ceramicPath).run();
         }
 
     } //main

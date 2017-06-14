@@ -4,7 +4,7 @@
   "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "./postinstall"
+    "postinstall": "node postinstall.js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "ncp": "^2.0.0",
     "plist": "^2.0.1",
     "portscanner": "^2.1.0",
+    "rimraf": "^2.6.1",
     "sharp": "^0.16.2",
     "shell-quote": "^1.6.1",
     "source-map-support": "^0.4.3",
