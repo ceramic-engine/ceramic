@@ -1,0 +1,8 @@
+-cp ../../tools/src
+-main tools.Index
+-lib hxnodejs
+-lib hscript
+-debug
+-js index.js
+-cp tools/src
+--no-output

@@ -8,7 +8,8 @@
         ["--cwd", "sample", "completion.hxml"],
         ["tools.hxml", "-js", "index.js"],
         ["tools-luxe.hxml", "-js", "tools-luxe.js"],
-        ["plugins/spine/tools.hxml"]
+        ["plugins/spine/tools-completion.hxml"],
+        ["plugins/ios/tools-completion.hxml"]
     ],
     "search.exclude": {
         "**/.git": true,

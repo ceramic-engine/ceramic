@@ -40,37 +40,37 @@ class Project {
 
         app = ProjectLoader.loadAppConfig(data, settings.defines);
 
-        // Ideally this should be put somewhere else.
-        var hxml = '';
-        
-        var hasSpineHaxe = false;
-        var appLibs:Array<Dynamic> = app.libs;
-        for (lib in appLibs) {
-            var libName:String = null;
-            var libVersion:String = "*";
-            if (Std.is(lib, String)) {
-                libName = lib;
-            } else {
-                for (k in Reflect.fields(lib)) {
-                    libName = k;
-                    libVersion = Reflect.field(lib, k);
-                    break;
-                }
+        // Let tools plugins extend app config
+        if (plugins != null) {
+            for (plugin in plugins) {
+                plugin.extendProject(this);
             }
-            if (libName == 'spinehaxe') {
-                hasSpineHaxe = true;
-                break;
-            }
-        }
-        if (hasSpineHaxe) {
-            hxml += "\n"+'--remap spine:spinehaxe';
         }
 
-        if (app.hxml == null) {
-            app.hxml = hxml;
-        } else {
-            app.hxml += "\n" + hxml;
+        // Discover plugins
+        //
+        var usedPlugins = [];
+        var localPluginsPath = Path.join([shared.cwd, 'plugins']);
+        if (FileSystem.exists(localPluginsPath)) {
+            for (name in FileSystem.readDirectory(localPluginsPath)) {
+                var srcPath = Path.join(['plugins', name, 'src']);
+                if (FileSystem.exists(srcPath)) {
+                    app.paths.push(srcPath);
+                    usedPlugins.push(name);
+                }
+            }
         }
+        for (name in FileSystem.readDirectory(Path.join([settings.ceramicPath, 'plugins']))) {
+            if (usedPlugins.indexOf(name) != -1) continue;
+            var srcPath = getRelativePath(Path.join([settings.ceramicPath, 'plugins', name, 'src']), shared.cwd);
+            if (FileSystem.exists(srcPath)) {
+                app.paths.push(srcPath);
+                usedPlugins.push(name);
+            }
+        }
+        app.plugins = usedPlugins;
+
+        if (app.hxml == null) app.hxml = '';
 
     } //loadFile
 

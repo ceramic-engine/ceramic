@@ -13,6 +13,8 @@ interface ToolsPlugin {
 
     function init(tools:Tools):Void;
 
+    function extendProject(project:Project):Void;
+
 } //ToolsPlugin
 
 class Tools {
@@ -44,7 +46,7 @@ class Tools {
 
     } //addPlugin
 
-    static var plugins:Array<ToolsPlugin>;
+    public static var plugins:Array<ToolsPlugin>;
 
     public static var settings = {
         colors: true,
