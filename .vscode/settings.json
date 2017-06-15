@@ -6,8 +6,8 @@
     // such as -cp, -lib, target output settings and defines.
     "haxe.displayConfigurations": [
         ["--cwd", "sample", "completion.hxml"],
-        ["tools.hxml"],
-        ["tools-luxe.hxml"],
+        ["tools.hxml", "-js", "index.js"],
+        ["tools-luxe.hxml", "-js", "tools-luxe.js"],
         ["plugins/spine/tools.hxml"]
     ],
     "search.exclude": {
