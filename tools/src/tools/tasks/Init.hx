@@ -88,6 +88,7 @@ import ceramic.Color;
 import ceramic.Quad;
 import ceramic.Settings;
 import ceramic.Assets;
+import ceramic.Shortcuts.*;
 
 class Project extends Entity {
 
