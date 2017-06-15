@@ -79,20 +79,9 @@ class Vscode extends tools.Task {
                                 {
                                     taskName: "build",
                                     command: "ceramic",
+                                    isShellCommand: true,
                                     args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
-                                    problemMatcher: {
-                                        owner: "haxe",
-                                        pattern: {
-                                            "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                                            "file": 1,
-                                            "line": 2,
-                                            "endLine": 3,
-                                            "column": 4,
-                                            "endColumn": 5,
-                                            "severity": 6,
-                                            "message": 7
-                                        }
-                                    }
+                                    problemMatcher: "$haxe"
                                 }
                             ];
 
