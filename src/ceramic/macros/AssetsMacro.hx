@@ -170,7 +170,7 @@ class AssetsMacro {
             exprEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(baseName)), pos: pos}, {expr: EArrayDecl(listExprs), pos: pos}), pos: pos});
         }
 
-        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+        var expr = exprEntries.length == 0 ? (macro new Map()) : {expr: EArrayDecl(exprEntries), pos: pos};
 
         var field = {
             pos: pos,
@@ -198,7 +198,7 @@ class AssetsMacro {
             exprEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(baseName)), pos: pos}, {expr: EArrayDecl(listExprs), pos: pos}), pos: pos});
         }
 
-        var expr = {expr: EArrayDecl(exprEntries), pos: pos};
+        var expr = exprEntries.length == 0 ? (macro new Map()) : {expr: EArrayDecl(exprEntries), pos: pos};
 
         var field = {
             pos: pos,
