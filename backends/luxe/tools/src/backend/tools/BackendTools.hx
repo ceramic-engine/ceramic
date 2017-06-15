@@ -22,15 +22,41 @@ class BackendTools implements tools.spec.BackendTools {
 
         var targets:Array<tools.BuildTarget> = [];
 
-        targets.push({
-            name: 'mac',
-            displayName: 'Mac',
-            configs: [
-                Run('Run Mac'),
-                Build('Build Mac'),
-                Clean('Clean Mac')
-            ]
-        });
+        var os = Sys.systemName();
+
+        if (os == 'Mac') {
+            targets.push({
+                name: 'mac',
+                displayName: 'Mac',
+                configs: [
+                    Run('Run Mac'),
+                    Build('Build Mac'),
+                    Clean('Clean Mac')
+                ]
+            });
+        }
+        else if (os == 'Windows') {
+            targets.push({
+                name: 'windows',
+                displayName: 'Windows',
+                configs: [
+                    Run('Run Windows'),
+                    Build('Build Windows'),
+                    Clean('Clean Windows')
+                ]
+            });
+        }
+        else if (os == 'Linux') {
+            targets.push({
+                name: 'linux',
+                displayName: 'Linux',
+                configs: [
+                    Run('Run Linux'),
+                    Build('Build Linux'),
+                    Clean('Clean Linux')
+                ]
+            });
+        }
 
         targets.push({
             name: 'web',

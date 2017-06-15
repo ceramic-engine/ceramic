@@ -227,7 +227,7 @@ class Tools {
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
-            fail('You must specify a target to setup.');
+            return;
         }
 
         // Find target from name
@@ -384,8 +384,10 @@ class Tools {
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
-        var fromParts = relativeTo.substr(1).split('/');
-        var toParts = absolutePath.substr(1).split('/');
+        var isWindows = Sys.systemName() == 'Windows';
+
+        var fromParts = Path.normalize(relativeTo).substr(isWindows ? 3 : 1).split('/');
+        var toParts = Path.normalize(absolutePath).substr(isWindows ? 3 : 1).split('/');
 
         var length:Int = cast Math.min(fromParts.length, toParts.length);
         var samePartsLength = length;
@@ -451,6 +453,11 @@ class Tools {
     static var RE_HAXE_ERROR = ~/^(.+):(\d+): (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
 
     public static function formatLineOutput(cwd:String, input:String):String {
+
+        // TODO remove temporary workaround for windows
+        if (Sys.systemName() == 'Windows') {
+            return input.replace("../../../../ceramic/", "../ceramic/").replace("\\", "/");
+        }
 
         if (RE_HAXE_ERROR.match(input)) {
             var relativePath = RE_HAXE_ERROR.matched(1);

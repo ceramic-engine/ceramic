@@ -32,7 +32,7 @@ class Build extends tools.Task {
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
-            fail('You must specify a target to setup.');
+            fail('You must specify a target to build.');
         }
 
         // Find target from name
