@@ -42,9 +42,19 @@ haxelib setup
 
 Unless you know what you are doing, just choose default.
 
-### Install Xcode (Mac)
+### Install Xcode (Mac only)
 
-Xcode is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12)
+Xcode (with its command line tools) is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12).
+
+### Install Visual C++ (Windows only)
+
+Visual C++ Desktop is required on Windows in order to compile C++ files. Any version of Visual C++ compatible with [HXCPP](https://github.com/HaxeFoundation/hxcpp) should work, but at the moment we recommend to install [Visual Studio Express 2015](https://www.visualstudio.com/fr/post-download-vs/?sku=xdesk&clcid=0x409&telem=ga).
+
+### Install windows-build-tools and configure node-gyp (Windows only)
+
+Some native node modules that **ceramic** depends on need to be compiled with _node-gyp_. You can easily set up _node-gyp_ on Windows thanks to the NPM module [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools).
+
+Open a terminal (Powershell/CMD) **as administrator** and run ``npm install --global --production windows-build-tools`` (it may take a while to install).
 
 ### Install ceramic
 
