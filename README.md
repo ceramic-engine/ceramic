@@ -10,7 +10,7 @@ Ceramic is made with very simple goals in mind:
 * Have a clear separation of ceramic API and its backend API.
 * Ensure adding new backends is as easy as possible by keeping the API clean and minimal.
 * Leverage as much as possible existing frameworks instead of reinventing the wheel.
-* Target iOS, Android, HTML5 (Canvas2D and WebGL), PC (Win/OSX/Linux).
+* Target iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux).
 
 See the short-term roadmap: https://github.com/jeremyfa/ceramic/issues/1
 
