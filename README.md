@@ -50,11 +50,15 @@ Xcode (with its command line tools) is required on Mac in order to compile C++ f
 
 Visual C++ Desktop is required on Windows in order to compile C++ files. Any version of Visual C++ compatible with [HXCPP](https://github.com/HaxeFoundation/hxcpp) should work, but at the moment we recommend to install [Visual Studio Express 2015](https://www.visualstudio.com/fr/post-download-vs/?sku=xdesk&clcid=0x409&telem=ga).
 
-### Install windows-build-tools and configure node-gyp (Windows only)
+### Install windows-build-tools (Windows only)
 
 Some native node modules that **ceramic** depends on need to be compiled with _node-gyp_. You can easily set up _node-gyp_ on Windows thanks to the NPM module [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools).
 
 Open a terminal (Powershell/CMD) **as administrator** and run ``npm install --global --production windows-build-tools`` (it may take a while to install).
+
+### Install git (Windows only)
+
+**ceramic** relies on **git** command line tools to perform some of its tasks. It is included with Xcode command line tools on Mac but needs to be installed on windows: download and install it from https://git-scm.com/ (keep default settings unless you know what you are doing).
 
 ### Install ceramic
 
