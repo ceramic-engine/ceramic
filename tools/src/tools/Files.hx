@@ -131,8 +131,10 @@ class Files {
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
-        var fromParts = relativeTo.substr(1).split('/');
-        var toParts = absolutePath.substr(1).split('/');
+        var isWindows = Sys.systemName() == 'Windows';
+
+        var fromParts = Path.normalize(relativeTo).substr(isWindows ? 3 : 1).split('/');
+        var toParts = Path.normalize(absolutePath).substr(isWindows ? 3 : 1).split('/');
 
         var length:Int = cast Math.min(fromParts.length, toParts.length);
         var samePartsLength = length;

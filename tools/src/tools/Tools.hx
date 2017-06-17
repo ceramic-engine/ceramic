@@ -384,33 +384,7 @@ class Tools {
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
-        var isWindows = Sys.systemName() == 'Windows';
-
-        var fromParts = Path.normalize(relativeTo).substr(isWindows ? 3 : 1).split('/');
-        var toParts = Path.normalize(absolutePath).substr(isWindows ? 3 : 1).split('/');
-
-        var length:Int = cast Math.min(fromParts.length, toParts.length);
-        var samePartsLength = length;
-        for (i in 0...length) {
-            if (fromParts[i] != toParts[i]) {
-                samePartsLength = i;
-                break;
-            }
-        }
-
-        var outputParts = [];
-        for (i in samePartsLength...fromParts.length) {
-            outputParts.push('..');
-        }
-
-        outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-        var result = outputParts.join('/');
-        if (absolutePath.endsWith('/') && !result.endsWith('/')) {
-            result += '/';
-        }
-
-        return result;
+        return Files.getRelativePath(absolutePath, relativeTo);
 
     } //getRelativePath
 
@@ -454,10 +428,8 @@ class Tools {
 
     public static function formatLineOutput(cwd:String, input:String):String {
 
-        // TODO remove temporary workaround for windows
-        if (Sys.systemName() == 'Windows') {
-            return input.replace("../../../../ceramic/", "../ceramic/").replace("\\", "/");
-        }
+        // We don't want \r char to mess up everything (windows)
+        input = input.replace("\r", '');
 
         if (RE_HAXE_ERROR.match(input)) {
             var relativePath = RE_HAXE_ERROR.matched(1);
