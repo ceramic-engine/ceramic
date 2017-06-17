@@ -37,6 +37,7 @@
     "shell-quote": "^1.6.1",
     "source-map-support": "^0.4.3",
     "stream-splitter": "^0.3.2",
+    "to-ico": "^1.1.4",
     "tree-kill": "^1.1.0",
     "xcode": "^0.8.9",
     "yamljs": "^0.2.9"

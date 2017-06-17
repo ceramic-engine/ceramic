@@ -140,7 +140,8 @@ class Setup extends tools.Task {
         ' + classPaths + Json.stringify(Path.join([ceramicPathRelative, 'src'])) + ',
         ' + Json.stringify(Path.join([ceramicPathRelative, 'backends/luxe/src'])) + ',
         ' + Json.stringify('../../../src') + '
-      ]
+      ],
+      icon: "icons => app"
     },
 
     build : {

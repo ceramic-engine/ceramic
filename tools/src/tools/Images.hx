@@ -2,7 +2,10 @@ package tools;
 
 import js.html.Uint8Array;
 import haxe.Json;
+import haxe.io.Path;
 import npm.Sharp.sharp;
+import npm.ToIco.toIco;
+import sys.FileSystem;
 
 typedef RawImageData = {
 
@@ -23,6 +26,16 @@ typedef ImageMetadata = {
     var height:Int;
 
 } //ImageMetadata
+
+typedef TargetImage = {
+
+    var path:String;
+
+    var width:Int;
+
+    var height:Int;
+
+} //TargetImage
 
 class Images {
 
@@ -111,6 +124,12 @@ class Images {
 
         Sync.run(function(done) {
 
+            // Create target directory if needed
+            var dirname = Path.directory(dstPath);
+            if (!FileSystem.exists(dirname)) {
+                FileSystem.createDirectory(dirname);
+            }
+
             sharp(
                 srcPath
             ).resize(
@@ -127,6 +146,42 @@ class Images {
         });
 
     } //resize
+
+    public static function createIco(srcPath:String, dstPath:String, targetWidth:Float = 256, targetHeight:Float = 256):Void {
+
+        Sync.run(function(done) {
+
+            // Create target directory if needed
+            var dirname = Path.directory(dstPath);
+            if (!FileSystem.exists(dirname)) {
+                FileSystem.createDirectory(dirname);
+            }
+
+            sharp(
+                srcPath
+            ).resize(
+                Math.round(targetWidth), Math.round(targetHeight)
+            ).toBuffer(function(err, data, info) {
+
+                if (err) throw err;
+
+                toIco([data], {resize: true, sizes: [16, 24, 32, 48, 64, 128, 256]})
+                .then(function(buffer:js.node.Buffer) {
+
+                    js.node.Fs.writeFileSync(dstPath, buffer);
+
+                    done();
+
+                },
+                function(err) {
+                    throw err;
+                });
+
+            });
+
+        });
+
+    } //createIco
 
     public function metadata(path:String):ImageMetadata {
 

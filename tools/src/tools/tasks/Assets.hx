@@ -125,6 +125,10 @@ class Assets extends tools.Task {
                     assetsJsonString
                 );
             }
+
+            // Update icons
+            var task = new Icons();
+            task.run(cwd, [args[0], 'icons', target.name, '--variant', settings.variant]);
         }
 
 

@@ -2,6 +2,7 @@ package backend.tools;
 
 import tools.Tools.*;
 import tools.Images;
+import tools.Files;
 import haxe.io.Path;
 
 using StringTools;
@@ -244,5 +245,108 @@ class BackendTools implements tools.spec.BackendTools {
         return newAssets;
 
     } //transformAssets
+
+    public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
+
+        var toTransform:Array<TargetImage> = [];
+        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+
+        switch (target.name) {
+            case 'mac':
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_16x16.png',
+                    width: 16,
+                    height: 16
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_16x16@2x.png',
+                    width: 32,
+                    height: 32
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_32x32.png',
+                    width: 32,
+                    height: 32
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_32x32@2x.png',
+                    width: 64,
+                    height: 64
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_128x128.png',
+                    width: 128,
+                    height: 128
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_128x128@2x.png',
+                    width: 256,
+                    height: 256
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_256x256.png',
+                    width: 256,
+                    height: 256
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_256x256@2x.png',
+                    width: 512,
+                    height: 512
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_512x512.png',
+                    width: 512,
+                    height: 512
+                });
+                toTransform.push({
+                    path: 'mac/app.iconset/icon_512x512@2x.png',
+                    width: 1024,
+                    height: 1024
+                });
+            
+            case 'windows':
+                toTransform.push({
+                    path: 'windows/app.ico',
+                    width: 256,
+                    height: 256
+                });
+            
+            case 'web':
+                toTransform.push({
+                    path: 'web/source.png',
+                    width: 128,
+                    height: 128
+                });
+            
+            case 'ios':
+                // TODO
+            
+            case 'android':
+                // TODO
+
+            default:
+                // Nothing to do?
+        }
+
+        // Create full paths
+        for (entry in toTransform) {
+            entry.path = Path.join([flowProjectPath, 'icons', entry.path]);
+
+            // Compare with original
+            if (!Files.haveSameLastModified(appIcon, entry.path)) {
+                if (entry.path.endsWith('.png')) {
+
+                    // Resize
+                    Images.resize(appIcon, entry.path, entry.width, entry.height);
+
+                } else if (entry.path.endsWith('.ico')) {
+
+                    // Create ico
+                    Images.createIco(appIcon, entry.path, entry.width, entry.height);
+                }
+            }
+        }
+
+    } //transformIcons
 
 } //Config
