@@ -327,6 +327,11 @@ class Tools {
             options = { cwd: null, mute: false };
         }
 
+        // Handle Windows, again...
+        if (Sys.systemName() == 'Windows' && name == 'npm') {
+            name = 'npm.cmd';
+        }
+
         if (muted) options.mute = true;
 
         if (options.cwd == null) options.cwd = shared.cwd;
