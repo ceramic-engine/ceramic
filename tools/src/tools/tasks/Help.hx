@@ -77,7 +77,7 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
     '+bg('_|_|_|')+'    '+bg('_|_|_|')+'  '+bg('_|')+'         '+bg('_|_|_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|_|_|'));
         
         var logo = lines[lines.length-1];
-        var logoLines = logo.split("\n");
+        var logoLines = logo.replace("\r","").split("\n");
         logoLines[1] += ' ' + green(version);
         lines[lines.length-1] = logoLines.join("\n");
 
