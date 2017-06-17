@@ -1,6 +1,7 @@
 -cp tools/src
 -cp backends/luxe/tools/src
 -D use_backend
+-D backend_luxe
 -main tools.Tools
 -lib hxnodejs
 -lib hscript
