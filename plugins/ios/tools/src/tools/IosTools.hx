@@ -2,6 +2,7 @@ package tools;
 
 import tools.Tools;
 import tools.Project;
+import tools.IosProject;
 
 @:keep
 class IosTools implements ToolsPlugin {
