@@ -66,10 +66,16 @@ class Build extends tools.Task {
                 tools.Files.deleteRecursive(targetAssetsPath);
             }
         }
+
+        // iOS case
+        var cmdAction = action;
+        if (cmdAction == 'run' && target.name == 'ios') {
+            cmdAction = 'build';
+        }
         
         // Clean with flow command
         //
-        var cmdArgs = ['run', 'flow', action, target.name];
+        var cmdArgs = ['run', 'flow', cmdAction, target.name];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
 
