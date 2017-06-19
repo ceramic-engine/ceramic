@@ -37,6 +37,11 @@ class Build extends tools.Task {
 
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
+        // Ensure flow project exist
+        if (!FileSystem.exists(flowProjectPath)) {
+            fail('Missing flow/luxe project file. Did you setup this target?');
+        }
+
         var backendName = 'luxe';
         var ceramicPath = settings.ceramicPath;
 
