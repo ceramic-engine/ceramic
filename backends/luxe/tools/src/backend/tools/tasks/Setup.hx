@@ -124,6 +124,30 @@ class Setup extends tools.Task {
                 classPaths += Json.stringify(relativePath) + ',\n        ';
             }
         }
+
+        var hooks = '';
+        var hookPre = null;
+
+        if (target.name == 'ios') {
+            hookPre = "
+exports.hook = function(flow, done) 
+{
+    // Don't compile Haxe/C++ if no archs are specified explicitly
+    if (process.argv.indexOf('--archs') == -1) {
+        done(null, true);
+    }
+    done(null, false);
+}
+";
+
+            hooks += ",
+      pre: {
+        priority: 1,
+        name: 'ceramic-pre',
+        desc: 'run ceramic pre build',
+        script: './hooks/pre.js'
+      }";
+        }
     
         var content = ('
 {
@@ -150,7 +174,7 @@ class Setup extends tools.Task {
       },
       flags: [
         ${haxeflags.join(',\n        ')}
-      ]
+      ]$hooks
     },
 
     files : {
@@ -166,6 +190,15 @@ class Setup extends tools.Task {
         File.saveContent(flowPath, content);
         Files.setToSameLastModified(projectPath, flowPath);
         print('Updated luxe project at: $flowPath');
+
+        // Create pre-hook if any
+        if (hookPre != null) {
+            var hookPrePath = Path.join([Path.directory(flowPath), 'hooks/pre.js']);
+            if (!FileSystem.exists(Path.directory(hookPrePath))) {
+                FileSystem.createDirectory(Path.directory(hookPrePath));
+            }
+            File.saveContent(hookPrePath, hookPre);
+        }
 
         // Generate files with flow
         command('haxelib', ['run', 'flow', 'files'], { cwd: flowPath });
