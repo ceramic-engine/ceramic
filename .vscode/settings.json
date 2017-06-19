@@ -6,10 +6,8 @@
     // such as -cp, -lib, target output settings and defines.
     "haxe.displayConfigurations": [
         ["--cwd", "sample", "completion.hxml"],
-        ["tools.hxml", "-js", "index.js"],
-        ["tools-luxe.hxml", "-js", "tools-luxe.js"],
-        ["plugins/spine/tools-completion.hxml"],
-        ["plugins/ios/tools-completion.hxml"]
+        ["tools.hxml", "-js", "index.js", "-cp", "plugins/ios/tools/src", "-cp", "plugins/spine/tools/src"],
+        ["tools-luxe.hxml", "-js", "tools-luxe.js", "-cp", "plugins/ios/tools/src", "-cp", "plugins/spine/tools/src"]
     ],
     "search.exclude": {
         "**/.git": true,
