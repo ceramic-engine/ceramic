@@ -1,0 +1,12 @@
+{
+    "displayName": "▶︎ Electron",
+    "description": "npm run start-electron",
+    "command": "npm",
+    "args": [
+        "run",
+        "start-electron"
+    ],
+    "isShellCommand": true,
+    "version": "2.0.0",
+    "chooserIndex": 0
+}

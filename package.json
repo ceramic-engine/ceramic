@@ -1,0 +1,39 @@
+{
+  "name": "react-electron-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "semantic-ui-css": "^2.2.10",
+    "semantic-ui-react": "^0.70.0"
+  },
+  "homepage": "./",
+  "main": "src/Electron.js",
+  "devDependencies": {
+    "concurrently": "^3.5.0",
+    "cross-env": "^5.0.1",
+    "electron": "^1.6.11",
+    "electron-packager": "^8.7.1",
+    "react-scripts": "1.0.7",
+    "rimraf": "^2.6.1",
+    "wait-on": "^2.0.2"
+  },
+  "scripts": {
+    "build": "cross-env NODE_ENV=production react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "react": "cross-env BROWSER=none NODE_ENV=development react-scripts start",
+    "react-browser": "cross-env NODE_ENV=development react-scripts start",
+    "electron-dev": "ELECTRON_DEV=1 electron .",
+    "electron-prod": "electron .",
+    "start": "concurrently 'npm run react-browser' '$(npm bin)/wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev'",
+    "start-browser": "npm run react-browser",
+    "start-electron": "concurrently 'npm run react' '$(npm bin)/wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev'",
+    "export-mac": "npm run build && electron-packager ./ --platform=darwin --out=./out",
+    "export-windows": "npm run build && electron-packager ./ --platform=win32 --out=./out",
+    "export-linux": "npm run build && electron-packager ./ --platform=linux --out=./out",
+    "export-all": "npm run build && electron-packager ./ --all --out=./out",
+    "clean": "rimraf ./out"
+  }
+}

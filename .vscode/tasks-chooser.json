@@ -1,0 +1,22 @@
+{
+    "selectDescription": "Select build config",
+    "items": [
+        {
+            "displayName": "▶︎ Electron",
+            "description": "npm run start-electron",
+            "command": "npm",
+            "args": ["run", "start-electron"],
+            "isShellCommand": true
+        },
+        {
+            "displayName": "▶︎ Browser",
+            "description": "npm run start-browser",
+            "command": "npm",
+            "args": ["run", "start-browser"],
+            "isShellCommand": true
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0"
+    }
+}
