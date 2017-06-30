@@ -10,10 +10,9 @@
         "ban": false,
         "class-name": true,
         "comment-format": [
-            true,
-            "check-space"
+            true
         ],
-        "curly": true,
+        "curly": false,
         "eofline": false,
         "forin": true,
         "indent": [ true, "spaces" ],
@@ -29,7 +28,7 @@
             "static-before-instance",
             "variables-before-functions"
         ],
-        "no-any": true,
+        "no-any": false,
         "no-arg": true,
         "no-bitwise": true,
         "no-console": [
@@ -46,22 +45,19 @@
         "no-construct": true,
         "no-debugger": true,
         "no-duplicate-variable": true,
-        "no-empty": true,
+        "no-empty": false,
         "no-eval": true,
         "no-shadowed-variable": true,
-        "no-string-literal": true,
+        "no-string-literal": false,
         "no-switch-case-fall-through": true,
         "no-trailing-whitespace": false,
         "no-unused-expression": true,
-        "no-use-before-declare": true,
+        "no-use-before-declare": false,
         "one-line": [
             true,
-            "check-catch",
-            "check-else",
-            "check-open-brace",
-            "check-whitespace"
+            "check-open-brace"
         ],
-        "quotemark": [true, "single", "jsx-double"],
+        "quotemark": [false, "single", "jsx-double"],
         "radix": true,
         "semicolon": [true, "always"],
         "switch-default": true,
@@ -92,7 +88,6 @@
             "check-module",
             "check-operator",
             "check-separator",
-            "check-type",
             "check-typecast"
         ]
     }

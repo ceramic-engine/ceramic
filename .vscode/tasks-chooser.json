@@ -6,14 +6,22 @@
             "description": "npm run start-electron",
             "command": "npm",
             "args": ["run", "start-electron"],
-            "isShellCommand": true
+            "isShellCommand": true,
+            "problemMatcher": {
+                "base": "$tslint5",
+                "fileLocation": "relative"
+            }
         },
         {
             "displayName": "▶︎ Browser",
             "description": "npm run start-browser",
             "command": "npm",
             "args": ["run", "start-browser"],
-            "isShellCommand": true
+            "isShellCommand": true,
+            "problemMatcher": {
+                "base": "$tslint5",
+                "fileLocation": "relative"
+            }
         }
     ],
     "baseItem": {

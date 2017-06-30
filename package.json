@@ -9,6 +9,7 @@
     "@types/node": "^8.0.3",
     "@types/react": "^15.0.32",
     "@types/react-dom": "^15.5.1",
+    "autobind-decorator": "^2.0.0",
     "mobx": "^3.1.16",
     "mobx-react": "^4.2.1",
     "react": "^15.6.1",

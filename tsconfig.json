@@ -16,7 +16,8 @@
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "baseUrl": "./src"
   },
   "exclude": [
     "node_modules",
@@ -29,8 +30,5 @@
   ],
   "types": [
     "typePatches"
-  ],
-  "files":[
-    "node_modules/electron/electron.d.ts"
   ]
 }

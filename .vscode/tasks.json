@@ -7,6 +7,10 @@
         "start-electron"
     ],
     "isShellCommand": true,
+    "problemMatcher": {
+        "base": "$tslint5",
+        "fileLocation": "relative"
+    },
     "version": "2.0.0",
     "chooserIndex": 0
 }
