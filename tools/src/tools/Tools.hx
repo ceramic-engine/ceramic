@@ -507,4 +507,28 @@ class Tools {
 
     } //ensureCeramicProject
 
+    public static function runHooks(cwd:String, args:Array<String>, hooks:Array<Hook>, when:String):Void {
+
+        if (hooks == null) return;
+
+        for (hook in hooks) {
+            if (hook.when == when) {
+                print('Run $when hooks');
+                break;
+            }
+        }
+
+        for (hook in hooks) {
+            if (hook.when == when) {
+
+                var res = command(hook.command, hook.args != null ? hook.args : [], { cwd: cwd });
+                if (res.status != 0) {
+                    fail('Error when running hook: ' + hook.command + (hook.args != null ? ' ' + hook.args.join(' ') : ''));
+                }
+
+            }
+        }
+
+    } //runHooks
+
 } //Tools

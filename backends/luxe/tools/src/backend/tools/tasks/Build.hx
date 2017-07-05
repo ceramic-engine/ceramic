@@ -37,6 +37,11 @@ class Build extends tools.Task {
 
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
+        // Load project file
+        var project = new tools.Project();
+        var projectPath = Path.join([cwd, 'ceramic.yml']);
+        project.loadAppFile(projectPath);
+
         // Ensure flow project exist
         if (!FileSystem.exists(flowProjectPath)) {
             fail('Missing flow/luxe project file. Did you setup this target?');
@@ -58,6 +63,8 @@ class Build extends tools.Task {
         }
 
         if (action == 'clean') {
+            runHooks(cwd, args, project.app.hooks, 'begin clean');
+
             // Remove generated assets on this target if cleaning
             //
             var targetAssetsPath = Path.join([flowProjectPath, 'assets']);
@@ -65,6 +72,9 @@ class Build extends tools.Task {
                 print('Remove generated assets.');
                 tools.Files.deleteRecursive(targetAssetsPath);
             }
+        }
+        else if (action == 'build' || action == 'run') {
+            runHooks(cwd, args, project.app.hooks, 'begin build');
         }
 
         // iOS case
@@ -114,6 +124,14 @@ class Build extends tools.Task {
         
         if (status != 0) {
             fail('Error when running luxe $action.');
+        }
+        else {
+            if (action == 'run' || action == 'build') {
+                runHooks(cwd, args, project.app.hooks, 'end build');
+            }
+            else if (action == 'clean') {
+                runHooks(cwd, args, project.app.hooks, 'end clean');
+            }
         }
 
     } //run
