@@ -292,6 +292,12 @@ class Visual extends Entity {
 
         if (transform != null) transform = null;
 
+        clear();
+
+    } //destroy
+
+    public function clear() {
+
         if (children != null) {
             for (child in children) {
                 child.destroy();
@@ -299,7 +305,7 @@ class Visual extends Entity {
             children = null;
         }
 
-    } //destroy
+    } //clear
 
 /// Matrix
 
