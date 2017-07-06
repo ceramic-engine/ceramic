@@ -11,6 +11,7 @@
     "@types/react-dom": "^15.5.1",
     "antd": "^2.11.2",
     "autobind-decorator": "^2.0.0",
+    "express": "^4.15.3",
     "mobx": "^3.1.16",
     "mobx-react": "^4.2.1",
     "react": "^15.6.1",
