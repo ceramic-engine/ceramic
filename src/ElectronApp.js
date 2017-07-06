@@ -13,7 +13,15 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    titleBarStyle: 'hidden',
+    minWidth: 800,
+    minHeight: 600,
+    resizable: true,
+    movable: true
+  })
 
   // and load the index.html of the app.
   if (process.env.ELECTRON_DEV) {

@@ -12,7 +12,8 @@ class Center extends React.Component {
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    textAlign: 'center'
                 }}
             >
                 {this.props.children}
