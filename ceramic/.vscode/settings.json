@@ -9,5 +9,6 @@
         "**/node_modules": true,
         "**/tmp": true,
         "**/out": true
-    }
+    },
+    "window.title": "${activeEditorShort} — Scene Editor (ceramic)"
 }
