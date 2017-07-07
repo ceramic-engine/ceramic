@@ -1,0 +1,20 @@
+app:
+    package: mycompany.SceneEditor
+    name: SceneEditor
+    displayName: SceneEditor
+    author: My Company
+    version: '1.0'
+
+    libs: []
+
+    'if web':
+        +hooks:
+            - when: end build
+              command: rm
+              args: ['-rf', '../public/ceramic']
+            - when: end build
+              command: cp
+              args: ['-R', 'out/luxe/web/bin/web', '../public/ceramic']
+            - when: end build
+              command: cp
+              args: ['resources/index.html', '../public/ceramic/index.html']

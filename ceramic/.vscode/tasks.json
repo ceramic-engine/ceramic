@@ -1,0 +1,24 @@
+{
+    "displayName": "▶︎ Build Web",
+    "description": "ceramic luxe build web --setup --assets",
+    "tasks": [
+        {
+            "taskName": "build",
+            "command": "ceramic",
+            "isShellCommand": true,
+            "args": [
+                "luxe",
+                "build",
+                "web",
+                "--setup",
+                "--assets",
+                "--vscode-editor",
+                "--hxml-output",
+                "completion.hxml"
+            ],
+            "problemMatcher": "$haxe"
+        }
+    ],
+    "version": "2.0.0",
+    "chooserIndex": 2
+}

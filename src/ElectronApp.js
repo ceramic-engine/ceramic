@@ -8,6 +8,7 @@ const path = require('path')
 const url = require('url')
 
 const express = require('express')
+const detect = require('detect-port')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -75,7 +76,7 @@ app.on('activate', function () {
 
 // Create http server
 //
-const port = 48903
+let port = 48903
 const server = express()
 
 if (process.env.ELECTRON_DEV) {
@@ -84,6 +85,18 @@ if (process.env.ELECTRON_DEV) {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../build/ceramic'))))
 }
 
-// TODO handle multiple instances (with multiple ports)
-server.listen(port);
-exports.serverPort = port;
+// Listen to a free port
+detect(port, (err, _port) => {
+  if (err) {
+    console.error(err);
+  }
+
+  if (port != _port) {
+    // Other port suggested
+    port = _port;
+  }
+
+  // Dispatch info
+  server.listen(port);
+  exports.serverPort = port;
+})

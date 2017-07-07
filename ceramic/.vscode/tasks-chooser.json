@@ -1,0 +1,140 @@
+{
+    "selectDescription": "Select build config",
+    "items": [
+        {
+            "displayName": "▶︎ Run Web",
+            "description": "ceramic luxe run web --setup --assets",
+            "tasks": [
+                {
+                    "taskName": "build",
+                    "command": "ceramic",
+                    "isShellCommand": true,
+                    "args": [
+                        "luxe",
+                        "run",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ Run Web (debug)",
+            "description": "ceramic luxe run web --setup --assets --debug",
+            "tasks": [
+                {
+                    "taskName": "build",
+                    "command": "ceramic",
+                    "isShellCommand": true,
+                    "args": [
+                        "luxe",
+                        "run",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ Build Web",
+            "description": "ceramic luxe build web --setup --assets",
+            "tasks": [
+                {
+                    "taskName": "build",
+                    "command": "ceramic",
+                    "isShellCommand": true,
+                    "args": [
+                        "luxe",
+                        "build",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ Build Web (debug)",
+            "description": "ceramic luxe build web --setup --assets --debug",
+            "tasks": [
+                {
+                    "taskName": "build",
+                    "command": "ceramic",
+                    "isShellCommand": true,
+                    "args": [
+                        "luxe",
+                        "build",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0"
+    }
+}

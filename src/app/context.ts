@@ -44,7 +44,13 @@ export class Context {
 
         // Get server port
         let electronApp = electron.remote.require('./ElectronApp');
-        this.serverPort = electronApp.serverPort;
+        const checkServerPort = () => {
+            this.serverPort = electronApp.serverPort;
+            if (this.serverPort == null) {
+                setTimeout(checkServerPort, 500);
+            }
+        };
+        checkServerPort();
 
     } //constructor
 

@@ -8,15 +8,20 @@ import { context } from 'app/context';
 
     render() {
 
-        return (
-            <iframe
-                src={"http://localhost:" + context.serverPort + "/ceramic"}
-                frameBorder={0}
-                scrolling="no"
-                sandbox="allow-scripts allow-popups allow-same-origin"
-                style={{ width: '100%', height: '100%', border: 'none' }}
-            />
-        );
+        if (context.serverPort == null) {
+            return null;
+        }
+        else {
+            return (
+                <iframe
+                    src={"http://localhost:" + context.serverPort + "/ceramic"}
+                    frameBorder={0}
+                    scrolling="no"
+                    sandbox="allow-scripts allow-popups allow-same-origin"
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+            );
+        }
 
     } //render
     
