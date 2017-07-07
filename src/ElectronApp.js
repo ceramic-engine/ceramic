@@ -7,6 +7,8 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 
+const express = require('express')
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
@@ -28,7 +30,7 @@ function createWindow () {
     mainWindow.loadURL('http://localhost:3000')
   } else {
     mainWindow.loadURL(url.format({
-      pathname: path.join(__dirname, '/../build/index.html'),
+      pathname: path.normalize(path.join(__dirname, '/../build/index.html')),
       protocol: 'file:',
       slashes: true
     }))
@@ -70,3 +72,18 @@ app.on('activate', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+// Create http server
+//
+const port = 48903
+const server = express()
+
+if (process.env.ELECTRON_DEV) {
+  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../public/ceramic'))))
+} else {
+  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../build/ceramic'))))
+}
+
+// TODO handle multiple instances (with multiple ports)
+server.listen(port);
+exports.serverPort = port;

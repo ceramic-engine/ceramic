@@ -12,6 +12,8 @@ export class Context {
 
     @observe height:number;
 
+    @observe serverPort:number;
+
 /// Constructor
 
     constructor() {
@@ -39,6 +41,10 @@ export class Context {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
         });
+
+        // Get server port
+        let electronApp = electron.remote.require('./ElectronApp');
+        this.serverPort = electronApp.serverPort;
 
     } //constructor
 
