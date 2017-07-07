@@ -4,7 +4,6 @@
         "align": [
             true,
             "parameters",
-            "arguments",
             "statements"
         ],
         "ban": false,
@@ -32,7 +31,7 @@
         "no-arg": true,
         "no-bitwise": true,
         "no-console": [
-            true,
+            false,
             "log",
             "error",
             "debug",

@@ -5,11 +5,19 @@ import ceramic.Color;
 import ceramic.Quad;
 import ceramic.Settings;
 import ceramic.Assets;
+import ceramic.Scene;
 import ceramic.Shortcuts.*;
 
 import js.Browser.*;
+import haxe.Json;
+
+using StringTools;
 
 class Project extends Entity {
+
+    var parentOrigin:String = null;
+
+    var scenes:Map<String, Scene> = new Map();
 
     function new(settings:InitSettings) {
 
@@ -30,6 +38,10 @@ class Project extends Entity {
         layout();
         window.addEventListener('resize', function() layout());
 
+        // Receive messages
+        window.addEventListener('message', receiveRawMessage);
+
+/*
         // TODO
         var quad1 = new Quad();
         quad1.color = Color.RED;
@@ -56,6 +68,9 @@ class Project extends Entity {
 
         });
 
+        trace("STARTED CERAMIC PART");
+*/
+
     } //ready
 
     function layout() {
@@ -70,5 +85,65 @@ class Project extends Entity {
         trace('screen width='+screen.width+' height='+screen.height);
 
     } //layout
+
+/// Messages
+
+    function receiveRawMessage(event:{data:String, origin:String, source:js.html.Window}) {
+
+        // Ensure message comes from parent
+        if (event.source != window.parent) {
+            return;
+        }
+
+        // Parse message
+        var message:Message = null;
+        try {
+            message = Json.parse(event.data);
+
+            // Ping?
+            if (message.type == 'ping') {
+                parentOrigin = event.origin;
+                window.parent.postMessage(Json.stringify({type: 'pong'}), parentOrigin);
+                return;
+            }
+
+        } catch (e:Dynamic) {
+            error('Failed to decode message: ' + event.data);
+            return;
+        }
+
+        if (message != null) {
+            // Handle message
+            receiveMessage(message);
+        }
+
+    } //receiveRawMessage
+
+    function receiveMessage(message:Message) {
+
+        console.log(message);
+
+        var parts = message.type.split('/');
+        var collection = parts[0];
+        var action = parts[1];
+        var value = message.value;
+
+        switch (collection) {
+
+            case 'scene':
+                var scene:Scene = scenes.get(value.name);
+                if (action == 'put') {
+                    if (scene == null) {
+                        scene = new Scene();
+                        scenes.set(value.name, scene);
+                    }
+                    scene.sceneData = value;
+                }
+
+            default:
+
+        } //switch
+
+    } //receiveMessage
 
 }
