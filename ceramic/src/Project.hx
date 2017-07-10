@@ -22,7 +22,7 @@ class Project extends Entity {
     function new(settings:InitSettings) {
 
         settings.antialiasing = true;
-        settings.background = Color.BLACK;
+        settings.background = 0x282828;
         settings.targetWidth = 640;
         settings.targetHeight = 480;
         settings.scaling = FIT;
@@ -34,9 +34,12 @@ class Project extends Entity {
     function ready() {
 
         // Setup
-        settings.background = Color.GRAY;
-        layout();
-        window.addEventListener('resize', function() layout());
+        //layout();
+        window.addEventListener('resize', function() updateCanvas());
+        screen.onResize(this, function() {
+            trace("ON RESIZE (ceramic) nativeWidth=" + screen.nativeWidth + " nativeHeight=" + screen.nativeHeight);
+        });
+        updateCanvas();
 
         // Receive messages
         window.addEventListener('message', receiveRawMessage);
@@ -73,7 +76,7 @@ class Project extends Entity {
 
     } //ready
 
-    function layout() {
+    function updateCanvas() {
 
         var appEl:js.html.CanvasElement = cast document.getElementById('app');
         appEl.style.margin = '0 0 0 0';

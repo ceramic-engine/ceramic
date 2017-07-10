@@ -6,13 +6,13 @@ import { project } from 'app/model';
 
 @observer class CreateProject extends React.Component {
 
-/// Lifecycle
-
     /** Form data */
     data = observe({
         /** Project name */
         name: ''
     });
+
+/// Lifecycle
 
     render() {
 

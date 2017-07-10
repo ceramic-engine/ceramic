@@ -1,13 +1,13 @@
 import * as React from 'react';
 import './ReactApp.css';
 import { observer } from 'mobx-react';
-import { Project } from './app/components';
+import { App } from './app/components';
 
 @observer class ReactApp extends React.Component {
 
     render() {
 
-        return <Project />;
+        return <App />;
 
     } //render
     

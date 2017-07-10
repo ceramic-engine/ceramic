@@ -27,12 +27,17 @@ export class Context {
         this.height = window.innerHeight;
 
         // Listen state changes
-        appWindow.on('enter-full-screen', () => {
+        const handleFullScreen = () => {
             this.fullscreen = appWindow.isFullScreen();
-        });
-        appWindow.on('leave-full-screen', () => {
-            this.fullscreen = appWindow.isFullScreen();
-        });
+        };
+        appWindow.addListener('enter-full-screen', handleFullScreen);
+        appWindow.addListener('leave-full-screen', handleFullScreen);
+        const handleClose = () => {
+            appWindow.removeListener('enter-full-screen', handleClose);
+            appWindow.removeListener('leave-full-screen', handleClose);
+            appWindow.removeListener('close', handleClose);
+        };
+        appWindow.addListener('close', handleClose);
         window.addEventListener('resize', () => {
             this.width = window.innerWidth;
             this.height = window.innerHeight;

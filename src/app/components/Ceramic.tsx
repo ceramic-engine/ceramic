@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observer, uuid, autobind } from 'utils';
+import { observer, observe, uuid, autobind } from 'utils';
 import { context } from 'app/context';
 
 interface Message {
@@ -12,9 +12,9 @@ interface Message {
 
 @observer class Ceramic extends React.Component {
 
-    elementId:string = 'ceramic-' + uuid();
+    @observe ready:boolean = false;
 
-    ready:boolean = false;
+    elementId:string = 'ceramic-' + uuid();
 
     mounted:boolean = false;
 
@@ -74,12 +74,19 @@ interface Message {
                     frameBorder={0}
                     scrolling="no"
                     sandbox="allow-scripts allow-popups allow-same-origin"
-                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        visibility: this.ready ? 'visible' : 'hidden'
+                    }}
                 />
             );
         }
 
     } //render
+
+/// Messages
 
     @autobind receiveRawMessage(event:any) {
 
@@ -141,8 +148,8 @@ interface Message {
                 data: {},
                 width: 320,
                 height: 568,
-                x: 800 / 2,
-                y: 600 / 2,
+                x: 640 / 2,
+                y: 480 / 2,
                 anchorX: 0.5,
                 anchorY: 0.5,
                 items: [
@@ -152,11 +159,11 @@ interface Message {
                         props: {
                             width: 120,
                             height: 50,
-                            x: 150,
-                            y: 150,
+                            x: 320 / 2,
+                            y: 568 / 2,
                             anchorX: 0.5,
                             anchorY: 0.5,
-                            color: 0xFF0000,
+                            color: 0x2798EB,
                             skewX: 25
                         }
                     }

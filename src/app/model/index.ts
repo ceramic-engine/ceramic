@@ -7,3 +7,4 @@ export const project = db.getOrCreate(Project, 'project');
 
 // Export store classes
 export { default as Project } from './Project';
+export { default as Scene } from './Scene';

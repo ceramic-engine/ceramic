@@ -1,6 +1,7 @@
 import { serialize, observe, action, autobind, files, Model } from 'utils';
 import { statSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import Scene from './Scene';
 
 class Project extends Model {
 
@@ -8,6 +9,9 @@ class Project extends Model {
 
     /** Project path */
     @observe @serialize path:string;
+
+    /** Related scene */
+    @observe @serialize scene:Scene;
 
     /** Project error */
     @observe error:string;
@@ -58,6 +62,18 @@ class Project extends Model {
                                 // Set project name
                                 this.name = data.name;
 
+                                // Set scene TODO remove
+                                let scene = new Scene();
+                                scene.name = 'scene';
+                                scene.data = {};
+                                scene.width = 320;
+                                scene.height = 568;
+                                scene.x = 640 / 2;
+                                scene.y = 480 / 2;
+                                scene.anchorX = 0.5;
+                                scene.anchorY = 0.5;
+                                this.scene = scene;
+
                             } else {
                                 this.error = "Invalid project data: name is empty.";
                             }
@@ -86,6 +102,18 @@ class Project extends Model {
 
         // Set name
         this.name = name;
+
+        // Set scene
+        let scene = new Scene();
+        scene.name = 'scene';
+        scene.data = {};
+        scene.width = 320;
+        scene.height = 568;
+        scene.x = 640 / 2;
+        scene.y = 480 / 2;
+        scene.anchorX = 0.5;
+        scene.anchorY = 0.5;
+        this.scene = scene;
 
         // Create data
         let data = {

@@ -1,7 +1,53 @@
 #root {
-    background-color: #fbfbfb;
+    background-color: #282828;
     width: 100vw;
     height: 100vh;
     margin: 0;
     padding: 0;
+}
+
+#root *:not(input):not(textarea):not(.selectable)  {
+    -webkit-user-select: none;
+}
+
+#root div,
+#root span,
+#root input,
+#root label,
+#root button {
+    color: #f3f3f3;
+}
+
+#root .nolabel label {
+    display: none;
+}
+
+#root .topnav {
+    background-color: #535353;
+    border-color: #3e3e3e;
+}
+
+#root .leftside {
+    background-color: #535353;
+    border-right: 1px solid #3e3e3e;
+}
+
+#root .rightside {
+    background-color: #535353;
+    border-left: 1px solid #3e3e3e;
+    min-height: 100%;
+}
+
+#root .rightside .ant-collapse-header {
+    background-color: #424242;
+}
+
+#root .rightside .ant-collapse-header:before {
+    background-color: #4f4f4f;
+}
+
+#root .rightside .ant-collapse-header,
+#root .rightside .ant-collapse-content,
+#root .rightside .ant-collapse-item {
+    border-color: #e9e9e9;
 }
