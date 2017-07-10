@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { Button, Menu, Icon } from 'antd';
+import { Button } from 'antd';
 import { Center } from 'components';
 import { project } from 'app/model';
 import { context } from 'app/context';
@@ -15,7 +15,7 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
     render() {
 
         const navHeight = 22;
-        const leftSideWidth = 32;
+        const leftSideWidth = 44;
 
         return (
             <div
@@ -34,37 +34,28 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
                         top: 0
                     }}
                 >
-                    <Menu
-                        mode="horizontal"
+                    <div
                         style={{
                             position: 'absolute',
+                            left: 0,
+                            top: 0,
                             width: '100%',
                             zIndex: 999,
                             lineHeight: navHeight + 'px',
-                            height: (navHeight + 1) + 'px',
-                            WebkitAppRegion: 'drag'
+                            height: navHeight,
+                            WebkitAppRegion: 'drag',
+                            textAlign: 'center'
                         }}
-                        selectedKeys={project.path != null ? ["1"] : []}
                         className="topnav"
                     >
-                        { project.path == null ? (
+                        { project.path != null ? (
                             project.name != null ? (
-                                <Menu.Item
-                                    key="1"
-                                    style={{ WebkitAppRegion: 'no-drag' }}
-                                >
-                                    <Icon type="folder-open" style={{ position: 'relative', top: '1px' }} />{project.name}
-                                </Menu.Item>
+                                <span>{project.name}</span>
                             ) : (
-                                <Menu.Item
-                                    key="1"
-                                    style={{ WebkitAppRegion: 'no-drag' }}
-                                >
-                                    <Icon type="folder-open" style={{ position: 'relative', top: '1px' }} />New project
-                                </Menu.Item>
+                                <span>New project</span>
                             )
                         ) : null }
-                    </Menu>
+                    </div>
                     <div
                         className="leftside"
                         style={{
@@ -99,7 +90,7 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
                                 </div>
                             </Center>
                         ) : (
-                            project.name == null ? <CreateProject /> : <EditProject width={context.width - leftSideWidth} />
+                            project.name == null ? <CreateProject /> : <EditProject width={context.width - leftSideWidth} height={context.height - navHeight} />
                         ) }
                     </div>
                 </div>

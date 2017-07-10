@@ -1,21 +1,20 @@
 import * as React from 'react';
 import { observer, observe, autobind } from 'utils';
 import { Center } from 'components';
-import { Ceramic, ScenePanel, VisualsPanel } from 'app/components';
-import { project } from 'app/model';
-import { Collapse } from 'antd';
+import { Ceramic } from 'app/components';
 
 @observer class EditProject extends React.Component {
 
     @observe activePanels:Map<string, boolean> = new Map();
 
+    props:{
+        /** Available width */
+        width:number,
+        /** Available height */
+        height:number
+    };
+
 /// Lifecycle
-
-    constructor(public props:{width:number}) {
-
-        super();
-
-    } //constructor
 
     componentWillMount() {
 
@@ -26,15 +25,7 @@ import { Collapse } from 'antd';
 
     render() {
 
-        let activePanels:Array<string> = [];
-        this.activePanels.forEach((_, key) => {
-            activePanels.push(key);
-        });
-
-        const panelStyle = {
-        };
-
-        console.log("RENDER -> " + JSON.stringify(activePanels));
+        let statusHeight = 16;
 
         return (
             <div
@@ -55,23 +46,17 @@ import { Collapse } from 'antd';
                     }}
                 >
                     <div className="rightside">
-                        <Collapse bordered={false} onChange={this.handlePanels} activeKey={activePanels}>
-
-                            <Collapse.Panel header="Scene" key="1" style={panelStyle}>
-                                <ScenePanel data={project.scene} />
-                            </Collapse.Panel>
-
-                            <Collapse.Panel header="Visuals" key="2" style={panelStyle}>
-                                <VisualsPanel data={project.scene} />
-                            </Collapse.Panel>
-
-                        </Collapse>
+                        <div className="panel-group">
+                            <div className="panel-tab active">Scene</div>
+                            <div className="panel-tab">Visuals</div>
+                            <div className="panel-content"><p>blah</p></div>
+                        </div>
                     </div>
                 </div>
                 <div
                     style={{
-                        width: (this.props.width - 300) + 'px',
-                        height: '100%',
+                        width: this.props.width - 300,
+                        height: this.props.height - statusHeight,
                         position: 'absolute',
                         left: 0,
                         top: 0
@@ -81,6 +66,16 @@ import { Collapse } from 'antd';
                         <Ceramic />
                     </Center>
                 </div>
+                <div
+                    className="statusbar"
+                    style={{
+                        width: this.props.width - 300,
+                        height: statusHeight,
+                        position: 'absolute',
+                        left: 0,
+                        top: this.props.height - statusHeight
+                    }}
+                />
             </div>
         );
 

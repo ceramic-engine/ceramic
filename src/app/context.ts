@@ -38,14 +38,17 @@ export class Context {
             appWindow.removeListener('close', handleClose);
         };
         appWindow.addListener('close', handleClose);
-        window.addEventListener('resize', () => {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-        });
-        window.addEventListener('orientationchange', () => {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-        });
+        let sizeTimeout:any = null;
+        const handleResize = () => {
+            if (sizeTimeout != null) clearTimeout(sizeTimeout);
+            sizeTimeout = setTimeout(() => {
+                sizeTimeout = null;
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+            }, 100);
+        };
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
 
         // Get server port
         let electronApp = electron.remote.require('./ElectronApp');

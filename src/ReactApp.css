@@ -1,3 +1,7 @@
+body, html {
+    background-color: #282828 !important;
+}
+
 #root {
     background-color: #282828;
     width: 100vw;
@@ -14,8 +18,11 @@
 #root span,
 #root input,
 #root label,
-#root button {
+#root button,
+#root i,
+#root textarea {
     color: #f3f3f3;
+    cursor: default;
 }
 
 #root .nolabel label {
@@ -23,31 +30,52 @@
 }
 
 #root .topnav {
-    background-color: #535353;
-    border-color: #3e3e3e;
+    background-color: #4f4f4f;
+    border-bottom: 1px solid #383838;
+}
+
+#root .statusbar {
+    background-color: #4f4f4f;
+    border-top: 1px solid #383838;
 }
 
 #root .leftside {
-    background-color: #535353;
-    border-right: 1px solid #3e3e3e;
+    background-color: #4f4f4f;
+    border-right: 1px solid #383838;
 }
 
 #root .rightside {
-    background-color: #535353;
-    border-left: 1px solid #3e3e3e;
+    background-color: #4f4f4f;
+    border-left: 1px solid #383838;
     min-height: 100%;
 }
 
-#root .rightside .ant-collapse-header {
+#root .rightside .panel-group {
     background-color: #424242;
 }
 
-#root .rightside .ant-collapse-header:before {
+#root .rightside .panel-group .panel-tab {
     background-color: #4f4f4f;
+    display: inline-block;
+    padding: 5px 10px;
+    border-right: 1px solid #383838;
+    border-bottom: 1px solid #4f4f4f;
+    font-weight: bold;
+    position: relative;
+    left: 0px;
+    top: 1px;
+    margin-top: -1px;
 }
 
-#root .rightside .ant-collapse-header,
-#root .rightside .ant-collapse-content,
-#root .rightside .ant-collapse-item {
-    border-color: #e9e9e9;
+#root .rightside .panel-group .panel-tab:not(.active) {
+    background-color: #424242;
+    color: #b0b0b0;
+    border-bottom: 1px solid #383838;
 }
+
+#root .rightside .panel-group .panel-content {
+    border-top: 1px solid #383838;
+    background-color: #4f4f4f;
+    padding: 8px 10px;
+}
+
