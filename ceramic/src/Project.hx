@@ -138,6 +138,7 @@ class Project extends Entity {
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
+                        scene.color = 0x2f2f2f;
                         scenes.set(value.name, scene);
                     }
                     scene.sceneData = value;

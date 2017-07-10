@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { observer, observe, uuid, autobind } from 'utils';
+import { observer, observe, autorun, uuid, autobind, serializeModel } from 'utils';
 import { context } from 'app/context';
+import { project } from 'app/model';
 
 interface Message {
 
@@ -113,7 +114,7 @@ interface Message {
                     this.ready = true;
                     console.debug('Messaging with ' + this.elementId + ' is ready');
 
-                    this.sendDummyData(); // TODO remove
+                    this.handleReady();
                 }
                 return;
             }
@@ -139,12 +140,35 @@ interface Message {
 
     } //send
 
+    handleReady() {
+
+        autorun(() => {
+
+            if (project.scene != null) {
+                this.send({
+                    type: 'scene/put',
+                    value: serializeModel(project.scene)
+                });
+            }
+            else {
+                this.send({
+                    type: 'scene/delete',
+                    value: {
+                        name: 'scene',
+                    }
+                });
+            }
+
+        });
+
+    } //handleReady
+
     sendDummyData() {
 
         this.send({
             type: 'scene/put',
             value: {
-                name: 'myscene',
+                name: 'scene',
                 data: {},
                 width: 320,
                 height: 568,

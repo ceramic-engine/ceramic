@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { observer, observe, autobind } from 'utils';
-import { Center, PanelTabs } from 'components';
+import { Center, PanelTabs, Panel, NumberInput, Field } from 'components';
 import { Ceramic } from 'app/components';
+import { project } from 'app/model';
 
 @observer class EditProject extends React.Component {
 
@@ -13,6 +14,8 @@ import { Ceramic } from 'app/components';
         /** Available height */
         height:number
     };
+
+    panelTabs = ["Scene", "Visuals"];
 
 /// Lifecycle
 
@@ -45,21 +48,19 @@ import { Ceramic } from 'app/components';
                         overflowY: 'auto'
                     }}
                 >
-                    {/*<div className="rightside">
-                        <div className="panel-group">
-                            <div className="panel-tab active">Scene</div>
-                            <div className="panel-tab">Visuals</div>
-                            <div className="panel-content"><p>blah</p></div>
-                        </div>
-                    </div>*/}
                     <div className="rightside">
-                        <PanelTabs tabs={["Scene", "Visuals"]}>
-                            <PanelTabs.Item>
-                                <p>blah</p>
-                            </PanelTabs.Item>
-                            <PanelTabs.Item>
+                        <PanelTabs tabs={this.panelTabs}>
+                            <Panel>
+                                <Field label="width">
+                                    <NumberInput value={project.scene.width} onChange={(val) => { project.scene.width = val; }} />
+                                </Field>
+                                <Field label="height">
+                                    <NumberInput value={project.scene.height} onChange={(val) => { project.scene.height = val; }} />
+                                </Field>
+                            </Panel>
+                            <Panel>
                                 <p>blah2</p>
-                            </PanelTabs.Item>
+                            </Panel>
                         </PanelTabs>
                     </div>
                 </div>

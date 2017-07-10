@@ -50,6 +50,8 @@ body, html {
     min-height: 100%;
 }
 
+/* Panel tabs */
+
 #root .panel-group {
     background-color: #424242;
 }
@@ -65,6 +67,7 @@ body, html {
     left: 0px;
     top: 1px;
     margin-top: -1px;
+    font-size: 11px;
 }
 
 #root .panel-group .panel-tab:not(.active) {
@@ -84,3 +87,35 @@ body, html {
     padding: 8px 10px;
 }
 
+/* Input */
+
+#root .field {
+    display: block;
+    margin-bottom: 4px;
+}
+
+#root .field label {
+    display: inline-block;
+    width: 90px;
+    text-align: right;
+    margin-right: 10px;
+    font-size: 11px;
+}
+
+#root .field .field-input {
+    display: inline-block;
+}
+
+#root input.input {
+    background-color: #454545;
+    border: 1px solid #666666;
+    cursor: text;
+    outline: none;
+    padding: 0px 4px;
+    width: 80px;
+    font-size: 11px;
+}
+
+#root input.input:focus {
+    border-color: #2798eb;
+}
