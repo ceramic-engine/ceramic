@@ -50,11 +50,11 @@ body, html {
     min-height: 100%;
 }
 
-#root .rightside .panel-group {
+#root .panel-group {
     background-color: #424242;
 }
 
-#root .rightside .panel-group .panel-tab {
+#root .panel-group .panel-tab {
     background-color: #4f4f4f;
     display: inline-block;
     padding: 5px 10px;
@@ -67,13 +67,18 @@ body, html {
     margin-top: -1px;
 }
 
-#root .rightside .panel-group .panel-tab:not(.active) {
+#root .panel-group .panel-tab:not(.active) {
     background-color: #424242;
     color: #b0b0b0;
     border-bottom: 1px solid #383838;
 }
 
-#root .rightside .panel-group .panel-content {
+#root .panel-group .panel-tab:not(.active):hover {
+    background-color: #464646;
+    color: #d0d0d0;
+}
+
+#root .panel-group .panel-content {
     border-top: 1px solid #383838;
     background-color: #4f4f4f;
     padding: 8px 10px;

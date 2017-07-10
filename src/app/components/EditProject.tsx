@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, observe, autobind } from 'utils';
-import { Center } from 'components';
+import { Center, PanelTabs } from 'components';
 import { Ceramic } from 'app/components';
 
 @observer class EditProject extends React.Component {
@@ -45,12 +45,22 @@ import { Ceramic } from 'app/components';
                         overflowY: 'auto'
                     }}
                 >
-                    <div className="rightside">
+                    {/*<div className="rightside">
                         <div className="panel-group">
                             <div className="panel-tab active">Scene</div>
                             <div className="panel-tab">Visuals</div>
                             <div className="panel-content"><p>blah</p></div>
                         </div>
+                    </div>*/}
+                    <div className="rightside">
+                        <PanelTabs tabs={["Scene", "Visuals"]}>
+                            <PanelTabs.Item>
+                                <p>blah</p>
+                            </PanelTabs.Item>
+                            <PanelTabs.Item>
+                                <p>blah2</p>
+                            </PanelTabs.Item>
+                        </PanelTabs>
                     </div>
                 </div>
                 <div

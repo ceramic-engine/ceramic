@@ -22,13 +22,15 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
                 style={{
                     position: 'relative',
                     left: 0,
-                    top: 0
+                    top: 0,
+                    width: context.width,
+                    height: context.height
                 }}
             >
                 <div
                     style={{
                         width: context.width,
-                        height: '100%',
+                        height: context.height,
                         position: 'absolute',
                         left: 0,
                         top: 0
