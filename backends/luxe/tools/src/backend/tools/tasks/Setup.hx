@@ -125,6 +125,12 @@ class Setup extends tools.Task {
             }
         }
 
+        var customIndex = '';
+        /*if (target.name == 'web') {
+            customIndex = ",
+      index : { path:'custom_index.html => index.html', template:'project', not_listed:true }";
+        }*/
+
         var hooks = '';
         var hookPre = null;
 
@@ -140,7 +146,7 @@ exports.hook = function(flow, done)
 }
 ";
 
-            hooks += ",
+        hooks += ",
       pre: {
         priority: 1,
         name: 'ceramic-pre',
@@ -178,7 +184,7 @@ exports.hook = function(flow, done)
     },
 
     files : {
-      assets : \'assets/\'
+      assets : \'assets/\'$customIndex
     }
 
   }
