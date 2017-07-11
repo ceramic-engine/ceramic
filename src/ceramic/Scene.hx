@@ -50,7 +50,7 @@ typedef SceneItem = {
 } //SceneEntities
 
 /** A scene is a group of visuals rendered from data (.scene file) */
-class Scene extends Visual {
+class Scene extends Quad {
 
     public var sceneData(default,set):SceneData;
 
@@ -86,6 +86,8 @@ class Scene extends Visual {
 
         if (sceneData != null) {
 
+            name = sceneData.name;
+            data = sceneData.data;
             width = sceneData.width;
             height = sceneData.height;
             x = sceneData.x;
@@ -111,6 +113,9 @@ class Scene extends Visual {
 
     public function addItem(item:SceneItem):Void {
 
+        trace('ADD ITEM');
+        trace(item);
+
         var entityClass = Type.resolveClass(item.entity);
         var instance:Entity = cast Type.createInstance(entityClass, []);
         instance.name = item.name;
@@ -126,7 +131,10 @@ class Scene extends Visual {
         // Copy item properties
         if (item.props != null) {
             for (field in Reflect.fields(item.props)) {
-                if (Reflect.hasField(instance, field)) {
+                if (#if flash untyped (instance).hasOwnProperty ("set_" + field) #elseif js untyped (instance).__properties__ && untyped (instance).__properties__["set_" + field] #else false #end) {
+                    Reflect.setProperty(instance, field, Reflect.field(item.props, field));
+                }
+                else if (Reflect.hasField(instance, field)) {
                     Reflect.setField(instance, field, Reflect.field(item.props, field));
                 } else {
                     warning('Entity class ' + item.entity + ' doesn\'t have a property named: $field');
