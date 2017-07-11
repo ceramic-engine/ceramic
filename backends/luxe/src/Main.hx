@@ -50,14 +50,6 @@ class Main extends luxe.Game {
         // Emit ready event
         ceramic.App.app.backend.emitReady();
 
-        // In some cases (web), we may want to check ourselves
-        // If screen size or density has changed and trigger
-        // And event if it happens.
-        // Let's check every second (the check is cheap).
-        Luxe.timer.schedule(1.0, function() {
-            triggerResizeIfNeeded();
-        }, true);
-
 #end
 
     } //ready
@@ -66,6 +58,11 @@ class Main extends luxe.Game {
 
 #if (!completion && !display)
 
+        // We may need to trigger resize explicitly as luxe/snow
+        // doesn't seem to always detect it automatically.
+        triggerResizeIfNeeded();
+
+        // Update
         ceramic.App.app.backend.emitUpdate(delta);
 
 #end
