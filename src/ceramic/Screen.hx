@@ -286,8 +286,20 @@ class Screen extends Entity {
         // Update scaling
         updateScaling();
 
+        // Keep previous values
+        var prevScaling = app.settings.scaling;
+        var prevTargetWidth = app.settings.targetWidth;
+        var prevTargetHeight = app.settings.targetHeight;
+
         // Emit resize event (to allow custom changes)
         emitResize();
+
+        // Recompute scaling if target scaling or size changed at emit
+        if (prevScaling != app.settings.scaling
+        || prevTargetWidth != app.settings.targetWidth
+        || prevTargetHeight != app.settings.targetHeight) {
+            updateScaling();
+        }
 
         // Apply result as transform
         updateTransform();
