@@ -16,18 +16,6 @@ class Scene extends Model {
     /** Scene height */
     @observe @serialize height:number;
 
-    /** Scene x */
-    @observe @serialize x:number;
-
-    /** Scene y */
-    @observe @serialize y:number;
-
-    /** Scene anchorX */
-    @observe @serialize anchorX:number;
-
-    /** Scene anchorY */
-    @observe @serialize anchorY:number;
-
 } //Scene
 
 export default Scene;

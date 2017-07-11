@@ -68,10 +68,6 @@ class Project extends Model {
                                 scene.data = {};
                                 scene.width = 320;
                                 scene.height = 568;
-                                scene.x = 640 / 2;
-                                scene.y = 480 / 2;
-                                scene.anchorX = 0.5;
-                                scene.anchorY = 0.5;
                                 this.scene = scene;
 
                             } else {
@@ -109,10 +105,6 @@ class Project extends Model {
         scene.data = {};
         scene.width = 320;
         scene.height = 568;
-        scene.x = 640 / 2;
-        scene.y = 480 / 2;
-        scene.anchorX = 0.5;
-        scene.anchorY = 0.5;
         this.scene = scene;
 
         // Create data

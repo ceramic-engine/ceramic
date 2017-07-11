@@ -1,11 +1,9 @@
 package;
 
 import ceramic.Entity;
-import ceramic.Color;
-import ceramic.Quad;
 import ceramic.Settings;
-import ceramic.Assets;
 import ceramic.Scene;
+import ceramic.Timer;
 import ceramic.Shortcuts.*;
 
 import js.Browser.*;
@@ -19,60 +17,57 @@ class Project extends Entity {
 
     var scenes:Map<String, Scene> = new Map();
 
+    var renders:Int = 0;
+
     function new(settings:InitSettings) {
 
         settings.antialiasing = true;
         settings.background = 0x282828;
-        settings.targetWidth = 640;
-        settings.targetHeight = 480;
         settings.scaling = FIT;
 
         app.onceReady(ready);
 
     } //new
 
+    function render() {
+
+        renders++;
+        if (!Luxe.core.auto_render) {
+            Luxe.core.auto_render = true;
+        }
+
+        Timer.delay(0.5, function() {
+            renders--;
+            if (renders == 0) {
+                Luxe.core.auto_render = false;
+            }
+        });
+
+    } //render
+
     function ready() {
+
+        //Luxe.core.update_rate = 0.1;
+        Luxe.core.auto_render = false;
 
         // Setup
         //layout();
         window.addEventListener('resize', function() updateCanvas());
         screen.onResize(this, function() {
-            trace("ON RESIZE (ceramic) nativeWidth=" + screen.nativeWidth + " nativeHeight=" + screen.nativeHeight);
+
+            // Fit scenes
+            fitScenes();
+
+            // Render
+            render();
         });
         updateCanvas();
 
         // Receive messages
         window.addEventListener('message', receiveRawMessage);
 
-/*
-        // TODO
-        var quad1 = new Quad();
-        quad1.color = Color.RED;
-        quad1.depth = 2;
-        quad1.size(50, 50);
-        quad1.anchor(0.5, 0.5);
-        quad1.pos(screen.width * 0.5, screen.height * 0.5);
-        quad1.rotation = 30;
-        quad1.scale(2.0, 0.5);
-
-        var quad2 = new Quad();
-        quad2.depth = 1;
-        quad2.color = Color.YELLOW;
-        quad2.size(50, 50);
-        quad2.anchor(0.5, 0.5);
-        quad2.pos(640 * 0.5, 480 * 0.5 + 20);
-        quad2.rotation = 30;
-        quad2.scale(2.0, 0.5);
-
-        app.onUpdate(this, function(delta) {
-
-            quad1.rotation = (quad1.rotation + delta * 100) % 360;
-            quad2.rotation = (quad2.rotation + delta * 100) % 360;
-
-        });
-
-        trace("STARTED CERAMIC PART");
-*/
+        // Render once
+        render();
 
     } //ready
 
@@ -85,9 +80,19 @@ class Project extends Entity {
         appEl.width = Math.round(window.innerWidth * window.devicePixelRatio);
         appEl.height = Math.round(window.innerHeight * window.devicePixelRatio);
 
-        trace('screen width='+screen.width+' height='+screen.height);
+    } //updateCanvas
 
-    } //layout
+    function fitScenes() {
+
+        // Fit scenes
+        for (key in scenes.keys()) {
+            var scene = scenes.get(key);
+            var scale = Math.min(screen.width / (scene.width / scene.scaleX), screen.height / (scene.height / scene.scaleY));
+            scene.scale(scale, scale);
+            scene.pos(screen.width * 0.5, screen.height * 0.5);
+        }
+
+    } //fitScenes
 
 /// Messages
 
@@ -120,6 +125,9 @@ class Project extends Entity {
             receiveMessage(message);
         }
 
+        // Render to reflect changes
+        render();
+
     } //receiveRawMessage
 
     function receiveMessage(message:Message) {
@@ -139,9 +147,13 @@ class Project extends Entity {
                     if (scene == null) {
                         scene = new Scene();
                         scene.color = 0x2f2f2f;
+                        scene.anchor(0.5, 0.5);
+                        scene.pos(screen.width * 0.5, screen.height * 0.5);
                         scenes.set(value.name, scene);
                     }
                     scene.sceneData = value;
+                    var scale = Math.min(screen.width / (scene.width / scene.scaleX), screen.height / (scene.height / scene.scaleY));
+                    scene.scale(scale, scale);
                 }
 
             default:
