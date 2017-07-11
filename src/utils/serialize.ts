@@ -1,4 +1,5 @@
 import Model from './Model';
+import { isObservableArray } from 'mobx';
 
 export type Serialized = any;
 
@@ -35,6 +36,13 @@ export function serializeValue(value:any, options?:SerializeOptions):any {
     else if (Array.isArray(value)) {
         let result = [];
         for (let val of value) {
+            result.push(serializeValue(val, options));
+        }
+        return result;
+    }
+    else if (isObservableArray(value)) {
+        let result = [];
+        for (let val of value.slice()) {
             result.push(serializeValue(val, options));
         }
         return result;
