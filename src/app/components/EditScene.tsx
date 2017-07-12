@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { observer, observe, autobind } from 'utils';
-import { Center, PanelTabs, Panel, NumberInput, Field } from 'components';
+import { Center, Tabs, Panel, NumberInput, Field } from 'components';
 import { Ceramic } from 'app/components';
 import { project } from 'app/model';
 
-@observer class EditProject extends React.Component {
+@observer class EditScene extends React.Component {
 
     @observe activePanels:Map<string, boolean> = new Map();
 
@@ -49,7 +49,7 @@ import { project } from 'app/model';
                     }}
                 >
                     <div className="rightside">
-                        <PanelTabs tabs={this.panelTabs}>
+                        <Tabs tabs={this.panelTabs}>
                             <Panel>
                                 <Field label="width">
                                     <NumberInput value={project.scene.width} onChange={(val) => { project.scene.width = val; }} />
@@ -61,7 +61,7 @@ import { project } from 'app/model';
                             <Panel>
                                 <p>blah2</p>
                             </Panel>
-                        </PanelTabs>
+                        </Tabs>
                     </div>
                 </div>
                 <div
@@ -106,4 +106,4 @@ import { project } from 'app/model';
     
 }
 
-export default EditProject;
+export default EditScene;

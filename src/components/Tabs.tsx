@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer, observe } from 'utils';
 
-class PanelTabsItem extends React.Component {
+class TabsItem extends React.Component {
 
     props:{
         /** Children */
@@ -21,9 +21,9 @@ class PanelTabsItem extends React.Component {
 }
 
 /** Tabs and related panel contents */
-@observer class PanelTabs extends React.Component {
+@observer class Tabs extends React.Component {
 
-    static Item = PanelTabsItem;
+    static Item = TabsItem;
 
     props:{
         /** Tab texts */
@@ -57,4 +57,4 @@ class PanelTabsItem extends React.Component {
 
 }
 
-export default PanelTabs;
+export default Tabs;

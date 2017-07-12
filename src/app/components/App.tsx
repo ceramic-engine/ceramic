@@ -1,12 +1,11 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { Button } from 'antd';
-import { Center } from 'components';
 import { project } from 'app/model';
 import { context } from 'app/context';
-import { CreateProject, EditProject } from 'app/components';
+import { EditScene } from 'app/components';
 
-project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remove
+// TODO remove
+project.createWithName('New Project');
 
 @observer class App extends React.Component {
 
@@ -50,13 +49,11 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
                         }}
                         className="topnav"
                     >
-                        { project.path != null ? (
-                            project.name != null ? (
-                                <span>{project.name}</span>
-                            ) : (
-                                <span>New project</span>
-                            )
-                        ) : null }
+                        {project.name != null ? (
+                            <span>{project.name}</span>
+                        ) : (
+                            <span>New project</span>
+                        )}
                     </div>
                     <div
                         className="leftside"
@@ -77,23 +74,7 @@ project.setProjectPath("/Users/jeremyfa/Documents/SCENES/Test01"); // TODO remov
                             top: navHeight
                         }}
                     >
-                        { project.path == null ? (
-                            <Center>
-                                <div style={{ width: 300 }}>
-                                    <Button
-                                        icon="folder"
-                                        size="large"
-                                        type="primary"
-                                        onClick={project.chooseDirectory}
-                                        style={{ height: '55px', width: '250px' }}
-                                    >
-                                        Select project directory
-                                    </Button>
-                                </div>
-                            </Center>
-                        ) : (
-                            project.name == null ? <CreateProject /> : <EditProject width={context.width - leftSideWidth} height={context.height - navHeight} />
-                        ) }
+                        <EditScene width={context.width - leftSideWidth} height={context.height - navHeight} />
                     </div>
                 </div>
             </div>
