@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, observe, autobind } from 'utils';
-import { Center, Tabs, Panel, NumberInput, Field } from 'components';
+import { Center, Tabs, Form, Panel, NumberInput, Field } from 'components';
 import { Ceramic } from 'app/components';
 import { project } from 'app/model';
 
@@ -51,12 +51,14 @@ import { project } from 'app/model';
                     <div className="rightside">
                         <Tabs tabs={this.panelTabs}>
                             <Panel>
-                                <Field label="width">
-                                    <NumberInput value={project.scene.width} onChange={(val) => { project.scene.width = val; }} />
-                                </Field>
-                                <Field label="height">
-                                    <NumberInput value={project.scene.height} onChange={(val) => { project.scene.height = val; }} />
-                                </Field>
+                                <Form>
+                                    <Field label="width">
+                                        <NumberInput value={project.scene.width} onChange={(val) => { project.scene.width = val; }} />
+                                    </Field>
+                                    <Field label="height">
+                                        <NumberInput value={project.scene.height} onChange={(val) => { project.scene.height = val; }} />
+                                    </Field>
+                                </Form>
                             </Panel>
                             <Panel>
                                 <p>blah2</p>
