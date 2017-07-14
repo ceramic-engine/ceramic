@@ -15,7 +15,7 @@ import { project } from 'app/model';
         height:number
     };
 
-    panelTabs = ["Scene", "Visuals"];
+    panelTabs = ["Scene", "Visuals", "Assets"];
 
 /// Lifecycle
 
@@ -60,6 +60,9 @@ import { project } from 'app/model';
                             </Panel>
                             <Panel>
                                 <p>blah2</p>
+                            </Panel>
+                            <Panel>
+                                <p>blah3</p>
                             </Panel>
                         </Tabs>
                     </div>

@@ -1,29 +1,8 @@
 import * as React from 'react';
 import { observer, observe } from 'utils';
 
-class TabsItem extends React.Component {
-
-    props:{
-        /** Children */
-        children:React.ReactNode
-    };
-
-    render() {
-
-        return (
-            <div className="panel-content">
-                {this.props.children}
-            </div>
-        );
-
-    } //render
-
-}
-
-/** Tabs and related panel contents */
+/** Tabs */
 @observer class Tabs extends React.Component {
-
-    static Item = TabsItem;
 
     props:{
         /** Tab texts */
@@ -37,12 +16,12 @@ class TabsItem extends React.Component {
     render() {
 
         return (
-            <div className="panel-group">
+            <div className="tabs">
                 {this.props.tabs.map((tab, i) =>
                     i === this.active ? 
-                        <div className="panel-tab active" onClick={() => { this.active = i; }}>{tab}</div>
+                        <div className="tab active" key={i} onClick={() => { this.active = i; }}>{tab}</div>
                     :
-                        <div className="panel-tab" onClick={() => { this.active = i; }}>{tab}</div>
+                        <div className="tab" key={i} onClick={() => { this.active = i; }}>{tab}</div>
                 )}
                 {this.props.children != null ? (this.props.children as any[]).map((child, i) =>
                     i === this.active ?

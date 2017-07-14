@@ -1,5 +1,5 @@
 import Model from './Model';
-import { isObservableArray } from 'mobx';
+import { isObservableArray, isObservableMap } from 'mobx';
 
 export type Serialized = any;
 
@@ -74,11 +74,18 @@ export function serializeValue(value:any, options?:SerializeOptions):any {
             return value.id;
         }
     }
+    else if (value instanceof Map || isObservableMap(value)) {
+        let result:any = {};
+        (value as Map<string, any>).forEach((val, key) => {
+            result[key] = serializeValue(val, options);
+        });
+        return result;
+    }
     else if (typeof(value) === 'object') {
         let result:any = {};
         for (let key in value) {
             if (value.hasOwnProperty(key)) {
-                result[key] = serializeValue(result[key], options);
+                result[key] = serializeValue(value[key], options);
             }
         }
         return result;
@@ -114,7 +121,18 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
         type = type[0];
     }
 
-    if (value == null) {
+    if (type == null) {
+        if (typeof(value) === 'string') {
+            return value;
+        } else if (typeof(value) === 'number') {
+            return value;
+        } else if (typeof(value) === 'boolean') {
+            return value;
+        } else {
+            return null;
+        }
+    }
+    else if (value == null) {
         return null;
     }
     else if (type === String) {
@@ -175,11 +193,20 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
             return undefined;
         }
     }
+    else if (type === Map) {
+        let result:Map<string, any> = new Map();
+        for (let key in value) {
+            if (value.hasOwnProperty(key)) {
+                result.set(key, deserializeValue(value[key], typeParam, options));
+            }
+        }
+        return result;
+    }
     else if (type === Object) {
         let result:any = {};
         for (let key in value) {
             if (value.hasOwnProperty(key)) {
-                result[key] = deserializeValue(result[key], typeParam, options);
+                result[key] = deserializeValue(value[key], typeParam, options);
             }
         }
         return result;

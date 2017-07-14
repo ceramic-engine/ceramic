@@ -24,7 +24,7 @@ class Project extends Model {
         // Set scene
         let scene = new Scene();
         scene.name = 'scene';
-        scene.data = {};
+        scene.data = new Map();
         scene.width = 320;
         scene.height = 568;
         this.scene = scene;

@@ -8,7 +8,7 @@ class Scene extends Model {
     @observe @serialize name:string;
 
     /** Scene arbitrary data */
-    @observe @serialize data:{ [key: string]: any } = {};
+    @observe @serialize data:Map<string, any>;
 
     /** Scene width */
     @observe @serialize width:number;

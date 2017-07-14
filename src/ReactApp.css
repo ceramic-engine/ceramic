@@ -12,6 +12,7 @@ body, html {
 
 #root *:not(input):not(textarea):not(.selectable)  {
     -webkit-user-select: none;
+    user-select: none;
 }
 
 #root div,
@@ -52,11 +53,11 @@ body, html {
 
 /* Panel tabs */
 
-#root .panel-group {
+#root .tabs {
     background-color: #424242;
 }
 
-#root .panel-group .panel-tab {
+#root .tabs .tab {
     background-color: #4f4f4f;
     display: inline-block;
     padding: 5px 10px;
@@ -70,18 +71,18 @@ body, html {
     font-size: 11px;
 }
 
-#root .panel-group .panel-tab:not(.active) {
+#root .tabs .tab:not(.active) {
     background-color: #424242;
     color: #b0b0b0;
     border-bottom: 1px solid #383838;
 }
 
-#root .panel-group .panel-tab:not(.active):hover {
+#root .tabs .tab:not(.active):hover {
     background-color: #464646;
     color: #d0d0d0;
 }
 
-#root .panel-group .panel-content {
+#root .tabs .panel {
     border-top: 1px solid #383838;
     background-color: #4f4f4f;
     padding: 8px 10px;
