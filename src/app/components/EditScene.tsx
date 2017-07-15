@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { observer, observe, autobind } from 'utils';
-import { Center, Tabs, Form, Panel, NumberInput, Field } from 'components';
-import { Ceramic } from 'app/components';
+import { observer } from 'utils';
+import { Center, Tabs, Form, Panel, Title, NumberInput, Field, Button, Alt } from 'components';
+import { Ceramic, AssetInfo } from 'app/components';
 import { project } from 'app/model';
+import { context } from 'app/context';
 
 @observer class EditScene extends React.Component {
-
-    @observe activePanels:Map<string, boolean> = new Map();
 
     props:{
         /** Available width */
@@ -20,9 +19,6 @@ import { project } from 'app/model';
 /// Lifecycle
 
     componentWillMount() {
-
-        this.activePanels.set('1', true);
-        this.activePanels.set('2', true);
         
     } //componentWillMount
 
@@ -38,6 +34,9 @@ import { project } from 'app/model';
                     height: '100%'
                 }}
             >
+                <div>
+                    <AssetInfo />
+                </div>
                 <div
                     style={{
                         width: '300px',
@@ -49,7 +48,7 @@ import { project } from 'app/model';
                     }}
                 >
                     <div className="rightside">
-                        <Tabs tabs={this.panelTabs}>
+                        <Tabs tabs={this.panelTabs} active={project.sceneTab} onChange={(i) => { project.sceneTab = i; }}>
                             <Panel>
                                 <Form>
                                     <Field label="width">
@@ -64,7 +63,62 @@ import { project } from 'app/model';
                                 <p>blah2</p>
                             </Panel>
                             <Panel>
-                                <p>blah3</p>
+                                <div style={{ maxHeight: this.props.height - 28, overflowY: 'auto' }}>
+                                {(
+                                    context.ceramicReady ?
+                                        project.allAssets != null ?
+                                            <div>
+                                                <Title>Images</Title>
+                                                <Alt>
+                                                    {project.imageAssets.map((val, i) =>
+                                                        <div key={i} className="entry" onMouseOver={() => { project.expandedAsset = val; }} onMouseOut={() => { project.expandedAsset = null; }}>
+                                                            <div className="name">{val.name}</div>
+                                                            <div className="info">{val.paths.join(', ')}</div>
+                                                        </div>
+                                                    )}
+                                                </Alt>
+                                                <Title>Texts</Title>
+                                                <Alt>
+                                                    {project.textAssets.map((val, i) =>
+                                                        <div key={i} className="entry">
+                                                            <div className="name">{val.name}</div>
+                                                            <div className="info">{val.paths.join(', ')}</div>
+                                                        </div>
+                                                    )}
+                                                </Alt>
+                                                <Title>Sounds</Title>
+                                                <Alt>
+                                                    {project.soundAssets.map((val, i) =>
+                                                        <div key={i} className="entry">
+                                                            <div className="name">{val.name}</div>
+                                                            <div className="info">{val.paths.join(', ')}</div>
+                                                        </div>
+                                                    )}
+                                                </Alt>
+                                                <Title>Fonts</Title>
+                                                <Alt>
+                                                    {project.fontAssets.map((val, i) =>
+                                                        <div key={i} className="entry">
+                                                            <div className="name">{val.name}</div>
+                                                            <div className="info">{val.paths.join(', ')}</div>
+                                                        </div>
+                                                    )}
+                                                </Alt>
+                                            </div>
+                                        :
+                                        <Form>
+                                            <Field>
+                                                <Button
+                                                    kind="dashed"
+                                                    value="Choose directory"
+                                                    onClick={() => { project.chooseAssetsPath(); }}
+                                                />
+                                            </Field>
+                                        </Form>
+                                    :
+                                        null
+                                )}
+                                </div>
                             </Panel>
                         </Tabs>
                     </div>
@@ -96,18 +150,6 @@ import { project } from 'app/model';
         );
 
     } //render
-
-    @autobind handlePanels(event:any) {
-
-        var newPanels = event as Array<string>;
-        this.activePanels.clear();
-
-        // Add new keys
-        for (let key of newPanels) {
-            this.activePanels.set(key, true);
-        }
-
-    } //handlePanels
     
 }
 

@@ -35,7 +35,7 @@ export class Database implements HistoryListener {
 
     } //create
 
-    get<T extends Model>(type:new(id?:string) => T, id:string):T|null {
+    get<T extends Model>(type:new(id?:string) => T, id:string, recursive:boolean = false):T|null {
 
         let instance = null;
         let entry = this.entries[id];
@@ -48,7 +48,7 @@ export class Database implements HistoryListener {
             else if (entry.serialized != null) {
                 instance = this.create(type, id);
                 entry.instance = instance;
-                this.extract(instance);
+                this.extract(instance, recursive);
             }
 
         }
@@ -74,10 +74,13 @@ export class Database implements HistoryListener {
 
     } //getSerialized
 
-    getOrCreate<T extends Model>(type:new(id?:string) => T, id:string):T {
+    getOrCreate<T extends Model>(type:new(id?:string) => T, id:string, recursive:boolean = false):T {
 
-        let existing = this.get(type, id);
+        console.log("GET OR CREATE");
+
+        let existing = this.get(type, id, recursive);
         if (existing != null) {
+            console.log("GET");
             return existing;
         }
 
@@ -142,13 +145,20 @@ export class Database implements HistoryListener {
 
     extract<T extends Model>(instance:T, recursive:boolean = false):void {
 
+        console.log("EXTRACT");
+
         let existing = this.entries[instance.id];
         let serialized = undefined;
         if (existing != null) {
             serialized = existing.serialized;
         }
 
-        deserializeModelInto(serialized, instance);
+        let options = recursive ? {
+            recursive: true,
+            entries: this.entries
+        } : undefined;
+
+        deserializeModelInto(serialized, instance, options);
 
     } //extract
 
@@ -174,6 +184,35 @@ export class Database implements HistoryListener {
 
     } //onHistoryRedo
 
+/// Storage
+
+    save() {
+
+        let saved:{ [key: string]: Entry } = {};
+        for (let key in this.entries) {
+            if (this.entries.hasOwnProperty(key)) {
+                saved[key] = {
+                    serialized: this.entries[key].serialized,
+                    instance: null
+                };
+            }
+        }
+        localStorage.setItem('ceramic-editor-db', JSON.stringify(saved));
+
+    } //save
+
+    load() {
+
+        let json = localStorage.getItem('ceramic-editor-db');
+        if (json) {
+            this.entries = JSON.parse(json);
+            console.log(JSON.parse(json));
+        } else {
+            console.warn('Nothing to load in db.');
+        }
+
+    } //load
+
 } //Database
 
 // Shared database instance
@@ -191,7 +230,7 @@ let dirty = new Set<Model>();
 let willClean = false;
 spy((event) => {
 
-    if (!history.doing && handledEvents[event.type]) {
+    if (!history.doing && history.pauses === 0 && handledEvents[event.type]) {
         if (event.object instanceof Model && event.name != null) {
 
             // Serialize only if the changed value is a serializable one
@@ -232,6 +271,10 @@ spy((event) => {
                                 undo: prevSerialized
                             });
                         }
+
+                        // Save on change
+                        // TODO find another solution?
+                        db.save();
                         
                     });
                 }

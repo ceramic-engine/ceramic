@@ -6,6 +6,7 @@ const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
 const url = require('url')
+const fs = require('fs')
 
 const express = require('express')
 const detect = require('detect-port')
@@ -84,6 +85,28 @@ if (process.env.ELECTRON_DEV) {
 } else {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../build/ceramic'))))
 }
+
+exports.assetsPath = null;
+server.get('/editor/assets/*', function(req, res) {
+  let relativePath = req.path.substr('/editor/assets/'.length);
+  if (!exports.assetsPath || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
+    res.status(404)
+    res.send('Not found')
+  } else {
+    let assetPath = path.join(exports.assetsPath, relativePath);
+    fs.readFile(assetPath, function(err, data) {
+      if (err) {
+        res.status(404)
+        res.send('Not found')
+      } else {
+        if (assetPath.toLowerCase().endsWith('.png')) {
+          res.contentType('image/png');
+          res.end(data, 'binary');
+        }
+      }
+    });
+  }
+});
 
 // Listen to a free port
 detect(port, (err, _port) => {

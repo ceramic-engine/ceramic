@@ -4,6 +4,7 @@ import ceramic.Entity;
 import ceramic.Settings;
 import ceramic.Scene;
 import ceramic.Timer;
+import ceramic.RuntimeAssets;
 import ceramic.Shortcuts.*;
 
 import js.Browser.*;
@@ -135,11 +136,31 @@ class Project extends Entity {
         console.log(message);
 
         var parts = message.type.split('/');
-        var collection = parts[0];
+        var service = parts[0];
         var action = parts[1];
         var value = message.value;
 
-        switch (collection) {
+        switch (service) {
+
+            case 'assets':
+                if (action == 'lists') {
+                    var rawList:Array<String> = value.list;
+                    var assets = new RuntimeAssets(rawList);
+                    var lists = assets.getEncodableLists();
+                    send({
+                        type: 'assets/lists',
+                        value: {
+                            images: assets.getNames('image'),
+                            texts: assets.getNames('text'),
+                            sounds: assets.getNames('sound'),
+                            fonts: assets.getNames('font'),
+                            all: lists.all,
+                            allDirs: lists.allDirs,
+                            allByName: lists.allByName,
+                            allDirsByName: lists.allDirsByName
+                        }
+                    });
+                }
 
             case 'scene':
                 var scene:Scene = scenes.get(value.name);
@@ -161,5 +182,15 @@ class Project extends Entity {
         } //switch
 
     } //receiveMessage
+
+    function send(message:Message):Void {
+
+        // Send message to parent
+        window.parent.postMessage(
+            Json.stringify(message),
+            parentOrigin
+        );
+
+    } //send
 
 }

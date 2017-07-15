@@ -166,7 +166,7 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
                 if (options.entries != null) {
                     let entry = options.entries[id];
                     if (entry != null) {
-                        serialized = entry[id].serialized;
+                        serialized = entry.serialized;
                     }
                 }
             }
@@ -229,6 +229,7 @@ export function deserializeModel<T extends Model>(
 } //deserializeModel
 
 export function deserializeModelInto<T extends Model>(serialized:any, instance:T, options?:DeserializeOptions):void {
+    console.log("DESERIALIZE MODEL");
 
     const recursive = (options != null && options.recursive);
 
@@ -238,20 +239,24 @@ export function deserializeModelInto<T extends Model>(serialized:any, instance:T
             // Get property type
             const type = Reflect.getMetadata('serialize:type', instance.constructor.prototype, propertyName);
             if (type != null) {
-                if (!recursive && type === Model || type.prototype instanceof Model) {
+                if (!recursive && (type === Model || type.prototype instanceof Model)) {
+                    console.log("DESERIALIZE(A) " + propertyName);
                     // When deserialize is not recursive,
                     // still try to keep existing sub-models referenced
                     let existing:Model = instance[propertyName];
                     if (existing != null) {
+                        console.log("HAS PROPERTY " + propertyName);
                         let value = serialized[propertyName];
                         let id:string = (typeof(value) === 'object' && value.id != null) ? value.id : value;
                         if (id !== existing.id) {
                             instance[propertyName] = undefined;
                         }
                     } else {
-                        instance[propertyName] = undefined;
+                        console.log("HAS NOT PROPERTY " + propertyName);
+                        instance[propertyName] = null;
                     }
                 } else {
+                    console.log("DESERIALIZE(B) " + propertyName);
                     instance[propertyName] = deserializeValue(serialized[propertyName], type, options);
                 }
             }

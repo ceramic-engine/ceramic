@@ -24,6 +24,8 @@ export interface HistoryListener {
 
     index:number = -1;
 
+    pauses:number = 0;
+
     listener:HistoryListener = {
 
         onHistoryUndo(item:HistoryItem) {
@@ -41,7 +43,7 @@ export interface HistoryListener {
     push(item:HistoryItem) {
 
         // Record item only if not undoing/redoing
-        if (!this.doing) {
+        if (!this.doing && this.pauses === 0) {
             this.items[++this.index] = item;
             if (this.items.length > this.index + 1) {
                 this.items.length = this.index + 1;
@@ -132,6 +134,18 @@ export interface HistoryListener {
         }
 
     } //redo
+
+    pause():void {
+
+        this.pauses++;
+
+    } //pause
+
+    resume():void {
+
+        this.pauses--;
+
+    } //resume
 
 }
 

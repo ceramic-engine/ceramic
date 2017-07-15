@@ -14,6 +14,8 @@ export class Context {
 
     @observe serverPort:number;
 
+    @observe ceramicReady:boolean;
+
 /// Constructor
 
     constructor() {
@@ -59,6 +61,9 @@ export class Context {
             }
         };
         checkServerPort();
+        
+        // Default ceramic state is false
+        this.ceramicReady = false;
 
     } //constructor
 

@@ -1,30 +1,31 @@
 import * as React from 'react';
-import { observer, observe } from 'utils';
 
 /** Tabs */
-@observer class Tabs extends React.Component {
+class Tabs extends React.Component {
 
     props:{
+        /** Store key (to persist/reload tabs position) */
+        active:number,
         /** Tab texts */
         tabs:Array<string>,
         /** Children */
-        children:React.ReactNode
+        children:React.ReactNode,
+        /** onChange */
+        onChange:(value:number) => void
     };
-
-    @observe active:number = 0;
 
     render() {
 
         return (
             <div className="tabs">
                 {this.props.tabs.map((tab, i) =>
-                    i === this.active ? 
-                        <div className="tab active" key={i} onClick={() => { this.active = i; }}>{tab}</div>
+                    i === this.props.active || (!this.props.active && i === 0) ? 
+                        <div className="tab active" key={i} onClick={() => { this.handleChange(i); }}>{tab}</div>
                     :
-                        <div className="tab" key={i} onClick={() => { this.active = i; }}>{tab}</div>
+                        <div className="tab" key={i} onClick={() => { this.handleChange(i); }}>{tab}</div>
                 )}
                 {this.props.children != null ? (this.props.children as any[]).map((child, i) =>
-                    i === this.active ?
+                    i === this.props.active ?
                         child
                     :
                         null
@@ -33,6 +34,12 @@ import { observer, observe } from 'utils';
         );
 
     } //render
+
+    handleChange(index:number) {
+
+        this.props.onChange(index);
+
+    } //handleChange
 
 }
 

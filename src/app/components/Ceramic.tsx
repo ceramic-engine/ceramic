@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { observer, observe, autorun, uuid, autobind, serializeModel } from 'utils';
+import { observer, observe, autorun, uuid, autobind, ceramic, serializeModel } from 'utils';
 import { context } from 'app/context';
 import { project } from 'app/model';
 
-interface Message {
+export interface Message {
 
     type:string;
 
@@ -19,12 +19,15 @@ interface Message {
 
     mounted:boolean = false;
 
+    private responseHandlers:Map<String, (message:Message) => void> = new Map();
+
 /// Lifecycle
 
     componentDidMount() {
 
         // Flag as mounted
         this.mounted = true;
+        ceramic.component = this;
 
         // Add listener to receive message
         window.addEventListener('message', this.receiveRawMessage);
@@ -56,6 +59,10 @@ interface Message {
 
         // Flag as unmounted
         this.mounted = false;
+        if (ceramic.component === this) {
+            delete ceramic.component;
+            context.ceramicReady = false;
+        }
 
         // Remove message listener
         window.removeEventListener('message', this.receiveRawMessage);
@@ -112,6 +119,7 @@ interface Message {
             if (message.type === 'pong') {
                 if (!this.ready) {
                     this.ready = true;
+                    context.ceramicReady = true;
                     console.debug('Messaging with ' + this.elementId + ' is ready');
 
                     this.handleReady();
@@ -121,7 +129,12 @@ interface Message {
             if (!this.ready) return;
 
             // Handle message
-
+            let handler = this.responseHandlers.get(message.type);
+            if (handler) {
+                this.responseHandlers.delete(message.type);
+                handler(message);
+            }
+ 
         } catch (e) {
             console.error('Failed to decode ' + this.elementId + ' message: ' + event.data);
             return;
@@ -129,7 +142,12 @@ interface Message {
 
     } //receiveMessage
 
-    send(message:Message) {
+    send(message:Message, responseHandler?:(message:Message) => void) {
+
+        // Add handler, if any
+        if (responseHandler) {
+            this.responseHandlers.set(message.type, responseHandler);
+        }
 
         // Send message to frame
         const iframe = document.getElementById(this.elementId) as HTMLIFrameElement;

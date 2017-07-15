@@ -4,9 +4,6 @@ import { project } from 'app/model';
 import { context } from 'app/context';
 import { EditScene } from 'app/components';
 
-// TODO remove
-project.createWithName('New Project');
-
 @observer class App extends React.Component {
 
 /// Lifecycle

@@ -85,7 +85,51 @@ body, html {
 #root .tabs .panel {
     border-top: 1px solid #383838;
     background-color: #4f4f4f;
-    padding: 8px 10px;
+}
+
+#root .tabs .panel .title {
+    border-bottom: 1px solid #444444;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#root .tabs .panel .alt {
+    background-color: #4a4a4a;
+    border-bottom: 1px solid #444444;
+    font-size: 9px;
+}
+
+#root .tabs .panel .alt .entry {
+    padding: 6px 10px;
+}
+
+#root .tabs .panel .alt .entry:not(:last-child) {
+    border-bottom: 1px solid #444444;
+}
+
+#root .tabs .panel .alt .entry:hover {
+    background-color: #4f4f4f;
+}
+
+#root .tabs .panel .alt .entry.selected {
+    background-color: #707070;
+}
+
+#root .tabs .panel .alt .entry .name {
+    font-size: 11px;
+}
+
+#root .tabs .panel .alt .entry .info {
+    font-size: 9px;
+    font-style: italic;
+    color: #888888;
+}
+
+#root .tabs .panel form {
+    padding: 6px 10px;
+    border-left: 1px solid #444444;
 }
 
 /* Input */
@@ -103,6 +147,10 @@ body, html {
     font-size: 11px;
 }
 
+#root .field:not(.with-label) {
+    margin-left: 100px;
+}
+
 #root .field .field-input {
     display: inline-block;
 }
@@ -110,13 +158,57 @@ body, html {
 #root input.input {
     background-color: #454545;
     border: 1px solid #666666;
-    cursor: text;
     outline: none;
     padding: 0px 4px;
-    width: 80px;
     font-size: 11px;
 }
 
-#root input.input:focus {
+/* Text/Number */
+
+#root input.input.input-text,
+#root input.input.input-number {
+    cursor: text;
+    width: 80px;
+}
+
+#root input.input.input-text:focus,
+#root input.input.input-number:focus {
     border-color: #2798eb;
+}
+
+/* Button */
+
+#root input.input.input-button {
+    padding: 3px 8px;
+    min-width: 80px;
+}
+
+#root input.input.input-button.dashed {
+    background-color: transparent;
+    border: 1px dashed #999999;
+}
+
+#root input.input.input-button:not(.dashed):active {
+    border-color: #2798eb;
+    background-color: #2798eb;
+    transform: translateY(1px);
+}
+
+#root input.input.input-button.dashed:active {
+    border-color: #bbbbbb;
+    transform: translateY(1px);
+}
+
+/* Asset info */
+
+#root .asset-info {
+    position: absolute;
+    right: 310px;
+    top: 30px;
+    z-index: 100;
+    max-width: 200px;
+}
+
+#root .asset-info > * {
+    max-width: 100%;
 }
