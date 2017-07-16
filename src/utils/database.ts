@@ -1,7 +1,7 @@
 import { serializeModel, deserializeModelInto, Entry, Serialized } from './serialize';
 import Model from './Model';
 import uuid from './uuid';
-import { spy } from 'mobx';
+import { spy, isObservableArray, isObservableMap } from 'mobx';
 import autobind from 'autobind-decorator';
 import { HistoryListener, HistoryItem, history } from './history';
 
@@ -184,9 +184,98 @@ export class Database implements HistoryListener {
 
     } //onHistoryRedo
 
+/// Clean
+
+    /** Walk object and  */
+    clean() {
+        
+        // Add root entries, first
+        let cleaned:{ [key: string]: Entry } = {};
+        let toWalk:Array<Model> = [];
+        for (let kept of Model.rootInstances) {
+            let entry = this.entries[kept.id];
+            if (entry) {
+                cleaned[kept.id] = entry;
+            }
+            toWalk.push(kept);
+        }
+
+        // Then for each root instance, walk properties to find sub-models
+        let walked:Map<string, boolean> = new Map();
+        while (toWalk.length > 0) {
+            let instance = toWalk.shift();
+            walked.set(instance.id, true);
+
+            // Walk instance properties
+            for (let key in instance) {
+                if (instance.hasOwnProperty(key)) {
+                    let val = instance[key];
+                    if (val != null) {
+
+                        if (val instanceof Model) {
+                            if (!walked.has(val.id)) {
+                                walked.set(val.id, true);
+                                let entry = this.entries[val.id];
+                                if (entry) {
+                                    cleaned[val.id] = entry;
+                                }
+                                toWalk.push(val);
+                            }
+                        }
+                        else if (Array.isArray(val) || isObservableArray(val)) {
+                            val.forEach((v, i) => {
+                                if (v instanceof Model) {
+                                    if (!walked.has(v.id)) {
+                                        walked.set(v.id, true);
+                                        let entry = this.entries[v.id];
+                                        if (entry) {
+                                            cleaned[v.id] = entry;
+                                        }
+                                        toWalk.push(v);
+                                    }
+                                }
+                            });
+                        }
+                        else if (val instanceof Map || isObservableMap(val)) {
+                            (val as Map<string, any>).forEach((v, k) => {
+                                if (v instanceof Model) {
+                                    if (!walked.has(v.id)) {
+                                        walked.set(v.id, true);
+                                        let entry = this.entries[v.id];
+                                        if (entry) {
+                                            cleaned[v.id] = entry;
+                                        }
+                                        toWalk.push(v);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Remove unused entries
+        let allIds = [];
+        for (let key in this.entries) {
+            if (this.entries.hasOwnProperty(key)) {
+                allIds.push(key);
+            }
+        }
+        for (let key of allIds) {
+            if (!cleaned[key]) {
+                console.log("REMOVE CLEANED " + key);
+                delete this.entries[key];
+            }
+        }
+
+    } //clean
+
 /// Storage
 
     save() {
+
+        this.clean();
 
         let saved:{ [key: string]: Entry } = {};
         for (let key in this.entries) {

@@ -128,7 +128,7 @@ body, html {
 }
 
 #root .tabs .panel form {
-    padding: 6px 10px;
+    padding: 14px 10px;
     border-left: 1px solid #444444;
 }
 
@@ -183,19 +183,55 @@ body, html {
     min-width: 80px;
 }
 
+#root input.input.input-button.default {
+    background-color: transparent;
+    border: 1px solid #777777;
+}
+
+#root input.input.input-button.default:hover {
+    background-color: rgba(255,255,255,0.05);
+    border: 1px solid #7c7c7c;
+}
+
 #root input.input.input-button.dashed {
     background-color: transparent;
     border: 1px dashed #999999;
 }
 
-#root input.input.input-button:not(.dashed):active {
+#root input.input.input-button.dashed:hover {
+    background-color: rgba(255,255,255,0.05);
+    border: 1px dashed #9e9e9e;
+}
+
+#root input.input.input-button.square {
+    background-color: #343434;
+    border: none;
+    width: 60px;
+    height: 60px;
+    margin: 3px;
+    border: 1px solid #666666;
+}
+
+#root input.input.input-button.square:hover {
+    background-color: #3a3a3a;
+    border: 1px solid #6b6b6b;
+}
+
+#root input.input.input-button.default:active {
     border-color: #2798eb;
     background-color: #2798eb;
     transform: translateY(1px);
 }
 
 #root input.input.input-button.dashed:active {
-    border-color: #bbbbbb;
+    border-color: #fafafa;
+    background-color: #2798eb;
+    transform: translateY(1px);
+}
+
+#root input.input.input-button.square:active {
+    border-color: #2798eb;
+    background-color: #2798eb;
     transform: translateY(1px);
 }
 
@@ -211,4 +247,43 @@ body, html {
 
 #root .asset-info > * {
     max-width: 100%;
+}
+
+/* Overlay */
+
+#root .overlay {
+    position: absolute;
+    background-color: rgba(0,0,0,0.3);
+}
+
+/* Dialog */
+
+#root .overlay .dialog {
+    margin-bottom: 10%;
+    min-width: 400px;
+}
+
+#root .overlay .dialog .title {
+    background-color: #4f4f4f;
+    border: 1px solid #383838;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    text-align: center;
+    line-height: 20px;
+}
+
+#root .overlay .dialog .content {
+    background-color: #4a4a4a;
+    border: 1px solid #383838;
+    border-top: none;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    text-align: center;
+    padding: 10px 10px;
+}
+
+/* Inline */
+
+#root .inline {
+    display: inline-block;
 }

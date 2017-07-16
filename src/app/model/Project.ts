@@ -1,6 +1,7 @@
 import { serialize, observe, action, compute, files, autorun, ceramic, Model } from 'utils';
 import Scene from './Scene';
 import Asset from './Asset';
+import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
 import { context } from 'app/context';
@@ -16,13 +17,11 @@ class Project extends Model {
     @observe error?:string;
 
     /** Project name */
-    @observe name?:string;
+    @observe @serialize name?:string;
 
 /// UI State
 
-    @observe @serialize sceneTab:number;
-
-    @observe expandedAsset?:{name:string, constName:string, paths:Array<string>};
+    @observe @serialize ui:UiState;
 
 /// Assets
 
@@ -139,6 +138,8 @@ class Project extends Model {
 
     @action createWithName(name:string) {
 
+        console.error("RECREATE PROJECT");
+
         // Set name
         this.name = name;
 
@@ -149,6 +150,9 @@ class Project extends Model {
         scene.width = 320;
         scene.height = 568;
         this.scene = scene;
+
+        // Set UI state
+        this.ui = new UiState('ui');
 
     } //createWithName
 

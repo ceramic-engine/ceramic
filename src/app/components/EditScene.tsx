@@ -48,7 +48,7 @@ import { context } from 'app/context';
                     }}
                 >
                     <div className="rightside">
-                        <Tabs tabs={this.panelTabs} active={project.sceneTab} onChange={(i) => { project.sceneTab = i; }}>
+                        <Tabs tabs={this.panelTabs} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
                             <Panel>
                                 <Form>
                                     <Field label="width">
@@ -60,7 +60,14 @@ import { context } from 'app/context';
                                 </Form>
                             </Panel>
                             <Panel>
-                                <p>blah2</p>
+                                <Form>
+                                    <Field>
+                                        <Button
+                                            value="Add visual"
+                                            onClick={() => { project.ui.addingVisual = true; }}
+                                        />
+                                    </Field>
+                                </Form>
                             </Panel>
                             <Panel>
                                 <div style={{ maxHeight: this.props.height - 28, overflowY: 'auto' }}>
@@ -71,7 +78,7 @@ import { context } from 'app/context';
                                                 <Title>Images</Title>
                                                 <Alt>
                                                     {project.imageAssets.map((val, i) =>
-                                                        <div key={i} className="entry" onMouseOver={() => { project.expandedAsset = val; }} onMouseOut={() => { project.expandedAsset = null; }}>
+                                                        <div key={i} className="entry" onMouseOver={() => { project.ui.expandedAsset = val; }} onMouseOut={() => { project.ui.expandedAsset = null; }}>
                                                             <div className="name">{val.name}</div>
                                                             <div className="info">{val.paths.join(', ')}</div>
                                                         </div>

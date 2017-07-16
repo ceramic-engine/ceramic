@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project } from 'app/model';
 import { context } from 'app/context';
-import { EditScene } from 'app/components';
+import { EditScene, AddVisual } from 'app/components';
 
 @observer class App extends React.Component {
 
@@ -32,13 +32,20 @@ import { EditScene } from 'app/components';
                         top: 0
                     }}
                 >
+                    <div>
+                        {project.ui.addingVisual ?
+                            <AddVisual>YOUPI</AddVisual>
+                        :
+                            null
+                        }
+                    </div>
                     <div
                         style={{
                             position: 'absolute',
                             left: 0,
                             top: 0,
                             width: '100%',
-                            zIndex: 999,
+                            zIndex: 500,
                             lineHeight: navHeight + 'px',
                             height: navHeight,
                             WebkitAppRegion: 'drag',

@@ -12,7 +12,7 @@ import { context } from 'app/context';
         // Don't do anything until a server port is defined
         if (context.serverPort == null) return null;
 
-        let asset = project.expandedAsset;
+        let asset = project.ui.expandedAsset;
         if (!asset) return null;
 
         if (asset.paths[0].toLowerCase().endsWith('.png')) {
