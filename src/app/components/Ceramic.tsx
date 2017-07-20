@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { observer, observe, autorun, uuid, autobind, ceramic, serializeModel } from 'utils';
 import { context } from 'app/context';
-import { project } from 'app/model';
+import { project, SceneItem } from 'app/model';
+import { IReactionDisposer } from 'mobx';
 
 export interface Message {
 
@@ -160,21 +161,73 @@ export interface Message {
 
     handleReady() {
 
+        // Watch scene && items
+        let sceneInCeramic = false;
+        let itemsInCeramic = new Map<SceneItem, IReactionDisposer>();
         autorun(() => {
-
             if (project.scene != null) {
+                sceneInCeramic = true;
                 this.send({
                     type: 'scene/put',
-                    value: serializeModel(project.scene)
+                    value: project.scene.serializeForCeramic()
                 });
             }
             else {
-                this.send({
-                    type: 'scene/delete',
-                    value: {
-                        name: 'scene',
+                if (sceneInCeramic) {
+                    sceneInCeramic = false;
+                    this.send({
+                        type: 'scene/delete',
+                        value: {
+                            name: 'scene',
+                        }
+                    });
+                }
+            }
+        });
+        autorun(() => {
+
+            if (project.scene != null) {
+                if (!sceneInCeramic) {
+                    sceneInCeramic = true;
+                    this.send({
+                        type: 'scene/put',
+                        value: project.scene.serializeForCeramic()
+                    });
+                }
+
+                let itemsToKeep = new Map<SceneItem, boolean>();
+                for (let item of project.scene.items) {
+                    itemsToKeep.set(item, true);
+
+                    if (!itemsInCeramic.has(item)) {
+
+                        // Add item and watch for changes
+                        itemsInCeramic.set(item, autorun(() => {
+                            this.send({
+                                type: 'scene-item/put',
+                                value: item.serializeForCeramic()
+                            });
+                        }));
                     }
+                }
+
+                itemsInCeramic.forEach((_, item) => {
+
+                    if (!itemsToKeep.has(item)) {
+                        // Stop watching item
+                        itemsInCeramic.get(item)();
+                        // Remove item
+                        itemsInCeramic.delete(item);
+                        this.send({
+                            type: 'scene-item/delete',
+                            value: {
+                                name: item.name
+                            }
+                        });
+                    }
+
                 });
+
             }
 
         });

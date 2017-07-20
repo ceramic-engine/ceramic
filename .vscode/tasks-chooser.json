@@ -10,7 +10,17 @@
             "problemMatcher": {
                 "base": "$tslint5",
                 "fileLocation": "relative"
-            }
+            },
+            "tasks": [
+                {
+                    "type": "npm",
+                    "script": "start-electron",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
+                }
+            ]
         },
         {
             "displayName": "▶︎ Browser",
@@ -21,7 +31,17 @@
             "problemMatcher": {
                 "base": "$tslint5",
                 "fileLocation": "relative"
-            }
+            },
+            "tasks": [
+                {
+                    "type": "npm",
+                    "script": "start-browser",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
+                }
+            ]
         }
     ],
     "baseItem": {

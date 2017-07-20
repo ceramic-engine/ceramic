@@ -11,6 +11,16 @@
         "base": "$tslint5",
         "fileLocation": "relative"
     },
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "start-electron",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
     "version": "2.0.0",
     "chooserIndex": 0
 }

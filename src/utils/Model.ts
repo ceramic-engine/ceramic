@@ -49,6 +49,10 @@ class Model {
 
     } //constructor
 
+    set instance(val:any) {
+        throw 'CANNOT SET INSTANCE ON MODEL';
+    }
+
 } //Model
 
 export default Model;

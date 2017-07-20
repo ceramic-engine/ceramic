@@ -76,11 +76,8 @@ export class Database implements HistoryListener {
 
     getOrCreate<T extends Model>(type:new(id?:string) => T, id:string, recursive:boolean = false):T {
 
-        console.log("GET OR CREATE");
-
         let existing = this.get(type, id, recursive);
         if (existing != null) {
-            console.log("GET");
             return existing;
         }
 
@@ -144,8 +141,6 @@ export class Database implements HistoryListener {
     }
 
     extract<T extends Model>(instance:T, recursive:boolean = false):void {
-
-        console.log("EXTRACT");
 
         let existing = this.entries[instance.id];
         let serialized = undefined;
@@ -317,9 +312,51 @@ let handledEvents = {
 };
 let dirty = new Set<Model>();
 let willClean = false;
+function addDirty(model:Model) {
+
+    // Stack dirty objects and serialize everything at the end of the roadloop
+    dirty.add(model);
+    if (!willClean) {
+        willClean = true;
+        setImmediate(() => {
+
+            willClean = false;
+
+            // Fill array of items
+            let items:Array<Model> = [];
+            dirty.forEach((item:Model) => {
+                items.push(item);
+            });
+            dirty.clear();
+
+            // Serialize items and put them in db
+            let newSerialized:{ [key: string]: any } = {};
+            let prevSerialized:{ [key: string]: any } = {};
+            for (let item of items) {
+                let serialized = serializeModel(item);
+                newSerialized[item.id] = serialized;
+                prevSerialized[item.id] = db.getSerialized(item.id);
+                db.put(item, serialized, false);
+            }
+
+            // Add history item
+            if (!history.doing) {
+                history.push({
+                    do: newSerialized,
+                    undo: prevSerialized
+                });
+            }
+
+            // Save on change
+            // TODO find another solution?
+            db.save();
+            
+        });
+    }
+}
 spy((event) => {
 
-    if (!history.doing && history.pauses === 0 && handledEvents[event.type]) {
+    if (!history.doing && history.pauses === 0 && handledEvents[event.type] && event.object != null) {
         if (event.object instanceof Model && event.name != null) {
 
             // Serialize only if the changed value is a serializable one
@@ -328,46 +365,20 @@ spy((event) => {
                 event.object.constructor.prototype,
                 event.name)) {
 
-                // Stack dirty objects and serialize everything at the end of the roadloop
-                dirty.add(event.object);
-                if (!willClean) {
-                    willClean = true;
-                    setImmediate(() => {
-
-                        willClean = false;
-
-                        // Fill array of items
-                        let items:Array<Model> = [];
-                        dirty.forEach((item:Model) => {
-                            items.push(item);
-                        });
-                        dirty.clear();
-
-                        // Serialize items and put them in db
-                        let newSerialized:{ [key: string]: any } = {};
-                        let prevSerialized:{ [key: string]: any } = {};
-                        for (let item of items) {
-                            let serialized = serializeModel(item);
-                            newSerialized[item.id] = serialized;
-                            prevSerialized[item.id] = db.getSerialized(item.id);
-                            db.put(item, serialized, false);
-                        }
-
-                        // Add history item
-                        if (!history.doing) {
-                            history.push({
-                                do: newSerialized,
-                                undo: prevSerialized
-                            });
-                        }
-
-                        // Save on change
-                        // TODO find another solution?
-                        db.save();
-                        
-                    });
+                // Add parent model as property to observable array/map
+                // in order to invalidate model when array/map changes
+                if (event.newValue != null && (isObservableArray(event.newValue) || isObservableMap(event.newValue))) {
+                    event.newValue['_parentModel'] = event.object;
                 }
+
+                addDirty(event.object);
             }
+        }
+        else if (event.object['_parentModel'] != null) {
+
+            // Observable Map or Array in model changed
+            addDirty(event.object['_parentModel']);
+
         }
     }
 

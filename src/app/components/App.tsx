@@ -34,7 +34,7 @@ import { EditScene, AddVisual } from 'app/components';
                 >
                     <div>
                         {project.ui.addingVisual ?
-                            <AddVisual>YOUPI</AddVisual>
+                            <AddVisual />
                         :
                             null
                         }

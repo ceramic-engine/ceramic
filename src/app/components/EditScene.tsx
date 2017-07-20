@@ -116,7 +116,6 @@ import { context } from 'app/context';
                                         <Form>
                                             <Field>
                                                 <Button
-                                                    kind="dashed"
                                                     value="Choose directory"
                                                     onClick={() => { project.chooseAssetsPath(); }}
                                                 />

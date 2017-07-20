@@ -1,4 +1,6 @@
-import { serialize, observe, Model } from 'utils';
+import { serialize, observe, serializeModel, Model } from 'utils';
+import SceneItem from './SceneItem';
+import VisualItem from './VisualItem';
 
 class Scene extends Model {
 
@@ -15,6 +17,17 @@ class Scene extends Model {
 
     /** Scene height */
     @observe @serialize height:number;
+
+    /** Scene items */
+    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem> = [];
+
+/// Helpers
+
+    serializeForCeramic() {
+
+        return serializeModel(this, { exclude: ['_model', 'id', 'items'] });
+
+    } //serializeForCeramic
 
 } //Scene
 

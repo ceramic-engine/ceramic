@@ -163,18 +163,27 @@ class Project extends Entity {
                 }
 
             case 'scene':
-                var scene:Scene = scenes.get(value.name);
+                var scene:Scene = scenes.get('scene');
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
                         scene.color = 0x2f2f2f;
                         scene.anchor(0.5, 0.5);
                         scene.pos(screen.width * 0.5, screen.height * 0.5);
-                        scenes.set(value.name, scene);
+                        scenes.set('scene', scene);
                     }
-                    scene.sceneData = value;
+                    scene.putData(value);
                     var scale = Math.min(screen.width / (scene.width / scene.scaleX), screen.height / (scene.height / scene.scaleY));
                     scene.scale(scale, scale);
+                }
+
+            case 'scene-item':
+                var scene:Scene = scenes.get('scene');
+                if (action == 'put') {
+                    scene.putItem(value);
+                }
+                else if (action == 'delete') {
+                    scene.removeItem(value.name);
                 }
 
             default:

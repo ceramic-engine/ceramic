@@ -19,7 +19,11 @@
                         "--hxml-output",
                         "completion.hxml"
                     ],
-                    "problemMatcher": "$haxe"
+                    "problemMatcher": "$haxe",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
                 }
             ],
             "onSelect": {
@@ -52,7 +56,11 @@
                         "completion.hxml",
                         "--debug"
                     ],
-                    "problemMatcher": "$haxe"
+                    "problemMatcher": "$haxe",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
                 }
             ],
             "onSelect": {
@@ -85,7 +93,11 @@
                         "--hxml-output",
                         "completion.hxml"
                     ],
-                    "problemMatcher": "$haxe"
+                    "problemMatcher": "$haxe",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
                 }
             ],
             "onSelect": {
@@ -118,7 +130,11 @@
                         "completion.hxml",
                         "--debug"
                     ],
-                    "problemMatcher": "$haxe"
+                    "problemMatcher": "$haxe",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
                 }
             ],
             "onSelect": {

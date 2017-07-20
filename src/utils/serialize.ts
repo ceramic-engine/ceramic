@@ -17,6 +17,8 @@ export interface SerializeOptions {
 
     entries?:{ [key: string]: Entry };
 
+    exclude?:Array<string>;
+
 }
 
 export interface DeserializeOptions {
@@ -26,6 +28,14 @@ export interface DeserializeOptions {
     entries?:{ [key: string]: Entry };
 
 }
+
+export const modelTypes:Map<string, any> = new Map();
+
+export function registerModel(modelType:any) {
+
+    modelTypes.set(modelType.name, modelType);
+
+} //registerModel
 
 /** An utility to serialize a value */
 export function serializeValue(value:any, options?:SerializeOptions):any {
@@ -99,14 +109,27 @@ export function serializeValue(value:any, options?:SerializeOptions):any {
 export function serializeModel<T extends Model>(instance:T, options?:SerializeOptions):any {
 
     let serialized:any = {};
+    let exclude:Map<string, boolean> = null;
+    if (options != null && options.exclude != null) {
+        exclude = new Map();
+        for (let excludeItem of options.exclude) {
+            exclude.set(excludeItem, true);
+        }
+    }
 
     for (let propertyName in instance) { // TODO use decorator info
-        if (instance.hasOwnProperty(propertyName)) {
+        if (instance.hasOwnProperty(propertyName) && (exclude == null || !exclude.has(propertyName))) {
 
             if (Reflect.hasMetadata('serialize:type', instance.constructor.prototype, propertyName)) {
                 serialized[propertyName] = serializeValue(instance[propertyName], options);
             }
         }
+    }
+
+    if ((exclude == null || !exclude.has('_model'))
+        && modelTypes.has(instance.constructor.name)
+        && modelTypes.get(instance.constructor.name) === instance.constructor) {
+        serialized._model = instance.constructor.name;
     }
 
     return serialized;
@@ -153,6 +176,7 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
         return result;
     }
     else if (type === Model || type.prototype instanceof Model) {
+
         if (options != null && options.recursive) {
             let id:string;
             let serialized:any = null;
@@ -179,10 +203,19 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
                     }
                 }
                 if (serialized != null) {
+
+                    // Override type, if provided by serialized object
+                    if (typeof(serialized._model) === 'string' && modelTypes.has(serialized._model)) {
+                        type = modelTypes.get(serialized._model);
+                    }
+
                     let instance = new type(id);
                     deserializeModelInto(serialized, instance, options);
                     if (options.entries != null) {
-                        options.entries[id] = instance;
+                        options.entries[id] = {
+                            instance: instance,
+                            serialized: serialized
+                        };
                     }
                     return instance;
                 }
@@ -229,7 +262,6 @@ export function deserializeModel<T extends Model>(
 } //deserializeModel
 
 export function deserializeModelInto<T extends Model>(serialized:any, instance:T, options?:DeserializeOptions):void {
-    console.log("DESERIALIZE MODEL");
 
     const recursive = (options != null && options.recursive);
 
@@ -240,23 +272,19 @@ export function deserializeModelInto<T extends Model>(serialized:any, instance:T
             const type = Reflect.getMetadata('serialize:type', instance.constructor.prototype, propertyName);
             if (type != null) {
                 if (!recursive && (type === Model || type.prototype instanceof Model)) {
-                    console.log("DESERIALIZE(A) " + propertyName);
                     // When deserialize is not recursive,
                     // still try to keep existing sub-models referenced
                     let existing:Model = instance[propertyName];
                     if (existing != null) {
-                        console.log("HAS PROPERTY " + propertyName);
                         let value = serialized[propertyName];
                         let id:string = (typeof(value) === 'object' && value.id != null) ? value.id : value;
                         if (id !== existing.id) {
                             instance[propertyName] = undefined;
                         }
                     } else {
-                        console.log("HAS NOT PROPERTY " + propertyName);
                         instance[propertyName] = null;
                     }
                 } else {
-                    console.log("DESERIALIZE(B) " + propertyName);
                     instance[propertyName] = deserializeValue(serialized[propertyName], type, options);
                 }
             }

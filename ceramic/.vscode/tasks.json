@@ -16,7 +16,11 @@
                 "--hxml-output",
                 "completion.hxml"
             ],
-            "problemMatcher": "$haxe"
+            "problemMatcher": "$haxe",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ],
     "version": "2.0.0",
