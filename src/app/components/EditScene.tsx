@@ -111,6 +111,14 @@ import { context } from 'app/context';
                                                         </div>
                                                     )}
                                                 </Alt>
+                                                <Form>
+                                                    <Field>
+                                                        <Button
+                                                            value="Change directory"
+                                                            onClick={() => { project.chooseAssetsPath(); }}
+                                                        />
+                                                    </Field>
+                                                </Form>
                                             </div>
                                         :
                                         <Form>

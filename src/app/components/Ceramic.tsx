@@ -208,6 +208,8 @@ export interface Message {
                                 value: item.serializeForCeramic()
                             });
                         }));
+
+                        console.log(itemsInCeramic);
                     }
                 }
 
@@ -218,6 +220,7 @@ export interface Message {
                         itemsInCeramic.get(item)();
                         // Remove item
                         itemsInCeramic.delete(item);
+                        console.log('REMOVE ITEM WITH NAME ' + item.name);
                         this.send({
                             type: 'scene-item/delete',
                             value: {

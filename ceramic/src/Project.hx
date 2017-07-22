@@ -4,8 +4,12 @@ import ceramic.Entity;
 import ceramic.Settings;
 import ceramic.Scene;
 import ceramic.Timer;
+import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Shortcuts.*;
+
+import editor.Message;
+import editor.Editable;
 
 import js.Browser.*;
 import haxe.Json;
@@ -58,6 +62,11 @@ class Project extends Entity {
 
             // Fit scenes
             fitScenes();
+
+            // Render
+            render();
+        });
+        screen.onDown(this, function(info) {
 
             // Render
             render();
@@ -180,7 +189,12 @@ class Project extends Entity {
             case 'scene-item':
                 var scene:Scene = scenes.get('scene');
                 if (action == 'put') {
-                    scene.putItem(value);
+                    var entity = scene.putItem(value);
+                    if (Std.is(entity, Visual)) {
+                        if (!entity.hasComponent('editable')) {
+                            entity.component('editable', new Editable(scene));
+                        }
+                    }
                 }
                 else if (action == 'delete') {
                     scene.removeItem(value.name);

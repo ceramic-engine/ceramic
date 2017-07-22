@@ -17,6 +17,9 @@ class VisualItem extends SceneItem {
     /** Item y */
     @observe @serialize y:number = 0;
 
+    /** Item depth */
+    @observe @serialize depth:number = 0;
+
     /** Item anchorX */
     @observe @serialize anchorX:number = 0.5;
 

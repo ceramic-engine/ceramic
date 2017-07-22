@@ -1,4 +1,4 @@
-package;
+package editor;
 
 typedef Message = {
 
