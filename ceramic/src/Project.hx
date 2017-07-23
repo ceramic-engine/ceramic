@@ -74,7 +74,11 @@ class Project extends Entity {
         updateCanvas();
 
         // Receive messages
-        window.addEventListener('message', receiveRawMessage);
+        window.addEventListener('message', function(event:{data:String, origin:String, source:js.html.Window}) {
+            app.onceUpdate(function(_) {
+                receiveRawMessage(event);
+            });
+        });
 
         // Render once
         render();
