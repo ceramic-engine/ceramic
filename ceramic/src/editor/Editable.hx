@@ -7,7 +7,7 @@ import ceramic.Shortcuts.*;
 
 class Editable extends Component {
 
-    @lazy static var highlight:Highlight = new Highlight();
+    static var highlight:Highlight;
 
     var entity:Visual;
 
@@ -26,17 +26,22 @@ class Editable extends Component {
 
         entity.onDown(this, function(info) {
 
-            trace('ENTITY ON DOWN');
-
             active = true;
             
-            entity.add(highlight);
+            if (highlight == null) {
+                highlight = new Highlight();
+                highlight.onceDestroy(function() {
+                    highlight = null;
+                });
+            }
+
             highlight.anchor(0, 0);
             highlight.pos(0, 0);
             highlight.size(entity.width / entity.scaleX, entity.height / entity.scaleY);
             highlight.depth = 99999; // We want it above everything
             highlight.cornerSize = 7.0 / scene.scaleX;
             highlight.borderSize = 1.0 / scene.scaleX;
+            entity.add(highlight);
 
             app.onUpdate(this, update);
 

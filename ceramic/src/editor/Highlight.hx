@@ -3,6 +3,7 @@ package editor;
 import ceramic.Visual;
 import ceramic.Quad;
 import ceramic.Color;
+import ceramic.Shortcuts.*;
 
 class Highlight extends Visual {
 
@@ -115,13 +116,13 @@ class Highlight extends Visual {
         cornerTopLeft.anchor(0.5, 0.5);
         cornerTopLeft.pos(0, 0);
 
-        cornerBottomLeft.size(cornerSize, cornerSize);
-        cornerBottomLeft.anchor(0.5, 0.5);
-        cornerBottomLeft.pos(width / scaleX, 0);
-
         cornerTopRight.size(cornerSize, cornerSize);
         cornerTopRight.anchor(0.5, 0.5);
-        cornerTopRight.pos(0, height / scaleY);
+        cornerTopRight.pos(width / scaleX, 0);
+
+        cornerBottomLeft.size(cornerSize, cornerSize);
+        cornerBottomLeft.anchor(0.5, 0.5);
+        cornerBottomLeft.pos(0, height / scaleY);
 
         cornerBottomRight.size(cornerSize, cornerSize);
         cornerBottomRight.anchor(0.5, 0.5);
