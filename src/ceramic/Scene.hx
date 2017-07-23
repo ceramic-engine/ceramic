@@ -16,20 +16,8 @@ typedef SceneData = {
     /** Scene height */
     public var height:Float;
 
-    /** Scene x */
-    public var x:Float;
-
-    /** Scene y */
-    public var y:Float;
-
-    /** Scene anchorX */
-    public var anchorX:Float;
-
-    /** Scene anchorY */
-    public var anchorY:Float;
-
     /** Scene items (visuals or other entities) */
-    public var items:Array<SceneItem>;
+    @:optional public var items:Array<SceneItem>;
 
 } //SceneData
 
@@ -52,8 +40,6 @@ typedef SceneItem = {
 /** A scene is a group of visuals rendered from data (.scene file) */
 class Scene extends Quad {
 
-    public var sceneData(default,set):SceneData;
-
     public var entities(default,null):Array<Entity>;
 
 /// Lifecycle
@@ -66,23 +52,25 @@ class Scene extends Quad {
 
     } //new
 
-    override function clear():Void {
+/// Overrides
 
-        super.clear();
+    override function set_width(width:Float):Float {
+        if (realWidth == width) return width;
+        realWidth = width;
+        matrixDirty = true;
+        return width;
+    }
 
-        for (entity in entities) {
-            entity.destroy();
-        }
-        entities = [];
-
-    } //clear
+    override function set_height(height:Float):Float {
+        if (realHeight == height) return height;
+        realHeight = height;
+        matrixDirty = true;
+        return width;
+    }
 
 /// Data
 
-    function set_sceneData(sceneData:SceneData):SceneData {
-
-        clear();
-        this.sceneData = sceneData;
+    public function putData(sceneData:SceneData):SceneData {
 
         if (sceneData != null) {
 
@@ -90,16 +78,24 @@ class Scene extends Quad {
             data = sceneData.data;
             width = sceneData.width;
             height = sceneData.height;
-            x = sceneData.x;
-            y = sceneData.y;
-            anchorX = sceneData.anchorX;
-            anchorY = sceneData.anchorY;
 
+            var usedNames = new Map<String,Bool>();
             if (sceneData.items != null) {
+                // Add/Update items
                 for (item in sceneData.items) {
+                    putItem(item);
+                    usedNames.set(item.name, true);
+                }
 
-                    addItem(item);
-
+                // Remove unused items
+                var toRemove = [];
+                for (entity in entities) {
+                    if (!usedNames.exists(entity.name)) {
+                        toRemove.push(entity.name);
+                    }
+                }
+                for (name in toRemove) {
+                    removeItem(name);
                 }
             }
 
@@ -107,17 +103,32 @@ class Scene extends Quad {
 
         return sceneData;
 
-    } //set_sceneData
+    } //putData
 
 /// Public API
 
-    public function addItem(item:SceneItem):Void {
+    public function putItem(item:SceneItem):Entity {
 
         trace('ADD ITEM');
-        trace(item);
+        var existing = getItem(item.name);
+        var existingWasVisual = false;
+        
+        // Remove previous object if entity class is different
+        if (existing != null) {
+            existingWasVisual = Std.is(existing, Visual);
+            if (item.entity != existing.className()) {
+                removeItem(item.name);
+                existing = null;
+                trace('REMOVE : not same class');
+            } else {
+                trace('ARE EQUAL: ' + item.entity);
+            }
+        } else {
+            trace('(new item)');
+        }
 
         var entityClass = Type.resolveClass(item.entity);
-        var instance:Entity = cast Type.createInstance(entityClass, []);
+        var instance:Entity = existing != null ? existing : cast Type.createInstance(entityClass, []);
         instance.name = item.name;
 
         // Copy item data
@@ -142,13 +153,31 @@ class Scene extends Quad {
             }
         }
 
-        // Add instance
-        entities.push(instance);
-        if (Std.is(instance, Visual)) {
+        // Add instance (if new)
+        if (existing == null) {
+            entities.push(instance);
+        }
+        // Add it to display tree if it is a visual
+        if (Std.is(instance, Visual) && !existingWasVisual) {
             add(cast instance);
         }
 
-    } //addItem
+        return instance;
+
+    } //putItem
+
+    public function getItem(itemName:String):Entity {
+
+        for (entity in entities) {
+            if (entity.name == itemName) {
+                
+                return entity;
+            }
+        }
+
+        return null;
+
+    } //getItem
 
     public function removeItem(itemName:String):Void {
 
@@ -156,10 +185,7 @@ class Scene extends Quad {
             if (entity.name == itemName) {
                 
                 entities.remove(entity);
-
-                if (Std.is(entity, Visual)) {
-                    remove(cast entity);
-                }
+                entity.destroy();
 
                 break;
             }
