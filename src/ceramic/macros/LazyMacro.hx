@@ -22,6 +22,9 @@ class LazyMacro {
                         var fieldName = field.name;
                         var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
                         var lazyFieldName = 'lazy' + capitalName;
+                        var isStatic = field.access.indexOf(AStatic) != -1;
+                        var lazyFieldNameExpr = { expr: EConst(CIdent(lazyFieldName)), pos: field.pos };
+                        var fieldNameExpr = { expr: EConst(CIdent(fieldName)), pos: field.pos };
 
                         if (expr != null) {
                             // Compute type from expr
@@ -77,14 +80,14 @@ class LazyMacro {
                                 args: [],
                                 ret: type,
                                 expr: macro {
-                                    if (this.$lazyFieldName) {
-                                        this.$lazyFieldName = false;
-                                        this.$fieldName = $expr;
+                                    if ($e{lazyFieldNameExpr}) {
+                                        $e{lazyFieldNameExpr} = false;
+                                        $e{fieldNameExpr} = $expr;
                                     }
-                                    return this.$fieldName;
+                                    return $e{fieldNameExpr};
                                 }
                             }),
-                            access: [APrivate],
+                            access: isStatic ? [APrivate, AStatic] : [APrivate],
                             doc: '',
                             meta: []
                         }
@@ -95,14 +98,14 @@ class LazyMacro {
                             name: 'set_' + field.name,
                             kind: FFun({
                                 args: [
-                                    {name: field.name, type: type}
+                                    {name: field.name + '_', type: type}
                                 ],
                                 ret: type,
                                 expr: macro {
-                                    return this.$fieldName = $i{fieldName};
+                                    return $e{fieldNameExpr} = $i{fieldName + '_'};
                                 }
                             }),
-                            access: [APrivate, AInline],
+                            access: isStatic ? [APrivate, AInline, AStatic] : [APrivate, AInline],
                             doc: '',
                             meta: []
                         }

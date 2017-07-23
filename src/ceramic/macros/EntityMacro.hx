@@ -99,14 +99,10 @@ class EntityMacro {
                                         @:privateAccess this.$fieldName.destroy();
                                     }
                                     this.$fieldName = $i{fieldName};
-                                    this.$fieldName.entity = cast this;
-                                    @:privateAccess this.$fieldName.init();
-                                    this.$fieldName.onceDestroy(function() {
-                                        if (this.$fieldName == $i{fieldName}) {
-                                            this.$fieldName = null;
-                                        }
-                                    });
-                                    return this.$fieldName;
+                                    if (this.$fieldName != null) {
+                                        return component($v{fieldName}, this.$fieldName);
+                                    }
+                                    removeComponent($v{fieldName});
                                 }
                             }),
                             access: [APrivate],
@@ -155,12 +151,6 @@ class EntityMacro {
                                         if (destroyed) return;
                                         super.destroy();
                                     });
-
-                                    // Destroy each linked component
-                                    for (compField in componentFields) {
-                                        var fieldName = compField.name;
-                                        exprs.push(macro this.$fieldName = null);
-                                    }
 
                                 default:
                             }

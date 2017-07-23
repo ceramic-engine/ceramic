@@ -3,7 +3,7 @@ package ceramic;
 #if !macro
 @:autoBuild(ceramic.macros.ComponentMacro.build())
 #end
-class Component extends Entity implements Events {
+class Component extends Entity {
 
     public function new() {
 

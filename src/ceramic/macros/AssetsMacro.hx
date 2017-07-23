@@ -104,7 +104,7 @@ class AssetsMacro {
 
         return fields;
 
-    } //build
+    } //buildNames
 
     macro static public function buildLists():Array<Field> {
         
