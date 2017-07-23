@@ -16,6 +16,7 @@ class Draw implements spec.Draw {
 /// Internal
 
     var quadPool:Array<phoenix.geometry.QuadGeometry> = [];
+    var batchedQuadPoolLength:Int = 0;
     var quadPoolLength:Int = 0;
     var prevQuadPoolIndex:Int = 0;
     var quadPoolIndex:Int = 0;
@@ -47,6 +48,7 @@ class Draw implements spec.Draw {
         // Remove unused geometries (if needed)
         //
         var i = quadPoolIndex;
+        batchedQuadPoolLength = quadPoolIndex;
         while (i < quadPoolLength) {
 
             var geom = quadPool.unsafeGet(i);
@@ -132,7 +134,9 @@ class Draw implements spec.Draw {
         // Draw visuals
         for (visual in visuals) {
 
-            if (!visual.computedVisible) continue;
+            if (!visual.computedVisible) {
+                continue;
+            }
 
             switch (visual.backendItem) {
                 
@@ -145,6 +149,10 @@ class Draw implements spec.Draw {
 
                         quadGeom = quadPool.unsafeGet(quadPoolIndex);
 
+                        if (quadPoolIndex >= batchedQuadPoolLength) {
+                            Luxe.renderer.batcher.add(quadGeom, true);
+                        }
+
                     }
                     else {
 
@@ -152,7 +160,7 @@ class Draw implements spec.Draw {
                         quadPool.push(quadGeom);
                         quadPoolLength++;
 
-                        Luxe.renderer.batcher.add(quadGeom);
+                        Luxe.renderer.batcher.add(quadGeom, true);
 
                     }
                     quadPoolIndex++;
