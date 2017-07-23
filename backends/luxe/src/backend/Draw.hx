@@ -22,6 +22,7 @@ class Draw implements spec.Draw {
     var quadPoolIndex:Int = 0;
 
     var meshPool:Array<phoenix.geometry.Geometry> = [];
+    var batchedMeshPoolLength:Int = 0;
     var meshPoolLength:Int = 0;
     var prevMeshPoolIndex:Int = 0;
     var meshPoolIndex:Int = 0;
@@ -61,6 +62,7 @@ class Draw implements spec.Draw {
         // Remove unused meshes (if needed)
         //
         var i = meshPoolIndex;
+        batchedMeshPoolLength = meshPoolIndex;
         while (i < meshPoolLength) {
 
             var geom = meshPool.unsafeGet(i);
@@ -272,6 +274,10 @@ class Draw implements spec.Draw {
                     if (meshPoolIndex < meshPoolLength) {
 
                         meshGeom = meshPool.unsafeGet(meshPoolIndex);
+                        
+                        if (meshPoolIndex >= batchedMeshPoolLength) {
+                            Luxe.renderer.batcher.add(meshGeom, true);
+                        }
 
                     }
                     else {
@@ -282,7 +288,7 @@ class Draw implements spec.Draw {
                         meshPool.push(meshGeom);
                         meshPoolLength++;
 
-                        Luxe.renderer.batcher.add(meshGeom);
+                        Luxe.renderer.batcher.add(meshGeom, true);
 
                     }
                     meshPoolIndex++;
