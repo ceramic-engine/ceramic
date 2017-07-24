@@ -4,6 +4,7 @@ import ceramic.Entity;
 import ceramic.Settings;
 import ceramic.Scene;
 import ceramic.Timer;
+import ceramic.Quad;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Shortcuts.*;
@@ -20,7 +21,15 @@ class Project extends Entity {
 
     var parentOrigin:String = null;
 
-    var scenes:Map<String, Scene> = new Map();
+    var scene:Scene = null;
+
+    var outsideTop:Quad = null;
+
+    var outsideRight:Quad = null;
+
+    var outsideBottom:Quad = null;
+
+    var outsideLeft:Quad = null;
 
     var renders:Int = 0;
 
@@ -34,7 +43,7 @@ class Project extends Entity {
 
     } //new
 
-    function render() {
+    public function render() {
 
         renders++;
         if (!Luxe.core.auto_render) {
@@ -60,8 +69,8 @@ class Project extends Entity {
         window.addEventListener('resize', function() updateCanvas());
         screen.onResize(this, function() {
 
-            // Fit scenes
-            fitScenes();
+            // Fit scene
+            fitScene();
 
             // Render
             render();
@@ -96,17 +105,57 @@ class Project extends Entity {
 
     } //updateCanvas
 
-    function fitScenes() {
+    function fitScene() {
 
-        // Fit scenes
-        for (key in scenes.keys()) {
-            var scene = scenes.get(key);
-            var scale = Math.min(screen.width / (scene.width / scene.scaleX), screen.height / (scene.height / scene.scaleY));
-            scene.scale(scale, scale);
-            scene.pos(screen.width * 0.5, screen.height * 0.5);
+        if (scene == null) return;
+
+        // Fit scene
+        var scale = Math.min(
+            screen.width / (scene.width / scene.scaleX),
+            screen.height / (scene.height / scene.scaleY)
+        );
+        scene.scale(scale, scale);
+        scene.pos(screen.width * 0.5, screen.height * 0.5);
+
+        // Fit outsides
+        //
+        if (outsideTop == null) {
+            outsideTop = new Quad();
+            outsideTop.color = settings.background;
+            outsideTop.alpha = 0.95;
+            outsideTop.depth = 99998;
+
+            outsideRight = new Quad();
+            outsideRight.color = settings.background;
+            outsideRight.alpha = 0.95;
+            outsideRight.depth = 99998;
+
+            outsideBottom = new Quad();
+            outsideBottom.color = settings.background;
+            outsideBottom.alpha = 0.95;
+            outsideBottom.depth = 99998;
+
+            outsideLeft = new Quad();
+            outsideLeft.color = settings.background;
+            outsideLeft.alpha = 0.95;
+            outsideLeft.depth = 99998;
         }
 
-    } //fitScenes
+        var pad = 1;
+
+        outsideTop.pos(-pad, -pad);
+        outsideTop.size(screen.width + pad * 2, (screen.height - scene.height) * 0.5 + pad);
+
+        outsideBottom.pos(-pad, scene.height + (screen.height - scene.height) * 0.5);
+        outsideBottom.size(screen.width + pad * 2, (screen.height - scene.height) * 0.5 + pad);
+
+        outsideLeft.pos(-pad, -pad);
+        outsideLeft.size((screen.width - scene.width) * 0.5 + pad, screen.height + pad * 2);
+
+        outsideRight.pos(scene.width + (screen.width - scene.width) * 0.5, -pad);
+        outsideRight.size((screen.width - scene.width) * 0.5 + pad, screen.height + pad * 2);
+
+    } //fitScene
 
 /// Messages
 
@@ -176,27 +225,23 @@ class Project extends Entity {
                 }
 
             case 'scene':
-                var scene:Scene = scenes.get('scene');
+                if (value.name != 'scene') return;
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
                         scene.color = 0x2f2f2f;
                         scene.anchor(0.5, 0.5);
-                        scene.pos(screen.width * 0.5, screen.height * 0.5);
                         scene.onDown(scene, function(info) {
                             if (Editable.highlight != null) {
                                 Editable.highlight.destroy();
                             }
                         });
-                        scenes.set('scene', scene);
                     }
                     scene.putData(value);
-                    var scale = Math.min(screen.width / (scene.width / scene.scaleX), screen.height / (scene.height / scene.scaleY));
-                    scene.scale(scale, scale);
+                    fitScene();
                 }
 
             case 'scene-item':
-                var scene:Scene = scenes.get('scene');
                 if (action == 'put') {
                     var entity = scene.putItem(value);
                     if (Std.is(entity, Visual)) {
