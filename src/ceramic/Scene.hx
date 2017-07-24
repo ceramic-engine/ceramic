@@ -109,7 +109,6 @@ class Scene extends Quad {
 
     public function putItem(item:SceneItem):Entity {
 
-        trace('PUT ITEM (name=' + item.name + ')');
         var existing = getItem(item.name);
         var existingWasVisual = false;
         

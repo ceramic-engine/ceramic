@@ -13,4 +13,11 @@ class Point {
 
     } //toString
 
+    public function new(x:Float = 0, y:Float = 0) {
+
+        this.x = x;
+        this.y = y;
+
+    } //new
+
 } //Point

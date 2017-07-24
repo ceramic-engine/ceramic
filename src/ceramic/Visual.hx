@@ -170,7 +170,7 @@ class Visual extends Entity {
     }
     function set_width(width:Float):Float {
         if (this.width == width) return width;
-        realWidth = width / scaleX;
+        realWidth = width;
         matrixDirty = true;
         return width;
     }
@@ -182,7 +182,7 @@ class Visual extends Entity {
     }
     function set_height(height:Float):Float {
         if (this.height == height) return height;
-        realHeight = height / scaleY;
+        realHeight = height;
         matrixDirty = true;
         return height;
     }
