@@ -371,6 +371,8 @@ class Screen extends Entity {
 
     function matchFirstDownListener(x:Float, y:Float):Visual {
 
+        app.computeHierarchy();
+
         var visuals = app.visuals;
         var i = visuals.length - 1;
         while (i >= 0) {
@@ -388,6 +390,8 @@ class Screen extends Entity {
     } //matchFirstDownListener
 
     function matchFirstOverListener(x:Float, y:Float):Visual {
+
+        app.computeHierarchy();
 
         var visuals = app.visuals;
         var i = visuals.length - 1;

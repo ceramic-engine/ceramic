@@ -169,31 +169,8 @@ class App extends Entity {
 
         }
 
-        if (hierarchyDirty) {
-
-            // Compute visuals depth
-            for (visual in visuals) {
-
-                if (visual.parent == null) {
-                    visual.computedDepth = visual.depth;
-
-                    if (visual.children != null) {
-                        visual.computeChildrenDepth();
-                    }
-                }
-            }
-
-            // Sort visuals by (computed) depth
-            haxe.ds.ArraySort.sort(visuals, function(a:Visual, b:Visual):Int {
-
-                if (a.computedDepth < b.computedDepth) return -1;
-                if (a.computedDepth > b.computedDepth) return 1;
-                return 0;
-
-            });
-
-            hierarchyDirty = false;
-        }
+        // Update hierarchy from depth
+        computeHierarchy();
 
         // Dispatch visual transforms changes
         for (visual in visuals) {
@@ -221,5 +198,41 @@ class App extends Entity {
         backend.draw.draw(visuals);
 
     } //update
+
+    inline function computeHierarchy() {
+
+        if (hierarchyDirty) {
+
+            // Compute visuals depth
+            for (visual in visuals) {
+
+                if (visual.parent == null) {
+                    visual.computedDepth = visual.depth;
+
+                    if (visual.children != null) {
+                        visual.computeChildrenDepth();
+                    }
+                }
+            }
+
+            sortVisuals();
+
+            hierarchyDirty = false;
+        }
+
+    } //computeHierarchy
+
+    inline function sortVisuals() {
+
+        // Sort visuals by (computed) depth
+        haxe.ds.ArraySort.sort(visuals, function(a:Visual, b:Visual):Int {
+
+            if (a.computedDepth < b.computedDepth) return -1;
+            if (a.computedDepth > b.computedDepth) return 1;
+            return 0;
+
+        });
+
+    } //sortVisuals
 
 }
