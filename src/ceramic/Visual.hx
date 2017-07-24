@@ -580,7 +580,7 @@ class Visual extends Entity {
 
                 for (child in children) {
 
-                    child.computedDepth = computedDepth + child.computedDepth * multDepth - minDepth;
+                    child.computedDepth = computedDepth + (child.computedDepth - minDepth ) * multDepth;
                     
                     if (child.children != null) {
                         child.computeChildrenDepth((maxDepth - child.depth) * multDepth);
