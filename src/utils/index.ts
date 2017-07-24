@@ -4,6 +4,9 @@ export { default as storage } from './storage';
 export { ceramic } from './ceramic';
 export { history, History, HistoryItem, HistoryListener } from './history';
 
+// Export keypath
+export { default as keypath } from './keypath';
+
 // Export external utilities
 export { default as autobind } from 'autobind-decorator';
 

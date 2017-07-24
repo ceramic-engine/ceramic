@@ -183,6 +183,11 @@ class Project extends Entity {
                         scene.color = 0x2f2f2f;
                         scene.anchor(0.5, 0.5);
                         scene.pos(screen.width * 0.5, screen.height * 0.5);
+                        scene.onDown(scene, function(info) {
+                            if (Editable.highlight != null) {
+                                Editable.highlight.destroy();
+                            }
+                        });
                         scenes.set('scene', scene);
                     }
                     scene.putData(value);
@@ -210,7 +215,7 @@ class Project extends Entity {
 
     } //receiveMessage
 
-    function send(message:Message):Void {
+    public function send(message:Message):Void {
 
         // Send message to parent
         window.parent.postMessage(

@@ -7,11 +7,11 @@ import ceramic.Shortcuts.*;
 
 class Editable extends Component {
 
-    static var highlight:Highlight;
+    public static var highlight:Highlight;
+
+    static var active:Editable = null;
 
     var entity:Visual;
-
-    var active:Bool = false;
 
     var scene:Scene;
 
@@ -26,24 +26,8 @@ class Editable extends Component {
 
         entity.onDown(this, function(info) {
 
-            active = true;
-            
-            if (highlight == null) {
-                highlight = new Highlight();
-                highlight.onceDestroy(function() {
-                    highlight = null;
-                });
-            }
-
-            highlight.anchor(0, 0);
-            highlight.pos(0, 0);
-            highlight.size(entity.width / entity.scaleX, entity.height / entity.scaleY);
-            highlight.depth = 99999; // We want it above everything
-            highlight.cornerSize = 7.0 / scene.scaleX;
-            highlight.borderSize = 1.0 / scene.scaleX;
-            entity.add(highlight);
-
-            app.onUpdate(this, update);
+            // Ensure this item is selected
+            select();
 
         });
 
@@ -51,16 +35,55 @@ class Editable extends Component {
 
     function update(_) {
 
+        if (active != this) return;
+
         highlight.size(entity.width / entity.scaleX, entity.height / entity.scaleY);
         highlight.cornerSize = 7.0 / scene.scaleX;
-        highlight.borderSize = 1.0 / scene.scaleX;
+        highlight.borderSize = 1.5 / scene.scaleX;
 
     } //update
 
-    function destroy() {
+/// Public API
 
-        trace('EDITABLE DESTROYED');
+    public function select() {
 
-    } //destroy
+        if (active == this) return;
+        active = this;
+        
+        if (highlight != null) {
+            highlight.destroy();
+        }
+        highlight = new Highlight();
+        highlight.onceDestroy(function() {
+            if (active == this) {
+                active = null;
+
+                // Set selected item
+                project.send({
+                    type: 'set/ui.selectedItemId',
+                    value: null
+                });
+            }
+            app.offUpdate(update);
+            highlight = null;
+        });
+
+        highlight.anchor(0, 0);
+        highlight.pos(0, 0);
+        highlight.size(entity.width / entity.scaleX, entity.height / entity.scaleY);
+        highlight.depth = 99999; // We want it above everything
+        highlight.cornerSize = 7.0 / scene.scaleX;
+        highlight.borderSize = 1.5 / scene.scaleX;
+        entity.add(highlight);
+
+        app.onUpdate(this, update);
+
+        // Set selected item
+        project.send({
+            type: 'set/ui.selectedItemId',
+            value: entity.name
+        });
+
+    } //select
 
 } //Editable

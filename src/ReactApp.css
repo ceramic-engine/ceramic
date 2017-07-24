@@ -286,3 +286,9 @@ body, html {
 #root .inline {
     display: inline-block;
 }
+
+/* Separator */
+
+#root .separator {
+    border-bottom: 1px solid #444444;
+}

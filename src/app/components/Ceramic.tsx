@@ -20,7 +20,9 @@ export interface Message {
 
     mounted:boolean = false;
 
-    private responseHandlers:Map<String, (message:Message) => void> = new Map();
+    private responseHandlers:Map<string, (message:Message) => void> = new Map();
+
+    private messageListeners:Map<string, Array<(message:Message) => void>> = new Map();
 
 /// Lifecycle
 
@@ -129,11 +131,30 @@ export interface Message {
             }
             if (!this.ready) return;
 
-            // Handle message
+            // Handle with respond handler (if any)
             let handler = this.responseHandlers.get(message.type);
             if (handler) {
                 this.responseHandlers.delete(message.type);
                 handler(message);
+            }
+
+            // Notify listeners
+            var keys = [message.type];
+            var parts = message.type.split('/');
+            for (let i = parts.length - 1; i >= 0; i--) {
+                parts[i] = '*';
+                if (i < parts.length - 1) {
+                    parts.pop();
+                }
+                keys.push(parts.join('/'));
+            }
+            for (let pattern of keys) {
+                let listeners = this.messageListeners.get(pattern);
+                if (listeners != null) {
+                    for (let listener of listeners) {
+                        listener(message);
+                    }
+                }
             }
  
         } catch (e) {
@@ -237,39 +258,33 @@ export interface Message {
 
     } //handleReady
 
-    sendDummyData() {
+    listen(typePattern:string, listener?:(message:Message) => void) {
 
-        this.send({
-            type: 'scene/put',
-            value: {
-                name: 'scene',
-                data: {},
-                width: 320,
-                height: 568,
-                x: 640 / 2,
-                y: 480 / 2,
-                anchorX: 0.5,
-                anchorY: 0.5,
-                items: [
-                    {
-                        name: 'quad1',
-                        entity: 'ceramic.Quad',
-                        props: {
-                            width: 120,
-                            height: 50,
-                            x: 320 / 2,
-                            y: 568 / 2,
-                            anchorX: 0.5,
-                            anchorY: 0.5,
-                            color: 0x2798EB,
-                            skewX: 25
-                        }
-                    }
-                ]
+        let listeners:Array<(message:Message) => void> = this.messageListeners.get(typePattern);
+        if (listeners == null) {
+            listeners = [];
+            this.messageListeners.set(typePattern, listeners);
+        }
+
+        listeners.push(listener);
+
+    } //listen
+
+    removeListener(typePattern:string, listener?:(message:Message) => void) {
+
+        let listeners:Array<(message:Message) => void> = this.messageListeners.get(typePattern);
+        if (listeners != null) {
+            let index = listeners.indexOf(listener);
+            if (index !== -1) {
+                if (listeners.length === 1) {
+                    this.messageListeners.delete(typePattern);
+                } else {
+                    listeners.splice(index, 1);
+                }
             }
-        });
+        }
 
-    } //sendDummyData
+    } //removeListener
     
 }
 

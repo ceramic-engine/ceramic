@@ -129,19 +129,19 @@ class Highlight extends Visual {
         cornerBottomRight.pos(width / scaleX, height / scaleY);
 
         borderTop.size(width / scaleX, borderSize);
-        borderTop.anchor(0.5, 0.5);
+        borderTop.anchor(0.5, 1);
         borderTop.pos(width * 0.5 / scaleX, 0);
 
         borderBottom.size(width / scaleX, borderSize);
-        borderBottom.anchor(0.5, 0.5);
+        borderBottom.anchor(0.5, 0);
         borderBottom.pos(width * 0.5 / scaleX, height / scaleY);
 
         borderLeft.size(borderSize, height / scaleY);
-        borderLeft.anchor(0.5, 0.5);
+        borderLeft.anchor(1, 0.5);
         borderLeft.pos(0, height * 0.5 / scaleY);
 
         borderRight.size(borderSize, height / scaleY);
-        borderRight.anchor(0.5, 0.5);
+        borderRight.anchor(0, 0.5);
         borderRight.pos(width / scaleX, height * 0.5 / scaleY);
 
     } //updateCornersPosition

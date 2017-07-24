@@ -158,7 +158,10 @@ class Project extends Model {
 
     @action chooseAssetsPath() {
 
-        this.assetsPath = files.chooseDirectory();
+        let path = files.chooseDirectory();
+        if (path != null) {
+            this.assetsPath = path;
+        }
 
     } //chooseAssetsDirectory
 

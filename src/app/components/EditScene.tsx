@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'utils';
 import { Center, Tabs, Form, Panel, Title, NumberInput, Field, Button, Alt } from 'components';
-import { Ceramic, AssetInfo } from 'app/components';
+import { Ceramic, AssetInfo, VisualsPanel, ScenePanel, AssetsPanel } from 'app/components';
 import { project } from 'app/model';
 import { context } from 'app/context';
 
@@ -49,91 +49,9 @@ import { context } from 'app/context';
                 >
                     <div className="rightside">
                         <Tabs tabs={this.panelTabs} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
-                            <Panel>
-                                <Form>
-                                    <Field label="width">
-                                        <NumberInput value={project.scene.width} onChange={(val) => { project.scene.width = val; }} />
-                                    </Field>
-                                    <Field label="height">
-                                        <NumberInput value={project.scene.height} onChange={(val) => { project.scene.height = val; }} />
-                                    </Field>
-                                </Form>
-                            </Panel>
-                            <Panel>
-                                <Form>
-                                    <Field>
-                                        <Button
-                                            value="Add visual"
-                                            onClick={() => { project.ui.addingVisual = true; }}
-                                        />
-                                    </Field>
-                                </Form>
-                            </Panel>
-                            <Panel>
-                                <div style={{ maxHeight: this.props.height - 28, overflowY: 'auto' }}>
-                                {(
-                                    context.ceramicReady ?
-                                        project.allAssets != null ?
-                                            <div>
-                                                <Title>Images</Title>
-                                                <Alt>
-                                                    {project.imageAssets.map((val, i) =>
-                                                        <div key={i} className="entry" onMouseOver={() => { project.ui.expandedAsset = val; }} onMouseOut={() => { project.ui.expandedAsset = null; }}>
-                                                            <div className="name">{val.name}</div>
-                                                            <div className="info">{val.paths.join(', ')}</div>
-                                                        </div>
-                                                    )}
-                                                </Alt>
-                                                <Title>Texts</Title>
-                                                <Alt>
-                                                    {project.textAssets.map((val, i) =>
-                                                        <div key={i} className="entry">
-                                                            <div className="name">{val.name}</div>
-                                                            <div className="info">{val.paths.join(', ')}</div>
-                                                        </div>
-                                                    )}
-                                                </Alt>
-                                                <Title>Sounds</Title>
-                                                <Alt>
-                                                    {project.soundAssets.map((val, i) =>
-                                                        <div key={i} className="entry">
-                                                            <div className="name">{val.name}</div>
-                                                            <div className="info">{val.paths.join(', ')}</div>
-                                                        </div>
-                                                    )}
-                                                </Alt>
-                                                <Title>Fonts</Title>
-                                                <Alt>
-                                                    {project.fontAssets.map((val, i) =>
-                                                        <div key={i} className="entry">
-                                                            <div className="name">{val.name}</div>
-                                                            <div className="info">{val.paths.join(', ')}</div>
-                                                        </div>
-                                                    )}
-                                                </Alt>
-                                                <Form>
-                                                    <Field>
-                                                        <Button
-                                                            value="Change directory"
-                                                            onClick={() => { project.chooseAssetsPath(); }}
-                                                        />
-                                                    </Field>
-                                                </Form>
-                                            </div>
-                                        :
-                                        <Form>
-                                            <Field>
-                                                <Button
-                                                    value="Choose directory"
-                                                    onClick={() => { project.chooseAssetsPath(); }}
-                                                />
-                                            </Field>
-                                        </Form>
-                                    :
-                                        null
-                                )}
-                                </div>
-                            </Panel>
+                            <ScenePanel />
+                            <VisualsPanel />
+                            <AssetsPanel height={this.props.height} />
                         </Tabs>
                     </div>
                 </div>

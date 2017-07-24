@@ -1,48 +1,61 @@
 import * as React from 'react';
 import { observer } from 'utils';
-import { Button, Icon, Form } from 'antd';
-import { Scene } from 'app/model';
+import { Button, Form, Field, Panel, NumberInput, Title, Alt } from 'components';
+import { project, VisualItem } from 'app/model';
 
 @observer class VisualsPanel extends React.Component {
-
-    constructor(public props:{data:Scene}) {
-
-        super();
-
-    } //constructor
 
 /// Lifecycle
 
     render() {
 
-        //const data = this.props.data;
-
-        const formItemLayout:any = {
-            labelCol: {
-                xs: { span: 24 },
-                sm: { span: 6 }
-            },
-            wrapperCol: {
-                xs: { span: 24 },
-                sm: { span: 16 }
-            },
-            style: {
-                marginBottom: '6px'
-            }
-        };
+        let selectedVisual:VisualItem = null;
+        if (project.ui.selectedItem != null && project.ui.selectedItem instanceof VisualItem) {
+            selectedVisual = project.ui.selectedItem;
+        }
 
         return (
-            <Form
-                onSubmit={(e:any) => { e.preventDefault(); }}
-            >
-
-                <Form.Item label="_" className="nolabel" {...formItemLayout}>
-                    <Button type="dashed" onClick={() => {}}>
-                        <Icon type="plus" /> Add visual
-                    </Button>
-                </Form.Item>
-
-            </Form>
+            <Panel>
+                {
+                    selectedVisual != null
+                    ?
+                        <div>
+                            <Title>Selected visual</Title>
+                            <Alt>
+                                <Form>
+                                    <Field label="width">
+                                        <NumberInput value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
+                                    </Field>
+                                    <Field label="height">
+                                        <NumberInput value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
+                                    </Field>
+                                    <Field label="x">
+                                        <NumberInput value={selectedVisual.x} onChange={(val) => { selectedVisual.x = val; }} />
+                                    </Field>
+                                    <Field label="y">
+                                        <NumberInput value={selectedVisual.y} onChange={(val) => { selectedVisual.y = val; }} />
+                                    </Field>
+                                    <Field label="anchorX">
+                                        <NumberInput value={selectedVisual.anchorX} onChange={(val) => { selectedVisual.anchorX = val; }} />
+                                    </Field>
+                                    <Field label="anchorY">
+                                        <NumberInput value={selectedVisual.anchorY} onChange={(val) => { selectedVisual.anchorY = val; }} />
+                                    </Field>
+                                </Form>
+                            </Alt>
+                        </div>
+                    :
+                        null
+                }
+                <Form>
+                    <Field>
+                        <Button
+                            value="Add visual"
+                            onClick={() => { project.ui.addingVisual = true; }}
+                        />
+                    </Field>
+                </Form>
+            </Panel>
         );
 
     } //render
