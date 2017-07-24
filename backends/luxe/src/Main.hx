@@ -11,10 +11,17 @@ class Main extends luxe.Game {
     static var touches:Map<Int,Int> = new Map();
     static var touchIndexes:Map<Int,Int> = new Map();
 
+    static var mouseDownButtons:Map<Int,Bool> = new Map();
+    static var mouseX:Float = 0;
+    static var mouseY:Float = 0;
+
+    static var instance:Main;
+
     override function config(config:luxe.GameConfig) {
 
 #if (!completion && !display)
 
+        instance = this;
         var app = @:privateAccess new ceramic.App();
 
         // Configure luxe
@@ -83,6 +90,14 @@ class Main extends luxe.Game {
 
     override function onmousedown(event:MouseEvent) {
 
+        if (mouseDownButtons.exists(event.button)) {
+            onmouseup(event);
+        }
+
+        mouseX = event.x;
+        mouseY = event.y;
+
+        mouseDownButtons.set(event.button, true);
         ceramic.App.app.backend.screen.emitMouseDown(
             event.button,
             event.x,
@@ -93,6 +108,14 @@ class Main extends luxe.Game {
 
     override function onmouseup(event:MouseEvent) {
 
+        if (!mouseDownButtons.exists(event.button)) {
+            return;
+        }
+
+        mouseX = event.x;
+        mouseY = event.y;
+
+        mouseDownButtons.remove(event.button);
         ceramic.App.app.backend.screen.emitMouseUp(
             event.button,
             event.x,
@@ -111,6 +134,9 @@ class Main extends luxe.Game {
     } //onmousewheel
 
     override function onmousemove(event:MouseEvent) {
+
+        mouseX = event.x;
+        mouseY = event.y;
 
         ceramic.App.app.backend.screen.emitMouseMove(
             event.x,
