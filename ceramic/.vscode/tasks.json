@@ -1,6 +1,6 @@
 {
-    "displayName": "▶︎ Build Web",
-    "description": "ceramic luxe build web --setup --assets",
+    "displayName": "▶︎ Build Web (debug)",
+    "description": "ceramic luxe build web --setup --assets --debug",
     "tasks": [
         {
             "taskName": "build",
@@ -14,7 +14,8 @@
                 "--assets",
                 "--vscode-editor",
                 "--hxml-output",
-                "completion.hxml"
+                "completion.hxml",
+                "--debug"
             ],
             "problemMatcher": "$haxe",
             "group": {
@@ -24,5 +25,5 @@
         }
     ],
     "version": "2.0.0",
-    "chooserIndex": 2
+    "chooserIndex": 3
 }

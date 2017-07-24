@@ -250,6 +250,12 @@ class Project extends Entity {
                         }
                     }
                 }
+                else if (action == 'select') {
+                    var item = scene.getItem(value.name);
+                    if (item != null && item.hasComponent('editable')) {
+                        cast(item.component('editable'), Editable).select();
+                    }
+                }
                 else if (action == 'delete') {
                     scene.removeItem(value.name);
                 }

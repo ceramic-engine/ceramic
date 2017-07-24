@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observer, autobind } from 'utils';
+import { observer, autobind, ceramic } from 'utils';
 import { Button, Inline } from 'components';
 import Overlay from './Overlay';
 import Dialog from './Dialog';
@@ -38,6 +38,14 @@ import { project, VisualItem } from 'app/model';
             project.scene.items.shift();
         }
         project.scene.items.push(quad);
+
+        // Select visual
+        ceramic.send({
+            type: 'scene-item/select',
+            value: {
+                name: quad.name
+            }
+        });
 
         project.ui.addingVisual = false;
 

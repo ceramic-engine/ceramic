@@ -29,6 +29,12 @@ import { project, VisualItem } from 'app/model';
                                     <Field label="height">
                                         <NumberInput value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
                                     </Field>
+                                    <Field label="scaleX">
+                                        <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />
+                                    </Field>
+                                    <Field label="scaleY">
+                                        <NumberInput value={selectedVisual.scaleY} onChange={(val) => { selectedVisual.scaleY = val; }} />
+                                    </Field>
                                     <Field label="x">
                                         <NumberInput value={selectedVisual.x} onChange={(val) => { selectedVisual.x = val; }} />
                                     </Field>
@@ -40,6 +46,15 @@ import { project, VisualItem } from 'app/model';
                                     </Field>
                                     <Field label="anchorY">
                                         <NumberInput value={selectedVisual.anchorY} onChange={(val) => { selectedVisual.anchorY = val; }} />
+                                    </Field>
+                                    <Field label="rotation">
+                                        <NumberInput value={selectedVisual.rotation} onChange={(val) => { selectedVisual.rotation = val; }} />
+                                    </Field>
+                                    <Field label="skewX">
+                                        <NumberInput value={selectedVisual.skewX} onChange={(val) => { selectedVisual.skewX = val; }} />
+                                    </Field>
+                                    <Field label="skewY">
+                                        <NumberInput value={selectedVisual.skewY} onChange={(val) => { selectedVisual.skewY = val; }} />
                                     </Field>
                                 </Form>
                             </Alt>

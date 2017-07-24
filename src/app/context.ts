@@ -1,4 +1,4 @@
-import { observe } from 'utils';
+import { observe, ceramic } from 'utils';
 import * as electron from 'electron';
 
 /** Track app info such as fullscreen, width, height.. */

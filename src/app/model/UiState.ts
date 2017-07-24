@@ -11,7 +11,7 @@ class UiState extends Model {
 
     @observe addingVisual:boolean;
 
-    @observe selectedItemId:string;
+    @observe @serialize selectedItemId:string;
 
 /// Computed
 

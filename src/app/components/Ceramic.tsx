@@ -256,6 +256,21 @@ export interface Message {
 
         });
 
+        // Selected item
+        autorun(() => {
+
+            if (project.ui.selectedItemId != null) {
+                // Select item
+                this.send({
+                    type: 'scene-item/select',
+                    value: {
+                        name: project.ui.selectedItemId
+                    }
+                });
+            }
+
+        });
+
     } //handleReady
 
     listen(typePattern:string, listener?:(message:Message) => void) {
