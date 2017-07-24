@@ -1,6 +1,7 @@
 package ceramic;
 
 import backend.Draw.VisualItem;
+import ceramic.Point;
 import ceramic.Shortcuts.*;
 
 @:allow(ceramic.App)
@@ -421,7 +422,7 @@ class Visual extends Entity {
 
 /// Hit test
 
-    /** Returns true if (testX,testY) hits/intersects this quad visible bounds */
+    /** Returns true if (testX,testY) screen coordinates hit/intersect this visual visible bounds */
     public function hits(x:Float, y:Float):Bool {
 
         if (matrixDirty) {
@@ -444,6 +445,62 @@ class Visual extends Entity {
             && testY < height / scaleY;
 
     } //hits
+
+/// Screen to visual positions and vice versa
+
+    /** Assign X and Y to given point after converting them from screen coordinates to current visual coordinates. */
+    public function screenToVisual(x:Float, y:Float, point:Point):Void {
+
+        if (matrixDirty) {
+            computeMatrix();
+        }
+
+        _matrix.identity();
+        // Apply whole visual transform
+        _matrix.setTo(a, b, c, d, tx, ty);
+        // But remove screen transform from it
+        _matrix.concat(screen.reverseMatrix);
+        _matrix.invert();
+
+        point.x = _matrix.transformX(x, y);
+        point.y = _matrix.transformY(x, y);
+
+    } //screenToVisual
+
+    /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
+    public function visualToScreen(x:Float, y:Float, point:Point):Void {
+
+        if (matrixDirty) {
+            computeMatrix();
+        }
+
+        _matrix.identity();
+        // Apply whole visual transform
+        _matrix.setTo(a, b, c, d, tx, ty);
+        // But remove screen transform from it
+        _matrix.concat(screen.reverseMatrix);
+
+        point.x = _matrix.transformX(x, y);
+        point.y = _matrix.transformY(x, y);
+
+    } //visualToScreen
+
+/// Transform from visual
+
+    /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
+    public function visualToTransform(transform:Transform):Void {
+
+        if (matrixDirty) {
+            computeMatrix();
+        }
+
+        transform.identity();
+        // Apply whole visual transform
+        transform.setTo(a, b, c, d, tx, ty);
+        // But remove screen transform from it
+        transform.concat(screen.reverseMatrix);
+
+    } //visualToTransform
 
 /// Visibility / Alpha
 
