@@ -109,22 +109,17 @@ class Scene extends Quad {
 
     public function putItem(item:SceneItem):Entity {
 
-        trace('ADD ITEM');
+        trace('PUT ITEM (name=' + item.name + ')');
         var existing = getItem(item.name);
         var existingWasVisual = false;
         
         // Remove previous object if entity class is different
         if (existing != null) {
             existingWasVisual = Std.is(existing, Visual);
-            if (item.entity != existing.className()) {
+            if (item.entity != Type.getClassName(Type.getClass(existing))) {
                 removeItem(item.name);
                 existing = null;
-                trace('REMOVE : not same class');
-            } else {
-                trace('ARE EQUAL: ' + item.entity);
             }
-        } else {
-            trace('(new item)');
         }
 
         var entityClass = Type.resolveClass(item.entity);
