@@ -25,7 +25,7 @@ class Tabs extends React.Component {
                         <div className="tab" key={i} onClick={() => { this.handleChange(i); }}>{tab}</div>
                 )}
                 {this.props.children != null ? (this.props.children as any[]).map((child, i) =>
-                    i === this.props.active ?
+                    i === this.props.active || (!this.props.active && i === 0) ?
                         child
                     :
                         null

@@ -126,10 +126,11 @@ export function serializeModel<T extends Model>(instance:T, options?:SerializeOp
         }
     }
 
-    if ((exclude == null || !exclude.has('_model'))
-        && modelTypes.has(instance.constructor.name)
-        && modelTypes.get(instance.constructor.name) === instance.constructor) {
-        serialized._model = instance.constructor.name;
+    if (exclude == null || !exclude.has('_model')) {
+        if (modelTypes.has(instance.constructor.name)
+            && modelTypes.get(instance.constructor.name) === instance.constructor) {
+            serialized._model = instance.constructor.name;
+        }
     }
 
     return serialized;

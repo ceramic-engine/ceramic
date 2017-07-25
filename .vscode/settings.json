@@ -1,3 +1,4 @@
 {
-    "window.title": "${activeEditorShort} — Scene Editor (react)"
+    "window.title": "${activeEditorShort} — Scene Editor (react)",
+    "git.ignoreLimitWarning": true
 }

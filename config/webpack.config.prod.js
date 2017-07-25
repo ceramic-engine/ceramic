@@ -228,6 +228,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appHtml,
+      hash: true,
       minify: {
         removeComments: true,
         collapseWhitespace: true,
@@ -238,7 +239,7 @@ module.exports = {
         keepClosingSlash: true,
         minifyJS: true,
         minifyCSS: true,
-        minifyURLs: true,
+        minifyURLs: true
       },
     }),
     // Makes some environment variables available to the JS code, for example:
@@ -255,6 +256,7 @@ module.exports = {
         // We'll wait with enabling it by default until it is more solid.
         reduce_vars: false,
       },
+      mangle: false,
       output: {
         comments: false,
       },

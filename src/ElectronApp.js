@@ -11,11 +11,22 @@ const fs = require('fs')
 const express = require('express')
 const detect = require('detect-port')
 
+// App name
+app.setName('Ceramic')
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
 function createWindow () {
+
+  if (exports.serverPort == null) {
+    setTimeout(createWindow, 100);
+    return;
+  }
+
+  if (mainWindow != null) return;
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1024,
@@ -24,22 +35,24 @@ function createWindow () {
     minWidth: 800,
     minHeight: 600,
     resizable: true,
-    movable: true
+    movable: true,
+    title: 'Ceramic'
   })
 
   // and load the index.html of the app.
   if (process.env.ELECTRON_DEV) {
     mainWindow.loadURL('http://localhost:3000')
   } else {
-    mainWindow.loadURL(url.format({
+    /*mainWindow.loadURL(url.format({
       pathname: path.normalize(path.join(__dirname, '/../build/index.html')),
       protocol: 'file:',
       slashes: true
-    }))
+    }))*/
+    mainWindow.loadURL('http://localhost:' + exports.serverPort + '/app/index.html')
   }
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -84,6 +97,7 @@ if (process.env.ELECTRON_DEV) {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../public/ceramic'))))
 } else {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../build/ceramic'))))
+  server.use('/app', express.static(path.normalize(path.join(__dirname, '/../build'))))
 }
 
 exports.assetsPath = null;

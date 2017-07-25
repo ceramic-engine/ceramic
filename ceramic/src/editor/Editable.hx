@@ -81,6 +81,10 @@ class Editable extends Component {
             type: 'set/ui.selectedItemId',
             value: entity.name
         });
+        project.send({
+            type: 'set/ui.sceneTab',
+            value: 1 // Visuals tab
+        });
 
     } //select
 

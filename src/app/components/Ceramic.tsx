@@ -259,12 +259,12 @@ export interface Message {
         // Selected item
         autorun(() => {
 
-            if (project.ui.selectedItemId != null) {
+            if (project.ui.selectedItem != null) {
                 // Select item
                 this.send({
                     type: 'scene-item/select',
                     value: {
-                        name: project.ui.selectedItemId
+                        name: project.ui.selectedItem.name
                     }
                 });
             }

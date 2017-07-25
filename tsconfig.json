@@ -28,6 +28,7 @@
     "acceptance-tests",
     "webpack",
     "jest",
+    "dist",
     "out",
     "ceramic",
     "src/setupTests.ts"

@@ -10,5 +10,6 @@
         "**/tmp": true,
         "**/out": true
     },
-    "window.title": "${activeEditorShort} — Scene Editor (ceramic)"
+    "window.title": "${activeEditorShort} — Scene Editor (ceramic)",
+    "git.ignoreLimitWarning": true
 }

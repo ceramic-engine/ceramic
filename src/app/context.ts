@@ -57,7 +57,7 @@ export class Context {
         const checkServerPort = () => {
             this.serverPort = electronApp.serverPort;
             if (this.serverPort == null) {
-                setTimeout(checkServerPort, 500);
+                setTimeout(checkServerPort, 100);
             }
         };
         checkServerPort();
