@@ -7,6 +7,10 @@ var ncp = require('ncp');
 var rimraf = require('rimraf');
 var spawnSync = require('child_process').spawnSync;
 
+// TODO windows
+var vendorDir = path.join(__dirname, 'vendor/mac');
+var haxeBin = path.join(vendorDir, 'haxe/haxe');
+
 // Configure target
 var args = [];
 var customPath = null;
@@ -49,8 +53,8 @@ for (plugin of ceramicPlugins) {
 }
 
 // Build tools
-spawnSync('haxe', ['tools.hxml'].concat(targetToolsArgs).concat(args), { stdio: "inherit", cwd: __dirname });
-spawnSync('haxe', ['tools-luxe.hxml'].concat(targetLuxeToolsArgs).concat(args), { stdio: "inherit", cwd: __dirname });
+spawnSync(haxeBin, ['tools.hxml'].concat(targetToolsArgs).concat(args), { stdio: "inherit", cwd: __dirname });
+spawnSync(haxeBin, ['tools-luxe.hxml'].concat(targetLuxeToolsArgs).concat(args), { stdio: "inherit", cwd: __dirname });
 
 // Override require (but try not to break source maps)
 if (customPath != null) {

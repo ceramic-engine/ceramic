@@ -22,6 +22,9 @@
   "dependencies": {
     "applescript": "^1.0.0",
     "colors": "^1.1.2",
+    "decompress": "^4.2.0",
+    "decompress-targz": "^4.1.0",
+    "download": "^6.2.5",
     "fibers": "^1.0.15",
     "glob": "^7.1.1",
     "handlebars": "^4.0.6",
