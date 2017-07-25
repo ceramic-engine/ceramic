@@ -12,3 +12,5 @@
 /sample/.vscode
 /.vscode/tasks.json
 xcuserdata
+/vendor/mac/node
+/vendor/mac/haxe
