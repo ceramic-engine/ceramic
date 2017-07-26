@@ -6,17 +6,27 @@ var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var decompress = require('decompress');
+var rimraf = require('rimraf');
 
 // TODO windows
 var vendorDir;
+var haxeBin;
+var haxelibBin;
+var nodeBin;
+var gitBin;
 if (process.platform == 'darwin') {
     vendorDir = path.join(__dirname, 'vendor/mac');
+    haxeBin = path.join(vendorDir, 'haxe/haxe');
+    haxelibBin = path.join(vendorDir, 'haxe/haxelib');
+    nodeBin = path.join(vendorDir, 'node/bin/node');
+    gitBin = path.join(vendorDir, 'git/bin/git');
 } else if (process.platform == 'win32') {
     vendorDir = path.join(__dirname, 'vendor/windows');
+    haxeBin = path.join(vendorDir, 'haxe/haxe.exe');
+    haxelibBin = path.join(vendorDir, 'haxe/haxelib.exe');
+    nodeBin = path.join(vendorDir, 'node/bin/node.exe');
+    gitBin = path.join(vendorDir, 'git/bin/git.exe');
 }
-var haxeBin = path.join(vendorDir, 'haxe/haxe');
-var haxelibBin = path.join(vendorDir, 'haxe/haxelib');
-var nodeBin = path.join(vendorDir, 'node/bin/node');
 
 downloadHaxe();
 
@@ -93,6 +103,55 @@ function downloadNode() {
                 fs.unlinkSync(archivePath);
                 fs.renameSync(path.join(vendorDir, nodeArchiveRootDirName), path.join(vendorDir, 'node'));
 
+                downloadGit();
+
+            }, (err) => {
+                throw err;
+            });
+
+        }, error => {
+            throw error;
+        });
+
+    }
+    else {
+        downloadGit();
+    }
+
+} //downloadNode
+
+function downloadGit() {
+
+    // Download git
+    var gitUrl;
+    var gitArchiveRootDirName;
+    if (process.platform == 'darwin') {
+        gitUrl = 'https://github.com/jeremyfa/precompiled-git/releases/download/v2.9.3/git-v2.9.3-mac.zip';
+    } else if (process.platform == 'win32') {
+        gitUrl = 'https://github.com/jeremyfa/precompiled-git/releases/download/v2.9.4/git-v2.9.4-win.zip';
+    }
+    gitArchiveRootDirName = 'git';
+    var gitArchiveName = gitUrl.substr(gitUrl.lastIndexOf('/') + 1);
+    if (!fs.existsSync(gitBin)) {
+
+        console.log('Download ' + gitUrl);
+        download(gitUrl)
+        .then(data => {
+            
+            // Write tar.gz
+            var archivePath = path.join(vendorDir, gitArchiveName);
+            fs.writeFileSync(archivePath, data);
+
+            // Extract archive
+            decompress(archivePath, vendorDir).then(() => {
+
+                fs.unlinkSync(archivePath);
+
+                // Remove mac-specific dir (just in case)
+                if (fs.existsSync(path.join(vendorDir, '__MACOSX'))) {
+                    rimraf.sync(path.join(vendorDir, '__MACOSX'));
+                }
+
                 installDeps();
 
             }, (err) => {
@@ -108,7 +167,7 @@ function downloadNode() {
         installDeps();
     }
 
-} //downloadNode
+} //downloadGit
 
 function installDeps() {
 

@@ -14,5 +14,7 @@
 xcuserdata
 /vendor/mac/node
 /vendor/mac/haxe
+/vendor/mac/git
 /vendor/windows/node
 /vendor/windows/haxe
+/vendor/windows/git

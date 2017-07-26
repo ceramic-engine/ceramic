@@ -9,13 +9,15 @@ var spawnSync = require('child_process').spawnSync;
 
 // TODO windows
 var vendorDir;
+var haxeBin;
 if (process.platform == 'darwin') {
     vendorDir = path.join(__dirname, 'vendor/mac');
+    haxeBin = path.join(vendorDir, 'haxe/haxe');
 }
 else if (process.platform == 'win32') {
     vendorDir = path.join(__dirname, 'vendor/windows');
+    haxeBin = path.join(vendorDir, 'haxe/haxe.exe');
 }
-var haxeBin = path.join(vendorDir, 'haxe/haxe');
 
 // Configure target
 var args = [];
