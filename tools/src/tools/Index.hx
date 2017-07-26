@@ -13,6 +13,14 @@ class Index {
         // Expose run(cwd, args)
         var module:Dynamic = js.Node.module;
         module.exports = run;
+
+#if !use_backend
+        // Expose local haxe to ENV, so that other commands will find it
+        if (Sys.systemName() == 'Mac') {
+            untyped __js__("process.env.PATH = __dirname + '/vendor/mac/haxe' + ':' + process.env.PATH");
+        }
+        // TODO windows
+#end
     
     } //main
 
