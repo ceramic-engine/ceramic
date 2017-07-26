@@ -207,7 +207,7 @@ exports.hook = function(flow, done)
         }
 
         // Generate files with flow
-        command('haxelib', ['run', 'flow', 'files'], { cwd: flowPath });
+        haxelib(['run', 'flow', 'files'], { cwd: flowPath });
 
     } //run
 
@@ -215,7 +215,7 @@ exports.hook = function(flow, done)
         
         // Almost the same thing as backend.runInstall()
 
-        var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        var output = ''+haxelib(['list'], { mute: true }).stdout;
         var libs = new Map<String,Bool>();
         for (line in output.split("\n")) {
             var libName = line.split(':')[0];
@@ -232,16 +232,16 @@ exports.hook = function(flow, done)
         print('Install luxe\u2026');
 
         if (!libs.exists('snowfall')) {
-            if (command('haxelib', ['install', 'snowfall']).status != 0) {
+            if (haxelib(['install', 'snowfall']).status != 0) {
                 fail('Error when trying to install snowfall.');
             }
         }
 
-        command('haxelib', ['run', 'snowfall', 'update', 'luxe']);
+        haxelib(['run', 'snowfall', 'update', 'luxe']);
 
         // Check that luxe is now available
         //
-        output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        output = ''+haxelib(['list'], { mute: true }).stdout;
         libs = new Map<String,Bool>();
         for (line in output.split("\n")) {
             var libName = line.split(':')[0];

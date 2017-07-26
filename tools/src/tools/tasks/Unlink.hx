@@ -2,20 +2,21 @@ package tools.tasks;
 
 import tools.Tools.*;
 import haxe.io.Path;
-import haxe.Json;
 
-class Update extends tools.Task {
+class Unlink extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Update or install " + backend.name + " framework and dependencies.";
+        return "Remove global ceramic command.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        backend.runUpdate(cwd, args);
+        if (Sys.systemName() == 'Mac') {
+            command('rm', ['ceramic'], { cwd: '/usr/local/bin' });
+        }
 
     } //run
 
-} //Update
+} //Unlink

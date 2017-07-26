@@ -79,7 +79,7 @@ class Libs extends tools.Task {
             // Check if library is installed
             var query = libName;
             if (libVersion != null) query += ':' + libVersion;
-            var res = command('haxelib', ['path', query], { mute: true, cwd: cwd });
+            var res = haxelib(['path', query], { mute: true, cwd: cwd });
             var path = (''+res.stdout).trim().split("\n")[0];
 
             // Library exists
@@ -94,12 +94,12 @@ class Libs extends tools.Task {
                 // Library doesn't exist, install it
                 var installArgs = [libName];
                 if (libVersion != null) installArgs.push(libVersion);
-                res = command('haxelib', ['install'].concat(installArgs), { cwd: cwd });
+                res = haxelib(['install'].concat(installArgs), { cwd: cwd });
 
                 // Check again
                 query = libName;
                 if (libVersion != null) query += ':' + libVersion;
-                res = command('haxelib', ['path', query], { mute: true, cwd: cwd });
+                res = haxelib(['path', query], { mute: true, cwd: cwd });
                 path = (''+res.stdout).trim().split("\n")[0];
                 if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
                     // Now installed \o/

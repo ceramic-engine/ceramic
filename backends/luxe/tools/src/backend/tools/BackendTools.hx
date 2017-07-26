@@ -101,7 +101,7 @@ class BackendTools implements tools.spec.BackendTools {
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
 
-        var res = command('haxelib', cmdArgs, { mute: true, cwd: flowProjectPath });
+        var res = haxelib(cmdArgs, { mute: true, cwd: flowProjectPath });
         
         if (res.status != 0) {
             fail('Error when getting project hxml.');
@@ -155,7 +155,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         // Update/install luxe (and dependencies)
 
-        var output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        var output = ''+haxelib(['list'], { mute: true }).stdout;
         var libs = new Map<String,Bool>();
         for (line in output.split("\n")) {
             var libName = line.split(':')[0];
@@ -163,16 +163,16 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         if (!libs.exists('snowfall')) {
-            if (command('haxelib', ['install', 'snowfall']).status != 0) {
+            if (haxelib(['install', 'snowfall']).status != 0) {
                 fail('Error when trying to install snowfall.');
             }
         }
 
-        command('haxelib', ['run', 'snowfall', 'update', 'luxe']);
+        haxelib(['run', 'snowfall', 'update', 'luxe']);
 
         // Check that luxe is available
         //
-        output = ''+command('haxelib', ['list'], { mute: true }).stdout;
+        output = ''+haxelib(['list'], { mute: true }).stdout;
         libs = new Map<String,Bool>();
         for (line in output.split("\n")) {
             var libName = line.split(':')[0];

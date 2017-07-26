@@ -123,12 +123,11 @@ Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should w
 
 Thanks to the [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extension, you can choose which target to run by selecting it in the status bar.
 
-## Update ceramic and its backends
+## Update ceramic backends
 
 Open a terminal and run:
 
 ```
-ceramic update
 ceramic luxe update
 ```
 

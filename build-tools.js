@@ -8,7 +8,13 @@ var rimraf = require('rimraf');
 var spawnSync = require('child_process').spawnSync;
 
 // TODO windows
-var vendorDir = path.join(__dirname, 'vendor/mac');
+var vendorDir;
+if (process.platform == 'darwin') {
+    vendorDir = path.join(__dirname, 'vendor/mac');
+}
+else if (process.platform == 'win32') {
+    vendorDir = path.join(__dirname, 'vendor/windows');
+}
 var haxeBin = path.join(vendorDir, 'haxe/haxe');
 
 // Configure target

@@ -4,11 +4,16 @@ var spawnSync = require('child_process').spawnSync;
 var download = require('download');
 var fs = require('fs');
 var path = require('path');
+var os = require('os');
 var decompress = require('decompress');
-var decompressTargz = require('decompress-targz');
 
 // TODO windows
-var vendorDir = path.join(__dirname, 'vendor/mac');
+var vendorDir;
+if (process.platform == 'darwin') {
+    vendorDir = path.join(__dirname, 'vendor/mac');
+} else if (process.platform == 'win32') {
+    vendorDir = path.join(__dirname, 'vendor/windows');
+}
 var haxeBin = path.join(vendorDir, 'haxe/haxe');
 var haxelibBin = path.join(vendorDir, 'haxe/haxelib');
 var nodeBin = path.join(vendorDir, 'node/bin/node');
@@ -18,7 +23,12 @@ downloadHaxe();
 function downloadHaxe() {
 
     // Download haxe
-    var haxeUrl = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-osx.tar.gz';
+    var haxeUrl;
+    if (process.platform == 'darwin') {
+        haxeUrl = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-osx.tar.gz';
+    } else if (process.platform == 'win32') {
+        haxeUrl = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-win.zip';
+    }
     var haxeArchiveRootDirName = 'haxe-3.4.2';
     var haxeArchiveName = haxeUrl.substr(haxeUrl.lastIndexOf('/') + 1);
     if (!fs.existsSync(haxeBin)) {
@@ -32,9 +42,7 @@ function downloadHaxe() {
             fs.writeFileSync(archivePath, data);
 
             // Extract archive
-            decompress(archivePath, vendorDir, {
-                plugins: [decompressTargz()]
-            }).then(() => {
+            decompress(archivePath, vendorDir).then(() => {
 
                 fs.unlinkSync(archivePath);
                 fs.renameSync(path.join(vendorDir, haxeArchiveRootDirName), path.join(vendorDir, 'haxe'));
@@ -59,9 +67,15 @@ function downloadHaxe() {
 function downloadNode() {
 
     // Download nodejs
-    // TODO windows
-    var nodeUrl = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-darwin-x64.tar.gz';
-    var nodeArchiveRootDirName = 'node-v6.11.1-darwin-x64';
+    var nodeUrl;
+    var nodeArchiveRootDirName;
+    if (process.platform == 'darwin') {
+        nodeUrl = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-darwin-x64.tar.gz';
+        nodeArchiveRootDirName = 'node-v6.11.1-darwin-x64';
+    } else if (process.platform == 'win32') {
+        nodeUrl = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-win-x64.zip';
+        nodeArchiveRootDirName = 'node-v6.11.1-win-x64';
+    }
     var nodeArchiveName = nodeUrl.substr(nodeUrl.lastIndexOf('/') + 1);
     if (!fs.existsSync(nodeBin)) {
 
@@ -74,9 +88,7 @@ function downloadNode() {
             fs.writeFileSync(archivePath, data);
 
             // Extract archive
-            decompress(archivePath, vendorDir, {
-                plugins: [decompressTargz()]
-            }).then(() => {
+            decompress(archivePath, vendorDir).then(() => {
 
                 fs.unlinkSync(archivePath);
                 fs.renameSync(path.join(vendorDir, nodeArchiveRootDirName), path.join(vendorDir, 'node'));
@@ -99,6 +111,13 @@ function downloadNode() {
 } //downloadNode
 
 function installDeps() {
+
+    // Setup haxelib repository (if needed)
+    var haxelibRepo = (''+spawnSync(haxelibBin, ['config'], { cwd: __dirname }).stdout).trim();
+    if (!fs.existsSync(haxelibRepo)) {
+        haxelibRepo = path.join(os.homedir(), '.ceramic/haxelib');
+        spawnSync(haxelibBin, ['setup', haxelibRepo], { stdio: "inherit", cwd: __dirname });
+    }
 
     // Install dependencies
     spawnSync(haxelibBin, ['install', 'hxcpp', '--always'], { stdio: "inherit", cwd: __dirname });

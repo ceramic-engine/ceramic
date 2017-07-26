@@ -90,6 +90,7 @@ class Tools {
         tasks.set('clean', new tools.tasks.Build('Clean'));
         tasks.set('assets', new tools.tasks.Assets());
         tasks.set('icons', new tools.tasks.Icons());
+        tasks.set('update', new tools.tasks.Update());
 
         backend.init(this);
 
@@ -99,11 +100,13 @@ class Tools {
         tasks.set('init', new tools.tasks.Init());
         tasks.set('vscode', new tools.tasks.Vscode());
         tasks.set('local', new tools.tasks.Local());
+        tasks.set('setup', new tools.tasks.Setup());
+        tasks.set('link', new tools.tasks.Link());
+        tasks.set('unlink', new tools.tasks.Unlink());
 
         #end
 
         tasks.set('info', new tools.tasks.Info());
-        tasks.set('update', new tools.tasks.Update());
         tasks.set('libs', new tools.tasks.Libs());
 
         // Init plugins
@@ -320,6 +323,24 @@ class Tools {
         js.Node.process.exit(1);
 
     } //fail
+
+    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+
+        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxe']), args, options);
+
+    } //haxe
+
+    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+
+        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']), args, options);
+
+    } //haxelib
+
+    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+
+        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'node/bin/node']), args, options);
+
+    } //node
 
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         

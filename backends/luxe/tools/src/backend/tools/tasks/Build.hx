@@ -93,7 +93,11 @@ class Build extends tools.Task {
 
         Sync.run(function(done) {
 
-            var proc = ChildProcess.spawn('haxelib', cmdArgs, { cwd: flowProjectPath });
+            var proc = ChildProcess.spawn(
+                Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
+                cmdArgs,
+                { cwd: flowProjectPath }
+            );
 
             var out = StreamSplitter.splitter("\n");
             proc.stdout.pipe(untyped out);
