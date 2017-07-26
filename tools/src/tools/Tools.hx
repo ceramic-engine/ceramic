@@ -339,12 +339,6 @@ class Tools {
 
     } //haxelib
 
-    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
-
-        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'node/bin/node']), args, options);
-
-    } //node
-
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
         if (options == null) {
