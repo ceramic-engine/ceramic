@@ -191,6 +191,6 @@ function installDeps() {
     spawnSync(haxelibBin, ['install', 'tools.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
     // Build tools
-    spawnSync('build-tools.js', { stdio: "inherit", cwd: __dirname });
+    spawnSync('./build-tools.js', { stdio: "inherit", cwd: __dirname });
 
 } //installDeps
