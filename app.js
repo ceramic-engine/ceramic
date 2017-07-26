@@ -1,8 +1,3 @@
-const electron = require('electron')
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
 const url = require('url')
@@ -11,8 +6,30 @@ const fs = require('fs')
 const express = require('express')
 const detect = require('detect-port')
 
+// Electron
+const electron = require('electron')
+// Module to control application life.
+const app = electron.app
+// Module to create native browser window.
+const BrowserWindow = electron.BrowserWindow
+
 // App name
 app.setName('Ceramic')
+
+// Ceramic CLI
+if (process.argv[1] == 'ceramic') {
+  // Hide dock icon when running ceramic command
+  app.dock.hide();
+
+  const ceramicPath = require.resolve('ceramic-tools')
+  const ceramicDir = path.dirname(ceramicPath)
+  const args = process.argv.slice(2)
+  const ceramic = require('ceramic-tools')
+
+  ceramic(process.cwd(), args, ceramicDir)
+
+  return;
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

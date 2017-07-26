@@ -1,3 +1,0 @@
-#!/bin/bash
-
-${0%/*}/../node_modules/ceramic-tools/vendor/mac/haxe/haxe "$@"

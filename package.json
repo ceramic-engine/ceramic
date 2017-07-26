@@ -25,7 +25,6 @@
       "!tsconfig.json",
       "!tslint.json",
       "build",
-      "tools",
       "app.js"
     ]
   },
@@ -103,7 +102,8 @@
     "clean": "rimraf ./out && rimraf ./build",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "rebuild": "electron-rebuild -f"
+    "rebuild": "electron-rebuild -f",
+    "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install jeremyfa/ceramic"
   },
   "jest": {
     "mapCoverage": true,
