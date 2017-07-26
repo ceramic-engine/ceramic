@@ -15,4 +15,5 @@ done
 SELF_PATH=$(dirname "$SELF_PATH")
 cd $PREV_CWD
 
-$SELF_PATH/vendor/mac/node/bin/node $SELF_PATH/ceramic.js "$@"
+node $SELF_PATH/ceramic.js "$@"
+#$SELF_PATH/vendor/mac/node/bin/node $SELF_PATH/ceramic.js "$@"

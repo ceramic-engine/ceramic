@@ -76,6 +76,10 @@ function downloadHaxe() {
 
 function downloadNode() {
 
+    // Disable it (for now)
+    downloadGit();
+    return;
+
     // Download nodejs
     var nodeUrl;
     var nodeArchiveRootDirName;
@@ -121,6 +125,10 @@ function downloadNode() {
 } //downloadNode
 
 function downloadGit() {
+
+    // Disable it (for now)
+    installDeps();
+    return;
 
     // Download git
     var gitUrl;
