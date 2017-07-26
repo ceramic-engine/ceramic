@@ -1,0 +1,3 @@
+#!/bin/bash
+
+${0%/*}/../node_modules/ceramic-tools/vendor/mac/node/bin/node ${0%/*}/../node_modules/ceramic-tools/ceramic "$@"

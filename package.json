@@ -2,7 +2,7 @@
   "name": "ceramic",
   "version": "0.1.0",
   "private": true,
-  "main": "src/ElectronApp.js",
+  "main": "app.js",
   "homepage": "./",
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "description": "Ceramic Editor",
@@ -24,13 +24,15 @@
       "!scripts",
       "!tsconfig.json",
       "!tslint.json",
-      "src/ElectronApp.js",
-      "build"
+      "build",
+      "tools",
+      "app.js"
     ]
   },
   "dependencies": {
     "antd": "^2.11.2",
     "autobind-decorator": "^2.0.0",
+    "ceramic-tools": "github:jeremyfa/ceramic",
     "detect-port": "^1.2.1",
     "express": "^4.15.3",
     "keypather": "^2.0.1",
@@ -100,7 +102,8 @@
     "start-electron": "concurrently 'npm run react' '$(npm bin)/wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev'",
     "clean": "rimraf ./out && rimraf ./build",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "rebuild": "electron-rebuild -f"
   },
   "jest": {
     "mapCoverage": true,

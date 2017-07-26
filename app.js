@@ -94,10 +94,10 @@ let port = 48903
 const server = express()
 
 if (process.env.ELECTRON_DEV) {
-  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../public/ceramic'))))
+  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/public/ceramic'))))
 } else {
-  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/../build/ceramic'))))
-  server.use('/app', express.static(path.normalize(path.join(__dirname, '/../build'))))
+  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/build/ceramic'))))
+  server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
 }
 
 exports.assetsPath = null;
