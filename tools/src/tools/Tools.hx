@@ -204,6 +204,9 @@ class Tools {
                     // Run task
                     task.run(cwd, args);
 
+                    // Ceramic end
+                    js.Node.process.exit(0);
+
                 }).run();
 
             } else {
