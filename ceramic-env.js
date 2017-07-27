@@ -21,7 +21,7 @@ if (process.platform == 'darwin') {
         spawnSync('ln', ['-s', '/usr/local/lib/neko/libneko.2.dylib', 'libneko.2.dylib'], { cwd: '/usr/local/lib' });
     }
     if (!fs.existsSync('/usr/local/lib/nekoc')) spawnSync('ln', ['-s', '/usr/local/lib/neko/nekoc', 'nekoc'], { cwd: '/usr/local/lib' });
-    if (!fs.existsSync('/usr/local/lib/nekotools')) spawnSync('ln', ['-s', '/usr/local/lib/neko/nekotools', 'nekoc'], { cwd: '/usr/local/lib' });
+    if (!fs.existsSync('/usr/local/lib/nekotools')) spawnSync('ln', ['-s', '/usr/local/lib/neko/nekotools', 'nekotools'], { cwd: '/usr/local/lib' });
     process.env['PATH'] = nekoPath + ':' + process.env['PATH'];
     process.env['DYLD_LIBRARY_PATH'] = process.env['DYLD_LIBRARY_PATH'] != null ?
         nekoPath + ':' + process.env['DYLD_LIBRARY_PATH'] :
