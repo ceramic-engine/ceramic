@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-require('./ceramic-env');
-
 var spawnSync = require('child_process').spawnSync;
 var download = require('download');
 var fs = require('fs');
@@ -124,16 +122,18 @@ function downloadNeko() {
 
 function installDeps() {
 
+    require('./ceramic-env');
+
     // Setup haxelib repository (if needed)
-    var haxelibRepo = (''+spawnSync(haxelibBin, ['config'], { cwd: __dirname }).stdout).trim();
+    var haxelibRepo = (''+spawnSync('haxelib', ['config'], { cwd: __dirname }).stdout).trim();
     if (!fs.existsSync(haxelibRepo)) {
         haxelibRepo = path.join(os.homedir(), '.ceramic/haxelib');
-        spawnSync(haxelibBin, ['setup', haxelibRepo], { stdio: "inherit", cwd: __dirname });
+        spawnSync('haxelib', ['setup', haxelibRepo], { stdio: "inherit", cwd: __dirname });
     }
 
     // Install dependencies
-    spawnSync(haxelibBin, ['install', 'hxcpp', '--always'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelibBin, ['install', 'tools.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync('haxelib', ['install', 'hxcpp', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync('haxelib', ['install', 'tools.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
     // Build tools
     spawnSync('./build-tools.js', { stdio: "inherit", cwd: __dirname });
