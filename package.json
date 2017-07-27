@@ -24,6 +24,7 @@
       "!scripts",
       "!tsconfig.json",
       "!tslint.json",
+      "!node_modules/ceramic-tools/sample",
       "build",
       "app.js"
     ]

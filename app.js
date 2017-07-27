@@ -18,17 +18,24 @@ app.setName('Ceramic')
 
 // Ceramic CLI
 if (process.argv[1] == 'ceramic') {
-  // Hide dock icon when running ceramic command
-  app.dock.hide();
+  try {
+    // Hide dock icon when running ceramic command
+    app.dock.hide();
 
-  const ceramicPath = require.resolve('ceramic-tools')
-  const ceramicDir = path.dirname(ceramicPath)
-  const args = process.argv.slice(2)
-  const ceramic = require('ceramic-tools')
+    const ceramicPath = require.resolve('ceramic-tools')
+    const ceramicDir = path.dirname(ceramicPath)
+    const args = process.argv.slice(2)
+    const ceramic = require('ceramic-tools')
 
-  ceramic(process.cwd(), args, ceramicDir)
+    ceramic(process.cwd(), args, ceramicDir)
 
-  return;
+    return;
+  }
+  catch (e) {
+    // Log error on console
+    console.error(e);
+    process.exit(-1);
+  }
 }
 
 // Keep a global reference of the window object, if you don't, the window will
