@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+require('./ceramic-env');
+
 var spawnSync = require('child_process').spawnSync;
 var download = require('download');
 var fs = require('fs');
@@ -12,20 +14,17 @@ var rimraf = require('rimraf');
 var vendorDir;
 var haxeBin;
 var haxelibBin;
-var nodeBin;
-var gitBin;
+var nekoBin
 if (process.platform == 'darwin') {
     vendorDir = path.join(__dirname, 'vendor/mac');
     haxeBin = path.join(vendorDir, 'haxe/haxe');
     haxelibBin = path.join(vendorDir, 'haxe/haxelib');
-    nodeBin = path.join(vendorDir, 'node/bin/node');
-    gitBin = path.join(vendorDir, 'git/bin/git');
+    nekoBin = path.join(vendorDir, 'neko/neko');
 } else if (process.platform == 'win32') {
     vendorDir = path.join(__dirname, 'vendor/windows');
     haxeBin = path.join(vendorDir, 'haxe/haxe.exe');
     haxelibBin = path.join(vendorDir, 'haxe/haxelib.exe');
-    nodeBin = path.join(vendorDir, 'node/bin/node.exe');
-    gitBin = path.join(vendorDir, 'git/bin/git.exe');
+    nekoBin = path.join(vendorDir, 'neko/neko.exe');
 }
 
 downloadHaxe();
@@ -33,29 +32,78 @@ downloadHaxe();
 function downloadHaxe() {
 
     // Download haxe
-    var haxeUrl;
+    var url;
     if (process.platform == 'darwin') {
-        haxeUrl = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-osx.tar.gz';
+        url = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-osx.tar.gz';
     } else if (process.platform == 'win32') {
-        haxeUrl = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-win.zip';
+        url = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-win.zip';
     }
-    var haxeArchiveRootDirName = 'haxe-3.4.2';
-    var haxeArchiveName = haxeUrl.substr(haxeUrl.lastIndexOf('/') + 1);
+    var archiveRootDirName = 'haxe-3.4.2';
+    var archiveName = url.substr(url.lastIndexOf('/') + 1);
     if (!fs.existsSync(haxeBin)) {
 
-        console.log('Download ' + haxeUrl);
-        download(haxeUrl)
+        console.log('Download ' + url);
+        download(url)
         .then(data => {
             
             // Write tar.gz
-            var archivePath = path.join(vendorDir, haxeArchiveName);
+            var archivePath = path.join(vendorDir, archiveName);
             fs.writeFileSync(archivePath, data);
 
             // Extract archive
             decompress(archivePath, vendorDir).then(() => {
 
                 fs.unlinkSync(archivePath);
-                fs.renameSync(path.join(vendorDir, haxeArchiveRootDirName), path.join(vendorDir, 'haxe'));
+                fs.renameSync(path.join(vendorDir, archiveRootDirName), path.join(vendorDir, 'haxe'));
+
+                downloadNeko();
+
+            }, (err) => {
+                throw err;
+            });
+
+        }, error => {
+            throw error;
+        });
+
+    }
+    else {
+        downloadNeko();
+    }
+
+} //downloadHaxe
+
+function downloadNeko() {
+
+    // Download neko
+    var url;
+    if (process.platform == 'darwin') {
+        url = 'https://github.com/jeremyfa/precompiled-bins/releases/download/neko/neko-2.1.0-mac.zip';
+    } else if (process.platform == 'win32') {
+        url = null; // TODO
+    }
+    var archiveRootDirName = 'neko-2.1.0-mac';
+    var archiveName = url.substr(url.lastIndexOf('/') + 1);
+    if (!fs.existsSync(nekoBin)) {
+
+        console.log('Download ' + url);
+        download(url)
+        .then(data => {
+            
+            // Write tar.gz
+            var archivePath = path.join(vendorDir, archiveName);
+            fs.writeFileSync(archivePath, data);
+
+            // Extract archive
+            decompress(archivePath, vendorDir).then(() => {
+
+                // Remove mac-specific dir (just in case)
+                if (fs.existsSync(path.join(vendorDir, '__MACOSX'))) {
+                    rimraf.sync(path.join(vendorDir, '__MACOSX'));
+                }
+
+                fs.unlinkSync(archivePath);
+                fs.renameSync(path.join(vendorDir, archiveRootDirName), path.join(vendorDir, 'neko'));
 
                 installDeps();
 
@@ -72,7 +120,7 @@ function downloadHaxe() {
         installDeps();
     }
 
-} //downloadHaxe
+} //downloadNeko
 
 function installDeps() {
 

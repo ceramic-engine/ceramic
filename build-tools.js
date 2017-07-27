@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+require('./ceramic-env');
+
 var glob = require('glob');
 var path = require('path');
 var fs = require('fs');

@@ -13,4 +13,6 @@
 /.vscode/tasks.json
 xcuserdata
 /vendor/mac/haxe
+/vendor/mac/neko
 /vendor/windows/haxe
+/vendor/windows/neko

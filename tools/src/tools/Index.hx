@@ -15,14 +15,8 @@ class Index {
         module.exports = run;
 
 #if !use_backend
-        // Expose local haxe to ENV, so that other commands will find it
-        if (Sys.systemName() == 'Mac') {
-            untyped __js__("process.env.PATH = __dirname + '/vendor/mac/haxe' + ':' + process.env.PATH");
-        }
-        else if (Sys.systemName() == 'Windows') {
-            untyped __js__("process.env.PATH = __dirname + '/vendor/windows/haxe' + ':' + process.env.PATH");
-        }
-        // TODO expose git as well
+        // Setup required environment variables
+        js.Node.require('./ceramic-env');
 #end
     
     } //main
