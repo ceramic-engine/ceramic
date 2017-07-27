@@ -10,9 +10,12 @@ if (process.platform == 'darwin') {
     // Expose Haxe/Haxelib
     var haxePath = path.join(vendorDir, 'haxe');
     process.env['PATH'] = haxePath + ':' + process.env['PATH'];
+    if (!fs.existsSync('/usr/local/lib/haxe')) spawnSync('ln', ['-s', haxePath, 'haxe'], { cwd: '/usr/local/lib' });
 
     // Expose Neko
+    //
     var nekoPath = path.join(vendorDir, 'neko');
+
     // Link with local neko, only if not existing already
     if (!fs.existsSync('/usr/local/lib/neko')) spawnSync('ln', ['-s', nekoPath, 'neko'], { cwd: '/usr/local/lib' });
     if (!fs.existsSync('/usr/local/lib/libneko.dylib')) {
