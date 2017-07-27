@@ -551,4 +551,10 @@ class Tools {
 
     } //runHooks
 
+    public static function isElectron():Bool {
+
+        return js.Node.process.versions['electron'] != null;
+
+    } //isElectron
+
 } //Tools
