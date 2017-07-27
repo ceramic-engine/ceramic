@@ -105,6 +105,7 @@ class Tools {
         tasks.set('unlink', new tools.tasks.Unlink());
         tasks.set('haxe', new tools.tasks.Haxe());
         tasks.set('haxelib', new tools.tasks.Haxelib());
+        tasks.set('path', new tools.tasks.Path());
 
         #end
 
