@@ -3,6 +3,10 @@ var path = require('path');
 var fs = require('fs');
 var spawnSync = require('child_process').spawnSync;
 
+// This will ensure we can run haxe/haxelib/neko on this machine and that
+// tools ceramic uses can also find them. If the current machine already has haxe/haxelib/neko
+// installed, they will be used (and no patch will be applied).
+
 // Mac
 if (process.platform == 'darwin') {
     var vendorDir = path.join(__dirname, 'vendor/mac');
