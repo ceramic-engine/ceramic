@@ -57,109 +57,6 @@ function downloadHaxe() {
                 fs.unlinkSync(archivePath);
                 fs.renameSync(path.join(vendorDir, haxeArchiveRootDirName), path.join(vendorDir, 'haxe'));
 
-                downloadNode();
-
-            }, (err) => {
-                throw err;
-            });
-
-        }, error => {
-            throw error;
-        });
-
-    }
-    else {
-        downloadNode();
-    }
-
-} //downloadHaxe
-
-function downloadNode() {
-
-    // Disable it (for now)
-    downloadGit();
-    return;
-
-    // Download nodejs
-    var nodeUrl;
-    var nodeArchiveRootDirName;
-    if (process.platform == 'darwin') {
-        nodeUrl = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-darwin-x64.tar.gz';
-        nodeArchiveRootDirName = 'node-v6.11.1-darwin-x64';
-    } else if (process.platform == 'win32') {
-        nodeUrl = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-win-x64.zip';
-        nodeArchiveRootDirName = 'node-v6.11.1-win-x64';
-    }
-    var nodeArchiveName = nodeUrl.substr(nodeUrl.lastIndexOf('/') + 1);
-    if (!fs.existsSync(nodeBin)) {
-
-        console.log('Download ' + nodeUrl);
-        download(nodeUrl)
-        .then(data => {
-            
-            // Write tar.gz
-            var archivePath = path.join(vendorDir, nodeArchiveName);
-            fs.writeFileSync(archivePath, data);
-
-            // Extract archive
-            decompress(archivePath, vendorDir).then(() => {
-
-                fs.unlinkSync(archivePath);
-                fs.renameSync(path.join(vendorDir, nodeArchiveRootDirName), path.join(vendorDir, 'node'));
-
-                downloadGit();
-
-            }, (err) => {
-                throw err;
-            });
-
-        }, error => {
-            throw error;
-        });
-
-    }
-    else {
-        downloadGit();
-    }
-
-} //downloadNode
-
-function downloadGit() {
-
-    // Disable it (for now)
-    installDeps();
-    return;
-
-    // Download git
-    var gitUrl;
-    var gitArchiveRootDirName;
-    if (process.platform == 'darwin') {
-        gitUrl = 'https://github.com/jeremyfa/precompiled-git/releases/download/v2.9.3/git-v2.9.3-mac.zip';
-    } else if (process.platform == 'win32') {
-        gitUrl = 'https://github.com/jeremyfa/precompiled-git/releases/download/v2.9.4/git-v2.9.4-win.zip';
-    }
-    gitArchiveRootDirName = 'git';
-    var gitArchiveName = gitUrl.substr(gitUrl.lastIndexOf('/') + 1);
-    if (!fs.existsSync(gitBin)) {
-
-        console.log('Download ' + gitUrl);
-        download(gitUrl)
-        .then(data => {
-            
-            // Write tar.gz
-            var archivePath = path.join(vendorDir, gitArchiveName);
-            fs.writeFileSync(archivePath, data);
-
-            // Extract archive
-            decompress(archivePath, vendorDir).then(() => {
-
-                fs.unlinkSync(archivePath);
-
-                // Remove mac-specific dir (just in case)
-                if (fs.existsSync(path.join(vendorDir, '__MACOSX'))) {
-                    rimraf.sync(path.join(vendorDir, '__MACOSX'));
-                }
-
                 installDeps();
 
             }, (err) => {
@@ -175,7 +72,7 @@ function downloadGit() {
         installDeps();
     }
 
-} //downloadGit
+} //downloadHaxe
 
 function installDeps() {
 
