@@ -103,6 +103,8 @@ class Tools {
         tasks.set('setup', new tools.tasks.Setup());
         tasks.set('link', new tools.tasks.Link());
         tasks.set('unlink', new tools.tasks.Unlink());
+        tasks.set('haxe', new tools.tasks.Haxe());
+        tasks.set('haxelib', new tools.tasks.Haxelib());
 
         #end
 

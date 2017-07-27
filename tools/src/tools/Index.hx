@@ -19,7 +19,10 @@ class Index {
         if (Sys.systemName() == 'Mac') {
             untyped __js__("process.env.PATH = __dirname + '/vendor/mac/haxe' + ':' + process.env.PATH");
         }
-        // TODO windows
+        else if (Sys.systemName() == 'Windows') {
+            untyped __js__("process.env.PATH = __dirname + '/vendor/windows/haxe' + ':' + process.env.PATH");
+        }
+        // TODO expose git as well
 #end
     
     } //main
