@@ -6,7 +6,7 @@ import sys.io.File;
 import haxe.io.Path;
 import haxe.Json;
 
-using npm.Colors;
+using tools.Colors;
 using StringTools;
 
 class Help extends tools.Task {

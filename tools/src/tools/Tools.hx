@@ -1,6 +1,6 @@
 package tools;
 
-import npm.Colors;
+import tools.Colors;
 import npm.Fiber;
 import sys.FileSystem;
 import haxe.io.Path;
@@ -8,7 +8,7 @@ import haxe.Json;
 import js.node.ChildProcess;
 
 using StringTools;
-using npm.Colors;
+using tools.Colors;
 
 interface ToolsPlugin {
 
@@ -326,8 +326,15 @@ class Tools {
 
     public static function stdoutWrite(input:String) {
 
-        if (isElectron()) {
-            js.Node.process.stdout.write(new js.node.Buffer(''+input).toString('base64'), 'ascii');
+        if (isElectronProxy()) {
+            var parts = (''+input).split("\n");
+            var i = 0;
+            while (i < parts.length) {
+                var part = parts[i];
+                part = part.replace("\r", '');
+                js.Node.process.stdout.write(new js.node.Buffer(part).toString('base64')+(i + 1 < parts.length ? "\n" : ''), 'ascii');
+                i++;
+            }
         }
         else {
             js.Node.process.stdout.write(input);
@@ -337,8 +344,15 @@ class Tools {
 
     public static function stderrWrite(input:String) {
 
-        if (isElectron()) {
-            js.Node.process.stderr.write(new js.node.Buffer(''+input).toString('base64'), 'ascii');
+        if (isElectronProxy()) {
+            var parts = (''+input).split("\n");
+            var i = 0;
+            while (i < parts.length) {
+                var part = parts[i];
+                part = part.replace("\r", '');
+                js.Node.process.stderr.write(new js.node.Buffer(part).toString('base64')+(i + 1 < parts.length ? "\n" : ''), 'ascii');
+                i++;
+            }
         }
         else {
             js.Node.process.stderr.write(input);
@@ -604,5 +618,11 @@ class Tools {
         return js.Node.process.versions['electron'] != null;
 
     } //isElectron
+
+    public static function isElectronProxy():Bool {
+
+        return js.Node.global.isElectronProxy != null;
+
+    } //isElectronProxy
 
 } //Tools

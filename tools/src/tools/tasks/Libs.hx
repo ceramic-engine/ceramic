@@ -5,7 +5,7 @@ import haxe.io.Path;
 import sys.FileSystem;
 
 using StringTools;
-using npm.Colors;
+using tools.Colors;
 
 class Libs extends tools.Task {
 

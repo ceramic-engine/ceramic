@@ -25,6 +25,13 @@ class Index {
 
     static function run(cwd:String, args:Array<String>, ceramicPath:String):Void {
 
+        // Electron proxy?
+        var argIndex = args.indexOf('--electron-proxy');
+        if (argIndex != -1) {
+            js.Node.global.isElectronProxy = true;
+            args.splice(argIndex, 1);
+        }
+
         if (args.length > 0 && args[0] != '--help') {
 
             var first = args[0];
