@@ -8,7 +8,6 @@ var os = require('os');
 var decompress = require('decompress');
 var rimraf = require('rimraf');
 
-// TODO windows
 var vendorDir;
 var haxeBin;
 var haxelibBin;
@@ -18,11 +17,6 @@ if (process.platform == 'darwin') {
     haxeBin = path.join(vendorDir, 'haxe/haxe');
     haxelibBin = path.join(vendorDir, 'haxe/haxelib');
     nekoBin = path.join(vendorDir, 'neko/neko');
-} else if (process.platform == 'win32') {
-    vendorDir = path.join(__dirname, 'vendor/windows');
-    haxeBin = path.join(vendorDir, 'haxe/haxe.exe');
-    haxelibBin = path.join(vendorDir, 'haxe/haxelib.exe');
-    nekoBin = path.join(vendorDir, 'neko/neko.exe');
 }
 
 downloadHaxe();
@@ -34,7 +28,8 @@ function downloadHaxe() {
     if (process.platform == 'darwin') {
         url = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-osx.tar.gz';
     } else if (process.platform == 'win32') {
-        url = 'https://github.com/HaxeFoundation/haxe/releases/download/3.4.2/haxe-3.4.2-win.zip';
+        downloadNeko();
+        return;
     }
     var archiveRootDirName = 'haxe-3.4.2';
     var archiveName = url.substr(url.lastIndexOf('/') + 1);
@@ -49,10 +44,12 @@ function downloadHaxe() {
             fs.writeFileSync(archivePath, data);
 
             // Extract archive
-            decompress(archivePath, vendorDir).then(() => {
+            decompress(archivePath, process.platform == 'win32' ? path.join(vendorDir, 'haxe') : vendorDir).then(() => {
 
                 fs.unlinkSync(archivePath);
-                fs.renameSync(path.join(vendorDir, archiveRootDirName), path.join(vendorDir, 'haxe'));
+                if (process.platform == 'darwin') {
+                    fs.renameSync(path.join(vendorDir, archiveRootDirName), path.join(vendorDir, 'haxe'));
+                }
 
                 downloadNeko();
 
@@ -78,7 +75,8 @@ function downloadNeko() {
     if (process.platform == 'darwin') {
         url = 'https://github.com/jeremyfa/precompiled-bins/releases/download/neko/neko-2.1.0-mac.zip';
     } else if (process.platform == 'win32') {
-        url = null; // TODO
+        installDeps();
+        return;
     }
     var archiveRootDirName = 'neko-2.1.0-mac';
     var archiveName = url.substr(url.lastIndexOf('/') + 1);
@@ -136,6 +134,6 @@ function installDeps() {
     spawnSync('haxelib', ['install', 'tools.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
     // Build tools
-    spawnSync('./build-tools.js', { stdio: "inherit", cwd: __dirname });
+    spawnSync('node', ['./build-tools.js'], { stdio: "inherit", cwd: __dirname });
 
 } //installDeps

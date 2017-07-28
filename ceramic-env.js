@@ -34,4 +34,5 @@ if (process.platform == 'darwin') {
 
 }
 
-// TODO windows
+// Embedded haxe/haxelib/neko is not supported on Windows at the moment.
+// The user must install Haxe (wich includes neko as well) with official installer
