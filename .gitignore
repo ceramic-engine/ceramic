@@ -24,3 +24,4 @@ yarn-error.log*
 /ceramic/out
 /ceramic/completion.hxml
 /dist
+/vendor/node

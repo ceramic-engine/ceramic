@@ -1,10 +1,9 @@
 {
     "displayName": "▶︎ Electron",
-    "description": "npm run start-electron",
+    "description": "npm start",
     "command": "npm",
     "args": [
-        "run",
-        "start-electron"
+        "start"
     ],
     "isShellCommand": true,
     "problemMatcher": {
@@ -14,7 +13,7 @@
     "tasks": [
         {
             "type": "npm",
-            "script": "start-electron",
+            "script": "start",
             "group": {
                 "kind": "build",
                 "isDefault": true

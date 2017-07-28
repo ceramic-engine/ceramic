@@ -3,9 +3,9 @@
     "items": [
         {
             "displayName": "▶︎ Electron",
-            "description": "npm run start-electron",
+            "description": "npm start",
             "command": "npm",
-            "args": ["run", "start-electron"],
+            "args": ["start"],
             "isShellCommand": true,
             "problemMatcher": {
                 "base": "$tslint5",
@@ -14,28 +14,7 @@
             "tasks": [
                 {
                     "type": "npm",
-                    "script": "start-electron",
-                    "group": {
-                        "kind": "build",
-                        "isDefault": true
-                    }
-                }
-            ]
-        },
-        {
-            "displayName": "▶︎ Browser",
-            "description": "npm run start-browser",
-            "command": "npm",
-            "args": ["run", "start-browser"],
-            "isShellCommand": true,
-            "problemMatcher": {
-                "base": "$tslint5",
-                "fileLocation": "relative"
-            },
-            "tasks": [
-                {
-                    "type": "npm",
-                    "script": "start-browser",
+                    "script": "start",
                     "group": {
                         "kind": "build",
                         "isDefault": true

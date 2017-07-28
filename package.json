@@ -14,7 +14,7 @@
       "**/*",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,test,__tests__,tests,powered-test,example,examples,*.d.ts}",
       "!**/node_modules/.bin",
-      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xpnoderoj}",
       "!**/._*",
       "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes,.editorconfig,.flowconfig,.yarn-metadata.json,.idea,.vs,appveyor.yml,.travis.yml,circle.yml,npm-debug.log,.nyc_output,yarn.lock,.yarn-integrity}",
       "!src",
@@ -26,6 +26,9 @@
       "!tslint.json",
       "!node_modules/ceramic-tools/sample",
       "build",
+      "vendor",
+      "ceramic-proxy.js",
+      "ceramic.bat",
       "app.js"
     ]
   },
@@ -33,7 +36,9 @@
     "antd": "^2.11.2",
     "autobind-decorator": "^2.0.0",
     "ceramic-tools": "github:jeremyfa/ceramic",
+    "decompress": "^4.2.0",
     "detect-port": "^1.2.1",
+    "download": "^6.2.5",
     "express": "^4.15.3",
     "keypather": "^2.0.1",
     "mobx": "^3.1.16",
@@ -43,6 +48,7 @@
     "reflect-metadata": "^0.1.10",
     "semantic-ui-css": "^2.2.10",
     "semantic-ui-react": "^0.70.0",
+    "stream-splitter": "^0.3.2",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
@@ -90,16 +96,14 @@
     "whatwg-fetch": "2.0.3"
   },
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && node postinstall.js",
     "build": "cross-env NODE_ENV=production NODE_PATH=src node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
-    "react": "cross-env BROWSER=none NODE_ENV=development NODE_PATH=src node scripts/start.js",
-    "react-browser": "cross-env NODE_ENV=development NODE_PATH=src node scripts/start.js",
-    "electron-dev": "ELECTRON_DEV=1 electron .",
+    "app-dev": "cross-env BROWSER=none NODE_ENV=development NODE_PATH=src node scripts/start.js",
+    "electron-dev": "cross-env ELECTRON_DEV=1 electron .",
     "electron-prod": "electron .",
-    "start": "concurrently 'npm run react-browser' '$(npm bin)/wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev'",
-    "start-browser": "npm run react-browser",
-    "start-electron": "concurrently 'npm run react' '$(npm bin)/wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev'",
+    "start": "node scripts/run-dev.js",
+    "start-legacy": "concurrently \"npm run react\" \"wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev\"",
     "clean": "rimraf ./out && rimraf ./build",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",

@@ -19,14 +19,18 @@ app.setName('Ceramic')
 // Ceramic CLI
 if (process.argv[1] == 'ceramic') {
   try {
+
     // Hide dock icon when running ceramic command
-    app.dock.hide();
+    if (app.dock != null) {
+      app.dock.hide();
+    }
 
     const ceramicPath = require.resolve('ceramic-tools')
     const ceramicDir = path.dirname(ceramicPath)
     const args = process.argv.slice(2)
     const ceramic = require('ceramic-tools')
 
+    process.stdout.write('[|ceramic:begin|]' + "\n");
     ceramic(process.cwd(), args, ceramicDir)
 
     return;
@@ -60,7 +64,8 @@ function createWindow () {
     minHeight: 600,
     resizable: true,
     movable: true,
-    title: 'Ceramic'
+    title: 'Ceramic',
+    frame: false
   })
 
   // and load the index.html of the app.
@@ -86,6 +91,7 @@ function createWindow () {
     mainWindow = null
   })
 }
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -148,6 +154,7 @@ server.get('/editor/assets/*', function(req, res) {
 
 // Listen to a free port
 detect(port, (err, _port) => {
+
   if (err) {
     console.error(err);
   }
