@@ -11,12 +11,15 @@ var rimraf = require('rimraf');
 var vendorDir;
 var haxeBin;
 var haxelibBin;
-var nekoBin
+var nekoBin;
 if (process.platform == 'darwin') {
     vendorDir = path.join(__dirname, 'vendor/mac');
     haxeBin = path.join(vendorDir, 'haxe/haxe');
     haxelibBin = path.join(vendorDir, 'haxe/haxelib');
     nekoBin = path.join(vendorDir, 'neko/neko');
+}
+else if (process.platform == 'win32') {
+    vendorDir = path.join(__dirname, 'vendor/windows');
 }
 
 downloadHaxe();

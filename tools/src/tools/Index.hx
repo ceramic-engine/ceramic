@@ -18,8 +18,6 @@ class Index {
         // Setup required environment variables
         js.Node.require('./ceramic-env');
 #end
-
-        js.Node.require('./ceramic-stdio');
     
     } //main
 

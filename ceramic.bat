@@ -1,3 +1,3 @@
 
 @echo off
-node ./ceramic %*
+node %~dp0/ceramic %*
