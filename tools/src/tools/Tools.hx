@@ -284,7 +284,7 @@ class Tools {
 
         if (muted) return;
 
-        js.Node.process.stdout.write(''+message+"\n");
+        stdoutWrite(''+message+"\n");
 
     } //log
 
@@ -293,9 +293,9 @@ class Tools {
         if (muted) return;
 
         if (settings.colors) {
-            js.Node.process.stdout.write(''+Colors.green(message)+"\n");
+            stdoutWrite(''+Colors.green(message)+"\n");
         } else {
-            js.Node.process.stdout.write(''+message+"\n");
+            stdoutWrite(''+message+"\n");
         }
 
     } //success
@@ -305,9 +305,9 @@ class Tools {
         if (muted) return;
 
         if (settings.colors) {
-            js.Node.process.stderr.write(''+Colors.red(message)+"\n");
+            stderrWrite(''+Colors.red(message)+"\n");
         } else {
-            js.Node.process.stderr.write(''+message+"\n");
+            stderrWrite(''+message+"\n");
         }
 
     } //error
@@ -317,12 +317,34 @@ class Tools {
         if (muted) return;
 
         if (settings.colors) {
-            js.Node.process.stderr.write(''+Colors.yellow(message)+"\n");
+            stderrWrite(''+Colors.yellow(message)+"\n");
         } else {
-            js.Node.process.stderr.write(''+message+"\n");
+            stderrWrite(''+message+"\n");
         }
 
     } //warning
+
+    public static function stdoutWrite(input:String) {
+
+        if (isElectron()) {
+            js.Node.process.stdout.write(new js.node.Buffer(''+input).toString('base64'), 'ascii');
+        }
+        else {
+            js.Node.process.stdout.write(input);
+        }
+
+    } //stdoutWrite
+
+    public static function stderrWrite(input:String) {
+
+        if (isElectron()) {
+            js.Node.process.stderr.write(new js.node.Buffer(''+input).toString('base64'), 'ascii');
+        }
+        else {
+            js.Node.process.stderr.write(input);
+        }
+
+    } //stderrWrite
 
     public static function fail(message:String):Void {
 
@@ -332,14 +354,14 @@ class Tools {
     } //fail
 
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
-
-        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxe']), args, options);
+        
+        return command('haxe', args, options);
 
     } //haxe
 
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
-        return command(Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']), args, options);
+        return command('haxelib', args, options);
 
     } //haxelib
 
@@ -358,17 +380,41 @@ class Tools {
 
         if (options.cwd == null) options.cwd = shared.cwd;
 
-        if (options.mute) {
+        var result = {
+            stdout: '',
+            stderr: '',
+            status: 0
+        };
+
+        Sync.run(function(done) {
+            var proc = null;
             if (args == null) {
-                return ChildProcess.spawnSync(name, {cwd: options.cwd});
+                proc = ChildProcess.spawn(name, {cwd: options.cwd});
             }
-            return ChildProcess.spawnSync(name, args, {cwd: options.cwd});
-        } else {
-            if (args == null) {
-                return ChildProcess.spawnSync(name, {stdio: "inherit", cwd: options.cwd});
-            }
-            return ChildProcess.spawnSync(name, args, {stdio: "inherit", cwd: options.cwd});
-        }
+            proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
+
+            proc.stdout.on('data', function(input) {
+                result.stdout += input.toString();
+                if (!options.mute) {
+                    stdoutWrite(input.toString());
+                }
+            });
+
+            proc.stderr.on('data', function(input) {
+                result.stderr += input.toString();
+                if (!options.mute) {
+                    stderrWrite(input.toString());
+                }
+            });
+
+            proc.on('close', function(code) {
+                result.status = code;
+                done();
+            });
+
+        });
+
+        return result;
 
     } //command
 

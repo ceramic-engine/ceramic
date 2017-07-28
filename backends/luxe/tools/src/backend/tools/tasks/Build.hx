@@ -104,7 +104,7 @@ class Build extends tools.Task {
             out.encoding = 'utf8';
             out.on('token', function(token) {
                 token = formatLineOutput(flowProjectPath, token);
-                js.Node.process.stdout.write(token + "\n");
+                stdoutWrite(token + "\n");
             });
             out.on('done', function() {
                 done();
@@ -118,7 +118,7 @@ class Build extends tools.Task {
             err.encoding = 'utf8';
             err.on('token', function(token) {
                 token = formatLineOutput(flowProjectPath, token);
-                js.Node.process.stderr.write(token + "\n");
+                stderrWrite(token + "\n");
             });
             err.on('error', function(err) {
                 warning(''+err);
