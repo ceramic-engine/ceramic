@@ -4,6 +4,7 @@ import npm.Colors;
 import npm.Fiber;
 import sys.FileSystem;
 import haxe.io.Path;
+import haxe.Json;
 import js.node.ChildProcess;
 
 using StringTools;
