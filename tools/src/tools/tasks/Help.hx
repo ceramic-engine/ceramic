@@ -33,6 +33,10 @@ class Help extends tools.Task {
             return settings.colors ? str.bold() : str;
         }
 
+        function r(str:String) {
+            return settings.colors ? str.reset() : str;
+        }
+
         function i(str:String) {
             return settings.colors ? str.italic() : str;
         }
@@ -84,7 +88,7 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
         lines.push("\n");
 
         lines.push(tab + b('USAGE'));
-        lines.push(tab + 'ceramic ' + u('command') + ' '+g('[')+'--arg'+g(',')+' --arg value'+g(', \u2026]'));
+        lines.push(tab + r('ceramic ') + u('command') + ' '+g('[')+'--arg'+g(',')+' --arg value'+g(', \u2026]'));
         lines.push('');
 
         lines.push(tab + b('COMMANDS'));
@@ -113,10 +117,17 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
             maxTaskLen = cast Math.max(maxTaskLen, key.length);
         }
         
+        var i = 0;
         for (key in allTasks.keys()) {
             var task:tools.Task = allTasks.get(key);
 
-            lines.push(tab + len(key, maxTaskLen) + '    ' + g(task.info(cwd)));
+            if (i == 0) {
+                lines.push(tab + r(len(key, maxTaskLen)) + '    ' + g(task.info(cwd)));
+            } else {
+                lines.push(tab + len(key, maxTaskLen) + '    ' + g(task.info(cwd)));
+            }
+
+            i++;
         }
 
         print(lines.join("\n") + "\n");
