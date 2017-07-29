@@ -5,10 +5,11 @@ const path = require('path');
 const net = require('net');
 
 var cwd = path.normalize(path.join(__dirname, '..'));
+var npm = process.platform == 'win32' ? 'npm.cmd' : 'npm';
 
 // Start app dev server
 console.log('Starting app dev server\u2026');
-var appProc = spawn('npm.cmd', ['run', 'app-dev'], { cwd: cwd });
+var appProc = spawn(npm, ['run', 'app-dev'], { cwd: cwd });
 
 // Check server is running
 //
@@ -33,5 +34,5 @@ client.on('error', (error) => {
 var electronProc;
 function startElectron() {
     console.log('Starting electron\u2026');
-    electronProc = spawn('npm.cmd', ['run', 'electron-dev'], { cwd: cwd, stdio: 'inherit' });
+    electronProc = spawn(npm, ['run', 'electron-dev'], { cwd: cwd, stdio: 'inherit' });
 }
