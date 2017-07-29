@@ -61,7 +61,6 @@
     "case-sensitive-paths-webpack-plugin": "2.0.0",
     "chalk": "1.1.3",
     "cli-highlight": "1.1.4",
-    "concurrently": "^3.5.0",
     "cross-env": "^5.0.1",
     "css-loader": "0.28.1",
     "dotenv": "4.0.0",
@@ -89,7 +88,6 @@
     "tslint-react": "^3.0.0",
     "typescript": "~2.3.3",
     "url-loader": "0.5.8",
-    "wait-on": "^2.0.2",
     "webpack": "2.6.0",
     "webpack-dev-server": "2.4.5",
     "webpack-manifest-plugin": "1.1.0",
@@ -103,11 +101,10 @@
     "electron-dev": "cross-env ELECTRON_DEV=1 electron .",
     "electron-prod": "electron .",
     "start": "node scripts/run-dev.js",
-    "start-legacy": "concurrently \"npm run react\" \"wait-on http://localhost:3000/ && sleep 1 && npm run electron-dev\"",
     "clean": "rimraf ./out && rimraf ./build",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "rebuild": "electron-rebuild -f",
+    "rebuild-native": "electron-rebuild -f",
     "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install jeremyfa/ceramic"
   },
   "jest": {
