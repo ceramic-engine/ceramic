@@ -16,6 +16,7 @@ class Link extends tools.Task {
     override function run(cwd:String, args:Array<String>):Void {
 
         if (Sys.systemName() == 'Mac') {
+            command('rm', ['ceramic'], { cwd: '/usr/local/bin', mute: true });
             if (isElectron()) {
                 command('ln', ['-s', Path.join([settings.ceramicPath, 'ceramic-electron']), 'ceramic'], { cwd: '/usr/local/bin' });
             }
