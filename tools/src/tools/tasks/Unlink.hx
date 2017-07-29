@@ -2,6 +2,7 @@ package tools.tasks;
 
 import tools.Tools.*;
 import haxe.io.Path;
+import sys.FileSystem;
 
 class Unlink extends tools.Task {
 
@@ -15,6 +16,13 @@ class Unlink extends tools.Task {
 
         if (Sys.systemName() == 'Mac') {
             command('rm', ['ceramic'], { cwd: '/usr/local/bin' });
+        }
+        else if (Sys.systemName() == 'Windows') {
+            var haxePath = js.Node.process.env['HAXEPATH'];
+            if (haxePath == null || !FileSystem.exists(Path.join([haxePath, 'ceramic.bat']))) {
+                fail('There is nothing to unlink.');
+            }
+            FileSystem.deleteFile(Path.join([haxePath, 'ceramic.bat']));
         }
 
     } //run

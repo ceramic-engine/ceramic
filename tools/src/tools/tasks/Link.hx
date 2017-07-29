@@ -2,6 +2,8 @@ package tools.tasks;
 
 import tools.Tools.*;
 import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 
 class Link extends tools.Task {
 
@@ -20,6 +22,16 @@ class Link extends tools.Task {
             else {
                 command('ln', ['-s', Path.join([settings.ceramicPath, 'ceramic']), 'ceramic'], { cwd: '/usr/local/bin' });
             }
+        }
+        else if (Sys.systemName() == 'Windows') {
+            var haxePath = js.Node.process.env['HAXEPATH'];
+            if (haxePath == null || !FileSystem.exists(haxePath)) {
+                fail('Haxe must be installed on this machine in order to link ceramic command.');
+            }
+            File.saveContent(
+                Path.join([haxePath, 'ceramic.bat']),
+                "@echo off\r\n" + Path.join([settings.ceramicPath, isElectron() ? 'ceramic-electron' : 'ceramic']) + " %*"
+            );
         }
 
     } //run
