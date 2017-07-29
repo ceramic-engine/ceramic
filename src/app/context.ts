@@ -53,7 +53,7 @@ export class Context {
         window.addEventListener('orientationchange', handleResize);
 
         // Get server port
-        let electronApp = electron.remote.require('./app');
+        let electronApp = electron.remote.require('./app.js');
         const checkServerPort = () => {
             this.serverPort = electronApp.serverPort;
             if (this.serverPort == null) {

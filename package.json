@@ -33,9 +33,9 @@
     ]
   },
   "dependencies": {
-    "antd": "^2.11.2",
     "autobind-decorator": "^2.0.0",
     "ceramic-tools": "github:jeremyfa/ceramic",
+    "colors": "^1.1.2",
     "decompress": "^4.2.0",
     "detect-port": "^1.2.1",
     "download": "^6.2.5",

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, Title, Alt } from 'components';
+import { Button, Form, Field, Panel, NumberInput, SelectInput, Title, Alt } from 'components';
 import { project, VisualItem } from 'app/model';
 
 @observer class VisualsPanel extends React.Component {
@@ -55,6 +55,9 @@ import { project, VisualItem } from 'app/model';
                                     </Field>
                                     <Field label="skewY">
                                         <NumberInput value={selectedVisual.skewY} onChange={(val) => { selectedVisual.skewY = val; }} />
+                                    </Field>
+                                    <Field label="texture">
+                                        <SelectInput value={'hello'} options={[]} />
                                     </Field>
                                 </Form>
                             </Alt>

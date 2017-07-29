@@ -1,20 +1,25 @@
 
 require('colors');
 
+if (process.platform != 'win32') {
+    console.error('Ceramic proxy is only supported/required on Windows.'.red);
+    return;
+}
+
 const spawn = require('child_process').spawn;
 const splitter = require('stream-splitter');
 const path = require('path');
 
+const dev = false;
+const nodeCeramic = false;
+
 let proc = spawn(
-    path.normalize(path.join(__dirname, '../../Ceramic.exe')),
-    //path.normalize(path.join(__dirname, 'dist/win-unpacked/Ceramic.exe')),
+    dev ?
+        path.normalize(path.join(__dirname, 'dist/win-unpacked/Ceramic.exe'))
+    :
+        path.normalize(path.join(__dirname, '../../Ceramic.exe')),
     ['ceramic'].concat(process.argv.slice(2)).concat('--electron-proxy')
 );
-/*let proc = spawn(
-    'node',
-    [path.normalize(path.join(__dirname, '../ceramic/ceramic.js'))]
-    .concat(process.argv.slice(2)).concat('--electron-proxy')
-);*/
 
 var ignoreOut = true;
 var out = splitter("\n");

@@ -21,7 +21,8 @@ body, html {
 #root label,
 #root button,
 #root i,
-#root textarea {
+#root textarea,
+#root select {
     color: #f3f3f3;
     cursor: default;
 }
@@ -154,12 +155,32 @@ body, html {
     display: inline-block;
 }
 
+#root input.input, #root select.input {
+    outline: none;
+    font-size: 10px;
+    min-height: 16px;
+    border-radius: 0;
+}
+
 #root input.input {
+    padding: 0px 4px 1px 4px;
+}
+
+#root input.input, #root .input-select-container {
     background-color: #454545;
     border: 1px solid #666666;
-    outline: none;
-    padding: 0px 4px;
-    font-size: 11px;
+}
+
+#root select.input {
+    background-color: transparent;
+    border: none;
+    padding: 1px 0px 1px 0px;
+    margin-left: -4px;
+    height: 18px;
+}
+
+#root input.input::selection, #root select.input::selection {
+    background-color: #2798eb;
 }
 
 /* Text/Number */
@@ -171,14 +192,15 @@ body, html {
 }
 
 #root input.input.input-text:focus,
-#root input.input.input-number:focus {
+#root input.input.input-number:focus,
+#root .input-select-container.focus {
     border-color: #2798eb;
 }
 
 /* Button */
 
 #root input.input.input-button {
-    padding: 3px 8px;
+    padding: 3px 8px 4px 8px;
     min-width: 80px;
 }
 
@@ -232,6 +254,12 @@ body, html {
     border-color: #2798eb;
     background-color: #2798eb;
     transform: translateY(1px);
+}
+
+/* Select */
+
+#root select.input.input-select {
+    width: 92px;
 }
 
 /* Asset info */

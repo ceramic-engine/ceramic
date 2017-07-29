@@ -1,6 +1,5 @@
 import { serialize, observe, action, compute, files, autorun, ceramic, Model } from 'utils';
 import Scene from './Scene';
-import Asset from './Asset';
 import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
@@ -62,7 +61,7 @@ class Project extends Model {
         //
         autorun(() => {
 
-            let electronApp = electron.remote.require('./ElectronApp');
+            let electronApp = electron.remote.require('./app.js');
             electronApp.assetsPath = this.assetsPath;
 
             if (!this.assetsPath || !fs.existsSync(this.assetsPath) || !fs.statSync(this.assetsPath).isDirectory()) {
@@ -126,19 +125,9 @@ class Project extends Model {
 
     } //constructor
 
-/// Computed
-
-    @compute get assets():Array<Asset> {
-
-        return []; // TODO implement
-
-    } //assets
-
 /// Public API
 
     @action createWithName(name:string) {
-
-        console.error("RECREATE PROJECT");
 
         // Set name
         this.name = name;
