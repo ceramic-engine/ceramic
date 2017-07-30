@@ -15,8 +15,8 @@ class Texture extends Entity {
     function set_density(density:Float):Float {
         if (this.density == density) return density;
         this.density = density;
-        width = app.backend.textures.getWidth(backendItem) * density;
-        height = app.backend.textures.getHeight(backendItem) * density;
+        width = app.backend.textures.getWidth(backendItem) / density;
+        height = app.backend.textures.getHeight(backendItem) / density;
         return density;
     }
 
