@@ -281,7 +281,9 @@ class ImageAsset extends Asset {
 
         status = LOADING;
         log('Load image $path');
-        app.backend.textures.load(path, null, function(texture) {
+        app.backend.textures.load(path, {
+            premultiplyAlpha: options.premultiplyAlpha ? true : false
+        }, function(texture) {
 
             if (texture != null) {
 

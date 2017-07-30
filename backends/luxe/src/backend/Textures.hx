@@ -4,7 +4,7 @@ import snow.systems.assets.Asset;
 import luxe.Resources;
 
 typedef LoadTextureOptions = {
-    
+    ?premultiplyAlpha:Bool
 }
 
 abstract Texture(phoenix.Texture) from phoenix.Texture to phoenix.Texture {}
@@ -24,7 +24,7 @@ class Textures implements spec.Textures {
             filter_mag: null,
             clamp_s: null,
             clamp_t: null,
-            load_premultiply_alpha: false
+            load_premultiply_alpha: options != null && options.premultiplyAlpha ? true : false
         });
 
         // Keep it in luxe cache
