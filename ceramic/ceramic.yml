@@ -8,6 +8,8 @@ app:
     libs: []
 
     'if web':
+        +defines:
+            - editor: true
         +hooks:
             - when: end build
               command: rm
