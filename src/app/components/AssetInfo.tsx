@@ -17,7 +17,7 @@ import { context } from 'app/context';
 
         if (asset.paths[0].toLowerCase().endsWith('.png')) {
 
-            let imgPath = 'http://localhost:' + context.serverPort + '/editor/assets/' + asset.paths[0];
+            let imgPath = 'http://localhost:' + context.serverPort + '/ceramic/assets/' + asset.paths[0];
 
             return (
                 <div className="asset-info">

@@ -31,6 +31,6 @@ class SceneItem extends Model {
 
     } //serializeForCeramic
 
-} //Scene
+} //SceneItem
 
 export default SceneItem;

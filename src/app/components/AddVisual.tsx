@@ -3,7 +3,7 @@ import { observer, autobind, ceramic } from 'utils';
 import { Button, Inline } from 'components';
 import Overlay from './Overlay';
 import Dialog from './Dialog';
-import { project, VisualItem } from 'app/model';
+import { project, VisualItem, QuadItem } from 'app/model';
 
 @observer class AddVisual extends React.Component {
 
@@ -28,7 +28,7 @@ import { project, VisualItem } from 'app/model';
 
     @autobind addQuad() {
 
-        let quad = new VisualItem(); // TODO make better ID
+        let quad = new QuadItem(); // TODO make better ID
         quad.name = quad.id;
         quad.entity = 'ceramic.Quad';
         quad.x = Math.round(project.scene.width / 2);

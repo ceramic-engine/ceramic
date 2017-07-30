@@ -7,6 +7,8 @@ import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
+import ceramic.Texture;
+import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
 import editor.Message;
@@ -16,6 +18,7 @@ import js.Browser.*;
 import haxe.Json;
 
 using StringTools;
+using ceramic.Extensions;
 
 class Project extends Entity {
 
@@ -32,6 +35,10 @@ class Project extends Entity {
     var outsideLeft:Quad = null;
 
     var renders:Int = 0;
+
+    var runtimeAssets:RuntimeAssets = null;
+
+    var assets:Assets = new Assets();
 
     function new(settings:InitSettings) {
 
@@ -111,8 +118,8 @@ class Project extends Entity {
 
         // Fit scene
         var scale = Math.min(
-            screen.width / (scene.width / scene.scaleX),
-            screen.height / (scene.height / scene.scaleY)
+            screen.width / scene.width,
+            screen.height / scene.height
         );
         scene.scale(scale, scale);
         scene.pos(screen.width * 0.5, screen.height * 0.5);
@@ -144,16 +151,16 @@ class Project extends Entity {
         var pad = 1;
 
         outsideTop.pos(-pad, -pad);
-        outsideTop.size(screen.width + pad * 2, (screen.height - scene.height) * 0.5 + pad);
+        outsideTop.size(screen.width + pad * 2, (screen.height - scene.height * scene.scaleY) * 0.5 + pad);
 
-        outsideBottom.pos(-pad, scene.height + (screen.height - scene.height) * 0.5);
-        outsideBottom.size(screen.width + pad * 2, (screen.height - scene.height) * 0.5 + pad);
+        outsideBottom.pos(-pad, scene.height * scene.scaleY + (screen.height - scene.height * scene.scaleY) * 0.5);
+        outsideBottom.size(screen.width + pad * 2, (screen.height - scene.height * scene.scaleY) * 0.5 + pad);
 
         outsideLeft.pos(-pad, -pad);
-        outsideLeft.size((screen.width - scene.width) * 0.5 + pad, screen.height + pad * 2);
+        outsideLeft.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
 
-        outsideRight.pos(scene.width + (screen.width - scene.width) * 0.5, -pad);
-        outsideRight.size((screen.width - scene.width) * 0.5 + pad, screen.height + pad * 2);
+        outsideRight.pos(scene.width * scene.scaleX + (screen.width - scene.width * scene.scaleX) * 0.5, -pad);
+        outsideRight.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
 
     } //fitScene
 
@@ -207,15 +214,15 @@ class Project extends Entity {
             case 'assets':
                 if (action == 'lists') {
                     var rawList:Array<String> = value.list;
-                    var assets = new RuntimeAssets(rawList);
-                    var lists = assets.getEncodableLists();
+                    runtimeAssets = new RuntimeAssets(rawList);
+                    var lists = runtimeAssets.getEncodableLists();
                     send({
                         type: 'assets/lists',
                         value: {
-                            images: assets.getNames('image'),
-                            texts: assets.getNames('text'),
-                            sounds: assets.getNames('sound'),
-                            fonts: assets.getNames('font'),
+                            images: runtimeAssets.getNames('image'),
+                            texts: runtimeAssets.getNames('text'),
+                            sounds: runtimeAssets.getNames('sound'),
+                            fonts: runtimeAssets.getNames('font'),
                             all: lists.all,
                             allDirs: lists.allDirs,
                             allByName: lists.allByName,
@@ -234,6 +241,57 @@ class Project extends Entity {
                         scene.onDown(scene, function(info) {
                             if (Editable.highlight != null) {
                                 Editable.highlight.destroy();
+                            }
+                        });
+                        scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
+                            if (item.props != null) {
+                                var quad:Quad = cast instance;
+                                for (field in Reflect.fields(item.props)) {
+                                    if (field == 'texture') {
+                                        if (runtimeAssets == null) {
+                                            trace('RUNTIME ASSETS NULL');
+                                            return;
+                                        }
+                                        var assetName:String = Reflect.field(item.props, field);
+                                        if (assetName != null) {
+                                            var existing:ImageAsset = cast assets.asset(assetName, 'image');
+                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
+                                            if (existing == null) {
+                                                asset.runtimeAssets = runtimeAssets;
+                                                trace('NEW ASSET: ' + asset);
+                                                assets.addAsset(asset);
+                                                    asset.onceComplete(function(success) {
+                                                        trace('NEW ASSET LOAD: ' + asset + ' success=' + success);
+                                                        if (success && !instance.destroyed) {
+                                                            quad.texture = assets.texture(assetName);
+                                                        }
+                                                    });
+                                                assets.load();
+                                            }
+                                            else {
+                                                trace('REUSE ASSET: ' + asset);
+                                                if (asset.status == READY) {
+                                                    trace('ASSET ALREADY AVAILABLE: ' + asset);
+                                                    quad.texture = assets.texture(assetName);
+                                                }
+                                                else {
+                                                    asset.onceComplete(function(success) {
+                                                        trace('WAITED ASSET LOAD: ' + asset + ' success=' + success);
+                                                        if (success && !instance.destroyed) {
+                                                            quad.texture = assets.texture(assetName);
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            quad.texture = null;
+                                        }
+                                    }
+                                    else {
+                                        instance.setProperty(field, Reflect.field(item.props, field));
+                                    }
+                                }
                             }
                         });
                     }

@@ -25,6 +25,7 @@ body, html {
 #root select {
     color: #f3f3f3;
     cursor: default;
+    -webkit-font-smoothing: subpixel-antialiased;
 }
 
 #root .nolabel label {
@@ -34,6 +35,7 @@ body, html {
 #root .topnav {
     background-color: #4f4f4f;
     border-bottom: 1px solid #383838;
+    font-size: 13px;
 }
 
 #root .statusbar {
@@ -61,7 +63,7 @@ body, html {
 #root .tabs .tab {
     background-color: #4f4f4f;
     display: inline-block;
-    padding: 5px 10px;
+    padding: 7px 10px 6px 10px;
     border-right: 1px solid #383838;
     border-bottom: 1px solid #4f4f4f;
     font-weight: bold;
@@ -69,7 +71,7 @@ body, html {
     left: 0px;
     top: 1px;
     margin-top: -1px;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 #root .tabs .tab:not(.active) {
@@ -90,7 +92,7 @@ body, html {
 
 #root .tabs .panel .title {
     border-bottom: 1px solid #444444;
-    padding: 3px 10px;
+    padding: 6px 10px;
     font-size: 10px;
     font-weight: bold;
     text-align: center;
@@ -120,6 +122,7 @@ body, html {
 
 #root .tabs .panel .alt .entry .name {
     font-size: 11px;
+    margin-bottom: 3px;
 }
 
 #root .tabs .panel .alt .entry .info {
@@ -174,7 +177,7 @@ body, html {
 #root select.input {
     background-color: transparent;
     border: none;
-    padding: 1px 0px 1px 0px;
+    padding: 1px 0px 0px 0px;
     margin-left: -4px;
     height: 18px;
 }
@@ -262,6 +265,11 @@ body, html {
     width: 92px;
 }
 
+#root .input-select-container.empty select.input.input-select {
+    color: #bbbbbb;
+    font-style: italic;
+}
+
 /* Asset info */
 
 #root .asset-info {
@@ -297,6 +305,7 @@ body, html {
     border-top-right-radius: 4px;
     text-align: center;
     line-height: 20px;
+    font-size: 13px;
 }
 
 #root .overlay .dialog .content {

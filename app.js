@@ -131,8 +131,8 @@ if (process.env.ELECTRON_DEV) {
 }
 
 exports.assetsPath = null;
-server.get('/editor/assets/*', function(req, res) {
-  let relativePath = req.path.substr('/editor/assets/'.length);
+server.get('/ceramic/assets/*', function(req, res) {
+  let relativePath = req.path.substr('/ceramic/assets/'.length);
   if (!exports.assetsPath || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
     res.status(404)
     res.send('Not found')

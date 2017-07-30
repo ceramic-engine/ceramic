@@ -1,6 +1,7 @@
 import { serialize, observe, serializeModel, Model } from 'utils';
 import SceneItem from './SceneItem';
 import VisualItem from './VisualItem';
+import QuadItem from './QuadItem';
 
 class Scene extends Model {
 
@@ -19,7 +20,7 @@ class Scene extends Model {
     @observe @serialize height:number;
 
     /** Scene items */
-    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem> = [];
+    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem> = [];
 
 /// Helpers
 

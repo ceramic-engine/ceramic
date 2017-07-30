@@ -47,6 +47,6 @@ class VisualItem extends SceneItem {
     /** Item alpha */
     @observe @serialize alpha:number = 1;
 
-} //Scene
+} //VisualItem
 
 export default VisualItem;

@@ -9,6 +9,8 @@ import SceneItem from './SceneItem';
 registerModel(SceneItem);
 import VisualItem from './VisualItem';
 registerModel(VisualItem);
+import QuadItem from './QuadItem';
+registerModel(QuadItem);
 import UiState from './UiState';
 registerModel(UiState);
 
@@ -17,6 +19,7 @@ export { default as Project } from './Project';
 export { default as Scene } from './Scene';
 export { default as SceneItem } from './SceneItem';
 export { default as VisualItem } from './VisualItem';
+export { default as QuadItem } from './QuadItem';
 export { default as UiState } from './UiState';
 
 // Load db (if anything to load)

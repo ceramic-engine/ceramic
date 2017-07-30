@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, SelectInput, Title, Alt } from 'components';
-import { project, VisualItem } from 'app/model';
+import { project, VisualItem, QuadItem } from 'app/model';
 
 @observer class VisualsPanel extends React.Component {
 
@@ -10,8 +10,25 @@ import { project, VisualItem } from 'app/model';
     render() {
 
         let selectedVisual:VisualItem = null;
-        if (project.ui.selectedItem != null && project.ui.selectedItem instanceof VisualItem) {
-            selectedVisual = project.ui.selectedItem;
+        let selectedQuad:QuadItem = null;
+        if (project.ui.selectedItem != null) {
+            if (project.ui.selectedItem instanceof VisualItem) {
+                selectedVisual = project.ui.selectedItem;
+            }
+            if (project.ui.selectedItem instanceof QuadItem) {
+                selectedQuad = project.ui.selectedItem;
+            }
+        }
+
+        let texturesList = ['none'];
+        let quadTextureIndex = 0;
+        let i = 1;
+        for (let asset of project.imageAssets) {
+            texturesList.push(asset.name);
+            if (selectedQuad != null && asset.name === selectedQuad.texture) {
+                quadTextureIndex = i;
+            }
+            i++;
         }
 
         return (
@@ -56,9 +73,19 @@ import { project, VisualItem } from 'app/model';
                                     <Field label="skewY">
                                         <NumberInput value={selectedVisual.skewY} onChange={(val) => { selectedVisual.skewY = val; }} />
                                     </Field>
-                                    <Field label="texture">
-                                        <SelectInput value={'hello'} options={[]} />
-                                    </Field>
+                                    {
+                                        selectedQuad != null ?
+                                            <Field label="texture">
+                                                <SelectInput
+                                                    empty={0}
+                                                    selected={quadTextureIndex}
+                                                    options={texturesList}
+                                                    onChange={(selected) => {selectedQuad.texture = texturesList[selected]; }}
+                                                />
+                                            </Field>
+                                        :
+                                            null
+                                    }
                                 </Form>
                             </Alt>
                         </div>
