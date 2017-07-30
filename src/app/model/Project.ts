@@ -1,4 +1,4 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, Model } from 'utils';
 import Scene from './Scene';
 import UiState from './UiState';
 import * as fs from 'fs';
@@ -120,6 +120,33 @@ class Project extends Model {
                 }
 
             });
+
+        });
+
+        // Update data from ceramic (haxe)
+        ceramic.listen('set/*', (message) => {
+
+            let [, key] = message.type.split('/');
+
+            // Change UI
+            if (key.startsWith('ui.')) {
+                keypath.set(this.ui, key.substr(3), message.value);
+            }
+            // Change Scene Item
+            else if (key.startsWith('scene.item.')) {
+                if (this.scene == null || this.scene.items == null) return;
+
+                let name = key.substr(11);
+                let item = this.scene.itemsByName.get(name);
+
+                if (item != null) {
+                    for (let k in message.value) {
+                        if (message.value.hasOwnProperty(k)) {
+                            keypath.set(item, k, message.value[k]);
+                        }
+                    }
+                }
+            }
 
         });
 

@@ -172,6 +172,11 @@ body, html {
 #root input.input, #root .input-select-container {
     background-color: #454545;
     border: 1px solid #666666;
+    height: 19px;
+}
+
+#root input.input.disabled {
+    color: #bbbbbb;
 }
 
 #root select.input {
@@ -179,7 +184,7 @@ body, html {
     border: none;
     padding: 1px 0px 0px 0px;
     margin-left: -4px;
-    height: 18px;
+    height: 19px;
 }
 
 #root input.input::selection, #root select.input::selection {
@@ -205,6 +210,7 @@ body, html {
 #root input.input.input-button {
     padding: 3px 8px 4px 8px;
     min-width: 80px;
+    height: 24px;
 }
 
 #root input.input.input-button.default {
@@ -267,7 +273,6 @@ body, html {
 
 #root .input-select-container.empty select.input.input-select {
     color: #bbbbbb;
-    font-style: italic;
 }
 
 /* Asset info */

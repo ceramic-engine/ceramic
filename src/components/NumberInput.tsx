@@ -7,6 +7,8 @@ import { autobind, observer, observe } from 'utils';
     props:{
         /** Value */
         value:number,
+        /** Disabled */
+        disabled?:boolean,
         /** onChange */
         onChange?:(value:number) => void
     };
@@ -21,8 +23,11 @@ import { autobind, observer, observe } from 'utils';
         if (this.endDot) val += '.';
         if (this.startMinus) val = '-' + val;
 
+        let className = 'input input-number';
+        if (this.props.disabled) className += ' disabled';
+
         return (
-            <input className="input input-number" type="numeric" value={val} onChange={this.handleChange} onFocus={this.handleFocus} onBlur={this.handleBlur} />
+            <input disabled={this.props.disabled} className={className} type="numeric" value={val} onChange={this.handleChange} onFocus={this.handleFocus} onBlur={this.handleBlur} />
         );
 
     } //render
@@ -75,7 +80,9 @@ import { autobind, observer, observe } from 'utils';
 
     @autobind handleFocus(e:any) {
 
-        e.target.select();
+        if (!this.props.disabled) {
+            e.target.select();
+        }
 
     } //handleFocus
 

@@ -245,15 +245,31 @@ class Project extends Entity {
                         });
                         scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
                             if (item.props != null) {
-                                if (Reflect.hasField(item.props, 'texture')) {
-                                    Reflect.deleteField(item.props, 'width');
-                                    Reflect.deleteField(item.props, 'height');
-                                }
+
                                 var quad:Quad = cast instance;
+
+                                function updateSize() {
+                                    if (quad.texture != null) {
+                                        if (item.props.width != quad.width || item.props.height != quad.height) {
+                                            send({
+                                                type: 'set/scene.item.${item.name}',
+                                                value: {
+                                                    width: quad.width,
+                                                    height: quad.height
+                                                }
+                                            });
+                                        }
+                                    }
+                                    else {
+                                        quad.width = item.props.width;
+                                        quad.height = item.props.height;
+                                    }
+                                }
+
                                 for (field in Reflect.fields(item.props)) {
+
                                     if (field == 'texture') {
                                         if (runtimeAssets == null) {
-                                            trace('RUNTIME ASSETS NULL');
                                             return;
                                         }
                                         var assetName:String = Reflect.field(item.props, field);
@@ -261,35 +277,42 @@ class Project extends Entity {
                                             var existing:ImageAsset = cast assets.asset(assetName, 'image');
                                             var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName, { premultiplyAlpha: true /* TODO REMOVE */ });
                                             if (existing == null) {
+                                                // Create and load asset
                                                 asset.runtimeAssets = runtimeAssets;
-                                                trace('NEW ASSET: ' + asset);
                                                 assets.addAsset(asset);
                                                     asset.onceComplete(function(success) {
-                                                        trace('NEW ASSET LOAD: ' + asset + ' success=' + success);
                                                         if (success && !instance.destroyed) {
                                                             quad.texture = assets.texture(assetName);
+                                                            updateSize();
                                                         }
                                                     });
                                                 assets.load();
                                             }
                                             else {
-                                                trace('REUSE ASSET: ' + asset);
                                                 if (asset.status == READY) {
-                                                    trace('ASSET ALREADY AVAILABLE: ' + asset);
+                                                    // Asset already available
                                                     quad.texture = assets.texture(assetName);
+                                                    updateSize();
                                                 }
-                                                else {
+                                                else if (asset.status == LOADING) {
+                                                    // Asset loading
                                                     asset.onceComplete(function(success) {
-                                                        trace('WAITED ASSET LOAD: ' + asset + ' success=' + success);
                                                         if (success && !instance.destroyed) {
                                                             quad.texture = assets.texture(assetName);
+                                                            updateSize();
                                                         }
                                                     });
+                                                }
+                                                else {
+                                                    // Asset broken?
+                                                    quad.texture = null;
+                                                    updateSize();
                                                 }
                                             }
                                         }
                                         else {
                                             quad.texture = null;
+                                            updateSize();
                                         }
                                     }
                                     else {

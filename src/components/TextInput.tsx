@@ -7,14 +7,19 @@ class TextInput extends React.Component {
     props:{
         /** Value */
         value:string,
+        /** Disabled */
+        disabled?:boolean,
         /** onChange */
         onChange?:(value:string) => void
     };
 
     render() {
 
+        let className = 'input input-number';
+        if (this.props.disabled) className += ' disabled';
+
         return (
-            <input className="input input-text" type="text" value={this.props.value} onChange={this.handleChange} onFocus={this.handleFocus} />
+            <input disabled={this.props.disabled} className={className} type="text" value={this.props.value} onChange={this.handleChange} onFocus={this.handleFocus} />
         );
 
     } //render
@@ -29,7 +34,9 @@ class TextInput extends React.Component {
 
     @autobind handleFocus(e:any) {
 
-        e.target.select();
+        if (!this.props.disabled) {
+            e.target.select();
+        }
 
     } //handleFocus
 

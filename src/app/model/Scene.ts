@@ -1,4 +1,4 @@
-import { serialize, observe, serializeModel, Model } from 'utils';
+import { serialize, observe, compute, serializeModel, Model } from 'utils';
 import SceneItem from './SceneItem';
 import VisualItem from './VisualItem';
 import QuadItem from './QuadItem';
@@ -21,6 +21,20 @@ class Scene extends Model {
 
     /** Scene items */
     @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem> = [];
+
+/// Computed
+
+    @compute get itemsByName() {
+        
+        let byName:Map<string, SceneItem|VisualItem|QuadItem> = new Map();
+
+        for (let item of this.items) {
+            byName.set(item.name, item);
+        }
+
+        return byName;
+
+    } //itemsByName
 
 /// Helpers
 

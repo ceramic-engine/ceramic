@@ -1,4 +1,4 @@
-import { serialize, observe, compute, ceramic, keypath, Model } from 'utils';
+import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
 
 class UiState extends Model {
@@ -32,16 +32,6 @@ class UiState extends Model {
     constructor(id?:string) {
 
         super(id);
-
-        ceramic.listen('set/*', (message) => {
-
-            let [, key] = message.type.split('/');
-
-            if (key.startsWith('ui.')) {
-                keypath.set(this, key.substr(3), message.value);
-            }
-
-        });
 
     } //constructor
 

@@ -41,10 +41,10 @@ import { project, VisualItem, QuadItem } from 'app/model';
                             <Alt>
                                 <Form>
                                     <Field label="width">
-                                        <NumberInput value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
+                                        <NumberInput disabled={quadTextureIndex !== 0} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
                                     </Field>
                                     <Field label="height">
-                                        <NumberInput value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
+                                        <NumberInput disabled={quadTextureIndex !== 0} value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
                                     </Field>
                                     <Field label="scaleX">
                                         <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />
@@ -80,7 +80,9 @@ import { project, VisualItem, QuadItem } from 'app/model';
                                                     empty={0}
                                                     selected={quadTextureIndex}
                                                     options={texturesList}
-                                                    onChange={(selected) => {selectedQuad.texture = texturesList[selected]; }}
+                                                    onChange={(selected) => {
+                                                        selectedQuad.texture = selected === 0 ? null : texturesList[selected];
+                                                    }}
                                                 />
                                             </Field>
                                         :
