@@ -245,6 +245,10 @@ class Project extends Entity {
                         });
                         scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
                             if (item.props != null) {
+                                if (Reflect.hasField(item.props, 'texture')) {
+                                    Reflect.deleteField(item.props, 'width');
+                                    Reflect.deleteField(item.props, 'height');
+                                }
                                 var quad:Quad = cast instance;
                                 for (field in Reflect.fields(item.props)) {
                                     if (field == 'texture') {
@@ -255,7 +259,7 @@ class Project extends Entity {
                                         var assetName:String = Reflect.field(item.props, field);
                                         if (assetName != null) {
                                             var existing:ImageAsset = cast assets.asset(assetName, 'image');
-                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
+                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName, { premultiplyAlpha: true /* TODO REMOVE */ });
                                             if (existing == null) {
                                                 asset.runtimeAssets = runtimeAssets;
                                                 trace('NEW ASSET: ' + asset);
