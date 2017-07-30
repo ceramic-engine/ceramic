@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
 /** A bunch of static extensions to make life easier. */
 class Extensions {
 
@@ -26,5 +28,18 @@ class Extensions {
         array[index] = value;
 #end
     } //unsafeSet
+
+    inline public static function setProperty<T>(instance:T, field:String, value:Dynamic):Void {
+
+        if (#if flash untyped (instance).hasOwnProperty ("set_" + field) #elseif js untyped (instance).__properties__ && untyped (instance).__properties__["set_" + field] #else false #end) {
+                Reflect.setProperty(instance, field, value);
+        }
+        else if (Reflect.hasField(instance, field)) {
+                Reflect.setField(instance, field, value);
+        } else {
+                warning('Object ' + instance + ' doesn\'t have a property named: $field');
+        }
+
+    } //setProperty
 
 } //Extensions

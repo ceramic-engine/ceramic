@@ -166,7 +166,7 @@ class Visual extends Entity {
     private var realWidth:Float = -1;
     public var width(get,set):Float;
     function get_width():Float {
-        return realWidth == -1 ? 0 : realWidth * scaleX;
+        return realWidth == -1 ? 0 : realWidth;
     }
     function set_width(width:Float):Float {
         if (this.width == width) return width;
@@ -178,7 +178,7 @@ class Visual extends Entity {
     private var realHeight:Float = -1;
     public var height(get,set):Float;
     function get_height():Float {
-        return realHeight == -1 ? 0 : realHeight * scaleY;
+        return realHeight == -1 ? 0 : realHeight;
     }
     function set_height(height:Float):Float {
         if (this.height == height) return height;
@@ -335,18 +335,18 @@ class Visual extends Entity {
 
         // Apply local properties (pos, scale, rotation, skew)
         //
-        _matrix.translate(-anchorX * w / scaleX, -anchorY * h / scaleY);
+        _matrix.translate(-anchorX * w, -anchorY * h);
 
         if (skewX != 0 || skewY != 0) {
             _matrix.skew(skewX * _degToRad, skewY * _degToRad);
         }
 
         if (rotation != 0) _matrix.rotate(rotation * _degToRad);
-        _matrix.translate(anchorX * w / scaleX, anchorY * h / scaleY);
+        _matrix.translate(anchorX * w, anchorY * h);
         if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
         _matrix.translate(
-            x - (anchorX * w),
-            y - (anchorY * h)
+            x - (anchorX * w * scaleX),
+            y - (anchorY * h * scaleY)
         );
 
         if (transform != null) {
@@ -440,9 +440,9 @@ class Visual extends Entity {
         var testY = _matrix.transformY(x, y);
 
         return testX >= 0
-            && testX < width / scaleX
+            && testX < width
             && testY >= 0
-            && testY < height / scaleY;
+            && testY < height;
 
     } //hits
 

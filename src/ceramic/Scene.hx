@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
+
 typedef SceneData = {
 
     /** Name to identify the scene. */
@@ -41,6 +43,8 @@ typedef SceneItem = {
 class Scene extends Quad {
 
     public var entities(default,null):Array<Entity>;
+
+    public var deserializers:Map<String,Scene->Entity->SceneItem->Void> = new Map();
 
 /// Lifecycle
 
@@ -134,15 +138,14 @@ class Scene extends Quad {
         }
 
         // Copy item properties
-        if (item.props != null) {
-            for (field in Reflect.fields(item.props)) {
-                if (#if flash untyped (instance).hasOwnProperty ("set_" + field) #elseif js untyped (instance).__properties__ && untyped (instance).__properties__["set_" + field] #else false #end) {
-                    Reflect.setProperty(instance, field, Reflect.field(item.props, field));
-                }
-                else if (Reflect.hasField(instance, field)) {
-                    Reflect.setField(instance, field, Reflect.field(item.props, field));
-                } else {
-                    warning('Entity class ' + item.entity + ' doesn\'t have a property named: $field');
+        var deserialize = deserializers.get(item.entity);
+        if (deserialize != null) {
+            deserialize(this, instance, item);
+        }
+        else {
+            if (item.props != null) {
+                for (field in Reflect.fields(item.props)) {
+                    instance.setProperty(field, Reflect.field(item.props, field));
                 }
             }
         }

@@ -16,6 +16,19 @@ class RuntimeAssets {
 
     var assetDirsByBaseName:Map<String,Array<String>> = null;
 
+    var cachedNames:Array<{
+        name: String,
+        paths: Array<String>,
+        constName: String
+    }> = null;
+
+    var cachedLists:{
+        all: Array<String>,
+        allDirs: Array<String>,
+        allByName: Map<String,Array<String>>,
+        allDirsByName: Map<String,Array<String>>
+    } = null;
+
     static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
     public function new(allAssets:Array<String>) {
@@ -33,6 +46,8 @@ class RuntimeAssets {
         paths: Array<String>,
         constName: String
     }> {
+
+        if (cachedNames != null) return cachedNames;
 
         var entries = [];
 
@@ -105,6 +120,8 @@ class RuntimeAssets {
             entries.push(entry);
         }
 
+        cachedNames = entries;
+
         return entries;
 
     } //getNames
@@ -115,6 +132,8 @@ class RuntimeAssets {
         allByName: Map<String,Array<String>>,
         allDirsByName: Map<String,Array<String>>
     } {
+
+        if (cachedLists != null) return cachedLists;
 
         var result = {
             all: [],
@@ -148,6 +167,8 @@ class RuntimeAssets {
             var list = [].concat(assetDirsByBaseName.get(baseName));
             result.allDirsByName.set(baseName, list);
         }
+
+        cachedLists = result;
 
         return result;
 

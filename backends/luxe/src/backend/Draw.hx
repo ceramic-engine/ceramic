@@ -170,11 +170,11 @@ class Draw implements spec.Draw {
                     // Update geometry values
                     //
                     if (quad.rotateFrame == RotateFrame.ROTATE_90) {
-                        w = quad.height / quad.scaleY;
-                        h = quad.width / quad.scaleX;
+                        w = quad.height;
+                        h = quad.width;
                     } else {
-                        w = quad.width / quad.scaleX;
-                        h = quad.height / quad.scaleY;
+                        w = quad.width;
+                        h = quad.height;
                     }
                     
                     v = quadGeom.vertices;

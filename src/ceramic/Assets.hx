@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.internal.BitmapFontParser;
 import ceramic.BitmapFont;
+import ceramic.Either;
 import ceramic.Shortcuts.*;
 
 using StringTools;
@@ -45,6 +46,9 @@ class Asset extends Entity {
     /** Asset owner. The owner is a group of assets (Assets instance). When the owner gets
         destroyed, every asset it owns get destroyed as well. */
     public var owner(default,null):Assets;
+
+    /** Optional runtime assets, used to compute path. */
+    public var runtimeAssets(default,set):RuntimeAssets;
 
     /** Asset options. Depends on asset kind and even backend in some cases. */
     public var options(default,null):AssetOptions;
@@ -90,7 +94,12 @@ class Asset extends Entity {
 
     } //destroy
 
-    public function computePath(?extensions:Array<String>, ?dir:Bool):Void {
+    public function computePath(?extensions:Array<String>, ?dir:Bool, ?runtimeAssets:RuntimeAssets):Void {
+
+        // Runtime assets
+        if (runtimeAssets == null && this.runtimeAssets != null) {
+            runtimeAssets = this.runtimeAssets;
+        }
 
         // Compute extensions list and dir flag
         //
@@ -119,7 +128,17 @@ class Asset extends Entity {
         var path = null;
         var bestPathInfo = null;
 
-        var byName:Map<String,Array<String>> = dir ? Assets.allDirsByName : Assets.allByName;
+        var byName:Map<String,Array<String>> = dir ?
+            runtimeAssets != null ?
+                runtimeAssets.getLists().allDirsByName
+            :
+                Assets.allDirsByName
+        :
+            runtimeAssets != null ?
+                runtimeAssets.getLists().allByName
+            :
+                Assets.allByName
+        ;
 
         var name = this.name;
 
@@ -193,6 +212,17 @@ class Asset extends Entity {
         return path;
 
     } //set_path
+
+    function set_runtimeAssets(runtimeAssets:RuntimeAssets):RuntimeAssets {
+
+        if (this.runtimeAssets == runtimeAssets) return runtimeAssets;
+
+        this.runtimeAssets = runtimeAssets;
+        computePath();
+
+        return runtimeAssets;
+
+    } //set_runtimeAssets
 
     function set_handleTexturesDensityChange(value:Bool):Bool {
 
@@ -837,6 +867,25 @@ class Assets extends Entity {
         return previousAsset;
 
     } //addAsset
+    
+    public function asset(idOrName:Either<AssetId, String>, ?kind:String):Asset {
+
+        var value:String = cast idOrName;
+        var colonIndex = value.indexOf(':');
+
+        var name:String = value;
+
+        if (colonIndex != -1) {
+            name = value.substring(0, colonIndex);
+            kind = value.substring(colonIndex + 1);
+        }
+
+        if (kind == null) return null;
+        var byName = assetsByKindAndName.get(kind);
+        if (byName == null) return null;
+        return byName.get(name);
+
+    } //asset
 
     public function removeAsset(asset:Asset):Void {
 
