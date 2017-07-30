@@ -313,7 +313,7 @@ class BackendTools implements tools.spec.BackendTools {
             
             case 'web':
                 toTransform.push({
-                    path: 'web/source.png',
+                    path: 'web/app.png',
                     width: 128,
                     height: 128
                 });
