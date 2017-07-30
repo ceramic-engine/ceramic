@@ -207,7 +207,7 @@ exports.hook = function(flow, done)
         }
 
         // Generate files with flow
-        haxelib(['run', 'flow', 'files'], { cwd: flowPath });
+        haxelib(['run', 'flow', 'files'], { cwd: targetPath });
 
     } //run
 
