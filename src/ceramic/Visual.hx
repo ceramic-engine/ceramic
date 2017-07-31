@@ -276,6 +276,37 @@ class Visual extends Entity {
 
     } //skew
 
+/// Advanced helpers
+
+    /** Change the visual's anchor but update its x and y values to make
+        it keep its current position. */
+    public function anchorKeepPosition(anchorX:Float, anchorY:Float):Void {
+
+        if (this.anchorX == anchorX && this.anchorY == anchorY) return;
+
+        // Get initial pos
+        visualToScreen(0, 0, _point);
+        if (parent != null) {
+            parent.screenToVisual(_point.x, _point.y, _point);
+        }
+        
+        var prevX = _point.x;
+        var prevY = _point.y;
+        this.anchorX = anchorX;
+        this.anchorY = anchorY;
+
+        // Get new pos
+        this.visualToScreen(0, 0, _point);
+        if (parent != null) {
+            parent.screenToVisual(_point.x, _point.y, _point);
+        }
+
+        // Move visual accordingly
+        this.x += prevX - _point.x;
+        this.y += prevY - _point.y;
+
+    } //anchor
+
 /// Lifecycle
 
     public function new() {
