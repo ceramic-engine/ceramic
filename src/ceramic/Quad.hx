@@ -48,7 +48,7 @@ class Quad extends Visual {
         this.frameWidth = frameWidth;
 
         // Update width
-        realWidth = frameWidth;
+        width = frameWidth;
 
         return frameWidth;
     }
@@ -59,7 +59,7 @@ class Quad extends Visual {
         this.frameHeight = frameHeight;
 
         // Update height
-        realHeight = frameHeight;
+        height = frameHeight;
 
         return frameHeight;
     }

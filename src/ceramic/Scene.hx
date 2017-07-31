@@ -56,22 +56,6 @@ class Scene extends Quad {
 
     } //new
 
-/// Overrides
-
-    override function set_width(width:Float):Float {
-        if (realWidth == width) return width;
-        realWidth = width;
-        matrixDirty = true;
-        return width;
-    }
-
-    override function set_height(height:Float):Float {
-        if (realHeight == height) return height;
-        realHeight = height;
-        matrixDirty = true;
-        return width;
-    }
-
 /// Data
 
     public function putData(sceneData:SceneData):SceneData {

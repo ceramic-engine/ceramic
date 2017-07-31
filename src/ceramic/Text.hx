@@ -84,7 +84,7 @@ class Text extends Visual {
     override function set_width(width:Float):Float {
         // Only adjust scaleX to match requested width
         if (this.width == width) return width;
-        scaleX = width / realWidth;
+        scaleX = width / this.width;
         matrixDirty = true;
         return width;
     }
@@ -96,7 +96,7 @@ class Text extends Visual {
     override function set_height(height:Float):Float {
         // Only adjust scaleY to match requested height
         if (this.height == height) return height;
-        scaleX = height / realHeight;
+        scaleX = height / this.height;
         matrixDirty = true;
         return height;
     }
@@ -136,8 +136,8 @@ class Text extends Visual {
     override function computeContent() {
 
         if (font == null) {
-            realWidth = 0;
-            realHeight = 0;
+            width = 0;
+            height = 0;
             contentDirty = false;
             return;
         }
@@ -225,8 +225,8 @@ class Text extends Visual {
         for (lineWidth in lineWidths) {
             maxLineWidth = Math.max(lineWidth, maxLineWidth);
         }
-        realWidth = maxLineWidth;
-        realHeight = lineWidths.length * pointSize * lineHeight;
+        this.width = maxLineWidth;
+        this.height = lineWidths.length * pointSize * lineHeight;
 
         // Align quads as requested
         switch (align) {

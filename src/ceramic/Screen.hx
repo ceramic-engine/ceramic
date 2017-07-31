@@ -168,7 +168,7 @@ class Screen extends Entity {
                         buttonId: buttonId,
                         x: x1,
                         y: y1,
-                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                     });
                 }
             });
@@ -187,7 +187,7 @@ class Screen extends Entity {
                         buttonId: buttonId,
                         x: x1,
                         y: y1,
-                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                     });
                 }
             });
@@ -204,7 +204,7 @@ class Screen extends Entity {
                     buttonId: MouseButton.NONE,
                     x: x1,
                     y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                 });
             });
         });
@@ -234,7 +234,7 @@ class Screen extends Entity {
                         buttonId: -1,
                         x: x1,
                         y: y1,
-                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                     });
                 }
             });
@@ -253,7 +253,7 @@ class Screen extends Entity {
                         buttonId: -1,
                         x: x1,
                         y: y1,
-                        hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                     });
                 }
             });
@@ -270,7 +270,7 @@ class Screen extends Entity {
                     buttonId: -1,
                     x: x1,
                     y: y1,
-                    hits: x1 >= 0 && x1 < width && y1 >= 0 && y1 < height
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                 });
             });
         });

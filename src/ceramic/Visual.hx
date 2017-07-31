@@ -163,26 +163,24 @@ class Visual extends Entity {
         return anchorY;
     }
 
-    private var realWidth:Float = -1;
-    public var width(get,set):Float;
+    @:isVar public var width(get,set):Float = 0;
     function get_width():Float {
-        return realWidth == -1 ? 0 : realWidth;
+        return width;
     }
     function set_width(width:Float):Float {
         if (this.width == width) return width;
-        realWidth = width;
+        this.width = width;
         matrixDirty = true;
         return width;
     }
 
-    private var realHeight:Float = -1;
-    public var height(get,set):Float;
+    @:isVar public var height(get,set):Float = 0;
     function get_height():Float {
-        return realHeight == -1 ? 0 : realHeight;
+        return height;
     }
     function set_height(height:Float):Float {
         if (this.height == height) return height;
-        realHeight = height;
+        this.height = height;
         matrixDirty = true;
         return height;
     }
@@ -238,6 +236,8 @@ class Visual extends Entity {
     static var _matrix:Transform = new Transform();
 
     static var _degToRad:Float = Math.PI / 180.0;
+
+    static var _point:Point = new Point();
 
 /// Helpers
 
@@ -436,13 +436,15 @@ class Visual extends Entity {
         _matrix.concat(screen.reverseMatrix);
         _matrix.invert();
 
-        var testX = _matrix.transformX(x, y);
-        var testY = _matrix.transformY(x, y);
+        var testX0 = _matrix.transformX(x, y);
+        var testY0 = _matrix.transformY(x, y);
+        var testX1 = _matrix.transformX(x - 1, y - 1);
+        var testY1 = _matrix.transformY(x - 1, y - 1);
 
-        return testX >= 0
-            && testX < width
-            && testY >= 0
-            && testY < height;
+        return testX0 >= 0
+            && testX1 <= width
+            && testY0 >= 0
+            && testY1 <= height;
 
     } //hits
 
