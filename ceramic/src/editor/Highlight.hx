@@ -4,19 +4,39 @@ import ceramic.Visual;
 import ceramic.Quad;
 import ceramic.Color;
 import ceramic.Point;
+import ceramic.TouchInfo;
 import ceramic.Shortcuts.*;
+
+enum HighlightCorner {
+    TOP_LEFT;
+    TOP_RIGHT;
+    BOTTOM_LEFT;
+    BOTTOM_RIGHT;
+}
 
 class Highlight extends Visual {
 
+/// Events
+
+    @event function cornerDown(corner:HighlightCorner, info:TouchInfo);
+
 /// Properties
 
-    var cornerTopLeft = new Quad();
+    public var cornerTopLeft = new Quad();
 
-    var cornerTopRight = new Quad();
+    public var cornerTopRight = new Quad();
 
-    var cornerBottomLeft = new Quad();
+    public var cornerBottomLeft = new Quad();
 
-    var cornerBottomRight = new Quad();
+    public var cornerBottomRight = new Quad();
+
+    public var topDistance(default,null):Float;
+
+    public var rightDistance(default,null):Float;
+
+    public var bottomDistance(default,null):Float;
+
+    public var leftDistance(default,null):Float;
 
     var borderTop = new Quad();
 
@@ -26,15 +46,15 @@ class Highlight extends Visual {
 
     var borderLeft = new Quad();
 
-    var pointTopLeft = new Point();
+    public var pointTopLeft(default,null) = new Point();
 
-    var pointTopRight = new Point();
+    public var pointTopRight(default,null) = new Point();
 
-    var pointBottomLeft = new Point();
+    public var pointBottomLeft(default,null) = new Point();
 
-    var pointBottomRight = new Point();
+    public var pointBottomRight(default,null) = new Point();
 
-    public var cornerSize(default,set):Float = 6;
+    public var cornerSize(default,set):Float = 8;
     function set_cornerSize(cornerSize:Float):Float {
         if (this.cornerSize == cornerSize) return cornerSize;
         this.cornerSize = cornerSize;
@@ -90,6 +110,19 @@ class Highlight extends Visual {
         add(borderRight);
         add(borderBottom);
         add(borderLeft);
+
+        cornerTopLeft.onDown(this, function(info) {
+            emitCornerDown(TOP_LEFT, info);
+        });
+        cornerTopRight.onDown(this, function(info) {
+            emitCornerDown(TOP_RIGHT, info);
+        });
+        cornerBottomLeft.onDown(this, function(info) {
+            emitCornerDown(BOTTOM_LEFT, info);
+        });
+        cornerBottomRight.onDown(this, function(info) {
+            emitCornerDown(BOTTOM_RIGHT, info);
+        });
 
         color = 0xFF0000;
 
@@ -154,7 +187,8 @@ class Highlight extends Visual {
         var b = pointTopRight.y - pointTopLeft.y;
         var r = Math.atan2(pointTopRight.y - pointTopLeft.y, pointTopRight.x - pointTopLeft.x) * 180.0 / Math.PI;
 
-        borderTop.size(Math.sqrt(a * a + b * b), borderSize);
+        topDistance = Math.sqrt(a * a + b * b);
+        borderTop.size(topDistance, borderSize);
         borderTop.anchor(0, 0.5);
         borderTop.pos(pointTopLeft.x, pointTopLeft.y);
         borderTop.rotation = r;
@@ -163,7 +197,8 @@ class Highlight extends Visual {
         b = pointBottomRight.y - pointTopRight.y;
         r = Math.atan2(pointBottomRight.y - pointTopRight.y, pointBottomRight.x - pointTopRight.x) * 180.0 / Math.PI;
 
-        borderRight.size(Math.sqrt(a * a + b * b), borderSize);
+        rightDistance = Math.sqrt(a * a + b * b);
+        borderRight.size(rightDistance, borderSize);
         borderRight.anchor(0, 0.5);
         borderRight.pos(pointTopRight.x, pointTopRight.y);
         borderRight.rotation = r;
@@ -172,7 +207,8 @@ class Highlight extends Visual {
         b = pointBottomLeft.y - pointBottomRight.y;
         r = Math.atan2(pointBottomLeft.y - pointBottomRight.y, pointBottomLeft.x - pointBottomRight.x) * 180.0 / Math.PI;
 
-        borderBottom.size(Math.sqrt(a * a + b * b), borderSize);
+        bottomDistance = Math.sqrt(a * a + b * b);
+        borderBottom.size(bottomDistance, borderSize);
         borderBottom.anchor(0, 0.5);
         borderBottom.pos(pointBottomRight.x, pointBottomRight.y);
         borderBottom.rotation = r;
@@ -181,7 +217,8 @@ class Highlight extends Visual {
         b = pointTopLeft.y - pointBottomLeft.y;
         r = Math.atan2(pointTopLeft.y - pointBottomLeft.y, pointTopLeft.x - pointBottomLeft.x) * 180.0 / Math.PI;
 
-        borderLeft.size(Math.sqrt(a * a + b * b), borderSize);
+        leftDistance = Math.sqrt(a * a + b * b);
+        borderLeft.size(leftDistance, borderSize);
         borderLeft.anchor(0, 0.5);
         borderLeft.pos(pointBottomLeft.x, pointBottomLeft.y);
         borderLeft.rotation = r;
