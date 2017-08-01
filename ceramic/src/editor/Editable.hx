@@ -11,10 +11,13 @@ import ceramic.TouchInfo;
 import ceramic.Shortcuts.*;
 
 import editor.Highlight;
+import editor.MouseHint;
 
 class Editable extends Component {
 
     public static var highlight:Highlight;
+
+    public static var hint:MouseHint;
 
     static var active:Editable = null;
 
@@ -43,6 +46,10 @@ class Editable extends Component {
             highlight.destroy();
         }
 
+        if (active == this && hint != null) {
+            hint.destroy();
+        }
+
     } //destroy
 
 /// Public API
@@ -59,6 +66,8 @@ class Editable extends Component {
         highlight.onceDestroy(function() {
 
             highlight.offCornerDown(handleCornerDown);
+            highlight.offCornerOver(handleCornerOver);
+            highlight.offCornerOut(handleCornerOut);
 
             if (active == this) {
                 active = null;
@@ -80,6 +89,8 @@ class Editable extends Component {
         highlight.wrapVisual(entity);
 
         highlight.onCornerDown(this, handleCornerDown);
+        highlight.onCornerOver(this, handleCornerOver);
+        highlight.onCornerOut(this, handleCornerOut);
 
         app.onUpdate(this, update);
 
@@ -297,5 +308,68 @@ class Editable extends Component {
         });
 
     } //handleCornerDown
+
+    function handleCornerOver(corner:HighlightCorner, info:TouchInfo) {
+
+        /*untyped console.debug('CORNER OVER ' + corner);
+
+        if (hint == null) {
+            hint = new MouseHint();
+        }
+
+        var allCornerPoints = [
+            highlight.pointTopLeft,
+            highlight.pointTopRight,
+            highlight.pointBottomLeft,
+            highlight.pointBottomRight
+        ];
+        var cornerPoint = switch(corner) {
+            case TOP_LEFT: highlight.pointTopLeft;
+            case TOP_RIGHT: highlight.pointTopRight;
+            case BOTTOM_LEFT: highlight.pointBottomLeft;
+            case BOTTOM_RIGHT: highlight.pointBottomRight;
+        }
+
+        var isMostLeft = true;
+        var isMostRight = true;
+        for (point in allCornerPoints) {
+            if (point != cornerPoint) {
+                if (point.x < cornerPoint.x) {
+                    isMostLeft = false;
+                }
+                else if (point.x > cornerPoint.x) {
+                    isMostRight = false;
+                }
+            }
+        }
+
+        if (isMostLeft) {
+            hint.text.anchor(1, 0.5);
+            hint.y = cornerPoint.y - 13;
+            hint.x = cornerPoint.x - 12;
+        }
+        else {
+            hint.text.anchor(0, 0.5);
+            hint.y = cornerPoint.y - 13;
+            hint.x = cornerPoint.x + 10;
+        }
+
+        project.render();*/
+
+    } //handleCornerOver
+
+    function handleCornerOut(corner:HighlightCorner, info:TouchInfo) {
+
+        /*untyped console.debug('CORNER OUT ' + corner);
+
+        if (hint != null) {
+            hint.destroy();
+            hint = null;
+        }
+
+
+        project.render();*/
+
+    } //handleCornerOut
 
 } //Editable

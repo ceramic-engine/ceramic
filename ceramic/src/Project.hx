@@ -96,6 +96,18 @@ class Project extends Entity {
             });
         });
 
+        // Keyboard events
+        app.onKeyDown(this, function(key) {
+
+            trace('KEY DOWN: ' + key);
+
+        });
+        app.onKeyUp(this, function(key) {
+
+            trace('KEY UP: ' + key);
+
+        });
+
         // Render once
         render();
 

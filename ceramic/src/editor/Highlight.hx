@@ -20,6 +20,10 @@ class Highlight extends Visual {
 
     @event function cornerDown(corner:HighlightCorner, info:TouchInfo);
 
+    @event function cornerOver(corner:HighlightCorner, info:TouchInfo);
+
+    @event function cornerOut(corner:HighlightCorner, info:TouchInfo);
+
 /// Properties
 
     public var cornerTopLeft = new Quad();
@@ -122,6 +126,32 @@ class Highlight extends Visual {
         });
         cornerBottomRight.onDown(this, function(info) {
             emitCornerDown(BOTTOM_RIGHT, info);
+        });
+
+        cornerTopLeft.onOver(this, function(info) {
+            emitCornerOver(TOP_LEFT, info);
+        });
+        cornerTopRight.onOver(this, function(info) {
+            emitCornerOver(TOP_RIGHT, info);
+        });
+        cornerBottomLeft.onOver(this, function(info) {
+            emitCornerOver(BOTTOM_LEFT, info);
+        });
+        cornerBottomRight.onOver(this, function(info) {
+            emitCornerOver(BOTTOM_RIGHT, info);
+        });
+
+        cornerTopLeft.onOut(this, function(info) {
+            emitCornerOut(TOP_LEFT, info);
+        });
+        cornerTopRight.onOut(this, function(info) {
+            emitCornerOut(TOP_RIGHT, info);
+        });
+        cornerBottomLeft.onOut(this, function(info) {
+            emitCornerOut(BOTTOM_LEFT, info);
+        });
+        cornerBottomRight.onOut(this, function(info) {
+            emitCornerOut(BOTTOM_RIGHT, info);
         });
 
         color = 0xFF0000;
