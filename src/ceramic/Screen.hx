@@ -584,7 +584,7 @@ class Screen extends Entity {
                 });
             }
         }
-        if (matched != null) {
+        if (matched != null && prevMatched != matched) {
             matched._numOver++;
             if (matched._numOver == 1 || matched.multiTouch) {
                 matched.emitOver({
@@ -663,7 +663,7 @@ class Screen extends Entity {
                 });
             }
         }
-        if (matched != null) {
+        if (matched != null && prevMatched != matched) {
             matched._numOver++;
             if (matched._numOver == 1 || matched.multiTouch) {
                 matched.emitOver({
