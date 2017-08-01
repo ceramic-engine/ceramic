@@ -81,24 +81,24 @@ class Text extends Visual {
         if (contentDirty) computeContent();
         return super.get_width();
     }
-    override function set_width(width:Float):Float {
+
+    function scaleWidth(targetWidth:Float):Void {
         // Only adjust scaleX to match requested width
-        if (this.width == width) return width;
-        scaleX = width / this.width;
+        if (_height == targetWidth) return;
+        scaleX = targetWidth / _width;
         matrixDirty = true;
-        return width;
     }
 
     override function get_height():Float {
         if (contentDirty) computeContent();
         return super.get_height();
     }
-    override function set_height(height:Float):Float {
+
+    function scaleHeight(targetHeight:Float):Void {
         // Only adjust scaleY to match requested height
-        if (this.height == height) return height;
-        scaleX = height / this.height;
+        if (_height == targetHeight) return;
+        scaleY = targetHeight / _height;
         matrixDirty = true;
-        return height;
     }
 
     override function set_blending(blending:Blending):Blending {

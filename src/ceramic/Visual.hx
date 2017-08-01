@@ -163,24 +163,26 @@ class Visual extends Entity {
         return anchorY;
     }
 
-    @:isVar public var width(get,set):Float = 0;
+    var _width:Float = 0;
+    public var width(get,set):Float;
     function get_width():Float {
-        return width;
+        return _width;
     }
     function set_width(width:Float):Float {
-        if (this.width == width) return width;
-        this.width = width;
+        if (_width == width) return width;
+        _width = width;
         matrixDirty = true;
         return width;
     }
 
-    @:isVar public var height(get,set):Float = 0;
+    var _height:Float = 0;
+    public var height(get,set):Float;
     function get_height():Float {
-        return height;
+        return _height;
     }
     function set_height(height:Float):Float {
-        if (this.height == height) return height;
-        this.height = height;
+        if (_height == height) return height;
+        _height = height;
         matrixDirty = true;
         return height;
     }
