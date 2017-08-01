@@ -1,5 +1,9 @@
 package backend;
 
+import haxe.io.Path;
+
+using StringTools;
+
 typedef LoadAudioOptions = {
 
     @:optional var stream:Bool;
@@ -25,7 +29,12 @@ class Audio implements spec.Audio {
 
     inline public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
 
-        Luxe.resources.load_audio('assets/' + path, {
+        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+            path
+        :
+            Path.join([ceramic.App.app.settings.assetsPath, path]);
+
+        Luxe.resources.load_audio(path, {
             is_stream: options != null ? options.stream : false
         })
         .then(function(audio:AudioResource) {

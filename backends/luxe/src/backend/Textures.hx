@@ -2,6 +2,9 @@ package backend;
 
 import snow.systems.assets.Asset;
 import luxe.Resources;
+import haxe.io.Path;
+
+using StringTools;
 
 typedef LoadTextureOptions = {
     ?premultiplyAlpha:Bool
@@ -16,9 +19,13 @@ class Textures implements spec.Textures {
     inline public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
 
         // Create empty texture
-        var id = 'assets/' + path;
+        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+            path
+        :
+            Path.join([ceramic.App.app.settings.assetsPath, path]);
+
         var texture:phoenix.Texture = new phoenix.Texture({
-            id: id,
+            id: path,
             system: Luxe.resources,
             filter_min: null,
             filter_mag: null,
@@ -33,7 +40,7 @@ class Textures implements spec.Textures {
         function doLoad() {
             // Load from asset using Luxe's internal API
             texture.state = ResourceState.loading;
-            var get = Luxe.snow.assets.image(id);
+            var get = Luxe.snow.assets.image(path);
             get.then(function(asset:AssetImage) {
                 texture.state = ResourceState.loaded;
 

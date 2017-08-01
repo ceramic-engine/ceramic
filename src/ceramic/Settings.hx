@@ -42,6 +42,12 @@ class Settings implements Observable {
     /** Whether the window can be resized or not. */
     public var resizable(default,null):Bool = false;
 
+    /** Assets path. */
+    public var assetsPath(default,null):String = 'assets';
+
+    /** Settings passed to backend. */
+    public var backend(default,null):Dynamic = {};
+
 }
 
 /** Same as Settings, but for app startup (inside Project.new(settings)).
@@ -137,6 +143,24 @@ class InitSettings {
     }
     inline function set_resizable(resizable:Bool):Bool {
         return @:privateAccess settings.resizable = resizable;
+    }
+
+    /** Assets path. */
+    public var assetsPath(get,set):String;
+    inline function get_assetsPath():String {
+        return settings.assetsPath;
+    }
+    inline function set_assetsPath(assetsPath:String):String {
+        return @:privateAccess settings.assetsPath = assetsPath;
+    }
+
+    /** Settings passed to backend. */
+    public var backend(get,set):Dynamic;
+    inline function get_backend():Dynamic {
+        return settings.backend;
+    }
+    inline function set_backend(backend:Dynamic):Dynamic {
+        return @:privateAccess settings.backend = backend;
     }
 
 }
