@@ -45,6 +45,11 @@ class Project extends Entity {
         settings.antialiasing = true;
         settings.background = 0x282828;
         settings.scaling = FIT;
+        settings.assetsPath = untyped window._ceramicBaseUrl + '/ceramic/assets';
+        settings.backend = {
+            webParent: js.Browser.document.getElementById('ceramic-editor-view'),
+            allowDefaultKeys: true
+        };
 
         app.onceReady(ready);
 
@@ -73,7 +78,20 @@ class Project extends Entity {
 
         // Setup
         //layout();
-        window.addEventListener('resize', function() updateCanvas());
+        var containerEl = document.getElementById('ceramic-editor-view');
+        var containerWidth = containerEl.offsetWidth;
+        var containerHeight = containerEl.offsetHeight;
+        app.onUpdate(this, function(delta) {
+            var containerEl = document.getElementById('ceramic-editor-view');
+            var width = containerEl.offsetWidth;
+            var height = containerEl.offsetHeight;
+
+            if (width != containerWidth || height != containerHeight) {
+                containerWidth = width;
+                containerHeight = height;
+                updateCanvas();
+            }
+        });
         screen.onResize(this, function() {
 
             // Fit scene
@@ -90,11 +108,14 @@ class Project extends Entity {
         updateCanvas();
 
         // Receive messages
-        window.addEventListener('message', function(event:{data:String, origin:String, source:js.html.Window}) {
-            app.onceUpdate(function(_) {
-                receiveRawMessage(event);
-            });
-        });
+        var _ceramicEditor = {
+            send: function(event:{data:String, origin:String, source:js.html.Window}) {
+                app.onceUpdate(function(_) {
+                    receiveRawMessage(event);
+                });
+            }
+        };
+        untyped window._ceramicEditor = _ceramicEditor;
 
         // Keyboard events
         app.onKeyDown(this, function(key) {
@@ -108,6 +129,9 @@ class Project extends Entity {
 
         });
 
+        // Update canvas
+        updateCanvas();
+
         // Render once
         render();
 
@@ -115,12 +139,16 @@ class Project extends Entity {
 
     function updateCanvas() {
 
+        var containerEl = document.getElementById('ceramic-editor-view');
+        var width = containerEl.offsetWidth;
+        var height = containerEl.offsetHeight;
+
         var appEl:js.html.CanvasElement = cast document.getElementById('app');
         appEl.style.margin = '0 0 0 0';
-        appEl.style.width = window.innerWidth + 'px';
-        appEl.style.height = window.innerHeight + 'px';
-        appEl.width = Math.round(window.innerWidth * window.devicePixelRatio);
-        appEl.height = Math.round(window.innerHeight * window.devicePixelRatio);
+        appEl.style.width = width + 'px';
+        appEl.style.height = height + 'px';
+        appEl.width = Math.round(width * window.devicePixelRatio);
+        appEl.height = Math.round(height * window.devicePixelRatio);
 
     } //updateCanvas
 
@@ -180,10 +208,10 @@ class Project extends Entity {
 
     function receiveRawMessage(event:{data:String, origin:String, source:js.html.Window}) {
 
-        // Ensure message comes from parent
+        /*// Ensure message comes from parent
         if (event.source != window.parent) {
             return;
-        }
+        }*/
 
         // Parse message
         var message:Message = null;
@@ -193,7 +221,12 @@ class Project extends Entity {
             // Ping?
             if (message.type == 'ping') {
                 parentOrigin = event.origin;
-                window.parent.postMessage(Json.stringify({type: 'pong'}), parentOrigin);
+                var _send:Dynamic = untyped window._ceramicComponentSend;
+                _send({
+                    data: Json.stringify({type: 'pong'}),
+                    origin: parentOrigin,
+                    source: untyped window
+                });
                 return;
             }
 
@@ -365,11 +398,13 @@ class Project extends Entity {
 
     public function send(message:Message):Void {
 
-        // Send message to parent
-        window.parent.postMessage(
-            Json.stringify(message),
-            parentOrigin
-        );
+        // Send message
+        var _send:Dynamic = untyped window._ceramicComponentSend;
+        _send({
+            data: Json.stringify(message),
+            origin: parentOrigin,
+            source: untyped window
+        });
 
     } //send
 

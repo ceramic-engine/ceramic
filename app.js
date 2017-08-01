@@ -123,6 +123,13 @@ app.on('activate', function () {
 let port = 48903
 const server = express()
 
+// Enable CORS
+server.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 if (process.env.ELECTRON_DEV) {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/public/ceramic'))))
 } else {

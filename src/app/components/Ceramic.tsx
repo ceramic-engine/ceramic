@@ -32,8 +32,26 @@ export interface Message {
         this.mounted = true;
         ceramic.component = this;
 
+        // Load script when server port is ready
+        let unbind = autorun(() => {
+
+            if (context.serverPort != null) {
+
+                (window as any)._ceramicBaseUrl = "http://localhost:" + context.serverPort;
+
+                const script = document.createElement("script");
+                script.src = "http://localhost:" + context.serverPort + "/ceramic/SceneEditor.js";
+                script.async = true;
+
+                document.body.appendChild(script);
+
+                setImmediate(() => unbind());
+            }
+
+        });
+
         // Add listener to receive message
-        window.addEventListener('message', this.receiveRawMessage);
+        (window as any)._ceramicComponentSend = this.receiveRawMessage;
 
         const emitPing = () => {
 
@@ -74,26 +92,17 @@ export interface Message {
 
     render() {
 
-        if (context.serverPort == null) {
-            return null;
-        }
-        else {
-            return (
-                <iframe
-                    id={this.elementId}
-                    src={"http://localhost:" + context.serverPort + "/ceramic"}
-                    frameBorder={0}
-                    scrolling="no"
-                    sandbox="allow-scripts allow-popups allow-same-origin"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        visibility: this.ready ? 'visible' : 'hidden'
-                    }}
-                />
-            );
-        }
+        return (
+            <div
+                id="ceramic-editor-view"
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    visibility: this.ready ? 'visible' : 'hidden'
+                }}
+            />
+        );
 
     } //render
 
@@ -101,7 +110,7 @@ export interface Message {
 
     @autobind receiveRawMessage(event:any) {
 
-        // Check origin
+        /*// Check origin
         if (event.origin !== "http://localhost:" + context.serverPort) {
             console.error('wrong origin');
             return;
@@ -112,7 +121,7 @@ export interface Message {
         if (event.source !== iframe.contentWindow) {
             console.error('Received message from invalid window');
             return;
-        }
+        }*/
 
         // Decode message
         try {
@@ -172,11 +181,19 @@ export interface Message {
         }
 
         // Send message to frame
-        const iframe = document.getElementById(this.elementId) as HTMLIFrameElement;
+        /*const iframe = document.getElementById(this.elementId) as HTMLIFrameElement;
         iframe.contentWindow.postMessage(
             JSON.stringify(message),
             "http://localhost:" + context.serverPort
-        );
+        );*/
+        let ceramicEditor = (window as any)._ceramicEditor;
+        if (ceramicEditor != null && ceramicEditor.send != null) {
+            ceramicEditor.send({
+                data: JSON.stringify(message),
+                origin: "http://localhost:" + context.serverPort,
+                source: window
+            });
+        }
 
     } //send
 
