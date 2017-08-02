@@ -285,6 +285,13 @@ export interface Message {
                     }
                 });
             }
+            else {
+                // Deselect
+                this.send({
+                    type: 'scene-item/select',
+                    value: null
+                });
+            }
 
         });
 

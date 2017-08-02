@@ -26,7 +26,15 @@ import { context } from 'app/context';
                                 <Title>Images</Title>
                                 <Alt>
                                     {project.imageAssets.map((val, i) =>
-                                        <div key={i} className="entry" onMouseOver={() => { project.ui.expandedAsset = val; }} onMouseOut={() => { project.ui.expandedAsset = null; }}>
+                                        <div
+                                            key={i}
+                                            className={
+                                                'entry in-alt'
+                                                + (i < project.imageAssets.length - 1 ? ' with-separator' : '')
+                                            }
+                                            onMouseOver={() => { project.ui.expandedAsset = val; }}
+                                            onMouseOut={() => { project.ui.expandedAsset = null; }}
+                                        >
                                             <div className="name">{val.name}</div>
                                             <div className="info">{val.paths.join(', ')}</div>
                                         </div>
@@ -35,7 +43,13 @@ import { context } from 'app/context';
                                 <Title>Texts</Title>
                                 <Alt>
                                     {project.textAssets.map((val, i) =>
-                                        <div key={i} className="entry">
+                                        <div
+                                            key={i}
+                                            className={
+                                                'entry in-alt'
+                                                + (i < project.textAssets.length - 1 ? ' with-separator' : '')
+                                            }
+                                        >
                                             <div className="name">{val.name}</div>
                                             <div className="info">{val.paths.join(', ')}</div>
                                         </div>
@@ -44,7 +58,13 @@ import { context } from 'app/context';
                                 <Title>Sounds</Title>
                                 <Alt>
                                     {project.soundAssets.map((val, i) =>
-                                        <div key={i} className="entry">
+                                        <div
+                                            key={i}
+                                            className={
+                                                'entry in-alt'
+                                                + (i < project.soundAssets.length - 1 ? ' with-separator' : '')
+                                            }
+                                        >
                                             <div className="name">{val.name}</div>
                                             <div className="info">{val.paths.join(', ')}</div>
                                         </div>
@@ -53,7 +73,13 @@ import { context } from 'app/context';
                                 <Title>Fonts</Title>
                                 <Alt>
                                     {project.fontAssets.map((val, i) =>
-                                        <div key={i} className="entry">
+                                        <div
+                                            key={i}
+                                            className={
+                                                'entry in-alt'
+                                                + (i < project.fontAssets.length - 1 ? ' with-separator' : '')
+                                            }
+                                        >
                                             <div className="name">{val.name}</div>
                                             <div className="info">{val.paths.join(', ')}</div>
                                         </div>

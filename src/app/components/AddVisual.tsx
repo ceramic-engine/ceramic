@@ -47,12 +47,7 @@ import { project, VisualItem, QuadItem } from 'app/model';
         project.scene.items.push(quad);
 
         // Select visual
-        ceramic.send({
-            type: 'scene-item/select',
-            value: {
-                name: quad.name
-            }
-        });
+        project.ui.selectedItemName = quad.id;
 
         project.ui.addingVisual = false;
 

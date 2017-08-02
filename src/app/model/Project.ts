@@ -150,6 +150,27 @@ class Project extends Model {
 
         });
 
+        // Update data from ceramic (haxe)
+        ceramic.listen('scene-item/delete', (message) => {
+
+            let name = message.value.name;
+            let item = this.scene.itemsByName.get(name);
+
+            if (item != null) {
+
+                if (this.ui.selectedItemName === name) {
+                    this.ui.selectedItemName = null;
+                }
+
+                this.scene.items.splice(
+                    this.scene.items.indexOf(item),
+                    1
+                );
+                item = null;
+            }
+
+        });
+
     } //constructor
 
 /// Public API

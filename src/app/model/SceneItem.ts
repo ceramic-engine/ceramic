@@ -2,6 +2,11 @@ import { serialize, observe, serializeModel, Model } from 'utils';
 
 class SceneItem extends Model {
 
+/// Sort
+
+    /** Item sort index */
+    @observe @serialize sortIndex:number = 0;
+
 /// Properties
 
     /** Item name (identifier) */
@@ -19,7 +24,7 @@ class SceneItem extends Model {
 
         for (let key in serialized) {
             if (serialized.hasOwnProperty(key)) {
-                if (key === 'name' || key === 'entity') {
+                if (key === 'name' || key === 'entity' || key === 'sortIndex') {
                     data[key] = serialized[key];
                 } else {
                     data.props[key] = serialized[key];

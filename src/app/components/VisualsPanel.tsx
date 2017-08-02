@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { observer } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, SelectInput, Title, Alt } from 'components';
+import { observer, arrayMove } from 'utils';
+import { Button, Form, Field, Panel, NumberInput, SelectInput, Title, Alt, Sortable } from 'components';
 import { project, VisualItem, QuadItem } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
@@ -34,16 +34,43 @@ import FaLock from 'react-icons/lib/fa/lock';
                 <div>
                     <Title>All visuals</Title>
                     <Alt>
+                        
                     <div style={{ height: this.props.height * 0.3 - 24, overflowY: 'auto' }}>
-                        {project.scene.visualItems.length > 0 ?
-                            project.scene.visualItems.map((visual, i) =>
+
+                        <Sortable
+                            lockAxis={'y'}
+                            distance={5}
+                            onSortEnd={({oldIndex, newIndex}) => {
+                                let visuals = project.scene.visualItemsSorted.slice();
+                                visuals = arrayMove(visuals, oldIndex, newIndex);
+                                if (oldIndex < newIndex) {
+                                    let depth = visuals[newIndex-1].depth;
+                                    if (newIndex < visuals.length - 1) {
+                                        depth = (depth + visuals[newIndex+1].depth) * 0.5;
+                                    } else {
+                                        depth--;
+                                    }
+                                    visuals[newIndex].depth = depth;
+                                }
+                                else {
+                                    let depth = visuals[newIndex+1].depth;
+                                    if (newIndex > 0) {
+                                        depth = (depth + visuals[newIndex-1].depth) * 0.5;
+                                    } else {
+                                        depth++;
+                                    }
+                                    visuals[newIndex].depth = depth;
+                                }
+                            }}
+                        >
+                        {project.scene.visualItemsSorted.length > 0 ?
+                            project.scene.visualItemsSorted.map((visual, i) =>
                                 <div
                                     key={i}
                                     className={
-                                        'entry'
-                                        + (project.ui.selectedItemId === visual.id ? ' selected' : '')
-                                        + (i === project.scene.visualItems.length - 1 ? ' with-separator' : '')}
-                                    onClick={() => { project.ui.selectedItemId = visual.id; }}
+                                        'entry in-alt with-separator'
+                                        + (project.ui.selectedItemName === visual.name ? ' selected' : '')}
+                                    onClick={() => { project.ui.selectedItemName = visual.name; }}
                                 >
                                     <div className="name">
                                     <div style={{color: '#888', float: 'right'}}><FaLock size={12} /></div>
@@ -62,6 +89,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                 </div>
                             )
                         : null}
+                        </Sortable>
                     </div>
                     </Alt>
                 </div>

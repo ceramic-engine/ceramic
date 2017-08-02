@@ -12,14 +12,14 @@ class UiState extends Model {
 
     @observe addingVisual:boolean;
 
-    @observe @serialize selectedItemId:string;
+    @observe @serialize selectedItemName:string;
 
 /// Computed
 
     @compute get selectedItem():VisualItem|QuadItem|SceneItem {
 
         for (let item of project.scene.items) {
-            if (item.id === this.selectedItemId) {
+            if (item.name === this.selectedItemName) {
                 return item;
             }
         }

@@ -2,7 +2,7 @@ body, html {
     background-color: #282828 !important;
 }
 
-#root {
+#body {
     background-color: #282828;
     width: 100vw;
     height: 100vh;
@@ -10,45 +10,45 @@ body, html {
     padding: 0;
 }
 
-#root *:not(input):not(textarea):not(.selectable)  {
+#body *:not(input):not(textarea):not(.selectable)  {
     -webkit-user-select: none;
     user-select: none;
 }
 
-#root div,
-#root span,
-#root input,
-#root label,
-#root button,
-#root i,
-#root textarea,
-#root select {
+#body div,
+#body span,
+#body input,
+#body label,
+#body button,
+#body i,
+#body textarea,
+#body select {
     color: #f3f3f3;
     cursor: default;
     -webkit-font-smoothing: subpixel-antialiased;
 }
 
-#root .nolabel label {
+#body .nolabel label {
     display: none;
 }
 
-#root .topnav {
+#body .topnav {
     background-color: #4f4f4f;
     border-bottom: 1px solid #383838;
     font-size: 13px;
 }
 
-#root .statusbar {
+#body .statusbar {
     background-color: #4f4f4f;
     border-top: 1px solid #383838;
 }
 
-#root .leftside {
+#body .leftside {
     background-color: #4f4f4f;
     border-right: 1px solid #383838;
 }
 
-#root .rightside {
+#body .rightside {
     background-color: #4f4f4f;
     border-left: 1px solid #383838;
     min-height: 100%;
@@ -56,11 +56,11 @@ body, html {
 
 /* Panel tabs */
 
-#root .tabs {
+#body .tabs {
     background-color: #424242;
 }
 
-#root .tabs .tab {
+#body .tabs .tab {
     background-color: #4f4f4f;
     display: inline-block;
     padding: 7px 10px 6px 10px;
@@ -74,23 +74,23 @@ body, html {
     font-size: 12px;
 }
 
-#root .tabs .tab:not(.active) {
+#body .tabs .tab:not(.active) {
     background-color: #424242;
     color: #b0b0b0;
     border-bottom: 1px solid #383838;
 }
 
-#root .tabs .tab:not(.active):hover {
+#body .tabs .tab:not(.active):hover {
     background-color: #464646;
     color: #d0d0d0;
 }
 
-#root .tabs .panel {
+#body .tabs .panel {
     border-top: 1px solid #383838;
     background-color: #4f4f4f;
 }
 
-#root .tabs .panel .title {
+#body .tabs .panel .title {
     border-bottom: 1px solid #444444;
     padding: 6px 10px;
     font-size: 10px;
@@ -98,54 +98,57 @@ body, html {
     text-align: center;
 }
 
-#root .tabs .panel .alt {
+#body .tabs .panel .alt {
     background-color: #4a4a4a;
     border-bottom: 1px solid #444444;
     font-size: 9px;
 }
 
-#root .tabs .panel .alt .entry {
+#body .entry {
     padding: 6px 10px;
 }
 
-#root .tabs .panel .alt .entry:not(:last-child),
-#root .tabs .panel .alt .entry.with-separator {
+#body .entry.in-alt {
+    background-color: #4a4a4a;
+}
+
+#body .entry.with-separator {
     border-bottom: 1px solid #444444;
 }
 
-#root .tabs .panel .alt .entry:hover {
+#body .entry:hover {
     background-color: #4f4f4f;
 }
 
-#root .tabs .panel .alt .entry.selected {
+#body .entry.selected {
     background-color: #4f4f4f;
     border-left: 2px solid #FF0000;
     padding-left: 8px;
 }
 
-#root .tabs .panel .alt .entry .name {
+#body .entry .name {
     font-size: 11px;
     margin-bottom: 3px;
 }
 
-#root .tabs .panel .alt .entry .info {
+#body .entry .info {
     font-size: 9px;
     font-style: italic;
     color: #888888;
 }
 
-#root .tabs .panel form {
+#body .tabs .panel form {
     padding: 14px 10px;
 }
 
 /* Input */
 
-#root .field {
+#body .field {
     display: block;
     margin-bottom: 4px;
 }
 
-#root .field label {
+#body .field label {
     display: inline-block;
     width: 90px;
     text-align: right;
@@ -153,36 +156,36 @@ body, html {
     font-size: 11px;
 }
 
-#root .field:not(.with-label) {
+#body .field:not(.with-label) {
     margin-left: 100px;
 }
 
-#root .field .field-input {
+#body .field .field-input {
     display: inline-block;
 }
 
-#root input.input, #root select.input {
+#body input.input, #body select.input {
     outline: none;
     font-size: 10px;
     min-height: 16px;
     border-radius: 0;
 }
 
-#root input.input {
+#body input.input {
     padding: 0px 4px 1px 4px;
 }
 
-#root input.input, #root .input-select-container {
+#body input.input, #body .input-select-container {
     background-color: #454545;
     border: 1px solid #666666;
     height: 19px;
 }
 
-#root input.input.disabled {
+#body input.input.disabled {
     color: #bbbbbb;
 }
 
-#root select.input {
+#body select.input {
     background-color: transparent;
     border: none;
     padding: 1px 0px 0px 0px;
@@ -190,53 +193,53 @@ body, html {
     height: 19px;
 }
 
-#root input.input::selection, #root select.input::selection {
+#body input.input::selection, #body select.input::selection {
     background-color: #2798eb;
 }
 
 /* Text/Number */
 
-#root input.input.input-text,
-#root input.input.input-number {
+#body input.input.input-text,
+#body input.input.input-number {
     cursor: text;
     width: 80px;
 }
 
-#root input.input.input-text:focus,
-#root input.input.input-number:focus,
-#root .input-select-container.focus {
+#body input.input.input-text:focus,
+#body input.input.input-number:focus,
+#body .input-select-container.focus {
     border-color: #2798eb;
 }
 
 /* Button */
 
-#root input.input.input-button {
+#body input.input.input-button {
     padding: 3px 8px 4px 8px;
     min-width: 80px;
     height: 24px;
 }
 
-#root input.input.input-button.default {
+#body input.input.input-button.default {
     background-color: transparent;
     border: 1px solid #777777;
 }
 
-#root input.input.input-button.default:hover {
+#body input.input.input-button.default:hover {
     background-color: rgba(255,255,255,0.05);
     border: 1px solid #7c7c7c;
 }
 
-#root input.input.input-button.dashed {
+#body input.input.input-button.dashed {
     background-color: transparent;
     border: 1px dashed #999999;
 }
 
-#root input.input.input-button.dashed:hover {
+#body input.input.input-button.dashed:hover {
     background-color: rgba(255,255,255,0.05);
     border: 1px dashed #9e9e9e;
 }
 
-#root input.input.input-button.square {
+#body input.input.input-button.square {
     background-color: #343434;
     border: none;
     width: 60px;
@@ -245,24 +248,24 @@ body, html {
     border: 1px solid #666666;
 }
 
-#root input.input.input-button.square:hover {
+#body input.input.input-button.square:hover {
     background-color: #3a3a3a;
     border: 1px solid #6b6b6b;
 }
 
-#root input.input.input-button.default:active {
+#body input.input.input-button.default:active {
     border-color: #2798eb;
     background-color: #2798eb;
     transform: translateY(1px);
 }
 
-#root input.input.input-button.dashed:active {
+#body input.input.input-button.dashed:active {
     border-color: #fafafa;
     background-color: #2798eb;
     transform: translateY(1px);
 }
 
-#root input.input.input-button.square:active {
+#body input.input.input-button.square:active {
     border-color: #2798eb;
     background-color: #2798eb;
     transform: translateY(1px);
@@ -270,17 +273,17 @@ body, html {
 
 /* Select */
 
-#root select.input.input-select {
+#body select.input.input-select {
     width: 92px;
 }
 
-#root .input-select-container.empty select.input.input-select {
+#body .input-select-container.empty select.input.input-select {
     color: #bbbbbb;
 }
 
 /* Asset info */
 
-#root .asset-info {
+#body .asset-info {
     position: absolute;
     right: 310px;
     top: 30px;
@@ -288,25 +291,25 @@ body, html {
     max-width: 200px;
 }
 
-#root .asset-info > * {
+#body .asset-info > * {
     max-width: 100%;
 }
 
 /* Overlay */
 
-#root .overlay {
+#body .overlay {
     position: absolute;
     background-color: rgba(0,0,0,0.3);
 }
 
 /* Dialog */
 
-#root .overlay .dialog {
+#body .overlay .dialog {
     margin-bottom: 10%;
     min-width: 400px;
 }
 
-#root .overlay .dialog .title {
+#body .overlay .dialog .title {
     background-color: #4f4f4f;
     border: 1px solid #383838;
     border-top-left-radius: 4px;
@@ -316,7 +319,7 @@ body, html {
     font-size: 13px;
 }
 
-#root .overlay .dialog .content {
+#body .overlay .dialog .content {
     background-color: #4a4a4a;
     border: 1px solid #383838;
     border-top: none;
@@ -328,12 +331,12 @@ body, html {
 
 /* Inline */
 
-#root .inline {
+#body .inline {
     display: inline-block;
 }
 
 /* Separator */
 
-#root .separator {
+#body .separator {
     border-bottom: 1px solid #444444;
 }

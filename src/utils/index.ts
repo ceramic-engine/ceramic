@@ -4,6 +4,12 @@ export { default as storage } from './storage';
 export { ceramic } from './ceramic';
 export { history, History, HistoryItem, HistoryListener } from './history';
 
+// Export arrayMove
+export { arrayMove } from 'react-sortable-hoc';
+
+// Export stableSort
+export { stableSort } from './stable-sort';
+
 // Export keypath
 export { default as keypath } from './keypath';
 

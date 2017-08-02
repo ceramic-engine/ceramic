@@ -1,4 +1,4 @@
-import { serialize, observe, compute, serializeModel, Model } from 'utils';
+import { serialize, observe, compute, serializeModel, stableSort, Model } from 'utils';
 import SceneItem from './SceneItem';
 import VisualItem from './VisualItem';
 import QuadItem from './QuadItem';
@@ -45,6 +45,24 @@ class Scene extends Model {
                 result.push(item);
             }
         }
+
+        return result;
+
+    } //visualItems
+
+    @compute get visualItemsSorted() {
+        
+        let result:Array<VisualItem|QuadItem> = [];
+
+        for (let item of this.visualItems) {
+            result.push(item);
+        }
+
+        stableSort(result, function(a, b) {
+            if (a.depth < b.depth) return 1;
+            if (a.depth > b.depth) return -1;
+            return 0;
+        });
 
         return result;
 

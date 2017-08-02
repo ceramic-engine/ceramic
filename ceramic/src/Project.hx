@@ -8,6 +8,7 @@ import ceramic.Quad;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
+import ceramic.Key;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
@@ -25,6 +26,8 @@ class Project extends Entity {
     var parentOrigin:String = null;
 
     var scene:Scene = null;
+
+    var selectedItemName:String = null;
 
     var outsideTop:Quad = null;
 
@@ -120,12 +123,24 @@ class Project extends Entity {
         // Keyboard events
         app.onKeyDown(this, function(key) {
 
-            trace('KEY DOWN: ' + key);
+            //trace('KEY DOWN: ' + key);
+
+            if (document.activeElement == null || document.activeElement.id == 'body') {
+
+                if (key.keyCode == KeyCode.BACKSPACE && selectedItemName != null) {
+                    send({
+                        type: 'scene-item/delete',
+                        value: {
+                            name: selectedItemName
+                        }
+                    });
+                }
+            }
 
         });
         app.onKeyUp(this, function(key) {
 
-            trace('KEY UP: ' + key);
+            //trace('KEY UP: ' + key);
 
         });
 
@@ -281,6 +296,7 @@ class Project extends Entity {
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
+                        scene.childrenDepthRange = 10000;
                         scene.color = 0x2f2f2f;
                         scene.anchor(0.5, 0.5);
                         scene.onDown(scene, function(info) {
@@ -381,9 +397,13 @@ class Project extends Entity {
                     }
                 }
                 else if (action == 'select') {
-                    var item = scene.getItem(value.name);
+                    var item = value != null && value.name != null ? scene.getItem(value.name) : null;
                     if (item != null && item.hasComponent('editable')) {
                         cast(item.component('editable'), Editable).select();
+                        selectedItemName = value.name;
+                    }
+                    else {
+                        selectedItemName = null;
                     }
                 }
                 else if (action == 'delete') {
