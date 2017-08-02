@@ -62,7 +62,7 @@ import { EditScene, AddVisual } from 'app/components';
                     <div
                         className="leftside"
                         style={{
-                            width: leftSideWidth,
+                            width: leftSideWidth - 1,
                             height: context.height - navHeight,
                             position: 'absolute',
                             left: 0,

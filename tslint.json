@@ -81,7 +81,7 @@
         ],
         "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"],
         "whitespace": [
-            true,
+            false,
             "check-branch",
             "check-decl",
             "check-module",

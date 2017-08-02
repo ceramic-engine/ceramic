@@ -1,5 +1,6 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
+import { VisualItem, QuadItem, SceneItem } from './index';
 
 class UiState extends Model {
 
@@ -15,7 +16,7 @@ class UiState extends Model {
 
 /// Computed
 
-    @compute get selectedItem() {
+    @compute get selectedItem():VisualItem|QuadItem|SceneItem {
 
         for (let item of project.scene.items) {
             if (item.id === this.selectedItemId) {
@@ -26,6 +27,26 @@ class UiState extends Model {
         return null;
 
     } //selectedItem
+
+    @compute get selectedVisual():VisualItem {
+
+        if (this.selectedItem != null && this.selectedItem instanceof VisualItem) {
+            return this.selectedItem;
+        }
+
+        return null;
+
+    } //selectedVisual
+
+    @compute get selectedQuad():QuadItem {
+
+        if (this.selectedItem != null && this.selectedItem instanceof QuadItem) {
+            return this.selectedItem;
+        }
+
+        return null;
+
+    } //selectedQuad
 
 /// Lifecycle
 

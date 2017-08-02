@@ -108,7 +108,8 @@ body, html {
     padding: 6px 10px;
 }
 
-#root .tabs .panel .alt .entry:not(:last-child) {
+#root .tabs .panel .alt .entry:not(:last-child),
+#root .tabs .panel .alt .entry.with-separator {
     border-bottom: 1px solid #444444;
 }
 
@@ -117,7 +118,9 @@ body, html {
 }
 
 #root .tabs .panel .alt .entry.selected {
-    background-color: #707070;
+    background-color: #4f4f4f;
+    border-left: 2px solid #FF0000;
+    padding-left: 8px;
 }
 
 #root .tabs .panel .alt .entry .name {

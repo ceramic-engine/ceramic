@@ -50,7 +50,7 @@ import { context } from 'app/context';
                     <div className="rightside">
                         <Tabs tabs={this.panelTabs} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
                             <ScenePanel />
-                            <VisualsPanel />
+                            <VisualsPanel height={this.props.height - 28 /* tab height */} />
                             <AssetsPanel height={this.props.height} />
                         </Tabs>
                     </div>
@@ -72,7 +72,7 @@ import { context } from 'app/context';
                     className="statusbar"
                     style={{
                         width: this.props.width - 300,
-                        height: statusHeight,
+                        height: statusHeight - 1,
                         position: 'absolute',
                         left: 0,
                         top: this.props.height - statusHeight

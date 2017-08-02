@@ -36,6 +36,20 @@ class Scene extends Model {
 
     } //itemsByName
 
+    @compute get visualItems() {
+        
+        let result:Array<VisualItem|QuadItem> = [];
+
+        for (let item of this.items) {
+            if (item instanceof VisualItem) {
+                result.push(item);
+            }
+        }
+
+        return result;
+
+    } //visualItems
+
 /// Helpers
 
     serializeForCeramic() {
