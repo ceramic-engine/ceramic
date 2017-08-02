@@ -25,9 +25,12 @@ class Form extends React.Component {
 
         e.preventDefault();
 
-        let firstInput = e.target.parentNode.querySelector('.input');
-        if (firstInput != null) {
-            firstInput.focus();
+        let inputs:Array<HTMLElement> = e.target.parentNode.querySelectorAll('.input');
+        for (let el of inputs) {
+            if (!el.classList.contains('disabled') && !(el as any).disabled) {
+                el.focus();
+                break;
+            }
         }
 
     } //handleFocusLoop
