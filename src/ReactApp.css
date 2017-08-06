@@ -141,6 +141,13 @@ body, html {
     padding: 14px 10px;
 }
 
+#body form .visual-extra-options {
+    display: block;
+    padding: 0 10px 10px 10px;
+    margin: 0 -10px 14px -10px;
+    border-bottom: 1px solid #444;
+}
+
 /* Input */
 
 #body .field {

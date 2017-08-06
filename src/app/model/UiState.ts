@@ -1,6 +1,6 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
-import { VisualItem, QuadItem, SceneItem } from './index';
+import { VisualItem, QuadItem, SceneItem, TextItem } from './index';
 
 class UiState extends Model {
 
@@ -47,6 +47,16 @@ class UiState extends Model {
         return null;
 
     } //selectedQuad
+
+    @compute get selectedText():TextItem {
+
+        if (this.selectedItem != null && this.selectedItem instanceof TextItem) {
+            return this.selectedItem;
+        }
+
+        return null;
+
+    } //selectedText
 
 /// Lifecycle
 

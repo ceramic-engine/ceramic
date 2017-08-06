@@ -5,6 +5,7 @@ import ceramic.Settings;
 import ceramic.Scene;
 import ceramic.Timer;
 import ceramic.Quad;
+import ceramic.Text;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
@@ -304,6 +305,7 @@ class Project extends Entity {
                                 Editable.highlight.destroy();
                             }
                         });
+
                         scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
                             if (item.props != null) {
 
@@ -374,6 +376,99 @@ class Project extends Entity {
                                         else {
                                             quad.texture = null;
                                             updateSize();
+                                        }
+                                    }
+                                    else {
+                                        instance.setProperty(field, Reflect.field(item.props, field));
+                                    }
+                                }
+                            }
+                        });
+
+                        scene.deserializers.set('ceramic.Text', function(scene:Scene, instance:Entity, item:SceneItem) {
+                            if (item.props != null) {
+
+                                var text:Text = cast instance;
+
+                                if (item.props.width != null) {
+                                    Reflect.deleteField(item.props, 'width');
+                                }
+                                if (item.props.height != null) {
+                                    Reflect.deleteField(item.props, 'height');
+                                }
+
+                                function updateSize() {
+                                    if (text.font != null) {
+                                        if (item.props.width != text.width || item.props.height != text.height) {
+                                            send({
+                                                type: 'set/scene.item.${item.name}',
+                                                value: {
+                                                    width: text.width,
+                                                    height: text.height
+                                                }
+                                            });
+                                        }
+                                    }
+                                    else {
+                                        text.width = item.props.width;
+                                        text.height = item.props.height;
+                                    }
+                                }
+
+                                for (field in Reflect.fields(item.props)) {
+
+                                    if (field == 'font') {
+                                        if (runtimeAssets == null) {
+                                            return;
+                                        }
+                                        var assetName:String = Reflect.field(item.props, field);
+                                        if (assetName != null) {
+                                            var existing:ImageAsset = cast assets.asset(assetName, 'image');
+                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
+                                            if (existing == null) {
+                                                // Create and load asset
+                                                asset.runtimeAssets = runtimeAssets;
+                                                assets.addAsset(asset);
+                                                    asset.onceComplete(function(success) {
+                                                        if (success && !instance.destroyed) {
+                                                            text.font = assets.font(assetName);
+                                                            updateSize();
+                                                        }
+                                                    });
+                                                assets.load();
+                                            }
+                                            else {
+                                                if (asset.status == READY) {
+                                                    // Asset already available
+                                                    text.font = assets.font(assetName);
+                                                    updateSize();
+                                                }
+                                                else if (asset.status == LOADING) {
+                                                    // Asset loading
+                                                    asset.onceComplete(function(success) {
+                                                        if (success && !instance.destroyed) {
+                                                            text.font = assets.font(assetName);
+                                                            updateSize();
+                                                        }
+                                                    });
+                                                }
+                                                else {
+                                                    // Asset broken?
+                                                    text.font = app.assets.font(Fonts.ARIAL_20);
+                                                    updateSize();
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            text.font = app.assets.font(Fonts.ARIAL_20);
+                                            updateSize();
+                                        }
+                                    }
+                                    else if (field == 'align') {
+                                        text.align = switch(field) {
+                                            case 'right': RIGHT;
+                                            case 'center': CENTER;
+                                            default: LEFT;
                                         }
                                     }
                                     else {

@@ -2,6 +2,7 @@ import { serialize, observe, compute, serializeModel, stableSort, Model } from '
 import SceneItem from './SceneItem';
 import VisualItem from './VisualItem';
 import QuadItem from './QuadItem';
+import TextItem from './TextItem';
 
 class Scene extends Model {
 
@@ -20,13 +21,13 @@ class Scene extends Model {
     @observe @serialize height:number;
 
     /** Scene items */
-    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem> = [];
+    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem|TextItem> = [];
 
 /// Computed
 
     @compute get itemsByName() {
         
-        let byName:Map<string, SceneItem|VisualItem|QuadItem> = new Map();
+        let byName:Map<string, SceneItem|VisualItem|QuadItem|TextItem> = new Map();
 
         for (let item of this.items) {
             byName.set(item.name, item);
@@ -38,7 +39,7 @@ class Scene extends Model {
 
     @compute get visualItems() {
         
-        let result:Array<VisualItem|QuadItem> = [];
+        let result:Array<VisualItem|QuadItem|TextItem> = [];
 
         for (let item of this.items) {
             if (item instanceof VisualItem) {
@@ -52,7 +53,7 @@ class Scene extends Model {
 
     @compute get visualItemsSorted() {
         
-        let result:Array<VisualItem|QuadItem> = [];
+        let result:Array<VisualItem|QuadItem|TextItem> = [];
 
         for (let item of this.visualItems) {
             result.push(item);

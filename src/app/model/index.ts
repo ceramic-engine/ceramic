@@ -11,6 +11,8 @@ import VisualItem from './VisualItem';
 registerModel(VisualItem);
 import QuadItem from './QuadItem';
 registerModel(QuadItem);
+import TextItem from './TextItem';
+registerModel(TextItem);
 import UiState from './UiState';
 registerModel(UiState);
 
@@ -20,6 +22,7 @@ export { default as Scene } from './Scene';
 export { default as SceneItem } from './SceneItem';
 export { default as VisualItem } from './VisualItem';
 export { default as QuadItem } from './QuadItem';
+export { default as TextItem } from './TextItem';
 export { default as UiState } from './UiState';
 
 // Load db (if anything to load)

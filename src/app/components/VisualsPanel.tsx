@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { observer, arrayMove } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, SelectInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, TextInput, SelectInput, Title, Alt, Sortable } from 'components';
 import { project, VisualItem, QuadItem } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
 @observer class VisualsPanel extends React.Component {
+
+    static textAlignList:Array<string> = ['left', 'right', 'center'];
 
     props:{
         /** Available height */
@@ -15,18 +17,29 @@ import FaLock from 'react-icons/lib/fa/lock';
 
     render() {
 
+        // Typed `selected`
         let selectedVisual = project.ui.selectedVisual;
         let selectedQuad = project.ui.selectedQuad;
+        let selectedText = project.ui.selectedText;
 
+        // Textures list
         let texturesList = ['none'];
         let quadTextureIndex = 0;
         let n = 1;
-        for (let asset of project.imageAssets) {
-            texturesList.push(asset.name);
-            if (selectedQuad != null && asset.name === selectedQuad.texture) {
-                quadTextureIndex = n;
+        if (selectedQuad != null && project.imageAssets != null) {
+            for (let asset of project.imageAssets) {
+                texturesList.push(asset.name);
+                if (selectedQuad != null && asset.name === selectedQuad.texture) {
+                    quadTextureIndex = n;
+                }
+                n++;
             }
-            n++;
+        }
+
+        var textAlignList = VisualsPanel.textAlignList;
+        let textAlignIndex = 0;
+        if (selectedText != null) {
+            textAlignIndex = Math.max(0, textAlignList.indexOf(selectedText.align));
         }
 
         return (
@@ -100,6 +113,42 @@ import FaLock from 'react-icons/lib/fa/lock';
                             <Title>Selected {selectedVisual.entity.split('ceramic.').join('').toLowerCase()}</Title>
                             <Alt>
                                 <Form>
+                                    {
+                                        selectedQuad != null ?
+                                        <div className="visual-extra-options">
+                                            <Field label="texture">
+                                                <SelectInput
+                                                    empty={0}
+                                                    selected={quadTextureIndex}
+                                                    options={texturesList}
+                                                    onChange={(selected) => {
+                                                        selectedQuad.texture = selected === 0 ? null : texturesList[selected];
+                                                    }}
+                                                />
+                                            </Field>
+                                        </div>
+                                        :
+                                            null
+                                    }
+                                    {
+                                        selectedText != null ?
+                                        <div className="visual-extra-options">
+                                            <Field label="content">
+                                                <TextInput value={selectedText.content} onChange={(val) => { selectedText.content = val.trim(); }} />
+                                            </Field>
+                                            <Field label="align">
+                                                <SelectInput
+                                                    selected={textAlignIndex}
+                                                    options={textAlignList}
+                                                    onChange={(selected) => {
+                                                        selectedText.align = textAlignList[selected] as any;
+                                                    }}
+                                                />
+                                            </Field>
+                                        </div>
+                                        :
+                                            null
+                                    }
                                     <Field label="width">
                                         <NumberInput disabled={quadTextureIndex !== 0} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
                                     </Field>
@@ -139,21 +188,6 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     <Field label="alpha">
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
                                     </Field>
-                                    {
-                                        selectedQuad != null ?
-                                            <Field label="texture">
-                                                <SelectInput
-                                                    empty={0}
-                                                    selected={quadTextureIndex}
-                                                    options={texturesList}
-                                                    onChange={(selected) => {
-                                                        selectedQuad.texture = selected === 0 ? null : texturesList[selected];
-                                                    }}
-                                                />
-                                            </Field>
-                                        :
-                                            null
-                                    }
                                 </Form>
                             </Alt>
                         </div>
