@@ -1,5 +1,3 @@
 # Ceramic Editor
 
-Ceramic Editor
-
-![Ceramic Logo](/public/icons/512x512.png)
+![Ceramic Logo](/public/icons/256x256.png)
