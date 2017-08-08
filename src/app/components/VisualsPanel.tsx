@@ -53,7 +53,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                         <Sortable
                             lockAxis={'y'}
                             distance={5}
+                            helperClass={"dragging"}
                             onSortEnd={({oldIndex, newIndex}) => {
+                                if (oldIndex === newIndex) return;
                                 let visuals = project.scene.visualItemsSorted.slice();
                                 visuals = arrayMove(visuals, oldIndex, newIndex);
                                 if (oldIndex < newIndex) {
@@ -134,7 +136,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                         selectedText != null ?
                                         <div className="visual-extra-options">
                                             <Field label="content">
-                                                <TextInput value={selectedText.content} onChange={(val) => { selectedText.content = val.trim(); }} />
+                                                <TextInput multiline={true} value={selectedText.content} onChange={(val) => { selectedText.content = val; }} />
                                             </Field>
                                             <Field label="align">
                                                 <SelectInput
@@ -145,15 +147,24 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                     }}
                                                 />
                                             </Field>
+                                            <Field label="pointSize">
+                                                <NumberInput value={selectedText.pointSize} onChange={(val) => { selectedText.pointSize = val; }} />
+                                            </Field>
+                                            <Field label="lineHeight">
+                                                <NumberInput value={selectedText.lineHeight} onChange={(val) => { selectedText.lineHeight = val; }} />
+                                            </Field>
+                                            <Field label="letterSpacing">
+                                                <NumberInput value={selectedText.letterSpacing} onChange={(val) => { selectedText.letterSpacing = val; }} />
+                                            </Field>
                                         </div>
                                         :
                                             null
                                     }
                                     <Field label="width">
-                                        <NumberInput disabled={quadTextureIndex !== 0} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
+                                        <NumberInput disabled={quadTextureIndex !== 0 || selectedText != null} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
                                     </Field>
                                     <Field label="height">
-                                        <NumberInput disabled={quadTextureIndex !== 0} value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
+                                        <NumberInput disabled={quadTextureIndex !== 0 || selectedText != null} value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
                                     </Field>
                                     <Field label="scaleX">
                                         <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />

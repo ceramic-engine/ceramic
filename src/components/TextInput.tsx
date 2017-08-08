@@ -9,18 +9,48 @@ class TextInput extends React.Component {
         value:string,
         /** Disabled */
         disabled?:boolean,
+        /* Multiline */
+        multiline?:boolean,
         /** onChange */
         onChange?:(value:string) => void
     };
 
     render() {
 
-        let className = 'input input-number';
+        let multiline = this.props.multiline != null ? this.props.multiline : true;
+        let className = 'input input-text';
         if (this.props.disabled) className += ' disabled';
 
-        return (
-            <input disabled={this.props.disabled} className={className} type="text" value={this.props.value} onChange={this.handleChange} onFocus={this.handleFocus} />
-        );
+        if (multiline) {
+            let numLines = this.props.value.split("\n").length;
+            let height = numLines * 12 + 2;
+
+            return (
+                <textarea
+                    disabled={this.props.disabled}
+                    className={className}
+                    value={this.props.value}
+                    onChange={this.handleChange}
+                    onFocus={this.handleFocus}
+                    style={{
+                        resize: "none",
+                        height: height
+                    }}
+                />
+            );
+        }
+        else {
+            return (
+                <input
+                    disabled={this.props.disabled}
+                    className={className}
+                    type="text"
+                    value={this.props.value}
+                    onChange={this.handleChange}
+                    onFocus={this.handleFocus}
+                />
+            );
+        }
 
     } //render
 

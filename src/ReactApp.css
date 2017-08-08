@@ -120,6 +120,11 @@ body, html {
     background-color: #4f4f4f;
 }
 
+#body .sortable-item.dragging .entry {
+    border-top: 1px solid #444444;
+    background-color: #4f4f4f;
+}
+
 #body .entry.selected {
     background-color: #4f4f4f;
     border-left: 2px solid #FF0000;
@@ -159,8 +164,10 @@ body, html {
     display: inline-block;
     width: 90px;
     text-align: right;
+    margin-top: 4px;
     margin-right: 10px;
     font-size: 11px;
+    vertical-align: top;
 }
 
 #body .field:not(.with-label) {
@@ -171,7 +178,7 @@ body, html {
     display: inline-block;
 }
 
-#body input.input, #body select.input {
+#body input.input, #body select.input, #body textarea.input {
     outline: none;
     font-size: 10px;
     min-height: 16px;
@@ -182,7 +189,11 @@ body, html {
     padding: 0px 4px 1px 4px;
 }
 
-#body input.input, #body .input-select-container {
+#body textarea.input {
+    padding: 3px 4px 1px 4px;
+}
+
+#body input.input, #body .input-select-container, #body textarea.input  {
     background-color: #454545;
     border: 1px solid #666666;
     height: 19px;
@@ -200,7 +211,7 @@ body, html {
     height: 19px;
 }
 
-#body input.input::selection, #body select.input::selection {
+#body input.input::selection, #body select.input::selection, #body textarea.input::selection {
     background-color: #2798eb;
 }
 
@@ -209,9 +220,15 @@ body, html {
 #body input.input.input-text,
 #body input.input.input-number {
     cursor: text;
-    width: 80px;
+    width: 140px;
 }
 
+#body textarea.input.input-text {
+    cursor: text;
+    width: 140px;
+}
+
+#body textarea.input.input-text:focus,
 #body input.input.input-text:focus,
 #body input.input.input-number:focus,
 #body .input-select-container.focus {
@@ -281,7 +298,7 @@ body, html {
 /* Select */
 
 #body select.input.input-select {
-    width: 92px;
+    width: 152px;
 }
 
 #body .input-select-container.empty select.input.input-select {

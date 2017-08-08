@@ -465,11 +465,23 @@ class Project extends Entity {
                                         }
                                     }
                                     else if (field == 'align') {
-                                        text.align = switch(field) {
+                                        text.align = switch(item.props.align) {
                                             case 'right': RIGHT;
                                             case 'center': CENTER;
                                             default: LEFT;
                                         }
+                                    }
+                                    else if (field == 'pointSize') {
+                                        text.pointSize = item.props.pointSize;
+                                        updateSize();
+                                    }
+                                    else if (field == 'lineHeight') {
+                                        text.lineHeight = item.props.lineHeight;
+                                        updateSize();
+                                    }
+                                    else if (field == 'letterSpacing') {
+                                        text.letterSpacing = item.props.letterSpacing;
+                                        updateSize();
                                     }
                                     else {
                                         instance.setProperty(field, Reflect.field(item.props, field));
