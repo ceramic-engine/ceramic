@@ -16,11 +16,11 @@ class RuntimeAssets {
 
     var assetDirsByBaseName:Map<String,Array<String>> = null;
 
-    var cachedNames:Array<{
+    var cachedNames:Map<String,Array<{
         name: String,
         paths: Array<String>,
         constName: String
-    }> = null;
+    }>> = new Map();
 
     var cachedLists:{
         all: Array<String>,
@@ -47,7 +47,9 @@ class RuntimeAssets {
         constName: String
     }> {
 
-        if (cachedNames != null) return cachedNames;
+        var cacheKey = kind + '|' + (extensions != null ? extensions.join(',') : '') + (dir ? '|1' : '|0');
+        var cached = cachedNames.get(cacheKey);
+        if (cached != null) return cached;
 
         var entries = [];
 
@@ -120,7 +122,7 @@ class RuntimeAssets {
             entries.push(entry);
         }
 
-        cachedNames = entries;
+        cachedNames.set(cacheKey, entries);
 
         return entries;
 
