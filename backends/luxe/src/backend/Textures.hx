@@ -23,6 +23,17 @@ class Textures implements spec.Textures {
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
+        
+        if (loadedTextures.exists(path)) {
+            loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) + 1);
+            var existing = Luxe.resources.texture(path);
+            if (existing.state == ResourceState.loaded) {
+                done(existing);
+            } else {
+                done(null);
+            }
+            return;
+        }
 
         var texture:phoenix.Texture = new phoenix.Texture({
             id: path,
@@ -78,9 +89,17 @@ class Textures implements spec.Textures {
 
     } //load
 
-    inline public function destroy(texture:Texture):Void {
-        
-        (texture:phoenix.Texture).destroy(true);
+    public function destroy(texture:Texture):Void {
+
+        var path = (texture:phoenix.Texture).id;
+        if (loadedTexturesRetainCount.get(path) > 1) {
+            loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) - 1);
+        }
+        else {
+            loadedTextures.remove(path);
+            loadedTexturesRetainCount.remove(path);
+            (texture:phoenix.Texture).destroy(true);
+        }
 
     } //destroy
 
@@ -95,5 +114,11 @@ class Textures implements spec.Textures {
         return (texture:phoenix.Texture).height;
 
     } //getHeight
+
+/// Internal
+
+    var loadedTextures:Map<String,phoenix.Texture> = new Map();
+
+    var loadedTexturesRetainCount:Map<String,Int> = new Map();
 
 } //Textures
