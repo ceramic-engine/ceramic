@@ -167,7 +167,7 @@ class Text extends Visual {
                 prevChar = null;
                 prevCode = 0;
                 i++;
-                y += pointSize * lineHeight;
+                y += lineHeight * font.lineHeight * sizeFactor;
                 lineWidths.push(x + (glyph != null ? (glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
                 lineQuads.push([]);
                 x = 0;
@@ -226,7 +226,7 @@ class Text extends Visual {
             maxLineWidth = Math.max(lineWidth, maxLineWidth);
         }
         this.width = maxLineWidth;
-        this.height = lineWidths.length * pointSize * lineHeight;
+        this.height = (lineWidths.length - 1) * lineHeight * font.lineHeight * sizeFactor + font.lineHeight * sizeFactor;
 
         // Align quads as requested
         switch (align) {
