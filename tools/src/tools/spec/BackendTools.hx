@@ -32,7 +32,7 @@ interface BackendTools {
     function runUpdate(cwd:String, args:Array<String>):Void;
 
     /** Transform and get assets for the given backend and build target */
-    function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool):Array<tools.Asset>;
+    function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset>;
 
     /** Transform icons */
     function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void;

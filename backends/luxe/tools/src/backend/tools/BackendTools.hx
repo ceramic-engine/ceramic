@@ -186,12 +186,14 @@ class BackendTools implements tools.spec.BackendTools {
 
     } //runUpdate
 
-    public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool):Array<tools.Asset> {
+    public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var validDstPaths:Map<String,Bool> = new Map();
-        var dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+        if (dstAssetsPath == null) {
+            dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+        }
 
         // Add/update missing assets
         //

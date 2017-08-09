@@ -26,7 +26,39 @@ class Assets extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args);
+        var fromArg = extractArgValue(args, 'from', true);
+        var toArg = extractArgValue(args, 'to', true);
+        var processIcons = false;
+
+        var fromPath = null;
+        var toPath = null;
+
+        // We are either processing assets for current project
+        // or with provided source and destination
+        if (fromArg == null || toArg == null) {
+            processIcons = true;
+            ensureCeramicProject(cwd, args);
+        }
+        else {
+            fromPath = fromArg;
+            if (!Path.isAbsolute(fromPath)) {
+                fromPath = Path.join([cwd, fromPath]);
+            }
+            toPath = toArg;
+            if (!Path.isAbsolute(toPath)) {
+                toPath = Path.join([cwd, toPath]);
+            }
+
+            if (!FileSystem.exists(fromPath)) {
+                fail('Assets source directory doesn\'t exist: ' + fromPath);
+            }
+            if (!FileSystem.isDirectory(fromPath)) {
+                fail('Assets source is not a directory: ' + fromPath);
+            }
+            if (FileSystem.exists(toPath) && !FileSystem.isDirectory(toPath)) {
+                fail('Assets destination is not a directory: ' + toPath);
+            }
+        }
 
         var availableTargets = backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
@@ -58,6 +90,9 @@ class Assets extends tools.Task {
         var assets:Array<tools.Asset> = [];
         var ceramicAssetsPath = Path.join([settings.ceramicPath, 'assets']);
         var assetsPath = Path.join([cwd, 'assets']);
+        if (fromPath != null) {
+            assetsPath = fromPath;
+        }
         var names:Map<String,Bool> = new Map();
 
         // Add project assets
@@ -78,7 +113,14 @@ class Assets extends tools.Task {
         }
 
         // Transform/copy assets
-        var transformedAssets = backend.transformAssets(cwd, assets, target, settings.variant, listOnly);
+        var transformedAssets = backend.transformAssets(
+            cwd,
+            assets,
+            target,
+            settings.variant,
+            listOnly,
+            toPath
+        );
 
         if (transformedAssets.length > 0) {
 
@@ -127,8 +169,10 @@ class Assets extends tools.Task {
             }
 
             // Update icons
-            var task = new Icons();
-            task.run(cwd, [args[0], 'icons', target.name, '--variant', settings.variant]);
+            if (processIcons) {
+                var task = new Icons();
+                task.run(cwd, [args[0], 'icons', target.name, '--variant', settings.variant]);
+            }
         }
 
 
