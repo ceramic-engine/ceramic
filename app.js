@@ -141,25 +141,51 @@ if (process.env.ELECTRON_DEV) {
 }
 
 exports.assetsPath = null;
+exports.processingAssets = false;
 server.get('/ceramic/assets/*', function(req, res) {
-  let relativePath = req.path.substr('/ceramic/assets/'.length);
-  if (!exports.assetsPath || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
-    res.status(404)
-    res.send('Not found')
-  } else {
-    let assetPath = path.join(exports.assetsPath, relativePath);
-    fs.readFile(assetPath, function(err, data) {
-      if (err) {
-        res.status(404)
-        res.send('Not found')
-      } else {
-        if (assetPath.toLowerCase().endsWith('.png')) {
-          res.contentType('image/png');
-          res.end(data, 'binary');
+  function handleAsset() {
+    let relativePath = req.path.substr('/ceramic/assets/'.length);
+
+    // Wait until assets are ready, if being processed
+    if (exports.processingAssets) {
+      setTimeout(() => {
+        handleAsset();
+      }, 250);
+      return;
+    }
+
+    if (exports.assetsPath == null || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
+      res.status(404)
+      res.send('Not found')
+    } else {
+      let assetPath = path.join(exports.assetsPath, relativePath);
+      fs.readFile(assetPath, function(err, data) {
+        if (err) {
+          res.status(404)
+          res.send('Not found')
+        } else {
+          let lowerCase = assetPath.toLowerCase()
+          if (lowerCase.endsWith('.png')) {
+            res.contentType('image/png');
+            res.end(data, 'binary');
+          }
+          else if (lowerCase.endsWith('.fnt')) {
+            res.contentType('text/plain');
+            res.end(data, 'utf8');
+          }
+          else if (lowerCase.endsWith('.json')) {
+            res.contentType('application/json');
+            res.end(data, 'utf8');
+          }
+          else {
+            res.status(403)
+            res.send('Forbidden')
+          }
         }
-      }
-    });
+      });
+    }
   }
+  handleAsset();
 });
 
 // Listen to a free port

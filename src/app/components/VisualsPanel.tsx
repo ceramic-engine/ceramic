@@ -36,10 +36,27 @@ import FaLock from 'react-icons/lib/fa/lock';
             }
         }
 
+        // Text align
         var textAlignList = VisualsPanel.textAlignList;
         let textAlignIndex = 0;
         if (selectedText != null) {
             textAlignIndex = Math.max(0, textAlignList.indexOf(selectedText.align));
+        }
+
+        // Fonts list
+
+        // Textures list
+        let fontsList = ['default'];
+        let textFontIndex = 0;
+        n = 1;
+        if (selectedText != null && project.fontAssets != null) {
+            for (let asset of project.fontAssets) {
+                fontsList.push(asset.name);
+                if (selectedText != null && asset.name === selectedText.font) {
+                    textFontIndex = n;
+                }
+                n++;
+            }
         }
 
         return (
@@ -48,7 +65,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                     <Title>All visuals</Title>
                     <Alt>
                         
-                    <div style={{ height: this.props.height * 0.3 - 24, overflowY: 'auto' }}>
+                    <div style={{ height: this.props.height * 0.3 - 24 * 2, overflowY: 'auto' }}>
 
                         <Sortable
                             lockAxis={'y'}
@@ -84,11 +101,27 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     key={i}
                                     className={
                                         'entry in-alt with-separator'
-                                        + (project.ui.selectedItemName === visual.name ? ' selected' : '')}
-                                    onClick={() => { project.ui.selectedItemName = visual.name; }}
+                                        + (project.ui.selectedItemName === visual.name ? ' selected' : '')
+                                        + (visual.locked ? ' locked' : '')}
+                                    onClick={() => {
+                                        if (visual.locked) return;
+                                        project.ui.selectedItemName = visual.name;
+                                    }}
                                 >
                                     <div className="name">
-                                    <div style={{color: '#888', float: 'right'}}><FaLock size={12} /></div>
+                                    <div className="lock" style={{float: 'right'}}>
+                                        <FaLock
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                visual.locked = !visual.locked;
+                                                if (visual.locked && visual.name === project.ui.selectedItemName) {
+                                                    project.ui.selectedItemName = null;
+                                                }
+                                            }}
+                                            size={14}
+                                            style={{ marginTop: 6 }}
+                                        />
+                                    </div>
                                     {
                                         visual.entity.split('ceramic.').join('')
                                         +
@@ -96,7 +129,8 @@ import FaLock from 'react-icons/lib/fa/lock';
                                             ' (' + visual.texture + ')'
                                         :
                                             '')
-                                    }</div>
+                                    }
+                                    </div>
                                     <div className="info">{
                                         'x='+visual.x+
                                         ' y='+visual.y
@@ -114,6 +148,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                         <div>
                             <Title>Selected {selectedVisual.entity.split('ceramic.').join('').toLowerCase()}</Title>
                             <Alt>
+                                <div style={{ height: this.props.height * 0.7 - 24 * 2 - 4, overflowY: 'auto' }}>
                                 <Form>
                                     {
                                         selectedQuad != null ?
@@ -155,6 +190,16 @@ import FaLock from 'react-icons/lib/fa/lock';
                                             </Field>
                                             <Field label="letterSpacing">
                                                 <NumberInput value={selectedText.letterSpacing} onChange={(val) => { selectedText.letterSpacing = val; }} />
+                                            </Field>
+                                            <Field label="font">
+                                                <SelectInput
+                                                    empty={0}
+                                                    selected={textFontIndex}
+                                                    options={fontsList}
+                                                    onChange={(selected) => {
+                                                        selectedText.font = selected === 0 ? null : fontsList[selected];
+                                                    }}
+                                                />
                                             </Field>
                                         </div>
                                         :
@@ -200,6 +245,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
                                     </Field>
                                 </Form>
+                                </div>
                             </Alt>
                         </div>
                     :

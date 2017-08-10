@@ -142,6 +142,41 @@ body, html {
     color: #888888;
 }
 
+/* Locked entry */
+
+#body .entry .lock {
+    color: #888888;
+    cursor: pointer;
+}
+
+#body .entry .lock:hover {
+    color: #bababa;
+}
+
+#body .entry .lock:active {
+    color: #dedede;
+}
+
+#body .entry.locked.in-alt {
+    background-color: #444444;
+}
+
+#body .entry.locked .lock {
+    color: white;
+}
+
+#body .entry.locked .lock:hover {
+    color: #dedede;
+}
+
+#body .entry.locked .name {
+    color: #888888;
+}
+
+#body .entry.locked .info {
+    color: #666666;
+}
+
 #body .tabs .panel form {
     padding: 14px 10px;
 }

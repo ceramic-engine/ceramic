@@ -338,17 +338,18 @@ class Project extends Entity {
                                         var assetName:String = Reflect.field(item.props, field);
                                         if (assetName != null) {
                                             var existing:ImageAsset = cast assets.asset(assetName, 'image');
-                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName, { premultiplyAlpha: true /* TODO REMOVE */ });
+                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
                                             if (existing == null) {
                                                 // Create and load asset
                                                 asset.runtimeAssets = runtimeAssets;
                                                 assets.addAsset(asset);
-                                                    asset.onceComplete(function(success) {
-                                                        if (success && !instance.destroyed) {
-                                                            quad.texture = assets.texture(assetName);
-                                                            updateSize();
-                                                        }
-                                                    });
+                                                asset.onceComplete(function(success) {
+                                                    if (success && !instance.destroyed) {
+                                                        quad.texture = assets.texture(assetName);
+                                                        updateSize();
+                                                        render();
+                                                    }
+                                                });
                                                 assets.load();
                                             }
                                             else {
@@ -363,6 +364,7 @@ class Project extends Entity {
                                                         if (success && !instance.destroyed) {
                                                             quad.texture = assets.texture(assetName);
                                                             updateSize();
+                                                            render();
                                                         }
                                                     });
                                                 }
@@ -423,18 +425,21 @@ class Project extends Entity {
                                         }
                                         var assetName:String = Reflect.field(item.props, field);
                                         if (assetName != null) {
-                                            var existing:ImageAsset = cast assets.asset(assetName, 'image');
-                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
+                                            var existing:FontAsset = cast assets.asset(assetName, 'font');
+                                            var asset:FontAsset = existing != null ? existing : new FontAsset(assetName);
                                             if (existing == null) {
                                                 // Create and load asset
                                                 asset.runtimeAssets = runtimeAssets;
                                                 assets.addAsset(asset);
-                                                    asset.onceComplete(function(success) {
-                                                        if (success && !instance.destroyed) {
-                                                            text.font = assets.font(assetName);
-                                                            updateSize();
-                                                        }
-                                                    });
+                                                asset.onceComplete(function(success) {
+
+                                                    untyped console.debug('success='+success);
+                                                    if (success && !instance.destroyed) {
+                                                        text.font = assets.font(assetName);
+                                                        updateSize();
+                                                        render();
+                                                    }
+                                                });
                                                 assets.load();
                                             }
                                             else {
@@ -449,6 +454,7 @@ class Project extends Entity {
                                                         if (success && !instance.destroyed) {
                                                             text.font = assets.font(assetName);
                                                             updateSize();
+                                                            render();
                                                         }
                                                     });
                                                 }
@@ -511,6 +517,9 @@ class Project extends Entity {
                     }
                     else {
                         selectedItemName = null;
+                        if (Editable.highlight != null) {
+                            Editable.highlight.destroy();
+                        }
                     }
                 }
                 else if (action == 'delete') {

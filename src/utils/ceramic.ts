@@ -1,3 +1,6 @@
+import { spawn } from 'child_process';
+import { join } from 'path';
+import * as fs from 'fs';
 
 interface Message {
 
@@ -9,6 +12,8 @@ interface Message {
 
 /** Utility taking advantage of shared Ceramic component to send/receive messages. */
 class CeramicProxy {
+
+    private ceramicRunning:boolean = false;
 
     component:any;
 
@@ -54,6 +59,49 @@ class CeramicProxy {
         return removeListener;
 
     } //listen
+
+    /** Run a ceramic CLI instance with the given args and cwd */
+    run(args:Array<string>, cwd:string, done:(code:number)=>void):void {
+
+        if (this.ceramicRunning) {
+            setTimeout(() => {
+                this.run(args, cwd, done);
+            }, 100);
+            return;
+        }
+        this.ceramicRunning = true;
+
+        if (args == null) args = [];
+        else args = [].concat(args);
+        if (cwd == null) throw 'cwd is required';
+
+        let cmd = 'ceramic';
+
+        if (process.platform === 'darwin') {
+            let macElectronPath = join(__dirname, '../../MacOS/Ceramic');
+            if (fs.existsSync(macElectronPath)) {
+                cmd = macElectronPath;
+                args.unshift('ceramic');
+            }
+            else {
+                let macGlobalPath = '/usr/local/bin/ceramic';
+                if (fs.existsSync(macGlobalPath)) {
+                    cmd = macGlobalPath;
+                }
+            }
+        }
+        else if (process.platform === 'win32') {
+            // TODO
+        }
+
+        let proc = spawn(cmd, args, { cwd: cwd, stdio: 'inherit' } );
+
+        proc.on('close', (code) => {
+            this.ceramicRunning = false;
+            done(code);
+        });
+
+    } //run
 
 }
 

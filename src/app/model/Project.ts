@@ -3,6 +3,8 @@ import Scene from './Scene';
 import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
+import * as os from 'os';
+import { join } from 'path';
 import { context } from 'app/context';
 
 class Project extends Model {
@@ -62,7 +64,27 @@ class Project extends Model {
         autorun(() => {
 
             let electronApp = electron.remote.require('./app.js');
-            electronApp.assetsPath = this.assetsPath;
+
+            electronApp.assetsPath = null;
+
+            if (this.assetsPath != null) {
+                electronApp.processingAssets = true;
+                let processedAssetsPath = join(os.tmpdir(), 'ceramic', this.id);
+                let proc = ceramic.run([
+                    'luxe', 'assets', 'web',
+                    '--from', this.assetsPath,
+                    '--to', processedAssetsPath
+                ], process.cwd(), (code) => {
+                    if (code !== 0) {
+                        console.error('Failed to process assets');
+                    }
+                    else {
+                        electronApp.assetsPath = processedAssetsPath;
+                        electronApp.processingAssets = false;
+                        console.log('assets path: ' + electronApp.assetsPath);
+                    }
+                });
+            }
 
             if (!this.assetsPath || !fs.existsSync(this.assetsPath) || !fs.statSync(this.assetsPath).isDirectory()) {
                 this.imageAssets = null;

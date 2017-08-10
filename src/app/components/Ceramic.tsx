@@ -246,8 +246,6 @@ export interface Message {
                                 value: item.serializeForCeramic()
                             });
                         }));
-
-                        console.log(itemsInCeramic);
                     }
                 }
 
@@ -286,6 +284,7 @@ export interface Message {
                 });
             }
             else {
+                console.debug('DESELECT ITEM');
                 // Deselect
                 this.send({
                     type: 'scene-item/select',

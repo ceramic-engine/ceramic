@@ -44,13 +44,13 @@ import { context } from 'app/context';
                         position: 'absolute',
                         left: (this.props.width - 300) + 'px',
                         top: 0,
-                        overflowY: 'auto'
+                        overflowY: 'hidden'
                     }}
                 >
                     <div className="rightside">
                         <Tabs tabs={this.panelTabs} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
                             <ScenePanel />
-                            <VisualsPanel height={this.props.height - 28 /* tab height */} />
+                            <VisualsPanel height={this.props.height - 28/* tab height */} />
                             <AssetsPanel height={this.props.height} />
                         </Tabs>
                     </div>
