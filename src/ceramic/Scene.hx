@@ -115,7 +115,6 @@ class Scene extends Quad {
 
         // Copy item data
         if (item.data != null) {
-            if (instance.data != null) instance.data = {};
             for (key in Reflect.fields(item.data)) {
                 Reflect.setField(instance.data, key, Reflect.field(item.data, key));
             }
