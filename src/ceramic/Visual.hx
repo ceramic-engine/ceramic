@@ -227,6 +227,10 @@ class Visual extends Entity {
 
     public var computedDepth:Float = 0;
 
+/// Properties (Events)
+
+    public var touchable:Bool = true;
+
 /// Properties (Children)
 
     public var children(default,null):Array<Visual> = null;
