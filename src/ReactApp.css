@@ -354,6 +354,34 @@ body, html {
     max-width: 100%;
 }
 
+/* Menu info */
+
+#body .menu-info {
+    position: absolute;
+    left: 0px;
+    z-index: 100;
+    max-width: 200px;
+    color: black;
+    background-color: white;
+    border-radius: 1px;
+    font-size: 10px;
+    padding: 5px 8px 5px 8px;
+    margin: -18px 0 0 2px;
+}
+
+#body .menu-info:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 0px;
+    top: 0px;
+    border: 4px solid;
+    border-color: white transparent transparent white;
+    transform-origin: bottom left;
+    transform: translateY(6px) scaleY(0.6) rotate(-45deg);
+}
+
 /* Overlay */
 
 #body .overlay {
@@ -398,4 +426,53 @@ body, html {
 
 #body .separator {
     border-bottom: 1px solid #444444;
+}
+
+#body .leftside .ceramic-separator {
+    border-top: 1px solid #444444;
+    border-bottom: 1px solid #444444;
+    height: 1px;
+    margin: 0px 8px 8px 8px;
+}
+
+/* Ceramic icon */
+
+#body .ceramic-icon {
+    display: block;
+    text-align: center;
+    margin: 5px 4px;
+    padding: 0;
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+
+#body .ceramic-icon:hover {
+    background-color: #686868;
+    border: 1px solid #686868;
+}
+
+/* Left side button */
+
+#body .leftside-button {
+    display: block;
+    text-align: center;
+    height: 26px;
+    width: 26px;
+    color: #cccccc;
+    border: 1px solid transparent;
+    text-align: center;
+    margin: 4px auto 0 auto;
+    padding: 0 0 0 0;
+}
+
+#body .leftside-button.selected {
+    background-color: #444444;
+    border: 1px solid #7c7c7c;
+    color: white;
+}
+
+#body .leftside-button:not(.selected):hover {
+    background-color: #555555;
+    border: 1px solid #8c8c8c;
+    color: #fafafa;
 }

@@ -3,6 +3,7 @@ export { default as App } from './App';
 export { default as EditScene } from './EditScene';
 export { default as Ceramic } from './Ceramic';
 export { default as AssetInfo } from './AssetInfo';
+export { default as MenuInfo } from './MenuInfo';
 export { default as Overlay } from './Overlay';
 export { default as Dialog } from './Dialog';
 export { default as AddVisual } from './AddVisual';

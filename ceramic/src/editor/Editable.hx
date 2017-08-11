@@ -118,9 +118,6 @@ class Editable extends Component {
 
     function handleDown(info:TouchInfo) {
 
-        // Ensure the item is not locked
-        if (entity.data.locked) return;
-
         // Ensure this item is selected
         select();
 

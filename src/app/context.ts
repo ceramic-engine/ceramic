@@ -1,5 +1,7 @@
 import { observe, ceramic } from 'utils';
 import * as electron from 'electron';
+import { createMenu } from './menu';
+const electronApp = electron.remote.require('./app.js');
 
 /** Track app info such as fullscreen, width, height.. */
 export class Context {
@@ -53,7 +55,6 @@ export class Context {
         window.addEventListener('orientationchange', handleResize);
 
         // Get server port
-        let electronApp = electron.remote.require('./app.js');
         const checkServerPort = () => {
             this.serverPort = electronApp.serverPort;
             if (this.serverPort == null) {
@@ -64,6 +65,8 @@ export class Context {
         
         // Default ceramic state is false
         this.ceramicReady = false;
+
+        createMenu();
 
     } //constructor
 

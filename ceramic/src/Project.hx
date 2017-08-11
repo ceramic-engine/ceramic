@@ -504,8 +504,10 @@ class Project extends Entity {
                 if (action == 'put') {
                     var entity = scene.putItem(value);
                     if (Std.is(entity, Visual)) {
-                        if (!entity.hasComponent('editable')) {
-                            entity.component('editable', new Editable(scene));
+                        var visual:Visual = cast entity;
+                        visual.touchable = !(value.data != null && value.data.locked);
+                        if (!visual.hasComponent('editable')) {
+                            visual.component('editable', new Editable(scene));
                         }
                     }
                 }

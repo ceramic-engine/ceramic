@@ -2,7 +2,9 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project } from 'app/model';
 import { context } from 'app/context';
-import { EditScene, AddVisual } from 'app/components';
+import { EditScene, AddVisual, MenuInfo } from 'app/components';
+import MdImage from 'react-icons/lib/md/image';
+import MdGridOn from 'react-icons/lib/md/grid-on';
 
 @observer class App extends React.Component {
 
@@ -53,11 +55,7 @@ import { EditScene, AddVisual } from 'app/components';
                         }}
                         className="topnav"
                     >
-                        {project.name != null ? (
-                            <span>{project.name}</span>
-                        ) : (
-                            <span>New project</span>
-                        )}
+                        Ceramic Editor
                     </div>
                     <div
                         className="leftside"
@@ -68,7 +66,30 @@ import { EditScene, AddVisual } from 'app/components';
                             left: 0,
                             top: navHeight
                         }}
-                    />
+                    >
+                        <img src="icon-nobg.svg" draggable={false} className="ceramic-icon" />
+                        <div className="ceramic-separator" />
+                        <div
+                            className="leftside-button selected"
+                            onMouseOver={(e) => { project.ui.menuInfo = {
+                                y: (e.currentTarget as HTMLElement).getClientRects()[0].top,
+                                text: 'Scene Editor'
+                            }; }}
+                            onMouseOut={() => { project.ui.menuInfo = null; }}
+                        >
+                            <MdImage size={22} style={{ position: 'relative', left: 0.5, top: 2 }} />
+                        </div>
+                        <div
+                            className="leftside-button"
+                            onMouseOver={(e) => { project.ui.menuInfo = {
+                                y: (e.currentTarget as HTMLElement).getClientRects()[0].top,
+                                text: 'Texture Atlas Editor'
+                            }; }}
+                            onMouseOut={() => { project.ui.menuInfo = null; }}
+                        >
+                            <MdGridOn size={20} style={{ position: 'relative', left: 0.5, top: 2.5 }} />
+                        </div>
+                    </div>
                     <div
                         style={{
                             width: context.width - leftSideWidth,
@@ -78,6 +99,9 @@ import { EditScene, AddVisual } from 'app/components';
                             top: navHeight
                         }}
                     >
+                        <div>
+                            <MenuInfo />
+                        </div>
                         <EditScene width={context.width - leftSideWidth} height={context.height - navHeight} />
                     </div>
                 </div>

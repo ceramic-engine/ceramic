@@ -12,9 +12,15 @@ const electron = require('electron')
 const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
+// Menu
+const Menu = electron.Menu
+const MenuItem = electron.MenuItem
 
 // App name
 app.setName('Ceramic')
+exports.app = app
+exports.Menu = Menu
+exports.MenuItem = MenuItem
 
 // Ceramic CLI
 if (process.argv[1] == 'ceramic') {
@@ -95,7 +101,6 @@ function createWindow () {
   })
 }
 
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -135,6 +140,7 @@ server.use(function(req, res, next) {
 
 if (process.env.ELECTRON_DEV) {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/public/ceramic'))))
+  server.use('/app', express.static(path.normalize(path.join(__dirname, '/public'))))
 } else {
   server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/build/ceramic'))))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
