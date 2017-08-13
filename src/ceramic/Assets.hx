@@ -36,6 +36,9 @@ class Asset extends Entity {
     /** Asset kind */
     public var kind(default,null):String;
 
+    /** Asset name */
+    public var name(default,set):String;
+
     /** Asset path */
     public var path(default,set):String;
 
@@ -65,8 +68,8 @@ class Asset extends Entity {
     public function new(kind:String, name:String, ?options:AssetOptions) {
 
         this.kind = kind;
-        this.name = name;
         this.options = options != null ? options : {};
+        this.name = name;
 
         computePath();
 
@@ -213,6 +216,17 @@ class Asset extends Entity {
 
     } //set_path
 
+    function set_name(name:String):String {
+
+        if (this.name == name) return name;
+
+        this.name = name;
+        id = 'asset:$kind:$name';
+
+        return name;
+
+    } //set_name
+
     function set_runtimeAssets(runtimeAssets:RuntimeAssets):RuntimeAssets {
 
         if (this.runtimeAssets == runtimeAssets) return runtimeAssets;
@@ -289,7 +303,7 @@ class ImageAsset extends Asset {
 
                 var prevTexture = this.texture;
                 this.texture = new Texture(texture, density);
-                this.texture.name = path;
+                this.texture.id = 'texture:' + path;
                 
                 // Link the texture to this asset so that
                 // destroying one will destroy the other
@@ -458,7 +472,7 @@ class FontAsset extends Asset {
                             // Create bitmap font
                             var prevFont = this.font;
                             this.font = new BitmapFont(fontData, pages);
-                            this.font.name = path;
+                            this.font.id = 'font:' + path;
 
                             // Link the font to this asset so that
                             // destroying one will destroy the other

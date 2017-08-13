@@ -3,6 +3,8 @@ package ceramic;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
+using StringTools;
+
 class Texture extends Entity {
 
 /// Properties
@@ -46,7 +48,9 @@ class Texture extends Entity {
 
     function toString():String {
 
-        if (name != null) {
+        if (id != null) {
+            var name = id;
+            if (name.startsWith('texture:')) name = name.substr(8);
             return 'Texture($name $width $height $density)';
         } else {
             return 'Texture($width $height $density)';

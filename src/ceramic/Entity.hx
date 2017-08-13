@@ -9,7 +9,7 @@ class Entity implements Events implements Lazy implements Observable {
 
     @lazy public var data:Dynamic<Dynamic> = {};
 
-    public var name:String = null;
+    public var id:String = null;
 
     public var destroyed:Bool = false;
 
@@ -50,8 +50,8 @@ class Entity implements Events implements Lazy implements Observable {
 
         var className = className();
 
-        if (name != null) {
-            return '$className($name)';
+        if (id != null) {
+            return '$className($id)';
         } else {
             return '$className';
         }

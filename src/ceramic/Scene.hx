@@ -6,8 +6,8 @@ using ceramic.Extensions;
 
 typedef SceneData = {
 
-    /** Name to identify the scene. */
-    public var name:String;
+    /** Identifier of the scene. */
+    public var id:String;
 
     /** Arbitrary data hold by this scene. */
     public var data:Dynamic<Dynamic>;
@@ -28,8 +28,8 @@ typedef SceneItem = {
     /** Entity class (ex: ceramic.Visual, ceramic.Quad, ...). */
     public var entity:String;
 
-    /** Entity name. */
-    public var name:String;
+    /** Entity identifier. */
+    public var id:String;
 
     /** Properties assigned after creating entity. */
     public var props:Dynamic<Dynamic>;
@@ -62,28 +62,28 @@ class Scene extends Quad {
 
         if (sceneData != null) {
 
-            name = sceneData.name;
+            id = sceneData.id;
             data = sceneData.data;
             width = sceneData.width;
             height = sceneData.height;
 
-            var usedNames = new Map<String,Bool>();
+            var usedIds = new Map<String,Bool>();
             if (sceneData.items != null) {
                 // Add/Update items
                 for (item in sceneData.items) {
                     putItem(item);
-                    usedNames.set(item.name, true);
+                    usedIds.set(item.id, true);
                 }
 
                 // Remove unused items
                 var toRemove = [];
                 for (entity in entities) {
-                    if (!usedNames.exists(entity.name)) {
-                        toRemove.push(entity.name);
+                    if (!usedIds.exists(entity.id)) {
+                        toRemove.push(entity.id);
                     }
                 }
-                for (name in toRemove) {
-                    removeItem(name);
+                for (id in toRemove) {
+                    removeItem(id);
                 }
             }
 
@@ -97,21 +97,21 @@ class Scene extends Quad {
 
     public function putItem(item:SceneItem):Entity {
 
-        var existing = getItem(item.name);
+        var existing = getItem(item.id);
         var existingWasVisual = false;
         
         // Remove previous object if entity class is different
         if (existing != null) {
             existingWasVisual = Std.is(existing, Visual);
             if (item.entity != Type.getClassName(Type.getClass(existing))) {
-                removeItem(item.name);
+                removeItem(item.id);
                 existing = null;
             }
         }
 
         var entityClass = Type.resolveClass(item.entity);
         var instance:Entity = existing != null ? existing : cast Type.createInstance(entityClass, []);
-        instance.name = item.name;
+        instance.id = item.id;
 
         // Copy item data
         if (item.data != null) {
@@ -146,10 +146,10 @@ class Scene extends Quad {
 
     } //putItem
 
-    public function getItem(itemName:String):Entity {
+    public function getItem(itemId:String):Entity {
 
         for (entity in entities) {
-            if (entity.name == itemName) {
+            if (entity.id == itemId) {
                 
                 return entity;
             }
@@ -159,10 +159,10 @@ class Scene extends Quad {
 
     } //getItem
 
-    public function removeItem(itemName:String):Void {
+    public function removeItem(itemId:String):Void {
 
         for (entity in entities) {
-            if (entity.name == itemName) {
+            if (entity.id == itemId) {
                 
                 entities.remove(entity);
                 entity.destroy();

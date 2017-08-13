@@ -255,8 +255,8 @@ class Text extends Visual {
 
     function toString():String {
 
-        if (name != null) {
-            return 'Text($name $content)';
+        if (id != null) {
+            return 'Text($id $content)';
         } else {
             return 'Text($content)';
         }
