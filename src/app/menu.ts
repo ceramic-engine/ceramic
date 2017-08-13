@@ -1,5 +1,6 @@
 import * as electron from 'electron';
 import { autorun } from 'utils';
+import { project } from 'app/model';
 const electronApp = electron.remote.require('./app.js');
 
 let menuReady = false;
@@ -15,10 +16,37 @@ export function createMenu() {
             label: 'File',
             submenu: [
                 {
-                    label: 'New',
+                    label: 'New project',
                     accelerator: 'CmdOrCtrl+N',
                     click() {
-                        console.debug('FILE NEW CLICK');
+                        if (project.initialized) {
+                            if (confirm('Create a new project?')) {
+                                project.createNew();
+                            }
+                        }
+                    }
+                },
+                {type: 'separator'},
+                {
+                    label: 'Open\u2026',
+                    accelerator: 'CmdOrCtrl+O',
+                    click() {
+                        console.debug('FILE OPEN');
+                    }
+                },
+                {type: 'separator'},
+                {
+                    label: 'Save project',
+                    accelerator: 'CmdOrCtrl+S',
+                    click() {
+                        console.debug('FILE SAVE');
+                    }
+                },
+                {
+                    label: 'Save as\u2026',
+                    accelerator: 'Shift+CmdOrCtrl+S',
+                    click() {
+                        console.debug('FILE SAVE AS');
                     }
                 }
             ]
@@ -91,11 +119,17 @@ export function createMenu() {
     const menu:Electron.Menu = electronApp.Menu.buildFromTemplate(template);
     const fileItems:Array<Electron.MenuItem> = (menu.items[1] as any).submenu.items;
 
-    for (let item of fileItems) {
-        if (item.label === 'New') {
-            item.enabled = false;
-        }
-    }
+    autorun(() => {
+
+        //if (!project.name)
+
+        /*for (let item of fileItems) {
+            if (item.label === 'New') {
+                item.enabled = false;
+            }
+        }*/
+
+    });
 
     electronApp.Menu.setApplicationMenu(menu);
 

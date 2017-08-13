@@ -1,10 +1,12 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
-import { VisualItem, QuadItem, SceneItem, TextItem } from './index';
+import { Scene, VisualItem, QuadItem, SceneItem, TextItem } from './index';
 
 class UiState extends Model {
 
 /// Properties
+
+    @observe @serialize editor:'scene'|'atlas';
     
     @observe @serialize sceneTab:number;
 
@@ -14,14 +16,32 @@ class UiState extends Model {
 
     @observe addingVisual:boolean;
 
-    @observe @serialize selectedItemName:string;
+/// Properties (selected)
+
+    @observe @serialize selectedItemId:string;
+
+    @observe @serialize selectedSceneId:string;
 
 /// Computed
 
+    @compute get selectedScene():Scene {
+
+        for (let scene of project.scenes) {
+            if (scene.id === this.selectedSceneId) {
+                return scene;
+            }
+        }
+
+        return null;
+
+    } //selectedScene
+
     @compute get selectedItem():VisualItem|QuadItem|SceneItem {
 
-        for (let item of project.scene.items) {
-            if (item.name === this.selectedItemName) {
+        if (!this.selectedScene) return null;
+
+        for (let item of this.selectedScene.items) {
+            if (item.id === this.selectedItemId) {
                 return item;
             }
         }

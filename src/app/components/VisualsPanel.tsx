@@ -73,7 +73,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                             helperClass={"dragging"}
                             onSortEnd={({oldIndex, newIndex}) => {
                                 if (oldIndex === newIndex) return;
-                                let visuals = project.scene.visualItemsSorted.slice();
+                                let visuals = project.ui.selectedScene.visualItemsSorted.slice();
                                 visuals = arrayMove(visuals, oldIndex, newIndex);
                                 if (oldIndex < newIndex) {
                                     let depth = visuals[newIndex-1].depth;
@@ -95,17 +95,17 @@ import FaLock from 'react-icons/lib/fa/lock';
                                 }
                             }}
                         >
-                        {project.scene.visualItemsSorted.length > 0 ?
-                            project.scene.visualItemsSorted.map((visual, i) =>
+                        {project.ui.selectedScene.visualItemsSorted.length > 0 ?
+                            project.ui.selectedScene.visualItemsSorted.map((visual, i) =>
                                 <div
                                     key={i}
                                     className={
                                         'entry in-alt with-separator'
-                                        + (project.ui.selectedItemName === visual.name ? ' selected' : '')
+                                        + (project.ui.selectedItemId === visual.id ? ' selected' : '')
                                         + (visual.locked ? ' locked' : '')}
                                     onClick={() => {
                                         if (visual.locked) return;
-                                        project.ui.selectedItemName = visual.name;
+                                        project.ui.selectedItemId = visual.id;
                                     }}
                                 >
                                     <div className="name">
@@ -114,8 +114,8 @@ import FaLock from 'react-icons/lib/fa/lock';
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 visual.locked = !visual.locked;
-                                                if (visual.locked && visual.name === project.ui.selectedItemName) {
-                                                    project.ui.selectedItemName = null;
+                                                if (visual.locked && visual.id === project.ui.selectedItemId) {
+                                                    project.ui.selectedItemId = null;
                                                 }
                                             }}
                                             size={14}

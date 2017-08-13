@@ -7,6 +7,6 @@ export { default as MenuInfo } from './MenuInfo';
 export { default as Overlay } from './Overlay';
 export { default as Dialog } from './Dialog';
 export { default as AddVisual } from './AddVisual';
-export { default as ScenePanel } from './ScenePanel';
+export { default as ScenesPanel } from './ScenesPanel';
 export { default as VisualsPanel } from './VisualsPanel';
 export { default as AssetsPanel } from './AssetsPanel';

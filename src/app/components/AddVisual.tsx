@@ -28,14 +28,15 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
 
     @autobind addQuad() {
 
+        let scene = project.ui.selectedScene;
+
         let quad = new QuadItem();
-        quad.name = quad.id;
         quad.entity = 'ceramic.Quad';
-        quad.x = Math.round(project.scene.width / 2);
-        quad.y = Math.round(project.scene.height / 2);
+        quad.x = Math.round(scene.width / 2);
+        quad.y = Math.round(scene.height / 2);
         
         var maxDepth = 0;
-        for (let item of project.scene.items) {
+        for (let item of scene.items) {
             if (item instanceof VisualItem)
             if (item.depth > maxDepth) {
                 maxDepth = item.depth;
@@ -44,10 +45,10 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
 
         quad.depth = maxDepth + 1;
 
-        project.scene.items.push(quad);
+        scene.items.push(quad);
 
         // Select visual
-        project.ui.selectedItemName = quad.id;
+        project.ui.selectedItemId = quad.id;
 
         project.ui.addingVisual = false;
 
@@ -55,15 +56,16 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
 
     @autobind addText() {
 
+        let scene = project.ui.selectedScene;
+
         let text = new TextItem();
-        text.name = text.id;
         text.entity = 'ceramic.Text';
-        text.x = Math.round(project.scene.width / 2);
-        text.y = Math.round(project.scene.height / 2);
+        text.x = Math.round(scene.width / 2);
+        text.y = Math.round(scene.height / 2);
         text.content = 'text';
         
         var maxDepth = 0;
-        for (let item of project.scene.items) {
+        for (let item of scene.items) {
             if (item instanceof VisualItem)
             if (item.depth > maxDepth) {
                 maxDepth = item.depth;
@@ -72,10 +74,10 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
 
         text.depth = maxDepth + 1;
 
-        project.scene.items.push(text);
+        scene.items.push(text);
 
         // Select visual
-        project.ui.selectedItemName = text.id;
+        project.ui.selectedItemId = text.id;
 
         project.ui.addingVisual = false;
 

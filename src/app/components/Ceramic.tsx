@@ -203,11 +203,14 @@ export interface Message {
         let sceneInCeramic = false;
         let itemsInCeramic = new Map<SceneItem, IReactionDisposer>();
         autorun(() => {
-            if (project.scene != null) {
+
+            let scene = project.ui.selectedScene;
+
+            if (scene != null) {
                 sceneInCeramic = true;
                 this.send({
                     type: 'scene/put',
-                    value: project.scene.serializeForCeramic()
+                    value: scene.serializeForCeramic()
                 });
             }
             else {
@@ -224,17 +227,19 @@ export interface Message {
         });
         autorun(() => {
 
-            if (project.scene != null) {
+            let scene = project.ui.selectedScene;
+
+            if (scene != null) {
                 if (!sceneInCeramic) {
                     sceneInCeramic = true;
                     this.send({
                         type: 'scene/put',
-                        value: project.scene.serializeForCeramic()
+                        value: scene.serializeForCeramic()
                     });
                 }
 
                 let itemsToKeep = new Map<SceneItem, boolean>();
-                for (let item of project.scene.items) {
+                for (let item of scene.items) {
                     itemsToKeep.set(item, true);
 
                     if (!itemsInCeramic.has(item)) {
@@ -256,11 +261,10 @@ export interface Message {
                         itemsInCeramic.get(item)();
                         // Remove item
                         itemsInCeramic.delete(item);
-                        console.log('REMOVE ITEM WITH NAME ' + item.name);
                         this.send({
                             type: 'scene-item/delete',
                             value: {
-                                name: item.name
+                                id: item.id
                             }
                         });
                     }
@@ -279,12 +283,11 @@ export interface Message {
                 this.send({
                     type: 'scene-item/select',
                     value: {
-                        name: project.ui.selectedItem.name
+                        id: project.ui.selectedItem.id
                     }
                 });
             }
             else {
-                console.debug('DESELECT ITEM');
                 // Deselect
                 this.send({
                     type: 'scene-item/select',

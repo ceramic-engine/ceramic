@@ -8,9 +8,6 @@ class Scene extends Model {
 
 /// Properties
 
-    /** Scene name (identifier) */
-    @observe @serialize name:string;
-
     /** Scene arbitrary data */
     @observe @serialize data:Map<string, any>;
 
@@ -25,12 +22,12 @@ class Scene extends Model {
 
 /// Computed
 
-    @compute get itemsByName() {
+    @compute get itemsById() {
         
         let byName:Map<string, SceneItem|VisualItem|QuadItem|TextItem> = new Map();
 
         for (let item of this.items) {
-            byName.set(item.name, item);
+            byName.set(item.id, item);
         }
 
         return byName;
@@ -73,7 +70,7 @@ class Scene extends Model {
 
     serializeForCeramic() {
 
-        return serializeModel(this, { exclude: ['_model', 'id', 'items'] });
+        return serializeModel(this, { exclude: ['_model', 'items'] });
 
     } //serializeForCeramic
 

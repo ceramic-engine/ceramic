@@ -74,7 +74,7 @@ class Editable extends Component {
 
                 // Set selected item
                 project.send({
-                    type: 'set/ui.selectedItemName',
+                    type: 'set/ui.selectedItemId',
                     value: null
                 });
             }
@@ -96,8 +96,8 @@ class Editable extends Component {
 
         // Set selected item
         project.send({
-            type: 'set/ui.selectedItemName',
-            value: entity.name
+            type: 'set/ui.selectedItemId',
+            value: entity.id
         });
         project.send({
             type: 'set/ui.sceneTab',

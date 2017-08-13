@@ -14,9 +14,6 @@ class SceneItem extends Model {
 
 /// Properties
 
-    /** Item name (identifier) */
-    @observe @serialize name:string;
-
     /** Item entity class */
     @observe @serialize entity:string;
 
@@ -24,14 +21,14 @@ class SceneItem extends Model {
 
     serializeForCeramic() {
 
-        let serialized = serializeModel(this, { exclude: ['_model', 'id'] });
+        let serialized = serializeModel(this, { exclude: ['_model'] });
         let data:any = { props: {}, data: {} };
 
         for (let key in serialized) {
             if (serialized.hasOwnProperty(key)) {
                 if (key === 'locked') {
                     data.data[key] = serialized[key];
-                } else if (key === 'name' || key === 'entity' || key === 'sortIndex') {
+                } else if (key === 'id' || key === 'entity' || key === 'sortIndex') {
                     data[key] = serialized[key];
                 } else {
                     data.props[key] = serialized[key];

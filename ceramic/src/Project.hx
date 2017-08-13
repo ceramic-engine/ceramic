@@ -28,7 +28,7 @@ class Project extends Entity {
 
     var scene:Scene = null;
 
-    var selectedItemName:String = null;
+    var selectedItemId:String = null;
 
     var outsideTop:Quad = null;
 
@@ -128,11 +128,11 @@ class Project extends Entity {
 
             if (document.activeElement == null || document.activeElement.id == 'body') {
 
-                if (key.keyCode == KeyCode.BACKSPACE && selectedItemName != null) {
+                if (key.keyCode == KeyCode.BACKSPACE && selectedItemId != null) {
                     send({
                         type: 'scene-item/delete',
                         value: {
-                            name: selectedItemName
+                            name: selectedItemId
                         }
                     });
                 }
@@ -293,7 +293,7 @@ class Project extends Entity {
                 }
 
             case 'scene':
-                if (value.name != 'scene') return;
+                if (value.id != 'scene') return;
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
@@ -315,7 +315,7 @@ class Project extends Entity {
                                     if (quad.texture != null) {
                                         if (item.props.width != quad.width || item.props.height != quad.height) {
                                             send({
-                                                type: 'set/scene.item.${item.name}',
+                                                type: 'set/scene.item.${item.id}',
                                                 value: {
                                                     width: quad.width,
                                                     height: quad.height
@@ -403,7 +403,7 @@ class Project extends Entity {
                                     if (text.font != null) {
                                         if (item.props.width != text.width || item.props.height != text.height) {
                                             send({
-                                                type: 'set/scene.item.${item.name}',
+                                                type: 'set/scene.item.${item.id}',
                                                 value: {
                                                     width: text.width,
                                                     height: text.height
@@ -512,20 +512,20 @@ class Project extends Entity {
                     }
                 }
                 else if (action == 'select') {
-                    var item = value != null && value.name != null ? scene.getItem(value.name) : null;
+                    var item = value != null && value.id != null ? scene.getItem(value.id) : null;
                     if (item != null && item.hasComponent('editable')) {
                         cast(item.component('editable'), Editable).select();
-                        selectedItemName = value.name;
+                        selectedItemId = value.id;
                     }
                     else {
-                        selectedItemName = null;
+                        selectedItemId = null;
                         if (Editable.highlight != null) {
                             Editable.highlight.destroy();
                         }
                     }
                 }
                 else if (action == 'delete') {
-                    scene.removeItem(value.name);
+                    scene.removeItem(value.id);
                 }
 
             default:

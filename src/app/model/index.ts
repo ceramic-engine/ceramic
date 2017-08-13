@@ -31,6 +31,6 @@ db.load();
 // Export app instances
 export const project = db.getOrCreate(Project, 'project', true);
 project.keep = true;
-if (!project.name) {
-    project.createWithName('project');
+if (!project.initialized) {
+    project.createNew();
 }

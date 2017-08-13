@@ -11,8 +11,11 @@ class Project extends Model {
 
 /// Properties
 
-    /** Related scene */
-    @observe @serialize scene:Scene;
+    /** Project path */
+    @observe @serialize path:string;
+
+    /** Project scenes */
+    @observe @serialize scenes:Array<Scene> = [];
 
     /** Project error */
     @observe error?:string;
@@ -52,6 +55,14 @@ class Project extends Model {
 
     /** Font assets */
     @observe fontAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
+
+/// Computed
+
+    get initialized():boolean {
+        
+        return !!this.name;
+
+    } //initialized
 
 /// Lifecycle
 
@@ -156,10 +167,10 @@ class Project extends Model {
             }
             // Change Scene Item
             else if (key.startsWith('scene.item.')) {
-                if (this.scene == null || this.scene.items == null) return;
+                if (this.ui.selectedScene == null || this.ui.selectedScene.items == null) return;
 
-                let name = key.substr(11);
-                let item = this.scene.itemsByName.get(name);
+                let itemId = key.substr(11);
+                let item = this.ui.selectedScene.itemsById.get(itemId);
 
                 if (item != null) {
                     for (let k in message.value) {
@@ -175,17 +186,17 @@ class Project extends Model {
         // Update data from ceramic (haxe)
         ceramic.listen('scene-item/delete', (message) => {
 
-            let name = message.value.name;
-            let item = this.scene.itemsByName.get(name);
+            let itemId = message.value.id;
+            let item = this.ui.selectedScene.itemsById.get(itemId);
 
             if (item != null) {
 
-                if (this.ui.selectedItemName === name) {
-                    this.ui.selectedItemName = null;
+                if (this.ui.selectedItemId === itemId) {
+                    this.ui.selectedItemId = null;
                 }
 
-                this.scene.items.splice(
-                    this.scene.items.indexOf(item),
+                this.ui.selectedScene.items.splice(
+                    this.ui.selectedScene.items.indexOf(item),
                     1
                 );
                 item = null;
@@ -197,23 +208,21 @@ class Project extends Model {
 
 /// Public API
 
-    @action createWithName(name:string) {
+    @action createNew() {
 
         // Set name
-        this.name = name;
+        this.name = 'project';
+
+        // Reset assets path
+        this.assetsPath = null;
 
         // Set scene
-        let scene = new Scene('scene');
-        scene.name = 'scene';
-        scene.data = new Map();
-        scene.width = 320;
-        scene.height = 568;
-        this.scene = scene;
+        this.scenes = [];
 
         // Set UI state
         this.ui = new UiState('ui');
 
-    } //createWithName
+    } //createNew
 
     @action chooseAssetsPath() {
 
@@ -222,7 +231,13 @@ class Project extends Model {
             this.assetsPath = path;
         }
 
-    } //chooseAssetsDirectory
+    } //chooseAssetsPath
+
+    @action createScene() {
+
+        // TODO
+
+    } //createScene
 
 } //Project
 

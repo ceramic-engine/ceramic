@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'utils';
 import { Center, Tabs, Form, Panel, Title, NumberInput, Field, Button, Alt } from 'components';
-import { Ceramic, AssetInfo, VisualsPanel, ScenePanel, AssetsPanel } from 'app/components';
+import { Ceramic, AssetInfo, VisualsPanel, ScenesPanel, AssetsPanel } from 'app/components';
 import { project } from 'app/model';
 import { context } from 'app/context';
 
@@ -14,8 +14,6 @@ import { context } from 'app/context';
         height:number
     };
 
-    panelTabs = ["Scene", "Visuals", "Assets"];
-
 /// Lifecycle
 
     componentWillMount() {
@@ -25,6 +23,8 @@ import { context } from 'app/context';
     render() {
 
         let statusHeight = 16;
+        let tabHeight = 28;
+        let scene = project.ui.selectedScene;
 
         return (
             <div
@@ -48,11 +48,23 @@ import { context } from 'app/context';
                     }}
                 >
                     <div className="rightside">
-                        <Tabs tabs={this.panelTabs} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
-                            <ScenePanel />
-                            <VisualsPanel height={this.props.height - 28/* tab height */} />
-                            <AssetsPanel height={this.props.height} />
-                        </Tabs>
+                        {project.assetsPath != null ?
+                            scene ?
+                                <Tabs tabs={["Visuals", "Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
+                                    <VisualsPanel height={this.props.height - tabHeight} />
+                                    <ScenesPanel />
+                                    <AssetsPanel height={this.props.height} />
+                                </Tabs>
+                            :
+                                <Tabs tabs={["Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
+                                    <ScenesPanel />
+                                    <AssetsPanel height={this.props.height} />
+                                </Tabs>
+                        :
+                            <Tabs tabs={["Assets"]} active={0} onChange={(i) => {}}>
+                                <AssetsPanel height={this.props.height} />
+                            </Tabs>
+                        }
                     </div>
                 </div>
                 <div
