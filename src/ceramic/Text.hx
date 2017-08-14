@@ -14,7 +14,18 @@ enum TextAlign {
 
 class Text extends Visual {
 
-    public var color:Color = Color.WHITE;
+    public var color(default,set):Color = Color.WHITE;
+    function set_color(color:Color):Color {
+        if (this.color == color) return color;
+        this.color = color;
+
+        // Ensure text glyphs have the requested color
+        for (quad in glyphQuads) {
+            quad.color = color;
+        }
+
+        return color;
+    }
 
     public var content(default,set):String = '';
     function set_content(content:String):String {
