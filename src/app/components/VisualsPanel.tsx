@@ -61,6 +61,8 @@ import FaLock from 'react-icons/lib/fa/lock';
 
         return (
             <Panel>
+                {project.ui.selectedScene.visualItems.length > 0 ?
+                <div>
                 <div>
                     <Title>All visuals</Title>
                     <Alt>
@@ -253,6 +255,8 @@ import FaLock from 'react-icons/lib/fa/lock';
                             <Title>Nothing selected</Title>
                         </div>
                 }
+                </div>
+                : null}
                 <Form>
                     <Field>
                         <Button

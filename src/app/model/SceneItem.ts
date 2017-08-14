@@ -26,7 +26,7 @@ class SceneItem extends Model {
 
         for (let key in serialized) {
             if (serialized.hasOwnProperty(key)) {
-                if (key === 'locked') {
+                if (key === 'locked' || key === 'name') {
                     data.data[key] = serialized[key];
                 } else if (key === 'id' || key === 'entity' || key === 'sortIndex') {
                     data[key] = serialized[key];

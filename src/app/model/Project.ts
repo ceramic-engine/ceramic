@@ -15,7 +15,7 @@ class Project extends Model {
     @observe @serialize path:string;
 
     /** Project scenes */
-    @observe @serialize scenes:Array<Scene> = [];
+    @observe @serialize(Scene) scenes:Array<Scene> = [];
 
     /** Project error */
     @observe error?:string;
@@ -235,7 +235,11 @@ class Project extends Model {
 
     @action createScene() {
 
-        // TODO
+        let scene = new Scene();
+        scene.name = 'Scene ' + (this.scenes.length + 1);
+
+        this.scenes.push(scene);
+        this.ui.selectedSceneId = scene.id;
 
     } //createScene
 

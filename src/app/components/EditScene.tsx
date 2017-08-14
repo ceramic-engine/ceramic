@@ -52,12 +52,12 @@ import { context } from 'app/context';
                             scene ?
                                 <Tabs tabs={["Visuals", "Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
                                     <VisualsPanel height={this.props.height - tabHeight} />
-                                    <ScenesPanel />
+                                    <ScenesPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
                             :
                                 <Tabs tabs={["Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
-                                    <ScenesPanel />
+                                    <ScenesPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
                         :

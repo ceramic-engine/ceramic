@@ -24,6 +24,21 @@ using ceramic.Extensions;
 
 class Project extends Entity {
 
+/// Public properties
+
+    public var leftShiftPressed:Bool = false;
+    public var rightShiftPressed:Bool = false;
+    public var shiftPressed:Bool = false;
+
+    public var aKeyPressed:Bool = false;
+    public var rKeyPressed:Bool = false;
+    public var xKeyPressed:Bool = false;
+    public var yKeyPressed:Bool = false;
+    public var wKeyPressed:Bool = false;
+    public var hKeyPressed:Bool = false;
+
+/// Properties
+
     var parentOrigin:String = null;
 
     var scene:Scene = null;
@@ -124,24 +139,74 @@ class Project extends Entity {
         // Keyboard events
         app.onKeyDown(this, function(key) {
 
-            //trace('KEY DOWN: ' + key);
-
             if (document.activeElement == null || document.activeElement.id == 'body') {
 
                 if (key.keyCode == KeyCode.BACKSPACE && selectedItemId != null) {
                     send({
                         type: 'scene-item/delete',
                         value: {
-                            name: selectedItemId
+                            id: selectedItemId
                         }
                     });
                 }
             }
 
+            if (key.keyCode == KeyCode.LSHIFT) {
+                leftShiftPressed = true;
+            }
+            else if (key.keyCode == KeyCode.RSHIFT) {
+                rightShiftPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_R) {
+                rKeyPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_A) {
+                aKeyPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_X) {
+                xKeyPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_Y) {
+                yKeyPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_W) {
+                wKeyPressed = true;
+            }
+            else if (key.keyCode == KeyCode.KEY_H) {
+                hKeyPressed = true;
+            }
+
+            shiftPressed = leftShiftPressed || rightShiftPressed;
+
         });
         app.onKeyUp(this, function(key) {
 
-            //trace('KEY UP: ' + key);
+            if (key.keyCode == KeyCode.LSHIFT) {
+                leftShiftPressed = false;
+            }
+            else if (key.keyCode == KeyCode.RSHIFT) {
+                rightShiftPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_R) {
+                rKeyPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_A) {
+                aKeyPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_X) {
+                xKeyPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_Y) {
+                yKeyPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_W) {
+                wKeyPressed = false;
+            }
+            else if (key.keyCode == KeyCode.KEY_H) {
+                hKeyPressed = false;
+            }
+
+            shiftPressed = leftShiftPressed || rightShiftPressed;
 
         });
 
@@ -293,10 +358,15 @@ class Project extends Entity {
                 }
 
             case 'scene':
-                if (value.id != 'scene') return;
+                if (scene != null && value.id != scene.id) {
+                    scene.destroy();
+                    scene = null;
+                    selectedItemId = null;
+                }
                 if (action == 'put') {
                     if (scene == null) {
                         scene = new Scene();
+                        scene.id = value.id;
                         scene.childrenDepthRange = 10000;
                         scene.color = 0x2f2f2f;
                         scene.anchor(0.5, 0.5);

@@ -9,13 +9,16 @@ class Scene extends Model {
 /// Properties
 
     /** Scene arbitrary data */
-    @observe @serialize data:Map<string, any>;
+    @observe @serialize data:Map<string, any> = new Map();
+
+    /** Scene name */
+    @observe @serialize name:string = '';
 
     /** Scene width */
-    @observe @serialize width:number;
+    @observe @serialize width:number = 800;
 
     /** Scene height */
-    @observe @serialize height:number;
+    @observe @serialize height:number = 600;
 
     /** Scene items */
     @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem|TextItem> = [];

@@ -101,7 +101,7 @@ class Editable extends Component {
         });
         project.send({
             type: 'set/ui.sceneTab',
-            value: 1 // Visuals tab
+            value: 0 // Visuals tab
         });
 
     } //select
@@ -181,10 +181,20 @@ class Editable extends Component {
             [-1, 0],
             [-1, 1]
         ];
-        var tests = [];
-        for (scaleTest in scaleTests) {
-            tests.push(scaleTest);
-        }
+        var rotateTests = [
+            1,
+            0,
+            -1
+        ];
+        var skewTests = [
+            1,
+            0,
+            -1
+        ];
+        var singleScaleTests = [
+            1,
+            -1
+        ];
 
         var anchorX = entity.anchorX;
         var anchorY = entity.anchorY;
@@ -209,6 +219,13 @@ class Editable extends Component {
             }
         }
 
+        var scaleRatio = entity.scaleY / entity.scaleX;
+        var startRotation = entity.rotation;
+        var startScaleX = entity.scaleX;
+        var startScaleY = entity.scaleY;
+        var startSkewX = entity.skewX;
+        var startSkewY = entity.skewY;
+
         entity.anchorKeepPosition(tmpAnchorX, tmpAnchorY);
 
         inline function distanceMain() {
@@ -220,59 +237,360 @@ class Editable extends Component {
         function onMove(info:TouchInfo) {
             project.render();
             
-            var scaleStep = 0.1;
-            var n = 0;
-            var best = -1;
-            var matched = false;
+            if (project.xKeyPressed) {
+                // Skew
+                var skewStep = 0.5;
+                var n = 0;
+                var best = -1;
 
-            while (n++ < 100) {
+                // Put other values as started
+                entity.scaleX = startScaleX;
+                entity.scaleY = startScaleY;
+                entity.rotation = startRotation;
+                entity.skewY = startSkewY;
 
-                // Scale the visual to make the corner point closer
-                best = -1;
-                var scaleX = entity.scaleX;
-                var scaleY = entity.scaleY;
-                var bestScaleX = scaleX;
-                var bestScaleY = scaleY;
-                var bestDistance = distanceMain();
+                while (n++ < 100) {
 
-                for (i in 0...tests.length) {
-                    var test = tests[i];
+                    // Skew the visual to make the corner point closer
+                    var skewX = entity.skewX;
+                    var bestSkewX = skewX;
+                    var bestDistance = distanceMain();
 
-                    var newScaleX = scaleX + switch(test[0]) {
-                        case 1: scaleStep;
-                        case -1: -scaleStep;
-                        default: 0;
+                    for (i in 0...skewTests.length) {
+                        var test = skewTests[i];
+
+                        var newSkewX = skewX + switch(test) {
+                            case 1: skewStep;
+                            case -1: -skewStep;
+                            default: 0;
+                        }
+
+                        entity.skewX = newSkewX;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestSkewX = entity.skewX;
+                        }
                     }
-                    var newScaleY = scaleY + switch(test[1]) {
-                        case 1: scaleStep;
-                        case -1: -scaleStep;
-                        default: 0;
-                    }
 
-                    entity.scaleX = newScaleX;
-                    entity.scaleY = newScaleY;
+                    // Apply best transform
+                    entity.skewX = bestSkewX;
                     highlight.wrapVisual(entity);
 
-                    // Is it better?
-                    var dist = distanceMain();
-                    if (dist < bestDistance) {
-                        matched = true;
-                        bestDistance = dist;
-                        best = i;
-                        bestScaleX = entity.scaleX;
-                        bestScaleY = entity.scaleY;
+                    if (best == -1) {
+                        skewStep *= 0.6;
                     }
                 }
 
-                // Apply best transform
-                entity.scaleX = bestScaleX;
-                entity.scaleY = bestScaleY;
-                highlight.wrapVisual(entity);
-
-                if (best == -1) {
-                    scaleStep *= 0.9;
+                // Snap to `common` skews?
+                if (project.shiftPressed) {
+                    entity.skewX = Math.round(entity.skewX / 22.5) * 22.5;
+                    highlight.wrapVisual(entity);
                 }
             }
+            else if (project.yKeyPressed) {
+                // Skew
+                var skewStep = 0.5;
+                var n = 0;
+                var best = -1;
+
+                // Put other values as started
+                entity.scaleX = startScaleX;
+                entity.scaleY = startScaleY;
+                entity.rotation = startRotation;
+                entity.skewX = startSkewX;
+
+                while (n++ < 100) {
+
+                    // Skew the visual to make the corner point closer
+                    var skewY = entity.skewY;
+                    var bestSkewY = skewY;
+                    var bestDistance = distanceMain();
+
+                    for (i in 0...skewTests.length) {
+                        var test = skewTests[i];
+
+                        var newSkewY = skewY + switch(test) {
+                            case 1: skewStep;
+                            case -1: -skewStep;
+                            default: 0;
+                        }
+
+                        entity.skewY = newSkewY;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestSkewY = entity.skewY;
+                        }
+                    }
+
+                    // Apply best transform
+                    entity.skewY = bestSkewY;
+                    highlight.wrapVisual(entity);
+
+                    if (best == -1) {
+                        skewStep *= 0.6;
+                    }
+                }
+
+                // Snap to `common` skews?
+                if (project.shiftPressed) {
+                    entity.skewY = Math.round(entity.skewY / 22.5) * 22.5;
+                    highlight.wrapVisual(entity);
+                }
+            }
+            else if (project.rKeyPressed) {
+                // Rotate
+                var rotateStep = 0.5;
+                var n = 0;
+                var best = -1;
+
+                // Put other values as started
+                entity.scaleX = startScaleX;
+                entity.scaleY = startScaleY;
+                entity.skewX = startSkewX;
+                entity.skewY = startSkewY;
+
+                while (n++ < 100) {
+
+                    // Rotate the visual to make the corner point closer
+                    var rotation = entity.rotation;
+                    var bestRotation = rotation;
+                    var bestDistance = distanceMain();
+
+                    for (i in 0...rotateTests.length) {
+                        var test = rotateTests[i];
+
+                        var newRotation = rotation + switch(test) {
+                            case 1: rotateStep;
+                            case -1: -rotateStep;
+                            default: 0;
+                        }
+
+                        entity.rotation = newRotation;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestRotation = entity.rotation;
+                        }
+                    }
+
+                    // Apply best transform
+                    entity.rotation = bestRotation;
+                    highlight.wrapVisual(entity);
+
+                    if (best == -1) {
+                        rotateStep *= 0.6;
+                    }
+                }
+
+                // Snap to `common` angles?
+                if (project.shiftPressed) {
+                    entity.rotation = Math.round(entity.rotation / 22.5) * 22.5;
+                    highlight.wrapVisual(entity);
+                }
+            }
+            else if (project.wKeyPressed) {
+                // Scale
+                var scaleStep = 0.1;
+                var n = 0;
+                var best = -1;
+
+                // Put other values as started
+                entity.rotation = startRotation;
+                entity.skewX = startSkewX;
+                entity.skewY = startSkewY;
+                entity.scaleY = startScaleY;
+
+                while (n++ < 100) {
+
+                    // Scale the visual to make the corner point closer
+                    best = -1;
+                    var scaleX = entity.scaleX;
+                    var bestScaleX = scaleX;
+                    var bestDistance = distanceMain();
+
+                    for (i in 0...singleScaleTests.length) {
+                        var test = singleScaleTests[i];
+
+                        var newScaleX = scaleX + switch(test) {
+                            case 1: scaleStep;
+                            case -1: -scaleStep;
+                            default: 0;
+                        }
+
+                        entity.scaleX = newScaleX;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestScaleX = entity.scaleX;
+                        }
+                    }
+
+                    // Apply best transform
+                    entity.scaleX = bestScaleX;
+                    highlight.wrapVisual(entity);
+
+                    if (best == -1) {
+                        scaleStep *= 0.9;
+                    }
+                }
+
+                // Round scales?
+                if (project.shiftPressed) {
+                    entity.scaleX = Math.round(entity.scaleX * 10) / 10;
+                    highlight.wrapVisual(entity);
+                }
+
+            }
+            else if (project.hKeyPressed) {
+                // Scale
+                var scaleStep = 0.1;
+                var n = 0;
+                var best = -1;
+
+                // Put other values as started
+                entity.rotation = startRotation;
+                entity.skewX = startSkewX;
+                entity.skewY = startSkewY;
+                entity.scaleX = startScaleX;
+
+                while (n++ < 100) {
+
+                    // Scale the visual to make the corner point closer
+                    best = -1;
+                    var scaleY = entity.scaleY;
+                    var bestScaleY = scaleY;
+                    var bestDistance = distanceMain();
+
+                    for (i in 0...singleScaleTests.length) {
+                        var test = singleScaleTests[i];
+
+                        var newScaleY = scaleY + switch(test) {
+                            case 1: scaleStep;
+                            case -1: -scaleStep;
+                            default: 0;
+                        }
+
+                        entity.scaleY = newScaleY;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestScaleY = entity.scaleY;
+                        }
+                    }
+
+                    // Apply best transform
+                    entity.scaleY = bestScaleY;
+                    highlight.wrapVisual(entity);
+
+                    if (best == -1) {
+                        scaleStep *= 0.9;
+                    }
+                }
+
+                // Round scales?
+                if (project.shiftPressed) {
+                    entity.scaleY = Math.round(entity.scaleY * 10) / 10;
+                    highlight.wrapVisual(entity);
+                }
+
+            }
+            else {
+                // Scale
+                var scaleStep = 0.1;
+                var n = 0;
+                var best = -1;
+
+                // Put other values as started
+                entity.rotation = startRotation;
+                entity.skewX = startSkewX;
+                entity.skewY = startSkewY;
+
+                while (n++ < 100) {
+
+                    // Scale the visual to make the corner point closer
+                    best = -1;
+                    var scaleX = entity.scaleX;
+                    var scaleY = entity.scaleY;
+                    var bestScaleX = scaleX;
+                    var bestScaleY = scaleY;
+                    var bestDistance = distanceMain();
+
+                    for (i in 0...scaleTests.length) {
+                        var test = scaleTests[i];
+
+                        var newScaleX = scaleX + switch(test[0]) {
+                            case 1: scaleStep;
+                            case -1: -scaleStep;
+                            default: 0;
+                        }
+                        var newScaleY = scaleY + switch(test[1]) {
+                            case 1: scaleStep;
+                            case -1: -scaleStep;
+                            default: 0;
+                        }
+
+                        entity.scaleX = newScaleX;
+                        entity.scaleY = newScaleY;
+                        highlight.wrapVisual(entity);
+
+                        // Is it better?
+                        var dist = distanceMain();
+                        if (dist < bestDistance) {
+                            bestDistance = dist;
+                            best = i;
+                            bestScaleX = entity.scaleX;
+                            bestScaleY = entity.scaleY;
+                        }
+                    }
+
+                    // Apply best transform
+                    entity.scaleX = bestScaleX;
+                    entity.scaleY = bestScaleY;
+                    highlight.wrapVisual(entity);
+
+                    if (best == -1) {
+                        scaleStep *= 0.9;
+                    }
+                }
+
+                // Round scales?
+                if (project.shiftPressed) {
+                    entity.scaleX = Math.round(entity.scaleX * 10) / 10;
+                    entity.scaleY = Math.round(entity.scaleY * 10) / 10;
+                    highlight.wrapVisual(entity);
+                }
+
+                // Keep aspect ratio?
+                if (project.aKeyPressed) {
+                    var bestScaleX = entity.scaleX;
+                    entity.scaleX = bestScaleX;
+                    entity.scaleY = bestScaleX * scaleRatio;
+                    highlight.wrapVisual(entity);
+                }
+            }
+            
         }
         screen.onMove(this, onMove);
 
@@ -286,6 +604,10 @@ class Editable extends Component {
             entity.y = Math.round(entity.y);
             entity.scaleX = Math.round(entity.scaleX * 1000) / 1000.0;
             entity.scaleY = Math.round(entity.scaleY * 1000) / 1000.0;
+            var rotation = entity.rotation;
+            while (rotation < 0) rotation += 360;
+            while (rotation >= 360) rotation -= 360;
+            entity.rotation = Math.round(rotation * 100) / 100.0;
 
             // Update pos & scale on react side
             project.send({
@@ -303,6 +625,10 @@ class Editable extends Component {
             project.send({
                 type: 'set/ui.selectedItem.scaleY',
                 value: entity.scaleY
+            });
+            project.send({
+                type: 'set/ui.selectedItem.rotation',
+                value: entity.rotation
             });
 
         });
