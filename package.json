@@ -44,7 +44,6 @@
     "mobx": "^3.1.16",
     "mobx-react": "^4.2.1",
     "react": "^15.6.1",
-    "react-color": "^2.13.4",
     "react-dom": "^15.6.1",
     "react-icons": "^2.2.5",
     "react-sortable-hoc": "^0.6.6",

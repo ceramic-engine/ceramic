@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { autobind } from 'utils';
+import { autobind, observe, observer, autorun } from 'utils';
 
 /** Color input */
-class ColorInput extends React.Component {
+@observer class ColorInput extends React.Component {
 
     props:{
         /** Value */
@@ -13,31 +13,40 @@ class ColorInput extends React.Component {
         onChange?:(value:string) => void
     };
 
+    @observe editedValue:string = null;
+
+    lastPropValue:string = null;
+
     render() {
 
         let className = 'input input-color';
         if (this.props.disabled) className += ' disabled';
 
+        let value = this.lastPropValue === this.props.value ? this.editedValue : null;
+        this.lastPropValue = this.props.value;
+        if (!value) value = this.props.value;
+
         return (
-            <input
-                disabled={this.props.disabled}
-                className={className}
-                type="text"
-                value={this.props.value}
-                onChange={this.handleChange}
-                onFocus={this.handleFocus}
-            />
+            <div className="input-color-container">
+                <input
+                    disabled={this.props.disabled}
+                    className={className}
+                    type="text"
+                    value={value}
+                    onChange={this.handleChange}
+                    onFocus={this.handleFocus}
+                />
+                <div
+                    className="color-preview"
+                    onClick={this.handlePreviewClick}
+                    style={{
+                        backgroundColor: this.props.value
+                    }}
+                />
+            </div>
         );
 
     } //render
-
-    @autobind handleChange(e:any) {
-
-        if (this.props.onChange) {
-            this.props.onChange(e.target.value);
-        }
-
-    } //handleChange
 
     @autobind handleFocus(e:any) {
 
@@ -46,6 +55,35 @@ class ColorInput extends React.Component {
         }
 
     } //handleFocus
+
+    @autobind handlePreviewClick(e:any) {
+
+        if (!this.props.disabled) {
+            let preview = e.currentTarget;
+            preview.previousElementSibling.focus();
+        }
+
+    } //handleFocus
+
+    @autobind handleChange(e:any) {
+
+        let newValue:string = e.target.value.toUpperCase();
+        if (!newValue.startsWith('#')) newValue = '#' + newValue;
+        if (newValue.length > 7 || !/^#[0-9A-Fa-f]*/.test(newValue)) {
+            return;
+        }
+
+        if (newValue.length === 7) {
+            this.editedValue = '';
+            if (this.props.onChange) {
+                this.props.onChange(newValue);
+            }
+        } else {
+            this.editedValue = newValue;
+            this.forceUpdate(); // Seems that mobx doesn't update in this case otherwise. No idea why :'(
+        }
+
+    } //handleChange
 
 }
 

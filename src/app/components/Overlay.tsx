@@ -20,7 +20,7 @@ import { Center } from 'components';
                     height: context.height,
                     top: 0,
                     left: 0,
-                    zIndex: 600
+                    zIndex: 100
                 }}
             >
                 <Center>

@@ -221,11 +221,12 @@ body, html {
 }
 
 #body input.input {
-    padding: 0px 4px 1px 4px;
+    padding: 0px 4px 0px 4px;
 }
 
 #body textarea.input {
-    padding: 3px 4px 1px 4px;
+    padding: 3px 4px 0px 4px;
+    margin-bottom: -2px;
 }
 
 #body input.input, #body .input-select-container, #body textarea.input  {
@@ -250,10 +251,11 @@ body, html {
     background-color: #2798eb;
 }
 
-/* Text/Number */
+/* Text/Number/Color */
 
 #body input.input.input-text,
-#body input.input.input-number {
+#body input.input.input-number,
+#body input.input.input-color {
     cursor: text;
 }
 
@@ -274,6 +276,20 @@ body, html {
 #body input.input.input-color:focus,
 #body .input-select-container.focus {
     border-color: #2798eb;
+}
+
+/* Color preview */
+
+#body .input-color-container {
+    position: relative;
+}
+
+#body .input-color-container .color-preview {
+    position: absolute;
+    left: 134px;
+    top: 5px;
+    width: 11px;
+    height: 11px;
 }
 
 /* Button */

@@ -1,4 +1,4 @@
-import { serialize, observe, compute } from 'utils';
+import { serialize, observe, compute, action } from 'utils';
 import SceneItem from './SceneItem';
 
 class VisualItem extends SceneItem {
@@ -41,24 +41,8 @@ class VisualItem extends SceneItem {
     /** Item skewY */
     @observe @serialize skewY:number = 0;
 
-    /** Item color */
-    @observe @serialize color:number = 0xFFFFFF;
-
     /** Item alpha */
     @observe @serialize alpha:number = 1;
-
-/// Computed
-
-    @compute get hexColor():string {
-
-        var hex = Number(this.color).toString(16).toUpperCase();
-        while (hex.length < 6) {
-            hex = '0' + hex;
-        }
-
-        return '#' + hex;
-
-    } //hexColor
 
 } //VisualItem
 

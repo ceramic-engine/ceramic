@@ -160,6 +160,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                     }}
                                                 />
                                             </Field>
+                                            <Field label="color">
+                                                <ColorInput value={selectedQuad.hexColor} onChange={(val) => { selectedQuad.setHexColor(val); }} />
+                                            </Field>
                                         </div>
                                         :
                                             null
@@ -197,6 +200,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                         selectedText.font = selected === 0 ? null : fontsList[selected];
                                                     }}
                                                 />
+                                            </Field>
+                                            <Field label="color">
+                                                <ColorInput value={selectedText.hexColor} onChange={(val) => { selectedText.setHexColor(val); }} />
                                             </Field>
                                         </div>
                                         :
@@ -243,9 +249,6 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     </Field>
                                     <Field label="alpha">
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
-                                    </Field>
-                                    <Field label="color">
-                                        <ColorInput value={selectedVisual.hexColor} onChange={(val) => { console.debug(val); }} />
                                     </Field>
                                 </Form>
                                 </div>

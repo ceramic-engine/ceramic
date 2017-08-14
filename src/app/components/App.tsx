@@ -12,7 +12,7 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
 
     render() {
 
-        const navHeight = 22;
+        const navHeight = 23;
         const leftSideWidth = 44;
 
         return (
@@ -47,9 +47,8 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             left: 0,
                             top: 0,
                             width: '100%',
-                            zIndex: 500,
                             lineHeight: navHeight + 'px',
-                            height: navHeight,
+                            height: navHeight - 1,
                             WebkitAppRegion: 'drag',
                             textAlign: 'center'
                         }}
