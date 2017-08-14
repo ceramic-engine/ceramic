@@ -194,6 +194,34 @@ server.get('/ceramic/assets/*', function(req, res) {
   handleAsset();
 });
 
+exports.sourceAssetsPath = null;
+server.get('/ceramic/source-assets/*', function(req, res) {
+  let relativePath = req.path.substr('/ceramic/source-assets/'.length);
+
+  if (exports.sourceAssetsPath == null || !fs.existsSync(path.join(exports.sourceAssetsPath, relativePath))) {
+    res.status(404)
+    res.send('Not found')
+  } else {
+    let assetPath = path.join(exports.sourceAssetsPath, relativePath);
+    fs.readFile(assetPath, function(err, data) {
+      if (err) {
+        res.status(404)
+        res.send('Not found')
+      } else {
+        let lowerCase = assetPath.toLowerCase()
+        if (lowerCase.endsWith('.png')) {
+          res.contentType('image/png');
+          res.end(data, 'binary');
+        }
+        else {
+          res.status(403)
+          res.send('Forbidden')
+        }
+      }
+    });
+  }
+});
+
 // Listen to a free port
 detect(port, (err, _port) => {
 

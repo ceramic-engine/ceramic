@@ -51,6 +51,34 @@ class Scene extends Model {
 
     } //visualItems
 
+    @compute get quadItems() {
+        
+        let result:Array<QuadItem> = [];
+
+        for (let item of this.items) {
+            if (item instanceof QuadItem) {
+                result.push(item);
+            }
+        }
+
+        return result;
+
+    } //quadItems
+
+    @compute get textItems() {
+        
+        let result:Array<TextItem> = [];
+
+        for (let item of this.items) {
+            if (item instanceof TextItem) {
+                result.push(item);
+            }
+        }
+
+        return result;
+
+    } //textItems
+
     @compute get visualItemsSorted() {
         
         let result:Array<VisualItem|QuadItem|TextItem> = [];

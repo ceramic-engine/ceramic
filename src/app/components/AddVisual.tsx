@@ -34,6 +34,7 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
         quad.entity = 'ceramic.Quad';
         quad.x = Math.round(scene.width / 2);
         quad.y = Math.round(scene.height / 2);
+        quad.name = 'Quad ' + (scene.quadItems.length + 1);
         
         var maxDepth = 0;
         for (let item of scene.items) {
@@ -63,6 +64,7 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
         text.x = Math.round(scene.width / 2);
         text.y = Math.round(scene.height / 2);
         text.content = 'text';
+        text.name = 'Text ' + (scene.textItems.length + 1);
         
         var maxDepth = 0;
         for (let item of scene.items) {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, arrayMove } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, TextInput, SelectInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
 import { project, VisualItem, QuadItem } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
@@ -125,12 +125,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                         />
                                     </div>
                                     {
-                                        visual.entity.split('ceramic.').join('')
-                                        +
-                                        (visual instanceof QuadItem && visual.texture != null ?
-                                            ' (' + visual.texture + ')'
-                                        :
-                                            '')
+                                        visual.name
                                     }
                                     </div>
                                     <div className="info">{
@@ -207,6 +202,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                         :
                                             null
                                     }
+                                    <Field label="name">
+                                        <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />
+                                    </Field>
                                     <Field label="width">
                                         <NumberInput disabled={quadTextureIndex !== 0 || selectedText != null} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
                                     </Field>
@@ -245,6 +243,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     </Field>
                                     <Field label="alpha">
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
+                                    </Field>
+                                    <Field label="color">
+                                        <ColorInput value={selectedVisual.hexColor} onChange={(val) => { console.debug(val); }} />
                                     </Field>
                                 </Form>
                                 </div>

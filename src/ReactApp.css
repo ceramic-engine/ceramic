@@ -255,6 +255,11 @@ body, html {
 #body input.input.input-text,
 #body input.input.input-number {
     cursor: text;
+}
+
+#body input.input.input-text,
+#body input.input.input-number,
+#body input.input.input-color {
     width: 140px;
 }
 
@@ -266,6 +271,7 @@ body, html {
 #body textarea.input.input-text:focus,
 #body input.input.input-text:focus,
 #body input.input.input-number:focus,
+#body input.input.input-color:focus,
 #body .input-select-container.focus {
     border-color: #2798eb;
 }
@@ -348,10 +354,29 @@ body, html {
     top: 30px;
     z-index: 100;
     max-width: 200px;
+    color: black;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 1px;
+    font-size: 10px;
+    padding: 10px 13px 10px 13px;
+    margin: -20px 0 0 2px;
 }
 
 #body .asset-info > * {
-    max-width: 100%;
+    max-width: 190px;
+}
+
+#body .asset-info:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    right: 0px;
+    top: 0px;
+    border: 4px solid;
+    border-color: rgba(255,255,255,0.3) rgba(255,255,255,0.3) transparent transparent;
+    transform-origin: bottom right;
+    transform: translateY(10px) scaleY(0.6) rotate(45deg);
 }
 
 /* Menu info */

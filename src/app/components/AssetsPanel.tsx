@@ -32,8 +32,15 @@ import { context } from 'app/context';
                                                 'entry in-alt'
                                                 + (i < project.imageAssets.length - 1 ? ' with-separator' : '')
                                             }
-                                            onMouseOver={() => { project.ui.expandedAsset = val; }}
-                                            onMouseOut={() => { project.ui.expandedAsset = null; }}
+                                            onMouseOver={(e) => {
+                                                project.ui.assetInfo = {
+                                                    asset: val,
+                                                    y: (e.currentTarget as HTMLElement).getClientRects()[0].top
+                                                };
+                                            }}
+                                            onMouseOut={() => {
+                                                project.ui.assetInfo = null;
+                                            }}
                                         >
                                             <div className="name">{val.name}</div>
                                             <div className="info">{val.paths.join(', ')}</div>

@@ -12,15 +12,16 @@ import { context } from 'app/context';
         // Don't do anything until a server port is defined
         if (context.serverPort == null) return null;
 
-        let asset = project.ui.expandedAsset;
-        if (!asset) return null;
+        if (!project.ui.assetInfo) return null;
+        let asset = project.ui.assetInfo.asset;
+        let y = project.ui.assetInfo.y;
 
         if (asset.paths[0].toLowerCase().endsWith('.png')) {
 
-            let imgPath = 'http://localhost:' + context.serverPort + '/ceramic/assets/' + asset.paths[0];
+            let imgPath = 'http://localhost:' + context.serverPort + '/ceramic/source-assets/' + asset.paths[0];
 
             return (
-                <div className="asset-info">
+                <div className="asset-info" style={{ top: y }}>
                     <img src={imgPath} />
                 </div>
             );

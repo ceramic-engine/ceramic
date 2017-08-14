@@ -17,6 +17,9 @@ class SceneItem extends Model {
     /** Item entity class */
     @observe @serialize entity:string;
 
+    /** Item name */
+    @observe @serialize name:string = '';
+
 /// Helpers
 
     serializeForCeramic() {

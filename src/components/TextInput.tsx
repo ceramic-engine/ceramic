@@ -17,12 +17,13 @@ class TextInput extends React.Component {
 
     render() {
 
-        let multiline = this.props.multiline != null ? this.props.multiline : true;
+        let multiline = this.props.multiline != null ? this.props.multiline : false;
         let className = 'input input-text';
         if (this.props.disabled) className += ' disabled';
 
         if (multiline) {
-            let numLines = this.props.value.split("\n").length;
+            let value = this.props.value ? this.props.value : '';
+            let numLines = value.split("\n").length;
             let height = numLines * 12 + 2;
 
             return (

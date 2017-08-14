@@ -10,7 +10,7 @@ class UiState extends Model {
     
     @observe @serialize sceneTab:number;
 
-    @observe expandedAsset:{name:string, constName:string, paths:Array<string>};
+    @observe assetInfo:{asset:{name:string, constName:string, paths:Array<string>}, y:number};
 
     @observe menuInfo:{text:string, y:number};
 

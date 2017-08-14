@@ -76,6 +76,7 @@ class Project extends Model {
 
             let electronApp = electron.remote.require('./app.js');
 
+            electronApp.sourceAssetsPath = this.assetsPath;
             electronApp.assetsPath = null;
 
             if (this.assetsPath != null) {
