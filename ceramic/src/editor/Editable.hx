@@ -201,7 +201,7 @@ class Editable extends Component {
         var tmpAnchorX = anchorX;
         var tmpAnchorY = anchorY;
 
-        if (anchorX != 0.5) {
+        if (anchorX < 0.01 || anchorX > 0.99) {
             tmpAnchorX = switch (corner) {
                 case TOP_LEFT: 1;
                 case TOP_RIGHT: 0;
@@ -210,7 +210,7 @@ class Editable extends Component {
             }
         }
 
-        if (anchorY != 0.5) {
+        if (anchorY < 0.01 || anchorY > 0.99) {
             tmpAnchorY = switch (corner) {
                 case TOP_LEFT: 1;
                 case TOP_RIGHT: 1;
@@ -604,8 +604,16 @@ class Editable extends Component {
             entity.y = Math.round(entity.y);
             entity.scaleX = Math.round(entity.scaleX * 1000) / 1000.0;
             entity.scaleY = Math.round(entity.scaleY * 1000) / 1000.0;
+            var skewX = entity.skewX;
+            while (skewX <= -360) skewX += 360;
+            while (skewX >= 360) skewX -= 360;
+            entity.skewX = Math.round(skewX * 100) / 100.0;
+            var skewY = entity.skewY;
+            while (skewY <= -360) skewY += 360;
+            while (skewY >= 360) skewY -= 360;
+            entity.skewY = Math.round(skewY * 100) / 100.0;
             var rotation = entity.rotation;
-            while (rotation < 0) rotation += 360;
+            while (rotation <= -360) rotation += 360;
             while (rotation >= 360) rotation -= 360;
             entity.rotation = Math.round(rotation * 100) / 100.0;
 
@@ -625,6 +633,14 @@ class Editable extends Component {
             project.send({
                 type: 'set/ui.selectedItem.scaleY',
                 value: entity.scaleY
+            });
+            project.send({
+                type: 'set/ui.selectedItem.skewX',
+                value: entity.skewX
+            });
+            project.send({
+                type: 'set/ui.selectedItem.skewY',
+                value: entity.skewY
             });
             project.send({
                 type: 'set/ui.selectedItem.rotation',

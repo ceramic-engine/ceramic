@@ -34,6 +34,10 @@ class Highlight extends Visual {
 
     public var cornerBottomRight = new Quad();
 
+    public var anchorCrossVBar = new Quad();
+
+    public var anchorCrossHBar = new Quad();
+
     public var topDistance(default,null):Float;
 
     public var rightDistance(default,null):Float;
@@ -58,6 +62,8 @@ class Highlight extends Visual {
 
     public var pointBottomRight(default,null) = new Point();
 
+    public var pointAnchor(default,null) = new Point();
+
     public var cornerSize(default,set):Float = 8;
     function set_cornerSize(cornerSize:Float):Float {
         if (this.cornerSize == cornerSize) return cornerSize;
@@ -74,6 +80,14 @@ class Highlight extends Visual {
         return borderSize;
     }
 
+    public var crossWidth(default,set):Float = 2;
+    function set_crossWidth(crossWidth:Float):Float {
+        if (this.crossWidth == crossWidth) return crossWidth;
+        this.crossWidth = crossWidth;
+        updateCornersAndBorders();
+        return crossWidth;
+    }
+
     public var color(default,set):Color;
     function set_color(color:Int):Int {
         if (this.color == color) return color;
@@ -86,6 +100,8 @@ class Highlight extends Visual {
         borderRight.color = color;
         borderBottom.color = color;
         borderLeft.color = color;
+        anchorCrossVBar.color = color;
+        anchorCrossHBar.color = color;
         return color;
     }
 
@@ -105,6 +121,8 @@ class Highlight extends Visual {
         borderRight.depth = 1.5;
         borderBottom.depth = 1.5;
         borderLeft.depth = 1.5;
+        anchorCrossVBar.depth = 1.75;
+        anchorCrossHBar.depth = 1.75;
 
         add(cornerTopLeft);
         add(cornerTopRight);
@@ -114,6 +132,8 @@ class Highlight extends Visual {
         add(borderRight);
         add(borderBottom);
         add(borderLeft);
+        add(anchorCrossVBar);
+        add(anchorCrossHBar);
 
         cornerTopLeft.onDown(this, function(info) {
             emitCornerDown(TOP_LEFT, info);
@@ -188,6 +208,7 @@ class Highlight extends Visual {
         visual.visualToScreen(visual.width, 0, pointTopRight);
         visual.visualToScreen(0, visual.height, pointBottomLeft);
         visual.visualToScreen(visual.width, visual.height, pointBottomRight);
+        visual.visualToScreen(visual.width * visual.anchorX, visual.height * visual.anchorY, pointAnchor);
 
         updateCornersAndBorders();
 
@@ -196,6 +217,14 @@ class Highlight extends Visual {
 /// Internal
 
     function updateCornersAndBorders() {
+
+        anchorCrossVBar.anchor(0.5, 0.5);
+        anchorCrossVBar.pos(pointAnchor.x, pointAnchor.y);
+        anchorCrossVBar.size(8, crossWidth);
+
+        anchorCrossHBar.anchor(0.5, 0.5);
+        anchorCrossHBar.pos(pointAnchor.x, pointAnchor.y);
+        anchorCrossHBar.size(crossWidth, 8);
 
         cornerTopLeft.size(cornerSize, cornerSize);
         cornerTopLeft.anchor(0.5, 0.5);
