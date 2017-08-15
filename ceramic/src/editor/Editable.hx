@@ -101,7 +101,7 @@ class Editable extends Component {
         });
         project.send({
             type: 'set/ui.sceneTab',
-            value: 0 // Visuals tab
+            value: 'visuals'
         });
 
     } //select

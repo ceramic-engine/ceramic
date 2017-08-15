@@ -8,7 +8,7 @@ class UiState extends Model {
 
     @observe @serialize editor:'scene'|'atlas';
     
-    @observe @serialize sceneTab:number;
+    @observe @serialize sceneTab:'visuals'|'scenes'|'assets';
 
     @observe assetInfo:{asset:{name:string, constName:string, paths:Array<string>}, y:number};
 

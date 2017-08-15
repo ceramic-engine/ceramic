@@ -50,13 +50,48 @@ import { context } from 'app/context';
                     <div className="rightside">
                         {project.assetsPath != null ?
                             scene ?
-                                <Tabs tabs={["Visuals", "Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
+                                <Tabs
+                                    tabs={["Visuals", "Scenes", "Assets"]}
+                                    active={
+                                        function() {
+                                            switch(project.ui.sceneTab) {
+                                                case 'visuals': return 0;
+                                                case 'scenes': return 1;
+                                                case 'assets': return 2;
+                                                default: 0;
+                                            }
+                                            return 0;
+                                        }()
+                                    }
+                                    onChange={
+                                        (i) => {
+                                            project.ui.sceneTab = ['visuals', 'scenes', 'assets'][i] as any;
+                                        }
+                                    }
+                                >
                                     <VisualsPanel height={this.props.height - tabHeight} />
                                     <ScenesPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
                             :
-                                <Tabs tabs={["Scenes", "Assets"]} active={project.ui.sceneTab} onChange={(i) => { project.ui.sceneTab = i; }}>
+                                <Tabs
+                                    tabs={["Scenes", "Assets"]}
+                                    active={
+                                        function() {
+                                            switch(project.ui.sceneTab) {
+                                                case 'scenes': return 0;
+                                                case 'assets': return 1;
+                                                default: 0;
+                                            }
+                                            return 0;
+                                        }()
+                                    }
+                                    onChange={
+                                        (i) => {
+                                            project.ui.sceneTab = ['scenes', 'assets'][i] as any;
+                                        }
+                                    }
+                                >
                                     <ScenesPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
