@@ -18,7 +18,7 @@ class UiState extends Model {
 
 /// Properties (selected)
 
-    @observe @serialize selectedItemId:string;
+    @observe selectedItemId:string;
 
     @observe @serialize selectedSceneId:string;
 

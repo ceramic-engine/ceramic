@@ -51,6 +51,7 @@ if (process.argv[1] == 'ceramic') {
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+exports.mainWindow = null;
 
 function createWindow () {
 
@@ -76,6 +77,7 @@ function createWindow () {
       path.join(__dirname, 'public/icons/64x64.png') : 
       path.join(__dirname, 'build/icons/64x64.png')
   })
+  exports.mainWindow = mainWindow;
 
   // and load the index.html of the app.
   if (process.env.ELECTRON_DEV) {
@@ -98,6 +100,7 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
+    exports.mainWindow = null;
   })
 }
 

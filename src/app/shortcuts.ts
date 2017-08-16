@@ -1,5 +1,5 @@
 import * as electron from 'electron';
-import { autorun } from 'utils';
+import { autorun, history, clipboard } from 'utils';
 import { project } from 'app/model';
 import { EventEmitter } from 'events';
 const electronApp = electron.remote.require('./app.js');
@@ -57,19 +57,59 @@ class Shortcuts extends EventEmitter {
             {
                 label: 'Edit',
                 submenu: [
-                    {role: 'undo'},
-                    {role: 'redo'},
+                    {
+                        label: 'Undo',
+                        accelerator: 'CmdOrCtrl+Z',
+                        click: () => {
+                            history.undo();
+                        }
+                    },
+                    {
+                        label: 'Redo',
+                        accelerator: 'CmdOrCtrl+Shift+Z',
+                        click: () => {
+                            history.redo();
+                        }
+                    },
                     {type: 'separator'},
-                    {role: 'cut'},
-                    {role: 'copy'},
-                    {role: 'paste'},
+                    {
+                        label: 'Cut',
+                        accelerator: 'CmdOrCtrl+X',
+                        click: () => {
+                            if (global['focusedInput'] != null) {
+                                clipboard.writeText(global['focusedInput'].getSelected(true));
+                            }
+                        }
+                    },
+                    {
+                        label: 'Copy',
+                        accelerator: 'CmdOrCtrl+C',
+                        click: () => {
+                            if (global['focusedInput'] != null) {
+                                clipboard.writeText(global['focusedInput'].getSelected(false));
+                            }
+                        }
+                    },
+                    {
+                        label: 'Paste',
+                        accelerator: 'CmdOrCtrl+V',
+                        click: () => {
+                            if (global['focusedInput'] != null) {
+                                let text = clipboard.readText();
+                                console.debug('PASTE: ' + text);
+                                if (text != null) {
+                                    global['focusedInput'].setSelected(text);
+                                }
+                            }
+                        }
+                    },
                     {role: 'selectall'},
                     {type: 'separator'},
                     {
                         label: 'Delete',
                         accelerator: 'Backspace',
                         click() {
-                            if (document.activeElement.id !== 'body') return;
+                            if (document.activeElement.nodeName.toLowerCase() !== 'body') return;
                             if (project.ui.editor === 'scene') {
                                 if (project.ui.sceneTab === 'visuals') {
                                     project.removeCurrentSceneItem();

@@ -6,10 +6,10 @@ class VisualItem extends SceneItem {
 /// Properties
 
     /** Item width */
-    @observe @serialize width:number = 100;
+    @observe width:number = null;
 
     /** Item height */
-    @observe @serialize height:number = 100;
+    @observe height:number = null;
 
     /** Item scaleX */
     @observe @serialize scaleX:number = 1;

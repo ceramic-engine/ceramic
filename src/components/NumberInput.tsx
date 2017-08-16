@@ -17,6 +17,8 @@ import { autobind, observer, observe } from 'utils';
 
     @observe startMinus:boolean = false;
 
+    inputElement:HTMLInputElement = null;
+
     render() {
 
         let val = '' + this.props.value;
@@ -27,7 +29,16 @@ import { autobind, observer, observe } from 'utils';
         if (this.props.disabled) className += ' disabled';
 
         return (
-            <input disabled={this.props.disabled} className={className} type="numeric" value={val} onChange={this.handleChange} onFocus={this.handleFocus} onBlur={this.handleBlur} />
+            <input
+                disabled={this.props.disabled}
+                className={className}
+                type="numeric"
+                value={val}
+                onChange={this.handleChange}
+                onFocus={this.handleFocus}
+                onBlur={this.handleBlur}
+                ref={(el) => { this.inputElement = el; }}
+            />
         );
 
     } //render
@@ -82,15 +93,51 @@ import { autobind, observer, observe } from 'utils';
 
         if (!this.props.disabled) {
             e.target.select();
+
+            global['focusedInput'] = this;
         }
 
     } //handleFocus
 
     @autobind handleBlur(e:any) {
 
+        if (global['focusedInput'] === this) {
+            global['focusedInput'] = undefined;
+        }
+
         this.endDot = false;
 
     } //handleBlur
+
+/// Clipboard
+
+    getSelected(cut:boolean = false) {
+
+        let input = this.inputElement;
+        let val = input.value.substring(input.selectionStart, input.selectionEnd);
+
+        if (cut && val.length > 0) {
+            
+            input.value = input.value.substring(0, input.selectionStart) + input.value.substring(input.selectionEnd);
+            this.handleChange({
+                target: input
+            });
+        }
+
+        return val;
+
+    } //getSelected
+
+    setSelected(content:string) {
+
+        let input = this.inputElement;
+
+        input.value = input.value.substring(0, input.selectionStart) + content + input.value.substring(input.selectionEnd);
+        this.handleChange({
+            target: input
+        });
+
+    } //setSelected
 
 }
 

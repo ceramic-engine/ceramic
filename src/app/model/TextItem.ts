@@ -8,6 +8,12 @@ class TextItem extends VisualItem {
     /** Item font (name) */
     @observe @serialize font:string = null;
 
+    /** Item width */
+    @observe width:number = 0;
+
+    /** Item height */
+    @observe height:number = 0;
+
     /** Item content */
     @observe @serialize content:string = '';
 

@@ -26,6 +26,8 @@ export interface HistoryListener {
 
     pauses:number = 0;
 
+    started:boolean = false;
+
     listener:HistoryListener = {
 
         onHistoryUndo(item:HistoryItem) {
@@ -41,6 +43,8 @@ export interface HistoryListener {
     /** Add a new history item
         @return `true` if the item was added, `false` if forbidden because already `doing`. */
     push(item:HistoryItem) {
+
+        if (!this.started) return false;
 
         // Record item only if not undoing/redoing
         if (!this.doing && this.pauses === 0) {
@@ -63,6 +67,8 @@ export interface HistoryListener {
     undo(callback:(item:HistoryItem) => void):boolean;
 
     undo(callback?:(item:HistoryItem) => void):boolean {
+
+        if (!this.started) return false;
 
         // Ensure the callback is not some kind of event (React), if given
         if (callback != null && !callback.constructor.name.endsWith('Event')) {
@@ -105,6 +111,8 @@ export interface HistoryListener {
 
     redo(callback?:(item:HistoryItem) => void):boolean {
 
+        if (!this.started) return false;
+
         if (callback != null && !callback.constructor.name.endsWith('Event')) {
             var canRedo = false;
 
@@ -134,6 +142,20 @@ export interface HistoryListener {
         }
 
     } //redo
+
+    clear():void {
+
+        this.items = [];
+        this.index = -1;
+
+    } //clear
+
+    start():void {
+
+        if (this.started) return;
+        this.started = true;
+
+    } //start
 
     pause():void {
 

@@ -1,4 +1,4 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, keypath, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, Model } from 'utils';
 import Scene from './Scene';
 import UiState from './UiState';
 import * as fs from 'fs';

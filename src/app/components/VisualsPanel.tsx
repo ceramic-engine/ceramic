@@ -59,6 +59,9 @@ import FaLock from 'react-icons/lib/fa/lock';
             }
         }
 
+        // Explicit sizes?
+        let allowExplicitSizes = (selectedQuad != null && quadTextureIndex === 0);
+
         return (
             <Panel>
                 {project.ui.selectedScene.visualItems.length > 0 ?
@@ -211,12 +214,26 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     <Field label="name">
                                         <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />
                                     </Field>
-                                    <Field label="width">
-                                        <NumberInput disabled={quadTextureIndex !== 0 || selectedText != null} value={selectedVisual.width} onChange={(val) => { selectedVisual.width = val; }} />
-                                    </Field>
-                                    <Field label="height">
-                                        <NumberInput disabled={quadTextureIndex !== 0 || selectedText != null} value={selectedVisual.height} onChange={(val) => { selectedVisual.height = val; }} />
-                                    </Field>
+                                    {
+                                        allowExplicitSizes ?
+                                        <div>
+                                            <Field label="width">
+                                                <NumberInput disabled={false} value={selectedVisual['explicitWidth']} onChange={(val) => { selectedVisual['explicitWidth'] = val; }} />
+                                            </Field>
+                                            <Field label="height">
+                                                <NumberInput disabled={false} value={selectedVisual['explicitHeight']} onChange={(val) => { selectedVisual['explicitHeight'] = val; }} />
+                                            </Field>
+                                        </div>
+                                        :
+                                        <div>
+                                            <Field label="width">
+                                                <NumberInput disabled={true} value={selectedVisual.width} />
+                                            </Field>
+                                            <Field label="height">
+                                                <NumberInput disabled={true} value={selectedVisual.height} />
+                                            </Field>
+                                        </div>
+                                    }
                                     <Field label="scaleX">
                                         <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />
                                     </Field>

@@ -135,7 +135,7 @@ export class Database implements HistoryListener {
         }
         
         if (entry.instance != null) {
-            this.extract(entry.instance, false);
+            this.extract(entry.instance, true);
         }
 
     }
@@ -149,7 +149,7 @@ export class Database implements HistoryListener {
         }
 
         let options = recursive ? {
-            recursive: true,
+            recursive: recursive,
             entries: this.entries
         } : undefined;
 
@@ -181,8 +181,8 @@ export class Database implements HistoryListener {
 
 /// Clean
 
-    /** Walk object and  */
-    clean() {
+    /** Clean unused objects */
+    clean(deep:boolean = false) {
         
         // Add root entries, first
         let cleaned:{ [key: string]: Entry } = {};
@@ -259,8 +259,11 @@ export class Database implements HistoryListener {
         }
         for (let key of allIds) {
             if (!cleaned[key]) {
-                console.log("REMOVE CLEANED " + key);
-                delete this.entries[key];
+                if (deep) {
+                    delete this.entries[key];
+                } else {
+                    this.entries[key].instance = undefined;
+                }
             }
         }
 
@@ -270,11 +273,14 @@ export class Database implements HistoryListener {
 
     save() {
 
-        this.clean();
+        // Clean before save
+        this.clean(false);
 
+        // Create json string to save
         let saved:{ [key: string]: Entry } = {};
         for (let key in this.entries) {
-            if (this.entries.hasOwnProperty(key)) {
+            // Only save entries that still have an instance (still existing after clean)
+            if (this.entries.hasOwnProperty(key) && this.entries[key].instance) {
                 saved[key] = {
                     serialized: this.entries[key].serialized,
                     instance: null

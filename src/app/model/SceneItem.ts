@@ -33,7 +33,16 @@ class SceneItem extends Model {
                     data.data[key] = serialized[key];
                 } else if (key === 'id' || key === 'entity' || key === 'sortIndex') {
                     data[key] = serialized[key];
-                } else {
+                } else if (key === 'explicitWidth') {
+                    if (serialized[key] != null) {
+                        data.props.width = serialized[key];
+                    }
+                } else if (key === 'explicitHeight') {
+                    if (serialized[key] != null) {
+                        data.props.height = serialized[key];
+                    }
+                }
+                else {
                     data.props[key] = serialized[key];
                 }
             }

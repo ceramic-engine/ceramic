@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observer, observe, autorun, uuid, autobind, ceramic, serializeModel } from 'utils';
+import { observer, observe, autorun, uuid, autobind, ceramic, history, serializeModel } from 'utils';
 import { context } from 'app/context';
 import { project, SceneItem } from 'app/model';
 import { IReactionDisposer } from 'mobx';
@@ -198,6 +198,9 @@ export interface Message {
     } //send
 
     handleReady() {
+
+        // Start history
+        history.start();
 
         // Watch scene && items
         let sceneInCeramic = false;

@@ -1,4 +1,6 @@
 
+export { clipboard } from 'electron';
+
 export { default as files } from './files';
 export { default as storage } from './storage';
 export { ceramic } from './ceramic';

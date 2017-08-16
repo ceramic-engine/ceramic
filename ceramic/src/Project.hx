@@ -9,6 +9,7 @@ import ceramic.Text;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
+import ceramic.Screen;
 import ceramic.Key;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
@@ -69,6 +70,7 @@ class Project extends Entity {
             webParent: js.Browser.document.getElementById('ceramic-editor-view'),
             allowDefaultKeys: true
         };
+        settings.targetDensity = 1;
 
         app.onceReady(ready);
 
@@ -271,6 +273,9 @@ class Project extends Entity {
         outsideRight.pos(scene.width * scene.scaleX + (screen.width - scene.width * scene.scaleX) * 0.5, -pad);
         outsideRight.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
 
+        // Update density
+        settings.targetDensity = Math.ceil(screen.density * scene.scaleX);
+
     } //fitScene
 
 /// Messages
@@ -371,15 +376,13 @@ class Project extends Entity {
 
                                 function updateSize() {
                                     if (quad.texture != null) {
-                                        if (item.props.width != quad.width || item.props.height != quad.height) {
-                                            send({
-                                                type: 'set/scene.item.${item.id}',
-                                                value: {
-                                                    width: quad.width,
-                                                    height: quad.height
-                                                }
-                                            });
-                                        }
+                                        send({
+                                            type: 'set/scene.item.${item.id}',
+                                            value: {
+                                                width: quad.width,
+                                                height: quad.height
+                                            }
+                                        });
                                     }
                                     else {
                                         quad.width = item.props.width;
