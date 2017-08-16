@@ -13,9 +13,9 @@ interface Message {
 /** Utility taking advantage of shared Ceramic component to send/receive messages. */
 class CeramicProxy {
 
-    private ceramicRunning:boolean = false;
-
     component:any;
+
+    private ceramicRunning:boolean = false;
 
     send(message:Message, responseHandler?:(message:Message) => void) {
 

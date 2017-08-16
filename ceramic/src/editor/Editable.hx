@@ -56,6 +56,11 @@ class Editable extends Component {
 
     public function select() {
 
+        project.send({
+            type: 'set/ui.sceneTab',
+            value: 'visuals'
+        });
+
         if (active == this) return;
         active = this;
         
@@ -98,10 +103,6 @@ class Editable extends Component {
         project.send({
             type: 'set/ui.selectedItemId',
             value: entity.id
-        });
-        project.send({
-            type: 'set/ui.sceneTab',
-            value: 'visuals'
         });
 
     } //select

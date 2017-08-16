@@ -139,18 +139,6 @@ class Project extends Entity {
         // Keyboard events
         app.onKeyDown(this, function(key) {
 
-            if (document.activeElement == null || document.activeElement.id == 'body') {
-
-                if (key.keyCode == KeyCode.BACKSPACE && selectedItemId != null) {
-                    send({
-                        type: 'scene-item/delete',
-                        value: {
-                            id: selectedItemId
-                        }
-                    });
-                }
-            }
-
             if (key.keyCode == KeyCode.LSHIFT) {
                 leftShiftPressed = true;
             }

@@ -6,7 +6,7 @@ class UiState extends Model {
 
 /// Properties
 
-    @observe @serialize editor:'scene'|'atlas';
+    @observe @serialize editor:'scene'|'atlas' = 'scene';
     
     @observe @serialize sceneTab:'visuals'|'scenes'|'assets';
 

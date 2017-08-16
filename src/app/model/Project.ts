@@ -4,6 +4,7 @@ import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
 import * as os from 'os';
+import shortcuts from 'app/shortcuts';
 import { join } from 'path';
 import { context } from 'app/context';
 
@@ -157,6 +158,20 @@ class Project extends Model {
 
         });
 
+        // Deselect item when changing scene tab
+        autorun(() => {
+
+            if (this.ui == null) return;
+            if (this.ui.editor !== 'scene') return;
+            if (this.ui.sceneTab !== 'visuals') {
+                ceramic.send({
+                    type: 'scene-item/select',
+                    value: null
+                });
+            }
+
+        });
+
         // Update data from ceramic (haxe)
         ceramic.listen('set/*', (message) => {
 
@@ -180,27 +195,6 @@ class Project extends Model {
                         }
                     }
                 }
-            }
-
-        });
-
-        // Update data from ceramic (haxe)
-        ceramic.listen('scene-item/delete', (message) => {
-
-            let itemId = message.value.id;
-            let item = this.ui.selectedScene.itemsById.get(itemId);
-
-            if (item != null) {
-
-                if (this.ui.selectedItemId === itemId) {
-                    this.ui.selectedItemId = null;
-                }
-
-                this.ui.selectedScene.items.splice(
-                    this.ui.selectedScene.items.indexOf(item),
-                    1
-                );
-                item = null;
             }
 
         });
@@ -243,6 +237,51 @@ class Project extends Model {
         this.ui.selectedSceneId = scene.id;
 
     } //createScene
+
+    @action removeCurrentSceneItem() {
+
+        let itemId = this.ui.selectedItemId;
+        if (!itemId) return;
+
+        let item = this.ui.selectedScene.itemsById.get(itemId);
+
+        if (item != null) {
+
+            if (this.ui.selectedItemId === itemId) {
+                this.ui.selectedItemId = null;
+            }
+
+            this.ui.selectedScene.items.splice(
+                this.ui.selectedScene.items.indexOf(item),
+                1
+            );
+            item = null;
+        }
+
+    } //removeCurrentSceneItem
+
+    @action removeCurrentScene() {
+
+        let sceneId = this.ui.selectedSceneId;
+
+        if (!sceneId) return;
+
+        let index = -1;
+        let i = 0;
+        for (let scene of this.scenes) {
+            if (scene.id === sceneId) {
+                index = i;
+                break;
+            }
+            i++;
+        }
+
+        if (index !== -1) {
+            this.ui.selectedSceneId = null;
+            this.scenes.splice(index, 1);
+        }
+
+    } //removeCurrentScene
 
 } //Project
 
