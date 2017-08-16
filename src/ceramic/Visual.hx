@@ -603,7 +603,12 @@ class Visual extends Entity {
 
             if (childrenDepthRange != -1) {
 
-                multDepth = childrenDepthRange / (maxDepth - minDepth);
+                if (maxDepth != minDepth) {
+                    multDepth = childrenDepthRange / (maxDepth - minDepth);
+                }
+                else {
+                    multDepth = 1;
+                }
 
             }
 
@@ -611,7 +616,9 @@ class Visual extends Entity {
 
                 if (multDepth == -1) multDepth = 1;
 
-                multDepth *= depthRange / (maxDepth - minDepth);
+                if (maxDepth != minDepth) {
+                    multDepth *= depthRange / (maxDepth - minDepth);
+                }
 
             }
 
@@ -619,7 +626,8 @@ class Visual extends Entity {
 
                 for (child in children) {
 
-                    child.computedDepth = computedDepth + (child.computedDepth - minDepth ) * multDepth;
+                    var prevD = child.computedDepth;
+                    child.computedDepth = computedDepth + (child.computedDepth - minDepth) * multDepth;
                     
                     if (child.children != null) {
                         child.computeChildrenDepth((maxDepth - child.depth) * multDepth);
