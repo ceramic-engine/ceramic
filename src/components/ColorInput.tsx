@@ -77,6 +77,9 @@ import { autobind, observe, observer, autorun } from 'utils';
             global['focusedInput'] = undefined;
         }
 
+        this.editedValue = null;
+        this.forceUpdate();
+
     } //handleBlur
 
     @autobind handleChange(e:any) {
@@ -94,7 +97,7 @@ import { autobind, observe, observer, autorun } from 'utils';
             }
         } else {
             this.editedValue = newValue;
-            this.forceUpdate(); // Seems that mobx doesn't update in this case otherwise. No idea why :'(
+            this.forceUpdate(); // Seems that mobx doesn't update in this case :/
         }
 
     } //handleChange
@@ -126,6 +129,8 @@ import { autobind, observe, observer, autorun } from 'utils';
         this.handleChange({
             target: input
         });
+
+        input.selectionStart = input.selectionEnd;
 
     } //setSelected
 

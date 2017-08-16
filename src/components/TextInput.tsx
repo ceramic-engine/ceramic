@@ -115,6 +115,8 @@ class TextInput extends React.Component {
             target: input
         });
 
+        input.selectionStart = input.selectionEnd;
+
     } //setSelected
 
 }

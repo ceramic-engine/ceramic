@@ -50,30 +50,7 @@ import { autobind, observer, observe } from 'utils';
 
             // Be smart about changing sign/handling comma/dot
             //
-            val = val.split(',').join('.');
-            this.endDot = val.endsWith('.') && val.substr(0, val.length - 1).indexOf('.') === -1;
-            if (this.endDot) {
-                val += '0';
-            }
-            if (!this.startMinus) {
-                if (val === '-' || val === '0-') {
-                    this.startMinus = true;
-                    val += '0';
-                }
-                else if (val.length > 1 && val.endsWith('-')) {
-                    val = '-' + val.substr(0, val.length - 1);
-                }
-            }
-            else {
-                if (val === '' || val === '-') {
-                    this.startMinus = false;
-                    val = '0';
-                }
-            }
-            if (val.startsWith('-') && val.endsWith('+')) {
-                this.startMinus = false;
-                val = val.substr(1, val.length - 2);
-            }
+            val = this.sanitize(val);
 
             // Then compute final valid number
             let num:number = parseFloat(val);
@@ -109,6 +86,49 @@ import { autobind, observer, observe } from 'utils';
 
     } //handleBlur
 
+/// Helpers
+
+    sanitize(val:string):string {
+
+        val = val.split(',').join('.');
+
+        // Forbid multiple dots
+        let parts = val.split('.');
+        while (parts.length > 2) {
+            parts.pop();
+        }
+        val = parts.join('.');
+
+        this.endDot = val.endsWith('.') && val.substr(0, val.length - 1).indexOf('.') === -1;
+        if (this.endDot) {
+            val += '0';
+        }
+        if (!this.startMinus) {
+            if (val === '-' || val === '0-') {
+                this.startMinus = true;
+                val += '0';
+            }
+            else if (val.length > 1 && val.endsWith('-')) {
+                val = '-' + val.substr(0, val.length - 1);
+            }
+        }
+        else {
+            if (val === '' || val === '-') {
+                this.startMinus = false;
+                val = '0';
+            }
+        }
+        if (val.startsWith('-') && val.endsWith('+')) {
+            this.startMinus = false;
+            val = val.substr(1, val.length - 2);
+        }
+
+        this.forceUpdate();
+
+        return val;
+
+    } //sanitize
+
 /// Clipboard
 
     getSelected(cut:boolean = false) {
@@ -132,10 +152,15 @@ import { autobind, observer, observe } from 'utils';
 
         let input = this.inputElement;
 
-        input.value = input.value.substring(0, input.selectionStart) + content + input.value.substring(input.selectionEnd);
+        let val = input.value.substring(0, input.selectionStart) + content + input.value.substring(input.selectionEnd);
+
+        input.value = this.sanitize(val);
+
         this.handleChange({
             target: input
         });
+
+        input.selectionStart = input.selectionEnd;
 
     } //setSelected
 

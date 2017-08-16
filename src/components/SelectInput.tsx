@@ -15,6 +15,8 @@ class SelectInput extends React.Component {
         onChange?:(value:number) => void
     };
 
+    inputElement:HTMLSelectElement = null;
+
     render() {
 
         let className = 'input-select-container';
@@ -24,7 +26,14 @@ class SelectInput extends React.Component {
 
         return (
             <div className={className}>
-                <select value={this.props.selected} className="input input-select" onChange={this.handleChange} onFocus={this.handleFocus} onBlur={this.handleBlur}>
+                <select
+                    value={this.props.selected}
+                    className="input input-select"
+                    onChange={this.handleChange}
+                    onFocus={this.handleFocus}
+                    onBlur={this.handleBlur}
+                    ref={(el) => { this.inputElement = el; }}
+                >
                     {this.props.options.map((opt, i) =>
                         <option key={i} value={i}>{opt}</option>
                     )}
@@ -48,13 +57,50 @@ class SelectInput extends React.Component {
 
         e.target.parentNode.classList.add('focus');
 
+        global['focusedInput'] = this;
+
     } //handleFocus
 
     @autobind handleBlur(e:any) {
 
         e.target.parentNode.classList.remove('focus');
 
+        if (global['focusedInput'] === this) {
+            global['focusedInput'] = undefined;
+        }
+
     } //handleBlur
+
+/// Clipboard
+
+    getSelected(cut:boolean = false) {
+
+        let input = this.inputElement;
+        let val = input.options[input.selectedIndex].text.trim();
+
+        // No cut in select. How would we do that?
+
+        return val;
+
+    } //getSelected
+
+    setSelected(content:string) {
+
+        let input = this.inputElement;
+
+        for (let i = 0; i < input.options.length; i++) {
+            if (input.options[i].text.trim().toLowerCase() === content.trim().toLowerCase()) {
+                input.selectedIndex = i;
+
+                this.handleChange({
+                    target: input
+                });
+
+                break;
+            }
+        }
+
+    } //setSelected
 
 }
 
