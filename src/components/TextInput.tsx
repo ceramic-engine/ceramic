@@ -54,6 +54,7 @@ class TextInput extends React.Component {
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
+                    ref={(el) => { this.inputElement = el; }}
                 />
             );
         }
