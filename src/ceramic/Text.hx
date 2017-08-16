@@ -179,7 +179,7 @@ class Text extends Visual {
                 prevCode = 0;
                 i++;
                 y += lineHeight * font.lineHeight * sizeFactor;
-                lineWidths.push(x + (glyph != null ? (glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
+                lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
                 lineQuads.push([]);
                 x = 0;
                 continue;
@@ -222,7 +222,7 @@ class Text extends Visual {
         }
 
         if (x > 0) {
-            lineWidths.push(x + (glyph != null ? (glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
+            lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
         }
 
         // Remove unused quads
