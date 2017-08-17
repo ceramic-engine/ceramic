@@ -296,7 +296,10 @@ export class Database implements HistoryListener {
                 };
             }
         }
-        localStorage.setItem('ceramic-editor-db', JSON.stringify(saved));
+
+        // Save into local storage
+        let result = JSON.stringify(saved);
+        localStorage.setItem('ceramic-editor-db', result);
 
     } //save
 

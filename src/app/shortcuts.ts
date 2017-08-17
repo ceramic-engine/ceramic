@@ -43,6 +43,7 @@ class Shortcuts extends EventEmitter {
                         accelerator: 'CmdOrCtrl+S',
                         click: () => {
                             console.debug('FILE SAVE');
+                            project.save();
                         }
                     },
                     {
@@ -50,6 +51,7 @@ class Shortcuts extends EventEmitter {
                         accelerator: 'Shift+CmdOrCtrl+S',
                         click: () => {
                             console.debug('FILE SAVE AS');
+                            project.saveAs();
                         }
                     }
                 ]

@@ -1,4 +1,5 @@
 import autobind from 'autobind-decorator';
+import { EventEmitter } from 'events';
 
 export interface HistoryItem {
 
@@ -16,7 +17,7 @@ export interface HistoryListener {
 
 }
 
-@autobind export class History {
+@autobind export class History extends EventEmitter {
 
     doing:boolean = false;
 
@@ -52,6 +53,9 @@ export interface HistoryListener {
             if (this.items.length > this.index + 1) {
                 this.items.length = this.index + 1;
             }
+
+            this.emit('push');
+
             return true;
         }
 

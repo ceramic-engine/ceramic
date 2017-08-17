@@ -454,7 +454,6 @@ class Project extends Entity {
                                 var text:Text = cast instance;
 
                                 function updateSize() {
-                                    untyped console.debug('SEND TEXT SIZE');
                                     send({
                                         type: 'set/scene.item.${item.id}',
                                         value: {
@@ -480,7 +479,6 @@ class Project extends Entity {
                                                 assets.addAsset(asset);
                                                 asset.onceComplete(function(success) {
 
-                                                    untyped console.debug('success='+success);
                                                     if (success && !instance.destroyed) {
                                                         text.font = assets.font(assetName);
                                                         updateSize();

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { project } from 'app/model';
+import { project, user } from 'app/model';
 import { context } from 'app/context';
 import { EditScene, AddVisual, MenuInfo } from 'app/components';
 import MdImage from 'react-icons/lib/md/image';
@@ -54,7 +54,16 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                         }}
                         className="topnav"
                     >
-                        Ceramic Editor
+                    {project.name ?
+                        project.name
+                    :
+                        'New Project'
+                    }
+                    {user.projectDirty ?
+                        ' *'
+                    :
+                        null
+                    }
                     </div>
                     <div
                         className="leftside"

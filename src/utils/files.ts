@@ -5,14 +5,26 @@ import { join, normalize } from 'path';
 class Files {
 
     /** Open a dialog to choose a directory */
-    chooseDirectory() {
+    chooseDirectory(title:string = 'Choose directory') {
 
         var result = electron.remote.dialog.showOpenDialog({
-            title: 'Choose directory',
+            title,
             properties: ['openDirectory', 'createDirectory']
         });
 
         return result != null ? result[0] : null;
+
+    } //chooseDirectory
+
+    /** Open a dialog to choose a file to `save as` */
+    chooseSaveAs(title:string = 'Save file', filters:Array<Electron.FileFilter> = []) {
+
+        var result = electron.remote.dialog.showSaveDialog({
+            title,
+            filters
+        });
+
+        return result != null ? result : null;
 
     } //chooseDirectory
 

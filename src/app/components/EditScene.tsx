@@ -58,7 +58,7 @@ import { context } from 'app/context';
                                                 case 'visuals': return 0;
                                                 case 'scenes': return 1;
                                                 case 'assets': return 2;
-                                                default: 0;
+                                                default: 1;
                                             }
                                             return 0;
                                         }()

@@ -1,6 +1,7 @@
 
 import { db, registerModel } from 'utils';
 import Project from './Project';
+import User from './User';
 
 // Register model types
 import Scene from './Scene';
@@ -18,6 +19,7 @@ registerModel(UiState);
 
 // Export store classes
 export { default as Project } from './Project';
+export { default as User } from './User';
 export { default as Scene } from './Scene';
 export { default as SceneItem } from './SceneItem';
 export { default as VisualItem } from './VisualItem';
@@ -29,6 +31,9 @@ export { default as UiState } from './UiState';
 db.load();
 
 // Export app instances
+//
+export const user = db.getOrCreate(User, 'user', true);
+user.keep = true;
 export const project = db.getOrCreate(Project, 'project', true);
 project.keep = true;
 if (!project.initialized) {

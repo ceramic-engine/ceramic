@@ -1,9 +1,9 @@
-import { observe, ceramic } from 'utils';
+import { observe, ceramic, serialize } from 'utils';
 import * as electron from 'electron';
 import shortcuts from './shortcuts';
 const electronApp = electron.remote.require('./app.js');
 
-/** Track app info such as fullscreen, width, height.. */
+/** Track app info such as fullscreen, width, height, project path.. */
 export class Context {
 
 /// Properties
@@ -66,6 +66,7 @@ export class Context {
         // Default ceramic state is false
         this.ceramicReady = false;
 
+        // Create menu/shortcuts
         shortcuts.createMenu();
 
     } //constructor

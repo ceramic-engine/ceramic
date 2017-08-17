@@ -1,4 +1,4 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, serializeModel, Model } from 'utils';
 import Scene from './Scene';
 import SceneItem from './SceneItem';
 import UiState from './UiState';
@@ -6,15 +6,13 @@ import * as fs from 'fs';
 import * as electron from 'electron';
 import * as os from 'os';
 import shortcuts from 'app/shortcuts';
-import { join } from 'path';
+import { join, normalize, dirname, relative, basename, isAbsolute } from 'path';
 import { context } from 'app/context';
+import { user } from './index';
 
 class Project extends Model {
 
 /// Properties
-
-    /** Project path */
-    @observe @serialize path:string;
 
     /** Project scenes */
     @observe @serialize(Scene) scenes:Array<Scene> = [];
@@ -60,11 +58,41 @@ class Project extends Model {
 
 /// Computed
 
-    get initialized():boolean {
+    @compute get path():string {
+        
+        return user.projectPath;
+
+    } //path
+
+    @compute get initialized():boolean {
         
         return !!this.name;
 
     } //initialized
+
+    @compute get absoluteAssetsPath():string {
+
+        let path = this.assetsPath;
+
+        if (!path) return null;
+
+        if (isAbsolute(path)) return path;
+
+        if (!this.path) {
+            return null;
+        }
+        else {
+            return normalize(join(dirname(this.path), path));
+        }
+
+    } //absoluteAssetsPath
+
+    @compute get cwd():string {
+
+        if (this.path) return dirname(this.path);
+        return null;
+
+    } //cwd
 
 /// Lifecycle
 
@@ -78,15 +106,16 @@ class Project extends Model {
 
             let electronApp = electron.remote.require('./app.js');
 
-            electronApp.sourceAssetsPath = this.assetsPath;
+            electronApp.sourceAssetsPath = this.absoluteAssetsPath;
             electronApp.assetsPath = null;
 
-            if (this.assetsPath != null) {
+            if (this.absoluteAssetsPath != null) {
+                console.debug('ABSOLUTE ASSETS: ' + this.absoluteAssetsPath);
                 electronApp.processingAssets = true;
                 let processedAssetsPath = join(os.tmpdir(), 'ceramic', this.id);
                 let proc = ceramic.run([
                     'luxe', 'assets', 'web',
-                    '--from', this.assetsPath,
+                    '--from', this.absoluteAssetsPath,
                     '--to', processedAssetsPath
                 ], process.cwd(), (code) => {
                     if (code !== 0) {
@@ -100,7 +129,7 @@ class Project extends Model {
                 });
             }
 
-            if (!this.assetsPath || !fs.existsSync(this.assetsPath) || !fs.statSync(this.assetsPath).isDirectory()) {
+            if (!this.absoluteAssetsPath || !fs.existsSync(this.absoluteAssetsPath) || !fs.statSync(this.absoluteAssetsPath).isDirectory()) {
                 this.imageAssets = null;
                 this.textAssets = null;
                 this.soundAssets = null;
@@ -124,7 +153,7 @@ class Project extends Model {
                 return;
             }
 
-            let rawList = files.getFlatDirectory(this.assetsPath);
+            let rawList = files.getFlatDirectory(this.absoluteAssetsPath);
 
             ceramic.send({
                 type: 'assets/lists',
@@ -184,7 +213,6 @@ class Project extends Model {
             }
             // Change Scene Item
             else if (key.startsWith('scene.item.')) {
-                console.debug(key + ' ' + JSON.stringify(message.value));
                 if (this.ui.selectedScene == null || this.ui.selectedScene.items == null) return;
 
                 let itemId = key.substr(11);
@@ -208,10 +236,13 @@ class Project extends Model {
     @action createNew() {
 
         // Set name
-        this.name = 'project';
+        this.name = null;
 
         // Reset assets path
         this.assetsPath = null;
+
+        // Reset project path
+        user.projectPath = null;
 
         // Set scene
         this.scenes = [];
@@ -284,6 +315,84 @@ class Project extends Model {
         }
 
     } //removeCurrentScene
+
+/// Save
+
+    save():void {
+
+        if (!this.path || !fs.existsSync(dirname(this.path))) {
+            this.saveAs();
+            return;
+        }
+
+        // Serialize
+        let options = { entries: {}, recursive: true };
+        let serialized = serializeModel(this, options);
+
+        // Keep the stuff we want
+        //
+        let entries:Array<any> = [];
+        for (let key in options.entries) {
+            if (options.entries.hasOwnProperty(key)) {
+                entries.push(options.entries[key].serialized);
+            }
+        }
+        
+        let data = JSON.stringify({
+            project: serialized,
+            entries: entries
+        }, null, 2);
+
+        // Save data
+        fs.writeFileSync(this.path, data);
+        console.log('saved project at: ' + this.path);
+
+        // Mark project as `clean`
+        user.markProjectAsClean();
+
+    } //save
+
+    saveAs():void {
+
+        let path = files.chooseSaveAs('Save project', [
+            {
+                name: 'Ceramic Project File',
+                extensions: ['cproj']
+            }
+        ]);
+
+        if (path) {
+
+            // Keep current absolute assets path
+            let assetsPath = this.absoluteAssetsPath;
+
+            // Update project path
+            user.projectPath = path;
+
+            // Update assets path (make it relative to new project path)
+            if (assetsPath) {
+
+                let projectDir = normalize(dirname(path));
+                let assetsDir = normalize(assetsPath);
+                
+                if (projectDir === assetsDir) {
+                    this.assetsPath = '.';
+                } else {
+                    let res = relative(projectDir, assetsDir);
+                    if (!res.startsWith('.')) res = './' + res;
+                    this.assetsPath = res;
+                }
+            
+            }
+
+            // Set project name from file path
+            this.name = basename(path).split('.')[0];
+
+            // Save
+            this.save();
+        }
+
+    } //saveAs
 
 /// Clipboard
 
