@@ -2,13 +2,14 @@ import * as electron from 'electron';
 import { autorun, history, clipboard, db } from 'utils';
 import { project } from 'app/model';
 import { EventEmitter } from 'events';
+import { context } from './context';
 const electronApp = electron.remote.require('./app.js');
 
 class Shortcuts extends EventEmitter {
 
     menuReady:boolean = false;
 
-    createMenu() {
+    initialize() {
 
         if (this.menuReady) return;
         this.menuReady = true;
@@ -34,7 +35,7 @@ class Shortcuts extends EventEmitter {
                         label: 'Open\u2026',
                         accelerator: 'CmdOrCtrl+O',
                         click: () => {
-                            console.debug('FILE OPEN');
+                            project.open();
                         }
                     },
                     {type: 'separator'},
@@ -42,7 +43,6 @@ class Shortcuts extends EventEmitter {
                         label: 'Save project',
                         accelerator: 'CmdOrCtrl+S',
                         click: () => {
-                            console.debug('FILE SAVE');
                             project.save();
                         }
                     },
@@ -50,7 +50,6 @@ class Shortcuts extends EventEmitter {
                         label: 'Save as\u2026',
                         accelerator: 'Shift+CmdOrCtrl+S',
                         click: () => {
-                            console.debug('FILE SAVE AS');
                             project.saveAs();
                         }
                     }
@@ -199,19 +198,32 @@ class Shortcuts extends EventEmitter {
         const menu:Electron.Menu = electronApp.Menu.buildFromTemplate(template);
         const fileItems:Array<Electron.MenuItem> = (menu.items[1] as any).submenu.items;
 
-        autorun(() => {
-
-            //if (!project.name)
-
-            /*for (let item of fileItems) {
-                if (item.label === 'New') {
-                    item.enabled = false;
-                }
-            }*/
-
-        });
-
         electronApp.Menu.setApplicationMenu(menu);
+
+        // Bind drag & drop file
+        //
+        let dragTimeout:any = null;
+        document.addEventListener('dragover', (ev) => {
+            ev.preventDefault();
+
+            context.draggingOver = true;
+            if (dragTimeout != null) clearTimeout(dragTimeout);
+            dragTimeout = setTimeout(() => {
+                dragTimeout = null;
+                context.draggingOver = false;
+            }, 250);
+        });
+        document.body.ondrop = (ev) => {
+            ev.preventDefault();
+
+            if (dragTimeout != null) clearTimeout(dragTimeout);
+            context.draggingOver = false;
+
+            let path = ev.dataTransfer.files[0].path;
+            if (path) {
+                project.dropFile(path);
+            }
+        };
 
     } //createMenu
 

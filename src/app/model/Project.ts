@@ -316,7 +316,54 @@ class Project extends Model {
 
     } //removeCurrentScene
 
-/// Save
+/// Save/Open
+
+    open():void {
+
+        let path = files.chooseFile(
+            'Open project',
+            [
+                {
+                    name: 'Ceramic Project File',
+                    extensions: ['ceramic']
+                }
+            ]
+        );
+
+        if (!path) return;
+
+        this.openFile(path);
+
+    } //open
+
+    openFile(path:string):void {
+
+        console.log('open project: ' + path);
+
+        try {
+            let data = JSON.parse(''+fs.readFileSync(path));
+            
+            let serialized = data.project;
+
+            // Update db from project data
+            for (let serializedItem of data.entries) {
+                db.putSerialized(serializedItem);
+            }
+
+            // Put project (and trigger its update)
+            db.putSerialized(serialized);
+
+            // Update project path
+            user.projectPath = path;
+
+            // Mark project as clean
+            user.markProjectAsClean();
+
+        }
+        catch (e) {
+            alert('Failed to open project: ' + e);
+        }
+    }
 
     save():void {
 
@@ -345,7 +392,7 @@ class Project extends Model {
 
         // Save data
         fs.writeFileSync(this.path, data);
-        console.log('saved project at: ' + this.path);
+        console.log('saved project: ' + this.path);
 
         // Mark project as `clean`
         user.markProjectAsClean();
@@ -355,14 +402,14 @@ class Project extends Model {
     saveAs():void {
 
         let path = files.chooseSaveAs(
-        'Save project',
-        [
-            {
-                name: 'Ceramic Project File',
-                extensions: ['cproj']
-            }
-        ],
-        this.path ? this.path : undefined
+            'Save project',
+            [
+                {
+                    name: 'Ceramic Project File',
+                    extensions: ['ceramic']
+                }
+            ],
+            this.path ? this.path : undefined
         );
 
         if (path) {
@@ -453,6 +500,16 @@ class Project extends Model {
         this.ui.selectedItemId = item.id;
 
     } //copySelectedItem
+
+/// Drag & Drop files
+
+    dropFile(path:string):void {
+
+        if (path.endsWith('.ceramic')) {
+            this.openFile(path);
+        }
+
+    } //dropFile
 
 } //Project
 

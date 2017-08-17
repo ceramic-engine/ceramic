@@ -16,6 +16,19 @@ class Files {
 
     } //chooseDirectory
 
+    /** Open a dialog to choose a file */
+    chooseFile(title:string = 'Choose file', filters:Array<Electron.FileFilter> = [], defaultPath?:string) {
+
+        var result = electron.remote.dialog.showOpenDialog({
+            title,
+            filters,
+            properties: ['openFile'] 
+        });
+
+        return result != null ? result[0] : null;
+
+    } //chooseFile
+
     /** Open a dialog to choose a file to `save as` */
     chooseSaveAs(title:string = 'Save file', filters:Array<Electron.FileFilter> = [], defaultPath?:string) {
 

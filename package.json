@@ -10,6 +10,15 @@
     "appId": "jeremyfa.ceramic",
     "productName": "Ceramic",
     "asar": false,
+    "fileAssociations": [
+      {
+        "ext": "ceramic",
+        "name": "Ceramic",
+        "description": "Ceramic project",
+        "role": "Editor",
+        "isPackage": false
+      }
+    ],
     "files": [
       "**/*",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,test,__tests__,tests,powered-test,example,examples,*.d.ts}",

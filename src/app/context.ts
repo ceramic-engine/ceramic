@@ -8,15 +8,17 @@ export class Context {
 
 /// Properties
 
-    @observe fullscreen:boolean;
+    @observe fullscreen:boolean = false;
 
-    @observe width:number;
+    @observe width:number = 0;
 
-    @observe height:number;
+    @observe height:number = 0;
 
-    @observe serverPort:number;
+    @observe serverPort:number = null;
 
-    @observe ceramicReady:boolean;
+    @observe ceramicReady:boolean = false;
+
+    @observe draggingOver:boolean = false;
 
 /// Constructor
 
@@ -67,7 +69,7 @@ export class Context {
         this.ceramicReady = false;
 
         // Create menu/shortcuts
-        shortcuts.createMenu();
+        shortcuts.initialize();
 
     } //constructor
 
