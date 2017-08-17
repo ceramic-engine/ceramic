@@ -73,7 +73,7 @@ class SelectInput extends React.Component {
 
 /// Clipboard
 
-    getSelected(cut:boolean = false) {
+    copySelected(cut:boolean = false) {
 
         let input = this.inputElement;
         let val = input.options[input.selectedIndex].text.trim();
@@ -82,9 +82,9 @@ class SelectInput extends React.Component {
 
         return val;
 
-    } //getSelected
+    } //copySelected
 
-    setSelected(content:string) {
+    pasteToSelected(content:string) {
 
         let input = this.inputElement;
 
@@ -100,7 +100,7 @@ class SelectInput extends React.Component {
             }
         }
 
-    } //setSelected
+    } //pasteToSelected
 
 }
 

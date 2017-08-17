@@ -3,6 +3,7 @@ import SceneItem from './SceneItem';
 import VisualItem from './VisualItem';
 import QuadItem from './QuadItem';
 import TextItem from './TextItem';
+import { project } from './index';
 
 class Scene extends Model {
 

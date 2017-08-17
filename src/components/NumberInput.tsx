@@ -131,7 +131,7 @@ import { autobind, observer, observe } from 'utils';
 
 /// Clipboard
 
-    getSelected(cut:boolean = false) {
+    copySelected(cut:boolean = false) {
 
         let input = this.inputElement;
         let val = input.value.substring(input.selectionStart, input.selectionEnd);
@@ -146,9 +146,9 @@ import { autobind, observer, observe } from 'utils';
 
         return val;
 
-    } //getSelected
+    } //copySelected
 
-    setSelected(content:string) {
+    pasteToSelected(content:string) {
 
         let input = this.inputElement;
 
@@ -162,7 +162,7 @@ import { autobind, observer, observe } from 'utils';
 
         input.selectionStart = input.selectionEnd;
 
-    } //setSelected
+    } //pasteToSelected
 
 }
 

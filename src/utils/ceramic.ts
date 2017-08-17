@@ -15,6 +15,8 @@ class CeramicProxy {
 
     component:any;
 
+    onReadyCallbacks:Array<() => void> = [];
+
     private ceramicRunning:boolean = false;
 
     send(message:Message, responseHandler?:(message:Message) => void) {
@@ -38,10 +40,10 @@ class CeramicProxy {
             this.component.listen(typePattern, listener);
         }
         else {
-            // If component is not ready, wait
-            setTimeout(() => {
+            // If component is not ready, wait until ready
+            this.onReadyCallbacks.push(() => {
                 this.listen(typePattern, listener);
-            }, 100);
+            });
         }
 
         let removeListener = () => {
@@ -49,10 +51,10 @@ class CeramicProxy {
                 this.component.removeListener(typePattern, listener);
             }
             else {
-                // If component is not ready, wait
-                setTimeout(() => {
+                // If component is not ready, wait until ready
+                this.onReadyCallbacks.push(() => {
                     removeListener();
-                }, 100);
+                });
             }
         };
 

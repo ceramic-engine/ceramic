@@ -1,4 +1,4 @@
-import { serializeModel, deserializeModelInto, Entry, Serialized } from './serialize';
+import { serializeModel, deserializeModelInto, typeForSerialized, Entry, Serialized } from './serialize';
 import Model from './Model';
 import uuid from './uuid';
 import { spy, isObservableArray, isObservableMap } from 'mobx';
@@ -14,6 +14,15 @@ export class Database implements HistoryListener {
     create<T extends Model>(type:new(id?:string) => T, id?:string):T {
 
         this.creating = true;
+
+        // Look for type overrides
+        if (id != null) {
+            let serialized = this.getSerialized(id);
+            if (serialized != null) {
+                let embeddedType = typeForSerialized(serialized);
+                if (embeddedType != null) type = embeddedType;
+            }
+        }
 
         const instance = new type(id != null ? id : uuid());
         let entry = this.entries[instance.id];
@@ -116,7 +125,7 @@ export class Database implements HistoryListener {
 
     }
 
-    putSerialized(serialized:Serialized, updateInstance:boolean = false):void {
+    putSerialized(serialized:Serialized, updateInstance:boolean = true):void {
 
         if (serialized.id == null) {
             throw "Missing serialized object id";
@@ -134,7 +143,7 @@ export class Database implements HistoryListener {
             this.entries[serialized.id] = entry;
         }
         
-        if (entry.instance != null) {
+        if (entry.instance != null && updateInstance) {
             this.extract(entry.instance, true);
         }
 

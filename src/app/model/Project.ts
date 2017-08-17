@@ -1,5 +1,6 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, Model } from 'utils';
 import Scene from './Scene';
+import SceneItem from './SceneItem';
 import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
@@ -183,6 +184,7 @@ class Project extends Model {
             }
             // Change Scene Item
             else if (key.startsWith('scene.item.')) {
+                console.debug(key + ' ' + JSON.stringify(message.value));
                 if (this.ui.selectedScene == null || this.ui.selectedScene.items == null) return;
 
                 let itemId = key.substr(11);
@@ -282,6 +284,62 @@ class Project extends Model {
         }
 
     } //removeCurrentScene
+
+/// Clipboard
+
+    copySelectedSceneItem(cut:boolean = false):string {
+
+        let scene = this.ui.selectedScene;
+        if (!scene) return null;
+
+        // Get scene item
+        let item = this.ui.selectedItem;
+        if (!item) return null;
+
+        // Duplicate serialized data
+        let data = JSON.parse(JSON.stringify(db.getSerialized(item.id)));
+
+        // Cut?
+        if (cut) {
+            let index = scene.items.indexOf(item);
+            if (index !== -1) {
+                scene.items.splice(index, 1);
+            }
+        }
+
+        return JSON.stringify(data);
+
+    } //copySelectedItem
+
+    pasteSceneItem(strData:string) {
+
+        let scene = this.ui.selectedScene;
+        if (!scene) return;
+
+        // Parse data
+        let data = JSON.parse(strData);
+
+        // Create a new id
+        data.id = uuid();
+
+        // Update name
+        if (data.name != null && !data.name.endsWith(' (copy)')) {
+            data.name += ' (copy)';
+        }
+
+        // Put item in db
+        db.putSerialized(data);
+
+        // Create instance
+        let item = db.getOrCreate(Model, data.id) as SceneItem;
+
+        // Add item
+        scene.items.push(item);
+
+        // Select item
+        this.ui.selectedItemId = item.id;
+
+    } //copySelectedItem
 
 } //Project
 

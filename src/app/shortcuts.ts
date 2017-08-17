@@ -1,5 +1,5 @@
 import * as electron from 'electron';
-import { autorun, history, clipboard } from 'utils';
+import { autorun, history, clipboard, db } from 'utils';
 import { project } from 'app/model';
 import { EventEmitter } from 'events';
 const electronApp = electron.remote.require('./app.js');
@@ -76,8 +76,14 @@ class Shortcuts extends EventEmitter {
                         label: 'Cut',
                         accelerator: 'CmdOrCtrl+X',
                         click: () => {
+                            // Save to clipboard
                             if (global['focusedInput'] != null) {
-                                clipboard.writeText(global['focusedInput'].getSelected(true));
+                                clipboard.writeText(global['focusedInput'].copySelected(true));
+                            }
+                            else if (project.ui.selectedScene != null && project.ui.selectedItem != null) {
+                                clipboard.writeText(
+                                    '[|ceramic/scene-item|]' + project.copySelectedSceneItem(true)
+                                );
                             }
                         }
                     },
@@ -85,8 +91,14 @@ class Shortcuts extends EventEmitter {
                         label: 'Copy',
                         accelerator: 'CmdOrCtrl+C',
                         click: () => {
+                            // Save to clipboard
                             if (global['focusedInput'] != null) {
-                                clipboard.writeText(global['focusedInput'].getSelected(false));
+                                clipboard.writeText(global['focusedInput'].copySelected(false));
+                            }
+                            else if (project.ui.selectedScene != null && project.ui.selectedItem != null) {
+                                clipboard.writeText(
+                                    '[|ceramic/scene-item|]' + project.copySelectedSceneItem(false)
+                                );
                             }
                         }
                     },
@@ -96,9 +108,14 @@ class Shortcuts extends EventEmitter {
                         click: () => {
                             if (global['focusedInput'] != null) {
                                 let text = clipboard.readText();
-                                console.debug('PASTE: ' + text);
-                                if (text != null) {
-                                    global['focusedInput'].setSelected(text);
+                                if (text != null && !text.startsWith('[|ceramic/')) {
+                                    global['focusedInput'].pasteToSelected(text);
+                                }
+                            }
+                            else if (project.ui.selectedScene != null) {
+                                let text = clipboard.readText();
+                                if (text != null && text.startsWith('[|ceramic/scene-item|]')) {
+                                    project.pasteSceneItem(text.substr('[|ceramic/scene-item|]'.length));
                                 }
                             }
                         }

@@ -89,7 +89,7 @@ class TextInput extends React.Component {
 
 /// Clipboard
 
-    getSelected(cut:boolean = false) {
+    copySelected(cut:boolean = false) {
 
         let input = this.inputElement;
         let val = input.value.substring(input.selectionStart, input.selectionEnd);
@@ -104,9 +104,9 @@ class TextInput extends React.Component {
 
         return val;
 
-    } //getSelected
+    } //copySelected
 
-    setSelected(content:string) {
+    pasteToSelected(content:string) {
 
         let input = this.inputElement;
 
@@ -117,7 +117,7 @@ class TextInput extends React.Component {
 
         input.selectionStart = input.selectionEnd;
 
-    } //setSelected
+    } //pasteToSelected
 
 }
 

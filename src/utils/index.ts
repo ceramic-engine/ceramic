@@ -38,7 +38,7 @@ export { observer } from 'mobx-react';
 
 // Export serializer
 export { serialize } from './serialize-decorator';
-export { serializeValue, serializeModel, deserializeModel, deserializeValue, deserializeModelInto, modelTypes, registerModel } from './serialize';
+export { serializeValue, serializeModel, deserializeModel, deserializeValue, deserializeModelInto, modelTypes, registerModel, typeForSerialized } from './serialize';
 
 // Export uuid
 export { default as uuid } from './uuid';

@@ -37,6 +37,14 @@ export function registerModel(modelType:any) {
 
 } //registerModel
 
+export function typeForSerialized(serialized:any):any {
+
+    if (serialized._model != null) {
+        return modelTypes.get(serialized._model);
+    }
+
+} //typeForSerialized
+
 /** An utility to serialize a value */
 export function serializeValue(value:any, options?:SerializeOptions):any {
 

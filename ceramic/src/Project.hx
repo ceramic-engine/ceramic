@@ -453,29 +453,15 @@ class Project extends Entity {
 
                                 var text:Text = cast instance;
 
-                                if (item.props.width != null) {
-                                    Reflect.deleteField(item.props, 'width');
-                                }
-                                if (item.props.height != null) {
-                                    Reflect.deleteField(item.props, 'height');
-                                }
-
                                 function updateSize() {
-                                    if (text.font != null) {
-                                        if (item.props.width != text.width || item.props.height != text.height) {
-                                            send({
-                                                type: 'set/scene.item.${item.id}',
-                                                value: {
-                                                    width: text.width,
-                                                    height: text.height
-                                                }
-                                            });
+                                    untyped console.debug('SEND TEXT SIZE');
+                                    send({
+                                        type: 'set/scene.item.${item.id}',
+                                        value: {
+                                            width: text.width,
+                                            height: text.height
                                         }
-                                    }
-                                    else {
-                                        text.width = item.props.width;
-                                        text.height = item.props.height;
-                                    }
+                                    });
                                 }
 
                                 for (field in Reflect.fields(item.props)) {
@@ -507,7 +493,6 @@ class Project extends Entity {
                                                 if (asset.status == READY) {
                                                     // Asset already available
                                                     text.font = assets.font(assetName);
-                                                    updateSize();
                                                 }
                                                 else if (asset.status == LOADING) {
                                                     // Asset loading
@@ -522,13 +507,11 @@ class Project extends Entity {
                                                 else {
                                                     // Asset broken?
                                                     text.font = app.assets.font(Fonts.ARIAL_20);
-                                                    updateSize();
                                                 }
                                             }
                                         }
                                         else {
                                             text.font = app.assets.font(Fonts.ARIAL_20);
-                                            updateSize();
                                         }
                                     }
                                     else if (field == 'align') {
@@ -540,20 +523,19 @@ class Project extends Entity {
                                     }
                                     else if (field == 'pointSize') {
                                         text.pointSize = item.props.pointSize;
-                                        updateSize();
                                     }
                                     else if (field == 'lineHeight') {
                                         text.lineHeight = item.props.lineHeight;
-                                        updateSize();
                                     }
                                     else if (field == 'letterSpacing') {
                                         text.letterSpacing = item.props.letterSpacing;
-                                        updateSize();
                                     }
                                     else {
                                         instance.setProperty(field, Reflect.field(item.props, field));
                                     }
                                 }
+
+                                updateSize();
                             }
                         });
                     }

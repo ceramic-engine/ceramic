@@ -199,6 +199,13 @@ export interface Message {
 
     handleReady() {
 
+        // Run ready callbacks
+        let callbacks = ceramic.onReadyCallbacks;
+        ceramic.onReadyCallbacks = [];
+        for (let cb of callbacks) {
+            cb();
+        }
+
         // Start history
         history.start();
 
