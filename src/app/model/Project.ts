@@ -354,12 +354,16 @@ class Project extends Model {
 
     saveAs():void {
 
-        let path = files.chooseSaveAs('Save project', [
+        let path = files.chooseSaveAs(
+        'Save project',
+        [
             {
                 name: 'Ceramic Project File',
                 extensions: ['cproj']
             }
-        ]);
+        ],
+        this.path ? this.path : undefined
+        );
 
         if (path) {
 
