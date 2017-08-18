@@ -89,15 +89,33 @@ class Textures implements spec.Textures {
 
     } //load
 
+    var nextRenderIndex:Int = 0;
+
+    inline public function createRenderTexture(width:Int, height:Int):Texture {
+
+        var id = 'render:' + (nextRenderIndex++);
+
+        var renderTexture = new phoenix.RenderTexture({
+            id: id,
+            width: width,
+            height: height
+        });
+
+        loadedTexturesRetainCount.set(id, 1);
+
+        return renderTexture;
+
+    } //createRenderTexture
+
     public function destroy(texture:Texture):Void {
 
-        var path = (texture:phoenix.Texture).id;
-        if (loadedTexturesRetainCount.get(path) > 1) {
-            loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) - 1);
+        var id = (texture:phoenix.Texture).id;
+        if (loadedTexturesRetainCount.get(id) > 1) {
+            loadedTexturesRetainCount.set(id, loadedTexturesRetainCount.get(id) - 1);
         }
         else {
-            loadedTextures.remove(path);
-            loadedTexturesRetainCount.remove(path);
+            loadedTextures.remove(id);
+            loadedTexturesRetainCount.remove(id);
             (texture:phoenix.Texture).destroy(true);
         }
 
