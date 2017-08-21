@@ -1,0 +1,4 @@
+{
+    "window.title": "${activeEditorShort} — Ceramic Editor",
+    "git.ignoreLimitWarning": true
+}

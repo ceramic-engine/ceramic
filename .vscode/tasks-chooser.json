@@ -1,0 +1,29 @@
+{
+    "selectDescription": "Select build config",
+    "items": [
+        {
+            "displayName": "▶︎ Electron",
+            "description": "npm start",
+            "command": "npm",
+            "args": ["start"],
+            "isShellCommand": true,
+            "problemMatcher": {
+                "base": "$tslint5",
+                "fileLocation": "relative"
+            },
+            "tasks": [
+                {
+                    "type": "npm",
+                    "script": "start",
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    }
+                }
+            ]
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0"
+    }
+}

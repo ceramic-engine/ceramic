@@ -1,0 +1,15 @@
+{
+    "haxe.displayConfigurations": [
+        [
+            "completion.hxml"
+        ]
+    ],
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "**/out": true
+    },
+    "window.title": "${activeEditorShort} — Scene Editor (ceramic)",
+    "git.ignoreLimitWarning": true
+}
