@@ -1,4 +1,0 @@
-[submodule "git/unifill"]
-	path = git/unifill
-	url = https://github.com/mandel59/unifill.git
-	branch = master
