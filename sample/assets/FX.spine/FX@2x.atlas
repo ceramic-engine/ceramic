@@ -1,0 +1,125 @@
+
+FX@2x.png
+size: 2048,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BUTTONS_TITLE64
+  rotate: false
+  xy: 1628, 185
+  size: 61, 59
+  orig: 61, 59
+  offset: 0, 0
+  index: -1
+BUTTONS_TITLE65
+  rotate: false
+  xy: 1691, 150
+  size: 45, 94
+  orig: 45, 94
+  offset: 0, 0
+  index: -1
+BUTTONS_TITLE66
+  rotate: false
+  xy: 1570, 176
+  size: 56, 68
+  orig: 56, 68
+  offset: 0, 0
+  index: -1
+IMPACT00
+  rotate: false
+  xy: 1348, 148
+  size: 96, 96
+  orig: 96, 96
+  offset: 0, 0
+  index: -1
+IMPACT01
+  rotate: false
+  xy: 907, 75
+  size: 154, 169
+  orig: 154, 169
+  offset: 0, 0
+  index: -1
+IMPACT02
+  rotate: false
+  xy: 554, 58
+  size: 171, 186
+  orig: 171, 186
+  offset: 0, 0
+  index: -1
+IMPACT03
+  rotate: false
+  xy: 2, 48
+  size: 184, 196
+  orig: 184, 196
+  offset: 0, 0
+  index: -1
+IMPACT04
+  rotate: false
+  xy: 374, 58
+  size: 178, 186
+  orig: 178, 186
+  offset: 0, 0
+  index: -1
+IMPACT05
+  rotate: false
+  xy: 727, 66
+  size: 178, 178
+  orig: 178, 178
+  offset: 0, 0
+  index: -1
+IMPACT06
+  rotate: false
+  xy: 1171, 96
+  size: 87, 148
+  orig: 87, 148
+  offset: 0, 0
+  index: -1
+IMPACT07
+  rotate: false
+  xy: 1063, 72
+  size: 106, 172
+  orig: 106, 172
+  offset: 0, 0
+  index: -1
+IMPACT08
+  rotate: false
+  xy: 1260, 108
+  size: 86, 136
+  orig: 86, 136
+  offset: 0, 0
+  index: -1
+IMPACT09
+  rotate: false
+  xy: 1446, 176
+  size: 122, 68
+  orig: 122, 68
+  offset: 0, 0
+  index: -1
+IMPACT10
+  rotate: false
+  xy: 188, 60
+  size: 184, 184
+  orig: 184, 184
+  offset: 0, 0
+  index: -1
+SMOKE00
+  rotate: false
+  xy: 2, 2
+  size: 56, 44
+  orig: 56, 44
+  offset: 0, 0
+  index: -1
+SMOKE01
+  rotate: false
+  xy: 1738, 198
+  size: 52, 46
+  orig: 52, 46
+  offset: 0, 0
+  index: -1
+SMOKE02
+  rotate: false
+  xy: 60, 7
+  size: 39, 39
+  orig: 39, 39
+  offset: 0, 0
+  index: -1
