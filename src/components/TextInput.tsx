@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { autobind } from 'utils';
+import { autobind, observe, observer } from 'utils';
 
 /** Text input */
-class TextInput extends React.Component {
+@observer class TextInput extends React.Component {
 
     props:{
         /** Value */
@@ -11,31 +11,39 @@ class TextInput extends React.Component {
         disabled?:boolean,
         /* Multiline */
         multiline?:boolean,
+        /* Separator */
+        separator?:string,
+        /* Placeholder */
+        placeholder?:string,
         /** onChange */
         onChange?:(value:string) => void
     };
 
     inputElement:HTMLInputElement|HTMLTextAreaElement = null;
 
+    @observe tailText:string = '';
+
     render() {
 
         let multiline = this.props.multiline != null ? this.props.multiline : false;
         let className = 'input input-text';
+        let placeholder = this.props.placeholder != null ? this.props.placeholder : '';
+        let value = this.props.value ? this.props.value : '';
         if (this.props.disabled) className += ' disabled';
 
         if (multiline) {
-            let value = this.props.value ? this.props.value : '';
-            let numLines = value.split("\n").length;
+            let numLines = (value + this.tailText).split("\n").length;
             let height = numLines * 12 + 2;
 
             return (
                 <textarea
                     disabled={this.props.disabled}
                     className={className}
-                    value={this.props.value}
+                    value={value + this.tailText}
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
+                    placeholder={placeholder}
                     ref={(el) => { this.inputElement = el; }}
                     style={{
                         resize: "none",
@@ -50,10 +58,11 @@ class TextInput extends React.Component {
                     disabled={this.props.disabled}
                     className={className}
                     type="text"
-                    value={this.props.value}
+                    value={value + this.tailText}
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
+                    placeholder={placeholder}
                     ref={(el) => { this.inputElement = el; }}
                 />
             );
@@ -63,8 +72,38 @@ class TextInput extends React.Component {
 
     @autobind handleChange(e:any) {
 
+        let val:string = e.target.value;
+        let tval = val.replace(/\s+$/, '');
+
+        let newTail = '';
+        if (this.props.separator) {
+            let sep = this.props.separator;
+            while (sep.length > 0) {
+                if (tval.endsWith(sep)) {
+                    let prevVal = val;
+                    val = val.substr(0, tval.length - sep.length);
+                    newTail = sep + prevVal.substr(tval.length);
+                    break;
+                }
+                else {
+                    sep = sep.substr(0, sep.length - 1);
+                }
+            }
+            if (newTail === '' && val.endsWith("\n")) {
+                val = tval;
+                newTail = ",\n";
+            }
+        }
+
+        if (newTail !== this.tailText) {
+            this.tailText = newTail;
+            this.forceUpdate();
+        }
+
+        if (this.props.value === val) return;
+
         if (this.props.onChange) {
-            this.props.onChange(e.target.value);
+            this.props.onChange(val);
         }
 
     } //handleChange

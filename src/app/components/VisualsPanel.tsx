@@ -174,7 +174,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                         selectedText != null ?
                                         <div className="visual-extra-options">
                                             <Field label="content">
-                                                <TextInput multiline={true} value={selectedText.content} onChange={(val) => { selectedText.content = val; }} />
+                                                <TextInput multiline={true} value={selectedText.content} onChange={(val:string) => { selectedText.content = val; }} />
                                             </Field>
                                             <Field label="align">
                                                 <SelectInput

@@ -12,6 +12,9 @@ class Scene extends Model {
     /** Scene arbitrary data */
     @observe @serialize data:Map<string, any> = new Map();
 
+    /** Scene bundle name (default: project's default bundle) */
+    @observe @serialize bundle:string = null;
+
     /** Scene name */
     @observe @serialize name:string = '';
 
@@ -102,7 +105,7 @@ class Scene extends Model {
 
     serializeForCeramic() {
 
-        return serializeModel(this, { exclude: ['_model', 'items'] });
+        return serializeModel(this, { exclude: ['_model', 'items', 'bundle'] });
 
     } //serializeForCeramic
 

@@ -224,6 +224,22 @@ body, html {
     padding: 0px 4px 0px 4px;
 }
 
+#body input.input::placeholder {
+    color: #777777;
+}
+
+#body textarea.input::placeholder {
+    color: #777777;
+}
+
+#body input.input:focus::placeholder {
+    visibility: hidden;
+}
+
+#body textarea.input:focus::placeholder {
+    visibility: hidden;
+}
+
 #body textarea.input {
     padding: 3px 4px 0px 4px;
     margin-bottom: -2px;

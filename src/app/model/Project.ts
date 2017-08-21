@@ -17,6 +17,12 @@ class Project extends Model {
     /** Project scenes */
     @observe @serialize(Scene) scenes:Array<Scene> = [];
 
+    /** Default scene bundle (name) */
+    @observe @serialize defaultSceneBundle:string = null;
+
+    /** Custom scene bundles (name) */
+    @observe @serialize sceneBundles:Array<string> = [];
+
     /** Project error */
     @observe error?:string;
 
@@ -439,6 +445,9 @@ class Project extends Model {
             // Set project name from file path
             this.name = basename(path).split('.')[0];
 
+            // Set project default scene bundle from project name
+            this.defaultSceneBundle = this.name.split(' ').join('_');
+
             // Save
             this.save();
         }
@@ -510,6 +519,64 @@ class Project extends Model {
         }
 
     } //dropFile
+
+/// Build
+
+    /** Build/Export scene files */
+    build():void {
+
+        if (!this.absoluteAssetsPath) {
+            alert('You choose an asset directory before building.');
+            return;
+        }
+
+        if (!fs.existsSync(this.absoluteAssetsPath)) {
+            alert('Current assets directory doesn\'t exist');
+            return;
+        }
+
+        let perBundle:Map<string,any> = new Map();
+
+        // Serialize each scene
+        for (let scene of this.scenes) {
+
+            let sceneData = scene.serializeForCeramic();
+
+            // Include scene items
+            sceneData.items = [];
+            for (let item of scene.items) {
+                let serialized = item.serializeForCeramic();
+                sceneData.items.push(serialized);
+            }
+
+            let bundleName = scene.bundle ? scene.bundle : this.defaultSceneBundle;
+            if (bundleName) {
+                let bundleData:any = perBundle.get(bundleName);
+                if (bundleData == null) {
+                    bundleData = {};
+                    perBundle.set(bundleName, bundleData);
+                }
+                bundleData[scene.id] = sceneData;
+            }
+            else {
+                alert('Save project before building it.');
+                return;
+            }
+
+        }
+
+        perBundle.forEach((val, key) => {
+
+            let scenesPath = join(this.absoluteAssetsPath, key + '.scenes');
+            let scenesData = JSON.stringify(val, null, 2);
+            
+            console.log('Export: ' + scenesPath);
+
+            fs.writeFileSync(scenesPath, scenesData);
+
+        });
+
+    } //build
 
 } //Project
 

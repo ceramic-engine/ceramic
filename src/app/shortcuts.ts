@@ -143,6 +143,18 @@ class Shortcuts extends EventEmitter {
                 ]
             },
             {
+                label: 'Project',
+                submenu: [
+                    {
+                        label: 'Build',
+                        accelerator: 'CmdOrCtrl+Shift+B',
+                        click: () => {
+                            project.build();
+                        }
+                    }
+                ]
+            },
+            {
                 label: 'View',
                 submenu: [
                     {role: 'reload'},
@@ -186,13 +198,18 @@ class Shortcuts extends EventEmitter {
             });
 
             // Window menu
-            template[4].submenu = [
-                {role: 'close'},
-                {role: 'minimize'},
-                {role: 'zoom'},
-                {type: 'separator'},
-                {role: 'front'}
-            ];
+            for (let tpl of template) {
+                if ((tpl as any).role === 'window') {
+                    tpl.submenu = [
+                        {role: 'close'},
+                        {role: 'minimize'},
+                        {role: 'zoom'},
+                        {type: 'separator'},
+                        {role: 'front'}
+                    ];
+                    break;
+                }
+            }
         }
 
         const menu:Electron.Menu = electronApp.Menu.buildFromTemplate(template);
