@@ -12,15 +12,15 @@ class Hxml extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Print hxml data using " + backend.name + " backend and the given target.";
+        return "Print hxml data using " + context.backend.name + " backend and the given target.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args);
+        ensureCeramicProject(cwd, args, App);
 
-        var availableTargets = backend.getBuildTargets();
+        var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
@@ -49,8 +49,8 @@ class Hxml extends tools.Task {
         }
 
         // Get and run backend's setup task
-        var rawHxml = backend.getHxml(cwd, args, target, context.variant);
-        var hxmlOriginalCwd = backend.getHxmlCwd(cwd, args, target, context.variant);
+        var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
+        var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
 
         // Add completion flag
         rawHxml += "\n" + '-D completion';

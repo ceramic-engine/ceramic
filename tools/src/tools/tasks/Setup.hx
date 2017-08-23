@@ -11,11 +11,11 @@ class Setup extends tools.Task {
 
     override public function info(cwd:String):String {
 
-#if use_backend
-        return "Setup a target using " + backend.name + " backend on current project.";
-#else
-        return "Setup ceramic on this machine.";
-#end
+        if (context.backend != null) {
+            return "Setup a target using " + context.backend.name + " backend on current project.";
+        } else {
+            return "Setup ceramic on this machine.";
+        }
 
     } //info
 

@@ -1,8 +1,8 @@
 package tools;
 
-import tools.Tools.*;
-import tools.Tools;
-import tools.Project;
+import tools.Context;
+import tools.Helpers;
+import tools.Helpers.*;
 
 @:keep
 class ToolsPlugin {
@@ -18,9 +18,12 @@ class ToolsPlugin {
 
     public function new() {}
 
-    public function init(tools:Tools):Void {
+    public function init(context:Context):Void {
 
-        // Extend tools here
+        // Get context
+        Helpers.context = context;
+
+        
         
 
     } //init

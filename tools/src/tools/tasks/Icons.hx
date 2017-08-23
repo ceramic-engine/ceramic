@@ -18,19 +18,19 @@ class Icons extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Generate app icons using " + backend.name + " backend and given target.";
+        return "Generate app icons using " + context.backend.name + " backend and given target.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args);
+        ensureCeramicProject(cwd, args, App);
 
         var project = new Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         project.loadAppFile(projectPath);
 
-        var availableTargets = backend.getBuildTargets();
+        var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
@@ -68,7 +68,7 @@ class Icons extends tools.Task {
             fail('Invalid icon: $appIcon');
         }
 
-        backend.transformIcons(cwd, appIcon, target, context.variant);
+        context.backend.transformIcons(cwd, appIcon, target, context.variant);
 
         print('Updated project icons.');
 

@@ -20,15 +20,15 @@ class Build extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return kind + " project with " + backend.name + " backend and given target.";
+        return kind + " project with " + context.backend.name + " backend and given target.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args);
+        ensureCeramicProject(cwd, args, App);
 
-        var availableTargets = backend.getBuildTargets();
+        var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
@@ -74,7 +74,7 @@ class Build extends tools.Task {
 
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
-            backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, context.variant, true);
+            context.backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, context.variant, true);
         }
 
         // Update assets, if needed
@@ -84,7 +84,7 @@ class Build extends tools.Task {
         }
 
         // Get and run backend's build task
-        backend.runBuild(cwd, args, target, context.variant, configIndex);
+        context.backend.runBuild(cwd, args, target, context.variant, configIndex);
 
         // Generate hxml?
         var hxmlOutput = extractArgValue(args, 'hxml-output', true);

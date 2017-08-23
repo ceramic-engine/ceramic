@@ -6,15 +6,15 @@ class Targets extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "List targets available with " + backend.name + " backend.";
+        return "List targets available with " + context.backend.name + " backend.";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args);
+        ensureCeramicProject(cwd, args, App);
 
-        for (target in backend.getBuildTargets()) {
+        for (target in context.backend.getBuildTargets()) {
 
             var configs = [];
             for (config in target.configs) {

@@ -11,11 +11,11 @@ class Libs extends tools.Task {
 
     override public function info(cwd:String):String {
 
-#if use_backend
-        return "Install required haxe libs when using " + backend.name + " backend on current project.";
-#else
-        return "Install required haxe libs on current project.";
-#end
+        if (context.backend != null) {
+            return "Install required haxe libs when using " + context.backend.name + " backend on current project.";
+        } else {
+            return "Install required haxe libs on current project.";
+        }
 
     } //info
 

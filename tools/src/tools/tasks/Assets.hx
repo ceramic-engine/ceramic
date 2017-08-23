@@ -20,7 +20,7 @@ class Assets extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Transform/copy project's assets for " + backend.name + " backend and given target.";
+        return "Transform/copy project's assets for " + context.backend.name + " backend and given target.";
 
     } //info
 
@@ -60,7 +60,7 @@ class Assets extends tools.Task {
             }
         }
 
-        var availableTargets = backend.getBuildTargets();
+        var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
 
         if (targetName == null) {
@@ -113,7 +113,7 @@ class Assets extends tools.Task {
         }
 
         // Transform/copy assets
-        var transformedAssets = backend.transformAssets(
+        var transformedAssets = context.backend.transformAssets(
             cwd,
             assets,
             target,
