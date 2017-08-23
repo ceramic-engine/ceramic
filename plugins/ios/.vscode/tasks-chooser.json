@@ -1,0 +1,32 @@
+{
+    "selectDescription": "Select build setting",
+    "items": [
+        {
+            "displayName": "▷ Tools plugin",
+            "description": "ceramic plugin build --tools",
+            "tasks": [{
+                "taskName": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "command": "ceramic",
+                "args": ["plugin", "build", "--debug", "--tools"],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": "$haxe"
+            }],
+            "onSelect": {
+                "command": "ceramic",
+                "args": ["plugin", "hxml", "--tools", "--debug", "--completion", "--output", "completion.hxml"]
+            }
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0"
+    }
+}

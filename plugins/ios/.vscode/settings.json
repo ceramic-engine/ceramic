@@ -5,7 +5,7 @@
     // they should only contain arguments and/or hxml files that are needed for completion,
     // such as -cp, -lib, target output settings and defines.
     "haxe.displayConfigurations": [
-        ["build.hxml"]
+        ["completion.hxml"]
     ],
     "search.exclude": {
         "**/.git": true,

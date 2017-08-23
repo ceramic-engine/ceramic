@@ -4,7 +4,14 @@ var fs = require('fs');
 var path = require('path');
 
 // Expose global require
-global.rReq = function(module) { return require.main.require(module) };
+global.rReqOrig = require;
+global.rReq = function(module) {
+    if (rReqOrig.resolve(module)) {
+        return rReqOrig(module);
+    } else {
+        return require.main.require(module);
+    }
+};
 
 // Load shared or local ceramic
 var ceramic;
