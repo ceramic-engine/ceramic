@@ -4,7 +4,7 @@ import haxe.io.Path;
 import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Tools.*;
+import tools.Helpers.*;
 import tools.Sync;
 import js.node.ChildProcess;
 import npm.StreamSplitter;
@@ -48,7 +48,7 @@ class Build extends tools.Task {
         }
 
         var backendName = 'luxe';
-        var ceramicPath = settings.ceramicPath;
+        var ceramicPath = context.ceramicPath;
 
         var outPath = Path.join([cwd, 'out']);
         var action = null;
@@ -94,7 +94,7 @@ class Build extends tools.Task {
         Sync.run(function(done) {
 
             var proc = ChildProcess.spawn(
-                Path.join([settings.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
+                Path.join([context.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
                 cmdArgs,
                 { cwd: flowProjectPath }
             );

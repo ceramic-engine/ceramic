@@ -1,6 +1,6 @@
 package backend.tools;
 
-import tools.Tools.*;
+import tools.Helpers.*;
 import tools.Images;
 import tools.Files;
 import haxe.io.Path;

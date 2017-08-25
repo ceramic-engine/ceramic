@@ -20,11 +20,10 @@ class ToolsPlugin {
 
     public function init(context:Context):Void {
 
-        // Get context
+        // Use same context as parent
         Helpers.context = context;
 
-        
-        
+        //
 
     } //init
 

@@ -4,7 +4,7 @@ import haxe.io.Path;
 import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Tools.*;
+import tools.Helpers.*;
 import tools.Files;
 
 using StringTools;
@@ -41,7 +41,7 @@ class Setup extends tools.Task {
         project.loadAppFile(projectPath);
 
         var backendName = 'luxe';
-        var ceramicPath = settings.ceramicPath;
+        var ceramicPath = context.ceramicPath;
 
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);

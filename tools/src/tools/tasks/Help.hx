@@ -107,11 +107,16 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
         for (key in allTasks.keys()) {
             var task:tools.Task = allTasks.get(key);
 
+            var prevBackend = context.backend;
+            context.backend = task.backend;
+
             if (i == 0) {
                 lines.push(tab + r(len(key, maxTaskLen)) + '    ' + g(task.info(cwd)));
             } else {
                 lines.push(tab + len(key, maxTaskLen) + '    ' + g(task.info(cwd)));
             }
+
+            context.backend = prevBackend;
 
             i++;
         }

@@ -13,7 +13,7 @@
                     "panel": "shared"
                 },
                 "command": "ceramic",
-                "args": ["plugin", "build", "--debug", "--tools"],
+                "args": ["plugin", "build", "--debug", "--tools", "--vscode-editor"],
                 "group": {
                     "kind": "build",
                     "isDefault": true

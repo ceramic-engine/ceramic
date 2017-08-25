@@ -1,13 +1,11 @@
 package tools;
 
-import tools.Tools.*;
-import tools.Tools;
-import tools.Project;
+import tools.Context;
+import tools.Helpers;
+import tools.Helpers.*;
 
 @:keep
 class ToolsPlugin {
-
-    public var backendName = 'luxe';
 
     static function main():Void {
         
@@ -20,23 +18,31 @@ class ToolsPlugin {
 
     public function new() {}
 
-    public function init(tools:Tools):Void {
+    public function init(context:Context):Void {
 
-        // Extend tools here
-        var tasks = shared.tasks;
-        
-        tasks.set('$backendName targets', new tools.tasks.Targets());
-        tasks.set('$backendName setup', new tools.tasks.Setup());
-        tasks.set('$backendName hxml', new tools.tasks.Hxml());
-        tasks.set('$backendName build', new tools.tasks.Build('Build'));
-        tasks.set('$backendName run', new tools.tasks.Build('Run'));
-        tasks.set('$backendName clean', new tools.tasks.Build('Clean'));
-        tasks.set('$backendName assets', new tools.tasks.Assets());
-        tasks.set('$backendName icons', new tools.tasks.Icons());
-        tasks.set('$backendName update', new tools.tasks.Update());
+        // Use same context as parent
+        Helpers.context = context;
 
-        tasks.set('$backendName info', new tools.tasks.Info());
-        tasks.set('$backendName libs', new tools.tasks.Libs());
+        // Set backend
+        var prevBackend = context.backend;
+        context.backend = new backend.tools.BackendTools();
+
+        // Add tasks
+        var tasks = context.tasks;
+        tasks.set('luxe targets', new tools.tasks.Targets());
+        tasks.set('luxe setup', new tools.tasks.Setup());
+        tasks.set('luxe hxml', new tools.tasks.Hxml());
+        tasks.set('luxe build', new tools.tasks.Build('Build'));
+        tasks.set('luxe run', new tools.tasks.Build('Run'));
+        tasks.set('luxe clean', new tools.tasks.Build('Clean'));
+        tasks.set('luxe assets', new tools.tasks.Assets());
+        tasks.set('luxe icons', new tools.tasks.Icons());
+        tasks.set('luxe update', new tools.tasks.Update());
+        tasks.set('luxe info', new tools.tasks.Info());
+        tasks.set('luxe libs', new tools.tasks.Libs());
+
+        // Restore default backend
+        context.backend = prevBackend;
 
     } //init
 

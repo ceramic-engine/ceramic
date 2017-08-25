@@ -20,18 +20,6 @@ class Tools {
 
     } //main
 
-/*
-    public static var settings = {
-        colors: true,
-        defines: new Map<String,String>(),
-        ceramicPath: '',
-        homeDir: '' + js.Node.require('os').homedir(),
-        isLocalDotCeramic: false,
-        dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),
-        variant: 'standard',
-        vscode: false
-    };
-*/
     static function runInFiber(cwd:String, args:Array<String>, ceramicPath:String) {
 
         // Wrap execution inside a fiber to allow calling
@@ -97,25 +85,6 @@ class Tools {
             }
         }
 
-        /*#if use_backend
-
-        tasks.set('targets', new tools.tasks.Targets());
-        tasks.set('setup', new tools.tasks.Setup());
-        tasks.set('hxml', new tools.tasks.Hxml());
-        tasks.set('build', new tools.tasks.Build('Build'));
-        tasks.set('run', new tools.tasks.Build('Run'));
-        tasks.set('clean', new tools.tasks.Build('Clean'));
-        tasks.set('assets', new tools.tasks.Assets());
-        tasks.set('icons', new tools.tasks.Icons());
-        tasks.set('update', new tools.tasks.Update());
-
-        tasks.set('info', new tools.tasks.Info());
-        tasks.set('libs', new tools.tasks.Libs());
-
-        backend.init(this);
-
-        #else*/
-
         context.tasks.set('help', new tools.tasks.Help());
         context.tasks.set('init', new tools.tasks.Init());
         context.tasks.set('vscode', new tools.tasks.Vscode());
@@ -123,7 +92,6 @@ class Tools {
         context.tasks.set('link', new tools.tasks.Link());
         context.tasks.set('unlink', new tools.tasks.Unlink());
         context.tasks.set('path', new tools.tasks.Path());
-
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
 
@@ -131,6 +99,7 @@ class Tools {
         context.tasks.set('plugin remove', new tools.tasks.plugin.RemovePlugin());
         context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
+        context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());
 
         //#end
 
@@ -215,6 +184,9 @@ class Tools {
 
                 // Extract backend target defines (if any)
                 extractBackendTargetDefines(cwd, args);
+
+                // Set correct backend to context
+                context.backend = @:privateAccess task.backend;
 
                 // Run task
                 task.run(cwd, args);

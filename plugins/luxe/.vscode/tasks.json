@@ -15,7 +15,8 @@
                 "plugin",
                 "build",
                 "--debug",
-                "--tools"
+                "--tools",
+                "--vscode-editor"
             ],
             "group": {
                 "kind": "build",

@@ -1,12 +1,19 @@
 package tools;
 
 import tools.Helpers.*;
+import tools.spec.BackendTools;
 
 class Task {
+
+    /** Keep a reference to the current backend
+        in context when creating the task. */
+    var backend:BackendTools = null;
 
 /// Lifecycle
 
     public function new() {
+
+        backend = context.backend;
 
     } //new
 
