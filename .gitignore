@@ -37,3 +37,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 /sample/out
+/sample/.vscode/tasks.json
+/sample/completion.hxml
