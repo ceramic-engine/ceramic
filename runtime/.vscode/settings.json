@@ -1,0 +1,13 @@
+{
+    "haxe.displayConfigurations": [
+        [
+            "--cwd", "../sample", "completion.hxml"
+        ]
+    ],
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "**/out": true
+    }
+}
