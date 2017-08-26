@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.0.0",
-    "ceramic-tools": "github:jeremyfa/ceramic",
+    "ceramic-tools": "../tools",
     "colors": "^1.1.2",
     "decompress": "^4.2.0",
     "detect-port": "^1.2.1",
@@ -108,7 +108,7 @@
     "whatwg-fetch": "2.0.3"
   },
   "scripts": {
-    "postinstall": "electron-builder install-app-deps && node postinstall.js",
+    "postinstall": "electron-builder install-app-deps && node post-install.js",
     "build": "cross-env NODE_ENV=production NODE_PATH=src node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "app-dev": "cross-env BROWSER=none NODE_ENV=development NODE_PATH=src node scripts/start.js",

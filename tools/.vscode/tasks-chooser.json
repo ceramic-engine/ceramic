@@ -6,7 +6,12 @@
             "description": "npm install",
             "tasks": [{
                 "taskName": "build",
-                "showOutput": "always",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
                 "command": "npm",
                 "args": ["install"],
                 "group": {
@@ -21,7 +26,12 @@
             "description": "haxe build.hxml",
             "tasks": [{
                 "taskName": "build",
-                "showOutput": "always",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
                 "command": "haxe",
                 "args": ["build.hxml"],
                 "group": {
@@ -36,7 +46,12 @@
             "description": "haxe build-all.hxml",
             "tasks": [{
                 "taskName": "build",
-                "showOutput": "always",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
                 "command": "haxe",
                 "args": ["build-all.hxml"],
                 "group": {
