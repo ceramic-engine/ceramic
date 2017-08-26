@@ -13,7 +13,7 @@ class Path extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        success(context.ceramicPath);
+        success(context.ceramicToolsPath);
 
     } //run
 

@@ -74,13 +74,13 @@ class Build extends tools.Task {
 
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
-            context.backend.runSetup(cwd, [args[0], 'setup', target.name, '--update-project'], target, context.variant, true);
+            context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
         }
 
         // Update assets, if needed
         if (extractArgFlag(args, 'assets', true)) {
             var task = new Assets();
-            task.run(cwd, [args[0], 'assets', target.name, '--variant', context.variant]);
+            task.run(cwd, ['assets', target.name, '--variant', context.variant]);
         }
 
         // Get and run backend's build task
@@ -90,7 +90,7 @@ class Build extends tools.Task {
         var hxmlOutput = extractArgValue(args, 'hxml-output', true);
         if (hxmlOutput != null) {
             var task = new Hxml();
-            task.run(cwd, [args[0], 'hxml', target.name, '--variant', context.variant, '--output', hxmlOutput]);
+            task.run(cwd, ['hxml', target.name, '--variant', context.variant, '--output', hxmlOutput]);
         }
 
     } //run

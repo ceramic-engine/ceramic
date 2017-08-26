@@ -2,10 +2,14 @@ package tools;
 
 import tools.Context;
 import tools.Helpers;
+import tools.Vscode;
 import tools.Helpers.*;
+import backend.tools.BackendTools;
 
 @:keep
 class ToolsPlugin {
+
+    public var backend:BackendTools;
 
     static function main():Void {
         
@@ -25,7 +29,8 @@ class ToolsPlugin {
 
         // Set backend
         var prevBackend = context.backend;
-        context.backend = new backend.tools.BackendTools();
+        backend = new BackendTools();
+        context.backend = backend;
 
         // Add tasks
         var tasks = context.tasks;
@@ -46,36 +51,68 @@ class ToolsPlugin {
 
     } //init
 
-    /**
-    public function extendProject(project:Project):Void {
+    public function extendVscodeTasksChooser(items:Array<VscodeChooserItem>) {
 
-        var hxml = '';
-        var app = project.app;
-        
-        var hasSpineHaxe = false;
-        var appLibs:Array<Dynamic> = app.libs;
-        for (lib in appLibs) {
-            var libName:String = null;
-            var libVersion:String = "*";
-            if (Std.is(lib, String)) {
-                libName = lib;
-            } else {
-                for (k in Reflect.fields(lib)) {
-                    libName = k;
-                    libVersion = Reflect.field(lib, k);
-                    break;
+        // Add luxe-related tasks
+        //
+        var backendName = 'luxe';
+
+        for (target in backend.getBuildTargets()) {
+
+            for (config in target.configs) {
+
+                var name:String = null;
+                var kind:String = null;
+
+                switch (config) {
+                    case Build(name_):
+                        name = name_;
+                        kind = 'build';
+                    case Run(name_):
+                        name = name_;
+                        kind = 'run';
+                    case Clean(name_):
                 }
+
+                if (kind == null) continue;
+
+                for (debug in [false, true]) {
+
+                    var tasksContent:Array<VscodeChooserItemTask> = [
+                        {
+                            taskName: "build",
+                            command: "ceramic",
+                            presentation: {
+                                echo: true,
+                                reveal: "always",
+                                focus: false,
+                                panel: "shared"
+                            },
+                            args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
+                            group: {
+                                kind: "build",
+                                isDefault: true
+                            },
+                            problemMatcher: "$haxe"
+                        }
+                    ];
+
+                    items.push({
+                        displayName: '▶︎ ' + name + (debug ? ' (debug)' : ''),
+                        description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : ''),
+                        tasks: tasksContent,
+                        onSelect: {
+                            command: "ceramic",
+                            args: [backendName, "hxml", target.name, "--output", "completion.hxml"].concat(debug ? ['--debug'] : [])
+                        }
+                    });
+
+                }
+
             }
-            if (libName == 'spinehaxe') {
-                hasSpineHaxe = true;
-                break;
-            }
-        }
-        if (hasSpineHaxe) {
-            hxml += "\n"+'--remap spine:spinehaxe';
+
         }
 
-    } //extendProject
-    **/
+    } //extendVscodeTasksChooser
 
 } //ToolsPlugin

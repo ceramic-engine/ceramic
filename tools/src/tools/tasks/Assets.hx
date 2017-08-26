@@ -88,7 +88,7 @@ class Assets extends tools.Task {
 
         // Compute all assets list
         var assets:Array<tools.Asset> = [];
-        var ceramicAssetsPath = Path.join([context.ceramicPath, 'assets']);
+        var ceramicAssetsPath = Path.join([context.ceramicToolsPath, 'assets']);
         var assetsPath = Path.join([cwd, 'assets']);
         if (fromPath != null) {
             assetsPath = fromPath;
@@ -171,7 +171,7 @@ class Assets extends tools.Task {
             // Update icons
             if (processIcons) {
                 var task = new Icons();
-                task.run(cwd, [args[0], 'icons', target.name, '--variant', context.variant]);
+                task.run(cwd, ['icons', target.name, '--variant', context.variant]);
             }
         }
 

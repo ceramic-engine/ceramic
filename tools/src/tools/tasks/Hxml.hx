@@ -58,7 +58,7 @@ class Hxml extends tools.Task {
         // Add some completion cache optims
         //
         var pathFilters = [];
-        var ceramicSrcContentPath = Path.join([context.ceramicPath, 'src/ceramic']);
+        var ceramicSrcContentPath = Path.join([context.ceramicRuntimePath, 'src/ceramic']);
         for (name in FileSystem.readDirectory(ceramicSrcContentPath)) {
             if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
                 if (name.endsWith('.hx')) {
@@ -73,6 +73,19 @@ class Hxml extends tools.Task {
         // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
         rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
         rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
+
+        // Let plugins extend completion HXML
+        for (plugin in context.plugins) {
+            if (plugin.extendCompletionHxml != null) {
+
+                var prevBackend = context.backend;
+                context.backend = plugin.backend;
+
+                plugin.extendCompletionHxml(rawHxml);
+
+                context.backend = prevBackend;
+            }
+        }
 
         // Required to ensure assets list gets updated
         var toInvalidate = [

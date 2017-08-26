@@ -36,9 +36,14 @@ class Helpers {
 
         // Add generic defines
         context.defines.set('assets_path', Path.join([cwd, 'assets']));
-        context.defines.set('ceramic_assets_path', Path.join([context.ceramicPath, 'assets']));
+        context.defines.set('ceramic_assets_path', Path.join([context.ceramicToolsPath, 'assets']));
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
+        context.defines.set('backend', context.backend.name.toLowerCase().replace(' ', '_'));
+        context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), '');
+
+        // To get absolute path in haxe log output
+        // Then, we process it to make it more readable, with colors etc...
         context.defines.set('absolute-path', '');
 
         // Add target defines
@@ -55,7 +60,7 @@ class Helpers {
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
-        return command(Path.join([context.ceramicPath, 'ceramic']), args, { cwd: cwd, mute: mute });
+        return command(Path.join([context.ceramicToolsPath, 'ceramic']), args, { cwd: cwd, mute: mute });
 
     } //runCeramic
 
@@ -183,8 +188,9 @@ class Helpers {
             var proc = null;
             if (args == null) {
                 proc = ChildProcess.spawn(name, {cwd: options.cwd});
+            } else {
+                proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
             }
-            proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
 
             proc.stdout.on('data', function(input) {
                 result.stdout += input.toString();
@@ -258,7 +264,13 @@ class Helpers {
     public static function getTargetName(args:Array<String>, availableTargets:Array<tools.BuildTarget>):String {
 
         // Compute target from args
-        var targetArg = args[2];
+        var targetArgIndex = 1;
+        if (args.length > 1) {
+            if (context.tasks.exists(args[0] + ' ' + args[1])) {
+                targetArgIndex++;
+            }
+        }
+        var targetArg = args[targetArgIndex];
         if (targetArg != null && !targetArg.startsWith('--')) {
             return targetArg;
         }

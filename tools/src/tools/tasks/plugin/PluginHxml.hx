@@ -60,7 +60,7 @@ class PluginHxml extends tools.Task {
         project.loadPluginFile(Path.join([cwd, 'ceramic.yml']));
 
         // Add path
-        project.plugin.paths.push(Path.join([context.ceramicPath, 'src']));
+        project.plugin.paths.push(Path.join([context.ceramicToolsPath, 'src']));
 
         // Compute extra HXML
         //

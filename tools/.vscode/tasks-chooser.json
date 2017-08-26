@@ -2,7 +2,7 @@
     "selectDescription": "Select build setting",
     "items": [
         {
-            "displayName": "▷ Tools",
+            "displayName": "▷ Tools + NPM",
             "description": "npm install",
             "tasks": [{
                 "taskName": "build",
@@ -24,6 +24,21 @@
                 "showOutput": "always",
                 "command": "haxe",
                 "args": ["build.hxml"],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": "$haxe"
+            }]
+        },
+        {
+            "displayName": "▷ Tools + Plugins",
+            "description": "haxe build-all.hxml",
+            "tasks": [{
+                "taskName": "build",
+                "showOutput": "always",
+                "command": "haxe",
+                "args": ["build-all.hxml"],
                 "group": {
                     "kind": "build",
                     "isDefault": true

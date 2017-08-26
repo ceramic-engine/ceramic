@@ -39,7 +39,7 @@ class Project extends Entity {
         quad1.pos(320 * 0.5, 568 * 0.5);
         quad1.rotation = 30;
         quad1.scale(2.0, 0.5);
-        quad1.name = 'quad1';
+        quad1.id = 'quad1';
 
         var quad2 = new Quad();
         quad2.depth = 1;
@@ -49,7 +49,7 @@ class Project extends Entity {
         quad2.pos(320 * 0.5, 568 * 0.5 + 20);
         quad2.rotation = 30;
         quad2.scale(2.0, 0.5);
-        quad2.name = 'quad2';
+        quad2.id = 'quad2';
 
         var text = new Text();
         text.content = "Jérémy.\nligne.";

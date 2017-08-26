@@ -18,10 +18,10 @@ class Link extends tools.Task {
         if (Sys.systemName() == 'Mac') {
             command('rm', ['ceramic'], { cwd: '/usr/local/bin', mute: true });
             if (isElectron()) {
-                command('ln', ['-s', Path.join([context.ceramicPath, 'ceramic-electron']), 'ceramic'], { cwd: '/usr/local/bin' });
+                command('ln', ['-s', Path.join([context.ceramicToolsPath, 'ceramic-electron']), 'ceramic'], { cwd: '/usr/local/bin' });
             }
             else {
-                command('ln', ['-s', Path.join([context.ceramicPath, 'ceramic']), 'ceramic'], { cwd: '/usr/local/bin' });
+                command('ln', ['-s', Path.join([context.ceramicToolsPath, 'ceramic']), 'ceramic'], { cwd: '/usr/local/bin' });
             }
         }
         else if (Sys.systemName() == 'Windows') {
@@ -31,7 +31,7 @@ class Link extends tools.Task {
             }
             File.saveContent(
                 Path.join([haxePath, 'ceramic.bat']),
-                "@echo off\r\n" + Path.join([context.ceramicPath, isElectron() ? 'ceramic-electron' : 'ceramic']) + " %*"
+                "@echo off\r\n" + Path.join([context.ceramicToolsPath, isElectron() ? 'ceramic-electron' : 'ceramic']) + " %*"
             );
         }
 

@@ -22,7 +22,7 @@ class Help extends tools.Task {
         var tab = '  ';
 
         // Compute tools version
-        var version = 'v' + js.Node.require(Path.join([context.ceramicPath, 'package.json'])).version;
+        var version = 'v' + js.Node.require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
         var versionPath = Path.join([js.Node.__dirname, 'version']);
         if (FileSystem.exists(versionPath)) {
             version = File.getContent(versionPath);
@@ -109,6 +109,8 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
 
             var prevBackend = context.backend;
             context.backend = task.backend;
+            var prevPlugin = context.plugin;
+            context.plugin = task.plugin;
 
             if (i == 0) {
                 lines.push(tab + r(len(key, maxTaskLen)) + '    ' + g(task.info(cwd)));
@@ -117,6 +119,7 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
             }
 
             context.backend = prevBackend;
+            context.plugin = prevPlugin;
 
             i++;
         }

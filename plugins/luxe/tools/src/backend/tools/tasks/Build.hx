@@ -48,7 +48,7 @@ class Build extends tools.Task {
         }
 
         var backendName = 'luxe';
-        var ceramicPath = context.ceramicPath;
+        var ceramicPath = context.ceramicToolsPath;
 
         var outPath = Path.join([cwd, 'out']);
         var action = null;
@@ -94,7 +94,7 @@ class Build extends tools.Task {
         Sync.run(function(done) {
 
             var proc = ChildProcess.spawn(
-                Path.join([context.ceramicPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
+                Path.join([context.ceramicToolsPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
                 cmdArgs,
                 { cwd: flowProjectPath }
             );

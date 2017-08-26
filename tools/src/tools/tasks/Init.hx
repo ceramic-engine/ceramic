@@ -164,7 +164,7 @@ class Project extends Entity {
         if (extractArgFlag(args, 'vscode')) {
 
             var task = new Vscode();
-            task.run(projectPath, [args[0], args[1]].concat(force ? ['--force'] : []));
+            task.run(projectPath, [args[1]].concat(force ? ['--force'] : []));
 
         }
 

@@ -41,7 +41,7 @@ class Setup extends tools.Task {
         project.loadAppFile(projectPath);
 
         var backendName = 'luxe';
-        var ceramicPath = context.ceramicPath;
+        var ceramicPath = context.ceramicToolsPath;
 
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
@@ -51,6 +51,10 @@ class Setup extends tools.Task {
 
         // Compute relative ceramicPath
         var ceramicPathRelative = getRelativePath(ceramicPath, targetPath);
+        var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
+        var runtimePathRelative = getRelativePath(runtimePath, targetPath);
+        var backendRuntimePath = Path.normalize(Path.join([context.plugin.path, 'runtime']));
+        var backendRuntimePathRelative = getRelativePath(backendRuntimePath, targetPath);
 
         // If ceramic.yml has changed, force setup update
         if (!force && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
@@ -167,8 +171,8 @@ exports.hook = function(flow, done)
       name: ' + Json.stringify(project.app.name) + ',
       package: ' + Json.stringify(Reflect.field(project.app, 'package')) + ',
       codepaths: [
-        ' + classPaths + Json.stringify(Path.join([ceramicPathRelative, 'src'])) + ',
-        ' + Json.stringify(Path.join([ceramicPathRelative, 'backends/luxe/src'])) + ',
+        ' + classPaths + Json.stringify(Path.join([runtimePathRelative, 'src'])) + ',
+        ' + Json.stringify(Path.join([backendRuntimePathRelative, 'src'])) + ',
         ' + Json.stringify('../../../src') + '
       ],
       icon: "icons => app"

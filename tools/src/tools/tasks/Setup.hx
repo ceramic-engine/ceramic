@@ -21,53 +21,55 @@ class Setup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-#if use_backend
-        ensureCeramicProject(cwd, args);
+        if (context.backend != null) {
 
-        var availableTargets = backend.getBuildTargets();
-        var targetName = getTargetName(args, availableTargets);
+            ensureCeramicProject(cwd, args, App);
 
-        if (targetName == null) {
-            fail('You must specify a target to setup.');
-        }
+            var availableTargets = context.backend.getBuildTargets();
+            var targetName = getTargetName(args, availableTargets);
 
-        // Find target from name
-        //
-        var target = null;
-        for (aTarget in availableTargets) {
-
-            if (aTarget.name == targetName) {
-                target = aTarget;
-                break;
+            if (targetName == null) {
+                fail('You must specify a target to setup.');
             }
 
-        }
+            // Find target from name
+            //
+            var target = null;
+            for (aTarget in availableTargets) {
 
-        if (target == null) {
-            fail('Unknown target: $targetName');
-        }
+                if (aTarget.name == targetName) {
+                    target = aTarget;
+                    break;
+                }
 
-        // Get and run backend's setup task
-        backend.runSetup(cwd, args, target, context.variant);
+            }
 
-#else
+            if (target == null) {
+                fail('Unknown target: $targetName');
+            }
 
-        // Check haxelib repository
-        var haxelibRepo = (''+haxelib(['config'], { mute: true }).stdout).trim();
-        if (!FileSystem.exists(haxelibRepo)) {
-            haxelibRepo = Path.join([untyped Os.homedir(), '.ceramic/haxelib']);
-            haxelib(['setup', haxelibRepo]);
-            success('Set new haxelib repository: ' + haxelibRepo);
+            // Get and run backend's setup task
+            context.backend.runSetup(cwd, args, target, context.variant);
+
         }
         else {
-            success('Keep existing haxelib repository: ' + haxelibRepo);
+
+            // Check haxelib repository
+            var haxelibRepo = (''+haxelib(['config'], { mute: true }).stdout).trim();
+            if (!FileSystem.exists(haxelibRepo)) {
+                haxelibRepo = Path.join([untyped Os.homedir(), '.ceramic/haxelib']);
+                haxelib(['setup', haxelibRepo]);
+                success('Set new haxelib repository: ' + haxelibRepo);
+            }
+            else {
+                success('Keep existing haxelib repository: ' + haxelibRepo);
+            }
+
+            // Install required dependencies
+            haxelib(['install', 'hxcpp', '--always']);
+            haxelib(['install', 'unifill', '--always']);
+            haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
         }
-
-        // Install required dependencies
-        haxelib(['install', 'hxcpp', '--always']);
-        haxelib(['install', Path.join([context.ceramicPath, 'tools.hxml']), '--always']);
-
-#end
 
     } //run
 

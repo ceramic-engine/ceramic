@@ -56,7 +56,7 @@ class Icons extends tools.Task {
         var appIcon = project.app.icon;
         if (!Path.isAbsolute(appIcon)) {
             var projectAppIcon = Path.join([context.cwd, appIcon]);
-            var ceramicAppIcon = Path.join([context.ceramicPath, appIcon]);
+            var ceramicAppIcon = Path.join([context.ceramicToolsPath, appIcon]);
             if (FileSystem.exists(projectAppIcon)) {
                 appIcon = projectAppIcon;
             } else if (FileSystem.exists(ceramicAppIcon)) {

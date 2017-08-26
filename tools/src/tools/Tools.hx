@@ -8,6 +8,8 @@ import haxe.Json;
 import tools.Helpers;
 import tools.Helpers.*;
 
+using StringTools;
+
 class Tools {
 
 /// Global
@@ -38,7 +40,8 @@ class Tools {
         Helpers.context = {
             colors: true,
             defines: new Map(),
-            ceramicPath: ceramicPath,
+            ceramicToolsPath: ceramicPath,
+            ceramicRuntimePath: Path.normalize(Path.join([ceramicPath, '../runtime'])),
             homeDir: '' + js.Node.require('os').homedir(),
             isLocalDotCeramic: false,
             dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),
@@ -49,7 +52,9 @@ class Tools {
             backend: null,
             cwd: cwd,
             args: args,
-            tasks: new Map()
+            tasks: new Map(),
+            plugin: null,
+            rootTask: null
         };
         
         // Compute .ceramic path (global or local)
@@ -74,6 +79,7 @@ class Tools {
                     var pluginIndexPath = Path.join([path, 'index.js']);
                     if (FileSystem.exists(pluginIndexPath)) {
                         var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
+                        plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
                         context.plugins.set(name, plugin);
                     }
 
@@ -108,7 +114,13 @@ class Tools {
         if (context.plugins != null) {
             for (key in context.plugins.keys()) {
                 var plugin = context.plugins.get(key);
+
+                var prevPlugin = context.plugin;
+                context.plugin = plugin;
+
                 plugin.init(context);
+
+                context.plugin = prevPlugin;
             }
         }
 
@@ -168,13 +180,13 @@ class Tools {
 
         // Run task from args
         //
-        if (args.length < 2) {
+        if (args.length < 1) {
             fail('Invalid arguments.');
         }
         else {
-            var taskName = args[1];
-            if (args.length >= 3 && context.tasks.exists(taskName + ' ' + args[2])) {
-                taskName = taskName + ' ' + args[2];
+            var taskName = args[0];
+            if (args.length >= 2 && context.tasks.exists(taskName + ' ' + args[1])) {
+                taskName = taskName + ' ' + args[1];
             }
 
             if (context.tasks.exists(taskName)) {
@@ -182,11 +194,21 @@ class Tools {
                 // Get task
                 var task = context.tasks.get(taskName);
 
-                // Extract backend target defines (if any)
-                extractBackendTargetDefines(cwd, args);
-
-                // Set correct backend to context
+                // Set correct backend
                 context.backend = @:privateAccess task.backend;
+
+                // Set correct plugin
+                context.plugin = @:privateAccess task.plugin;
+
+                // Add additional defines
+                if (context.backend != null) {
+
+                    // Extract backend target defines (if any)
+                    extractBackendTargetDefines(cwd, args);
+                }
+
+                // Set correct task
+                context.rootTask = task;
 
                 // Run task
                 task.run(cwd, args);

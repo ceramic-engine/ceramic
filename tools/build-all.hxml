@@ -1,0 +1,7 @@
+-cp src
+-main tools.Index
+-lib hxnodejs
+-lib hscript
+-js index.js
+-debug
+-cmd ./ceramic plugin build --tools --all

@@ -2,6 +2,7 @@ package tools;
 
 import tools.Helpers.*;
 import tools.spec.BackendTools;
+import tools.spec.ToolsPlugin;
 
 class Task {
 
@@ -9,11 +10,16 @@ class Task {
         in context when creating the task. */
     var backend:BackendTools = null;
 
+    /** Keep a reference to the current plugin
+        in context when creating the task. */
+    var plugin:ToolsPlugin = null;
+
 /// Lifecycle
 
     public function new() {
 
         backend = context.backend;
+        plugin = context.plugin;
 
     } //new
 

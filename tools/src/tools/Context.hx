@@ -10,7 +10,10 @@ typedef Context = {
     var defines:Map<String,String>;
 
     /** Ceramic tools absolute path. */
-    var ceramicPath:String;
+    var ceramicToolsPath:String;
+
+    /** Ceramic runtime absolute path. */
+    var ceramicRuntimePath:String;
 
     /** Current user's home directory */
     var homeDir:String;
@@ -44,5 +47,11 @@ typedef Context = {
 
     /** Loaded tasks */
     var tasks:Map<String,tools.Task>;
+
+    /** Current plugin (if any) */
+    var plugin:tools.spec.ToolsPlugin;
+
+    /** Root triggered task */
+    var rootTask:tools.Task;
 
 } //Context

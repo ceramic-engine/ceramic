@@ -135,8 +135,11 @@ function installDeps() {
     // Install dependencies
     spawnSync('haxelib', ['install', 'hxcpp', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync('haxelib', ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
-
+    
     // Build tools
     spawnSync('haxe', ['build.hxml'], { stdio: "inherit", cwd: __dirname });
+        
+    // Build tools plugins
+    spawnSync('./ceramic', ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
 
 } //installDeps

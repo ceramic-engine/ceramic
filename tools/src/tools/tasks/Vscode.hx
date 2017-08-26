@@ -32,7 +32,7 @@ class Vscode extends tools.Task {
             }
         }
 
-        var chooser:Dynamic = {
+        var chooser = {
             selectDescription: "Select build config",
             items: [],
             baseItem: {
@@ -40,76 +40,18 @@ class Vscode extends tools.Task {
             }
         };
 
-        var completionHxmlInfo = null;
+        // Let plugins extend the list
+        for (plugin in context.plugins) {
+            if (plugin.extendVscodeTasksChooser != null) {
 
-        /*
-        for (backendName in ['luxe']) {
+                var prevBackend = context.backend;
+                context.backend = plugin.backend;
 
-            if (~/^([a-zA-Z0-9_]+)$/.match(backendName) && sys.FileSystem.exists(Path.join([js.Node.__dirname, 'tools-' + backendName + '.js']))) {
-                var initTools = js.Node.require('./tools-' + backendName + '.js');
-                var tools:tools.Tools = initTools(cwd, ['-D$backendName'].concat(args));
+                plugin.extendVscodeTasksChooser(chooser.items);
 
-                var backend = context.backend;
-
-                for (target in backend.getBuildTargets()) {
-
-                    for (config in target.configs) {
-
-                        var name:String = null;
-                        var kind:String = null;
-
-                        switch (config) {
-                            case Build(name_):
-                                name = name_;
-                                kind = 'build';
-                            case Run(name_):
-                                name = name_;
-                                kind = 'run';
-                            case Clean(name_):
-                        }
-
-                        if (kind == null) continue;
-
-                        if (completionHxmlInfo == null) {
-                            completionHxmlInfo = [backendName, 'hxml', target.name, '--output', 'completion.hxml'];
-                        }
-
-                        for (debug in [false, true]) {
-
-                            var tasksContent:Array<Dynamic> = [
-                                {
-                                    taskName: "build",
-                                    command: "ceramic",
-                                    showOutput: "always",
-                                    args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []),
-                                    group: {
-                                        kind: "build",
-                                        isDefault: true
-                                    },
-                                    problemMatcher: "$haxe"
-                                }
-                            ];
-
-                            chooser.items.push({
-                                displayName: '▶︎ ' + name + (debug ? ' (debug)' : ''),
-                                description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : ''),
-                                tasks: tasksContent,
-                                onSelect: {
-                                    command: "ceramic",
-                                    args: [backendName, "hxml", target.name, "--output", "completion.hxml"].concat(debug ? ['--debug'] : [])
-                                }
-                            });
-
-                        }
-
-                    }
-
-                }
-
+                context.backend = prevBackend;
             }
-
-        }*/
-        // TODO extend from plugins
+        }
 
         // Save tasks-chooser.json
         //
@@ -149,7 +91,8 @@ class Vscode extends tools.Task {
 
         // Save completion.hxml
         //
-        runCeramic(cwd, completionHxmlInfo);
+        //runCeramic(cwd, completionHxmlInfo);
+        // Use "runTask" instead of "runCeramic"
 
     } //run
 

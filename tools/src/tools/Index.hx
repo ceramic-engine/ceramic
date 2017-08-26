@@ -32,9 +32,9 @@ class Index {
         }
 
         if (args.length > 0 && args[0] != '--help') {
-            @:privateAccess Tools.runInFiber(cwd, ['default'].concat(args), ceramicPath);
+            @:privateAccess Tools.runInFiber(cwd, [].concat(args), ceramicPath);
         } else {
-            @:privateAccess Tools.runInFiber(cwd, ['default', 'help'], ceramicPath);
+            @:privateAccess Tools.runInFiber(cwd, ['help'], ceramicPath);
         }
 
     } //main

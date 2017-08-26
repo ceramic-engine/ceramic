@@ -5,42 +5,70 @@ import sys.FileSystem;
 import sys.io.File;
 import haxe.io.Path;
 
+using tools.Colors;
+
 class BuildPlugin extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Build the current plugin.";
+        return "Build the current plugin or all enabled plugins (with --all).";
 
     } //info
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        // Use same HXML as completion
-        var task = new PluginHxml();
-        task.run(cwd, args.concat(['--output', 'build.hxml']));
-
-        // Run haxe
-        var result = haxe(['build.hxml']);
-
-        // Remove build.hxml
-        FileSystem.deleteFile(Path.join([cwd, 'build.hxml']));
-
-        // Did it build fine?
-        if (result.status != 0) {
-            fail('Failed to build plugin.');
+        // Compute plugin(s) to build
+        var pluginPaths = [];
+        var all = extractArgFlag(args, 'all', true);
+        if (all) {
+            for (plugin in context.plugins) {
+                pluginPaths.push(plugin.path);
+            }
+        }
+        else {
+            pluginPaths.push(cwd);
         }
 
-        // Patch require
-        var targetFile = Path.join([cwd, 'index.js']);
-        var content = File.getContent(targetFile);
-        var lines = content.split("\n");
-        var firstLine = lines[0];
-        lines[0] = 'require=m=>rReq(m);';
-        while (lines[0].length < firstLine.length) {
-            lines[0] += '/';
+        for (pluginPath in pluginPaths) {
+
+            // Change cwd
+            var prevCwd = context.cwd;
+            context.cwd = pluginPath;
+
+            if (all) {
+                print('Build ' + pluginPath.bold());
+            }
+
+            // Use same HXML as completion
+            var task = new PluginHxml();
+            task.run(pluginPath, args.concat(['--output', 'build.hxml']));
+
+            // Run haxe
+            var result = haxe(['build.hxml']);
+
+            // Remove build.hxml
+            FileSystem.deleteFile(Path.join([pluginPath, 'build.hxml']));
+
+            // Did it build fine?
+            if (result.status != 0) {
+                fail('Failed to build plugin.');
+            }
+
+            // Patch require
+            var targetFile = Path.join([pluginPath, 'index.js']);
+            var content = File.getContent(targetFile);
+            var lines = content.split("\n");
+            var firstLine = lines[0];
+            lines[0] = 'require=m=>rReq(m);';
+            while (lines[0].length < firstLine.length) {
+                lines[0] += '/';
+            }
+            content = lines.join("\n");
+            File.saveContent(targetFile, content);
+
+            context.cwd = prevCwd;
+
         }
-        content = lines.join("\n");
-        File.saveContent(targetFile, content);
 
     } //run
 

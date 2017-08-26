@@ -60,33 +60,16 @@ class Project {
         if (context.plugins != null) {
             for (plugin in context.plugins) {
                 if (plugin.extendProject != null) {
-                    plugin.extendProject(this);
-                }
-            }
-        }
 
-        // Discover plugins
-        //
-        var usedPlugins = [];
-        var localPluginsPath = Path.join([context.cwd, 'plugins']);
-        if (FileSystem.exists(localPluginsPath)) {
-            for (name in FileSystem.readDirectory(localPluginsPath)) {
-                var srcPath = Path.join(['plugins', name, 'src']);
-                if (FileSystem.exists(srcPath)) {
-                    app.paths.push(srcPath);
-                    usedPlugins.push(name);
+                    var prevPlugin = context.plugin;
+                    context.plugin = plugin;
+
+                    plugin.extendProject(this);
+
+                    context.plugin = prevPlugin;
                 }
             }
         }
-        for (name in FileSystem.readDirectory(Path.join([context.ceramicPath, 'plugins']))) {
-            if (usedPlugins.indexOf(name) != -1) continue;
-            var srcPath = getRelativePath(Path.join([context.ceramicPath, 'plugins', name, 'src']), context.cwd);
-            if (FileSystem.exists(srcPath)) {
-                app.paths.push(srcPath);
-                usedPlugins.push(name);
-            }
-        }
-        app.plugins = usedPlugins;
 
         if (app.hxml == null) app.hxml = '';
 
@@ -176,16 +159,10 @@ class ProjectLoader {
                 app.paths = [];
             }
 
-            // Add required class paths
-            for (cp in [
-                'git/unifill'
-            ]) {
-                app.paths.push(
-                    getRelativePath(
-                        Path.join([context.ceramicPath, cp]), context.cwd
-                    )
-                );
-            }
+            // Add required libs
+            app.libs.push({
+                unifill: '0.4.1'
+            });
 
             if (app.icon == null) {
                 app.icon = 'resources/AppIcon.png';

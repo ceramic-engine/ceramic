@@ -92,7 +92,7 @@ class Templates {
         // Create context
         //
         var context:Dynamic = {};
-        context.ceramicPath = context.ceramicPath;
+        context.ceramicToolsPath = context.ceramicToolsPath;
         context.projectPath = context.cwd;
         context.defines = context.defines;
 
