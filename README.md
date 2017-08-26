@@ -1,4 +1,6 @@
-# ceramic
+# Ceramic
+
+![Ceramic Logo](/editor/public/icons/256x256.png)
 
 Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.
 
