@@ -1,9 +1,9 @@
 import * as React from 'react';
-import './ReactApp.css';
+import './CeramicEditor.css';
 import { observer } from 'mobx-react';
 import { App } from './app/components';
 
-@observer class ReactApp extends React.Component {
+@observer class CeramicEditor extends React.Component {
 
     render() {
 
@@ -13,4 +13,4 @@ import { App } from './app/components';
     
 }
 
-export default ReactApp;
+export default CeramicEditor;

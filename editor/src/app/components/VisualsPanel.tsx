@@ -282,7 +282,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                     <Field>
                         <Button
                             value="Add visual"
-                            onClick={() => { project.ui.addingVisual = true; }}
+                            onClick={() => { project.ui.addVisual = true; }}
                         />
                     </Field>
                 </Form>

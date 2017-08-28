@@ -29,6 +29,9 @@ class Project extends Model {
     /** Project name */
     @observe @serialize name?:string;
 
+    /** Project custom editor canvas path */
+    @observe @serialize editorPath?:string;
+
 /// UI State
 
     @observe @serialize ui:UiState;

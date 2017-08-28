@@ -17,7 +17,7 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
                     <Inline><Button kind="square" value="Quad" onClick={this.addQuad} /></Inline>
                     <Inline><Button kind="square" value="Text" onClick={this.addText} /></Inline>
                     <div style={{ height: 12 }} />
-                    <Button value="Cancel" onClick={() => { project.ui.addingVisual = false; }} />
+                    <Button value="Cancel" onClick={() => { project.ui.addVisual = false; }} />
                 </Dialog>
             </Overlay>
         );
@@ -51,7 +51,7 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
         // Select visual
         project.ui.selectedItemId = quad.id;
 
-        project.ui.addingVisual = false;
+        project.ui.addVisual = false;
 
     } //addQuad
 
@@ -81,7 +81,7 @@ import { project, VisualItem, QuadItem, TextItem } from 'app/model';
         // Select visual
         project.ui.selectedItemId = text.id;
 
-        project.ui.addingVisual = false;
+        project.ui.addVisual = false;
 
     } //addText
     

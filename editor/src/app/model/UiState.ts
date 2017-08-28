@@ -14,7 +14,9 @@ class UiState extends Model {
 
     @observe menuInfo:{text:string, y:number};
 
-    @observe addingVisual:boolean;
+    @observe addVisual:boolean;
+    
+    @observe editSettings:boolean;
 
 /// Properties (selected)
 

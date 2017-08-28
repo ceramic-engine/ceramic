@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project, user } from 'app/model';
 import { context } from 'app/context';
-import { EditScene, AddVisual, DragOver, MenuInfo } from 'app/components';
+import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo } from 'app/components';
 import MdImage from 'react-icons/lib/md/image';
 import MdGridOn from 'react-icons/lib/md/grid-on';
 
@@ -40,8 +40,13 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                         :
                             null
                         }
-                        {project.ui.addingVisual ?
+                        {project.ui.addVisual ?
                             <AddVisual />
+                        :
+                            null
+                        }
+                        {project.ui.editSettings ?
+                            <EditSettings />
                         :
                             null
                         }
@@ -80,7 +85,17 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             top: navHeight
                         }}
                     >
-                        <img src="icon-nobg.svg" draggable={false} className="ceramic-icon" />
+                        <img
+                            src="icon-nobg.svg"
+                            draggable={false}
+                            className="ceramic-icon"
+                            onClick={() => { project.ui.editSettings = true; }}
+                            onMouseOver={(e) => { project.ui.menuInfo = {
+                                y: (e.currentTarget as HTMLElement).getClientRects()[0].top,
+                                text: 'Settings'
+                            }; }}
+                            onMouseOut={() => { project.ui.menuInfo = null; }}
+                        />
                         <div className="ceramic-separator" />
                         <div
                             className="leftside-button selected"

@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import ReactApp from './ReactApp';
+import CeramicEditor from './CeramicEditor';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
 ReactDOM.render(
-    <ReactApp />,
+    <CeramicEditor />,
     document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();

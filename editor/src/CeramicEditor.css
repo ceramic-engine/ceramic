@@ -497,15 +497,24 @@ body, html {
 #body .ceramic-icon {
     display: block;
     text-align: center;
-    margin: 5px 4px;
-    padding: 0;
+    margin: 6px 7px;
+    padding: 4px 7px;
+    max-width: 14px;
     background-color: transparent;
     border: 1px solid transparent;
+    opacity: 0.95;
 }
 
 #body .ceramic-icon:hover {
-    background-color: #686868;
-    border: 1px solid #686868;
+    background-color: #555555;
+    border: 1px solid #8c8c8c;
+    opacity: 1;
+}
+
+#body .ceramic-icon:active {
+    background-color: #2798eb;
+    border: 1px solid #2798eb;
+    opacity: 1;
 }
 
 /* Left side button */
