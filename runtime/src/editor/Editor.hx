@@ -59,6 +59,14 @@ class Editor extends Entity {
 
     var outsideLeft:Quad = null;
 
+    var outsideTopClick:Quad = null;
+
+    var outsideRightClick:Quad = null;
+
+    var outsideBottomClick:Quad = null;
+
+    var outsideLeftClick:Quad = null;
+
     var renders:Int = 0;
 
     var runtimeAssets:RuntimeAssets = null;
@@ -278,6 +286,30 @@ class Editor extends Entity {
             outsideLeft.color = settings.background;
             outsideLeft.alpha = 0.95;
             outsideLeft.depth = 99998;
+
+            outsideTopClick = new Quad();
+            outsideTopClick.alpha = 0;
+            outsideTopClick.depth = 0;
+
+            outsideRightClick = new Quad();
+            outsideRightClick.alpha = 0;
+            outsideRightClick.depth = 0;
+
+            outsideBottomClick = new Quad();
+            outsideBottomClick.alpha = 0;
+            outsideBottomClick.depth = 0;
+
+            outsideLeftClick = new Quad();
+            outsideLeftClick.alpha = 0;
+            outsideLeftClick.depth = 0;
+
+            for (area in [outsideTopClick, outsideRightClick, outsideBottomClick, outsideLeftClick]) {
+                area.onDown(area, function(info) {
+                    if (Editable.highlight != null) {
+                        Editable.highlight.destroy();
+                    }
+                });
+            }
         }
 
         var pad = 1;
@@ -293,6 +325,18 @@ class Editor extends Entity {
 
         outsideRight.pos(scene.width * scene.scaleX + (screen.width - scene.width * scene.scaleX) * 0.5, -pad);
         outsideRight.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
+
+        outsideTopClick.pos(outsideTop.x, outsideTop.y);
+        outsideTopClick.size(outsideTop.width, outsideTop.height);
+
+        outsideBottomClick.pos(outsideBottom.x, outsideBottom.y);
+        outsideBottomClick.size(outsideBottom.width, outsideBottom.height);
+
+        outsideLeftClick.pos(outsideLeft.x, outsideLeft.y);
+        outsideLeftClick.size(outsideLeft.width, outsideLeft.height);
+
+        outsideRightClick.pos(outsideRight.x, outsideRight.y);
+        outsideRightClick.size(outsideRight.width, outsideRight.height);
 
         // Update density
         settings.targetDensity = Math.ceil(screen.density * scene.scaleX);
