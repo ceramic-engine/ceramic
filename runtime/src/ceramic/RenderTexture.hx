@@ -14,7 +14,7 @@ class RenderTexture extends Texture {
         var backendItem = app.backend.textures.createRenderTexture(
             Math.round(width * density),
             Math.round(height * density)
-        ); // TODO create render texture from backend
+        );
 
         super(backendItem, density);
 

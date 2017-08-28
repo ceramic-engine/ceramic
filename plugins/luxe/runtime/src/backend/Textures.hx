@@ -2,6 +2,7 @@ package backend;
 
 import snow.systems.assets.Asset;
 import luxe.Resources;
+import luxe.options.ResourceOptions;
 import haxe.io.Path;
 
 using StringTools;
@@ -11,6 +12,50 @@ typedef LoadTextureOptions = {
 }
 
 abstract Texture(phoenix.Texture) from phoenix.Texture to phoenix.Texture {}
+
+class BatchedRenderTexture extends phoenix.RenderTexture {
+
+    public var targetBatcher:phoenix.Batcher = null;
+
+    public var batcherClearColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
+
+    public function new(_options:RenderTextureOptions) {
+
+        super(_options);
+
+        targetBatcher = Luxe.renderer.create_batcher({
+            name: 'batcher:' + _options.id
+        });
+        targetBatcher.on(prerender, targetBatcherBefore);
+        targetBatcher.on(postrender, targetBatcherBefore);
+
+    } //new
+
+    override function destroy(?_force:Bool=false) {
+
+        targetBatcher.destroy();
+        targetBatcher = null;
+
+        super.destroy(_force);
+
+    } //destroy
+
+/// Batcher stuff
+
+    function targetBatcherBefore(_) {
+
+        Luxe.renderer.target = this;
+        Luxe.renderer.clear(batcherClearColor);
+
+    } //targetBatcherBefore
+
+    function targetBatcherAfter(_) {
+
+        Luxe.renderer.target = null;
+
+    } //targetBatcherAfter
+
+} //BatchedRenderTexture
 
 class Textures implements spec.Textures {
 
@@ -95,7 +140,7 @@ class Textures implements spec.Textures {
 
         var id = 'render:' + (nextRenderIndex++);
 
-        var renderTexture = new phoenix.RenderTexture({
+        var renderTexture = new BatchedRenderTexture({
             id: id,
             width: width,
             height: height

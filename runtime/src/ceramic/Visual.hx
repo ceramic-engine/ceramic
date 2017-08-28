@@ -62,6 +62,10 @@ class Visual extends Entity {
         will be within range [parent.depth, parent.depth + childrenDepthRange] */
     public var childrenDepthRange:Float = -1;
 
+    /** If set, the visual will be rendered into this target RenderTexture instance
+        instead of being drawn onto screen directly. */
+    public var renderTarget:RenderTexture = null;
+
     public var blending(default,set):Blending = Blending.NORMAL;
     function set_blending(blending:Blending):Blending {
         return this.blending = blending;
