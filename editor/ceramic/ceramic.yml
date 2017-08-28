@@ -7,7 +7,7 @@ app:
 
     libs: []
 
-    'if web':
+    'if web && editor':
         +defines:
             - editor: true
         +hooks:
@@ -16,7 +16,4 @@ app:
               args: ['-rf', '../public/ceramic']
             - when: end build
               command: cp
-              args: ['-R', 'out/luxe/web/bin/web', '../public/ceramic']
-            - when: end build
-              command: cp
-              args: ['resources/index.html', '../public/ceramic/index.html']
+              args: ['-R', 'out/luxe/web-editor/bin/web', '../public/ceramic']

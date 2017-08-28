@@ -1,4 +1,5 @@
 {
+    "window.title": "${activeEditorShort} — Ceramic Editor (Haxe)",
     "haxe.displayConfigurations": [
         [
             "completion.hxml"
@@ -9,7 +10,5 @@
         "**/node_modules": true,
         "**/tmp": true,
         "**/out": true
-    },
-    "window.title": "${activeEditorShort} — Scene Editor (ceramic)",
-    "git.ignoreLimitWarning": true
+    }
 }

@@ -1,6 +1,6 @@
 {
-    "displayName": "▶︎ Build Web (debug)",
-    "description": "ceramic luxe build web --setup --assets --debug",
+    "displayName": "▶︎ Build Web (editor)",
+    "description": "ceramic luxe build web --setup --assets --debug --variant editor",
     "tasks": [
         {
             "taskName": "build",
@@ -21,6 +21,8 @@
                 "--hxml-output",
                 "completion.hxml",
                 "--debug",
+                "--variant",
+                "editor",
                 "--cwd",
                 "../sample"
             ],
@@ -32,5 +34,5 @@
         }
     ],
     "version": "2.0.0",
-    "chooserIndex": 7
+    "chooserIndex": 8
 }

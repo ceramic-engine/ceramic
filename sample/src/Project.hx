@@ -17,6 +17,13 @@ class Project extends Entity {
 
     function new(settings:InitSettings) {
 
+#if editor
+
+        new editor.Editor(settings);
+        app.onceReady(editor, editor.start);
+
+#else
+
         settings.antialiasing = true;
         settings.background = 0x444444;
         settings.resizable = true;
@@ -26,6 +33,8 @@ class Project extends Entity {
         settings.targetDensity = 2;
 
         app.onceReady(this, ready);
+
+#end
 
     } //new
 

@@ -6,6 +6,14 @@ class Index {
 
     static function main():Void {
 
+        var Luxe = {
+            core: {
+                auto_render: true
+            }
+        };
+
+        Luxe.core.auto_render = true;
+
         // Better source map support for node
         var sourceMapSupport:Dynamic = js.Node.require('source-map-support');
         sourceMapSupport.install();

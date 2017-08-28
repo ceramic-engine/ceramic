@@ -1,4 +1,5 @@
 {
+    "window.title": "${activeEditorShort} — Ceramic Runtime",
     "haxe.displayConfigurations": [
         [
             "--cwd", "../sample", "completion.hxml"

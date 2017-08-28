@@ -5,6 +5,10 @@ import ceramic.Screen;
 import ceramic.Settings;
 import haxe.PosInfos;
 
+#if editor
+import editor.Editor;
+#end
+
 /** Shortcuts adds convenience identifiers to access ceramic app, screen, ...
     Use it by adding `import ceramic.Shortcuts.*;` in your files. */
 class Shortcuts {
@@ -24,6 +28,14 @@ class Shortcuts {
     /** Shared project instance */
     public static var project(get,never):Project;
     inline static function get_project():Project { return App.app.project; }
+
+#if editor
+
+    /** Shared editor instance */
+    public static var editor(get,never):Editor;
+    inline static function get_editor():Editor { return Editor.editor; }
+
+#end
 
     /** Log message */
     inline public static function log(value:Dynamic, ?pos:PosInfos) {

@@ -56,7 +56,7 @@ class Editable extends Component {
 
     public function select() {
 
-        project.send({
+        editor.send({
             type: 'set/ui.sceneTab',
             value: 'visuals'
         });
@@ -78,7 +78,7 @@ class Editable extends Component {
                 active = null;
 
                 // Set selected item
-                project.send({
+                editor.send({
                     type: 'set/ui.selectedItemId',
                     value: null
                 });
@@ -100,7 +100,7 @@ class Editable extends Component {
         app.onUpdate(this, update);
 
         // Set selected item
-        project.send({
+        editor.send({
             type: 'set/ui.selectedItemId',
             value: entity.id
         });
@@ -130,7 +130,7 @@ class Editable extends Component {
         var dragStartY = point.y;
 
         function onMove(info:TouchInfo) {
-            project.render();
+            editor.render();
 
             scene.screenToVisual(screen.pointerX, screen.pointerY, point);
             entity.x = entityStartX + point.x - dragStartX;
@@ -140,7 +140,7 @@ class Editable extends Component {
         screen.onMove(this, onMove);
 
         screen.onceUp(this, function(info) {
-            project.render();
+            editor.render();
 
             screen.offMove(onMove);
 
@@ -148,11 +148,11 @@ class Editable extends Component {
             entity.y = Math.round(entity.y);
 
             // Update pos on react side
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.x',
                 value: entity.x
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.y',
                 value: entity.y
             });
@@ -236,9 +236,9 @@ class Editable extends Component {
         }
 
         function onMove(info:TouchInfo) {
-            project.render();
+            editor.render();
             
-            if (project.xKeyPressed) {
+            if (editor.xKeyPressed) {
                 // Skew
                 var skewStep = 0.5;
                 var n = 0;
@@ -288,12 +288,12 @@ class Editable extends Component {
                 }
 
                 // Snap to `common` skews?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.skewX = Math.round(entity.skewX / 22.5) * 22.5;
                     highlight.wrapVisual(entity);
                 }
             }
-            else if (project.yKeyPressed) {
+            else if (editor.yKeyPressed) {
                 // Skew
                 var skewStep = 0.5;
                 var n = 0;
@@ -343,12 +343,12 @@ class Editable extends Component {
                 }
 
                 // Snap to `common` skews?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.skewY = Math.round(entity.skewY / 22.5) * 22.5;
                     highlight.wrapVisual(entity);
                 }
             }
-            else if (project.rKeyPressed) {
+            else if (editor.rKeyPressed) {
                 // Rotate
                 var rotateStep = 0.5;
                 var n = 0;
@@ -398,12 +398,12 @@ class Editable extends Component {
                 }
 
                 // Snap to `common` angles?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.rotation = Math.round(entity.rotation / 22.5) * 22.5;
                     highlight.wrapVisual(entity);
                 }
             }
-            else if (project.wKeyPressed) {
+            else if (editor.wKeyPressed) {
                 // Scale
                 var scaleStep = 0.1;
                 var n = 0;
@@ -454,13 +454,13 @@ class Editable extends Component {
                 }
 
                 // Round scales?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.scaleX = Math.round(entity.scaleX * 10) / 10;
                     highlight.wrapVisual(entity);
                 }
 
             }
-            else if (project.hKeyPressed) {
+            else if (editor.hKeyPressed) {
                 // Scale
                 var scaleStep = 0.1;
                 var n = 0;
@@ -511,7 +511,7 @@ class Editable extends Component {
                 }
 
                 // Round scales?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.scaleY = Math.round(entity.scaleY * 10) / 10;
                     highlight.wrapVisual(entity);
                 }
@@ -577,14 +577,14 @@ class Editable extends Component {
                 }
 
                 // Round scales?
-                if (project.shiftPressed) {
+                if (editor.shiftPressed) {
                     entity.scaleX = Math.round(entity.scaleX * 10) / 10;
                     entity.scaleY = Math.round(entity.scaleY * 10) / 10;
                     highlight.wrapVisual(entity);
                 }
 
                 // Keep aspect ratio?
-                if (project.aKeyPressed) {
+                if (editor.aKeyPressed) {
                     var bestScaleX = entity.scaleX;
                     entity.scaleX = bestScaleX;
                     entity.scaleY = bestScaleX * scaleRatio;
@@ -596,7 +596,7 @@ class Editable extends Component {
         screen.onMove(this, onMove);
 
         screen.onceUp(this, function(info) {
-            project.render();
+            editor.render();
 
             screen.offMove(onMove);
 
@@ -619,31 +619,31 @@ class Editable extends Component {
             entity.rotation = Math.round(rotation * 100) / 100.0;
 
             // Update pos & scale on react side
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.x',
                 value: entity.x
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.y',
                 value: entity.y
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.scaleX',
                 value: entity.scaleX
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.scaleY',
                 value: entity.scaleY
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.skewX',
                 value: entity.skewX
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.skewY',
                 value: entity.skewY
             });
-            project.send({
+            editor.send({
                 type: 'set/ui.selectedItem.rotation',
                 value: entity.rotation
             });

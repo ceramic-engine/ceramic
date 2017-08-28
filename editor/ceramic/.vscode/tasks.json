@@ -1,11 +1,16 @@
 {
-    "displayName": "▶︎ Build Web (debug)",
-    "description": "ceramic luxe build web --setup --assets --debug",
+    "displayName": "▶︎ Build Web (editor)",
+    "description": "ceramic luxe build web --setup --assets --debug --variant editor",
     "tasks": [
         {
             "taskName": "build",
             "command": "ceramic",
-            "isShellCommand": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
             "args": [
                 "luxe",
                 "build",
@@ -15,15 +20,17 @@
                 "--vscode-editor",
                 "--hxml-output",
                 "completion.hxml",
-                "--debug"
+                "--debug",
+                "--variant",
+                "editor"
             ],
-            "problemMatcher": "$haxe",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": "$haxe"
         }
     ],
     "version": "2.0.0",
-    "chooserIndex": 3
+    "chooserIndex": 8
 }
