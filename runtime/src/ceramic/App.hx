@@ -181,8 +181,12 @@ class App extends Entity {
 
         }
 
-        // Update visuals matrix and visibility
+        // Update visuals render target, matrix and visibility
         for (visual in visuals) {
+
+            if (visual.renderTargetDirty) {
+                visual.computeRenderTarget();
+            }
 
             if (visual.matrixDirty) {
                 visual.computeMatrix();

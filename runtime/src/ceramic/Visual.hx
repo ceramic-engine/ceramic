@@ -55,8 +55,33 @@ class Visual extends Entity {
         return matrixDirty;
     }
 
+    /** Setting this to true will force the visual's computed render target to be re-computed */
+    public var renderTargetDirty(default,set):Bool = true;
+    inline function set_renderTargetDirty(renderTargetDirty:Bool):Bool {
+        if (!this.renderTargetDirty && renderTargetDirty) {
+            this.renderTargetDirty = true;
+            if (children != null) {
+                for (child in children) {
+                    child.renderTargetDirty = true;
+                }
+            }
+        }
+        return renderTargetDirty;
+    }
+
     /** Setting this to true will force the visual to compute it's visility in hierarchy */
-    public var visibilityDirty:Bool = true;
+    public var visibilityDirty(default,set):Bool = true;
+    inline function set_visibilityDirty(visibilityDirty:Bool):Bool {
+        if (!this.visibilityDirty && visibilityDirty) {
+            this.visibilityDirty = true;
+            if (children != null) {
+                for (child in children) {
+                    child.visibilityDirty = true;
+                }
+            }
+        }
+        return visibilityDirty;
+    }
 
     /** If set, children will be sort by depth and their computed depth
         will be within range [parent.depth, parent.depth + childrenDepthRange] */
@@ -64,7 +89,13 @@ class Visual extends Entity {
 
     /** If set, the visual will be rendered into this target RenderTexture instance
         instead of being drawn onto screen directly. */
-    public var renderTarget:RenderTexture = null;
+    public var renderTarget(default,set):RenderTexture = null;
+    function set_renderTarget(renderTarget:RenderTexture):RenderTexture {
+        if (this.renderTarget == renderTarget) return renderTarget;
+        this.renderTarget = renderTarget;
+        matrixDirty = true;
+        return renderTarget;
+    }
 
     public var blending(default,set):Blending = Blending.NORMAL;
     function set_blending(blending:Blending):Blending {
@@ -230,6 +261,8 @@ class Visual extends Entity {
     public var computedAlpha:Float = 1;
 
     public var computedDepth:Float = 0;
+
+    public var computedRenderTarget:RenderTexture = null;
 
 /// Properties (Events)
 
@@ -428,22 +461,27 @@ class Visual extends Entity {
 
         } else {
 
-            // Concat matrix with screen transform
-            //
-            var m = screen.matrix;
-            
-            var a1 = _matrix.a * m.a + _matrix.b * m.c;
-            _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
-            _matrix.a = a1;
+            if (renderTargetDirty) computeRenderTarget();
 
-            var c1 = _matrix.c * m.a + _matrix.d * m.c;
-            _matrix.d = _matrix.c * m.b + _matrix.d * m.d;
+            if (computedRenderTarget == null) {
 
-            _matrix.c = c1;
+                // Concat matrix with screen transform
+                //
+                var m = screen.matrix;
+                
+                var a1 = _matrix.a * m.a + _matrix.b * m.c;
+                _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
+                _matrix.a = a1;
 
-            var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
-            _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
-            _matrix.tx = tx1;
+                var c1 = _matrix.c * m.a + _matrix.d * m.c;
+                _matrix.d = _matrix.c * m.b + _matrix.d * m.d;
+
+                _matrix.c = c1;
+
+                var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
+                _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
+                _matrix.tx = tx1;
+            }
 
         }
 
@@ -501,8 +539,11 @@ class Visual extends Entity {
         _matrix.identity();
         // Apply whole visual transform
         _matrix.setTo(a, b, c, d, tx, ty);
-        // But remove screen transform from it
-        _matrix.concat(screen.reverseMatrix);
+        // But remove screen transform from it if needed
+        if (renderTargetDirty) computeRenderTarget();
+        if (computedRenderTarget == null) {
+            _matrix.concat(screen.reverseMatrix);
+        }
         _matrix.invert();
 
         point.x = _matrix.transformX(x, y);
@@ -520,8 +561,11 @@ class Visual extends Entity {
         _matrix.identity();
         // Apply whole visual transform
         _matrix.setTo(a, b, c, d, tx, ty);
-        // But remove screen transform from it
-        _matrix.concat(screen.reverseMatrix);
+        // But remove screen transform from it if needed
+        if (renderTargetDirty) computeRenderTarget();
+        if (computedRenderTarget == null) {
+            _matrix.concat(screen.reverseMatrix);
+        }
 
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
@@ -574,6 +618,23 @@ class Visual extends Entity {
         visibilityDirty = false;
 
     } //computeVisibility
+
+/// RenderTarget (computed)
+
+    function computeRenderTarget() {
+
+        if (parent != null && parent.renderTargetDirty) {
+            parent.computeRenderTarget();
+        }
+
+        computedRenderTarget = renderTarget;
+        if (computedRenderTarget == null && parent != null && parent.computedRenderTarget != null) {
+            computedRenderTarget = parent.computedRenderTarget;
+        }
+        
+        renderTargetDirty = false;
+
+    } //computeRenderTarget
 
 /// Display
 
@@ -660,6 +721,9 @@ class Visual extends Entity {
         }
 
         visual.parent = this;
+        visual.visibilityDirty = true;
+        visual.matrixDirty = true;
+        visual.renderTargetDirty = true;
         if (children == null) {
             children = [];
         }
@@ -675,6 +739,9 @@ class Visual extends Entity {
 
         children.splice(children.indexOf(visual), 1);
         visual.parent = null;
+        visual.visibilityDirty = true;
+        visual.matrixDirty = true;
+        visual.renderTargetDirty = true;
 
     } //remove
 

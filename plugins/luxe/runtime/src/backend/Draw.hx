@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.RotateFrame;
+import backend.Textures.BatchedRenderTexture;
 
 using ceramic.Extensions;
 
@@ -55,7 +56,7 @@ class Draw implements spec.Draw {
             var geom = quadPool.unsafeGet(i);
             i++;
 
-            Luxe.renderer.batcher.remove(geom);
+            geom.batchers.unsafeGet(0).remove(geom);
 
         }
 
@@ -151,8 +152,31 @@ class Draw implements spec.Draw {
 
                         quadGeom = quadPool.unsafeGet(quadPoolIndex);
 
+                        // Add to correct batcher
                         if (quadPoolIndex >= batchedQuadPoolLength) {
-                            Luxe.renderer.batcher.add(quadGeom, true);
+                            if (quad.computedRenderTarget != null) {
+                                var renderTexture:BatchedRenderTexture = cast quad.computedRenderTarget.backendItem;
+                                renderTexture.targetBatcher.add(quadGeom, true);
+                            }
+                            else {
+                                Luxe.renderer.batcher.add(quadGeom, true);
+                            }
+                        }
+                        // Or if already added, change the batcher if needed
+                        else if (quad.computedRenderTarget != null) {
+                            var renderTexture:BatchedRenderTexture = cast quad.computedRenderTarget.backendItem;
+                            var prevBatcher = quadGeom.batchers.unsafeGet(0);
+                            if (prevBatcher != renderTexture.targetBatcher) {
+                                prevBatcher.remove(quadGeom);
+                                renderTexture.targetBatcher.add(quadGeom, true);
+                            }
+                        }
+                        else {
+                            var prevBatcher = quadGeom.batchers.unsafeGet(0);
+                            if (prevBatcher != Luxe.renderer.batcher) {
+                                prevBatcher.remove(quadGeom);
+                                Luxe.renderer.batcher.add(quadGeom, true);
+                            }
                         }
 
                     }
@@ -162,7 +186,14 @@ class Draw implements spec.Draw {
                         quadPool.push(quadGeom);
                         quadPoolLength++;
 
-                        Luxe.renderer.batcher.add(quadGeom, true);
+                        // Add to correct batcher
+                        if (quad.computedRenderTarget != null) {
+                            var renderTexture:BatchedRenderTexture = cast quad.computedRenderTarget.backendItem;
+                            renderTexture.targetBatcher.add(quadGeom, true);
+                        }
+                        else {
+                            Luxe.renderer.batcher.add(quadGeom, true);
+                        }
 
                     }
                     quadPoolIndex++;
@@ -275,8 +306,31 @@ class Draw implements spec.Draw {
 
                         meshGeom = meshPool.unsafeGet(meshPoolIndex);
                         
+                        // Add to correct batcher
                         if (meshPoolIndex >= batchedMeshPoolLength) {
-                            Luxe.renderer.batcher.add(meshGeom, true);
+                            if (mesh.computedRenderTarget != null) {
+                                var renderTexture:BatchedRenderTexture = cast mesh.computedRenderTarget.backendItem;
+                                renderTexture.targetBatcher.add(meshGeom, true);
+                            }
+                            else {
+                                Luxe.renderer.batcher.add(meshGeom, true);
+                            }
+                        }
+                        // Or if already added, change the batcher if needed
+                        else if (mesh.computedRenderTarget != null) {
+                            var renderTexture:BatchedRenderTexture = cast mesh.computedRenderTarget.backendItem;
+                            var prevBatcher = meshGeom.batchers.unsafeGet(0);
+                            if (prevBatcher != renderTexture.targetBatcher) {
+                                prevBatcher.remove(meshGeom);
+                                renderTexture.targetBatcher.add(meshGeom, true);
+                            }
+                        }
+                        else {
+                            var prevBatcher = meshGeom.batchers.unsafeGet(0);
+                            if (prevBatcher != Luxe.renderer.batcher) {
+                                prevBatcher.remove(meshGeom);
+                                Luxe.renderer.batcher.add(meshGeom, true);
+                            }
                         }
 
                     }
@@ -288,7 +342,14 @@ class Draw implements spec.Draw {
                         meshPool.push(meshGeom);
                         meshPoolLength++;
 
-                        Luxe.renderer.batcher.add(meshGeom, true);
+                        // Add to correct batcher
+                        if (mesh.computedRenderTarget != null) {
+                            var renderTexture:BatchedRenderTexture = cast mesh.computedRenderTarget.backendItem;
+                            renderTexture.targetBatcher.add(meshGeom, true);
+                        }
+                        else {
+                            Luxe.renderer.batcher.add(meshGeom, true);
+                        }
 
                     }
                     meshPoolIndex++;
