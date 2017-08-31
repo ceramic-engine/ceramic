@@ -111,6 +111,7 @@ class Asset extends Entity {
                 case 'image': app.backend.info.imageExtensions();
                 case 'text': app.backend.info.textExtensions();
                 case 'sound': app.backend.info.soundExtensions();
+                case 'shader': app.backend.info.shaderExtensions();
                 case 'font': ['fnt'];
                 default: null;
             }
@@ -663,6 +664,50 @@ class SoundAsset extends Asset {
 
 } //SoundAsset
 
+class ShaderAsset extends Asset {
+
+    public var shader:Shader = null;
+
+    override public function new(name:String, ?options:AssetOptions) {
+
+        super('shader', name, options);
+
+    } //name
+
+    override public function load() {
+
+        status = LOADING;
+        log('Load shader $path');
+        app.backend.shaders.load(path, { fragId: options.fragId, vertId: options.vertId, noDefaultUniforms: options.noDefaultUniforms }, function(shader) {
+
+            if (shader != null) {
+                this.shader = new Shader(shader);
+                this.shader.asset = this;
+                status = READY;
+                emitComplete(true);
+            }
+            else {
+                status = BROKEN;
+                error('Failed to load shader at path: $path');
+                emitComplete(false);
+            }
+
+        });
+
+    } //load
+
+    function destroy():Void {
+
+        if (shader != null) {
+            shader.destroy();
+            shader = null;
+        }
+
+    } //destroy
+
+
+} //SoundAsset
+
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('image'))
 #end
@@ -682,6 +727,11 @@ class Sounds {}
 @:build(ceramic.macros.AssetsMacro.buildNames('font'))
 #end
 class Fonts {}
+
+#if !macro
+@:build(ceramic.macros.AssetsMacro.buildNames('shader'))
+#end
+class Shaders {}
 
 class AssetPathInfo {
 
@@ -818,6 +868,7 @@ class Assets extends Entity {
             case 'text': addText(name, options);
             case 'sound': addSound(name, options);
             case 'font': addFont(name, options);
+            case 'shader': addShader(name, options);
             default:
                 if (customAssetKinds != null && customAssetKinds.exists(kind)) {
                     customAssetKinds.get(kind).add(this, name, options);
@@ -855,6 +906,13 @@ class Assets extends Entity {
         addAsset(new SoundAsset(name, options));
 
     } //addSound
+
+    public function addShader(name:String, ?options:AssetOptions):Void {
+        
+        if (name.startsWith('shader:')) name = name.substr(6);
+        addAsset(new ShaderAsset(name, options));
+
+    } //addShader
 
     /** Add the given asset. If a previous asset was replaced, return it. */
     public function addAsset(asset:Asset):Asset {
@@ -1022,6 +1080,19 @@ class Assets extends Entity {
         return asset.text;
 
     } //text
+
+    public function shader(name:Either<String,AssetId>):Shader {
+
+        var realName:String = cast name;
+        if (realName.startsWith('shader:')) realName = realName.substr(6);
+        
+        if (!assetsByKindAndName.exists('shader')) return null;
+        var asset:ShaderAsset = cast assetsByKindAndName.get('shader').get(realName);
+        if (asset == null) return null;
+
+        return asset.shader;
+
+    } //shader
 
 /// Iterator
 

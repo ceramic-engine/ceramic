@@ -12,4 +12,6 @@ interface Info {
 
     function soundExtensions():Array<String>;
 
+    function shaderExtensions():Array<String>;
+
 } //Info

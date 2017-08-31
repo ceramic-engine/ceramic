@@ -18,4 +18,8 @@ class Info implements spec.Info {
         return ['ogg', 'wav'];
     }
 
+    inline public function shaderExtensions():Array<String> {
+        return ['glsl'];
+    }
+
 } //Info

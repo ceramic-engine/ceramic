@@ -4,7 +4,7 @@ import backend.Audio;
 
 interface Audio {
 
-    function load(name:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void;
+    function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void;
 
     function destroy(audio:AudioResource):Void;
 

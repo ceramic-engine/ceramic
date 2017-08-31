@@ -106,7 +106,7 @@ class Draw implements spec.Draw {
         var rect = new luxe.Rectangle();
 
         var mesh:ceramic.Mesh;
-        var color:ceramic.AlphaColor;
+        var color:ceramic.AlphaColor = 0xFFFFFFFF;
         var vertex:phoenix.geometry.Vertex;
 
         var r:Float;
@@ -403,12 +403,20 @@ class Draw implements spec.Draw {
                         }
                     }
 
+                    var singleColor = mesh.colorMapping == MESH;
+                    var indicesColor = mesh.colorMapping == INDICES;
+                    if (singleColor) {
+                        color = colors.unsafeGet(0);
+                    }
+
                     while (i < len) {
 
                         j = indices.unsafeGet(i);
                         x = vertices.unsafeGet(j * 2);
                         y = vertices.unsafeGet(j * 2 + 1);
-                        color = colors.unsafeGet(j);
+                        if (!singleColor) {
+                            color = indicesColor ? colors.unsafeGet(j) : colors.unsafeGet(i);
+                        }
 
                         // Update color
                         r = color.redFloat;

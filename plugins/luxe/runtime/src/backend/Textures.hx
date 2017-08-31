@@ -17,7 +17,7 @@ class BatchedRenderTexture extends phoenix.RenderTexture {
 
     public var targetBatcher:phoenix.Batcher = null;
 
-    public var batcherClearColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
+    public var batcherClearColor = new phoenix.Color(1.0, 1.0, 1.0, 1.0);
 
     public function new(_options:RenderTextureOptions) {
 
@@ -27,7 +27,9 @@ class BatchedRenderTexture extends phoenix.RenderTexture {
             name: 'batcher:' + _options.id
         });
         targetBatcher.on(prerender, targetBatcherBefore);
-        targetBatcher.on(postrender, targetBatcherBefore);
+        targetBatcher.on(postrender, targetBatcherAfter);
+        targetBatcher.view.transform.scale.y = -1;
+        targetBatcher.view.viewport = new luxe.Rectangle(0, 0, _options.width, _options.height);
 
     } //new
 
@@ -45,7 +47,7 @@ class BatchedRenderTexture extends phoenix.RenderTexture {
     function targetBatcherBefore(_) {
 
         Luxe.renderer.target = this;
-        Luxe.renderer.clear(batcherClearColor);
+        Luxe.renderer.clear(new phoenix.Color().rgb(0xff4b03));
 
     } //targetBatcherBefore
 

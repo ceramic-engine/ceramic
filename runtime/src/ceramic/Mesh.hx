@@ -1,7 +1,20 @@
 package ceramic;
 
+@:enum abstract MeshColorMapping(Int) {
+    /** Map a single color to the whole mesh. */
+    var MESH = 0;
+    /** Map a color to each indice. */
+    var INDICES = 1;
+    /** Map a color to each vertex. */
+    var VERTICES = 2;
+}
+
 /** Draw anything composed of triangles/vertices. */
 class Mesh extends Visual {
+
+/// Settings
+
+    public var colorMapping:MeshColorMapping = MESH;
 
 /// Vertices
 

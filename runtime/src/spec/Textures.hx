@@ -4,7 +4,9 @@ import backend.Textures;
 
 interface Textures {
 
-    function load(name:String, ?options:LoadTextureOptions, done:Texture->Void):Void;  
+    function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void;
+
+    function createRenderTexture(width:Int, height:Int):Texture;
     
     function destroy(texture:Texture):Void;
 

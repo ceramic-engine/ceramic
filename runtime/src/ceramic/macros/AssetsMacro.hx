@@ -33,6 +33,7 @@ class AssetsMacro {
             case 'image': backendInfo.imageExtensions();
             case 'text': backendInfo.textExtensions();
             case 'sound': backendInfo.soundExtensions();
+            case 'shader': backendInfo.shaderExtensions();
             case 'font': ['fnt'];
             default: [];
         });
