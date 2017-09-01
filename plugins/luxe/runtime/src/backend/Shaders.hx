@@ -24,6 +24,21 @@ class Shaders implements spec.Shaders {
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
+        var dir = path;
+
+        var fragId = options.fragId != null ? options.fragId : 'default';
+        var vertId = options.vertId != null ? options.vertId : 'default';
+
+        path += '/[' + fragId + ',' + vertId + ']';
+
+        if (fragId != 'default') {
+            fragId = Path.join([dir, fragId]);
+        }
+
+        if (vertId != 'default') {
+            vertId = Path.join([dir, vertId]);
+        }
+
         if (loadedShaders.exists(path)) {
             loadedShadersRetainCount.set(path, loadedShadersRetainCount.get(path) + 1);
             var existing = Luxe.resources.shader(path);
@@ -34,24 +49,6 @@ class Shaders implements spec.Shaders {
             }
             return;
         }
-
-        var dir = Path.directory(path);
-
-        var fragId = options.fragId != null ? options.fragId : 'default';
-        if (fragId != 'default') {
-            fragId = Path.join([dir, fragId + '.glsl']);
-        }
-
-        var vertId = options.vertId != null ? options.vertId : 'default';
-        if (vertId != null && vertId != 'default') {
-            vertId = Path.join([dir, vertId + '.glsl']);
-        }
-
-        trace({
-            frag_id: fragId,
-            vert_id: vertId,
-            no_default_uniforms: options.noDefaultUniforms
-        });
 
         Luxe.resources.load_shader(path, {
             frag_id: fragId,

@@ -6,6 +6,8 @@ import ceramic.AlphaColor;
 import ceramic.Texture;
 import ceramic.Shortcuts.*;
 
+using StringTools;
+
 class Shader extends Entity {
 
     public var backendItem:backend.Shaders.Shader;
@@ -78,5 +80,26 @@ class Shader extends Entity {
         app.backend.shaders.setTexture(backendItem, name, texture.backendItem);
 
     } //setTexture
+
+/// Print
+
+    function toString():String {
+
+        if (id != null) {
+            var name = id;
+            if (name.startsWith('shader:')) name = name.substr(7);
+            if (asset != null && asset.options.vertId != null || asset.options.fragId != null) {
+                var vertId = asset.options.vertId != null ? asset.options.vertId : 'default';
+                var fragId = asset.options.fragId != null ? asset.options.fragId : 'default';
+                return 'Shader($name $vertId $fragId)';
+            }
+            else {
+                return 'Shader($name)';
+            }
+        } else {
+            return 'Shader()';
+        }
+
+    } //toString
 
 } //Shader

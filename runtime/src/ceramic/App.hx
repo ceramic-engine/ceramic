@@ -97,9 +97,6 @@ class App extends Entity {
         }
 
         assets.add(Fonts.ARIAL_20);
-        assets.add(Shaders.FXAA, {
-            fragId: 'fxaa'
-        });
         assets.onceComplete(this, function(success) {
 
             if (success) {

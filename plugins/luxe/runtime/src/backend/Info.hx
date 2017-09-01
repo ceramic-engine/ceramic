@@ -19,7 +19,7 @@ class Info implements spec.Info {
     }
 
     inline public function shaderExtensions():Array<String> {
-        return ['glsl'];
+        return ['glsl', 'frag', 'vert'];
     }
 
 } //Info

@@ -5,6 +5,8 @@ import ceramic.BitmapFont;
 import ceramic.Either;
 import ceramic.Shortcuts.*;
 
+import haxe.io.Path;
+
 using StringTools;
 
 typedef AssetOptions = Dynamic;
@@ -267,7 +269,7 @@ class Asset extends Entity {
 
         var className = className();
 
-        if (path != null) {
+        if (path != null && path.trim() != '') {
             return '$className($name $path)';
         } else {
             return '$className($name)';
@@ -677,8 +679,42 @@ class ShaderAsset extends Asset {
     override public function load() {
 
         status = LOADING;
-        log('Load shader $path');
-        app.backend.shaders.load(path, { fragId: options.fragId, vertId: options.vertId, noDefaultUniforms: options.noDefaultUniforms }, function(shader) {
+        
+        // Compute vertex and fragment shader paths
+        if (path != null && (path.toLowerCase().endsWith('.frag') || path.toLowerCase().endsWith('.vert'))) {
+            var paths = Assets.allByName.get(name);
+            if (options.fragId == null) {
+                for (path in paths) {
+                    if (path.toLowerCase().endsWith('.frag')) {
+                        options.fragId = path;
+                        break;
+                    }
+                }
+            }
+            if (options.vertId == null) {
+                for (path in paths) {
+                    if (path.toLowerCase().endsWith('.vert')) {
+                        options.vertId = path;
+                        break;
+                    }
+                }
+            }
+
+            if (options.fragId != null || options.vertId != null) {
+                path = Path.directory(path);
+            }
+
+            log('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
+        }
+        else {
+            log('Load shader $path');
+        }
+
+        app.backend.shaders.load(path, {
+            fragId: options.fragId,
+            vertId: options.vertId,
+            noDefaultUniforms: options.noDefaultUniforms
+        }, function(shader) {
 
             if (shader != null) {
                 this.shader = new Shader(shader);
@@ -705,8 +741,26 @@ class ShaderAsset extends Asset {
 
     } //destroy
 
+/// Print
 
-} //SoundAsset
+    function toString():String {
+
+        var className = 'ShaderAsset';
+
+        if (options.vertId != null || options.fragId != null) {
+            var vertId = options.vertId != null ? options.vertId : 'default';
+            var fragId = options.fragId != null ? options.fragId : 'default';
+            return '$className($name $vertId $fragId)';
+        }
+        else if (path != null && path.trim() != '') {
+            return '$className($name $path)';
+        } else {
+            return '$className($name)';
+        }
+
+    } //toString
+
+} //ShaderAsset
 
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('image'))
@@ -909,7 +963,7 @@ class Assets extends Entity {
 
     public function addShader(name:String, ?options:AssetOptions):Void {
         
-        if (name.startsWith('shader:')) name = name.substr(6);
+        if (name.startsWith('shader:')) name = name.substr(7);
         addAsset(new ShaderAsset(name, options));
 
     } //addShader
@@ -1084,7 +1138,7 @@ class Assets extends Entity {
     public function shader(name:Either<String,AssetId>):Shader {
 
         var realName:String = cast name;
-        if (realName.startsWith('shader:')) realName = realName.substr(6);
+        if (realName.startsWith('shader:')) realName = realName.substr(7);
         
         if (!assetsByKindAndName.exists('shader')) return null;
         var asset:ShaderAsset = cast assetsByKindAndName.get('shader').get(realName);

@@ -240,6 +240,9 @@ class Visual extends Entity {
         return transform;
     }
 
+    /** Assign a shader to this visual. */
+    public var shader:Shader = null;
+
 /// Properties (Matrix)
 
     public var a:Float = 1;

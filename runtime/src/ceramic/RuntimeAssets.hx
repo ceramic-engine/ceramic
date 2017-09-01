@@ -58,6 +58,7 @@ class RuntimeAssets {
             case 'image': app.backend.info.imageExtensions();
             case 'text': app.backend.info.textExtensions();
             case 'sound': app.backend.info.soundExtensions();
+            case 'shader': app.backend.info.shaderExtensions();
             case 'font': ['fnt'];
             default: [];
         });

@@ -1,45 +1,7 @@
-/**
-Basic FXAA implementation based on the code on geeks3d.com with the
-modification that the texture2DLod stuff was removed since it's
-unsupported by WebGL.
-
---
-
-From:
-https://github.com/mitsuhiko/webgl-meincraft
-
-Copyright (c) 2011 by Armin Ronacher.
-
-Some rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-
-    * The names of the contributors may not be used to endorse or
-      promote products derived from this software without specific
-      prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+uniform sampler2D tex0;
+uniform vec2 u_resolution;
+varying vec2 tcoord;
+varying vec4 color;
 
 #ifdef GL_ES
 precision mediump float;
@@ -56,11 +18,6 @@ precision mediump float;
 #ifndef FXAA_SPAN_MAX
     #define FXAA_SPAN_MAX     8.0
 #endif
-
-uniform vec2 resolution;
-uniform sampler2D tex0;
-varying vec2 tcoord;
-varying vec4 color;
 
 //optimized version for mobile, where dependent 
 //texture reads can be a bottleneck
@@ -112,7 +69,37 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
     return color;
 }
 
-void main() {
-	vec2 fragCoord = gl_FragCoord.xy;
-	gl_FragColor = fxaa(tex0, fragCoord, resolution);
+void texcoords(vec2 fragCoord, vec2 resolution,
+			out vec2 v_rgbNW, out vec2 v_rgbNE,
+			out vec2 v_rgbSW, out vec2 v_rgbSE,
+			out vec2 v_rgbM) {
+	vec2 inverseVP = 1.0 / resolution.xy;
+	v_rgbNW = (fragCoord + vec2(-1.0, -1.0)) * inverseVP;
+	v_rgbNE = (fragCoord + vec2(1.0, -1.0)) * inverseVP;
+	v_rgbSW = (fragCoord + vec2(-1.0, 1.0)) * inverseVP;
+	v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * inverseVP;
+	v_rgbM = vec2(fragCoord * inverseVP);
+}
+
+vec4 apply(sampler2D tex, vec2 fragCoord, vec2 resolution) {
+	mediump vec2 v_rgbNW;
+	mediump vec2 v_rgbNE;
+	mediump vec2 v_rgbSW;
+	mediump vec2 v_rgbSE;
+	mediump vec2 v_rgbM;
+
+	//compute the texture coords
+	texcoords(fragCoord, resolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);
+	
+	//compute FXAA
+	return fxaa(tex, fragCoord, resolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);
+}
+
+void main() { 
+    vec2 fragCoord = tcoord * u_resolution;
+    
+    //vec4 texcolor = texture2D(tex0, tcoord);
+    vec4 texcolor = apply(tex0, fragCoord, u_resolution);
+
+    gl_FragColor = color * texcolor;
 }

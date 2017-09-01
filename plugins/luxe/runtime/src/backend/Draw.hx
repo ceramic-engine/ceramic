@@ -152,6 +152,15 @@ class Draw implements spec.Draw {
 
                         quadGeom = quadPool.unsafeGet(quadPoolIndex);
 
+                        // Assign custom shader (if any)
+                        if (quad.shader != null) {
+                            if (quadGeom.shader != quad.shader.backendItem) {
+                                quadGeom.shader = quad.shader.backendItem;
+                            }
+                        } else if (quadGeom.shader != null) {
+                            quadGeom.shader = null;
+                        }
+
                         // Add to correct batcher
                         if (quadPoolIndex >= batchedQuadPoolLength) {
                             if (quad.computedRenderTarget != null) {
@@ -185,6 +194,11 @@ class Draw implements spec.Draw {
                         quadGeom = new phoenix.geometry.QuadGeometry({});
                         quadPool.push(quadGeom);
                         quadPoolLength++;
+
+                        // Assign custom shader (if any)
+                        if (quad.shader != null) {
+                            quadGeom.shader = quad.shader.backendItem;
+                        }
 
                         // Add to correct batcher
                         if (quad.computedRenderTarget != null) {
