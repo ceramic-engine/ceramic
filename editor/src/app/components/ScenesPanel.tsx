@@ -87,16 +87,16 @@ import { project } from 'app/model';
                     <Title>Selected scene</Title>
                     <Alt>
                         <Form>
-                            <Field label="name">
+                            <Field label="Name">
                                 <TextInput value={selectedScene.name} onChange={(val) => { selectedScene.name = val; }} />
                             </Field>
-                            <Field label="width">
+                            <Field label="Width">
                                 <NumberInput value={selectedScene.width} onChange={(val) => { selectedScene.width = val; }} />
                             </Field>
-                            <Field label="height">
+                            <Field label="Height">
                                 <NumberInput value={selectedScene.height} onChange={(val) => { selectedScene.height = val; }} />
                             </Field>
-                            <Field label="bundle">
+                            <Field label="Bundle">
                                 <SelectInput
                                     empty={0}
                                     selected={sceneBundleIndex}
@@ -114,7 +114,7 @@ import { project } from 'app/model';
                     <Title>Scene bundles</Title>
                     <Alt>
                         <Form>
-                            <Field label="custom bundles">
+                            <Field label="Custom bundles">
                                 <TextInput
                                     multiline={true}
                                     separator={','}

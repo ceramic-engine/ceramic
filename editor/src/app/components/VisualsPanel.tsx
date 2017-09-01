@@ -153,7 +153,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     {
                                         selectedQuad != null ?
                                         <div className="visual-extra-options">
-                                            <Field label="texture">
+                                            <Field label="Texture">
                                                 <SelectInput
                                                     empty={0}
                                                     selected={quadTextureIndex}
@@ -163,7 +163,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                     }}
                                                 />
                                             </Field>
-                                            <Field label="color">
+                                            <Field label="Color">
                                                 <ColorInput value={selectedQuad.hexColor} onChange={(val) => { selectedQuad.setHexColor(val); }} />
                                             </Field>
                                         </div>
@@ -173,10 +173,10 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     {
                                         selectedText != null ?
                                         <div className="visual-extra-options">
-                                            <Field label="content">
+                                            <Field label="Content">
                                                 <TextInput multiline={true} value={selectedText.content} onChange={(val:string) => { selectedText.content = val; }} />
                                             </Field>
-                                            <Field label="align">
+                                            <Field label="Align">
                                                 <SelectInput
                                                     selected={textAlignIndex}
                                                     options={textAlignList}
@@ -185,16 +185,16 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                     }}
                                                 />
                                             </Field>
-                                            <Field label="pointSize">
+                                            <Field label="Point Size">
                                                 <NumberInput value={selectedText.pointSize} onChange={(val) => { selectedText.pointSize = val; }} />
                                             </Field>
-                                            <Field label="lineHeight">
+                                            <Field label="Line Height">
                                                 <NumberInput value={selectedText.lineHeight} onChange={(val) => { selectedText.lineHeight = val; }} />
                                             </Field>
-                                            <Field label="letterSpacing">
+                                            <Field label="Letter Spacing">
                                                 <NumberInput value={selectedText.letterSpacing} onChange={(val) => { selectedText.letterSpacing = val; }} />
                                             </Field>
-                                            <Field label="font">
+                                            <Field label="Font">
                                                 <SelectInput
                                                     empty={0}
                                                     selected={textFontIndex}
@@ -204,67 +204,67 @@ import FaLock from 'react-icons/lib/fa/lock';
                                                     }}
                                                 />
                                             </Field>
-                                            <Field label="color">
+                                            <Field label="Color">
                                                 <ColorInput value={selectedText.hexColor} onChange={(val) => { selectedText.setHexColor(val); }} />
                                             </Field>
                                         </div>
                                         :
                                             null
                                     }
-                                    <Field label="name">
+                                    <Field label="Name">
                                         <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />
                                     </Field>
                                     {
                                         allowExplicitSizes ?
                                         <div>
-                                            <Field label="width">
+                                            <Field label="Width">
                                                 <NumberInput disabled={false} value={selectedVisual['explicitWidth']} onChange={(val) => { selectedVisual['explicitWidth'] = val; }} />
                                             </Field>
-                                            <Field label="height">
+                                            <Field label="Height">
                                                 <NumberInput disabled={false} value={selectedVisual['explicitHeight']} onChange={(val) => { selectedVisual['explicitHeight'] = val; }} />
                                             </Field>
                                         </div>
                                         :
                                         <div>
-                                            <Field label="width">
+                                            <Field label="Width">
                                                 <NumberInput disabled={true} value={selectedVisual.width} />
                                             </Field>
-                                            <Field label="height">
+                                            <Field label="Height">
                                                 <NumberInput disabled={true} value={selectedVisual.height} />
                                             </Field>
                                         </div>
                                     }
-                                    <Field label="scaleX">
+                                    <Field label="Scale X">
                                         <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />
                                     </Field>
-                                    <Field label="scaleY">
+                                    <Field label="Scale Y">
                                         <NumberInput value={selectedVisual.scaleY} onChange={(val) => { selectedVisual.scaleY = val; }} />
                                     </Field>
-                                    <Field label="x">
+                                    <Field label="X">
                                         <NumberInput value={selectedVisual.x} onChange={(val) => { selectedVisual.x = val; }} />
                                     </Field>
-                                    <Field label="y">
+                                    <Field label="Y">
                                         <NumberInput value={selectedVisual.y} onChange={(val) => { selectedVisual.y = val; }} />
                                     </Field>
-                                    <Field label="anchorX">
+                                    <Field label="Anchor X">
                                         <NumberInput value={selectedVisual.anchorX} onChange={(val) => { selectedVisual.anchorX = val; }} />
                                     </Field>
-                                    <Field label="anchorY">
+                                    <Field label="Anchor Y">
                                         <NumberInput value={selectedVisual.anchorY} onChange={(val) => { selectedVisual.anchorY = val; }} />
                                     </Field>
-                                    <Field label="rotation">
+                                    <Field label="Rotation">
                                         <NumberInput value={selectedVisual.rotation} onChange={(val) => { selectedVisual.rotation = val; }} />
                                     </Field>
-                                    <Field label="skewX">
+                                    <Field label="Skew X">
                                         <NumberInput value={selectedVisual.skewX} onChange={(val) => { selectedVisual.skewX = val; }} />
                                     </Field>
-                                    <Field label="skewY">
+                                    <Field label="Skew Y">
                                         <NumberInput value={selectedVisual.skewY} onChange={(val) => { selectedVisual.skewY = val; }} />
                                     </Field>
-                                    <Field label="depth">
+                                    <Field label="Depth">
                                         <NumberInput value={selectedVisual.depth} onChange={(val) => { selectedVisual.depth = val; }} />
                                     </Field>
-                                    <Field label="alpha">
+                                    <Field label="Alpha">
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
                                     </Field>
                                 </Form>

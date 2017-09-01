@@ -16,7 +16,7 @@ class UiState extends Model {
 
     @observe addVisual:boolean;
     
-    @observe editSettings:boolean;
+    @observe @serialize editSettings:boolean;
 
 /// Properties (selected)
 

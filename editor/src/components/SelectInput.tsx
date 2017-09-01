@@ -9,6 +9,8 @@ class SelectInput extends React.Component {
         selected:number,
         /** Empty index */
         empty?:number,
+        /** Width */
+        size?:"large",
         /** Options */
         options:Array<string>,
         /** onChange */
@@ -24,6 +26,11 @@ class SelectInput extends React.Component {
             className += ' empty';
         }
 
+        let styles:any = {};
+        if (this.props.size === 'large') {
+            styles.width = 300;
+        }
+
         return (
             <div className={className}>
                 <select
@@ -32,6 +39,7 @@ class SelectInput extends React.Component {
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
+                    style={styles}
                     ref={(el) => { this.inputElement = el; }}
                 >
                     {this.props.options.map((opt, i) =>

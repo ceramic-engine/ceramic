@@ -95,6 +95,23 @@ class Project extends Model {
         }
 
     } //absoluteAssetsPath
+    
+    @compute get absoluteEditorPath():string {
+
+        let path = this.editorPath;
+
+        if (!path) return null;
+
+        if (isAbsolute(path)) return path;
+
+        if (!this.path) {
+            return null;
+        }
+        else {
+            return normalize(join(dirname(this.path), path));
+        }
+
+    } //absoluteEditorPath
 
     @compute get cwd():string {
 
@@ -265,7 +282,44 @@ class Project extends Model {
 
         let path = files.chooseDirectory();
         if (path != null) {
-            this.assetsPath = path;
+            this.setAssetsPath(path);
+        }
+
+    } //chooseAssetsPath
+
+    @action setAssetsPath(path:string) {
+
+        let projectDir = normalize(dirname(this.path));
+        let assetsDir = normalize(path);
+        
+        if (projectDir === assetsDir) {
+            this.assetsPath = '.';
+        } else {
+            let res = relative(projectDir, assetsDir);
+            if (!res.startsWith('.')) res = './' + res;
+            this.assetsPath = res;
+        }
+
+    }
+
+    @action setEditorPath(path:string) {
+        
+        if (path) {
+
+            let projectDir = normalize(dirname(this.path));
+            let editorDir = normalize(path);
+            
+            if (projectDir === editorDir) {
+                this.editorPath = '.';
+            } else {
+                let res = relative(projectDir, editorDir);
+                if (!res.startsWith('.')) res = './' + res;
+                this.editorPath = res;
+            }
+            
+        }
+        else {
+            this.editorPath = null;
         }
 
     } //chooseAssetsPath
@@ -426,23 +480,20 @@ class Project extends Model {
             // Keep current absolute assets path
             let assetsPath = this.absoluteAssetsPath;
 
+            // Keep current absolut editor path
+            let editorPath = this.absoluteEditorPath;
+
             // Update project path
             user.projectPath = path;
 
             // Update assets path (make it relative to new project path)
             if (assetsPath) {
+                this.setAssetsPath(assetsPath);
+            }
 
-                let projectDir = normalize(dirname(path));
-                let assetsDir = normalize(assetsPath);
-                
-                if (projectDir === assetsDir) {
-                    this.assetsPath = '.';
-                } else {
-                    let res = relative(projectDir, assetsDir);
-                    if (!res.startsWith('.')) res = './' + res;
-                    this.assetsPath = res;
-                }
-            
+            // Update editor path as well
+            if (editorPath) {
+                this.setEditorPath(editorPath);
             }
 
             // Set project name from file path

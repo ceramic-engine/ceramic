@@ -15,32 +15,33 @@ import { homedir } from 'os';
     render() {
 
         let editorsList = ['default'];
+        editorsList.push('choose');
         if (project.editorPath) {
-            let displayPath = project.editorPath;
+            let displayPath = project.absoluteEditorPath;
             if (displayPath.startsWith(homedir())) {
                 displayPath = '~' + displayPath.substr(homedir().length);
             }
             editorsList.push(displayPath);
         }
-        editorsList.push('choose');
 
         return (
             <Overlay>
-                <Dialog title="Settings">
+                <Dialog title="Settings" width={600}>
                     <Form>
-                        <Field label="editor canvas">
+                        <Field label="Editor canvas">
                             <SelectInput
+                                size="large"
                                 empty={0}
-                                selected={project.editorPath ? 1 : 0}
+                                selected={project.editorPath ? 2 : 0}
                                 options={editorsList}
                                 onChange={(selected) => {
                                     if (selected === 0) {
                                         project.editorPath = null;
                                     }
-                                    else if (!project.editorPath || selected === 2) {
+                                    else if (!project.editorPath || selected === 1) {
                                         let path = files.chooseDirectory('Editor Canvas Directory');
                                         if (path && fs.existsSync(path)) {
-                                            project.editorPath = path;
+                                            project.setEditorPath(path);
                                         }
                                     }
                                 }}
