@@ -11,6 +11,13 @@ class User extends Model {
     /** Whether current project is dirty (has unsaved changes) or not */
     @observe @serialize projectDirty:boolean = true;
 
+/// Github access
+    
+    /** Github personal access token */
+    @observe @serialize githubToken?:string;
+
+/// Internal
+
     private ignoreProjectChanges = false;
 
 /// Lifecycle

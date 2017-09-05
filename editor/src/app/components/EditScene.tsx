@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'utils';
 import { Center, Tabs, Form, Panel, Title, NumberInput, Field, Button, Alt } from 'components';
-import { Ceramic, AssetInfo, VisualsPanel, ScenesPanel, AssetsPanel } from 'app/components';
+import { Ceramic, AssetInfo, VisualsPanel, ScenesPanel, AssetsPanel, StatusBar } from 'app/components';
 import { project } from 'app/model';
 import { context } from 'app/context';
 
@@ -22,7 +22,6 @@ import { context } from 'app/context';
 
     render() {
 
-        let statusHeight = 16;
         let tabHeight = 28;
         let scene = project.ui.selectedScene;
 
@@ -105,7 +104,7 @@ import { context } from 'app/context';
                 <div
                     style={{
                         width: this.props.width - 300,
-                        height: this.props.height - statusHeight,
+                        height: this.props.height - StatusBar.statusHeight,
                         position: 'absolute',
                         left: 0,
                         top: 0
@@ -115,15 +114,9 @@ import { context } from 'app/context';
                         <Ceramic />
                     </Center>
                 </div>
-                <div
-                    className="statusbar"
-                    style={{
-                        width: this.props.width - 300,
-                        height: statusHeight - 1,
-                        position: 'absolute',
-                        left: 0,
-                        top: this.props.height - statusHeight
-                    }}
+                <StatusBar
+                    width={this.props.width - 300}
+                    top={this.props.height - StatusBar.statusHeight}
                 />
             </div>
         );

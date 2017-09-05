@@ -1,6 +1,10 @@
-import { observe, ceramic, serialize } from 'utils';
+import { observe, ceramic, action, serialize, uuid } from 'utils';
 import * as electron from 'electron';
 import shortcuts from './shortcuts';
+import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import { join } from 'path';
 const electronApp = electron.remote.require('./app.js');
 
 /** Track app info such as fullscreen, width, height, project path.. */
@@ -19,6 +23,14 @@ export class Context {
     @observe ceramicReady:boolean = false;
 
     @observe draggingOver:boolean = false;
+
+    @observe machineId:string = null;
+
+/// External commands versions
+
+    @observe haxeVersion?:string;
+
+    @observe gitVersion?:string;
 
 /// Constructor
 
@@ -64,6 +76,19 @@ export class Context {
             }
         };
         checkServerPort();
+
+        // Get machine identifier
+        var dotCeramicDir = join(os.homedir(), '.ceramic');
+        if (!fs.existsSync(dotCeramicDir)) {
+            fs.mkdirSync(dotCeramicDir);
+        }
+        var idFilePath = join(dotCeramicDir, '.machine');
+        if (!fs.existsSync(idFilePath)) {
+            this.machineId = uuid();
+            fs.writeFileSync(idFilePath, this.machineId);
+        } else {
+            this.machineId = ('' + fs.readFileSync(idFilePath)).trim();
+        }
         
         // Default ceramic state is false
         this.ceramicReady = false;
@@ -71,7 +96,63 @@ export class Context {
         // Create menu/shortcuts
         shortcuts.initialize();
 
+        // Check external commands status
+        this.checkHaxeVersion();
+        this.checkGitVersion();
+
     } //constructor
+
+/// Commands version
+
+    @action checkHaxeVersion() {
+
+        // Check haxe
+        var proc = spawn('haxe', ['-version']);
+        proc.on('error', (error) => {
+            console.error('Haxe command failed: ' + error);
+        });
+        var out = '';
+        proc.stdout.on('data', (data) => {
+            out += data;
+        });
+        proc.stderr.on('data', (data) => {
+            out += data;
+        });
+        proc.on('close', (code) => {
+            if (code === 0) {
+                this.haxeVersion = out.trim();
+            }
+            else {
+                this.haxeVersion = null;
+            }
+        });
+
+    } //checkHaxeVersion
+    
+    @action checkGitVersion() {
+
+        // Check git
+        var proc = spawn('git', ['--version']);
+        proc.on('error', (error) => {
+            console.error('Git command failed: ' + error);
+        });
+        var out = '';
+        proc.stdout.on('data', (data) => {
+            out += data;
+        });
+        proc.stderr.on('data', (data) => {
+            out += data;
+        });
+        proc.on('close', (code) => {
+            if (code === 0) {
+                this.gitVersion = out.trim().split('git version ').join('');
+            }
+            else {
+                this.gitVersion = null;
+            }
+        });
+
+    } //checkGitVersion
 
 } //Context
 

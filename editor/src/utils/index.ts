@@ -15,6 +15,9 @@ export { stableSort } from './stable-sort';
 // Export keypath
 export { default as keypath } from './keypath';
 
+// Export git
+export { git } from './git';
+
 // Export external utilities
 export { default as autobind } from 'autobind-decorator';
 

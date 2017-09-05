@@ -52,6 +52,14 @@ class Shortcuts extends EventEmitter {
                         click: () => {
                             project.saveAs();
                         }
+                    },
+                    {type: 'separator'},
+                    {
+                        label: 'Sync with Github',
+                        accelerator: 'Shift+CmdOrCtrl+G',
+                        click: () => {
+                            project.syncWithGithub();
+                        }
                     }
                 ]
             },
@@ -62,6 +70,8 @@ class Shortcuts extends EventEmitter {
                         label: 'Undo',
                         accelerator: 'CmdOrCtrl+Z',
                         click: () => {
+                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
+                            
                             history.undo();
                         }
                     },
@@ -69,6 +79,8 @@ class Shortcuts extends EventEmitter {
                         label: 'Redo',
                         accelerator: 'CmdOrCtrl+Shift+Z',
                         click: () => {
+                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
+
                             history.redo();
                         }
                     },
@@ -77,6 +89,8 @@ class Shortcuts extends EventEmitter {
                         label: 'Cut',
                         accelerator: 'CmdOrCtrl+X',
                         click: () => {
+                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
+
                             // Save to clipboard
                             if (global['focusedInput'] != null) {
                                 clipboard.writeText(global['focusedInput'].copySelected(true));

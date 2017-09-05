@@ -28,7 +28,7 @@ class SelectInput extends React.Component {
 
         let styles:any = {};
         if (this.props.size === 'large') {
-            styles.width = 300;
+            styles.width = 372;
         }
 
         return (

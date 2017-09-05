@@ -16,13 +16,27 @@ class UiState extends Model {
 
     @observe addVisual:boolean;
     
-    @observe @serialize editSettings:boolean;
+    @observe editSettings:boolean;
 
 /// Properties (selected)
 
     @observe selectedItemId:string;
 
     @observe @serialize selectedSceneId:string;
+
+/// Status bar text
+
+    @observe statusBarText:string = '';
+
+/// Prompt
+
+    @observe prompt?:{
+        title:string,
+        message:string,
+        choices:Array<string>
+    };
+
+    @observe promptResult:number;
 
 /// Computed
 

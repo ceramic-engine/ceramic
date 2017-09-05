@@ -1,5 +1,5 @@
 
-import { db, registerModel } from 'utils';
+import { db, uuid, registerModel } from 'utils';
 import Project from './Project';
 import User from './User';
 
@@ -39,3 +39,5 @@ project.keep = true;
 if (!project.initialized) {
     project.createNew();
 }
+// Just for retro-compatibility ; TODO remove
+if (!project.uuid) project.uuid = uuid();

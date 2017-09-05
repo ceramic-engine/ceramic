@@ -15,6 +15,8 @@ import { autobind, observe, observer } from 'utils';
         separator?:string,
         /* Placeholder */
         placeholder?:string,
+        /** Width */
+        size?:"large",
         /** onChange */
         onChange?:(value:string) => void
     };
@@ -34,6 +36,14 @@ import { autobind, observe, observer } from 'utils';
         if (multiline) {
             let numLines = (value + this.tailText).split("\n").length;
             let height = numLines * 12 + 2;
+            
+            let styles:any = {
+                resize: "none",
+                height: height
+            };
+            if (this.props.size === 'large') {
+                styles.width = 360;
+            }
 
             return (
                 <textarea
@@ -45,14 +55,17 @@ import { autobind, observe, observer } from 'utils';
                     onBlur={this.handleBlur}
                     placeholder={placeholder}
                     ref={(el) => { this.inputElement = el; }}
-                    style={{
-                        resize: "none",
-                        height: height
-                    }}
+                    style={styles}
                 />
             );
         }
         else {
+            
+            let styles:any = {};
+            if (this.props.size === 'large') {
+                styles.width = 360;
+            }
+
             return (
                 <input
                     disabled={this.props.disabled}
@@ -63,6 +76,7 @@ import { autobind, observe, observer } from 'utils';
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
                     placeholder={placeholder}
+                    style={styles}
                     ref={(el) => { this.inputElement = el; }}
                 />
             );

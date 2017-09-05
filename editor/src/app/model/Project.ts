@@ -1,4 +1,4 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, serializeModel, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, git, serializeModel, Model } from 'utils';
 import Scene from './Scene';
 import SceneItem from './SceneItem';
 import UiState from './UiState';
@@ -9,10 +9,15 @@ import shortcuts from 'app/shortcuts';
 import { join, normalize, dirname, relative, basename, isAbsolute } from 'path';
 import { context } from 'app/context';
 import { user } from './index';
+import { spawn } from 'child_process';
+import { createHash } from 'crypto';
 
 class Project extends Model {
 
 /// Properties
+
+    /** Project hash (unique identifier) */
+    @observe @serialize uuid:string;
 
     /** Project scenes */
     @observe @serialize(Scene) scenes:Array<Scene> = [];
@@ -29,8 +34,25 @@ class Project extends Model {
     /** Project name */
     @observe @serialize name?:string;
 
+    /** Project footprint.
+        The footprint is computed from local project's path and host machine identifier. */
+    @observe @serialize footprint:string;
+
+/// Editor canvas
+
     /** Project custom editor canvas path */
     @observe @serialize editorPath?:string;
+
+/// Git (Github) repository
+
+    /** Whether the editor is currently syncing with Github repository. */
+    @observe syncingWithGithub:boolean = false;
+
+    /** Git repository (https) URL */
+    @observe @serialize gitRepository?:string;
+
+    /** Keep the (unix) timestamp of when this project was last synced with Github. */
+    @observe @serialize lastGitSyncTimestamp?:number;
 
 /// UI State
 
@@ -112,6 +134,16 @@ class Project extends Model {
         }
 
     } //absoluteEditorPath
+    
+    @compute get hasValidEditorPath():boolean {
+
+        let path = this.absoluteEditorPath;
+
+        // TODO
+
+        return false;
+
+    } //hasValidEditorPath
 
     @compute get cwd():string {
 
@@ -126,6 +158,36 @@ class Project extends Model {
 
         super(id);
 
+        // Update status bar text
+        //
+        autorun(() => {
+
+            if (!this.ui) return;
+            
+            if (this.syncingWithGithub) {
+                this.ui.statusBarText = 'Synchronizing with Github repository \u2026';
+            }
+            else {
+                this.ui.statusBarText = '';
+            }
+
+        });
+
+        // Generate project footprint
+        //
+        autorun(() => {
+
+            let projectPath = this.path;
+            let machineId = context.machineId;
+
+            if (!projectPath) return;
+            if (!machineId) return;
+
+            let hash = createHash('md5').update(projectPath + ' ~! ' + machineId).digest('hex');
+            this.footprint = hash;
+
+        });
+
         // Update asset info from assets path
         //
         autorun(() => {
@@ -136,7 +198,6 @@ class Project extends Model {
             electronApp.assetsPath = null;
 
             if (this.absoluteAssetsPath != null) {
-                console.debug('ABSOLUTE ASSETS: ' + this.absoluteAssetsPath);
                 electronApp.processingAssets = true;
                 let processedAssetsPath = join(os.tmpdir(), 'ceramic', this.id);
                 let proc = ceramic.run([
@@ -264,6 +325,9 @@ class Project extends Model {
         // Set name
         this.name = null;
 
+        // Set unique identifier
+        this.uuid = uuid();
+
         // Reset assets path
         this.assetsPath = null;
 
@@ -306,6 +370,8 @@ class Project extends Model {
         
         if (path) {
 
+            // Set project dir
+            //
             let projectDir = normalize(dirname(this.path));
             let editorDir = normalize(path);
             
@@ -407,6 +473,9 @@ class Project extends Model {
             let data = JSON.parse(''+fs.readFileSync(path));
             
             let serialized = data.project;
+
+            // Remove footprint (we will compute ours)
+            delete serialized.footprint;
 
             // Update db from project data
             for (let serializedItem of data.entries) {
@@ -631,6 +700,170 @@ class Project extends Model {
         });
 
     } //build
+
+/// Remote save
+
+    syncWithGithub():void {
+
+        if (this.syncingWithGithub) return;
+
+        if (!context.gitVersion) {
+            alert('Git is required to save remotely to Github.');
+            return;
+        }
+
+        if (!user.githubToken) {
+            alert('You need to set a Github Personal Access Token.');
+            return;
+        }
+
+        // Compute 'tokenized' git url
+        if (!this.gitRepository || !this.gitRepository.startsWith('https://')) {
+            alert('Invalid git repository URL.');
+            return;
+        }
+
+        // Save local version before sync
+        this.save();
+
+        // Check that project is saved to disk and has local path
+        if (!this.path) {
+            alert('Cannot synchronize project with Github if it\'s not saved to disk first');
+            return;
+        }
+
+        this.syncingWithGithub = true;
+
+        // Serialize
+        let options = { entries: {}, recursive: true };
+        let serialized = serializeModel(this, options);
+
+        // Remove things we don't want to save remotely
+        delete serialized.lastGitSyncTimestamp;
+
+        // Keep the stuff we want
+        //
+        let entries:Array<any> = [];
+        for (let key in options.entries) {
+            if (options.entries.hasOwnProperty(key)) {
+                entries.push(options.entries[key].serialized);
+            }
+        }
+        
+        let data = JSON.stringify({
+            project: serialized,
+            entries: entries
+        }, null, 2);
+
+        // Clone repository
+        //
+        var tmpDir = join(os.tmpdir(), 'ceramic');
+        if (!fs.existsSync(tmpDir)) {
+            fs.mkdirSync(tmpDir);
+        }
+
+        var uniqId = uuid();
+        var repoDir = join(tmpDir, uniqId);
+
+        var authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
+
+        // TODO optimize?
+        // Ideally, this could be optimized so that we don't have to pull the whole repository data.
+        // In practice, we are already doing a shallow clone (only getting latest commit),
+        // And things get simpler as we never need to keep a permanent local git repository.
+
+        // Init temporary repo
+        git.run(['init', uniqId], tmpDir, (code, out, err) => {
+            if (code !== 0) {
+                this.syncingWithGithub = false;
+                alert('Failed to initialize git repository: ' + err);
+                return;
+            }
+
+            // Pull (shallow, only latest commit)
+            git.run(['pull', '--depth', '1', authenticatedUrl], repoDir, (code, out, err) => {
+                if (code !== 0) {
+                    this.syncingWithGithub = false;
+                    alert('Failed to pull latest commit: ' + err);
+                    return;
+                }
+                
+                // Get latest commit timestamp
+                git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
+                    if (code !== 0) {
+                        this.syncingWithGithub = false;
+                        alert('Failed to get latest commit timestamp: ' + err);
+                        return;
+                    }
+
+                    var timestamp = parseInt(out, 10);
+                    var hasProjectInRepo = true;//fs.existsSync(join(repoDir, 'project.ceramic'));
+
+                    if (hasProjectInRepo && (!this.lastGitSyncTimestamp || timestamp >= this.lastGitSyncTimestamp)) {
+                        // There are more recent commits from remote.
+                        // Prompt user to know which version he wants to keep (local or remote)
+                        this.prompt(
+                            "Resolve conflict",
+                            "Remote project has new changes.\nWhich version do you want to keep?",
+                            [
+                                "Keep local version",
+                                "Keep remote version"
+                            ],
+                            (result) => {
+                                
+                                if (result === 0) {
+                                    // Apply local version
+                                    this.applyLocalToRemoteGit(authenticatedUrl, repoDir, data);
+                                }
+                                else if (result === 1) {
+                                    // Apply remote version
+                                    this.applyRemoteGitToLocal(authenticatedUrl, repoDir);
+                                }
+                            }
+                        );
+                    }
+                    else {
+                        // Apply local version
+                        this.applyLocalToRemoteGit(authenticatedUrl, repoDir, data);
+                    }
+
+                });
+                
+            });
+        });
+
+    } //syncWithGithub
+
+    applyLocalToRemoteGit(authenticatedUrl:string, repoDir:string, data:string) {
+
+    } //applyLocalToRemoteGit
+
+    applyRemoteGitToLocal(authenticatedUrl:string, repoDir:string) {
+
+    } //applyRemoteGitToLocal
+
+/// Prompt
+
+    prompt(title:string, message:string, choices:Array<string>, callback:(result:number) => void) {
+
+        this.ui.promptResult = null;
+
+        let release:any = null;
+        release = autorun(() => {
+            if (this.ui.promptResult == null) return;
+            release();
+            let result = this.ui.promptResult;
+            this.ui.promptResult = null;
+            callback(result);
+        });
+
+        this.ui.prompt = {
+            title: title,
+            message: message,
+            choices: choices
+        };
+
+    } //prompt
 
 } //Project
 

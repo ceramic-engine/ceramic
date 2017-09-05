@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project, user } from 'app/model';
 import { context } from 'app/context';
-import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo } from 'app/components';
+import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo, Prompt } from 'app/components';
 import MdImage from 'react-icons/lib/md/image';
 import MdGridOn from 'react-icons/lib/md/grid-on';
 
@@ -47,6 +47,11 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                         }
                         {project.ui.editSettings ?
                             <EditSettings />
+                        :
+                            null
+                        }
+                        {project.ui.prompt ?
+                            <Prompt />
                         :
                             null
                         }
