@@ -11,6 +11,8 @@ import { context } from 'app/context';
 import { user } from './index';
 import { spawn } from 'child_process';
 import { createHash } from 'crypto';
+import { ncp } from 'ncp';
+import rimraf from 'rimraf';
 
 class Project extends Model {
 
@@ -18,6 +20,9 @@ class Project extends Model {
 
     /** Project hash (unique identifier) */
     @observe @serialize uuid:string;
+
+    /** Project save timestamp */
+    @observe @serialize saveTimestamp:number;
 
     /** Project scenes */
     @observe @serialize(Scene) scenes:Array<Scene> = [];
@@ -504,6 +509,9 @@ class Project extends Model {
             return;
         }
 
+        // Update save timestamp
+        this.saveTimestamp = Math.round(new Date().getTime() / 1000.0);
+
         // Serialize
         let options = { entries: {}, recursive: true };
         let serialized = serializeModel(this, options);
@@ -757,88 +765,208 @@ class Project extends Model {
 
         // Clone repository
         //
-        var tmpDir = join(os.tmpdir(), 'ceramic');
+        let tmpDir = join(os.tmpdir(), 'ceramic');
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
 
-        var uniqId = uuid();
-        var repoDir = join(tmpDir, uniqId);
+        let uniqId = uuid();
+        let repoDir = join(tmpDir, uniqId);
+        let localAssetsPath = this.absoluteAssetsPath;
 
-        var authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
+        let authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
 
         // TODO optimize?
-        // Ideally, this could be optimized so that we don't have to pull the whole repository data.
-        // In practice, we are already doing a shallow clone (only getting latest commit),
-        // And things get simpler as we never need to keep a permanent local git repository.
+        // Ideally, this could be optimized so that we don't have to pull the whole data set of repo's latest commit.
+        // In practice, as we are already doing a shallow clone (only getting latest commit), it should be OK.
+        // Things can be kept simpler as we never need to keep a permanent local git repository.
 
-        // Init temporary repo
-        git.run(['init', uniqId], tmpDir, (code, out, err) => {
+        // Clone (shallow, only latest commit)
+        git.run(['clone', '--depth', '1', authenticatedUrl, uniqId], tmpDir, (code, out, err) => {
             if (code !== 0) {
                 this.syncingWithGithub = false;
-                alert('Failed to initialize git repository: ' + err);
+                alert('Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join(''));
+                rimraf.sync(repoDir);
                 return;
             }
-
-            // Pull (shallow, only latest commit)
-            git.run(['pull', '--depth', '1', authenticatedUrl], repoDir, (code, out, err) => {
+            
+            // Get latest commit timestamp
+            git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
                 if (code !== 0) {
                     this.syncingWithGithub = false;
-                    alert('Failed to pull latest commit: ' + err);
+                    alert('Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
+                    rimraf.sync(repoDir);
                     return;
                 }
-                
-                // Get latest commit timestamp
-                git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
-                    if (code !== 0) {
-                        this.syncingWithGithub = false;
-                        alert('Failed to get latest commit timestamp: ' + err);
-                        return;
-                    }
 
-                    var timestamp = parseInt(out, 10);
-                    var hasProjectInRepo = true;//fs.existsSync(join(repoDir, 'project.ceramic'));
+                var timestamp = parseInt(out, 10);
+                var hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
 
-                    if (hasProjectInRepo && (!this.lastGitSyncTimestamp || timestamp >= this.lastGitSyncTimestamp)) {
-                        // There are more recent commits from remote.
-                        // Prompt user to know which version he wants to keep (local or remote)
-                        this.prompt(
-                            "Resolve conflict",
-                            "Remote project has new changes.\nWhich version do you want to keep?",
-                            [
-                                "Keep local version",
-                                "Keep remote version"
-                            ],
-                            (result) => {
-                                
-                                if (result === 0) {
-                                    // Apply local version
-                                    this.applyLocalToRemoteGit(authenticatedUrl, repoDir, data);
-                                }
-                                else if (result === 1) {
-                                    // Apply remote version
-                                    this.applyRemoteGitToLocal(authenticatedUrl, repoDir);
-                                }
+                if (hasProjectInRepo && (!this.lastGitSyncTimestamp || timestamp >= this.lastGitSyncTimestamp)) {
+                    // There are more recent commits from remote.
+                    // Prompt user to know which version he wants to keep (local or remote)
+                    this.prompt(
+                        "Resolve conflict",
+                        "Remote project has new changes.\nWhich version do you want to keep?",
+                        [
+                            "Keep local version",
+                            "Keep remote version"
+                        ],
+                        (result) => {
+                            
+                            if (result === 0) {
+                                // Apply local version
+                                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath);
                             }
-                        );
-                    }
-                    else {
-                        // Apply local version
-                        this.applyLocalToRemoteGit(authenticatedUrl, repoDir, data);
-                    }
+                            else if (result === 1) {
+                                // Apply remote version
+                                this.applyRemoteGitToLocal(repoDir, localAssetsPath);
+                            }
+                        }
+                    );
+                }
+                else {
+                    // Apply local version
+                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath);
+                }
 
-                });
-                
             });
+            
         });
 
     } //syncWithGithub
 
-    applyLocalToRemoteGit(authenticatedUrl:string, repoDir:string, data:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string) {
+
+        // Sync assets
+        if (localAssetsPath) {
+            let repoAssetsDir = join(repoDir, 'assets');
+
+            // Copy local assets to repo assets
+            if (fs.existsSync(repoAssetsDir)) {
+                rimraf.sync(repoAssetsDir);
+            }
+            fs.mkdirSync(repoAssetsDir);
+            ncp(localAssetsPath, repoAssetsDir, (err) => {
+                if (err) {
+                    this.syncingWithGithub = false;
+                    alert('Failed to copy asset: ' + err);
+                    rimraf.sync(repoDir);
+                    return;
+                }
+
+                syncProjectFileAndPush();
+            });
+        }
+        else {
+            setImmediate(() => {
+                syncProjectFileAndPush();
+            });
+        }
+
+        // Sync project file
+        let syncProjectFileAndPush = () => {
+            let repoProjectFile = join(repoDir, 'project.ceramic');
+            fs.writeFileSync(repoProjectFile, data);
+
+            // Stage files
+            git.run(['add', '-A'], repoDir, (code, out, err) => {
+                if (code !== 0) {
+                    this.syncingWithGithub = false;
+                    alert('Failed to stage modified files: ' + (''+err).split(user.githubToken + '@').join(''));
+                    rimraf.sync(repoDir);
+                    return;
+                }
+
+                // Commit
+                git.run(['commit', '-m', 'Save from Ceramic Editor'], repoDir, (code, out, err) => {
+                    if (code !== 0) {
+                        this.syncingWithGithub = false;
+                        alert('Failed commit changes: ' + (''+err).split(user.githubToken + '@').join(''));
+                        rimraf.sync(repoDir);
+                        return;
+                    }
+
+                    // Push
+                    git.run(['push'], repoDir, (code, out, err) => {
+                        if (code !== 0) {
+                            this.syncingWithGithub = false;
+                            alert('Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join(''));
+                            rimraf.sync(repoDir);
+                            return;
+                        }
+
+                        // Finish
+                        this.syncingWithGithub = false;
+                        rimraf.sync(repoDir);
+                    });
+                });
+
+            });
+        };
 
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(authenticatedUrl:string, repoDir:string) {
+    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string) {
+
+        // Get remote project data
+        let repoProjectFile = join(repoDir, 'project.ceramic');
+        let data = JSON.parse('' + fs.readFileSync(repoProjectFile));
+
+        // Assign new data
+        let serialized = data.project;
+
+        // Remove footprint (we will compute ours)
+        delete serialized.footprint;
+
+        // Update db from project data
+        for (let serializedItem of data.entries) {
+            db.putSerialized(serializedItem);
+        }
+
+        // Put project (and trigger its update)
+        db.putSerialized(serialized);
+
+        // Get new assets path
+        let localAssetsPath = this.absoluteAssetsPath;
+
+        // Sync assets
+        if (localAssetsPath) {
+            let repoAssetsDir = join(repoDir, 'assets');
+
+            // Copy local assets to repo assets
+            if (fs.existsSync(localAssetsPath)) {
+                rimraf.sync(localAssetsPath);
+            }
+            fs.mkdirSync(localAssetsPath);
+            if (fs.existsSync(repoAssetsDir)) {
+                ncp(repoAssetsDir, localAssetsPath, (err) => {
+                    if (err) {
+                        this.syncingWithGithub = false;
+                        alert('Failed to copy asset: ' + err);
+                        rimraf.sync(repoDir);
+                        return;
+                    }
+
+                    finish();
+                });
+            } else {
+                setImmediate(() => {
+                    finish();
+                });
+            }
+        }
+        else {
+            setImmediate(() => {
+                finish();
+            });
+        }
+
+        // That's it
+        let finish = () => {
+            this.syncingWithGithub = false;
+            rimraf.sync(repoDir);
+        };
 
     } //applyRemoteGitToLocal
 

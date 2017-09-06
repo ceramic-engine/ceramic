@@ -64,11 +64,13 @@
   },
   "devDependencies": {
     "@types/jest": "^20.0.2",
+    "@types/ncp": "^2.0.0",
     "@types/node": "^8.0.3",
     "@types/react": "^15.0.32",
     "@types/react-dom": "^15.5.1",
     "@types/react-icons": "^2.2.2",
     "@types/react-sortable-hoc": "^0.6.0",
+    "@types/rimraf": "0.0.28",
     "app-root-path": "^2.0.1",
     "autoprefixer": "7.1.0",
     "case-sensitive-paths-webpack-plugin": "2.0.0",
