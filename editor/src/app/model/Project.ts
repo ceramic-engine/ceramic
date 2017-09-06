@@ -13,6 +13,7 @@ import { spawn } from 'child_process';
 import { createHash } from 'crypto';
 import { ncp } from 'ncp';
 import rimraf from 'rimraf';
+import dateformat from 'dateformat';
 
 class Project extends Model {
 
@@ -53,11 +54,17 @@ class Project extends Model {
     /** Whether the editor is currently syncing with Github repository. */
     @observe syncingWithGithub:boolean = false;
 
+    /** Whether the editor is currently syncing with Github repository. */
+    @observe @serialize lastGithubSyncStatus:'success'|'failure' = null;
+
     /** Git repository (https) URL */
     @observe @serialize gitRepository?:string;
 
     /** Keep the (unix) timestamp of when this project was last synced with Github. */
     @observe @serialize lastGitSyncTimestamp?:number;
+
+    /** Keep last git sync footprint. */
+    @observe @serialize lastGitSyncProjectFootprint?:string;
 
 /// UI State
 
@@ -168,11 +175,37 @@ class Project extends Model {
         autorun(() => {
 
             if (!this.ui) return;
+
+            let CtlrOrCmd = process.platform === 'darwin' ? 'Cmd' : 'Ctrl';
             
-            if (this.syncingWithGithub) {
-                this.ui.statusBarText = 'Synchronizing with Github repository \u2026';
+            if (this.gitRepository) {
+                if (!user.githubToken) {
+                    this.ui.statusBarTextKind = 'warning';
+                    this.ui.statusBarText = '⚠ Set your Github Personal Access Token in settings';
+                }
+                else if (this.syncingWithGithub) {
+                    this.ui.statusBarTextKind = 'default';
+                    this.ui.statusBarText = 'Synchronizing with Github repository \u2026';
+                }
+                else if (this.lastGithubSyncStatus === 'failure') {
+                    this.ui.statusBarTextKind = 'failure';
+                    this.ui.statusBarText = '✗ Failed to synchronize with Github';
+                }
+                else if (user.githubProjectDirty) {
+                    this.ui.statusBarTextKind = 'default';
+                    this.ui.statusBarText = 'Press ' + CtlrOrCmd + '+Shift+G to synchronize with Github';
+                }
+                else if (this.lastGithubSyncStatus === 'success') {
+                    this.ui.statusBarTextKind = 'success';
+                    this.ui.statusBarText = '✔ Synchronized with Github on ' + dateformat(this.lastGitSyncTimestamp * 1000);
+                }
+                else {
+                    this.ui.statusBarTextKind = 'default';
+                    this.ui.statusBarText = '';
+                }
             }
             else {
+                this.ui.statusBarTextKind = 'default';
                 this.ui.statusBarText = '';
             }
 
@@ -741,6 +774,7 @@ class Project extends Model {
         }
 
         this.syncingWithGithub = true;
+        this.ui.loadingMessage = 'Updating remote repository \u2026';
 
         // Serialize
         let options = { entries: {}, recursive: true };
@@ -748,6 +782,8 @@ class Project extends Model {
 
         // Remove things we don't want to save remotely
         delete serialized.lastGitSyncTimestamp;
+        delete serialized.lastGithubSyncStatus;
+        delete serialized.lastGitSyncProjectFootprint;
 
         // Keep the stuff we want
         //
@@ -785,6 +821,8 @@ class Project extends Model {
         git.run(['clone', '--depth', '1', authenticatedUrl, uniqId], tmpDir, (code, out, err) => {
             if (code !== 0) {
                 this.syncingWithGithub = false;
+                this.lastGithubSyncStatus = 'failure';
+                this.ui.loadingMessage = null;
                 alert('Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join(''));
                 rimraf.sync(repoDir);
                 return;
@@ -794,24 +832,32 @@ class Project extends Model {
             git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
                 if (code !== 0) {
                     this.syncingWithGithub = false;
+                    this.lastGithubSyncStatus = 'failure';
+                    this.ui.loadingMessage = null;
                     alert('Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
                     rimraf.sync(repoDir);
                     return;
                 }
 
-                var timestamp = parseInt(out, 10);
-                var hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
+                let timestamp = parseInt(out, 10);
+                let hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
+                this.ui.loadingMessage = null;
 
-                if (hasProjectInRepo && (!this.lastGitSyncTimestamp || timestamp >= this.lastGitSyncTimestamp)) {
+                if (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp)) {
+                    // Apply remote version
+                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp);
+                }
+                else if (hasProjectInRepo && timestamp > this.lastGitSyncTimestamp) {
                     // There are more recent commits from remote.
                     // Prompt user to know which version he wants to keep (local or remote)
-                    this.prompt(
-                        "Resolve conflict",
-                        "Remote project has new changes.\nWhich version do you want to keep?",
-                        [
-                            "Keep local version",
-                            "Keep remote version"
-                        ],
+                    this.promptChoice({
+                            title: "Resolve conflict",
+                            message: "Remote project has new changes.\nWhich version do you want to keep?",
+                            choices: [
+                                "Local",
+                                "Remote"
+                            ]
+                        },
                         (result) => {
                             
                             if (result === 0) {
@@ -820,7 +866,7 @@ class Project extends Model {
                             }
                             else if (result === 1) {
                                 // Apply remote version
-                                this.applyRemoteGitToLocal(repoDir, localAssetsPath);
+                                this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp);
                             }
                         }
                     );
@@ -836,7 +882,23 @@ class Project extends Model {
 
     } //syncWithGithub
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, commitMessage?:string) {
+
+        if (!commitMessage) {
+            this.promptText({
+                title: 'Commit message',
+                message: 'Please describe your changes:',
+                placeholder: 'Enter a message\u2026',
+                validate: 'Commit'
+            },
+            (result) => {
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, result);
+            });
+
+            return;
+        }
+
+        this.ui.loadingMessage = 'Pushing changes \u2026';
 
         // Sync assets
         if (localAssetsPath) {
@@ -850,6 +912,8 @@ class Project extends Model {
             ncp(localAssetsPath, repoAssetsDir, (err) => {
                 if (err) {
                     this.syncingWithGithub = false;
+                    this.lastGithubSyncStatus = 'failure';
+                    this.ui.loadingMessage = null;
                     alert('Failed to copy asset: ' + err);
                     rimraf.sync(repoDir);
                     return;
@@ -864,6 +928,14 @@ class Project extends Model {
             });
         }
 
+        // Set .gitignore
+        let gitIgnorePath = join(repoDir, '.gitignore');
+        fs.writeFileSync(gitIgnorePath, [
+            '.DS_Store',
+            '__MACOSX',
+            'thumbs.db'
+        ].join(os.EOL));
+
         // Sync project file
         let syncProjectFileAndPush = () => {
             let repoProjectFile = join(repoDir, 'project.ceramic');
@@ -873,41 +945,71 @@ class Project extends Model {
             git.run(['add', '-A'], repoDir, (code, out, err) => {
                 if (code !== 0) {
                     this.syncingWithGithub = false;
+                    this.lastGithubSyncStatus = 'failure';
+                    this.ui.loadingMessage = null;
                     alert('Failed to stage modified files: ' + (''+err).split(user.githubToken + '@').join(''));
                     rimraf.sync(repoDir);
                     return;
                 }
 
                 // Commit
-                git.run(['commit', '-m', 'Save from Ceramic Editor'], repoDir, (code, out, err) => {
+                git.run(['commit', '-m', commitMessage], repoDir, (code, out, err) => {
                     if (code !== 0) {
                         this.syncingWithGithub = false;
+                        this.lastGithubSyncStatus = 'failure';
+                        this.ui.loadingMessage = null;
                         alert('Failed commit changes: ' + (''+err).split(user.githubToken + '@').join(''));
                         rimraf.sync(repoDir);
                         return;
                     }
 
-                    // Push
-                    git.run(['push'], repoDir, (code, out, err) => {
+                    // Get commit timestamp
+                    git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
                         if (code !== 0) {
                             this.syncingWithGithub = false;
-                            alert('Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join(''));
+                            this.lastGithubSyncStatus = 'failure';
+                            this.ui.loadingMessage = null;
+                            alert('Failed to get new commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
                             rimraf.sync(repoDir);
                             return;
                         }
 
-                        // Finish
-                        this.syncingWithGithub = false;
-                        rimraf.sync(repoDir);
+                        // Keep timestamp
+                        let timestamp = parseInt(out, 10);
+
+                        // Push
+                        git.run(['push'], repoDir, (code, out, err) => {
+                            if (code !== 0) {
+                                this.syncingWithGithub = false;
+                                this.lastGithubSyncStatus = 'failure';
+                                this.ui.loadingMessage = null;
+                                alert('Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join(''));
+                                rimraf.sync(repoDir);
+                                return;
+                            }
+
+                            // Save project with new timestamp and footprint
+                            this.lastGitSyncTimestamp = timestamp;
+                            this.lastGitSyncProjectFootprint = this.footprint;
+                            this.save();
+                            
+                            // Finish
+                            this.syncingWithGithub = false;
+                            rimraf.sync(repoDir);
+                            this.lastGithubSyncStatus = 'success';
+                            this.ui.loadingMessage = null;
+                            user.markGithubProjectAsClean();
+                        });
                     });
                 });
-
             });
         };
 
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string) {
+    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number) {
+
+        this.ui.loadingMessage = 'Updating local files \u2026';
 
         // Get remote project data
         let repoProjectFile = join(repoDir, 'project.ceramic');
@@ -934,15 +1036,25 @@ class Project extends Model {
         if (localAssetsPath) {
             let repoAssetsDir = join(repoDir, 'assets');
 
-            // Copy local assets to repo assets
-            if (fs.existsSync(localAssetsPath)) {
-                rimraf.sync(localAssetsPath);
+            try {
+                // Copy local assets to repo assets
+                if (fs.existsSync(localAssetsPath)) {
+                    rimraf.sync(localAssetsPath);
+                }
+                fs.mkdirSync(localAssetsPath);
+            } catch (e) {
+                this.syncingWithGithub = false;
+                this.lastGithubSyncStatus = 'failure';
+                this.ui.loadingMessage = null;
+                alert('Failed to update asset directory: ' + e);
+                return;
             }
-            fs.mkdirSync(localAssetsPath);
             if (fs.existsSync(repoAssetsDir)) {
                 ncp(repoAssetsDir, localAssetsPath, (err) => {
                     if (err) {
                         this.syncingWithGithub = false;
+                        this.lastGithubSyncStatus = 'failure';
+                        this.ui.loadingMessage = null;
                         alert('Failed to copy asset: ' + err);
                         rimraf.sync(repoDir);
                         return;
@@ -964,7 +1076,16 @@ class Project extends Model {
 
         // That's it
         let finish = () => {
+
+            // Save project with changed data and new timestamp and footprint
+            this.lastGitSyncTimestamp = commitTimestamp;
+            this.lastGitSyncProjectFootprint = this.footprint;
+            this.save();
+
             this.syncingWithGithub = false;
+            this.lastGithubSyncStatus = 'success';
+            this.ui.loadingMessage = null;
+            user.markGithubProjectAsClean();
             rimraf.sync(repoDir);
         };
 
@@ -972,26 +1093,39 @@ class Project extends Model {
 
 /// Prompt
 
-    prompt(title:string, message:string, choices:Array<string>, callback:(result:number) => void) {
+    promptChoice(options:{title:string, message:string, choices:Array<string>}, callback:(result:number) => void) {
 
-        this.ui.promptResult = null;
+        this.ui.promptChoiceResult = null;
 
         let release:any = null;
         release = autorun(() => {
-            if (this.ui.promptResult == null) return;
+            if (this.ui.promptChoiceResult == null) return;
             release();
-            let result = this.ui.promptResult;
-            this.ui.promptResult = null;
+            let result = this.ui.promptChoiceResult;
+            this.ui.promptChoiceResult = null;
             callback(result);
         });
 
-        this.ui.prompt = {
-            title: title,
-            message: message,
-            choices: choices
-        };
+        this.ui.promptChoice = options;
 
-    } //prompt
+    } //promptChoice
+
+    promptText(options:{title:string, message:string, placeholder:string, validate:string, skip?:string}, callback:(result:string) => void) {
+
+        this.ui.promptTextResult = null;
+
+        let release:any = null;
+        release = autorun(() => {
+            if (this.ui.promptTextResult == null) return;
+            release();
+            let result = this.ui.promptTextResult;
+            this.ui.promptTextResult = null;
+            callback(result);
+        });
+
+        this.ui.promptText = options;
+
+    } //promptText
 
 } //Project
 

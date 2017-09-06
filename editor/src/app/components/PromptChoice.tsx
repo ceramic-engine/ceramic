@@ -5,27 +5,27 @@ import Overlay from './Overlay';
 import Dialog from './Dialog';
 import { project } from 'app/model';
 
-@observer class Prompt extends React.Component {
+@observer class PromptChoice extends React.Component {
 
 /// Lifecycle
 
     render() {
 
-        return project.ui.prompt ? (
+        return project.ui.promptChoice ? (
             <Overlay>
-                <Dialog title={project.ui.prompt.title}>
-                    <div className="message">{project.ui.prompt.message.split("\n").map((val, index) =>
+                <Dialog title={project.ui.promptChoice.title}>
+                    <div className="message">{project.ui.promptChoice.message.split("\n").map((val, index) =>
                         val ? <div key={index} className="line">{val}</div> : null
                     )}</div>
                     <div style={{ height: 12 }} />
                     <div className="prompt-choices">
-                        {project.ui.prompt.choices.map((val, index) =>
+                        {project.ui.promptChoice.choices.map((val, index) =>
                             <Inline key={index}>
                                 <Button
                                     value={val}
                                     onClick={() => {
-                                        project.ui.prompt = null;
-                                        project.ui.promptResult = index;
+                                        project.ui.promptChoice = null;
+                                        project.ui.promptChoiceResult = index;
                                     }}
                                 />
                             </Inline>
@@ -39,4 +39,4 @@ import { project } from 'app/model';
     
 }
 
-export default Prompt;
+export default PromptChoice;

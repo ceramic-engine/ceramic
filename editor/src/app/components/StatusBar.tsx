@@ -20,6 +20,17 @@ import { Center } from 'components';
 
     render() {
 
+        let color = '#FFFFFF';
+        if (project.ui.statusBarTextKind === 'success') {
+            color = '#00FF00';
+        }
+        else if (project.ui.statusBarTextKind === 'failure') {
+            color = '#FF0000';
+        }
+        else if (project.ui.statusBarTextKind === 'warning') {
+            color = '#FFFF00';
+        }
+
         return (
             <div
                 className="statusbar"
@@ -31,7 +42,14 @@ import { Center } from 'components';
                     top: this.props.top
                 }}
             >
-                <div className="statusbar-text">{project.ui.statusBarText}</div>
+                <div
+                    className="statusbar-text"
+                    style={{
+                        color: color
+                    }}
+                >
+                    {project.ui.statusBarText}
+                </div>
             </div>
         );
 

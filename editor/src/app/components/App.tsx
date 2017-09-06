@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project, user } from 'app/model';
 import { context } from 'app/context';
-import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo, Prompt } from 'app/components';
+import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo, PromptChoice, PromptText, LoadingOverlay } from 'app/components';
 import MdImage from 'react-icons/lib/md/image';
 import MdGridOn from 'react-icons/lib/md/grid-on';
 
@@ -50,8 +50,18 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                         :
                             null
                         }
-                        {project.ui.prompt ?
-                            <Prompt />
+                        {project.ui.promptChoice ?
+                            <PromptChoice />
+                        :
+                            null
+                        }
+                        {project.ui.promptText ?
+                            <PromptText />
+                        :
+                            null
+                        }
+                        {project.ui.loadingMessage ?
+                            <LoadingOverlay />
                         :
                             null
                         }

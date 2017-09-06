@@ -9,6 +9,8 @@ class Button extends React.Component {
         value:string,
         /** Kind */
         kind?:('dashed'|'square'),
+        /** Disabled */
+        disabled?:boolean,
         /** onChange */
         onClick?:() => void
     };
@@ -17,15 +19,15 @@ class Button extends React.Component {
 
         if (this.props.kind === 'dashed') {
             return (
-                <input className="input input-button dashed" type="button" value={this.props.value} onClick={this.handleClick} />
+                <input className={'input input-button dashed' + (this.props.disabled ? ' disabled' : '')} type="button" disabled={this.props.disabled} value={this.props.value} onClick={this.handleClick} />
             );
         } else if (this.props.kind === 'square') {
             return (
-                <input className="input input-button square" type="button" value={this.props.value} onClick={this.handleClick} />
+                <input className={'input input-button square' + (this.props.disabled ? ' disabled' : '')} type="button" disabled={this.props.disabled} value={this.props.value} onClick={this.handleClick} />
             );
         } else {
             return (
-                <input className="input input-button default" type="button" value={this.props.value} onClick={this.handleClick} />
+                <input className={'input input-button default' + (this.props.disabled ? ' disabled' : '')} type="button" disabled={this.props.disabled} value={this.props.value} onClick={this.handleClick} />
             );
         }
 

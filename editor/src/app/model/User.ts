@@ -11,6 +11,9 @@ class User extends Model {
     /** Whether current project is dirty (has unsaved changes) or not */
     @observe @serialize projectDirty:boolean = true;
 
+    /** Whether current project (github repository) is dirty (has uncommited changes) or not */
+    @observe @serialize githubProjectDirty:boolean = true;
+
 /// Github access
     
     /** Github personal access token */
@@ -28,8 +31,10 @@ class User extends Model {
 
         // Track history changes to mark project as dirty
         history.on('push', () => {
-            if (this.ignoreProjectChanges) return;
-            this.projectDirty = true;
+            if (!this.ignoreProjectChanges) {
+                this.projectDirty = true;
+                this.githubProjectDirty = true;
+            }
         });
 
     } //constructor
@@ -49,6 +54,20 @@ class User extends Model {
         });
 
     } //markProjectAsClean
+
+    markGithubProjectAsClean():void {
+
+        this.ignoreProjectChanges = true;
+
+        this.githubProjectDirty = false;
+
+        setImmediate(() => {
+            setImmediate(() => {
+                this.ignoreProjectChanges = false;
+            });
+        });
+
+    } //markGithubProjectAsClean
 
 } //User
 

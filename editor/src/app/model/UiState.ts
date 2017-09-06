@@ -28,17 +28,45 @@ class UiState extends Model {
 
     @observe statusBarText:string = '';
 
+    @observe statusBarTextKind:'default'|'success'|'failure'|'warning';
+
+/// Loading
+
+    @observe loadingMessage:string = '';
+
 /// Prompt
 
-    @observe prompt?:{
+    @observe promptChoice?:{
         title:string,
         message:string,
         choices:Array<string>
     };
 
-    @observe promptResult:number;
+    @observe promptChoiceResult:number;
+
+    @observe promptText?:{
+        title:string,
+        message:string,
+        placeholder:string,
+        validate:string,
+        skip?:string
+    };
+
+    @observe promptTextResult:string;
 
 /// Computed
+
+    @compute get canEditHistory():boolean {
+
+        return !(this.promptChoice || this.promptText || this.addVisual);
+
+    } //canEditHistory
+
+    @compute get canDragFileIntoWindow():boolean {
+
+        return !(this.promptChoice || this.promptText || this.addVisual);
+
+    } //canDragFileIntoWindow
 
     @compute get selectedScene():Scene {
 

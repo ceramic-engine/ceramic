@@ -7,7 +7,17 @@ const electronApp = electron.remote.require('./app.js');
 
 class Shortcuts extends EventEmitter {
 
+/// Properties
+
     menuReady:boolean = false;
+
+/// Custom undo/redo handlers
+
+    handleUndo:() => void = null;
+
+    handleRedo:() => void = null;
+
+/// Lifecycle
 
     initialize() {
 
@@ -70,7 +80,12 @@ class Shortcuts extends EventEmitter {
                         label: 'Undo',
                         accelerator: 'CmdOrCtrl+Z',
                         click: () => {
-                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
+                            if (!project.ui.canEditHistory) {
+                                if (this.handleUndo != null) {
+                                    this.handleUndo();
+                                }
+                                return;
+                            }
                             
                             history.undo();
                         }
@@ -79,7 +94,12 @@ class Shortcuts extends EventEmitter {
                         label: 'Redo',
                         accelerator: 'CmdOrCtrl+Shift+Z',
                         click: () => {
-                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
+                            if (!project.ui.canEditHistory) {
+                                if (this.handleRedo != null) {
+                                    this.handleRedo();
+                                }
+                                return;
+                            }
 
                             history.redo();
                         }
@@ -89,7 +109,6 @@ class Shortcuts extends EventEmitter {
                         label: 'Cut',
                         accelerator: 'CmdOrCtrl+X',
                         click: () => {
-                            if (project.ui.addVisual || context.draggingOver || project.ui.prompt) return;
 
                             // Save to clipboard
                             if (global['focusedInput'] != null) {
@@ -236,6 +255,7 @@ class Shortcuts extends EventEmitter {
         let dragTimeout:any = null;
         document.addEventListener('dragover', (ev) => {
             ev.preventDefault();
+            if (!project.ui.canDragFileIntoWindow) return;
 
             context.draggingOver = true;
             if (dragTimeout != null) clearTimeout(dragTimeout);
@@ -246,6 +266,7 @@ class Shortcuts extends EventEmitter {
         });
         document.body.ondrop = (ev) => {
             ev.preventDefault();
+            if (!project.ui.canDragFileIntoWindow) return;
 
             if (dragTimeout != null) clearTimeout(dragTimeout);
             context.draggingOver = false;

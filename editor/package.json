@@ -45,6 +45,7 @@
     "autobind-decorator": "^2.0.0",
     "ceramic-tools": "../tools",
     "colors": "^1.1.2",
+    "dateformat": "^2.0.0",
     "decompress": "^4.2.0",
     "detect-port": "^1.2.1",
     "download": "^6.2.5",
@@ -63,6 +64,7 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "@types/dateformat": "^1.0.1",
     "@types/jest": "^20.0.2",
     "@types/ncp": "^2.0.0",
     "@types/node": "^8.0.3",
