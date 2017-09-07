@@ -71,6 +71,7 @@ class Textures implements spec.Textures {
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
         
+        // Is texture already loaded?
         if (loadedTextures.exists(path)) {
             loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) + 1);
             var existing = Luxe.resources.texture(path);
@@ -82,6 +83,20 @@ class Textures implements spec.Textures {
             return;
         }
 
+        // Is texture currently loading?
+        if (loadingTextureCallbacks.exists(path)) {
+            // Yes, just bind it
+            loadingTextureCallbacks.get(path).push(function(texture:Texture) {
+                if (texture != null) {
+                    var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
+                    loadedTexturesRetainCount.set(path, retain + 1);
+                }
+                done(texture);
+            });
+            return;
+        }
+
+        // No texture yet, load one
         var texture:phoenix.Texture = new phoenix.Texture({
             id: path,
             system: Luxe.resources,
@@ -95,6 +110,16 @@ class Textures implements spec.Textures {
         // Keep it in luxe cache
         Luxe.resources.add(texture);
 
+        // Create callbacks list with first entry
+        loadingTextureCallbacks.set(path, [function(texture:Texture) {
+            if (texture != null) {
+                var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
+                loadedTexturesRetainCount.set(path, retain + 1);
+            }
+            done(texture);
+        }]);
+
+        // Load
         function doLoad() {
             // Load from asset using Luxe's internal API
             texture.state = ResourceState.loading;
@@ -105,7 +130,13 @@ class Textures implements spec.Textures {
                 function doCreate() {
                     @:privateAccess texture.texture = texture.create_texture_id();
                     @:privateAccess texture.from_asset(asset);
-                    done(texture);
+
+                    loadedTextures.set(path, texture);
+                    var callbacks = loadingTextureCallbacks.get(path);
+                    loadingTextureCallbacks.remove(path);
+                    for (callback in callbacks) {
+                        callback(texture);
+                    }
                 }
 /*#if cpp
                 ceramic.internal.Worker.execInPrimary(doCreate);
@@ -118,7 +149,12 @@ class Textures implements spec.Textures {
                 function doFail() {
                     texture.state = ResourceState.failed;
                     texture.destroy(true);
-                    done(null);
+                    
+                    var callbacks = loadingTextureCallbacks.get(path);
+                    loadingTextureCallbacks.remove(path);
+                    for (callback in callbacks) {
+                        callback(null);
+                    }
                 }
 /*#if cpp
                 ceramic.internal.Worker.execInPrimary(doFail);
@@ -181,6 +217,8 @@ class Textures implements spec.Textures {
     } //getHeight
 
 /// Internal
+
+    var loadingTextureCallbacks:Map<String,Array<Texture->Void>> = new Map();
 
     var loadedTextures:Map<String,phoenix.Texture> = new Map();
 
