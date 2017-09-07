@@ -32,7 +32,7 @@ class Draw implements spec.Draw {
     var vertexPoolLength:Int = 0;
     var vertexPoolIndex:Int = 0;
 
-    inline function begin():Void {
+    #if !debug inline #end function begin():Void {
 
         prevQuadPoolIndex = quadPoolIndex;
         quadPoolIndex = 0;
@@ -45,7 +45,7 @@ class Draw implements spec.Draw {
 
     } //begin
 
-    inline function end():Void {
+    #if !debug inline #end function end():Void {
 
         // Remove unused geometries (if needed)
         //
@@ -56,7 +56,9 @@ class Draw implements spec.Draw {
             var geom = quadPool.unsafeGet(i);
             i++;
 
-            geom.batchers.unsafeGet(0).remove(geom);
+            if (geom.batchers.length > 0) {
+                geom.batchers.unsafeGet(0).remove(geom);
+            }
 
         }
 
@@ -69,7 +71,9 @@ class Draw implements spec.Draw {
             var geom = meshPool.unsafeGet(i);
             i++;
 
-            Luxe.renderer.batcher.remove(geom);
+            if (geom.batchers.length > 0) {
+                geom.batchers.unsafeGet(0).remove(geom);
+            }
 
         }
 
