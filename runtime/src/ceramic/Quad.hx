@@ -10,6 +10,12 @@ class Quad extends Visual {
     public var texture(default,set):Texture = null;
     inline function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
+
+        // Unbind previous texture destroy event
+        if (this.texture != null) {
+            this.texture.offDestroy(textureDestroyed);
+        }
+
         this.texture = texture;
 
         // Update frame
@@ -24,6 +30,9 @@ class Quad extends Visual {
             frameY = 0;
             frameWidth = texture.width;
             frameHeight = texture.height;
+
+            // Ensure we remove the texture if it gets destroyed
+            texture.onDestroy(this, textureDestroyed);
         }
 
         return texture;
@@ -95,5 +104,14 @@ class Quad extends Visual {
         doComputeMatrix();
 
     } //computeMatrix
+
+/// Texture destroyed
+
+    function textureDestroyed() {
+
+        // Remove texture because it has been destroyed
+        this.texture = null;
+
+    } //textureDestroyed
 
 } //Quad

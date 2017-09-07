@@ -30,10 +30,37 @@ class Mesh extends Visual {
 /// Texture
 
     /** The texture used on the mesh (optional) */
-    public var texture:Texture = null;
+    public var texture(default,set):Texture = null;
+    inline function set_texture(texture:Texture):Texture {
+        if (this.texture == texture) return texture;
+
+        // Unbind previous texture destroy event
+        if (this.texture != null) {
+            this.texture.offDestroy(textureDestroyed);
+        }
+
+        this.texture = texture;
+
+        // Update frame
+        if (texture != null) {
+            // Ensure we remove the texture if it gets destroyed
+            texture.onDestroy(this, textureDestroyed);
+        }
+
+        return texture;
+    }
 
     /** An array of normalized coordinates used to apply texture mapping.
         Required if the texture is set. */
     public var uvs:Array<Float> = [];
+
+/// Texture destroyed
+
+    function textureDestroyed() {
+
+        // Remove texture because it has been destroyed
+        this.texture = null;
+
+    } //textureDestroyed
 
 } //Mesh
