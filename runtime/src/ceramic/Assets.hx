@@ -895,7 +895,7 @@ class Assets extends Entity {
 
     public function destroy() {
 
-        for (asset in addedAssets) {
+        for (asset in [].concat(addedAssets)) {
             asset.destroy();
         }
         addedAssets = null;
