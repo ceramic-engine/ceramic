@@ -173,4 +173,15 @@ class Scene extends Quad {
 
     } //removeItem
 
+    override public function clear():Void {
+
+        for (entity in entities) {
+                
+            entities.remove(entity);
+            entity.destroy();
+
+        }
+
+    } //clear
+
 } //Scene
