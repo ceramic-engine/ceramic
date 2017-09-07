@@ -73,6 +73,8 @@ class Editor extends Entity {
 
     var assets:Assets = new Assets();
 
+    var sceneItems:Map<String,SceneItem> = new Map();
+
 /// Lifecycle
 
     public function new(settings:InitSettings) {
@@ -390,9 +392,35 @@ class Editor extends Entity {
 
             case 'assets':
                 if (action == 'lists') {
+
+                    // Update asset list
                     var rawList:Array<String> = value.list;
                     runtimeAssets = new RuntimeAssets(rawList);
                     var lists = runtimeAssets.getEncodableLists();
+
+                    // Reset assets
+                    assets.destroy();
+                    assets = new Assets();
+
+                    // Reset scene to get updated assets
+                    if (scene != null) {
+                        scene.clear();
+                        for (key in sceneItems.keys()) {
+                            var item = sceneItems.get(key);
+                            var entity = scene.putItem(item);
+                            if (Std.is(entity, Visual)) {
+                                var visual:Visual = cast entity;
+                                visual.touchable = !(value.data != null && value.data.locked);
+                                if (!visual.hasComponent('editable')) {
+                                    visual.component('editable', new Editable(scene));
+                                }
+                                if (selectedItemId == item.id) {
+                                    cast(visual.component('editable'), Editable).select();
+                                }
+                            }
+                        }
+                    }
+
                     send({
                         type: 'assets/lists',
                         value: {
@@ -428,6 +456,7 @@ class Editor extends Entity {
                         });
 
                         scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
+                            if (instance.destroyed) return;
                             if (item.props != null) {
 
                                 var quad:Quad = cast instance;
@@ -459,17 +488,22 @@ class Editor extends Entity {
                                             var existing:ImageAsset = cast assets.asset(assetName, 'image');
                                             var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
                                             if (existing == null) {
-                                                // Create and load asset
-                                                asset.runtimeAssets = runtimeAssets;
-                                                assets.addAsset(asset);
-                                                asset.onceComplete(function(success) {
-                                                    if (success && !instance.destroyed) {
-                                                        quad.texture = assets.texture(assetName);
-                                                        updateSize();
-                                                        render();
-                                                    }
-                                                });
-                                                assets.load();
+                                                if (asset != null) {
+                                                    // Create and load asset
+                                                    asset.runtimeAssets = runtimeAssets;
+                                                    assets.addAsset(asset);
+                                                    asset.onceComplete(function(success) {
+                                                        if (success && !instance.destroyed) {
+                                                            quad.texture = assets.texture(assetName);
+                                                            updateSize();
+                                                            render();
+                                                        }
+                                                    });
+                                                    assets.load();
+                                                }
+                                                else {
+                                                    // Nothing to do
+                                                }
                                             }
                                             else {
                                                 if (asset.status == READY) {
@@ -507,6 +541,7 @@ class Editor extends Entity {
                         });
 
                         scene.deserializers.set('ceramic.Text', function(scene:Scene, instance:Entity, item:SceneItem) {
+                            if (instance.destroyed) return;
                             if (item.props != null) {
 
                                 var text:Text = cast instance;
@@ -532,18 +567,23 @@ class Editor extends Entity {
                                             var existing:FontAsset = cast assets.asset(assetName, 'font');
                                             var asset:FontAsset = existing != null ? existing : new FontAsset(assetName);
                                             if (existing == null) {
-                                                // Create and load asset
-                                                asset.runtimeAssets = runtimeAssets;
-                                                assets.addAsset(asset);
-                                                asset.onceComplete(function(success) {
+                                                if (asset != null) {
+                                                    // Create and load asset
+                                                    asset.runtimeAssets = runtimeAssets;
+                                                    assets.addAsset(asset);
+                                                    asset.onceComplete(function(success) {
 
-                                                    if (success && !instance.destroyed) {
-                                                        text.font = assets.font(assetName);
-                                                        updateSize();
-                                                        render();
-                                                    }
-                                                });
-                                                assets.load();
+                                                        if (success && !instance.destroyed) {
+                                                            text.font = assets.font(assetName);
+                                                            updateSize();
+                                                            render();
+                                                        }
+                                                    });
+                                                    assets.load();
+                                                }
+                                                else {
+                                                    // Nothing to do
+                                                }
                                             }
                                             else {
                                                 if (asset.status == READY) {
@@ -601,6 +641,7 @@ class Editor extends Entity {
 
             case 'scene-item':
                 if (action == 'put') {
+                    sceneItems.set(value.id, value);
                     var entity = scene.putItem(value);
                     if (Std.is(entity, Visual)) {
                         var visual:Visual = cast entity;
@@ -611,9 +652,9 @@ class Editor extends Entity {
                     }
                 }
                 else if (action == 'select') {
-                    var item = value != null && value.id != null ? scene.getItem(value.id) : null;
-                    if (item != null && item.hasComponent('editable')) {
-                        cast(item.component('editable'), Editable).select();
+                    var entity = value != null && value.id != null ? scene.getItem(value.id) : null;
+                    if (entity != null && entity.hasComponent('editable')) {
+                        cast(entity.component('editable'), Editable).select();
                         selectedItemId = value.id;
                     }
                     else {
@@ -624,6 +665,7 @@ class Editor extends Entity {
                     }
                 }
                 else if (action == 'delete') {
+                    sceneItems.remove(value.id);
                     scene.removeItem(value.id);
                 }
 

@@ -72,6 +72,8 @@ class Project extends Model {
 
 /// Assets
 
+    @observe assetsUpdatedAt:number;
+
     /** Assets path */
     @observe @serialize assetsPath?:string;
 
@@ -230,6 +232,7 @@ class Project extends Model {
         //
         autorun(() => {
 
+            let updatedAt = this.assetsUpdatedAt;
             let electronApp = electron.remote.require('./app.js');
 
             electronApp.sourceAssetsPath = this.absoluteAssetsPath;
@@ -371,6 +374,22 @@ class Project extends Model {
 
         // Reset project path
         user.projectPath = null;
+
+        // Reset editor path
+        this.editorPath = null;
+
+        // Reset git stuff
+        this.gitRepository = null;
+        this.lastGitSyncProjectFootprint = null;
+        this.lastGitSyncTimestamp = null;
+        this.lastGithubSyncStatus = null;
+
+        // Save timestamp
+        this.saveTimestamp = null;
+
+        // Scene bundles
+        this.defaultSceneBundle = null;
+        this.sceneBundles = [];
 
         // Set scene
         this.scenes = [];
@@ -514,6 +533,14 @@ class Project extends Model {
 
             // Remove footprint (we will compute ours)
             delete serialized.footprint;
+
+            // Reset sync timestamp & footprint if not provided
+            if (!serialized.lastGitSyncProjectFootprint) {
+                serialized.lastGitSyncProjectFootprint = null;
+            }
+            if (!serialized.lastGitSyncTimestamp) {
+                serialized.lastGitSyncTimestamp = null;
+            }
 
             // Update db from project data
             for (let serializedItem of data.entries) {
@@ -1021,6 +1048,11 @@ class Project extends Model {
         // Remove footprint (we will compute ours)
         delete serialized.footprint;
 
+        // Remove assets path (if current already set)
+        if (prevAssetsPath) {
+            delete serialized.assetsPath;
+        }
+
         // Update db from project data
         for (let serializedItem of data.entries) {
             db.putSerialized(serializedItem);
@@ -1046,6 +1078,7 @@ class Project extends Model {
                 this.syncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
+                console.error(e);
                 alert('Failed to update asset directory: ' + e);
                 return;
             }
@@ -1087,6 +1120,9 @@ class Project extends Model {
             this.ui.loadingMessage = null;
             user.markGithubProjectAsClean();
             rimraf.sync(repoDir);
+            
+            // Force assets list to update
+            this.assetsUpdatedAt = new Date().getTime();
         };
 
     } //applyRemoteGitToLocal

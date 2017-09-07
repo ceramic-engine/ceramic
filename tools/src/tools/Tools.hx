@@ -169,6 +169,13 @@ class Tools {
             args.splice(index, 2);
         }
 
+        // Debug
+        if (args.indexOf('--debug') != -1) {
+            if (!context.defines.exists('debug')) {
+                context.defines.set('debug', '');
+            }
+        }
+
         // VSCode
         index = args.indexOf('--vscode-editor');
         if (index != -1) {
