@@ -12,7 +12,7 @@ class Texts implements spec.Texts {
 
     public function new() {}
 
-    inline public function load(path:String, ?options:LoadTextOptions, done:String->Void):Void {
+    public function load(path:String, ?options:LoadTextOptions, done:String->Void):Void {
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path

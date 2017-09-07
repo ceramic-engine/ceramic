@@ -63,7 +63,7 @@ class Textures implements spec.Textures {
 
     public function new() {}
 
-    inline public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
+    public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
 
         // Create empty texture
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?

@@ -17,7 +17,7 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    inline public function load(path:String, options:LoadShaderOptions, done:Shader->Void):Void {
+    public function load(path:String, options:LoadShaderOptions, done:Shader->Void):Void {
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path

@@ -27,7 +27,7 @@ class Audio implements spec.Audio {
 
 /// Public API
 
-    inline public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
+    public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
