@@ -577,6 +577,14 @@ class FontAsset extends Asset {
             font = null;
         }
 
+        if (pages != null) {
+            for (key in pages.keys()) {
+                var texture = pages.get(key);
+                texture.destroy();
+            }
+            pages = null;
+        }
+
     } //destroy
 
 } //FontAsset
