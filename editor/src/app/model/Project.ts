@@ -920,9 +920,18 @@ class Project extends Model {
                 title: 'Commit message',
                 message: 'Please describe your changes:',
                 placeholder: 'Enter a message\u2026',
-                validate: 'Commit'
+                validate: 'Commit',
+                cancel: 'Cancel'
             },
             (result) => {
+                if (result == null) {
+                    this.syncingWithGithub = false;
+                    this.lastGithubSyncStatus = 'failure';
+                    this.ui.loadingMessage = null;
+                    rimraf.sync(repoDir);
+                    return;
+                }
+
                 this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, result);
             });
 
@@ -1150,12 +1159,18 @@ class Project extends Model {
 
     } //promptChoice
 
-    promptText(options:{title:string, message:string, placeholder:string, validate:string, skip?:string}, callback:(result:string) => void) {
+    promptText(options:{title:string, message:string, placeholder:string, validate:string, cancel?:string}, callback:(result:string) => void) {
 
         this.ui.promptTextResult = null;
+        this.ui.promptTextCanceled = false;
 
         let release:any = null;
         release = autorun(() => {
+            if (this.ui.promptTextCanceled) {
+                release();
+                callback(null);
+                return;
+            }
             if (this.ui.promptTextResult == null) return;
             release();
             let result = this.ui.promptTextResult;
