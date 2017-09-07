@@ -50,7 +50,6 @@ class Setup extends tools.Task {
         var updateProject = args.indexOf('--update-project') != -1;
 
         // Compute relative ceramicPath
-        var ceramicPathRelative = getRelativePath(ceramicPath, targetPath);
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
         var runtimePathRelative = getRelativePath(runtimePath, targetPath);
         var backendRuntimePath = Path.normalize(Path.join([context.plugin.path, 'runtime']));
