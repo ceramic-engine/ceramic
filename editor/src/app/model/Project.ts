@@ -410,15 +410,19 @@ class Project extends Model {
 
     @action setAssetsPath(path:string) {
 
-        let projectDir = normalize(dirname(this.path));
+        let projectDir = this.path ? normalize(dirname(this.path)) : null;
         let assetsDir = normalize(path);
         
         if (projectDir === assetsDir) {
             this.assetsPath = '.';
-        } else {
+        }
+        else if (projectDir) {
             let res = relative(projectDir, assetsDir);
             if (!res.startsWith('.')) res = './' + res;
             this.assetsPath = res;
+        }
+        else {
+            this.assetsPath = path;
         }
 
     }
