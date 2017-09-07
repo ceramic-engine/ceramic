@@ -139,6 +139,7 @@ class ProjectLoader {
                 newDefines.set(key, defines.get(key));
             }
             defines = newDefines;
+
             // Defines (before evaluating conditions)
             if (app.defines != null) {
                 for (key in Reflect.fields(app.defines)) {
@@ -146,6 +147,9 @@ class ProjectLoader {
                         defines.set(key, Reflect.field(app.defines, key));
                     }
                 }
+            }
+            else {
+                app.defines = {};
             }
 
             // Evaluate conditionals
@@ -268,8 +272,9 @@ class ProjectLoader {
                         defines.set(key, Reflect.field(plugin.defines, key));
                     }
                 }
+            } else {
+                plugin.defines = {};
             }
-            plugin.defines = {};
             for (key in defines.keys()) {
                 var val = defines.get(key);
                 Reflect.setField(plugin.defines, key, val == null || val.trim() == '' ? true : val.trim());
