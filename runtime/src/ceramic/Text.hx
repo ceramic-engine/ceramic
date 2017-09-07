@@ -62,8 +62,20 @@ class Text extends Visual {
     public var font(default,set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
         if (this.font == font) return font;
+
+        // Unbind previous font destroy event
+        if (this.font != null) {
+            this.font.offDestroy(fontDestroyed);
+        }
+
         contentDirty = true;
         this.font = font;
+
+        if (this.font != null) {
+            // Ensure we remove the font if it gets destroyed
+            this.font.onDestroy(this, fontDestroyed);
+        }
+
         return font;
     }
 
@@ -261,6 +273,15 @@ class Text extends Visual {
         contentDirty = false;
 
     } //computeContent
+
+/// Font destroyed
+
+    function fontDestroyed() {
+
+        // Remove font (and set default one) because it has been destroyed
+        this.font = app.assets.font(Fonts.ARIAL_20);
+
+    } //fontDestroyed
 
 /// Print
 
