@@ -297,6 +297,14 @@ class ImageAsset extends Asset {
     override public function load() {
 
         status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load image asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
+
         log('Load image $path');
         app.backend.textures.load(path, {
             premultiplyAlpha: options.premultiplyAlpha ? true : false
@@ -432,6 +440,14 @@ class FontAsset extends Asset {
 
         // Load font data
         status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load font asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
+
         log('Load font $path');
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
@@ -530,7 +546,6 @@ class FontAsset extends Asset {
                     assets.load();
 
                 } catch (e:Dynamic) {
-                    trace(e);
                     status = BROKEN;
                     error('Failed to decode font data at path: $path');
                     emitComplete(false);
@@ -602,6 +617,14 @@ class TextAsset extends Asset {
     override public function load() {
 
         status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load text asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
+
         log('Load text $path');
         app.backend.texts.load(path, function(text) {
 
@@ -643,6 +666,14 @@ class SoundAsset extends Asset {
     override public function load() {
 
         status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load sound asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
+
         log('Load sound $path');
         app.backend.audio.load(path, { stream: options.stream }, function(audio) {
 
@@ -687,6 +718,13 @@ class ShaderAsset extends Asset {
     override public function load() {
 
         status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load shader asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
         
         // Compute vertex and fragment shader paths
         if (path != null && (path.toLowerCase().endsWith('.frag') || path.toLowerCase().endsWith('.vert'))) {
