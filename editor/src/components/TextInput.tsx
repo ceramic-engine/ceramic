@@ -7,6 +7,8 @@ import { autobind, observe, observer } from 'utils';
     props:{
         /** Value */
         value:string,
+        /** Autofocus */
+        autoFocus?:boolean,
         /** Disabled */
         disabled?:boolean,
         /* Multiline */
@@ -53,6 +55,7 @@ import { autobind, observe, observer } from 'utils';
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
+                    autoFocus={this.props.autoFocus}
                     placeholder={placeholder}
                     ref={(el) => { this.inputElement = el; }}
                     style={styles}
