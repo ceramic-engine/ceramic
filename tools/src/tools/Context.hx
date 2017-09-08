@@ -24,6 +24,9 @@ typedef Context = {
     /** Absolute path to `.ceramic` directory. */
     var dotCeramicPath:String;
     
+    /** Default plugins path (embedded with ceramic itself). */
+    var defaultPluginsPath:String;
+    
     /** Whether we are running a variant configuration or not. */
     var variant:String;
 

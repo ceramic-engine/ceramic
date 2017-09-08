@@ -42,6 +42,7 @@ class Tools {
             defines: new Map(),
             ceramicToolsPath: ceramicPath,
             ceramicRuntimePath: Path.normalize(Path.join([ceramicPath, '../runtime'])),
+            defaultPluginsPath: Path.normalize(Path.join([ceramicPath, '../plugins'])),
             homeDir: '' + js.Node.require('os').homedir(),
             isLocalDotCeramic: false,
             dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),
@@ -68,28 +69,7 @@ class Tools {
         }
 
         // Compute plugins
-        var pluginsRegistryPath = Path.join([context.dotCeramicPath, 'plugins.json']);
-        if (FileSystem.exists(pluginsRegistryPath)) {
-            try {
-                var pluginData = Json.parse(File.getContent(pluginsRegistryPath));
-                for (name in Reflect.fields(pluginData.plugins)) {
-                    var path:String = Reflect.field(pluginData.plugins, name);
-                    if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
-                    
-                    var pluginIndexPath = Path.join([path, 'index.js']);
-                    if (FileSystem.exists(pluginIndexPath)) {
-                        var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
-                        plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
-                        context.plugins.set(name, plugin);
-                    }
-
-                }
-            }
-            catch (e:Dynamic) {
-                untyped console.error(e);
-                error('Error when loading plugin.');
-            }
-        }
+        computePlugins();
 
         context.tasks.set('help', new tools.tasks.Help());
         context.tasks.set('init', new tools.tasks.Init());

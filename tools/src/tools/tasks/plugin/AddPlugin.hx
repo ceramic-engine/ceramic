@@ -23,6 +23,9 @@ class AddPlugin extends tools.Task {
             fail('You must specify a plugin path.');
         }
 
+        // Don't replace if already one mapped?
+        var noReplace = extractArgFlag(args, 'no-replace', true);
+
         // Relative path or not?
         var relative = !extractArgFlag(args, 'absolute', true) && (extractArgFlag(args, 'relative', true) || context.isLocalDotCeramic);
 
@@ -48,11 +51,15 @@ class AddPlugin extends tools.Task {
             }
         }
 
-        // Set plugin
-        Reflect.setField(data.plugins, pluginName, relative ? getRelativePath(path, Path.join([context.dotCeramicPath, '..'])) : path);
+        // Finish
+        if (!noReplace || Reflect.field(data.plugins, pluginName) == null) {
 
-        // Save
-        File.saveContent(pluginsRegistryPath, Json.stringify(data, null, '  '));
+            // Set plugin
+            Reflect.setField(data.plugins, pluginName, relative ? getRelativePath(path, Path.join([context.dotCeramicPath, '..'])) : path);
+
+            // Save
+            File.saveContent(pluginsRegistryPath, Json.stringify(data, null, '  '));
+        }
 
     } //run
 

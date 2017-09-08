@@ -4,4 +4,4 @@
 -lib hscript
 -js index.js
 -debug
--cmd ./ceramic plugin build --tools --all
+-cmd ./ceramic plugin build --tools --all --add-defaults

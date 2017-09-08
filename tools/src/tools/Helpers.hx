@@ -1,6 +1,9 @@
 package tools;
 
+import haxe.Json;
 import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 import js.node.ChildProcess;
 import tools.Project;
 
@@ -57,6 +60,33 @@ class Helpers {
         }
 
     } //extractBackendTargetDefines
+
+    public static function computePlugins() {
+
+        var pluginsRegistryPath = Path.join([context.dotCeramicPath, 'plugins.json']);
+        if (FileSystem.exists(pluginsRegistryPath)) {
+            try {
+                var pluginData = Json.parse(File.getContent(pluginsRegistryPath));
+                for (name in Reflect.fields(pluginData.plugins)) {
+                    var path:String = Reflect.field(pluginData.plugins, name);
+                    if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
+                    
+                    var pluginIndexPath = Path.join([path, 'index.js']);
+                    if (FileSystem.exists(pluginIndexPath)) {
+                        var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
+                        plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
+                        context.plugins.set(name, plugin);
+                    }
+
+                }
+            }
+            catch (e:Dynamic) {
+                untyped console.error(e);
+                error('Error when loading plugin.');
+            }
+        }
+
+    } //computePlugins
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
