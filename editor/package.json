@@ -60,6 +60,7 @@
     "reflect-metadata": "^0.1.10",
     "semantic-ui-css": "^2.2.10",
     "semantic-ui-react": "^0.70.0",
+    "simple-peer": "^8.1.1",
     "stream-splitter": "^0.3.2",
     "uuid": "^3.1.0"
   },
@@ -73,6 +74,7 @@
     "@types/react-icons": "^2.2.2",
     "@types/react-sortable-hoc": "^0.6.0",
     "@types/rimraf": "0.0.28",
+    "@types/simple-peer": "^6.1.2",
     "app-root-path": "^2.0.1",
     "autoprefixer": "7.1.0",
     "case-sensitive-paths-webpack-plugin": "2.0.0",
