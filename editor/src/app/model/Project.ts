@@ -200,7 +200,7 @@ class Project extends Model {
                 }
                 else if (user.githubProjectDirty) {
                     this.ui.statusBarTextKind = 'default';
-                    this.ui.statusBarText = 'Press ' + CtlrOrCmd + '+Shift+G to synchronize with Github';
+                    this.ui.statusBarText = 'Press ' + CtlrOrCmd + '+Alt+S to synchronize with Github';
                 }
                 else if (this.lastGithubSyncStatus === 'success') {
                     this.ui.statusBarTextKind = 'success';
@@ -795,7 +795,7 @@ class Project extends Model {
 
 /// Remote save
 
-    syncWithGithub():void {
+    syncWithGithub(resetToGithub:boolean = false):void {
 
         if (this.syncingWithGithub) return;
 
@@ -825,7 +825,7 @@ class Project extends Model {
         }
 
         this.syncingWithGithub = true;
-        this.ui.loadingMessage = 'Updating remote repository \u2026';
+        this.ui.loadingMessage = 'Fetching remote repository \u2026';
 
         // Serialize
         let options = { entries: {}, recursive: true };
@@ -894,7 +894,7 @@ class Project extends Model {
                 let hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
                 this.ui.loadingMessage = null;
 
-                if (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp)) {
+                if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
                     // Apply remote version
                     this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp);
                 }
@@ -945,8 +945,9 @@ class Project extends Model {
             },
             (result) => {
                 if (result == null) {
+                    // Canceled
                     this.syncingWithGithub = false;
-                    this.lastGithubSyncStatus = 'failure';
+                    this.lastGithubSyncStatus = null;
                     this.ui.loadingMessage = null;
                     rimraf.sync(repoDir);
                     return;
