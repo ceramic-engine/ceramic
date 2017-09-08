@@ -63,7 +63,7 @@ class CeramicProxy {
     } //listen
 
     /** Run a ceramic CLI instance with the given args and cwd */
-    run(args:Array<string>, cwd:string, done:(code:number)=>void):void {
+    run(args:Array<string>, cwd:string, done:(code:number, out:string, err:string)=>void):void {
 
         if (this.ceramicRunning) {
             setTimeout(() => {
@@ -96,11 +96,22 @@ class CeramicProxy {
             // TODO
         }
 
-        let proc = spawn(cmd, args, { cwd: cwd, stdio: 'inherit' } );
+        let proc = spawn(cmd, args, { cwd: cwd } );
+        
+        var out = '';
+        var err = '';
+
+        proc.stdout.on('data', (data) => {
+            out += data;
+        });
+
+        proc.stderr.on('data', (data) => {
+            err += data;
+        });
 
         proc.on('close', (code) => {
             this.ceramicRunning = false;
-            done(code);
+            done(code, out, err);
         });
 
     } //run
