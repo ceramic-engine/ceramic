@@ -173,7 +173,7 @@ class Scene extends Quad {
 
     } //removeItem
 
-    override public function clear():Void {
+    public function removeAllItems():Void {
 
         for (entity in entities) {
                 
@@ -182,6 +182,6 @@ class Scene extends Quad {
 
         }
 
-    } //clear
+    } //removeAllItems
 
 } //Scene
