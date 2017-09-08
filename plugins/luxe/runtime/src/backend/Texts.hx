@@ -21,6 +21,13 @@ class Texts implements spec.Texts {
 
         Luxe.resources.load_text(path)
         .then(function(res:luxe.resource.Resource.TextResource) {
+            
+            if (res.asset == null) {
+                res.destroy(true);
+                done(null);
+                return;
+            }
+
             var text = res.asset.text;
             res.destroy(true);
             done(text);
