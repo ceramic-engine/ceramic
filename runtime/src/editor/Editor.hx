@@ -404,7 +404,7 @@ class Editor extends Entity {
 
                     // Reset scene to get updated assets
                     if (scene != null) {
-                        scene.clear();
+                        scene.removeAllItems();
                         for (key in sceneItems.keys()) {
                             var item = sceneItems.get(key);
                             var entity = scene.putItem(item);
@@ -498,6 +498,9 @@ class Editor extends Entity {
                                                             updateSize();
                                                             render();
                                                         }
+                                                        else if (!instance.destroyed) {
+                                                            warning('Failed to load texture for visual: ' + instance);
+                                                        }
                                                     });
                                                     assets.load();
                                                 }
@@ -518,6 +521,9 @@ class Editor extends Entity {
                                                             quad.texture = assets.texture(assetName);
                                                             updateSize();
                                                             render();
+                                                        }
+                                                        else if (!instance.destroyed) {
+                                                            warning('Failed to load texture for visual: ' + instance);
                                                         }
                                                     });
                                                 }
@@ -637,6 +643,13 @@ class Editor extends Entity {
                     }
                     scene.putData(value);
                     fitScene();
+                }
+                else if (action == 'delete') {
+                    if (scene != null && value.id == scene.id) {
+                        scene.destroy();
+                        scene = null;
+                        selectedItemId = null;
+                    }
                 }
 
             case 'scene-item':
