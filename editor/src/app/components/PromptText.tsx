@@ -20,6 +20,10 @@ import shortcuts from 'app/shortcuts';
 
         shortcuts.handleRedo = this.handleRedo;
 
+        shortcuts.handleCancel = this.handleCancel;
+
+        shortcuts.handleValidate = this.handleValidate;
+
     } //componentDidMount
 
     componentWillUnmount() {
@@ -30,6 +34,14 @@ import shortcuts from 'app/shortcuts';
 
         if (shortcuts.handleRedo === this.handleRedo) {
             shortcuts.handleRedo = null;
+        }
+
+        if (shortcuts.handleCancel === this.handleCancel) {
+            shortcuts.handleCancel = null;
+        }
+
+        if (shortcuts.handleValidate === this.handleValidate) {
+            shortcuts.handleValidate = null;
         }
 
     } //componentWillUnmount
@@ -47,6 +59,7 @@ import shortcuts from 'app/shortcuts';
                         <Form>
                             <TextInput
                                 size="large"
+                                autoFocus={true}
                                 multiline={true}
                                 placeholder={project.ui.promptText.placeholder}
                                 value={this.values[this.valueIndex]}
@@ -88,7 +101,7 @@ import shortcuts from 'app/shortcuts';
 
     } //render
 
-/// Local undo/redo
+/// Keyboard shortcuts
 
     @autobind handleUndo() {
 
@@ -105,6 +118,26 @@ import shortcuts from 'app/shortcuts';
         }
 
     } //handleRedo
+
+    @autobind handleCancel() {
+
+        if (project.ui.promptText.cancel) {
+            project.ui.promptTextCanceled = true;
+            project.ui.promptText = null;
+            project.ui.promptTextResult = null;
+        }
+
+    } //handleCancel
+
+    @autobind handleValidate() {
+
+        if (this.values[this.valueIndex].trim().length > 0) {
+            project.ui.promptText = null;
+            project.ui.promptTextCanceled = false;
+            project.ui.promptTextResult = this.values[this.valueIndex];
+        }
+
+    } //handleValidate
     
 }
 

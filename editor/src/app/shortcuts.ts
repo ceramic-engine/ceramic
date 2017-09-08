@@ -11,11 +11,15 @@ class Shortcuts extends EventEmitter {
 
     menuReady:boolean = false;
 
-/// Custom undo/redo handlers
+/// Custom event handlers
 
     handleUndo:() => void = null;
 
     handleRedo:() => void = null;
+
+    handleCancel:() => void = null;
+
+    handleValidate:() => void = null;
 
 /// Lifecycle
 
@@ -66,9 +70,18 @@ class Shortcuts extends EventEmitter {
                     {type: 'separator'},
                     {
                         label: 'Sync with Github',
-                        accelerator: 'Shift+CmdOrCtrl+G',
+                        accelerator: 'CmdOrCtrl+Alt+S',
                         click: () => {
                             project.syncWithGithub();
+                        }
+                    },
+                    {
+                        label: 'Reset to Github',
+                        accelerator: 'Shift+CmdOrCtrl+Alt+S',
+                        click: () => {
+                            if (confirm('Reset to Github changes?')) {
+                                project.syncWithGithub(true);
+                            }
                         }
                     }
                 ]
@@ -159,7 +172,7 @@ class Shortcuts extends EventEmitter {
                     {
                         label: 'Delete',
                         accelerator: 'Backspace',
-                        click() {
+                        click: () => {
                             if (document.activeElement.nodeName.toLowerCase() !== 'body') return;
                             if (project.ui.editor === 'scene') {
                                 if (project.ui.sceneTab === 'visuals') {
@@ -170,6 +183,25 @@ class Shortcuts extends EventEmitter {
                                         project.removeCurrentScene();
                                     }
                                 }
+                            }
+                        }
+                    },
+                    {type: 'separator'},
+                    {
+                        label: 'Cancel',
+                        accelerator: 'Esc',
+                        click: () => {
+                            if (this.handleCancel != null) {
+                                this.handleCancel();
+                            }
+                        }
+                    },
+                    {
+                        label: 'Validate',
+                        accelerator: 'CmdOrCtrl+Enter',
+                        click: () => {
+                            if (this.handleValidate != null) {
+                                this.handleValidate();
                             }
                         }
                     }
@@ -209,7 +241,7 @@ class Shortcuts extends EventEmitter {
                 submenu: [
                     {
                         label: 'Learn More',
-                        click () { require('electron').shell.openExternal('https://github.com/jeremyfa/ceramic'); }
+                        click: () => { require('electron').shell.openExternal('https://github.com/jeremyfa/ceramic'); }
                     }
                 ]
             }
