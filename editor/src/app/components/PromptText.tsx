@@ -58,12 +58,25 @@ import shortcuts from 'app/shortcuts';
                             />
                         </Form>
                         <div style={{ height: 12 }} />
+                        {project.ui.promptText.cancel ?
+                            <Inline>
+                                <Button
+                                    value={project.ui.promptText.cancel}
+                                    onClick={() => {
+                                        project.ui.promptTextCanceled = true;
+                                        project.ui.promptText = null;
+                                        project.ui.promptTextResult = null;
+                                    }}
+                                />
+                            </Inline>
+                        : null}
                         <Inline>
                             <Button
                                 value={project.ui.promptText.validate}
                                 disabled={this.values[this.valueIndex].trim().length === 0}
                                 onClick={() => {
                                     project.ui.promptText = null;
+                                    project.ui.promptTextCanceled = false;
                                     project.ui.promptTextResult = this.values[this.valueIndex];
                                 }}
                             />

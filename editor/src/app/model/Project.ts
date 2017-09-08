@@ -72,7 +72,12 @@ class Project extends Model {
 
 /// Assets
 
+    /** Updating this value will force refresh of assets list */
     @observe assetsUpdatedAt:number;
+
+    /** Sometimes, we want to lock assets lists, like when loading a project to prevent
+        it from processing in-between values that don't make any sense. */
+    @observe assetsLocked:boolean = false;
 
     /** Assets path */
     @observe @serialize assetsPath?:string;
@@ -235,6 +240,11 @@ class Project extends Model {
             let updatedAt = this.assetsUpdatedAt;
             let electronApp = electron.remote.require('./app.js');
 
+            if (this.assetsLocked) {
+                electronApp.processingAssets = true;
+                return;
+            }
+
             electronApp.sourceAssetsPath = this.absoluteAssetsPath;
             electronApp.assetsPath = null;
 
@@ -245,9 +255,9 @@ class Project extends Model {
                     'luxe', 'assets', 'web',
                     '--from', this.absoluteAssetsPath,
                     '--to', processedAssetsPath
-                ], process.cwd(), (code) => {
+                ], process.cwd(), (code, out, err) => {
                     if (code !== 0) {
-                        console.error('Failed to process assets');
+                        console.error('Failed to process assets from ' + this.absoluteAssetsPath + ' to ' + processedAssetsPath + ' : ' + err);
                     }
                     else {
                         electronApp.assetsPath = processedAssetsPath;
@@ -530,6 +540,9 @@ class Project extends Model {
 
         console.log('open project: ' + path);
 
+        // Lock assets
+        this.assetsLocked = true;
+
         try {
             let data = JSON.parse(''+fs.readFileSync(path));
             
@@ -557,12 +570,19 @@ class Project extends Model {
             // Update project path
             user.projectPath = path;
 
+            // Unlock and force assets to reload
+            this.assetsUpdatedAt = new Date().getTime();
+            this.assetsLocked = false;
+
             // Mark project as clean
             user.markProjectAsClean();
 
         }
         catch (e) {
             alert('Failed to open project: ' + e);
+
+            // Unlock assets
+            this.assetsLocked = false;
         }
     }
 
@@ -1051,6 +1071,9 @@ class Project extends Model {
 
         this.ui.loadingMessage = 'Updating local files \u2026';
 
+        // Lock assets
+        this.assetsLocked = true;
+
         // Get remote project data
         let repoProjectFile = join(repoDir, 'project.ceramic');
         let data = JSON.parse('' + fs.readFileSync(repoProjectFile));
@@ -1091,6 +1114,10 @@ class Project extends Model {
                 this.syncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
+
+                // Unlock assets
+                this.assetsLocked = true;
+
                 console.error(e);
                 alert('Failed to update asset directory: ' + e);
                 return;
@@ -1101,6 +1128,10 @@ class Project extends Model {
                         this.syncingWithGithub = false;
                         this.lastGithubSyncStatus = 'failure';
                         this.ui.loadingMessage = null;
+
+                        // Unlock assets
+                        this.assetsLocked = true;
+
                         alert('Failed to copy asset: ' + err);
                         rimraf.sync(repoDir);
                         return;
@@ -1134,8 +1165,9 @@ class Project extends Model {
             user.markGithubProjectAsClean();
             rimraf.sync(repoDir);
             
-            // Force assets list to update
+            // Unlock and force assets list to update
             this.assetsUpdatedAt = new Date().getTime();
+            this.assetsLocked = true;
         };
 
     } //applyRemoteGitToLocal

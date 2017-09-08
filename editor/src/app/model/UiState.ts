@@ -49,10 +49,12 @@ class UiState extends Model {
         message:string,
         placeholder:string,
         validate:string,
-        skip?:string
+        cancel?:string
     };
 
     @observe promptTextResult:string;
+
+    @observe promptTextCanceled:boolean;
 
 /// Computed
 
