@@ -210,28 +210,28 @@ export interface Message {
         history.start();
 
         // Watch scene && items
-        let sceneInCeramic = false;
+        let sceneInCeramic:string = null;
         let itemsInCeramic = new Map<SceneItem, IReactionDisposer>();
         autorun(() => {
 
             let scene = project.ui.selectedScene;
 
             if (scene != null) {
-                sceneInCeramic = true;
+                sceneInCeramic = scene.id;
                 this.send({
                     type: 'scene/put',
                     value: scene.serializeForCeramic()
                 });
             }
             else {
-                if (sceneInCeramic) {
-                    sceneInCeramic = false;
+                if (sceneInCeramic != null) {
                     this.send({
                         type: 'scene/delete',
                         value: {
-                            name: 'scene',
+                            id: sceneInCeramic,
                         }
                     });
+                    sceneInCeramic = null;
                 }
             }
         });
@@ -241,7 +241,7 @@ export interface Message {
 
             if (scene != null) {
                 if (!sceneInCeramic) {
-                    sceneInCeramic = true;
+                    sceneInCeramic = scene.id;
                     this.send({
                         type: 'scene/put',
                         value: scene.serializeForCeramic()
