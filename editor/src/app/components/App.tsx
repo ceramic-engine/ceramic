@@ -12,7 +12,8 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
 
     render() {
 
-        const navHeight = 23;
+        const isWindows = process.platform === 'win32';
+        const navHeight = !isWindows ? 23 : 0;
         const leftSideWidth = 44;
 
         return (
@@ -66,30 +67,32 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             null
                         }
                     </div>
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            width: '100%',
-                            lineHeight: navHeight + 'px',
-                            height: navHeight - 1,
-                            WebkitAppRegion: 'drag',
-                            textAlign: 'center'
-                        }}
-                        className="topnav"
-                    >
-                    {project.name ?
-                        project.name
-                    :
-                        'New Project'
-                    }
-                    {user.projectDirty ?
-                        ' *'
-                    :
-                        null
-                    }
-                    </div>
+                    {!isWindows ?
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                width: '100%',
+                                lineHeight: navHeight + 'px',
+                                height: Math.max(0, navHeight - 1),
+                                WebkitAppRegion: 'drag',
+                                textAlign: 'center'
+                            }}
+                            className="topnav"
+                        >
+                        {project.name ?
+                            project.name
+                        :
+                            'New Project'
+                        }
+                        {user.projectDirty ?
+                            ' *'
+                        :
+                            null
+                        }
+                        </div>
+                    : null}
                     <div
                         className="leftside"
                         style={{

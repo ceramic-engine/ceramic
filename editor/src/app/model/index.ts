@@ -3,6 +3,16 @@ import { db, uuid, registerModel } from 'utils';
 import Project from './Project';
 import User from './User';
 
+if (process.platform === 'win32') {
+    console.debug = (data) => {
+        if (typeof(data).toLowerCase() === 'string') {
+            console.log('[DEBUG] ' + data);
+        } else {
+            console.log(data);
+        }
+    };
+}
+
 // Register model types
 import Scene from './Scene';
 registerModel(Scene);

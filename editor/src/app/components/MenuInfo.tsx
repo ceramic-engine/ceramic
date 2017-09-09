@@ -16,7 +16,7 @@ import { context } from 'app/context';
         if (!info) return null;
 
         return (
-            <div className="menu-info" style={{ top: info.y }}>
+            <div className={'menu-info' + (process.platform === 'win32' ? ' windows' : ' mac')} style={{ top: info.y }}>
                 {info.text}
             </div>
         );
