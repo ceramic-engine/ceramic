@@ -2,10 +2,11 @@
     "selectDescription": "Select build config",
     "items": [
         {
-            "displayName": "▶︎ Run Mac",
-            "description": "ceramic luxe run mac --setup --assets",
+            "displayName": "▶︎ Run Windows",
+            "description": "ceramic luxe run windows --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -17,7 +18,7 @@
                     "args": [
                         "luxe",
                         "run",
-                        "mac",
+                        "windows",
                         "--setup",
                         "--assets",
                         "--vscode-editor",
@@ -36,17 +37,18 @@
                 "args": [
                     "luxe",
                     "hxml",
-                    "mac",
+                    "windows",
                     "--output",
                     "completion.hxml"
                 ]
             }
         },
         {
-            "displayName": "▶︎ Run Mac (debug)",
-            "description": "ceramic luxe run mac --setup --assets --debug",
+            "displayName": "▶︎ Run Windows (debug)",
+            "description": "ceramic luxe run windows --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -58,7 +60,7 @@
                     "args": [
                         "luxe",
                         "run",
-                        "mac",
+                        "windows",
                         "--setup",
                         "--assets",
                         "--vscode-editor",
@@ -78,7 +80,7 @@
                 "args": [
                     "luxe",
                     "hxml",
-                    "mac",
+                    "windows",
                     "--output",
                     "completion.hxml",
                     "--debug"
@@ -86,10 +88,11 @@
             }
         },
         {
-            "displayName": "▶︎ Build Mac",
-            "description": "ceramic luxe build mac --setup --assets",
+            "displayName": "▶︎ Build Windows",
+            "description": "ceramic luxe build windows --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -101,7 +104,7 @@
                     "args": [
                         "luxe",
                         "build",
-                        "mac",
+                        "windows",
                         "--setup",
                         "--assets",
                         "--vscode-editor",
@@ -120,17 +123,18 @@
                 "args": [
                     "luxe",
                     "hxml",
-                    "mac",
+                    "windows",
                     "--output",
                     "completion.hxml"
                 ]
             }
         },
         {
-            "displayName": "▶︎ Build Mac (debug)",
-            "description": "ceramic luxe build mac --setup --assets --debug",
+            "displayName": "▶︎ Build Windows (debug)",
+            "description": "ceramic luxe build windows --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -142,7 +146,7 @@
                     "args": [
                         "luxe",
                         "build",
-                        "mac",
+                        "windows",
                         "--setup",
                         "--assets",
                         "--vscode-editor",
@@ -162,7 +166,7 @@
                 "args": [
                     "luxe",
                     "hxml",
-                    "mac",
+                    "windows",
                     "--output",
                     "completion.hxml",
                     "--debug"
@@ -174,6 +178,7 @@
             "description": "ceramic luxe run web --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -215,6 +220,7 @@
             "description": "ceramic luxe run web --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -258,6 +264,7 @@
             "description": "ceramic luxe build web --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -299,6 +306,7 @@
             "description": "ceramic luxe build web --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -342,6 +350,7 @@
             "description": "ceramic luxe build web --setup --assets --debug --variant editor",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -389,6 +398,7 @@
             "description": "ceramic luxe run ios --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -430,6 +440,7 @@
             "description": "ceramic luxe run ios --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -473,6 +484,7 @@
             "description": "ceramic luxe build ios --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -514,6 +526,7 @@
             "description": "ceramic luxe build ios --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -557,6 +570,7 @@
             "description": "ceramic luxe run android --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -598,6 +612,7 @@
             "description": "ceramic luxe run android --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -641,6 +656,7 @@
             "description": "ceramic luxe build android --setup --assets",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {
@@ -682,6 +698,7 @@
             "description": "ceramic luxe build android --setup --assets --debug",
             "tasks": [
                 {
+                    "type": "shell",
                     "taskName": "build",
                     "command": "ceramic",
                     "presentation": {

@@ -94,7 +94,7 @@ class Build extends tools.Task {
         Sync.run(function(done) {
 
             var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, 'vendor', Sys.systemName().toLowerCase(), 'haxe/haxelib']),
+                'haxelib',
                 cmdArgs,
                 { cwd: flowProjectPath }
             );
