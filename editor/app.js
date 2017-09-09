@@ -74,8 +74,8 @@ function createWindow () {
     title: 'Ceramic',
     frame: process.platform != 'darwin',
     icon: process.env.ELECTRON_DEV ?
-      path.join(__dirname, 'public/icons/64x64.png') : 
-      path.join(__dirname, 'build/icons/64x64.png')
+      path.join(__dirname, 'public/icons/256x256.png') : 
+      path.join(__dirname, 'build/icons/256x256.png')
   })
   exports.mainWindow = mainWindow;
 
