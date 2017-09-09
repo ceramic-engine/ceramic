@@ -236,7 +236,6 @@ class Project extends Model {
         // Update asset info from assets path
         //
         autorun(() => {
-            console.debug('ASSETS AUTORUN');
 
             let updatedAt = this.assetsUpdatedAt;
             let electronApp = electron.remote.require('./app.js');
@@ -250,7 +249,6 @@ class Project extends Model {
             electronApp.assetsPath = null;
 
             if (this.absoluteAssetsPath != null) {
-                console.debug('PROCESS ASSETS');
                 electronApp.processingAssets = true;
                 let processedAssetsPath = join(os.tmpdir(), 'ceramic', this.id);
                 let proc = ceramic.run([
@@ -258,7 +256,6 @@ class Project extends Model {
                     '--from', this.absoluteAssetsPath,
                     '--to', processedAssetsPath
                 ], process.cwd(), (code, out, err) => {
-                    console.debug('END PROCESS ASSETS');
                     if (code !== 0) {
                         console.error('Failed to process assets from ' + this.absoluteAssetsPath + ' to ' + processedAssetsPath + ' : ' + err);
                     }
@@ -268,9 +265,6 @@ class Project extends Model {
                         console.log('assets path: ' + electronApp.assetsPath);
                     }
                 });
-            }
-            else {
-                console.debug('ABSOLUTE ASSETS PATH IS NULL');
             }
 
             if (!this.absoluteAssetsPath || !fs.existsSync(this.absoluteAssetsPath) || !fs.statSync(this.absoluteAssetsPath).isDirectory()) {
