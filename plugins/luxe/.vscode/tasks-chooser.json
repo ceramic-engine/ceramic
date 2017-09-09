@@ -5,6 +5,7 @@
             "displayName": "▷ Tools plugin",
             "description": "ceramic plugin build --tools",
             "tasks": [{
+                "type": "shell",
                 "taskName": "build",
                 "presentation": {
                     "echo": true,

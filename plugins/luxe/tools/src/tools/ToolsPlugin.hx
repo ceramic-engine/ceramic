@@ -86,6 +86,7 @@ class ToolsPlugin {
 
                         var tasksContent:Array<VscodeChooserItemTask> = [
                             {
+                                type: "shell",
                                 taskName: "build",
                                 command: "ceramic",
                                 presentation: {

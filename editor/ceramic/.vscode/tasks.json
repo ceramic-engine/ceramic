@@ -3,6 +3,7 @@
     "description": "ceramic luxe build web --setup --assets --debug --variant editor",
     "tasks": [
         {
+            "type": "shell",
             "taskName": "build",
             "command": "ceramic",
             "presentation": {

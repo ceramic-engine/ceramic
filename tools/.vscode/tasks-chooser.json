@@ -5,6 +5,7 @@
             "displayName": "▷ Tools + NPM",
             "description": "npm install",
             "tasks": [{
+                "type": "shell",
                 "taskName": "build",
                 "presentation": {
                     "echo": true,
@@ -25,6 +26,7 @@
             "displayName": "▷ Tools",
             "description": "haxe build.hxml",
             "tasks": [{
+                "type": "shell",
                 "taskName": "build",
                 "presentation": {
                     "echo": true,
@@ -45,6 +47,7 @@
             "displayName": "▷ Tools + Plugins",
             "description": "haxe build-all.hxml",
             "tasks": [{
+                "type": "shell",
                 "taskName": "build",
                 "presentation": {
                     "echo": true,
