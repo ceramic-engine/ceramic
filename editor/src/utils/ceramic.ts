@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { join } from 'path';
+import { join, normalize } from 'path';
 import * as fs from 'fs';
 
 interface Message {
@@ -93,7 +93,15 @@ class CeramicProxy {
             }
         }
         else if (process.platform === 'win32') {
-            // TODO
+            // TODO handle packaged windows app
+            let linkedCeramic = normalize('C:/HaxeToolkit/haxe/ceramic.bat');
+            if (fs.existsSync(linkedCeramic)) {
+                cmd = linkedCeramic;
+            }
+            /*else {
+                cmd = 'cmd';
+                args = ['/c', 'ceramic'].concat(args);
+            }*/
         }
 
         let proc = spawn(cmd, args, { cwd: cwd } );
@@ -109,7 +117,20 @@ class CeramicProxy {
             err += data;
         });
 
+        proc.on('error', (err) => {
+            console.error('Error when running ceramic command: ' + err);
+        });
+
         proc.on('close', (code) => {
+            if (code !== 0) {
+                if (err.trim().length > 0) {
+                    console.warn(err);
+                }
+                console.error('Finished ceramic command with code: ' + code);
+            }
+            if (out.trim().length > 0) {
+                console.log(out);
+            }
             this.ceramicRunning = false;
             done(code, out, err);
         });
