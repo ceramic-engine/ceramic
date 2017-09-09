@@ -36,8 +36,8 @@ class Main extends luxe.Game {
         if (app.settings.backend.webParent != null) {
             config.runtime.window_parent = app.settings.backend.webParent;
         }
-        config.runtime.browser_window_mousemove = true;
-        config.runtime.browser_window_mouseup = true;
+        //config.runtime.browser_window_mousemove = true;
+        //config.runtime.browser_window_mouseup = true;
         if (app.settings.backend.allowDefaultKeys) {
             config.runtime.prevent_default_keys = [];
         }
