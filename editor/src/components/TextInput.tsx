@@ -30,14 +30,14 @@ import { autobind, observe, observer } from 'utils';
     render() {
 
         let multiline = this.props.multiline != null ? this.props.multiline : false;
-        let className = 'input input-text';
+        let className = 'input input-text' + (process.platform === 'win32' ? ' windows' : ' mac');
         let placeholder = this.props.placeholder != null ? this.props.placeholder : '';
         let value = this.props.value ? this.props.value : '';
         if (this.props.disabled) className += ' disabled';
 
         if (multiline) {
             let numLines = (value + this.tailText).split("\n").length;
-            let height = numLines * 12 + 2;
+            let height = numLines * 12 + (process.platform === 'win32' ? (numLines > 1 ? 2 : 0) : 2);
             
             let styles:any = {
                 resize: "none",

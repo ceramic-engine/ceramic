@@ -21,25 +21,19 @@ class SelectInput extends React.Component {
 
     render() {
 
-        let className = 'input-select-container';
+        let className = 'input-select-container' + (process.platform === 'win32' ? ' windows' : ' mac');
         if (this.props.empty != null && this.props.selected === this.props.empty) {
             className += ' empty';
         }
 
-        let styles:any = {};
-        if (this.props.size === 'large') {
-            styles.width = 372;
-        }
-
         return (
-            <div className={className}>
+            <div className={className + (this.props.size === 'large' ? ' large' : '')}>
                 <select
                     value={this.props.selected}
-                    className="input input-select"
+                    className={'input input-select'}
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
-                    style={styles}
                     ref={(el) => { this.inputElement = el; }}
                 >
                     {this.props.options.map((opt, i) =>

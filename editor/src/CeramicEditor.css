@@ -23,6 +23,7 @@ body, html {
 #body i,
 #body textarea,
 #body select {
+    font-family: sans-serif;
     color: #f3f3f3;
     cursor: default;
     -webkit-font-smoothing: subpixel-antialiased;
@@ -260,7 +261,11 @@ body, html {
     margin-bottom: -2px;
 }
 
-#body input.input, #body .input-select-container, #body textarea.input  {
+#body textarea.input.windows {
+    padding-top: 5px;
+}
+
+#body input.input, #body .input-select-container, #body textarea.input {
     background-color: #454545;
     border: 1px solid #666666;
     height: 19px;
@@ -392,8 +397,40 @@ body, html {
 
 /* Select */
 
-#body select.input.input-select {
+#body .input-select-container.mac select.input.input-select {
     width: 152px;
+}
+
+#body .input-select-container.mac.large select.input.input-select {
+    width: 372px;
+}
+
+#body .input-select-container.windows select.input.input-select {
+    width: 148px;
+    position: relative;
+    left: 4px;
+    top: -2px;
+}
+
+#body .input-select-container.windows select.input.input-select option {
+    color: black;
+}
+
+#body .input-select-container.windows:not(.large) select.input.input-select {
+    top: -0.5px;
+}
+
+#body .input-select-container.windows:not(.large) {
+    width: 148px;
+}
+
+#body .input-select-container.windows.large {
+    padding-left: 1px;
+    padding-right: 3px;
+}
+
+#body .input-select-container.windows.large select.input.input-select {
+    width: 368px;
 }
 
 #body .input-select-container.empty select.input.input-select {
