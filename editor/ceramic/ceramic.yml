@@ -10,8 +10,8 @@ app:
     'if web && editor':
         +hooks:
             - when: end build
-              command: rm
-              args: ['-rf', '../public/ceramic']
+              command: rimraf
+              args: ['../public/ceramic']
             - when: end build
-              command: cp
-              args: ['-R', 'out/luxe/web-editor/bin/web', '../public/ceramic']
+              command: ncp
+              args: ['out/luxe/web-editor/bin/web', '../public/ceramic']

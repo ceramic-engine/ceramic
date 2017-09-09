@@ -205,11 +205,6 @@ class Helpers {
             options = { cwd: null, mute: false };
         }
 
-        // Handle Windows, again...
-        if (Sys.systemName() == 'Windows' && name == 'npm') {
-            name = 'npm.cmd';
-        }
-
         if (context.muted) options.mute = true;
 
         if (options.cwd == null) options.cwd = context.cwd;
@@ -220,34 +215,75 @@ class Helpers {
             status: 0
         };
 
-        Sync.run(function(done) {
-            var proc = null;
-            if (args == null) {
-                proc = ChildProcess.spawn(name, {cwd: options.cwd});
-            } else {
-                proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
+        // Handle Windows, again...
+        if (Sys.systemName() == 'Windows') {
+            // npm
+            if (name == 'npm') {
+                name = 'npm.cmd';
             }
+        }
 
-            proc.stdout.on('data', function(input) {
-                result.stdout += input.toString();
-                if (!options.mute) {
-                    stdoutWrite(input.toString());
+        // Custom commands
+        //
+        // Like: rm -rf {path}
+        if (name == 'rimraf' && args[0] != null) {
+            var rimraf = js.Node.require('rimraf');
+            var path = args[0];
+            if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([options.cwd, path]));
+
+            rimraf.sync(path);
+
+        }
+        // Like: cp -R {source} {dest}
+        else if (name == 'ncp' && args[0] != null && args[1] != null) {
+            var ncp = js.Node.require('ncp');
+            var source = args[0];
+            var dest = args[1];
+            if (!Path.isAbsolute(source)) source = Path.normalize(Path.join([options.cwd, source]));
+            if (!Path.isAbsolute(dest)) dest = Path.normalize(Path.join([options.cwd, dest]));
+            
+            Sync.run(function(done) {
+                ncp(source, dest, function(err:Dynamic) {
+                    if (err != null) {
+                        result.status = -1;
+                        result.stderr += err;
+                    }
+                    done();
+                });
+            });
+
+        }
+        else {
+
+            Sync.run(function(done) {
+                var proc = null;
+                if (args == null) {
+                    proc = ChildProcess.spawn(name, {cwd: options.cwd});
+                } else {
+                    proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
                 }
-            });
 
-            proc.stderr.on('data', function(input) {
-                result.stderr += input.toString();
-                if (!options.mute) {
-                    stderrWrite(input.toString());
-                }
-            });
+                proc.stdout.on('data', function(input) {
+                    result.stdout += input.toString();
+                    if (!options.mute) {
+                        stdoutWrite(input.toString());
+                    }
+                });
 
-            proc.on('close', function(code) {
-                result.status = code;
-                done();
-            });
+                proc.stderr.on('data', function(input) {
+                    result.stderr += input.toString();
+                    if (!options.mute) {
+                        stderrWrite(input.toString());
+                    }
+                });
 
-        });
+                proc.on('close', function(code) {
+                    result.status = code;
+                    done();
+                });
+
+            });
+        }
 
         return result;
 
@@ -438,6 +474,9 @@ class Helpers {
 
                 var res = command(hook.command, hook.args != null ? hook.args : [], { cwd: cwd });
                 if (res.status != 0) {
+                    if (res.stderr.trim().length > 0) {
+                        warning(res.stderr);
+                    }
                     fail('Error when running hook: ' + hook.command + (hook.args != null ? ' ' + hook.args.join(' ') : ''));
                 }
 
