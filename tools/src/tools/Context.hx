@@ -39,6 +39,9 @@ typedef Context = {
     /** Loaded plugins. */
     var plugins:Map<String,tools.spec.ToolsPlugin>;
 
+    /** Plugins that haven't be built yet */
+    var unbuiltPlugins:Map<String,{ path: String }>;
+
     /** Current related backend (if any). */
     var backend:tools.spec.BackendTools;
 

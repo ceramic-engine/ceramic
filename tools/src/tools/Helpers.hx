@@ -63,10 +63,13 @@ class Helpers {
 
     public static function computePlugins() {
 
+        context.plugins = new Map();
+        context.unbuiltPlugins = new Map();
+
         var pluginsRegistryPath = Path.join([context.dotCeramicPath, 'plugins.json']);
         if (FileSystem.exists(pluginsRegistryPath)) {
             try {
-                var pluginData = Json.parse(File.getContent(pluginsRegistryPath));
+                var pluginData:Dynamic = Json.parse(File.getContent(pluginsRegistryPath));
                 for (name in Reflect.fields(pluginData.plugins)) {
                     var path:String = Reflect.field(pluginData.plugins, name);
                     if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
@@ -76,6 +79,9 @@ class Helpers {
                         var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
                         plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
                         context.plugins.set(name, plugin);
+                    }
+                    else {
+                        context.unbuiltPlugins.set(name, { path: path });
                     }
 
                 }

@@ -41,6 +41,9 @@ class BuildPlugin extends tools.Task {
             for (plugin in context.plugins) {
                 pluginPaths.push(plugin.path);
             }
+            for (plugin in context.unbuiltPlugins) {
+                pluginPaths.push(plugin.path);
+            }
         }
         else {
             pluginPaths.push(cwd);

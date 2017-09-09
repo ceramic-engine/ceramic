@@ -50,6 +50,7 @@ class Tools {
             vscode: false,
             muted: false,
             plugins: new Map(),
+            unbuiltPlugins: new Map(),
             backend: null,
             cwd: cwd,
             args: args,
