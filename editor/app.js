@@ -16,8 +16,10 @@ const BrowserWindow = electron.BrowserWindow
 const Menu = electron.Menu
 const MenuItem = electron.MenuItem
 
+const appName = 'Ceramic';
+
 // App name
-app.setName('Ceramic')
+app.setName(appName)
 exports.app = app
 exports.Menu = Menu
 exports.MenuItem = MenuItem
@@ -71,7 +73,7 @@ function createWindow () {
     minHeight: 600,
     resizable: true,
     movable: true,
-    title: 'Ceramic',
+    title: appName,
     frame: process.platform != 'darwin',
     icon: process.env.ELECTRON_DEV ?
       path.join(__dirname, 'public/icons/256x256.png') : 
@@ -90,6 +92,11 @@ function createWindow () {
     }))*/
     mainWindow.loadURL('http://localhost:' + exports.serverPort + '/app/index.html')
   }
+
+  // Ensure we keep the initial window title we set
+  mainWindow.on('page-title-updated', function (e) {
+    e.preventDefault()
+  })
 
   // Open the DevTools.
   //mainWindow.webContents.openDevTools()
