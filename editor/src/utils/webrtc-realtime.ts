@@ -10,7 +10,7 @@ class WebRTCRealtime extends EventEmitter {
 
     peers:Map<string, SimplePeer.Instance> = new Map();
 
-    connect(room:string) {
+    connect(room:string, initiator:boolean) {
 
         // Connect to the webrtc room
         // (a room is just a concept to tell:
@@ -67,9 +67,6 @@ class WebRTCRealtime extends EventEmitter {
                         initiator: true
                     });
                     this.configurePeer(p, room, remoteClient);
-
-                    // Keep peer instance and map it to the couple room + client id
-                    this.peers.set(room + ':' + remoteClient, p);
                 }
             }
             catch (e) {
@@ -78,19 +75,24 @@ class WebRTCRealtime extends EventEmitter {
 
         });
 
-        // Let others in the room know about us
-        realtime.send(room, JSON.stringify({
-            type: 'enter',
-            value: {
-                client: this.clientId
-            }
-        }));
+        if (initiator) {
+            // Let others in the room know about us
+            realtime.send(room, JSON.stringify({
+                type: 'enter',
+                value: {
+                    client: this.clientId
+                }
+            }));
+        }
 
     } //connect
 
 /// Internal
 
     private configurePeer(p:SimplePeer.Instance, room:string, remoteClient:string) {
+
+        // Map
+        this.peers.set(room + ':' + remoteClient, p);
 
         p.on('signal', (signal) => {
             // Send signaling data to client we want to connect to
@@ -105,7 +107,17 @@ class WebRTCRealtime extends EventEmitter {
 
         p.on('connect', () => {
             // Let locally know about the new connection
-            this.emit('connect', room, remoteClient);
+            this.emit('connect', room, remoteClient, p);
+        });
+
+        p.on('close', () => {
+            // Let locally know about the new connection
+            this.emit('close', room, remoteClient, p);
+
+            // Unmap
+            if (this.peers.get(room + ':' + remoteClient) === p) {
+                this.peers.delete(room + ':' + remoteClient);
+            }
         });
 
         p.on('data', (data) => {
