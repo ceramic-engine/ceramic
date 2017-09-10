@@ -45,3 +45,7 @@ export { serializeValue, serializeModel, deserializeModel, deserializeValue, des
 
 // Export uuid
 export { default as uuid } from './uuid';
+
+// Export realtime + webrtc
+export { realtime } from './realtime';
+export { webrtc } from './webrtc-realtime';
