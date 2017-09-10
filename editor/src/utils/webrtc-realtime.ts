@@ -25,6 +25,8 @@ class WebRTCRealtime extends EventEmitter {
                     let remoteClient = data.value.client;
                     let signal = data.value.signal;
 
+                    if (remoteClient === this.clientId) return; // This is us
+
                     // Received an updated signal / an offer to connect
                     let p = this.peers.get(room + ':' + remoteClient);
                     if (p != null) {
@@ -34,6 +36,10 @@ class WebRTCRealtime extends EventEmitter {
                     else {
                         // Create new peer and set the signal
                         p = new SimplePeer();
+
+                        // Keep peer instance and map it to the couple room + client id
+                        this.peers.set(room + ':' + remoteClient, p);
+
                         this.configurePeer(p, room, remoteClient);
                         p.signal(signal);
                     }
@@ -52,6 +58,8 @@ class WebRTCRealtime extends EventEmitter {
 
                 if (data.type === 'enter' && !this.peers.has(room + ':' + data.value.client)) {
                     let remoteClient = data.value.client;
+
+                    if (remoteClient === this.clientId) return; // This is us
 
                     // Receive a new client's info,
                     // Initiate a new P2P connection
