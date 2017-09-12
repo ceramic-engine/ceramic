@@ -80,23 +80,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                 if (oldIndex === newIndex) return;
                                 let visuals = project.ui.selectedScene.visualItemsSorted.slice();
                                 visuals = arrayMove(visuals, oldIndex, newIndex);
-                                if (oldIndex < newIndex) {
-                                    let depth = visuals[newIndex-1].depth;
-                                    if (newIndex < visuals.length - 1) {
-                                        depth = (depth + visuals[newIndex+1].depth) * 0.5;
-                                    } else {
-                                        depth--;
-                                    }
-                                    visuals[newIndex].depth = depth;
-                                }
-                                else {
-                                    let depth = visuals[newIndex+1].depth;
-                                    if (newIndex > 0) {
-                                        depth = (depth + visuals[newIndex-1].depth) * 0.5;
-                                    } else {
-                                        depth++;
-                                    }
-                                    visuals[newIndex].depth = depth;
+                                let depth = 1;
+                                for (let i = visuals.length -1; i >= 0; i--) {
+                                    visuals[i].depth = depth++;
                                 }
                             }}
                         >
