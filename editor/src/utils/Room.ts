@@ -190,14 +190,14 @@ export class Peer extends EventEmitter {
             // Destroy
             webrtcPeer.removeAllListeners();
             webrtcPeer.destroy();
+
+            // Log transport change
+            this.updateTransport('realtime.co');
         });
 
         webrtcPeer.on('data', (rawData) => {
             // Receive data
-            if (this.lastMessageTransport !== 'webrtc') {
-                this.lastMessageTransport = 'webrtc';
-                console.log('%cUSE WEBRTC with client: ' + this.remoteClient, 'color: #00CC00');
-            }
+            this.updateTransport('webrtc');
             this.emit('webrtc-data', rawData, webrtcPeer, remoteClient);
 
             let data = JSON.parse('' + rawData);
@@ -219,7 +219,7 @@ export class Peer extends EventEmitter {
 
         if (this.lastMessageTransport !== 'realtime.co') {
             this.lastMessageTransport = 'realtime.co';
-            console.log('%cUSE REALTIME with client: ' + this.remoteClient, 'color: #00CC00');
+            console.log('%cUSE REALTIME: ' + this.remoteClient, 'color: #009900');
         }
             
         if (this.onMessage) this.onMessage(message);
@@ -233,12 +233,34 @@ export class Peer extends EventEmitter {
 
         if (this.lastMessageTransport !== 'realtime.co') {
             this.lastMessageTransport = 'realtime.co';
-            console.log('%cUSE REALTIME with client: ' + this.remoteClient, 'color: #00CC00');
+            console.log('%cUSE REALTIME: ' + this.remoteClient, 'color: #009900');
         }
 
         this.remotePeerAliveSince = new Date().getTime();
 
     } //handleRealtimeAlive
+
+    updateTransport(transport:'webrtc'|'realtime.co') {
+
+        if (transport === 'webrtc') {
+            if (this.lastMessageTransport !== 'webrtc') {
+                console.log('%cUPGRADE TO WEBRTC: ' + this.remoteClient, 'color: #00DD00');
+                this.lastMessageTransport = 'webrtc';
+            }
+        }
+        else if (transport === 'realtime.co') {
+            if (this.lastMessageTransport !== 'realtime.co') {
+                if (this.lastMessageTransport === 'webrtc') {
+                    console.log('%cFALLBACK TO REALTIME: ' + this.remoteClient, 'color: #009900');
+                }
+                else {
+                    console.log('%cUSE REALTIME: ' + this.remoteClient, 'color: #009900');
+                }
+                this.lastMessageTransport = 'realtime.co';
+            }
+        }
+
+    } //updateTransport
 
 } //Peer
 
@@ -342,6 +364,7 @@ export class Room extends EventEmitter {
                     let clients = [this.clientId, remoteClient];
                     clients.sort();
                     if (clients[0] === this.clientId) {
+                        console.log('%cINITIATE CONNECTION', 'color: #FF00FF');
                         // Yes, initiate a new P2P connection (if not any yet)
                         if (!p.webrtcPeer) {
                             p.webrtcPeer = new SimplePeer({
@@ -393,16 +416,17 @@ export class Room extends EventEmitter {
 
                     console.log('%cRECEIVE ' + data.type + ' EVENT', 'color: #FF00FF');
 
+                    let p = this.peers.get(remoteClient);
+                    if (p == null) {
+                        p = new Peer(this, remoteClient);
+                    }
+
                     // Should we initiate this connection?
                     let clients = [this.clientId, remoteClient];
                     clients.sort();
                     if (clients[0] === this.clientId) {
                         console.log('%cINITIATE CONNECTION', 'color: #FF00FF');
                         // Yes, initiate a new P2P connection
-                        let p = this.peers.get(remoteClient);
-                        if (p == null) {
-                            p = new Peer(this, remoteClient);
-                        }
                         if (!p.webrtcPeer) {
                             p.webrtcPeer = new SimplePeer({
                                 initiator: true,
