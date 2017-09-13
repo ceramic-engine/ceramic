@@ -29,6 +29,9 @@ export class Peer extends EventEmitter {
     /** Room */
     room:Room = null;
 
+    /** Last message transport */
+    lastMessageTransport:'webrtc'|'realtime.co' = null;
+
     /** On message custom callback */
     onMessage:(message:string) => void = null;
 
@@ -135,12 +138,10 @@ export class Peer extends EventEmitter {
 
         // If Web RTC is ready, use it to send the message
         if (this.webrtcPeer && this.webrtcReady) {
-            console.log('%c-- send via webrtc --', 'color: #666666');
             this.webrtcPeer.send(rawData);
         }
         // Otherwise, fallback to realtime.co messaging
         else {
-            console.log('%c-- send via realtime.co --', 'color: #666666');
             realtime.send(this.room.roomId + ':' + this.remoteClient, rawData);
         }
 
@@ -193,7 +194,10 @@ export class Peer extends EventEmitter {
 
         webrtcPeer.on('data', (rawData) => {
             // Receive data
-            console.log('%c-- receive via webrtc --', 'color: #666666');
+            if (this.lastMessageTransport !== 'webrtc') {
+                this.lastMessageTransport = 'webrtc';
+                console.log('%cUSE WEBRTC with client: ' + this.remoteClient, 'color: #00CC00');
+            }
             this.emit('webrtc-data', rawData, webrtcPeer, remoteClient);
 
             let data = JSON.parse('' + rawData);
@@ -212,6 +216,11 @@ export class Peer extends EventEmitter {
     handleRealtimeMessage(message:string) {
 
         if (this.destroyed) return;
+
+        if (this.lastMessageTransport !== 'realtime.co') {
+            this.lastMessageTransport = 'realtime.co';
+            console.log('%cUSE REALTIME with client: ' + this.remoteClient, 'color: #00CC00');
+        }
             
         if (this.onMessage) this.onMessage(message);
         this.emit('message', message);
@@ -221,6 +230,11 @@ export class Peer extends EventEmitter {
     handleRealtimeAlive() {
 
         if (this.destroyed) return;
+
+        if (this.lastMessageTransport !== 'realtime.co') {
+            this.lastMessageTransport = 'realtime.co';
+            console.log('%cUSE REALTIME with client: ' + this.remoteClient, 'color: #00CC00');
+        }
 
         this.remotePeerAliveSince = new Date().getTime();
 
