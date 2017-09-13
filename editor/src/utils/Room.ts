@@ -23,6 +23,9 @@ export class Peer extends EventEmitter {
     /** Destroyed? */
     destroyed:boolean = false;
 
+    /** Remote peer alive since... */
+    remotePeerAliveSince:number = -1;
+
     /** Room */
     room:Room = null;
 
@@ -38,6 +41,51 @@ export class Peer extends EventEmitter {
         this.clientId = clientId;
         this.room = room;
         this.room.peers.set(clientId, this);
+        this.remotePeerAliveSince = new Date().getTime();
+
+        // Emit connect event as the peer is now ready to communicate,
+        // At least through realtime.co, then Web RTC if possible.
+        setImmediate(() => {
+            if (this.destroyed) return;
+            
+            this.room.emit('connect', this, this.clientId);
+        });
+
+        // Send an `alive` paquet at a regular interval and
+        // expect the remote peer to respond to do the same.
+        // If one of the peers didn't receive any `alive` paquet
+        // After a while, that means the connection is not valid
+        // anymore and should be closed.
+        let intervalId = setInterval(() => {
+            if (this.destroyed) {
+                clearInterval(intervalId);
+                return;
+            }
+
+            // Check if connection is still valid
+            let time = new Date().getTime();
+            if (time - this.remotePeerAliveSince > 16) {
+                // Connection expired
+                this.destroy();
+                return;
+            }
+            
+            // Ok, let's continue to `ping` the remote peer
+            this.sendInternal({
+                type: 'alive',
+                value: {
+                    client: this.clientId
+                }
+            });
+
+        }, 5000);
+
+        this.sendInternal({
+            type: 'alive',
+            value: {
+                client: this.clientId
+            }
+        });
 
     } //constructor
 
@@ -57,6 +105,8 @@ export class Peer extends EventEmitter {
         if (this.room.peers.get(this.clientId) === this) {
             this.room.peers.delete(this.clientId);
         }
+        
+        this.room.emit('close', this.clientId);
 
     } //destroy
 
@@ -64,26 +114,34 @@ export class Peer extends EventEmitter {
 
     send(message:string) {
 
+        this.sendInternal({
+            type: 'message',
+            value: {
+                client: this.clientId,
+                message: message
+            }
+        });
+
+    } //send
+
+    sendInternal(data:{type:string, value?:any}) {
+
         if (this.destroyed) return;
+
+        let rawData = JSON.stringify(data);
 
         // If Web RTC is ready, use it to send the message
         if (this.webrtcPeer && this.webrtcReady) {
             console.log('%c-- send via webrtc --', 'color: #666666');
-            this.webrtcPeer.send(message);
+            this.webrtcPeer.send(rawData);
         }
         // Otherwise, fallback to realtime.co messaging
         else {
             console.log('%c-- send via realtime.co --', 'color: #666666');
-            realtime.send(this.room.roomId + ':' + this.clientId, JSON.stringify({
-                type: 'message',
-                value: {
-                    client: this.clientId,
-                    message: message
-                }
-            }));
+            realtime.send(this.room.roomId + ':' + this.clientId, rawData);
         }
 
-    } //send
+    } //sendRaw
 
 /// Internal API
 
@@ -130,14 +188,20 @@ export class Peer extends EventEmitter {
             webrtcPeer.destroy();
         });
 
-        webrtcPeer.on('data', (data) => {
+        webrtcPeer.on('data', (rawData) => {
             // Receive data
             console.log('%c-- receive via webrtc --', 'color: #666666');
-            this.emit('webrtc-data', data, webrtcPeer, remoteClient);
+            this.emit('webrtc-data', rawData, webrtcPeer, remoteClient);
 
-            let message = ''+data;
-            if (this.onMessage) this.onMessage(message);
-            this.emit('message', message);
+            let data = JSON.parse('' + rawData);
+            if (data.type === 'message') {
+                let message = data.value.message;
+                if (this.onMessage) this.onMessage(message);
+                this.emit('message', message);
+            }
+            else if (data.type === 'alive') {
+                this.remotePeerAliveSince = new Date().getTime();
+            }
         });
 
     } //configurePeer
@@ -150,6 +214,14 @@ export class Peer extends EventEmitter {
         this.emit('message', message);
 
     } //handleRealtimeMessage
+
+    handleRealtimeAlive() {
+
+        if (this.destroyed) return;
+
+        this.remotePeerAliveSince = new Date().getTime();
+
+    } //handleRealtimeAlive
 
 } //Peer
 
@@ -273,6 +345,17 @@ export class Room extends EventEmitter {
                     }
                     else {
                         console.warn('Received realtime message from unmapped peer: ' + remoteClient);
+                    }
+                }
+                else if (data.type === 'alive') {
+                    let remoteClient = data.value.client;
+
+                    let p = this.peers.get(remoteClient);
+                    if (p) {
+                        p.handleRealtimeAlive();
+                    }
+                    else {
+                        console.warn('Received realtime alive from unmapped peer: ' + remoteClient);
                     }
                 }
             }

@@ -238,7 +238,7 @@ class Project extends Model {
                         console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
 
                     });
-                    this.room.on('close', (p:Peer, remoteClient:string) => {
+                    this.room.on('close', (remoteClient:string) => {
 
                         console.log('%cPEER DISCONNECTED: ' + remoteClient, 'color: #FFBB00');
 
