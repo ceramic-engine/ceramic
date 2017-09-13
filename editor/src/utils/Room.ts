@@ -4,7 +4,154 @@ import { autobind } from 'utils';
 import SimplePeer from 'simple-peer';
 import { EventEmitter } from 'events';
 
-export interface Peer extends SimplePeer.Instance {}
+/** WebRTC peer */
+export interface WebrtcPeer extends SimplePeer.Instance {}
+
+export class Peer extends EventEmitter {
+
+/// Properties
+
+    /** WebRTC peer */
+    webrtcPeer:WebrtcPeer = null;
+
+    /** WebRTC ready? */
+    webrtcReady:boolean = false;
+
+    /** Client id */
+    clientId:string = null;
+
+    /** Destroyed? */
+    destroyed:boolean = false;
+
+    /** Room */
+    room:Room = null;
+
+    /** On message custom callback */
+    onMessage:(message:string) => void = null;
+
+/// Lifecycle
+
+    constructor(room:Room, clientId:string) {
+
+        super();
+
+        this.clientId = clientId;
+        this.room = room;
+        this.room.peers.set(clientId, this);
+
+    } //constructor
+
+    destroy() {
+
+        if (this.destroyed) return;
+    
+        this.destroyed = true;
+        this.webrtcReady = false;
+
+        let webrtcPeer = this.webrtcPeer;
+        if (webrtcPeer) {
+            this.webrtcPeer = null;
+            webrtcPeer.destroy();
+        }
+
+        if (this.room.peers.get(this.clientId) === this) {
+            this.room.peers.delete(this.clientId);
+        }
+
+    } //destroy
+
+/// Public API
+
+    send(message:string) {
+
+        if (this.destroyed) return;
+
+        // If Web RTC is ready, use it to send the message
+        if (this.webrtcPeer && this.webrtcReady) {
+            console.log('%c-- send via webrtc --', 'color: #666666');
+            this.webrtcPeer.send(message);
+        }
+        // Otherwise, fallback to realtime.co messaging
+        else {
+            console.log('%c-- send via realtime.co --', 'color: #666666');
+            realtime.send(this.room.roomId + ':' + this.clientId, JSON.stringify({
+                type: 'message',
+                value: {
+                    client: this.clientId,
+                    message: message
+                }
+            }));
+        }
+
+    } //send
+
+/// Internal API
+
+    configureWebrtcPeer() {
+
+        if (this.destroyed) return;
+
+        let roomId = this.room.roomId;
+        let remoteClient = this.clientId;
+        let webrtcPeer = this.webrtcPeer;
+        if (!webrtcPeer) {
+            throw 'Cannot configure WebRTC peer if it doesn\' exist';
+        }
+
+        webrtcPeer.on('signal', (signal) => {
+            // Send signaling data to client we want to connect to
+            realtime.send(roomId + ':' + remoteClient, JSON.stringify({
+                type: 'signal',
+                value: {
+                    client: this.clientId,
+                    signal: signal
+                }
+            }));
+        });
+
+        webrtcPeer.on('connect', () => {
+            // Let locally know about the new connection
+            this.webrtcReady = true;
+            this.emit('webrtc-connect', webrtcPeer, remoteClient);
+        });
+
+        webrtcPeer.on('close', () => {
+            // Let locally know about the new connection
+            this.emit('webrtc-close', webrtcPeer, remoteClient);
+
+            // Unmap
+            if (this.webrtcPeer === webrtcPeer) {
+                this.webrtcPeer = null;
+                this.webrtcReady = false;
+            }
+
+            // Destroy
+            webrtcPeer.removeAllListeners();
+            webrtcPeer.destroy();
+        });
+
+        webrtcPeer.on('data', (data) => {
+            // Receive data
+            console.log('%c-- receive via webrtc --', 'color: #666666');
+            this.emit('webrtc-data', data, webrtcPeer, remoteClient);
+
+            let message = ''+data;
+            if (this.onMessage) this.onMessage(message);
+            this.emit('message', message);
+        });
+
+    } //configurePeer
+
+    handleRealtimeMessage(message:string) {
+
+        if (this.destroyed) return;
+            
+        if (this.onMessage) this.onMessage(message);
+        this.emit('message', message);
+
+    } //handleRealtimeMessage
+
+} //Peer
 
 /** Utility built with realtime.co + webrtc to let peers
     communicate with each others inside a common `room` */
@@ -22,7 +169,7 @@ export class Room extends EventEmitter {
 /// Internal properties
 
     /** Mapping of (webrtc) peers by client id. */
-    private peers:Map<string, Peer> = new Map();
+    peers:Map<string, Peer> = new Map();
 
     /** Simple-peer (webrtc) config used internally */
     private peerConfig = {
@@ -71,21 +218,23 @@ export class Room extends EventEmitter {
 
                     // Received an updated signal / an offer to connect
                     let p = this.peers.get(remoteClient);
-                    if (p != null) {
+                    if (p != null && p.webrtcPeer != null) {
                         // Update peer signal
-                        p.signal(data.value.signal);
+                        p.webrtcPeer.signal(data.value.signal);
                     }
                     else {
-                        // Create new peer and set the signal
-                        p = new SimplePeer({
+                        // Create (or reuse) peer and set the signal
+                        if (p == null) {
+                            p = new Peer(this, remoteClient);
+                        }
+
+                        // Create WebRTC peer
+                        p.webrtcPeer = new SimplePeer({
                             config: this.peerConfig
                         });
 
-                        // Keep peer instance and map it to the couple roomId + client id
-                        this.peers.set(remoteClient, p);
-
-                        this.configurePeer(p, remoteClient);
-                        p.signal(signal);
+                        p.configureWebrtcPeer();
+                        p.webrtcPeer.signal(signal);
                     }
                 }
                 else if (data.type === 'reply') {
@@ -93,17 +242,37 @@ export class Room extends EventEmitter {
                     let remoteClient = data.value.client;
                     if (remoteClient === this.clientId) return; // This is us
 
+                    // Get or create peer
+                    let p = this.peers.get(remoteClient);
+                    if (p == null) {
+                        p = new Peer(this, remoteClient);
+                    }
+
                     // We receive a reply because we should initiate the connection,
                     // But check again before doing so, then do it.
                     let clients = [this.clientId, remoteClient];
                     clients.sort();
                     if (clients[0] === this.clientId) {
-                        // Yes, initiate a new P2P connection
-                        let p = new SimplePeer({
-                            initiator: true,
-                            config: this.peerConfig
-                        });
-                        this.configurePeer(p, remoteClient);
+                        // Yes, initiate a new P2P connection (if not any yet)
+                        if (!p.webrtcPeer) {
+                            p.webrtcPeer = new SimplePeer({
+                                initiator: true,
+                                config: this.peerConfig
+                            });
+                            p.configureWebrtcPeer();
+                        }
+                    }
+                }
+                else if (data.type === 'message') {
+                    let remoteClient = data.value.client;
+                    let message = data.value.message;
+
+                    let p = this.peers.get(remoteClient);
+                    if (p) {
+                        p.handleRealtimeMessage(message);
+                    }
+                    else {
+                        console.warn('Received realtime message from unmapped peer: ' + remoteClient);
                     }
                 }
             }
@@ -129,11 +298,17 @@ export class Room extends EventEmitter {
                     clients.sort();
                     if (clients[0] === this.clientId) {
                         // Yes, initiate a new P2P connection
-                        let p = new SimplePeer({
-                            initiator: true,
-                            config: this.peerConfig
-                        });
-                        this.configurePeer(p, remoteClient);
+                        let p = this.peers.get(remoteClient);
+                        if (p == null) {
+                            p = new Peer(this, remoteClient);
+                        }
+                        if (!p.webrtcPeer) {
+                            p.webrtcPeer = new SimplePeer({
+                                initiator: true,
+                                config: this.peerConfig
+                            });
+                            p.configureWebrtcPeer();
+                        }
                     }
                     else if (data.type === 'enter') {
                         // No, then just reply to this client
@@ -200,47 +375,5 @@ export class Room extends EventEmitter {
         }));
 
     } //onRealtimeReconnect
-
-    private configurePeer(p:Peer, remoteClient:string) {
-
-        // Map
-        this.peers.set(remoteClient, p);
-
-        p.on('signal', (signal) => {
-            // Send signaling data to client we want to connect to
-            realtime.send(this.roomId + ':' + remoteClient, JSON.stringify({
-                type: 'signal',
-                value: {
-                    client: this.clientId,
-                    signal: signal
-                }
-            }));
-        });
-
-        p.on('connect', () => {
-            // Let locally know about the new connection
-            this.emit('connect', p, remoteClient);
-        });
-
-        p.on('close', () => {
-            // Let locally know about the new connection
-            this.emit('close', p, remoteClient);
-
-            // Unmap
-            if (this.peers.get(remoteClient) === p) {
-                this.peers.delete(remoteClient);
-            }
-
-            // Destroy
-            p.removeAllListeners();
-            p.destroy();
-        });
-
-        p.on('data', (data) => {
-            // Receive data
-            this.emit('data', data, p, remoteClient);
-        });
-
-    } //configurePeer
 
 } //Room
