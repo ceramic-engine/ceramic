@@ -51,6 +51,7 @@ export class Room extends EventEmitter {
         }
 
         console.log('%cREALTIME subscribe ' + roomId + ':' + this.clientId, 'color: #0000FF');
+        console.log('%cREALTIME subscribe ' + roomId, 'color: #0000FF');
 
         // Add listener to re-send `enter` event in case we were disconnected
         realtime.addListener('reconnect', this.onRealtimeReconnect);
@@ -120,6 +121,8 @@ export class Room extends EventEmitter {
                 if ((data.type === 'enter' || data.type === 'reply') && !this.peers.has(data.value.client)) {
                     let remoteClient = data.value.client;
                     if (remoteClient === this.clientId) return; // This is us
+
+                    console.log('%cRECEIVE ' + data.type + ' EVENT', 'color: #FF00FF');
 
                     // Should we initiate this connection?
                     let clients = [this.clientId, remoteClient];

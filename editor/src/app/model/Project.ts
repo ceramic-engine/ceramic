@@ -189,11 +189,20 @@ class Project extends Model {
 
             if (realtime.apiKey !== user.realtimeApiKey) {
                 if (user.realtimeApiKey) {
-                    console.log('REALTIME CONNECT');
+                    console.log('%cREALTIME CONNECT', 'color: #FF00FF');
                     realtime.connect(user.realtimeApiKey);
+                    realtime.on('connect', () => {
+                        console.log('%cREALTIME READY', 'color: #00FF00');
+                    });
+                    realtime.on('disconnect', () => {
+                        console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
+                    });
+                    realtime.on('reconnect', () => {
+                        console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
+                    });
                 }
                 else {
-                    console.log('REALTIME DISCONNECT');
+                    console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
                     realtime.disconnect(true);
                 }
             }
@@ -227,7 +236,7 @@ class Project extends Model {
                 //
                 this.room.on('connect', (p:Peer, remoteClient:string) => {
 
-                    console.log('PEER CONNECTED: ' + remoteClient);
+                    console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
 
                 });
             }
