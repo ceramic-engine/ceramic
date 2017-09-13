@@ -17,8 +17,8 @@ export class Peer extends EventEmitter {
     /** WebRTC ready? */
     webrtcReady:boolean = false;
 
-    /** Client id */
-    clientId:string = null;
+    /** Remote client id */
+    remoteClient:string = null;
 
     /** Destroyed? */
     destroyed:boolean = false;
@@ -34,15 +34,15 @@ export class Peer extends EventEmitter {
 
 /// Lifecycle
 
-    constructor(room:Room, clientId:string) {
+    constructor(room:Room, remoteClient:string) {
 
         super();
 
-        console.log('CREATE PEER ' + clientId);
+        console.log('%cCREATE PEER ' + remoteClient, 'color: #FF0000');
 
-        this.clientId = clientId;
+        this.remoteClient = remoteClient;
         this.room = room;
-        this.room.peers.set(clientId, this);
+        this.room.peers.set(remoteClient, this);
         this.remotePeerAliveSince = new Date().getTime();
 
         // Emit connect event as the peer is now ready to communicate,
@@ -50,7 +50,7 @@ export class Peer extends EventEmitter {
         setImmediate(() => {
             if (this.destroyed) return;
             
-            this.room.emit('connect', this, this.clientId);
+            this.room.emit('connect', this, this.remoteClient);
         });
 
         // Send an `alive` paquet at a regular interval and
@@ -68,7 +68,7 @@ export class Peer extends EventEmitter {
             let time = new Date().getTime();
             if (time - this.remotePeerAliveSince > 16000) {
                 // Connection expired
-                console.warn('Connection expired with peer: ' + this.clientId);
+                console.warn('Connection expired with peer: ' + this.remoteClient);
                 this.destroy();
                 return;
             }
@@ -77,7 +77,7 @@ export class Peer extends EventEmitter {
             this.sendInternal({
                 type: 'alive',
                 value: {
-                    client: this.clientId
+                    client: room.clientId
                 }
             });
 
@@ -86,7 +86,7 @@ export class Peer extends EventEmitter {
         this.sendInternal({
             type: 'alive',
             value: {
-                client: this.clientId
+                client: room.clientId
             }
         });
 
@@ -105,11 +105,11 @@ export class Peer extends EventEmitter {
             webrtcPeer.destroy();
         }
 
-        if (this.room.peers.get(this.clientId) === this) {
-            this.room.peers.delete(this.clientId);
+        if (this.room.peers.get(this.remoteClient) === this) {
+            this.room.peers.delete(this.remoteClient);
         }
         
-        this.room.emit('close', this.clientId);
+        this.room.emit('close', this.remoteClient);
 
     } //destroy
 
@@ -120,7 +120,7 @@ export class Peer extends EventEmitter {
         this.sendInternal({
             type: 'message',
             value: {
-                client: this.clientId,
+                client: this.room.clientId,
                 message: message
             }
         });
@@ -141,7 +141,7 @@ export class Peer extends EventEmitter {
         // Otherwise, fallback to realtime.co messaging
         else {
             console.log('%c-- send via realtime.co --', 'color: #666666');
-            realtime.send(this.room.roomId + ':' + this.clientId, rawData);
+            realtime.send(this.room.roomId + ':' + this.remoteClient, rawData);
         }
 
     } //sendRaw
@@ -153,7 +153,7 @@ export class Peer extends EventEmitter {
         if (this.destroyed) return;
 
         let roomId = this.room.roomId;
-        let remoteClient = this.clientId;
+        let remoteClient = this.remoteClient;
         let webrtcPeer = this.webrtcPeer;
         if (!webrtcPeer) {
             throw 'Cannot configure WebRTC peer if it doesn\' exist';
@@ -164,7 +164,7 @@ export class Peer extends EventEmitter {
             realtime.send(roomId + ':' + remoteClient, JSON.stringify({
                 type: 'signal',
                 value: {
-                    client: this.clientId,
+                    client: this.room.clientId,
                     signal: signal
                 }
             }));
@@ -383,6 +383,7 @@ export class Room extends EventEmitter {
                     let clients = [this.clientId, remoteClient];
                     clients.sort();
                     if (clients[0] === this.clientId) {
+                        console.log('%cINITIATE CONNECTION', 'color: #FF00FF');
                         // Yes, initiate a new P2P connection
                         let p = this.peers.get(remoteClient);
                         if (p == null) {
@@ -397,6 +398,7 @@ export class Room extends EventEmitter {
                         }
                     }
                     else if (data.type === 'enter') {
+                        console.log('%cREPLY', 'color: #FF00FF');
                         // No, then just reply to this client
                         // to let it initiate the connection
                         realtime.send(roomId + ':' + remoteClient, JSON.stringify({
