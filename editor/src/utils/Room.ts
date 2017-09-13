@@ -38,6 +38,8 @@ export class Peer extends EventEmitter {
 
         super();
 
+        console.log('CREATE PEER ' + clientId);
+
         this.clientId = clientId;
         this.room = room;
         this.room.peers.set(clientId, this);
@@ -64,8 +66,9 @@ export class Peer extends EventEmitter {
 
             // Check if connection is still valid
             let time = new Date().getTime();
-            if (time - this.remotePeerAliveSince > 16) {
+            if (time - this.remotePeerAliveSince > 16000) {
                 // Connection expired
+                console.warn('Connection expired with peer: ' + this.clientId);
                 this.destroy();
                 return;
             }
