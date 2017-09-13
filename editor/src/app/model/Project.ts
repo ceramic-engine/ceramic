@@ -1,4 +1,4 @@
-import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, git, serializeModel, Model } from 'utils';
+import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, git, realtime, serializeModel, Model, Room, Peer } from 'utils';
 import Scene from './Scene';
 import SceneItem from './SceneItem';
 import UiState from './UiState';
@@ -65,6 +65,10 @@ class Project extends Model {
 
     /** Keep last git sync footprint. */
     @observe @serialize lastGitSyncProjectFootprint?:string;
+
+/// Realtime
+
+    @observe room:Room = null;
 
 /// UI State
 
@@ -176,6 +180,59 @@ class Project extends Model {
     constructor(id?:string) {
 
         super(id);
+
+        // Manage realtime.co connection
+        //
+        autorun(() => {
+
+            if (!this.ui || this.ui.editSettings) return;
+
+            if (realtime.apiKey !== user.realtimeApiKey) {
+                if (user.realtimeApiKey) {
+                    console.log('REALTIME CONNECT');
+                    realtime.connect(user.realtimeApiKey);
+                }
+                else {
+                    console.log('REALTIME DISCONNECT');
+                    realtime.disconnect(true);
+                }
+            }
+
+        });
+
+        // Manage realtime messaging room
+        //
+        autorun(() => {
+
+            if (!this.uuid) {
+                // Destroy existing room, if any
+                if (this.room) {
+                    this.room.destroy();
+                    this.room = null;
+                }
+            }
+            else {
+                // Destroy existing room, if any
+                if (this.room && this.room.roomId !== this.uuid) {
+                    this.room.destroy();
+                    this.room = null;
+                }
+
+                if (!this.room) {
+                    // Create up to date room
+                    this.room = new Room(this.uuid);
+                }
+
+                // Bind events
+                //
+                this.room.on('connect', (p:Peer, remoteClient:string) => {
+
+                    console.log('PEER CONNECTED: ' + remoteClient);
+
+                });
+            }
+
+        });
 
         // Update status bar text
         //

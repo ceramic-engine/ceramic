@@ -1,8 +1,11 @@
 import uuid from './uuid';
+import { EventEmitter } from 'events';
 
-class Realtime {
+class Realtime extends EventEmitter {
 
     active:boolean = false;
+
+    apiKey:string = null;
 
     private onConnectedCallbacks:Array<() => void> = [];
 
@@ -12,16 +15,20 @@ class Realtime {
 
     constructor() {
 
+        super();
+
     } //constructor
 
     connect(apiKey:string, token:string = '_') {
 
         if (this.ortcClient != null) {
-            this.disconnect();
+            this.disconnect(true);
         }
 
+        this.apiKey = apiKey;
+
         this.ortcClient = (window as any).RealtimeMessaging.createClient();
-        this.ortcClient.setClusterUrl('https://ortc-developers.realtime.co/server/ssl/2.1/');
+        this.ortcClient.setClusterUrl('https://ortc-europe.realtime.co/server/ssl/2.1');
         this.ortcClient.connect(apiKey, token);
 
         this.ortcClient.onConnected = () => {
@@ -31,21 +38,42 @@ class Realtime {
             for (let cb of callbacks) {
                 cb();
             }
+
+            this.emit('connect');
+        };
+
+        this.ortcClient.onDisconnected = () => {
+            this.active = false;
+
+            this.emit('disconnect');
+        };
+
+        this.ortcClient.onReconnected = () => {
+            this.active = true;
+            let callbacks = this.onConnectedCallbacks;
+            this.onConnectedCallbacks = [];
+            for (let cb of callbacks) {
+                cb();
+            }
+
+            this.emit('reconnect');
         };
 
     } //connect
 
-    disconnect() {
+    disconnect(force:boolean = false) {
 
-        if (!this.active) {
+        if (!this.active && !force) {
             this.onConnectedCallbacks.push(() => {
                 this.disconnect();
             });
             return;
         }
 
-        this.ortcClient.disconnect();
-        this.ortcClient = null;
+        if (this.ortcClient) {
+            this.ortcClient.disconnect();
+            this.ortcClient = null;
+        }
 
     } //disconnect
 

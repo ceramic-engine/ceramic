@@ -19,6 +19,10 @@ class User extends Model {
     /** Github personal access token */
     @observe @serialize githubToken?:string;
 
+/// Room / realtime
+
+    @observe @serialize realtimeApiKey?:string;
+
 /// Internal
 
     private ignoreProjectChanges = false;

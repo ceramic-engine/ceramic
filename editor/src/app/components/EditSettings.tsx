@@ -43,7 +43,7 @@ import FaQuestion from 'react-icons/lib/fa/question';
                             <span style={{ color: '#FF0000', position: 'relative' }}>
                                 <FaClose style={{ position: 'relative', top: -1 }} size={10} /> Not found
                                 <span className="install-link">
-                                    Install: <a href="https://haxe.org/" onClick={(e) => { e.preventDefault(); shell.openExternal('https://haxe.org/'); }}>https://haxe.org/</a>
+                                    Install: <a href="#" onClick={(e) => { e.preventDefault(); shell.openExternal('https://haxe.org/'); }}>https://haxe.org/</a>
                                 </span>
                             </span>
                             }
@@ -57,7 +57,7 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                 <span style={{ color: '#FF0000', position: 'relative' }}>
                                     <FaClose style={{ position: 'relative', top: -1 }} size={10} /> Not found
                                     <span className="install-link">
-                                        Install: <a href="https://git-scm.com/" onClick={(e) => { e.preventDefault(); shell.openExternal('https://git-scm.com/'); }}>https://git-scm.com/</a>
+                                        Install: <a href="#" onClick={(e) => { e.preventDefault(); shell.openExternal('https://git-scm.com/'); }}>https://git-scm.com/</a>
                                     </span>
                                 </span>
                             }
@@ -98,10 +98,24 @@ import FaQuestion from 'react-icons/lib/fa/question';
                         </Field>
                         <Field label="Github token">
                             <TextInput
+                                password={true}
                                 size="large"
                                 placeholder={'Enter personal access token\u2026'}
                                 value={user.githubToken}
                                 onChange={(val:string) => { user.githubToken = val.trim(); }}
+                            />
+                        </Field>
+                    </Form>
+                    <div className="title">Realtime settings</div>
+                    <div className="description">In addition to Github sync, you can enable realtime multi-user editing experience if you set a common and valid <a href="#" onClick={(e) => { e.preventDefault(); shell.openExternal('https://realtime.co'); }}>realtime.co</a> API key.</div>
+                    <Form>
+                        <Field label="Realtime.co API key">
+                            <TextInput
+                                password={true}
+                                size="large"
+                                placeholder={'Enter realtime.co API key\u2026'}
+                                value={user.realtimeApiKey}
+                                onChange={(val:string) => { user.realtimeApiKey = val.trim(); }}
                             />
                         </Field>
                     </Form>

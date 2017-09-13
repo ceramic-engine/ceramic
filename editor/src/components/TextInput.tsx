@@ -13,6 +13,8 @@ import { autobind, observe, observer } from 'utils';
         disabled?:boolean,
         /* Multiline */
         multiline?:boolean,
+        /* Password */
+        password?:boolean,
         /* Separator */
         separator?:string,
         /* Placeholder */
@@ -73,7 +75,7 @@ import { autobind, observe, observer } from 'utils';
                 <input
                     disabled={this.props.disabled}
                     className={className}
-                    type="text"
+                    type={this.props.password ? 'password' : 'text'}
                     value={value + this.tailText}
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}

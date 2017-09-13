@@ -229,6 +229,10 @@ body, html {
     text-align: left;
 }
 
+#body .large .field label {
+    width: 120px;
+}
+
 #body input.input, #body select.input, #body textarea.input {
     outline: none;
     font-size: 10px;
@@ -512,6 +516,14 @@ body, html {
     background-color: rgba(0,0,0,0.5);
 }
 
+/* Links */
+
+#body a {
+    color: #AAAAAA;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* Install link */
 
 #body .install-link {
@@ -520,11 +532,6 @@ body, html {
     left: 75px;
     top: 0;
     white-space: nowrap;
-}
-
-#body .install-link a {
-    color: #AAAAAA;
-    text-decoration: underline;
 }
 
 /* Dialog */
@@ -590,7 +597,7 @@ body, html {
 
 #body .overlay .dialog.large .dialog-content .description {
     font-size: 10px;
-    margin: 0 auto 8px 155px;
+    margin: 0 auto 8px 171px;
     color: #aaaaaa;
     text-align: left;
     max-width: 350px;
@@ -598,7 +605,7 @@ body, html {
 
 #body .overlay .dialog.large .dialog-content .field-content {
     font-size: 11px;
-    margin: 0 auto 8px 155px;
+    margin: 0 auto 8px 171px;
     text-align: left;
     max-width: 350px;
 }

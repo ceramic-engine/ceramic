@@ -132,7 +132,7 @@ export interface Message {
                 if (!this.ready) {
                     this.ready = true;
                     context.ceramicReady = true;
-                    console.debug('Messaging with ' + this.elementId + ' is ready');
+                    console.log('%cMessaging with ' + this.elementId + ' is ready', 'color: #0000FF');
 
                     this.handleReady();
                 }

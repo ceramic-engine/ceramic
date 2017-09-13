@@ -48,4 +48,4 @@ export { default as uuid } from './uuid';
 
 // Export realtime + webrtc
 export { realtime } from './realtime';
-export { webrtc } from './webrtc-realtime';
+export { Room, Peer } from './Room';
