@@ -93,6 +93,8 @@ export class Peer extends EventEmitter {
             }
         });
 
+        this.updateTransport('realtime.co');
+
     } //constructor
 
     destroy() {
