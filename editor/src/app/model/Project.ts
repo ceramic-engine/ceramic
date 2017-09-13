@@ -230,15 +230,20 @@ class Project extends Model {
                 if (!this.room) {
                     // Create up to date room
                     this.room = new Room(this.uuid);
+
+                    // Bind events
+                    //
+                    this.room.on('connect', (p:Peer, remoteClient:string) => {
+
+                        console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
+
+                    });
+                    this.room.on('close', (p:Peer, remoteClient:string) => {
+
+                        console.log('%cPEER DISCONNECTED: ' + remoteClient, 'color: #FFBB00');
+
+                    });
                 }
-
-                // Bind events
-                //
-                this.room.on('connect', (p:Peer, remoteClient:string) => {
-
-                    console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
-
-                });
             }
 
         });
