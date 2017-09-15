@@ -3,6 +3,8 @@ import { EventEmitter } from 'events';
 
 export interface HistoryItem {
 
+    meta:any;
+
     do:any;
 
     undo:any;

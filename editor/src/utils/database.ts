@@ -360,6 +360,9 @@ function addDirty(model:Model) {
             // Add history item
             if (!history.doing) {
                 history.push({
+                    meta: {
+                        status: 'local'
+                    },
                     do: newSerialized,
                     undo: prevSerialized
                 });

@@ -114,7 +114,7 @@ export class Peer extends EventEmitter {
             this.room.peers.delete(this.remoteClient);
         }
         
-        this.room.emit('close', this.remoteClient);
+        this.room.emit('close', this, this.remoteClient);
 
     } //destroy
 

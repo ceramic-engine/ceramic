@@ -68,7 +68,25 @@ class Project extends Model {
 
 /// Realtime
 
+    @observe sessionId:string = null;
+
+    @observe clientId:string = uuid();
+
     @observe room:Room = null;
+
+    @observe peers:Array<Peer> = [];
+
+    /** Is `true` if current project data is considered up to date.
+        Project must be up to date before sending data to other peers. */
+    @observe isUpToDate:boolean = false;
+
+    /** Last master step index we processed. Coupled with local step index,
+        helps to know what is the gap (if any) with master. */
+    @observe masterStepIndex:number = null;
+
+    /** Current local step index. Coupled with last master step index,
+        helps to know what is the gap (if any) with master. */
+    @observe localStepIndex:number = null;
 
 /// UI State
 
@@ -229,7 +247,7 @@ class Project extends Model {
 
                 if (!this.room) {
                     // Create up to date room
-                    this.room = new Room(this.uuid);
+                    this.room = new Room(this.uuid, this.clientId);
 
                     // Bind events
                     //
@@ -237,10 +255,19 @@ class Project extends Model {
 
                         console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
 
+                        if (this.peers.indexOf(p) === -1) {
+                            this.peers.push(p);
+                        }
+
                     });
-                    this.room.on('close', (remoteClient:string) => {
+                    this.room.on('close', (p:Peer, remoteClient:string) => {
 
                         console.log('%cPEER DISCONNECTED: ' + remoteClient, 'color: #FFBB00');
+                        
+                        let peerIndex = this.peers.indexOf(p);
+                        if (peerIndex !== -1) {
+                            this.peers.splice(peerIndex, 1);
+                        }
 
                     });
                 }
@@ -1285,6 +1312,52 @@ class Project extends Model {
         this.ui.promptText = options;
 
     } //promptText
+
+/// Realtime
+
+    @compute get shouldSendToMaster():boolean {
+
+        return this.hasRemotePeers && !this.isMaster && this.isUpToDate;
+
+    } //shouldSendToMaster
+
+    @compute get hasRemotePeers():boolean {
+
+        return this.peers != null && this.peers.length > 0;
+
+    } //hasRemotePeers
+
+    @compute get isMaster():boolean {
+
+        return !this.hasRemotePeers || this.masterPeer == null;
+
+    } //isMaster
+
+    @compute get masterPeer():Peer {
+
+        if (!this.hasRemotePeers) {
+            return null;
+        }
+        else {
+            let ids = [this.clientId];
+            for (let peer of this.peers) {
+                ids.push(peer.remoteClient);
+            }
+            ids.sort();
+            if (ids[0] === this.clientId) {
+                return null;
+            }
+            else {
+                for (let peer of this.peers) {
+                    if (ids[0] === peer.remoteClient) {
+                        return peer;
+                    }
+                }
+                return null;
+            }
+        }
+
+    } //masterPeer
 
 } //Project
 
