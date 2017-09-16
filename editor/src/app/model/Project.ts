@@ -1502,7 +1502,7 @@ class Project extends Model {
                 let receivedMessages = this.receivedMessagesByClientId.get(remoteClient);
                 if (
                     lastProcessedIndex < message.index &&
-                    receivedMessages.has(message.index)) {
+                    !receivedMessages.has(message.index)) {
                     
                     // Add message
                     receivedMessages.set(message.index, message);
