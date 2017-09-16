@@ -116,6 +116,8 @@ export class Peer extends EventEmitter {
         
         this.room.emit('close', this, this.remoteClient);
 
+        this.onMessage = null;
+
     } //destroy
 
 /// Public API
@@ -173,14 +175,14 @@ export class Peer extends EventEmitter {
             }));
         });
 
-        webrtcPeer.on('connect', () => {
+        webrtcPeer.on('peer-connect', () => {
             // Let locally know about the new connection
             this.webrtcReady = true;
             this.emit('webrtc-connect', webrtcPeer, remoteClient);
         });
 
-        webrtcPeer.on('close', () => {
-            // Let locally know about the new connection
+        webrtcPeer.on('peer-close', () => {
+            // Let locally know about the closed connection
             this.emit('webrtc-close', webrtcPeer, remoteClient);
 
             // Unmap

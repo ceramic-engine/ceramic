@@ -15,6 +15,29 @@ import { ncp } from 'ncp';
 import rimraf from 'rimraf';
 import dateformat from 'dateformat';
 
+interface PeerMessage {
+
+    /** The (unique) index of this message. Allows clients to keep strict message orders. */
+    index:number;
+
+    /** Message type */
+    type:string;
+
+    /** Message data */
+    data?:any;
+
+} //PeerMessage
+
+interface PeerMessageReceipt {
+
+    /** Always to `true`, to identify receipt kinds */
+    receipt:true;
+
+    /** The message index we want to confirm its reception. */
+    index:number;
+
+} //PeerMessageReceipt
+
 class Project extends Model {
 
 /// Properties
@@ -68,13 +91,18 @@ class Project extends Model {
 
 /// Realtime
 
-    @observe sessionId:string = null;
-
+    /** Our own client id. Generated at app startup. */
     @observe clientId:string = uuid();
 
+    /** The room where every client/peer is connecting to. It's id is the same as the project's uuid. */
     @observe room:Room = null;
 
+    /** List of connected peers (`us` is not included in this list) */
     @observe peers:Array<Peer> = [];
+
+    /** Session id. It is included in every message of the room.
+        Helps to detect outdated clients and resync them. */
+    @observe sessionId:string = null;
 
     /** Is `true` if current project data is considered up to date.
         Project must be up to date before sending data to other peers. */
@@ -87,6 +115,18 @@ class Project extends Model {
     /** Current local step index. Coupled with last master step index,
         helps to know what is the gap (if any) with master. */
     @observe localStepIndex:number = null;
+
+    /** Whether the realtime (realtime.co) connetion itself is ready. */
+    @observe realtimeConnected:boolean = false;
+
+    /** Track the last index of message processed for each peer (client id) */
+    @observe lastProcessedIndexByClientId:Map<string,number> = new Map();
+
+    /** Keep received messages for each peer (client id) until they are processed */
+    @observe receivedMessagesByClientId:Map<string,Map<number,PeerMessage>> = new Map();
+
+    /** Keep sent messages for each peer (client id) until we get a receipt from remote peer */
+    @observe sentMessagesByClientId:Map<string,Map<number,PeerMessage>> = new Map();
 
 /// UI State
 
@@ -211,12 +251,15 @@ class Project extends Model {
                     realtime.connect(user.realtimeApiKey);
                     realtime.on('connect', () => {
                         console.log('%cREALTIME READY', 'color: #00FF00');
+                        this.realtimeConnected = true;
                     });
                     realtime.on('disconnect', () => {
                         console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
+                        this.realtimeConnected = false;
                     });
                     realtime.on('reconnect', () => {
                         console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
+                        this.realtimeConnected = true;
                     });
                 }
                 else {
@@ -227,53 +270,8 @@ class Project extends Model {
 
         });
 
-        // Manage realtime messaging room
-        //
-        autorun(() => {
-
-            if (!this.uuid) {
-                // Destroy existing room, if any
-                if (this.room) {
-                    this.room.destroy();
-                    this.room = null;
-                }
-            }
-            else {
-                // Destroy existing room, if any
-                if (this.room && this.room.roomId !== this.uuid) {
-                    this.room.destroy();
-                    this.room = null;
-                }
-
-                if (!this.room) {
-                    // Create up to date room
-                    this.room = new Room(this.uuid, this.clientId);
-
-                    // Bind events
-                    //
-                    this.room.on('connect', (p:Peer, remoteClient:string) => {
-
-                        console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
-
-                        if (this.peers.indexOf(p) === -1) {
-                            this.peers.push(p);
-                        }
-
-                    });
-                    this.room.on('close', (p:Peer, remoteClient:string) => {
-
-                        console.log('%cPEER DISCONNECTED: ' + remoteClient, 'color: #FFBB00');
-                        
-                        let peerIndex = this.peers.indexOf(p);
-                        if (peerIndex !== -1) {
-                            this.peers.splice(peerIndex, 1);
-                        }
-
-                    });
-                }
-            }
-
-        });
+        // Bind realtime features
+        this.bindRealtime();
 
         // Update status bar text
         //
@@ -1358,6 +1356,199 @@ class Project extends Model {
         }
 
     } //masterPeer
+
+    bindRealtime() {
+
+        // Manage realtime messaging room
+        //
+        autorun(() => {
+
+            if (!this.uuid) {
+                // Destroy existing room, if any
+                if (this.room) {
+                    this.room.destroy();
+                    this.room = null;
+                    this.peers.splice(0, this.peers.length);
+                }
+            }
+            else {
+                // Destroy existing room, if any
+                if (this.room && this.room.roomId !== this.uuid) {
+                    this.room.destroy();
+                    this.room = null;
+                }
+
+                if (!this.room) {
+                    // Create up to date room
+                    this.room = new Room(this.uuid, this.clientId);
+
+                    // Bind events
+                    //
+                    this.room.on('peer-connect', (p:Peer, remoteClient:string) => {
+
+                        console.log('%cPEER CONNECTED: ' + remoteClient, 'color: #0000FF');
+
+                        this.bindPeer(p);
+
+                    });
+                    this.room.on('peer-close', (p:Peer, remoteClient:string) => {
+
+                        console.log('%cPEER DISCONNECTED: ' + remoteClient, 'color: #FFBB00');
+
+                        this.unbindPeer(p);
+
+                    });
+                }
+            }
+
+        });
+
+        let sessionStatusTimeout:any = null;
+        autorun(() => {
+
+            let connected = this.realtimeConnected;
+
+            // Connection status changed, clear previous timeout
+            if (sessionStatusTimeout != null) clearTimeout(sessionStatusTimeout);
+
+            // Start a new timeout
+            sessionStatusTimeout = setTimeout(() => {
+
+                // Now, decide whether we are master or not
+                //
+                if (!this.isUpToDate) {
+                    // Do something to make up to date as there seem
+                    // to be no remote peer responding
+                }
+
+            }, 10000);
+
+        });
+
+    } //bindRealtime
+
+    bindPeer(p:Peer) {
+
+        // Update peer list
+        if (this.peers.indexOf(p) === -1) {
+            this.peers.push(p);
+        }
+
+        // Listen to remote peer incoming messages
+        this.listenToPeerMessages(p, (type:string, data?:any) => {
+            
+            if (type === 'saveTime/ask') {
+
+            }
+            else if (type === 'saveTime/reply') {
+
+            }
+
+        });
+        
+        // If we need to get updated, ask peer his last save time
+        if (!this.isUpToDate) {
+            this.sendPeerMessage(p, 'saveTime/ask');
+        }
+
+    } //binPeer
+
+    unbindPeer(p:Peer) {
+                        
+        // Update peer list
+        let peerIndex = this.peers.indexOf(p);
+        if (peerIndex !== -1) {
+            this.peers.splice(peerIndex, 1);
+        }
+
+    } //unbindPeer
+
+    listenToPeerMessages(p:Peer, onMessage:(type:string, data?:any) => void) {
+
+        let remoteClient = p.remoteClient;
+
+        // Create required mappings if needed
+        //
+        if (!this.sentMessagesByClientId.has(remoteClient)) {
+            this.sentMessagesByClientId.set(remoteClient, new Map());
+        }
+        if (!this.receivedMessagesByClientId.has(remoteClient)) {
+            this.receivedMessagesByClientId.set(remoteClient, new Map());
+        }
+        if (!this.lastProcessedIndexByClientId.has(remoteClient)) {
+            this.lastProcessedIndexByClientId.set(remoteClient, -1);
+        }
+
+        p.onMessage = (rawMessage:string) => {
+
+            let parsed = JSON.parse(rawMessage);
+
+            if (parsed.receipt) {
+
+                // Message has been received by remote peer,
+                // No need to keep it locally anymore
+                let receipt:PeerMessageReceipt = parsed;
+                
+                // Delete confirmed message
+                this.sentMessagesByClientId.get(remoteClient).delete(parsed.number);
+
+            }
+            else {
+                // Get received messsage
+                let message:PeerMessage = parsed;
+
+                // If the message is new, keep it in mapping
+                let lastProcessedIndex = this.lastProcessedIndexByClientId.get(remoteClient);
+                let receivedMessages = this.receivedMessagesByClientId.get(remoteClient);
+                if (
+                    lastProcessedIndex < message.index &&
+                    receivedMessages.has(message.index)) {
+                    
+                    // Add message
+                    receivedMessages.set(message.index, message);
+                }
+
+                // Process new messages (if any)
+                // Messages are processed in strict order depending
+                // on the order they were sent by the client
+                while (receivedMessages.has(lastProcessedIndex + 1)) {
+
+                    // Get message
+                    let toProcess = receivedMessages.get(lastProcessedIndex + 1);
+
+                    try {
+                        // Process message
+                        onMessage(toProcess.type, toProcess.data);
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+
+                    // Remove processed message from mapping
+                    receivedMessages.delete(lastProcessedIndex + 1);
+
+                    // Increment processed index
+                    lastProcessedIndex++;
+                    this.lastProcessedIndexByClientId.set(remoteClient, lastProcessedIndex);
+                }
+
+                // Even if it's not the first time we received it,
+                // Reply with a confirmation to let remote peer know about our reception.
+                p.send(JSON.stringify({
+                    receipt:true,
+                    index:message.index
+                }));
+            }
+
+        };
+
+    } //listenToPeerMessages
+
+    sendPeerMessage(p:Peer, type:string, data?:any) {
+
+        // TODO
+
+    } //sendPeerMessage
 
 } //Project
 

@@ -39,7 +39,9 @@ class Realtime extends EventEmitter {
                 cb();
             }
 
-            this.emit('connect');
+            setImmediate(() => {
+                this.emit('connect');
+            });
         };
 
         this.ortcClient.onDisconnected = () => {
