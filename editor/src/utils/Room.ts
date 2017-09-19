@@ -476,11 +476,10 @@ export class Room extends EventEmitter {
         realtime.removeListener('reconnect', this.onRealtimeReconnect);
 
         // Close all peers
-        let allPeers = [];
-        for (let remoteClient in this.peers.keys()) {
-            let peer = this.peers.get(remoteClient);
+        let allPeers:Array<Peer> = [];
+        this.peers.forEach((peer, remoteClient) => {
             allPeers.push(peer);
-        }
+        });
         this.peers = new Map();
         for (let peer of allPeers) {
             peer.destroy();

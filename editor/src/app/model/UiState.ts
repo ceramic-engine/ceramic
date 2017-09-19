@@ -1,5 +1,6 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
+import { context } from '../context';
 import { Scene, VisualItem, QuadItem, SceneItem, TextItem } from './index';
 
 class UiState extends Model {
@@ -60,7 +61,7 @@ class UiState extends Model {
 
     @compute get canEditHistory():boolean {
 
-        return !(this.promptChoice || this.promptText || this.addVisual);
+        return !(this.promptChoice || this.promptText || this.addVisual || (project.onlineEnabled && context.connectionStatus !== 'online'));
 
     } //canEditHistory
 

@@ -28,6 +28,22 @@ interface PeerMessage {
 
 } //PeerMessage
 
+interface PendingPeerMessage {
+
+    /** The message itself */
+    message:PeerMessage;
+
+    /** Time when the message was sent */
+    time:number;
+
+    /** Number of attempts. When this number gets too high,
+        we discard the message (all messages for this client)
+        and mark the client as `expired`. In case the client reconnects later,
+        He will have to make itself `up to date` before exchanging changesets. */
+    attempts:number;
+
+} //PendingPeerMessage
+
 interface PeerMessageReceipt {
 
     /** Always to `true`, to identify receipt kinds */
@@ -89,7 +105,12 @@ class Project extends Model {
     /** Keep last git sync footprint. */
     @observe @serialize lastGitSyncProjectFootprint?:string;
 
-/// Realtime
+/// Realtime / Online
+
+    @observe @serialize onlineEnabled:boolean = false;
+
+    /** A flag that marks realtime as broken */
+    @observe realtimeBroken:boolean = false;
 
     /** Our own client id. Generated at app startup. */
     @observe clientId:string = uuid();
@@ -99,10 +120,6 @@ class Project extends Model {
 
     /** List of connected peers (`us` is not included in this list) */
     @observe peers:Array<Peer> = [];
-
-    /** Session id. It is included in every message of the room.
-        Helps to detect outdated clients and resync them. */
-    @observe sessionId:string = null;
 
     /** Is `true` if current project data is considered up to date.
         Project must be up to date before sending data to other peers. */
@@ -125,8 +142,15 @@ class Project extends Model {
     /** Keep received messages for each peer (client id) until they are processed */
     @observe receivedMessagesByClientId:Map<string,Map<number,PeerMessage>> = new Map();
 
+    /** Track the last index of message sent to each peer (client id) */
+    @observe lastSentIndexByClientId:Map<string,number> = new Map();
+
     /** Keep sent messages for each peer (client id) until we get a receipt from remote peer */
-    @observe sentMessagesByClientId:Map<string,Map<number,PeerMessage>> = new Map();
+    @observe pendingMessagesByClientId:Map<string,Map<number,PendingPeerMessage>> = new Map();
+
+    /** Expired client ids. At this stage, we don't interact with them,
+        unless we get them up to date again. */
+    @observe expiredClientIds:Map<string,boolean> = new Map();
 
 /// UI State
 
@@ -238,37 +262,6 @@ class Project extends Model {
     constructor(id?:string) {
 
         super(id);
-
-        // Manage realtime.co connection
-        //
-        autorun(() => {
-
-            if (!this.ui || this.ui.editSettings) return;
-
-            if (realtime.apiKey !== user.realtimeApiKey) {
-                if (user.realtimeApiKey) {
-                    console.log('%cREALTIME CONNECT', 'color: #FF00FF');
-                    realtime.connect(user.realtimeApiKey);
-                    realtime.on('connect', () => {
-                        console.log('%cREALTIME READY', 'color: #00FF00');
-                        this.realtimeConnected = true;
-                    });
-                    realtime.on('disconnect', () => {
-                        console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
-                        this.realtimeConnected = false;
-                    });
-                    realtime.on('reconnect', () => {
-                        console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
-                        this.realtimeConnected = true;
-                    });
-                }
-                else {
-                    console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
-                    realtime.disconnect(true);
-                }
-            }
-
-        });
 
         // Bind realtime features
         this.bindRealtime();
@@ -891,7 +884,7 @@ class Project extends Model {
 
 /// Remote save
 
-    syncWithGithub(resetToGithub:boolean = false):void {
+    syncWithGithub(resetToGithub:boolean = false, auto:boolean = false):void {
 
         if (this.syncingWithGithub) return;
 
@@ -921,7 +914,7 @@ class Project extends Model {
         }
 
         this.syncingWithGithub = true;
-        this.ui.loadingMessage = 'Fetching remote repository \u2026';
+        if (!auto) this.ui.loadingMessage = 'Fetching remote repository \u2026';
 
         // Serialize
         let options = { entries: {}, recursive: true };
@@ -970,7 +963,7 @@ class Project extends Model {
                 this.syncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
-                alert('Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join(''));
+                if (!auto) alert('Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join(''));
                 rimraf.sync(repoDir);
                 return;
             }
@@ -981,7 +974,7 @@ class Project extends Model {
                     this.syncingWithGithub = false;
                     this.lastGithubSyncStatus = 'failure';
                     this.ui.loadingMessage = null;
-                    alert('Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
+                    if (!auto) alert('Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
                     rimraf.sync(repoDir);
                     return;
                 }
@@ -992,35 +985,41 @@ class Project extends Model {
 
                 if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
                     // Apply remote version
-                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp);
+                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto);
                 }
                 else if (hasProjectInRepo && timestamp > this.lastGitSyncTimestamp) {
-                    // There are more recent commits from remote.
-                    // Prompt user to know which version he wants to keep (local or remote)
-                    this.promptChoice({
-                            title: "Resolve conflict",
-                            message: "Remote project has new changes.\nWhich version do you want to keep?",
-                            choices: [
-                                "Local",
-                                "Remote"
-                            ]
-                        },
-                        (result) => {
-                            
-                            if (result === 0) {
-                                // Apply local version
-                                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath);
+
+                    if (auto) {
+                        // Always get most recent changes in automatic mode
+                    }
+                    else {
+                        // There are more recent commits from remote.
+                        // Prompt user to know which version he wants to keep (local or remote)
+                        this.promptChoice({
+                                title: "Resolve conflict",
+                                message: "Remote project has new changes.\nWhich version do you want to keep?",
+                                choices: [
+                                    "Local",
+                                    "Remote"
+                                ]
+                            },
+                            (result) => {
+                                
+                                if (result === 0) {
+                                    // Apply local version
+                                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto);
+                                }
+                                else if (result === 1) {
+                                    // Apply remote version
+                                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto);
+                                }
                             }
-                            else if (result === 1) {
-                                // Apply remote version
-                                this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp);
-                            }
-                        }
-                    );
+                        );
+                    }
                 }
                 else {
                     // Apply local version
-                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath);
+                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto);
                 }
 
             });
@@ -1029,7 +1028,7 @@ class Project extends Model {
 
     } //syncWithGithub
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, commitMessage?:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, commitMessage?:string) {
 
         if (!commitMessage) {
             this.promptText({
@@ -1049,13 +1048,13 @@ class Project extends Model {
                     return;
                 }
 
-                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, result);
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, result);
             });
 
             return;
         }
 
-        this.ui.loadingMessage = 'Pushing changes \u2026';
+        if (!autoSave) this.ui.loadingMessage = 'Pushing changes \u2026';
 
         // Sync assets
         if (localAssetsPath) {
@@ -1164,9 +1163,9 @@ class Project extends Model {
 
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number) {
+    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, autoLoad:boolean) {
 
-        this.ui.loadingMessage = 'Updating local files \u2026';
+        if (!autoLoad) this.ui.loadingMessage = 'Updating local files \u2026';
 
         // Lock assets
         this.assetsLocked = true;
@@ -1359,6 +1358,59 @@ class Project extends Model {
 
     bindRealtime() {
 
+        // Check realtime connection status
+        let cyclesBroken = 0;
+        let lastRealtimeToken = user.realtimeApiKey;
+        setInterval(() => {
+
+            if (lastRealtimeToken !== user.realtimeApiKey) {
+                lastRealtimeToken = user.realtimeApiKey;
+                this.realtimeBroken = false;
+                cyclesBroken = 0;
+            }
+            else if (this.onlineEnabled && !this.realtimeConnected) {
+                cyclesBroken++;
+
+                if (cyclesBroken >= 10) this.realtimeBroken = true;
+            }
+            else {
+                cyclesBroken = 0;
+                this.realtimeBroken = false;
+            }
+
+        }, 1000);
+
+        // Manage realtime.co connection
+        //
+        autorun(() => {
+
+            if (!this.ui || this.ui.editSettings) return;
+
+            if (realtime.apiKey !== user.realtimeApiKey) {
+                if (user.realtimeApiKey) {
+                    console.log('%cREALTIME CONNECT', 'color: #FF00FF');
+                    realtime.connect(user.realtimeApiKey);
+                    realtime.on('connect', () => {
+                        console.log('%cREALTIME READY', 'color: #00FF00');
+                        this.realtimeConnected = true;
+                    });
+                    realtime.on('disconnect', () => {
+                        console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
+                        this.realtimeConnected = false;
+                    });
+                    realtime.on('reconnect', () => {
+                        console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
+                        this.realtimeConnected = true;
+                    });
+                }
+                else {
+                    console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
+                    realtime.disconnect(true);
+                }
+            }
+
+        });
+
         // Manage realtime messaging room
         //
         autorun(() => {
@@ -1403,6 +1455,7 @@ class Project extends Model {
 
         });
 
+        // Make project up to date in a way or another
         let sessionStatusTimeout:any = null;
         autorun(() => {
 
@@ -1425,9 +1478,68 @@ class Project extends Model {
 
         });
 
+        // Automatically re-send messages for which we didn't
+        // receive any confirmation receipt from remote user
+        setInterval(() => {
+
+            // No peers? Nothing to do
+            if (!this.hasRemotePeers || !this.realtimeConnected) return;
+
+            // Get current time
+            let time = new Date().getTime();
+
+            // Iterate over pending messages
+            this.pendingMessagesByClientId.forEach((pendingMessages, remoteClient) => {
+
+                // Find peer for remote client
+                let p:Peer = null;
+                for (let peer of this.peers) {
+                    if (!peer.destroyed && peer.remoteClient === remoteClient) {
+                        p = peer;
+                        break;
+                    }
+                }
+
+                // Then iterate over each pending message of this client
+                // To check if we should still try to send messages
+                let maxAttempts = 0;
+                pendingMessages.forEach((pending, index) => {
+
+                    // Increment attempts and keep max value
+                    if (time - 5000 >= pending.time) {
+                        maxAttempts = Math.max(pending.attempts, maxAttempts);
+                        pending.attempts++;
+                    }
+
+                });
+                
+                // If max attempts > 12 (1 min), mark this client as expired
+                if (maxAttempts > 12) {
+                    this.pendingMessagesByClientId.delete(remoteClient);
+                    this.expiredClientIds.set(remoteClient, true);
+                }
+                else {
+                    // Otherwise, try to send each message again
+                    pendingMessages.forEach((pending, index) => {
+
+                        // Send message again
+                        if (time - 5000 >= pending.time) {
+                            p.send(JSON.stringify(pending.message));
+                        }
+
+                    });
+                }
+
+            });
+
+        }, 2500);
+
     } //bindRealtime
 
     bindPeer(p:Peer) {
+
+        // Keep remote client id
+        let remoteClient = p.remoteClient;
 
         // Update peer list
         if (this.peers.indexOf(p) === -1) {
@@ -1437,18 +1549,33 @@ class Project extends Model {
         // Listen to remote peer incoming messages
         this.listenToPeerMessages(p, (type:string, data?:any) => {
             
-            if (type === 'saveTime/ask') {
+            if (type === 'sync') {
+                let status:'request'|'expired'|'reply' = data.status;
 
+                if (status === 'request') {
+                    // A peer requests to sync. In that case, every client sends to each other
+                    // his last modified time. If there are only 2 users, most recent changes are kept.
+                    // If
+                    
+                }
+                else if (status === 'reply') {
+                    // We received a reply. Are we expecting it?
+                    // If yes, keep it safe until we decide what we want to keep
+
+                }
             }
-            else if (type === 'saveTime/reply') {
-
+            // Handle other kind of message only if the client is up to date
+            else if (!this.expiredClientIds.has(remoteClient)) {
+                
             }
 
         });
         
         // If we need to get updated, ask peer his last save time
         if (!this.isUpToDate) {
-            this.sendPeerMessage(p, 'saveTime/ask');
+            this.sendPeerMessage(p, 'sync', {
+                status: 'ask'
+            });
         }
 
     } //binPeer
@@ -1469,8 +1596,8 @@ class Project extends Model {
 
         // Create required mappings if needed
         //
-        if (!this.sentMessagesByClientId.has(remoteClient)) {
-            this.sentMessagesByClientId.set(remoteClient, new Map());
+        if (!this.pendingMessagesByClientId.has(remoteClient)) {
+            this.pendingMessagesByClientId.set(remoteClient, new Map());
         }
         if (!this.receivedMessagesByClientId.has(remoteClient)) {
             this.receivedMessagesByClientId.set(remoteClient, new Map());
@@ -1490,7 +1617,7 @@ class Project extends Model {
                 let receipt:PeerMessageReceipt = parsed;
                 
                 // Delete confirmed message
-                this.sentMessagesByClientId.get(remoteClient).delete(parsed.number);
+                this.pendingMessagesByClientId.get(remoteClient).delete(parsed.number);
 
             }
             else {
@@ -1535,8 +1662,8 @@ class Project extends Model {
                 // Even if it's not the first time we received it,
                 // Reply with a confirmation to let remote peer know about our reception.
                 p.send(JSON.stringify({
-                    receipt:true,
-                    index:message.index
+                    receipt: true,
+                    index: message.index
                 }));
             }
 
@@ -1546,7 +1673,40 @@ class Project extends Model {
 
     sendPeerMessage(p:Peer, type:string, data?:any) {
 
-        // TODO
+        let remoteClient = p.remoteClient;
+
+        // Check that this client is not expired
+        if (this.expiredClientIds.has(remoteClient) && type !== 'sync') {
+            console.warn('Cannot send message to expired client: ' + remoteClient);
+            return;
+        }
+
+        // Create required mappings if needed
+        //
+        if (!this.pendingMessagesByClientId.has(remoteClient)) {
+            this.pendingMessagesByClientId.set(remoteClient, new Map());
+        }
+        if (!this.lastSentIndexByClientId.has(remoteClient)) {
+            this.lastSentIndexByClientId.set(remoteClient, -1);
+        }
+
+        let messageIndex = this.lastSentIndexByClientId.get(remoteClient) + 1;
+
+        let message:PeerMessage = {
+            index: messageIndex,
+            type: type,
+            data: data
+        };
+
+        // Keep message, to re-send it if needed
+        this.pendingMessagesByClientId.get(remoteClient).set(messageIndex, {
+            time: new Date().getTime(),
+            message: message,
+            attempts: 1
+        });
+
+        // Send it
+        p.send(JSON.stringify(message));
 
     } //sendPeerMessage
 

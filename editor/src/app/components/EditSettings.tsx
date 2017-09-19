@@ -85,19 +85,32 @@ import FaQuestion from 'react-icons/lib/fa/question';
                             />
                         </Field>
                     </Form>
-                    <div className="title">Github settings</div>
-                    <div className="description">Synchronize this project with a Github repository. This allows to work on a ceramic project and save changes, settings, assets and more remotely. It also makes it possible to share the project between multiple users.</div>
+                    <div className="title">Multi-user settings</div>
+                    <div className="description">Synchronize this project with a Github repository and realtime messaging. This allows to work on a ceramic project and save changes, settings, assets and more remotely. It also makes it possible to share the project between multiple users.</div>
                     <Form>
-                        <Field label="Repository URL">
+                        <Field label="Online project">
+                            <SelectInput
+                                size="large"
+                                empty={0}
+                                selected={project.onlineEnabled ? 1 : 0}
+                                options={['Disabled', 'Enabled']}
+                                onChange={(selected) => {
+                                    project.onlineEnabled = selected === 1 ? true : false;
+                                }}
+                            />
+                        </Field>
+                        <Field label="Github repository URL" disabled={!project.onlineEnabled}>
                             <TextInput
+                                disabled={!project.onlineEnabled}
                                 size="large"
                                 placeholder={'https://github.com/username/project-name.git'}
                                 value={project.gitRepository}
                                 onChange={(val:string) => { project.gitRepository = val.trim(); }}
                             />
                         </Field>
-                        <Field label="Github token">
+                        <Field label="Github token" disabled={!project.onlineEnabled}>
                             <TextInput
+                                disabled={!project.onlineEnabled}
                                 password={true}
                                 size="large"
                                 placeholder={'Enter personal access token\u2026'}
@@ -105,12 +118,9 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                 onChange={(val:string) => { user.githubToken = val.trim(); }}
                             />
                         </Field>
-                    </Form>
-                    <div className="title">Realtime settings</div>
-                    <div className="description">In addition to Github sync, you can enable realtime multi-user editing experience if you set a common and valid <a href="#" onClick={(e) => { e.preventDefault(); shell.openExternal('https://realtime.co'); }}>realtime.co</a> API key.</div>
-                    <Form>
-                        <Field label="Realtime.co API key">
+                        <Field label="Realtime.co API key" disabled={!project.onlineEnabled}>
                             <TextInput
+                                disabled={!project.onlineEnabled}
                                 password={true}
                                 size="large"
                                 placeholder={'Enter realtime.co API key\u2026'}

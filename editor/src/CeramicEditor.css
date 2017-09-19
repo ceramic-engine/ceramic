@@ -215,6 +215,10 @@ body, html {
     vertical-align: top;
 }
 
+#body .field.disabled label {
+    color: #999999;
+}
+
 #body .field:not(.with-label) {
     margin-left: 100px;
 }
@@ -407,6 +411,9 @@ body, html {
 
 #body .input-select-container.mac.large select.input.input-select {
     width: 372px;
+    position: relative;
+    left: 0px;
+    top: -1.5px;
 }
 
 #body .input-select-container.windows select.input.input-select {

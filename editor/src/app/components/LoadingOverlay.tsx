@@ -6,12 +6,19 @@ import { Overlay } from 'app/components';
 
 @observer class LoadingOverlay extends React.Component {
 
+    props:{
+        /** Message */
+        message?:string
+    };
+
+/// Lifecycle
+
     render() {
 
         return (
             <Overlay>
                 <Center>
-                    {project.ui.loadingMessage}
+                    {this.props.message != null ? this.props.message : project.ui.loadingMessage}
                 </Center>
             </Overlay>
         );

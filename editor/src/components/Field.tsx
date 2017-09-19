@@ -8,6 +8,8 @@ class Field extends React.Component {
         label?:string,
         /** Kind */
         kind?:"custom",
+        /** Disabled */
+        disabled?:boolean,
         /** Children */
         children:React.ReactNode
     };
@@ -15,7 +17,7 @@ class Field extends React.Component {
     render() {
 
         return (
-            <div className={'field' + (this.props.label ? ' with-label' : '') + (this.props.kind ? ' ' + this.props.kind : '')}>
+            <div className={'field' + (this.props.label ? ' with-label' : '') + (this.props.disabled ? ' disabled' : '') + (this.props.kind ? ' ' + this.props.kind : '')}>
 
                 {this.props.label ?
                     <label>{this.props.label}</label>

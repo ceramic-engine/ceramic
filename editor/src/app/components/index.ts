@@ -13,6 +13,7 @@ export { default as AddVisual } from './AddVisual';
 export { default as EditSettings } from './EditSettings';
 export { default as DragOver } from './DragOver';
 export { default as LoadingOverlay } from './LoadingOverlay';
+export { default as OnlineBroken } from './OnlineBroken';
 export { default as ScenesPanel } from './ScenesPanel';
 export { default as VisualsPanel } from './VisualsPanel';
 export { default as AssetsPanel } from './AssetsPanel';

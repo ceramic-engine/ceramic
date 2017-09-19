@@ -26,6 +26,8 @@ export class Context {
 
     @observe machineId:string = null;
 
+    @observe connectionStatus:'pending'|'online'|'offline' = 'pending';
+
 /// External commands versions
 
     @observe haxeVersion?:string;
@@ -99,6 +101,16 @@ export class Context {
         // Check external commands status
         this.checkHaxeVersion();
         this.checkGitVersion();
+
+        // Connection status
+        setInterval(() => {
+            if (navigator.onLine) {
+                this.connectionStatus = 'online';
+            }
+            else {
+                this.connectionStatus = 'offline';
+            }
+        }, 250);
 
     } //constructor
 
