@@ -1387,7 +1387,7 @@ class Project extends Model {
             if (!this.ui || this.ui.editSettings) return;
 
             if (realtime.apiKey !== user.realtimeApiKey) {
-                if (user.realtimeApiKey) {
+                if (user.realtimeApiKey && this.onlineEnabled) {
                     console.log('%cREALTIME CONNECT', 'color: #FF00FF');
                     realtime.connect(user.realtimeApiKey);
                     realtime.on('connect', () => {
