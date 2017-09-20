@@ -11,8 +11,11 @@ class User extends Model {
     /** Whether current project is dirty (has unsaved changes) or not */
     @observe @serialize projectDirty:boolean = true;
 
-    /** Whether current project (github repository) is dirty (has uncommited changes) or not */
-    @observe @serialize githubProjectDirty:boolean = true;
+    /** Whether current project (github repository, master branch) is dirty (has uncommited changes) or not */
+    @observe @serialize manualGithubProjectDirty:boolean = true;
+
+    /** Whether current project (github repository, auto branch) is dirty (has uncommited changes) or not */
+    @observe @serialize autoGithubProjectDirty:boolean = true;
 
 /// Github access
     
@@ -37,7 +40,8 @@ class User extends Model {
         history.on('push', () => {
             if (!this.ignoreProjectChanges) {
                 this.projectDirty = true;
-                this.githubProjectDirty = true;
+                this.manualGithubProjectDirty = true;
+                this.autoGithubProjectDirty = true;
             }
         });
 
@@ -59,11 +63,11 @@ class User extends Model {
 
     } //markProjectAsClean
 
-    markGithubProjectAsClean():void {
+    markManualGithubProjectAsClean():void {
 
         this.ignoreProjectChanges = true;
 
-        this.githubProjectDirty = false;
+        this.manualGithubProjectDirty = false;
 
         setImmediate(() => {
             setImmediate(() => {
@@ -71,7 +75,21 @@ class User extends Model {
             });
         });
 
-    } //markGithubProjectAsClean
+    } //markManualGithubProjectAsClean
+
+    markAutoGithubProjectAsClean():void {
+
+        this.ignoreProjectChanges = true;
+
+        this.autoGithubProjectDirty = false;
+
+        setImmediate(() => {
+            setImmediate(() => {
+                this.ignoreProjectChanges = false;
+            });
+        });
+
+    } //markAutoGithubProjectAsClean
 
 } //User
 

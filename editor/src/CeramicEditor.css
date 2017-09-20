@@ -53,6 +53,13 @@ body, html {
     top: 4px;
 }
 
+#body .statusbar .statusbar-text .separator {
+    display: inline-block;
+    margin: 0 8px 0 9px;
+    border-right: 1px solid #666666;
+    height: 5px;
+}
+
 #body .leftside {
     background-color: #4f4f4f;
     border-right: 1px solid #383838;

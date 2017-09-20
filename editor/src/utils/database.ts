@@ -5,11 +5,24 @@ import { spy, isObservableArray, isObservableMap } from 'mobx';
 import autobind from 'autobind-decorator';
 import { HistoryListener, HistoryItem, history } from './history';
 
+export interface DatabaseChangesListener {
+
+    onDbChange(changeset:{
+        newSerialized:any,
+        prevSerialized:any,
+        undoing:boolean,
+        redoing:boolean
+    }):void;
+
+} //DatabaseChangesListener
+
 export class Database implements HistoryListener {
 
     entries:{ [key: string]: Entry } = {};
 
     creating:boolean = false;
+
+    changesListener:DatabaseChangesListener = null;
 
     create<T extends Model>(type:new(id?:string) => T, id?:string):T {
 
@@ -173,7 +186,9 @@ export class Database implements HistoryListener {
         let undoData:{ [key: string]: any } = item.undo;
 
         for (let key in undoData) {
-            this.putSerialized(undoData[key], true);
+            if (undoData.hasOwnProperty(key)) {
+                this.putSerialized(undoData[key], true);
+            }
         }
 
     } //onHistoryUndo
@@ -183,7 +198,9 @@ export class Database implements HistoryListener {
         let redoData:{ [key: string]: any } = item.do;
 
         for (let key in redoData) {
-            this.putSerialized(redoData[key], true);
+            if (redoData.hasOwnProperty(key)) {
+                this.putSerialized(redoData[key], true);
+            }
         }
 
     } //onHistoryRedo
@@ -357,14 +374,13 @@ function addDirty(model:Model) {
                 db.put(item, serialized, false);
             }
 
-            // Add history item
-            if (!history.doing) {
-                history.push({
-                    meta: {
-                        status: 'local'
-                    },
-                    do: newSerialized,
-                    undo: prevSerialized
+            // Notify db changes listener (if any)
+            if (db.changesListener) {
+                db.changesListener.onDbChange({
+                    newSerialized,
+                    prevSerialized,
+                    undoing: history.undoing,
+                    redoing: history.redoing
                 });
             }
 

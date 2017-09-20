@@ -36,71 +36,45 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                     }}
                 >
                     <div>
-                        {!project.ui.editSettings && project.onlineEnabled && context.connectionStatus === 'pending' ?
+                        { !project.ui.editSettings && project.onlineEnabled && context.connectionStatus === 'pending' ?
                             <LoadingOverlay
                                 message={'Connecting to Internet\u2026'}
                             />
-                        :
-                            null
-                        }
-                        {!project.ui.editSettings && project.onlineEnabled && context.connectionStatus === 'offline' ?
+                        : !project.ui.editSettings && project.onlineEnabled && !project.isUpToDate ?
+                            <LoadingOverlay
+                                message={'Updating\u2026'}
+                            />
+                        : !project.ui.editSettings && project.onlineEnabled && context.connectionStatus === 'offline' ?
                             <OnlineBroken
                                 title={'Internet is required'}
                                 message={'This project is configured to be online.\n\nPlease ensure you are connected to Internet or set this project as offline.'}
                             />
-                        :
-                            null
-                        }
-                        {!project.ui.editSettings && project.onlineEnabled && !user.realtimeApiKey ?
+                        : !project.ui.editSettings && project.onlineEnabled && !user.realtimeApiKey ?
                             <OnlineBroken
                                 title={'Realtime token is required'}
                                 message={'This project is configured to be online.\n\nPlease add a valid Realtime token.'}
                             />
-                        :
-                            null
-                        }
-                        {!project.ui.editSettings && project.onlineEnabled && user.realtimeApiKey && project.realtimeBroken ?
+                        : !project.ui.editSettings && project.onlineEnabled && user.realtimeApiKey && project.realtimeBroken ?
                             <OnlineBroken
                                 title={'Realtime token seems invalid'}
                                 message={'This project is configured to be online.\n\nEnsure your Realtime token is valid.'}
                             />
-                        :
-                            null
-                        }
-                        {!project.ui.editSettings && project.onlineEnabled && (!user.githubToken) ?
+                        : !project.ui.editSettings && project.onlineEnabled && (!user.githubToken) ?
                             <OnlineBroken
                                 title={'Github token is required'}
                                 message={'This project is configured to be online.\n\nPlease set up a valid Github Personal Access Token.'}
                             />
-                        :
-                            null
-                        }
-                        {context.draggingOver ?
+                        : context.draggingOver ?
                             <DragOver />
-                        :
-                            null
-                        }
-                        {project.ui.addVisual ?
+                        : project.ui.addVisual ?
                             <AddVisual />
-                        :
-                            null
-                        }
-                        {project.ui.editSettings ?
+                        : project.ui.editSettings ?
                             <EditSettings />
-                        :
-                            null
-                        }
-                        {project.ui.promptChoice ?
+                        : project.ui.promptChoice ?
                             <PromptChoice />
-                        :
-                            null
-                        }
-                        {project.ui.promptText ?
+                        : project.ui.promptText ?
                             <PromptText />
-                        :
-                            null
-                        }
-                        {project.ui.loadingMessage ?
+                        : project.ui.loadingMessage ?
                             <LoadingOverlay />
                         :
                             null
@@ -126,6 +100,11 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             'New Project'
                         }
                         {user.projectDirty ?
+                            ' *'
+                        :
+                            null
+                        }
+                        {user.githubToken && project.gitRepository && user.manualGithubProjectDirty ?
                             ' *'
                         :
                             null

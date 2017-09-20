@@ -23,6 +23,10 @@ export interface HistoryListener {
 
     doing:boolean = false;
 
+    undoing:boolean = false;
+
+    redoing:boolean = false;
+
     items:Array<HistoryItem> = [];
 
     index:number = -1;
@@ -85,6 +89,10 @@ export interface HistoryListener {
             if (!wasDoing) {
                 this.doing = true;
             }
+            var wasUndoing = this.undoing;
+            if (!wasUndoing) {
+                this.undoing = true;
+            }
 
             if (this.index >= 0) {
                 var item = this.items[this.index--];
@@ -98,6 +106,9 @@ export interface HistoryListener {
             
             if (!wasDoing) {
                 this.doing = false;
+            }
+            if (!wasUndoing) {
+                this.undoing = false;
             }
 
             return canUndo;
@@ -126,6 +137,10 @@ export interface HistoryListener {
             if (!wasDoing) {
                 this.doing = true;
             }
+            var wasRedoing = this.redoing;
+            if (!wasRedoing) {
+                this.redoing = true;
+            }
 
             if (this.items.length > this.index + 1) {
                 var item = this.items[++this.index];
@@ -139,6 +154,9 @@ export interface HistoryListener {
             
             if (!wasDoing) {
                 this.doing = false;
+            }
+            if (!wasRedoing) {
+                this.redoing = false;
             }
 
             return canRedo;

@@ -31,6 +31,10 @@ class UiState extends Model {
 
     @observe statusBarTextKind:'default'|'success'|'failure'|'warning';
 
+    @observe statusBarBisText:string = '';
+
+    @observe statusBarBisTextKind:'default'|'success'|'failure'|'warning';
+
 /// Loading
 
     @observe loadingMessage:string = '';
@@ -61,13 +65,13 @@ class UiState extends Model {
 
     @compute get canEditHistory():boolean {
 
-        return !(this.promptChoice || this.promptText || this.addVisual || (project.onlineEnabled && context.connectionStatus !== 'online'));
+        return !(this.promptChoice || this.promptText || this.addVisual || (project.onlineEnabled && context.connectionStatus !== 'online') || (!project.ui.editSettings && project.onlineEnabled && !project.isUpToDate));
 
     } //canEditHistory
 
     @compute get canDragFileIntoWindow():boolean {
 
-        return !(this.promptChoice || this.promptText || this.addVisual);
+        return !(this.promptChoice || this.promptText || this.addVisual || (project.onlineEnabled && context.connectionStatus !== 'online') || (!project.ui.editSettings && project.onlineEnabled && !project.isUpToDate));
 
     } //canDragFileIntoWindow
 

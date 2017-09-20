@@ -54,6 +54,19 @@ interface PeerMessageReceipt {
 
 } //PeerMessageReceipt
 
+interface PendingChangeset {
+
+    /** Changeset index (per client) */
+    index:number;
+
+    /** Related data */
+    data:any;
+
+    /** Target client id */
+    targetClient:string;
+
+} //PendingChangeset
+
 class Project extends Model {
 
 /// Properties
@@ -90,8 +103,11 @@ class Project extends Model {
 
 /// Git (Github) repository
 
-    /** Whether the editor is currently syncing with Github repository. */
-    @observe syncingWithGithub:boolean = false;
+    /** Whether the editor is currently syncing with Github repository (manual sync). */
+    @observe manualSyncingWithGithub:boolean = false;
+
+    /** Whether the editor is currently syncing with Github repository (auto sync). */
+    @observe autoSyncingWithGithub:boolean = false;
 
     /** Whether the editor is currently syncing with Github repository. */
     @observe @serialize lastGithubSyncStatus:'success'|'failure' = null;
@@ -109,6 +125,9 @@ class Project extends Model {
 
     @observe @serialize onlineEnabled:boolean = false;
 
+    /** Last online project sync timestamp. Helps to know if we are up to date or not. */
+    @observe lastOnlineSyncTimestamp:number = null;
+
     /** A flag that marks realtime as broken */
     @observe realtimeBroken:boolean = false;
 
@@ -120,6 +139,10 @@ class Project extends Model {
 
     /** List of connected peers (`us` is not included in this list) */
     @observe peers:Array<Peer> = [];
+
+    /** Client ids that are confirmed to be up to date as far as we know.
+        Only a peer which have its cliend it in this list can be considered master. */
+    @observe upToDateClientIds:Map<string,boolean> = new Map();
 
     /** Is `true` if current project data is considered up to date.
         Project must be up to date before sending data to other peers. */
@@ -152,6 +175,31 @@ class Project extends Model {
         unless we get them up to date again. */
     @observe expiredClientIds:Map<string,boolean> = new Map();
 
+    /** Changesets waiting to be validated by master */
+    @observe pendingLocalChangesets:Array<PendingChangeset> = [];
+
+    /** Next local changeset index */
+    @observe nextLocalChangesetIndex:number = 0;
+
+    /** Keep track of the master changeset index. We don't want to miss any */
+    @observe lastProcessedChangesetIndexByClientId:Map<string,number> = new Map();
+
+    /** Master changesets waiting to be processed */
+    @observe pendingMasterChangesets:Map<number, PendingChangeset> = new Map();
+
+    /** When consuming a master changeset, this flag is set to `true`
+        to prevent the changeset from being re-sent again in loop forever. */
+    @observe processingMasterChangeset:boolean = false;
+
+    /** Consumed changeset index by master */
+    @observe consumedChangesetIndexByMaster:number = null;
+
+    /** Consumed client by master */
+    @observe consumedClientByMaster:string = null;
+
+    /** Index consumed by remote peers (client id) */
+    @observe remoteConsumedChangesetByClientId:Map<string,number> = new Map();
+    
 /// UI State
 
     @observe @serialize ui:UiState;
@@ -263,6 +311,9 @@ class Project extends Model {
 
         super(id);
 
+        // Set db changes listener
+        db.changesListener = this;
+
         // Bind realtime features
         this.bindRealtime();
 
@@ -279,7 +330,7 @@ class Project extends Model {
                     this.ui.statusBarTextKind = 'warning';
                     this.ui.statusBarText = '⚠ Set your Github Personal Access Token in settings';
                 }
-                else if (this.syncingWithGithub) {
+                else if (this.manualSyncingWithGithub || this.autoSyncingWithGithub) {
                     this.ui.statusBarTextKind = 'default';
                     this.ui.statusBarText = 'Synchronizing with Github repository \u2026';
                 }
@@ -287,13 +338,13 @@ class Project extends Model {
                     this.ui.statusBarTextKind = 'failure';
                     this.ui.statusBarText = '✗ Failed to synchronize with Github';
                 }
-                else if (user.githubProjectDirty) {
-                    this.ui.statusBarTextKind = 'default';
-                    this.ui.statusBarText = 'Press ' + CtlrOrCmd + '+Alt+S to synchronize with Github';
-                }
                 else if (this.lastGithubSyncStatus === 'success') {
                     this.ui.statusBarTextKind = 'success';
                     this.ui.statusBarText = '✔ Synchronized with Github on ' + dateformat(this.lastGitSyncTimestamp * 1000);
+                }
+                else if (user.manualGithubProjectDirty) {
+                    this.ui.statusBarTextKind = 'default';
+                    this.ui.statusBarText = 'Press ' + CtlrOrCmd + '+Alt+S to synchronize with Github';
                 }
                 else {
                     this.ui.statusBarTextKind = 'default';
@@ -303,6 +354,35 @@ class Project extends Model {
             else {
                 this.ui.statusBarTextKind = 'default';
                 this.ui.statusBarText = '';
+            }
+            
+            if (this.onlineEnabled) {
+                if (!user.realtimeApiKey) {
+                    this.ui.statusBarBisTextKind = 'warning';
+                    this.ui.statusBarBisText = '⚠ Set your Realtime token in settings';
+                }
+                else if (this.realtimeBroken) {
+                    this.ui.statusBarBisTextKind = 'failure';
+                    this.ui.statusBarBisText = '✗ Failed to connect to Realtime';
+                }
+                else if (!this.isUpToDate && !this.ui.editSettings) {
+                    this.ui.statusBarBisTextKind = 'default';
+                    this.ui.statusBarBisText = 'Updating\u2026';
+                    this.ui.statusBarTextKind = 'default';
+                    this.ui.statusBarText = '';
+                }
+                else if (this.realtimeConnected) {
+                    this.ui.statusBarBisTextKind = 'success';
+                    this.ui.statusBarBisText = '✔ Connected to Realtime messaging';
+                }
+                else {
+                    this.ui.statusBarBisTextKind = 'default';
+                    this.ui.statusBarBisText = '';
+                }
+            }
+            else {
+                this.ui.statusBarBisTextKind = 'default';
+                this.ui.statusBarBisText = '';
             }
 
         });
@@ -884,23 +964,36 @@ class Project extends Model {
 
 /// Remote save
 
-    syncWithGithub(resetToGithub:boolean = false, auto:boolean = false):void {
+    syncWithGithub(resetToGithub:boolean = false, auto:boolean = false, done?:(err?:string) => void):void {
 
-        if (this.syncingWithGithub) return;
+        if (!auto && this.manualSyncingWithGithub) {
+            if (done) done('Already syncing.');
+            return;
+        }
+        if (auto && this.autoSyncingWithGithub) {
+            if (done) done('Already syncing.');
+            return;
+        }
 
         if (!context.gitVersion) {
-            alert('Git is required to save remotely to Github.');
+            let err = 'Git is required to save remotely to Github.';
+            if (!auto) alert(err);
+            if (done) done(err);
             return;
         }
 
         if (!user.githubToken) {
-            alert('You need to set a Github Personal Access Token.');
+            let err = 'You need to set a Github Personal Access Token.';
+            if (!auto) alert(err);
+            if (done) done(err);
             return;
         }
 
         // Compute 'tokenized' git url
         if (!this.gitRepository || !this.gitRepository.startsWith('https://')) {
-            alert('Invalid git repository URL.');
+            let err = 'Invalid git repository URL.';
+            if (!auto) alert(err);
+            if (done) done(err);
             return;
         }
 
@@ -909,11 +1002,14 @@ class Project extends Model {
 
         // Check that project is saved to disk and has local path
         if (!this.path) {
-            alert('Cannot synchronize project with Github if it\'s not saved to disk first');
+            let err = 'Cannot synchronize project with Github if it\'s not saved to disk first';
+            if (!auto) alert(err);
+            if (done) done(err);
             return;
         }
 
-        this.syncingWithGithub = true;
+        if (!auto) this.manualSyncingWithGithub = true;
+        if (auto) this.autoSyncingWithGithub = true;
         if (!auto) this.ui.loadingMessage = 'Fetching remote repository \u2026';
 
         // Serialize
@@ -949,6 +1045,7 @@ class Project extends Model {
         let uniqId = uuid();
         let repoDir = join(tmpDir, uniqId);
         let localAssetsPath = this.absoluteAssetsPath;
+        let branch = auto ? 'auto' : 'master';
 
         let authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
 
@@ -956,14 +1053,18 @@ class Project extends Model {
         // Ideally, this could be optimized so that we don't have to pull the whole data set of repo's latest commit.
         // In practice, as we are already doing a shallow clone (only getting latest commit), it should be OK.
         // Things can be kept simpler as we never need to keep a permanent local git repository.
+        // That said, we may want to reuse local clones in the future to play better with large projects with many assets.
 
         // Clone (shallow, only latest commit)
-        git.run(['clone', '--depth', '1', authenticatedUrl, uniqId], tmpDir, (code, out, err) => {
+        git.run(['clone', '--depth', '1', '--branch', branch, authenticatedUrl, uniqId], tmpDir, (code, out, err) => {
             if (code !== 0) {
-                this.syncingWithGithub = false;
+                if (!auto) this.manualSyncingWithGithub = false;
+                if (auto) this.autoSyncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
-                if (!auto) alert('Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join(''));
+                let error = 'Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join('');
+                if (!auto) alert(error);
+                if (done) done(error);
                 rimraf.sync(repoDir);
                 return;
             }
@@ -971,10 +1072,13 @@ class Project extends Model {
             // Get latest commit timestamp
             git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
                 if (code !== 0) {
-                    this.syncingWithGithub = false;
+                    if (!auto) this.manualSyncingWithGithub = false;
+                    if (auto) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = 'failure';
                     this.ui.loadingMessage = null;
-                    if (!auto) alert('Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
+                    let error = 'Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join('');
+                    if (!auto) alert(error);
+                    if (done) done(error);
                     rimraf.sync(repoDir);
                     return;
                 }
@@ -985,12 +1089,13 @@ class Project extends Model {
 
                 if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
                     // Apply remote version
-                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto);
+                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
                 }
                 else if (hasProjectInRepo && timestamp > this.lastGitSyncTimestamp) {
 
                     if (auto) {
                         // Always get most recent changes in automatic mode
+                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
                     }
                     else {
                         // There are more recent commits from remote.
@@ -1007,11 +1112,11 @@ class Project extends Model {
                                 
                                 if (result === 0) {
                                     // Apply local version
-                                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto);
+                                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, done);
                                 }
                                 else if (result === 1) {
                                     // Apply remote version
-                                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto);
+                                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
                                 }
                             }
                         );
@@ -1019,7 +1124,7 @@ class Project extends Model {
                 }
                 else {
                     // Apply local version
-                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto);
+                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, done);
                 }
 
             });
@@ -1028,7 +1133,11 @@ class Project extends Model {
 
     } //syncWithGithub
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, commitMessage?:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, done?:(err?:string) => void, commitMessage?:string) {
+
+        if (autoSave && !commitMessage) {
+            commitMessage = 'Auto-save on ' + dateformat(new Date().getTime());
+        }
 
         if (!commitMessage) {
             this.promptText({
@@ -1041,14 +1150,15 @@ class Project extends Model {
             (result) => {
                 if (result == null) {
                     // Canceled
-                    this.syncingWithGithub = false;
+                    if (!autoSave) this.manualSyncingWithGithub = false;
+                    if (autoSave) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = null;
                     this.ui.loadingMessage = null;
                     rimraf.sync(repoDir);
                     return;
                 }
 
-                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, result);
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, done, result);
             });
 
             return;
@@ -1067,10 +1177,13 @@ class Project extends Model {
             fs.mkdirSync(repoAssetsDir);
             ncp(localAssetsPath, repoAssetsDir, (err) => {
                 if (err) {
-                    this.syncingWithGithub = false;
+                    if (!autoSave) this.manualSyncingWithGithub = false;
+                    if (autoSave) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = 'failure';
                     this.ui.loadingMessage = null;
-                    alert('Failed to copy asset: ' + err);
+                    let error = 'Failed to copy asset: ' + err;
+                    if (!autoSave) alert(error);
+                    if (done) done(error);
                     rimraf.sync(repoDir);
                     return;
                 }
@@ -1100,10 +1213,13 @@ class Project extends Model {
             // Stage files
             git.run(['add', '-A'], repoDir, (code, out, err) => {
                 if (code !== 0) {
-                    this.syncingWithGithub = false;
+                    if (!autoSave) this.manualSyncingWithGithub = false;
+                    if (autoSave) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = 'failure';
                     this.ui.loadingMessage = null;
-                    alert('Failed to stage modified files: ' + (''+err).split(user.githubToken + '@').join(''));
+                    let error = 'Failed to stage modified files: ' + (''+err).split(user.githubToken + '@').join('');
+                    if (!autoSave) alert(error);
+                    if (done) done(error);
                     rimraf.sync(repoDir);
                     return;
                 }
@@ -1111,10 +1227,13 @@ class Project extends Model {
                 // Commit
                 git.run(['commit', '-m', commitMessage], repoDir, (code, out, err) => {
                     if (code !== 0) {
-                        this.syncingWithGithub = false;
+                        if (!autoSave) this.manualSyncingWithGithub = false;
+                        if (autoSave) this.autoSyncingWithGithub = false;
                         this.lastGithubSyncStatus = 'failure';
                         this.ui.loadingMessage = null;
-                        alert('Failed commit changes: ' + (''+err).split(user.githubToken + '@').join(''));
+                        let error = 'Failed commit changes: ' + (''+err).split(user.githubToken + '@').join('');
+                        if (!autoSave) alert(error);
+                        if (done) done(error);
                         rimraf.sync(repoDir);
                         return;
                     }
@@ -1122,10 +1241,13 @@ class Project extends Model {
                     // Get commit timestamp
                     git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
                         if (code !== 0) {
-                            this.syncingWithGithub = false;
+                            if (!autoSave) this.manualSyncingWithGithub = false;
+                            if (autoSave) this.autoSyncingWithGithub = false;
                             this.lastGithubSyncStatus = 'failure';
                             this.ui.loadingMessage = null;
-                            alert('Failed to get new commit timestamp: ' + (''+err).split(user.githubToken + '@').join(''));
+                            let error = 'Failed to get new commit timestamp: ' + (''+err).split(user.githubToken + '@').join('');
+                            if (!autoSave) alert(error);
+                            if (done) done(error);
                             rimraf.sync(repoDir);
                             return;
                         }
@@ -1136,10 +1258,13 @@ class Project extends Model {
                         // Push
                         git.run(['push'], repoDir, (code, out, err) => {
                             if (code !== 0) {
-                                this.syncingWithGithub = false;
+                                if (!autoSave) this.manualSyncingWithGithub = false;
+                                if (autoSave) this.autoSyncingWithGithub = false;
                                 this.lastGithubSyncStatus = 'failure';
                                 this.ui.loadingMessage = null;
-                                alert('Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join(''));
+                                let error = 'Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join('');
+                                if (!autoSave) alert(error);
+                                if (done) done(error);
                                 rimraf.sync(repoDir);
                                 return;
                             }
@@ -1150,11 +1275,15 @@ class Project extends Model {
                             this.save();
                             
                             // Finish
-                            this.syncingWithGithub = false;
+                            if (!autoSave) this.manualSyncingWithGithub = false;
+                            if (autoSave) this.autoSyncingWithGithub = false;
                             rimraf.sync(repoDir);
                             this.lastGithubSyncStatus = 'success';
                             this.ui.loadingMessage = null;
-                            user.markGithubProjectAsClean();
+                            if (!autoSave) user.markManualGithubProjectAsClean();
+                            if (autoSave) user.markAutoGithubProjectAsClean();
+
+                            if (done) done();
                         });
                     });
                 });
@@ -1163,7 +1292,7 @@ class Project extends Model {
 
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, autoLoad:boolean) {
+    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, autoLoad:boolean, done?:(err?:string) => void) {
 
         if (!autoLoad) this.ui.loadingMessage = 'Updating local files \u2026';
 
@@ -1207,7 +1336,8 @@ class Project extends Model {
                 }
                 fs.mkdirSync(localAssetsPath);
             } catch (e) {
-                this.syncingWithGithub = false;
+                if (!autoLoad) this.manualSyncingWithGithub = false;
+                if (autoLoad) this.autoSyncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
 
@@ -1215,20 +1345,25 @@ class Project extends Model {
                 this.assetsLocked = true;
 
                 console.error(e);
-                alert('Failed to update asset directory: ' + e);
+                let error = 'Failed to update asset directory: ' + e;
+                if (!autoLoad) alert(error);
+                if (done) done(error);
                 return;
             }
             if (fs.existsSync(repoAssetsDir)) {
                 ncp(repoAssetsDir, localAssetsPath, (err) => {
                     if (err) {
-                        this.syncingWithGithub = false;
+                        if (!autoLoad) this.manualSyncingWithGithub = false;
+                        if (autoLoad) this.autoSyncingWithGithub = false;
                         this.lastGithubSyncStatus = 'failure';
                         this.ui.loadingMessage = null;
 
                         // Unlock assets
                         this.assetsLocked = true;
 
-                        alert('Failed to copy asset: ' + err);
+                        let error = 'Failed to copy asset: ' + err;
+                        if (!autoLoad) alert(error);
+                        if (done) done(error);
                         rimraf.sync(repoDir);
                         return;
                     }
@@ -1255,15 +1390,19 @@ class Project extends Model {
             this.lastGitSyncProjectFootprint = this.footprint;
             this.save();
 
-            this.syncingWithGithub = false;
+            if (!autoLoad) this.manualSyncingWithGithub = false;
+            if (autoLoad) this.autoSyncingWithGithub = false;
             this.lastGithubSyncStatus = 'success';
             this.ui.loadingMessage = null;
-            user.markGithubProjectAsClean();
+            if (!autoLoad) user.markManualGithubProjectAsClean();
+            if (autoLoad) user.markAutoGithubProjectAsClean();
             rimraf.sync(repoDir);
             
             // Unlock and force assets list to update
             this.assetsUpdatedAt = new Date().getTime();
             this.assetsLocked = true;
+
+            if (done) done();
         };
 
     } //applyRemoteGitToLocal
@@ -1330,15 +1469,27 @@ class Project extends Model {
 
     } //isMaster
 
+    @compute get isUncheckedMaster():boolean {
+
+        return !this.hasRemotePeers || this.uncheckedMasterPeer == null;
+
+    } //isUncheckedMaster
+
     @compute get masterPeer():Peer {
 
         if (!this.hasRemotePeers) {
             return null;
         }
         else {
-            let ids = [this.clientId];
+            let ids = [];
+            if (this.isUpToDate) {
+                ids.push(this.clientId);
+            }
             for (let peer of this.peers) {
-                ids.push(peer.remoteClient);
+                if (this.upToDateClientIds.has(peer.remoteClient)) {
+                    // Only add `up to date` peers
+                    ids.push(peer.remoteClient);
+                }
             }
             ids.sort();
             if (ids[0] === this.clientId) {
@@ -1356,12 +1507,42 @@ class Project extends Model {
 
     } //masterPeer
 
+    @compute get uncheckedMasterPeer():Peer {
+
+        if (!this.hasRemotePeers) {
+            return null;
+        }
+        else {
+            let ids = [];
+            ids.push(this.clientId);
+            for (let peer of this.peers) {
+                ids.push(peer.remoteClient);
+            }
+            ids.sort();
+            if (ids[0] === this.clientId) {
+                return null;
+            }
+            else {
+                for (let peer of this.peers) {
+                    if (ids[0] === peer.remoteClient) {
+                        return peer;
+                    }
+                }
+                return null;
+            }
+        }
+
+    } //uncheckedMasterPeer
+
     bindRealtime() {
 
         // Check realtime connection status
         let cyclesBroken = 0;
         let lastRealtimeToken = user.realtimeApiKey;
         setInterval(() => {
+
+            // Wait until we close settings before deciding something is broken or not
+            if (this.ui.editSettings) return;
 
             if (lastRealtimeToken !== user.realtimeApiKey) {
                 lastRealtimeToken = user.realtimeApiKey;
@@ -1382,31 +1563,43 @@ class Project extends Model {
 
         // Manage realtime.co connection
         //
+        let realtimeActive = false;
+
+        // Bind events
+        realtime.on('connect', () => {
+            console.log('%cREALTIME READY', 'color: #00FF00');
+            this.realtimeConnected = true;
+        });
+        realtime.on('disconnect', () => {
+            console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
+            this.realtimeConnected = false;
+        });
+        realtime.on('reconnect', () => {
+            console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
+            this.realtimeConnected = true;
+        });
+
         autorun(() => {
 
             if (!this.ui || this.ui.editSettings) return;
 
-            if (realtime.apiKey !== user.realtimeApiKey) {
+            if (realtime.apiKey !== user.realtimeApiKey || (!realtimeActive && this.onlineEnabled)
+            ) {
                 if (user.realtimeApiKey && this.onlineEnabled) {
-                    console.log('%cREALTIME CONNECT', 'color: #FF00FF');
+                    if (!realtimeActive) console.log('%cREALTIME CONNECT', 'color: #FF00FF');
+                    realtimeActive = true;
                     realtime.connect(user.realtimeApiKey);
-                    realtime.on('connect', () => {
-                        console.log('%cREALTIME READY', 'color: #00FF00');
-                        this.realtimeConnected = true;
-                    });
-                    realtime.on('disconnect', () => {
-                        console.log('%cREALTIME DISCONNECTED', 'color: #FF0000');
-                        this.realtimeConnected = false;
-                    });
-                    realtime.on('reconnect', () => {
-                        console.log('%cREALTIME RECONNECTED', 'color: #00FF00');
-                        this.realtimeConnected = true;
-                    });
                 }
                 else {
-                    console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
+                    if (realtimeActive) console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
+                    realtimeActive = false;
                     realtime.disconnect(true);
                 }
+            }
+            else if (realtimeActive && !this.onlineEnabled) {
+                if (realtimeActive) console.log('%cREALTIME DISCONNECT', 'color: #FF00FF');
+                realtimeActive = false;
+                realtime.disconnect(true);
             }
 
         });
@@ -1414,6 +1607,8 @@ class Project extends Model {
         // Manage realtime messaging room
         //
         autorun(() => {
+
+            if (!this.onlineEnabled) return;
 
             if (!this.uuid) {
                 // Destroy existing room, if any
@@ -1455,10 +1650,50 @@ class Project extends Model {
 
         });
 
+        // Manage auto-save
+        //
+        let lastTimeSinceAutoSave = new Date().getTime();
+        setInterval(() => {
+
+            if (!this.onlineEnabled) return;
+
+            // Don't save if internet is down or realtime broken
+            if (this.realtimeBroken || context.connectionStatus !== 'online') return;
+
+            // Only master peer is responsible to save
+            if (!this.isMaster) return;
+
+            // Don't save if not up to date
+            if (!this.isUpToDate) return;
+
+            // Don't save if project hasn't changed
+            if (!user.autoGithubProjectDirty) return;
+
+            // Don't save more than once every minute
+            if (new Date().getTime() - 60000 <= lastTimeSinceAutoSave) return;
+
+            // Save
+            lastTimeSinceAutoSave = new Date().getTime();
+            this.syncWithGithub(false, true, (err?:string) => {
+
+                // If err
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+            });
+
+        }, 10000);
+
         // Make project up to date in a way or another
         let sessionStatusTimeout:any = null;
         autorun(() => {
 
+            if (!this.onlineEnabled) return;
+
+            // Make this autorun depend on these values
+            let apiKey = user.realtimeApiKey;
             let connected = this.realtimeConnected;
 
             // Connection status changed, clear previous timeout
@@ -1469,9 +1704,29 @@ class Project extends Model {
 
                 // Now, decide whether we are master or not
                 //
-                if (!this.isUpToDate) {
-                    // Do something to make up to date as there seem
-                    // to be no remote peer responding
+                if (!this.isUpToDate && this.realtimeConnected) {
+                    // Project still not up to date, update from git
+                    // if we are alone, or if we are the `unchecked master peer`
+                    if (this.isUncheckedMaster || !this.hasRemotePeers) {
+
+                        // Sync
+                        this.syncWithGithub(false, true, (err?:string) => {
+
+                            // If err
+                            if (err) {
+                                console.error(err);
+                                return;
+                            }
+
+                            // Fine? Then update timestamp and mark project as up to date
+                            this.lastOnlineSyncTimestamp = this.lastGitSyncTimestamp;
+                            this.isUpToDate = true;
+
+                            // Send our state to everyone else (if any)
+                            this.sendMasterProjectToEveryone();
+
+                        });
+                    }
                 }
 
             }, 10000);
@@ -1481,6 +1736,9 @@ class Project extends Model {
         // Automatically re-send messages for which we didn't
         // receive any confirmation receipt from remote user
         setInterval(() => {
+
+            // Online disabled? Nothing to do
+            if (!this.onlineEnabled) return;
 
             // No peers? Nothing to do
             if (!this.hasRemotePeers || !this.realtimeConnected) return;
@@ -1534,6 +1792,40 @@ class Project extends Model {
 
         }, 2500);
 
+        // Re-send pending changes if needed
+        //
+        setInterval(() => {
+
+            // Online disabled? Nothing to do
+            if (!this.onlineEnabled) return;
+
+            // No peers? Nothing to do
+            if (!this.hasRemotePeers || !this.realtimeConnected) return;
+
+            // Check pending local changes
+            if (!this.isMaster) {
+
+                // Re-send changesets that where not send to this client id
+                // (in case master peer changed)
+                let changesetsToSend:Array<PendingChangeset> = [];
+                for (let changeset of this.pendingLocalChangesets) {
+                    if (changeset.targetClient !== this.masterPeer.remoteClient) {
+                        changeset.targetClient = this.masterPeer.remoteClient;
+                        changesetsToSend.push(changeset);
+                    }
+                }
+
+                // Then send a message that includes all pending changesets
+                this.sendPeerMessage(this.masterPeer, 'change', {
+                    master: false,
+                    lastSyncTimestamp: this.lastOnlineSyncTimestamp,
+                    changesets: changesetsToSend
+                });
+
+            }
+
+        }, 5000);
+
     } //bindRealtime
 
     bindPeer(p:Peer) {
@@ -1550,23 +1842,206 @@ class Project extends Model {
         this.listenToPeerMessages(p, (type:string, data?:any) => {
             
             if (type === 'sync') {
-                let status:'request'|'expired'|'reply' = data.status;
+                let status:'update'|'reset'|'expired'|'verify' = data.status;
 
-                if (status === 'request') {
-                    // A peer requests to sync. In that case, every client sends to each other
-                    // his last modified time. If there are only 2 users, most recent changes are kept.
-                    // If
-                    
+                if (status === 'update') {
+                    // A peer requests to sync and get updated. In that case, master peer sends its latest data
+                    // to everybody and update the sync timestamp. If nobody replies,
+                    // That means we are alone and we should just use git data.
+                    if (this.isMaster && this.isUpToDate) {
+                        // That's us! Reply!
+                        this.sendMasterProjectToEveryone();
+                    }
                 }
-                else if (status === 'reply') {
-                    // We received a reply. Are we expecting it?
-                    // If yes, keep it safe until we decide what we want to keep
+                else if (status === 'reset') {
+                    // We received a reset. If it's from master peer, process it.
+                    if ((this.uncheckedMasterPeer != null && this.uncheckedMasterPeer.remoteClient === remoteClient && (!this.isMaster || !this.isUpToDate)) || (this.masterPeer != null && this.masterPeer.remoteClient === remoteClient)) {
 
+                        // Update local data accordingly
+                        this.lastProcessedChangesetIndexByClientId = new Map();
+                        this.lastProcessedIndexByClientId = new Map();
+                        this.nextLocalChangesetIndex = 0;
+                        this.pendingMasterChangesets = new Map();
+                        let i = 0;
+                        for (let changeset of this.pendingLocalChangesets) {
+                            changeset.index = i++;
+                            changeset.targetClient = null;
+                        }
+
+                        // Update expired/up to date lists
+                        for (let clientId of data.updatedClients) {
+                            if (clientId !== this.clientId) {
+                                this.expiredClientIds.delete(clientId);
+                                this.upToDateClientIds.set(clientId, true);
+                            }
+                        }
+
+                        // Load master's project
+                        this.loadMasterProject(data.project);
+
+                        // Mark project as up to date
+                        this.isUpToDate = true;
+                        this.lastOnlineSyncTimestamp = data.timestamp;
+                        user.markProjectAsClean();
+                    }
+                }
+                else if (status === 'verify') {
+                    // We received a verify request.
+                    // Let's check if we should verify
+                    if (this.isMaster && this.isUpToDate) {
+
+                        // Compare peer sync time with ours
+                        if (this.lastOnlineSyncTimestamp !== data.timestamp) {
+                            // And tell remote peer it is expired
+                            this.sendPeerMessage(p, 'sync', {
+                                status: 'expired',
+                                master: true,
+                                newTimestamp: this.lastOnlineSyncTimestamp,
+                                expiredTimestamp: data.timestamp
+                            });
+                        }
+                    }
+                }
+                else if (status === 'expired') {
+
+                    // Received expired from master peer?
+                    if (data.master) {
+                        this.upToDateClientIds.set(remoteClient, true);
+                        this.expiredClientIds.delete(remoteClient);
+                    }
+
+                    // Peer told us we are expired, let's get updated
+                    // Well, only if master peer told us so. Others is noise.
+                    if (this.masterPeer != null && this.masterPeer.remoteClient === remoteClient && data.newTimestamp !== this.lastOnlineSyncTimestamp) {
+
+                        // Mark us as expired
+                        this.isUpToDate = false;
+
+                        // Request master to be synchronized
+                        this.sendPeerMessage(p, 'sync', {
+                            status: 'update'
+                        });
+                    }
                 }
             }
             // Handle other kind of message only if the client is up to date
-            else if (!this.expiredClientIds.has(remoteClient)) {
+            // Ignore expired peers at this point. Life is hard sometimes.
+            else if (status === 'change') {
                 
+                if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
+                    // Ignore changesets from peers that don't match sync timestamp
+                    // Situation should resolve itself when peer verify each other
+                    return;
+                }
+                else {
+                    if (data.master && this.masterPeer != null && remoteClient === this.masterPeer.remoteClient) {
+
+                        // Not master, got data from master
+                        //
+                        for (let changeset of data.changesets) {
+                            this.pendingMasterChangesets.set(changeset.index, changeset);
+                        }
+
+                        // Process every changeset we can in strict order
+                        let lastProcessed = -1;
+                        if (this.lastProcessedChangesetIndexByClientId.has(remoteClient)) {
+                            lastProcessed = this.lastProcessedChangesetIndexByClientId.get(remoteClient);
+                        }
+
+                        while (this.pendingMasterChangesets.has(lastProcessed + 1)) {
+
+                            lastProcessed++;
+                            let changeset = this.pendingMasterChangesets.get(lastProcessed);
+                            this.lastProcessedChangesetIndexByClientId.set(remoteClient, lastProcessed);
+
+                            // Apply changeset
+                            //
+                            // Setting this flag will prevent history from being modified automatically
+                            // and also prevent the applied changes to be re-sent again in loop
+                            this.processingMasterChangeset = true;
+
+                            // Insert changeset in history
+                            //
+
+                            // Applying changeset should trigger a response changeset
+                            let serialized = changeset.data;
+                            for (let key in serialized) {
+                                if (serialized.hasOwnProperty(key)) {
+                                    db.putSerialized(serialized[key], true);
+                                }
+                            }
+
+                            // Unlock history/changeset messaging
+                            this.processingMasterChangeset = false;
+                        }
+
+                        // TODO delete useless pending things
+
+                        // Notify peer about where we are
+                        this.sendPeerMessage(p, 'consumed', {
+                            lastIndex: lastProcessed,
+                            master: false,
+                            lastSyncTimestamp: this.lastOnlineSyncTimestamp
+                        });
+                        
+                    }
+                    else if (this.isMaster && !data.master) {
+
+                        // We are master,
+                        // Got data from other peer
+                        //
+                        for (let changeset of data.changesets) {
+                            this.pendingMasterChangesets.set(changeset.index, changeset);
+                        }
+
+                        // Process every changeset we can in strict order
+                        let lastProcessed = -1;
+                        if (this.lastProcessedChangesetIndexByClientId.has(remoteClient)) {
+                            lastProcessed = this.lastProcessedChangesetIndexByClientId.get(remoteClient);
+                        }
+                        while (this.pendingMasterChangesets.has(lastProcessed + 1)) {
+
+                            lastProcessed++;
+                            let changeset = this.pendingMasterChangesets.get(lastProcessed);
+                            this.lastProcessedChangesetIndexByClientId.set(remoteClient, lastProcessed);
+
+                            this.consumedChangesetIndexByMaster = lastProcessed;
+                            this.consumedClientByMaster = remoteClient;
+
+                            // Applying changeset should trigger a response changeset
+                            // that include info about original changeset
+                            let serialized = changeset.data;
+                            for (let key in serialized) {
+                                if (serialized.hasOwnProperty(key)) {
+                                    db.putSerialized(serialized[key], true);
+                                }
+                            }
+
+                            this.consumedChangesetIndexByMaster = null;
+                            this.consumedClientByMaster = null;
+                        }
+
+                        // TODO delete useless pending things
+
+                        // Notify peer about where we are
+                        this.sendPeerMessage(p, 'consumed', {
+                            lastIndex: lastProcessed,
+                            master: true,
+                            lastSyncTimestamp: this.lastOnlineSyncTimestamp
+                        });
+
+                    }
+                }
+            }
+            else if (status === 'consumed') {
+                
+                if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
+                    // Ignore consumed message from out of sync peers
+                    return;
+                }
+                else {
+                    this.remoteConsumedChangesetByClientId.set(remoteClient, data.lastIndex);
+                }
             }
 
         });
@@ -1574,8 +2049,28 @@ class Project extends Model {
         // If we need to get updated, ask peer his last save time
         if (!this.isUpToDate) {
             this.sendPeerMessage(p, 'sync', {
-                status: 'ask'
+                status: 'update'
             });
+        }
+        else {
+
+            // Verify continuously that we are up to date
+            this.sendPeerMessage(p, 'sync', {
+                status: 'verify',
+                timestamp: this.lastOnlineSyncTimestamp
+            });
+            let intervalId = setInterval(() => {
+                if (p.destroyed) {
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                this.sendPeerMessage(p, 'sync', {
+                    status: 'verify',
+                    timestamp: this.lastOnlineSyncTimestamp
+                });
+
+            }, 10000);
         }
 
     } //binPeer
@@ -1673,6 +2168,11 @@ class Project extends Model {
 
     sendPeerMessage(p:Peer, type:string, data?:any) {
 
+        if (!p || p.destroyed) {
+            console.error('Invalid peer: ' + p);
+            return;
+        }
+
         let remoteClient = p.remoteClient;
 
         // Check that this client is not expired
@@ -1709,6 +2209,191 @@ class Project extends Model {
         p.send(JSON.stringify(message));
 
     } //sendPeerMessage
+
+/// Send/Receive project via Realtime
+
+    sendMasterProjectToEveryone() {
+
+        // Check again
+        if (!this.isMaster || !this.isUpToDate) {
+            console.error('Cannot send project to everyone without being master and up to date.');
+            return;
+        }
+
+        // Update online sync timestamp
+        this.lastOnlineSyncTimestamp = new Date().getTime() / 1000.0;
+
+        // Serialize
+        let options = { entries: {}, recursive: true };
+        let serialized = serializeModel(this, options);
+
+        // Keep the stuff we want
+        //
+        let entries:Array<any> = [];
+        for (let key in options.entries) {
+            if (options.entries.hasOwnProperty(key)) {
+                entries.push(options.entries[key].serialized);
+            }
+        }
+        
+        let data = {
+            project: serialized,
+            entries: entries
+        };
+
+        // Cleanup pending stuff
+        this.nextLocalChangesetIndex = 0;
+        this.pendingLocalChangesets = [];
+        this.pendingMasterChangesets = new Map();
+        this.lastProcessedChangesetIndexByClientId = new Map();
+        this.lastProcessedIndexByClientId = new Map();
+
+        // Send to every peer
+        let updatedClients:Array<string> = [this.clientId];
+        for (let peer of this.peers) {
+            if (updatedClients.indexOf(peer.remoteClient) === -1) {
+                updatedClients.push(peer.remoteClient);
+                this.expiredClientIds.delete(peer.remoteClient);
+                this.upToDateClientIds.set(peer.remoteClient, true);
+            }
+        }
+        for (let peer of this.peers) {
+            this.sendPeerMessage(peer, 'sync', { status: 'reset', project: data, timestamp: this.lastOnlineSyncTimestamp, clients: updatedClients });
+        }
+
+    } //sendMasterProjectToEveryone
+
+    loadMasterProject(data:{project:any, entries:Array<any>}) {
+
+        let serialized = data.project;
+
+        // Remove footprint (we will compute ours)
+        delete serialized.footprint;
+
+        // Reset sync timestamp & footprint if not provided
+        if (!serialized.lastGitSyncProjectFootprint) {
+            serialized.lastGitSyncProjectFootprint = null;
+        }
+        if (!serialized.lastGitSyncTimestamp) {
+            serialized.lastGitSyncTimestamp = null;
+        }
+
+        // Update db from project data
+        for (let serializedItem of data.entries) {
+            db.putSerialized(serializedItem);
+        }
+
+        // Put project (and trigger its update)
+        db.putSerialized(serialized);
+
+    } //loadMasterProject
+
+/// Database changes listener
+
+    onDbChange(changeset:{
+        newSerialized:any,
+        prevSerialized:any,
+        undoing:boolean,
+        redoing:boolean
+    }) {
+
+        let { newSerialized, prevSerialized, undoing, redoing } = changeset;
+
+        let meta:any = {};
+
+        // Nothing to do in those cases
+        if (this.onlineEnabled && this.hasRemotePeers && !this.processingMasterChangeset) {
+
+            // Get list if ids that belong to project
+            // We need to browse full project for that.
+            // Might want to find another solution later.
+            let options = { entries: {}, recursive: true };
+            let serializedProject = serializeModel(this, options);
+            let projectEntries = options.entries;
+
+            let keptSerialized:any = {};
+
+            // Some data has changed. First, let's keep objects that belong to project
+            let numEntries = 0;
+            for (let itemId in newSerialized) {
+                if (newSerialized.hasOwnProperty(itemId)) {
+                    if (projectEntries[itemId] != null || itemId === 'project') {
+                        keptSerialized[itemId] = newSerialized[itemId];
+                        numEntries++;
+                    }
+                }
+            }
+
+            // Do we have something that changed?
+            if (numEntries > 0) {
+                // Yes, then let's do things differently if we are master peer or not
+                if (this.isMaster) {
+
+                    let localChangesetIndex = this.nextLocalChangesetIndex++;
+                    meta.localIndex = localChangesetIndex;
+
+                    // We are master, let's send updated data to everyone
+                    // Peers will either receive it or be marked as expired
+                    for (let peer of this.peers) {
+                        this.sendPeerMessage(peer, 'change', {
+                            master: true,
+                            lastSyncTimestamp: this.lastOnlineSyncTimestamp,
+                            changesets: [{
+                                index: localChangesetIndex,
+                                consumedIndex: this.consumedChangesetIndexByMaster,
+                                consumedClient: this.consumedClientByMaster,
+                                data: keptSerialized
+                            }]
+                        });
+                    }
+                }
+                else {
+
+                    // Re-send changesets that where not send to this client id
+                    // (in case master peer changed)
+                    let changesetsToSend:Array<PendingChangeset> = [];
+                    for (let changeset of this.pendingLocalChangesets) {
+                        if (changeset.targetClient !== this.masterPeer.remoteClient) {
+                            changeset.targetClient = this.masterPeer.remoteClient;
+                            changesetsToSend.push(changeset);
+                        }
+                    }
+
+                    let localChangesetIndex = this.nextLocalChangesetIndex++;
+                    meta.localIndex = localChangesetIndex;
+
+                    // We are not master, and doing our own changes,
+                    // let's send data to master,
+                    // and also keep the changeset safe until it
+                    // has been processed by master.
+                    this.pendingLocalChangesets.push({
+                        index: localChangesetIndex,
+                        data: keptSerialized,
+                        targetClient: this.masterPeer.remoteClient
+                    });
+                    changesetsToSend.push(this.pendingLocalChangesets[this.pendingLocalChangesets.length - 1]);
+
+                    // Then send a message that includes all pending changesets
+                    this.sendPeerMessage(this.masterPeer, 'change', {
+                        master: false,
+                        lastSyncTimestamp: this.lastOnlineSyncTimestamp,
+                        changesets: changesetsToSend
+                    });
+                }
+            }
+
+            // Add history item
+            if (!history.doing) {
+                history.push({
+                    meta: meta,
+                    do: newSerialized,
+                    undo: prevSerialized
+                });
+            }
+
+        }
+
+    }
 
 } //Project
 

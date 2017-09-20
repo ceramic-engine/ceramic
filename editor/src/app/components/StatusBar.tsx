@@ -31,6 +31,17 @@ import { Center } from 'components';
             color = '#FFFF00';
         }
 
+        let colorBis = '#FFFFFF';
+        if (project.ui.statusBarBisTextKind === 'success') {
+            colorBis = '#00FF00';
+        }
+        else if (project.ui.statusBarBisTextKind === 'failure') {
+            colorBis = '#FF0000';
+        }
+        else if (project.ui.statusBarBisTextKind === 'warning') {
+            colorBis = '#FFFF00';
+        }
+
         return (
             <div
                 className="statusbar"
@@ -49,6 +60,20 @@ import { Center } from 'components';
                     }}
                 >
                     {project.ui.statusBarText}
+                    {project.ui.statusBarBisText ?
+                    <span>
+                        {project.ui.statusBarText ?
+                            <span className="separator" />
+                        : null}
+                        <span
+                            style={{
+                                color: colorBis
+                            }}
+                        >
+                            {project.ui.statusBarBisText}
+                        </span>
+                    </span>
+                    : null}
                 </div>
             </div>
         );
