@@ -2190,6 +2190,8 @@ class Project extends Model {
         p.onMessage = (rawMessage:string) => {
 
             let parsed = JSON.parse(rawMessage);
+            console.log('p.onMessage ' + rawMessage);
+            console.log(parsed);
 
             if (parsed.receipt) {
 
@@ -2198,7 +2200,7 @@ class Project extends Model {
                 let receipt:PeerMessageReceipt = parsed;
                 
                 // Delete confirmed message
-                this.pendingMessagesByClientId.get(remoteClient).delete(parsed.number);
+                this.pendingMessagesByClientId.get(remoteClient).delete(parsed.index);
 
             }
             else {
