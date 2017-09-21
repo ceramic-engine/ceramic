@@ -1822,7 +1822,7 @@ class Project extends Model {
             if (!this.hasRemotePeers || !this.realtimeConnected) return;
 
             // Check pending local changes
-            if (!this.isMaster) {
+            if (!this.isMaster && this.masterPeer != null) {
 
                 // Re-send changesets that where not send to this client id
                 // (in case master peer changed)
