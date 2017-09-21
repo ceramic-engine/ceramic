@@ -1695,7 +1695,7 @@ class Project extends Model {
         }, 10000);
 
         // Make project up to date in a way or another
-        let sessionStatusTimeout:any = null;
+        let sessionStatusInterval:any = null;
         autorun(() => {
 
             if (!this.onlineEnabled) return;
@@ -1705,10 +1705,10 @@ class Project extends Model {
             let connected = this.realtimeConnected;
 
             // Connection status changed, clear previous timeout
-            if (sessionStatusTimeout != null) clearTimeout(sessionStatusTimeout);
+            if (sessionStatusInterval != null) clearInterval(sessionStatusInterval);
 
             // Start a new timeout
-            sessionStatusTimeout = setTimeout(() => {
+            sessionStatusInterval = setInterval(() => {
 
                 // Now, decide whether we are master or not
                 //
