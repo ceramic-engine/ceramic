@@ -78,7 +78,7 @@ class UiState extends Model {
     @compute get selectedScene():Scene {
 
         for (let scene of project.scenes) {
-            if (scene.id === this.selectedSceneId) {
+            if (scene != null && scene.id === this.selectedSceneId) {
                 return scene;
             }
         }
@@ -92,7 +92,7 @@ class UiState extends Model {
         if (!this.selectedScene) return null;
 
         for (let item of this.selectedScene.items) {
-            if (item.id === this.selectedItemId) {
+            if (item != null && item.id === this.selectedItemId) {
                 return item;
             }
         }
