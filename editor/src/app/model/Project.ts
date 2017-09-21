@@ -1791,7 +1791,7 @@ class Project extends Model {
                         // Send message again
                         if (time - 5000 >= pending.time) {
 
-                            console.log('(RE) SEND PEER MESSAGE ' + p.remoteClient + ' ' + pending.message.type);
+                            console.log('(RE) SEND PEER MESSAGE ' + remoteClient + ' ' + pending.message.type);
                             console.log(pending.message.data);
 
                             p.send(JSON.stringify(pending.message));
