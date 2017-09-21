@@ -40,6 +40,11 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             <LoadingOverlay
                                 message={'Connecting to Internet\u2026'}
                             />
+                        : !project.ui.editSettings && project.onlineEnabled && !user.githubToken ?
+                            <OnlineBroken
+                                title={'Github token is required'}
+                                message={'This project is configured to be online.\n\nPlease set up a valid Github Personal Access Token.'}
+                            />
                         : !project.ui.editSettings && project.onlineEnabled && !project.isUpToDate ?
                             <LoadingOverlay
                                 message={'Updating\u2026'}
@@ -58,11 +63,6 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             <OnlineBroken
                                 title={'Realtime token seems invalid'}
                                 message={'This project is configured to be online.\n\nEnsure your Realtime token is valid.'}
-                            />
-                        : !project.ui.editSettings && project.onlineEnabled && (!user.githubToken) ?
-                            <OnlineBroken
-                                title={'Github token is required'}
-                                message={'This project is configured to be online.\n\nPlease set up a valid Github Personal Access Token.'}
                             />
                         : context.draggingOver ?
                             <DragOver />
