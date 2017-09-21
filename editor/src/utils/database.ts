@@ -9,9 +9,7 @@ export interface DatabaseChangesListener {
 
     onDbChange(changeset:{
         newSerialized:any,
-        prevSerialized:any,
-        undoing:boolean,
-        redoing:boolean
+        prevSerialized:any
     }):void;
 
 } //DatabaseChangesListener
@@ -378,9 +376,7 @@ function addDirty(model:Model) {
             if (db.changesListener) {
                 db.changesListener.onDbChange({
                     newSerialized,
-                    prevSerialized,
-                    undoing: history.undoing,
-                    redoing: history.redoing
+                    prevSerialized
                 });
             }
 

@@ -23,6 +23,8 @@ export interface HistoryListener {
 
     doing:boolean = false;
 
+    doingItem:HistoryItem = null;
+
     undoing:boolean = false;
 
     redoing:boolean = false;
@@ -47,6 +49,12 @@ export interface HistoryListener {
 
     };
 
+    get lastItem():HistoryItem {
+
+        return this.index >= 0 ? this.items[this.index] : null;
+
+    } //lastItem
+
     /** Add a new history item
         @return `true` if the item was added, `false` if forbidden because already `doing`. */
     push(item:HistoryItem) {
@@ -68,6 +76,46 @@ export interface HistoryListener {
         return false;
 
     } //push
+
+    /** Insert history item. This keeps redo stack (in contrary of `push()`).
+        @return `true` if the item was inserted, `false` if forbidden because already `doing`. */
+    insert(item:HistoryItem):boolean {
+
+        if (!this.started) return false;
+
+        // Record item only if not undoing/redoing
+        if (!this.doing && this.pauses === 0) {
+            this.items.splice(++this.index, 0, item);
+
+            this.emit('insert');
+
+            return true;
+        }
+
+        return false;
+
+    } //insert
+
+    /** Pop the latest history item currently applied */
+    pop():HistoryItem {
+
+        if (!this.started) return null;
+
+        if (this.index >= 0) {
+
+            // Get popped item and remove it
+            let poppedIndex = this.index--;
+            let poppedItem = this.items[poppedIndex];
+            this.items.splice(poppedIndex, 1);
+
+            this.emit('pop');
+
+            return poppedItem;
+        }
+
+        return null;
+
+    } //pop
 
     /** Undo the previous item in history (if any)
         @return `true` if there was an item to undo. */
@@ -97,8 +145,10 @@ export interface HistoryListener {
             if (this.index >= 0) {
                 var item = this.items[this.index--];
                 if (item) {
+                    this.doingItem = item;
                     canUndo = true;
                     callback(item);
+                    this.doingItem = null;
                 } else {
                     console.warn('Unexpected missing item when undoing.');
                 }
@@ -145,8 +195,10 @@ export interface HistoryListener {
             if (this.items.length > this.index + 1) {
                 var item = this.items[++this.index];
                 if (item) {
+                    this.doingItem = item;
                     canRedo = true;
                     callback(item);
+                    this.doingItem = null;
                 } else {
                     console.warn('Unexpected missing item when redoing.');
                 }

@@ -65,6 +65,12 @@ interface PendingChangeset {
     /** Target client id */
     targetClient:string;
 
+    /** Redoing? */
+    redoing?:{ owner:string, index:number, syncTimestamp:number };
+
+    /** Undoing? */
+    undoing?:{ owner:string, index:number, syncTimestamp:number };
+
 } //PendingChangeset
 
 class Project extends Model {
@@ -141,22 +147,18 @@ class Project extends Model {
     @observe peers:Array<Peer> = [];
 
     /** Client ids that are confirmed to be up to date as far as we know.
-        Only a peer which have its cliend it in this list can be considered master. */
+        Only a peer which have its client id in this list can be considered master. */
     @observe upToDateClientIds:Map<string,boolean> = new Map();
 
     /** Is `true` if current project data is considered up to date.
         Project must be up to date before sending data to other peers. */
     @observe isUpToDate:boolean = false;
 
-    /** Last master step index we processed. Coupled with local step index,
-        helps to know what is the gap (if any) with master. */
-    @observe masterStepIndex:number = null;
+    /** Expired client ids. At this stage, we don't interact with them,
+        unless we get them up to date again. */
+    @observe expiredClientIds:Map<string,boolean> = new Map();
 
-    /** Current local step index. Coupled with last master step index,
-        helps to know what is the gap (if any) with master. */
-    @observe localStepIndex:number = null;
-
-    /** Whether the realtime (realtime.co) connetion itself is ready. */
+    /** Whether the realtime (realtime.co) connection itself is ready. */
     @observe realtimeConnected:boolean = false;
 
     /** Track the last index of message processed for each peer (client id) */
@@ -171,10 +173,6 @@ class Project extends Model {
     /** Keep sent messages for each peer (client id) until we get a receipt from remote peer */
     @observe pendingMessagesByClientId:Map<string,Map<number,PendingPeerMessage>> = new Map();
 
-    /** Expired client ids. At this stage, we don't interact with them,
-        unless we get them up to date again. */
-    @observe expiredClientIds:Map<string,boolean> = new Map();
-
     /** Changesets waiting to be validated by master */
     @observe pendingLocalChangesets:Array<PendingChangeset> = [];
 
@@ -184,17 +182,21 @@ class Project extends Model {
     /** Keep track of the master changeset index. We don't want to miss any */
     @observe lastProcessedChangesetIndexByClientId:Map<string,number> = new Map();
 
-    /** Master changesets waiting to be processed */
-    @observe pendingMasterChangesets:Map<number, PendingChangeset> = new Map();
+    /** Remote changesets waiting to be processed locally */
+    @observe pendingRemoteChangesetsByClientId:Map<string, Map<number,PendingChangeset>> = new Map();
 
     /** When consuming a master changeset, this flag is set to `true`
         to prevent the changeset from being re-sent again in loop forever. */
     @observe processingMasterChangeset:boolean = false;
 
-    /** Consumed changeset index by master */
+    /** When history is locked, no change will be added or removed automatically in it.
+        Project data itself can still be changed. */
+    @observe historyLocked:boolean = false;
+
+    /** Currently consumed changeset index by master */
     @observe consumedChangesetIndexByMaster:number = null;
 
-    /** Consumed client by master */
+    /** Currently consumed client by master */
     @observe consumedClientByMaster:string = null;
 
     /** Index consumed by remote peers (client id) */
@@ -1861,7 +1863,7 @@ class Project extends Model {
                         this.lastProcessedChangesetIndexByClientId = new Map();
                         this.lastProcessedIndexByClientId = new Map();
                         this.nextLocalChangesetIndex = 0;
-                        this.pendingMasterChangesets = new Map();
+                        this.pendingRemoteChangesetsByClientId = new Map();
                         let i = 0;
                         for (let changeset of this.pendingLocalChangesets) {
                             changeset.index = i++;
@@ -1925,7 +1927,7 @@ class Project extends Model {
                 }
             }
             // Handle other kind of message only if the client is up to date
-            // Ignore expired peers at this point. Life is hard sometimes.
+            // Ignore expired peers at this point. Life is hard.
             else if (status === 'change') {
                 
                 if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
@@ -1936,46 +1938,91 @@ class Project extends Model {
                 else {
                     if (data.master && this.masterPeer != null && remoteClient === this.masterPeer.remoteClient) {
 
+                        this.historyLocked = true;
+
                         // Not master, got data from master
                         //
+                        let pendingChangesets = this.pendingRemoteChangesetsByClientId.get(remoteClient);
+                        if (pendingChangesets == null) {
+                            pendingChangesets = new Map();
+                            this.pendingRemoteChangesetsByClientId.set(remoteClient, pendingChangesets);
+                        }
                         for (let changeset of data.changesets) {
-                            this.pendingMasterChangesets.set(changeset.index, changeset);
+                            pendingChangesets.set(changeset.index, changeset);
                         }
 
-                        // Process every changeset we can in strict order
+                        let lastConsumedByMaster = this.remoteConsumedChangesetByClientId.get(remoteClient);
+                        if (lastConsumedByMaster == null) lastConsumedByMaster = -1;
+
+                        // Apply changesets
+                        //
+                        // Setting this flag will prevent history from being modified automatically
+                        // and also prevent the applied changes to be re-sent again in loop
+                        this.processingMasterChangeset = true;
+
+                        // Before applying master changesets, get
+                        // every item we need to re-apply after master changes
+                        let itemsToReApply = [];
+                        let itemIndex = history.index;
+                        let item = history.items[itemIndex];
+                        while (
+                            item != null &&
+                            item.meta.syncTimestamp === this.lastGitSyncTimestamp &&
+                            item.meta.owner === this.clientId &&
+                            !(
+                                item.meta.consumedClient === this.clientId &&
+                                item.meta.consumedIndex === lastConsumedByMaster
+                            )) {
+
+                            itemsToReApply.unshift(item);
+
+                            item = history.items[--itemIndex];
+                        }
+
+                        // Insert new master changes in history
                         let lastProcessed = -1;
                         if (this.lastProcessedChangesetIndexByClientId.has(remoteClient)) {
                             lastProcessed = this.lastProcessedChangesetIndexByClientId.get(remoteClient);
                         }
-
-                        while (this.pendingMasterChangesets.has(lastProcessed + 1)) {
+                        while (pendingChangesets.has(lastProcessed + 1)) {
 
                             lastProcessed++;
-                            let changeset = this.pendingMasterChangesets.get(lastProcessed);
+                            let changeset = pendingChangesets.get(lastProcessed);
                             this.lastProcessedChangesetIndexByClientId.set(remoteClient, lastProcessed);
 
-                            // Apply changeset
-                            //
-                            // Setting this flag will prevent history from being modified automatically
-                            // and also prevent the applied changes to be re-sent again in loop
-                            this.processingMasterChangeset = true;
-
-                            // Insert changeset in history
-                            //
-
-                            // Applying changeset should trigger a response changeset
                             let serialized = changeset.data;
                             for (let key in serialized) {
                                 if (serialized.hasOwnProperty(key)) {
                                     db.putSerialized(serialized[key], true);
                                 }
                             }
-
-                            // Unlock history/changeset messaging
-                            this.processingMasterChangeset = false;
                         }
 
-                        // TODO delete useless pending things
+                        // Re-apply local changes
+                        for (let item of itemsToReApply) {
+                            let doData:{ [key: string]: any } = item.do;
+                            for (let key in doData) {
+                                if (doData.hasOwnProperty(key)) {
+                                    db.putSerialized(doData[key], true);
+                                }
+                            }
+                        }
+
+                        // Unlock history/changeset messaging
+                        this.processingMasterChangeset = false;
+
+                        // Cleanup
+                        let toRemove:Array<number> = [];
+                        pendingChangesets.forEach((val, key) => {
+                            if (key <= lastProcessed) {
+                                toRemove.push(key);
+                            }
+                        });
+                        for (let key of toRemove) {
+                            pendingChangesets.delete(key);
+                        }
+
+                        this.historyLocked = false;
 
                         // Notify peer about where we are
                         this.sendPeerMessage(p, 'consumed', {
@@ -1987,11 +2034,18 @@ class Project extends Model {
                     }
                     else if (this.isMaster && !data.master) {
 
+                        this.historyLocked = true;
+
                         // We are master,
                         // Got data from other peer
                         //
+                        let pendingChangesets = this.pendingRemoteChangesetsByClientId.get(remoteClient);
+                        if (pendingChangesets == null) {
+                            pendingChangesets = new Map();
+                            this.pendingRemoteChangesetsByClientId.set(remoteClient, pendingChangesets);
+                        }
                         for (let changeset of data.changesets) {
-                            this.pendingMasterChangesets.set(changeset.index, changeset);
+                            pendingChangesets.set(changeset.index, changeset);
                         }
 
                         // Process every changeset we can in strict order
@@ -1999,10 +2053,10 @@ class Project extends Model {
                         if (this.lastProcessedChangesetIndexByClientId.has(remoteClient)) {
                             lastProcessed = this.lastProcessedChangesetIndexByClientId.get(remoteClient);
                         }
-                        while (this.pendingMasterChangesets.has(lastProcessed + 1)) {
+                        while (pendingChangesets.has(lastProcessed + 1)) {
 
                             lastProcessed++;
-                            let changeset = this.pendingMasterChangesets.get(lastProcessed);
+                            let changeset = pendingChangesets.get(lastProcessed);
                             this.lastProcessedChangesetIndexByClientId.set(remoteClient, lastProcessed);
 
                             this.consumedChangesetIndexByMaster = lastProcessed;
@@ -2021,7 +2075,18 @@ class Project extends Model {
                             this.consumedClientByMaster = null;
                         }
 
-                        // TODO delete useless pending things
+                        // Cleanup
+                        let toRemove:Array<number> = [];
+                        pendingChangesets.forEach((val, key) => {
+                            if (key <= lastProcessed) {
+                                toRemove.push(key);
+                            }
+                        });
+                        for (let key of toRemove) {
+                            pendingChangesets.delete(key);
+                        }
+
+                        this.historyLocked = false;
 
                         // Notify peer about where we are
                         this.sendPeerMessage(p, 'consumed', {
@@ -2244,7 +2309,7 @@ class Project extends Model {
         // Cleanup pending stuff
         this.nextLocalChangesetIndex = 0;
         this.pendingLocalChangesets = [];
-        this.pendingMasterChangesets = new Map();
+        this.pendingRemoteChangesetsByClientId = new Map();
         this.lastProcessedChangesetIndexByClientId = new Map();
         this.lastProcessedIndexByClientId = new Map();
 
@@ -2292,14 +2357,16 @@ class Project extends Model {
 
     onDbChange(changeset:{
         newSerialized:any,
-        prevSerialized:any,
-        undoing:boolean,
-        redoing:boolean
+        prevSerialized:any
     }) {
 
-        let { newSerialized, prevSerialized, undoing, redoing } = changeset;
+        let { undoing, redoing, doingItem } = history;
+        let { newSerialized, prevSerialized } = changeset;
 
-        let meta:any = {};
+        let meta:any = {
+            owner: this.clientId,
+            syncTimestamp: this.lastOnlineSyncTimestamp
+        };
 
         // Nothing to do in those cases
         if (this.onlineEnabled && this.hasRemotePeers && !this.processingMasterChangeset) {
@@ -2326,6 +2393,9 @@ class Project extends Model {
 
             // Do we have something that changed?
             if (numEntries > 0) {
+
+                meta.project = true;
+
                 // Yes, then let's do things differently if we are master peer or not
                 if (this.isMaster) {
 
@@ -2342,14 +2412,24 @@ class Project extends Model {
                                 index: localChangesetIndex,
                                 consumedIndex: this.consumedChangesetIndexByMaster,
                                 consumedClient: this.consumedClientByMaster,
-                                data: keptSerialized
+                                data: keptSerialized,
+                                redoing: redoing && doingItem ? {
+                                    owner: doingItem.meta.owner,
+                                    index: doingItem.meta.localIndex,
+                                    syncTimestamp: doingItem.meta.syncTimestamp
+                                } : null,
+                                undoing: undoing && doingItem ? {
+                                    owner: doingItem.meta.owner,
+                                    index: doingItem.meta.localIndex,
+                                    syncTimestamp: doingItem.meta.syncTimestamp
+                                } : null
                             }]
                         });
                     }
                 }
                 else {
 
-                    // Re-send changesets that where not send to this client id
+                    // Re-send changesets that where not sent to this client id
                     // (in case master peer changed)
                     let changesetsToSend:Array<PendingChangeset> = [];
                     for (let changeset of this.pendingLocalChangesets) {
@@ -2369,7 +2449,17 @@ class Project extends Model {
                     this.pendingLocalChangesets.push({
                         index: localChangesetIndex,
                         data: keptSerialized,
-                        targetClient: this.masterPeer.remoteClient
+                        targetClient: this.masterPeer.remoteClient,
+                        redoing: redoing && doingItem ? {
+                            owner: doingItem.meta.owner,
+                            index: doingItem.meta.localIndex,
+                            syncTimestamp: doingItem.meta.syncTimestamp
+                        } : null,
+                        undoing: undoing && doingItem ? {
+                            owner: doingItem.meta.owner,
+                            index: doingItem.meta.localIndex,
+                            syncTimestamp: doingItem.meta.syncTimestamp
+                        } : null
                     });
                     changesetsToSend.push(this.pendingLocalChangesets[this.pendingLocalChangesets.length - 1]);
 
@@ -2381,9 +2471,12 @@ class Project extends Model {
                     });
                 }
             }
+            else {
+                meta.project = false;
+            }
 
             // Add history item
-            if (!history.doing) {
+            if (!history.doing && !this.historyLocked) {
                 history.push({
                     meta: meta,
                     do: newSerialized,
