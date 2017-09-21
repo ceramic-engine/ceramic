@@ -1784,7 +1784,7 @@ class Project extends Model {
                     this.pendingMessagesByClientId.delete(remoteClient);
                     this.expiredClientIds.set(remoteClient, true);
                 }
-                else {
+                else if (p != null) {
                     // Otherwise, try to send each message again
                     pendingMessages.forEach((pending, index) => {
 
