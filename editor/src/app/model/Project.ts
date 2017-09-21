@@ -1790,6 +1790,10 @@ class Project extends Model {
 
                         // Send message again
                         if (time - 5000 >= pending.time) {
+
+                            console.log('(RE) SEND PEER MESSAGE ' + p.remoteClient + ' ' + pending.message.type);
+                            console.log(pending.message.data);
+
                             p.send(JSON.stringify(pending.message));
                         }
 
@@ -2195,6 +2199,9 @@ class Project extends Model {
 
             if (parsed.receipt) {
 
+                console.log('RECEIVE PEER RECEIPT ' + p.remoteClient);
+                console.log(parsed);
+
                 // Message has been received by remote peer,
                 // No need to keep it locally anymore
                 let receipt:PeerMessageReceipt = parsed;
@@ -2206,6 +2213,9 @@ class Project extends Model {
             else {
                 // Get received messsage
                 let message:PeerMessage = parsed;
+
+                console.log('RECEIVE PEER MESSAGE ' + p.remoteClient + ' ' + message.type);
+                console.log(message.data);
 
                 // If the message is new, keep it in mapping
                 let lastProcessedIndex = this.lastProcessedIndexByClientId.get(remoteClient);
@@ -2261,9 +2271,6 @@ class Project extends Model {
             return;
         }
 
-        console.log('SEND PEER MESSAGE ' + p.remoteClient + ' ' + type);
-        console.log(data);
-
         let remoteClient = p.remoteClient;
 
         // Check that this client is not expired
@@ -2295,6 +2302,9 @@ class Project extends Model {
             message: message,
             attempts: 1
         });
+
+        console.log('SEND PEER MESSAGE ' + p.remoteClient + ' ' + type);
+        console.log(data);
 
         // Send it
         p.send(JSON.stringify(message));
