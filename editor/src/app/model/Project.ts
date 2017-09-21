@@ -1715,7 +1715,7 @@ class Project extends Model {
             // Start a new timeout
             sessionStatusInterval = setInterval(() => {
 
-                console.log('%sMASTER='+this.isMaster+' UNCHECKED_MASTER='+this.isUncheckedMaster, 'color: #FBAC02');
+                console.log('%cMASTER='+this.isMaster+' UNCHECKED_MASTER='+this.isUncheckedMaster, 'color: #FBAC02');
 
                 // Now, decide whether we are master or not
                 //
