@@ -971,6 +971,11 @@ class Project extends Model {
 
     syncWithGithub(resetToGithub:boolean = false, auto:boolean = false, done?:(err?:string) => void):void {
 
+        if (auto) {
+            console.log('AUTO GIT SYNC DISABLED');
+            return;
+        }
+
         if (!auto && this.manualSyncingWithGithub) {
             if (done) done('Already syncing.');
             return;
@@ -1866,6 +1871,7 @@ class Project extends Model {
                     }
                 }
                 else if (status === 'reset') {
+                    console.log('RECEIVE RESET');
                     // We received a reset. If it's from master peer, process it.
                     if ((this.uncheckedMasterPeer != null && this.uncheckedMasterPeer.remoteClient === remoteClient && (!this.isMaster || !this.isUpToDate)) || (this.masterPeer != null && this.masterPeer.remoteClient === remoteClient)) {
 
@@ -2143,25 +2149,32 @@ class Project extends Model {
             });
         }
         else {
-
-            // Verify continuously that we are up to date
+            // Verify continuously that we are still up to date
             this.sendPeerMessage(p, 'sync', {
                 status: 'verify',
                 timestamp: this.lastOnlineSyncTimestamp
             });
-            let intervalId = setInterval(() => {
-                if (p.destroyed) {
-                    clearInterval(intervalId);
-                    return;
-                }
+        }
 
+        let intervalId = setInterval(() => {
+            if (p.destroyed) {
+                clearInterval(intervalId);
+                return;
+            }
+
+            if (!this.isUpToDate) {
+            this.sendPeerMessage(p, 'sync', {
+                status: 'update'
+            });
+            }
+            else {
                 this.sendPeerMessage(p, 'sync', {
                     status: 'verify',
                     timestamp: this.lastOnlineSyncTimestamp
                 });
+            }
 
-            }, 10000);
-        }
+        }, 10000);
 
     } //binPeer
 
@@ -2194,8 +2207,6 @@ class Project extends Model {
         p.onMessage = (rawMessage:string) => {
 
             let parsed = JSON.parse(rawMessage);
-            console.log('p.onMessage ' + rawMessage);
-            console.log(parsed);
 
             if (parsed.receipt) {
 
