@@ -2259,6 +2259,9 @@ class Project extends Model {
             return;
         }
 
+        console.log('SEND PEER MESSAGE ' + p.remoteClient + ' ' + type);
+        console.log(data);
+
         let remoteClient = p.remoteClient;
 
         // Check that this client is not expired

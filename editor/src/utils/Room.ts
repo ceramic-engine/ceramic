@@ -53,7 +53,7 @@ export class Peer extends EventEmitter {
         setImmediate(() => {
             if (this.destroyed) return;
             
-            this.room.emit('connect', this, this.remoteClient);
+            this.room.emit('peer-connect', this, this.remoteClient);
         });
 
         // Send an `alive` paquet at a regular interval and
@@ -114,7 +114,7 @@ export class Peer extends EventEmitter {
             this.room.peers.delete(this.remoteClient);
         }
         
-        this.room.emit('close', this, this.remoteClient);
+        this.room.emit('peer-close', this, this.remoteClient);
 
         this.onMessage = null;
 
@@ -175,13 +175,13 @@ export class Peer extends EventEmitter {
             }));
         });
 
-        webrtcPeer.on('peer-connect', () => {
+        webrtcPeer.on('connect', () => {
             // Let locally know about the new connection
             this.webrtcReady = true;
             this.emit('webrtc-connect', webrtcPeer, remoteClient);
         });
 
-        webrtcPeer.on('peer-close', () => {
+        webrtcPeer.on('close', () => {
             // Let locally know about the closed connection
             this.emit('webrtc-close', webrtcPeer, remoteClient);
 
