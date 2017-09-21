@@ -185,6 +185,11 @@ export class Database implements HistoryListener {
 
         for (let key in undoData) {
             if (undoData.hasOwnProperty(key)) {
+                this.putSerialized(undoData[key], false);
+            }
+        }
+        for (let key in undoData) {
+            if (undoData.hasOwnProperty(key)) {
                 this.putSerialized(undoData[key], true);
             }
         }
@@ -195,6 +200,11 @@ export class Database implements HistoryListener {
 
         let redoData:{ [key: string]: any } = item.do;
 
+        for (let key in redoData) {
+            if (redoData.hasOwnProperty(key)) {
+                this.putSerialized(redoData[key], false);
+            }
+        }
         for (let key in redoData) {
             if (redoData.hasOwnProperty(key)) {
                 this.putSerialized(redoData[key], true);

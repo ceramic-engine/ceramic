@@ -732,7 +732,10 @@ class Project extends Model {
 
             // Update db from project data
             for (let serializedItem of data.entries) {
-                db.putSerialized(serializedItem);
+                db.putSerialized(serializedItem, false);
+            }
+            for (let serializedItem of data.entries) {
+                db.putSerialized(serializedItem, true);
             }
 
             // Put project (and trigger its update)
@@ -1318,7 +1321,10 @@ class Project extends Model {
 
         // Update db from project data
         for (let serializedItem of data.entries) {
-            db.putSerialized(serializedItem);
+            db.putSerialized(serializedItem, false);
+        }
+        for (let serializedItem of data.entries) {
+            db.putSerialized(serializedItem, true);
         }
 
         // Put project (and trigger its update)
@@ -1993,6 +1999,11 @@ class Project extends Model {
                             let serialized = changeset.data;
                             for (let key in serialized) {
                                 if (serialized.hasOwnProperty(key)) {
+                                    db.putSerialized(serialized[key], false);
+                                }
+                            }
+                            for (let key in serialized) {
+                                if (serialized.hasOwnProperty(key)) {
                                     db.putSerialized(serialized[key], true);
                                 }
                             }
@@ -2001,6 +2012,11 @@ class Project extends Model {
                         // Re-apply local changes
                         for (let item of itemsToReApply) {
                             let doData:{ [key: string]: any } = item.do;
+                            for (let key in doData) {
+                                if (doData.hasOwnProperty(key)) {
+                                    db.putSerialized(doData[key], false);
+                                }
+                            }
                             for (let key in doData) {
                                 if (doData.hasOwnProperty(key)) {
                                     db.putSerialized(doData[key], true);
@@ -2065,6 +2081,11 @@ class Project extends Model {
                             // Applying changeset should trigger a response changeset
                             // that include info about original changeset
                             let serialized = changeset.data;
+                            for (let key in serialized) {
+                                if (serialized.hasOwnProperty(key)) {
+                                    db.putSerialized(serialized[key], false);
+                                }
+                            }
                             for (let key in serialized) {
                                 if (serialized.hasOwnProperty(key)) {
                                     db.putSerialized(serialized[key], true);
@@ -2345,7 +2366,10 @@ class Project extends Model {
 
         // Update db from project data
         for (let serializedItem of data.entries) {
-            db.putSerialized(serializedItem);
+            db.putSerialized(serializedItem, false);
+        }
+        for (let serializedItem of data.entries) {
+            db.putSerialized(serializedItem, true);
         }
 
         // Put project (and trigger its update)
