@@ -1478,7 +1478,7 @@ class Project extends Model {
 
     @compute get isMaster():boolean {
 
-        return !this.hasRemotePeers || this.masterPeer == null;
+        return !this.hasRemotePeers || (this.masterPeer == null && this.isUpToDate);
 
     } //isMaster
 
