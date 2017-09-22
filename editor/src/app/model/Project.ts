@@ -2479,7 +2479,7 @@ class Project extends Model {
                         });
                     }
                 }
-                else if (this.masterPeer != null) {
+                else {
 
                     // Re-send changesets that where not sent to this client id
                     // (in case master peer changed)
@@ -2516,11 +2516,13 @@ class Project extends Model {
                     changesetsToSend.push(this.pendingLocalChangesets[this.pendingLocalChangesets.length - 1]);
 
                     // Then send a message that includes all pending changesets
-                    this.sendPeerMessage(this.masterPeer, 'change', {
-                        master: false,
-                        lastSyncTimestamp: this.lastOnlineSyncTimestamp,
-                        changesets: changesetsToSend
-                    });
+                    if (this.masterPeer != null) {
+                        this.sendPeerMessage(this.masterPeer, 'change', {
+                            master: false,
+                            lastSyncTimestamp: this.lastOnlineSyncTimestamp,
+                            changesets: changesetsToSend
+                        });
+                    }
                 }
             }
             else {
