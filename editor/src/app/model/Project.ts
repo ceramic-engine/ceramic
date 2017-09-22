@@ -1319,10 +1319,10 @@ class Project extends Model {
         // Remove footprint (we will compute ours)
         delete serialized.footprint;
 
-        // Remove assets path (if current already set)
+        /*// Remove assets path (if current already set)
         if (prevAssetsPath) {
             delete serialized.assetsPath;
-        }
+        }*/
 
         // Update db from project data
         for (let serializedItem of data.entries) {
@@ -2479,7 +2479,7 @@ class Project extends Model {
                         });
                     }
                 }
-                else {
+                else if (this.masterPeer != null) {
 
                     // Re-send changesets that where not sent to this client id
                     // (in case master peer changed)
