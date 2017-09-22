@@ -57,7 +57,7 @@ class Shortcuts extends EventEmitter {
                         label: 'Save project',
                         accelerator: 'CmdOrCtrl+S',
                         click: () => {
-                            project.save();
+                            project.save(true);
                         }
                     },
                     {

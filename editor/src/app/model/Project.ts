@@ -760,7 +760,7 @@ class Project extends Model {
         }
     }
 
-    save():void {
+    save(manual:boolean = false):void {
 
         if (!this.path || !fs.existsSync(dirname(this.path))) {
             this.saveAs();
@@ -794,6 +794,29 @@ class Project extends Model {
 
         // Mark project as `clean`
         user.markProjectAsClean();
+
+        // If we can auto sync with github and the save is manual, do sync
+        if (manual) {
+
+            // Not online, no auto github save
+            if (!this.onlineEnabled) return;
+
+            // Don't save if internet is down or realtime broken
+            if (this.realtimeBroken || context.connectionStatus !== 'online') return;
+
+            // Only master peer is responsible to save
+            if (!this.isMaster) return;
+
+            // Don't save if not up to date
+            if (!this.isUpToDate) return;
+
+            // Don't save if project hasn't changed
+            if (!user.autoGithubProjectDirty) return;
+
+            this.syncWithGithub(false, true, () => {
+                // Done
+            });
+        }
 
     } //save
 
