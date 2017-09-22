@@ -2335,12 +2335,6 @@ class Project extends Model {
 
     sendMasterProjectToEveryone() {
 
-        // Check again
-        if (!this.isMaster || !this.isUpToDate) {
-            console.error('Cannot send project to everyone without being master and up to date.');
-            return;
-        }
-
         // Update online sync timestamp
         this.lastOnlineSyncTimestamp = new Date().getTime() / 1000.0;
 
