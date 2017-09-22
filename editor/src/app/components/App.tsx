@@ -46,8 +46,9 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                                 message={'This project is configured to be online.\n\nPlease set up a valid Github Personal Access Token.'}
                             />
                         : !project.ui.editSettings && project.onlineEnabled && !project.isUpToDate ?
-                            <LoadingOverlay
-                                message={'Updating\u2026'}
+                            <OnlineBroken
+                                title={'Updating\u2026'}
+                                message={'Project is getting up to date\u2026'}
                             />
                         : !project.ui.editSettings && project.onlineEnabled && context.connectionStatus === 'offline' ?
                             <OnlineBroken
