@@ -9,7 +9,10 @@ export interface DatabaseChangesListener {
 
     onDbChange(changeset:{
         newSerialized:any,
-        prevSerialized:any
+        prevSerialized:any,
+        hasHistoryItems:boolean,
+        historyNewSerialized:any,
+        historyPrevSerialized:any
     }):void;
 
 } //DatabaseChangesListener
@@ -183,6 +186,9 @@ export class Database implements HistoryListener {
 
     @autobind onHistoryUndo(item:HistoryItem):void {
 
+        console.log('%cON HISTORY UNDO', 'color: blue');
+        console.log(item);
+
         let undoData:{ [key: string]: any } = item.undo;
 
         for (let key in undoData) {
@@ -355,14 +361,14 @@ let handledEvents = {
     delete: true,
     create: true
 };
-let dirty = new Set<Model>();
+let dirty = new Set<{model:Model,inHistory:boolean}>();
 let willClean = false;
-function addDirty(model:Model) {
+function addDirty(model:Model, inHistory:boolean) {
 
     if (db.silentChanges) return;
 
     // Stack dirty objects and serialize everything at the end of the roadloop
-    dirty.add(model);
+    dirty.add({ model, inHistory });
     if (!willClean) {
         willClean = true;
         setImmediate(() => {
@@ -370,8 +376,8 @@ function addDirty(model:Model) {
             willClean = false;
 
             // Fill array of items
-            let items:Array<Model> = [];
-            dirty.forEach((item:Model) => {
+            let items:Array<{model:Model,inHistory:boolean}> = [];
+            dirty.forEach((item:{model:Model,inHistory:boolean}) => {
                 items.push(item);
             });
             dirty.clear();
@@ -379,18 +385,29 @@ function addDirty(model:Model) {
             // Serialize items and put them in db
             let newSerialized:{ [key: string]: any } = {};
             let prevSerialized:{ [key: string]: any } = {};
+            let historyNewSerialized:{ [key: string]: any } = {};
+            let historyPrevSerialized:{ [key: string]: any } = {};
+            let hasHistoryItems:boolean = false;
             for (let item of items) {
-                let serialized = serializeModel(item);
-                newSerialized[item.id] = serialized;
-                prevSerialized[item.id] = db.getSerialized(item.id);
-                db.put(item, serialized, false);
+                let serialized = serializeModel(item.model);
+                newSerialized[item.model.id] = serialized;
+                prevSerialized[item.model.id] = db.getSerialized(item.model.id);
+                if (item.inHistory) {
+                    hasHistoryItems = true;
+                    historyNewSerialized[item.model.id] = serialized;
+                    historyPrevSerialized[item.model.id] = prevSerialized[item.model.id];
+                }
+                db.put(item.model, serialized, false);
             }
 
             // Notify db changes listener (if any)
             if (db.changesListener) {
                 db.changesListener.onDbChange({
                     newSerialized,
-                    prevSerialized
+                    prevSerialized,
+                    hasHistoryItems,
+                    historyNewSerialized,
+                    historyPrevSerialized
                 });
             }
 
@@ -403,7 +420,7 @@ function addDirty(model:Model) {
 }
 spy((event) => {
 
-    if (!history.doing && history.pauses === 0 && handledEvents[event.type] && event.object != null) {
+    if (handledEvents[event.type] && event.object != null) {
         if (event.object instanceof Model && event.name != null) {
 
             // Serialize only if the changed value is a serializable one
@@ -418,13 +435,13 @@ spy((event) => {
                     event.newValue['_parentModel'] = event.object;
                 }
 
-                addDirty(event.object);
+                addDirty(event.object, !history.doing && history.pauses === 0);
             }
         }
         else if (event.object['_parentModel'] != null) {
 
             // Observable Map or Array in model changed
-            addDirty(event.object['_parentModel']);
+            addDirty(event.object['_parentModel'], !history.doing && history.pauses === 0);
 
         }
     }

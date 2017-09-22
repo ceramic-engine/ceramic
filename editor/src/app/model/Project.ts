@@ -1878,45 +1878,44 @@ class Project extends Model {
                 }
                 else if (status === 'reset') {
 
-                    // We received a reset. If it's from master peer, process it.
-                    if ((this.uncheckedMasterPeer != null && this.uncheckedMasterPeer.remoteClient === remoteClient && (!this.isMaster || !this.isUpToDate)) || (this.masterPeer != null && this.masterPeer.remoteClient === remoteClient)) {
+                    // We received a reset. Process it.
 
-                        db.silentChanges = true;
+                    db.silentChanges = true;
 
-                        // Update local data accordingly
-                        this.lastProcessedChangesetIndexByClientId = new Map();
-                        this.lastProcessedIndexByClientId = new Map();
-                        this.nextLocalChangesetIndex = 0;
-                        this.pendingRemoteChangesetsByClientId = new Map();
-                        let i = 0;
-                        for (let changeset of this.pendingLocalChangesets) {
-                            changeset.index = i++;
-                            changeset.targetClient = null;
-                        }
-
-                        // Update expired/up to date lists
-                        for (let clientId of data.clients) {
-                            if (clientId !== this.clientId) {
-                                this.expiredClientIds.delete(clientId);
-                                this.upToDateClientIds.set(clientId, true);
-                            }
-                        }
-
-                        // Load master's project
-                        this.loadMasterProject(data.project);
-
-                        // Mark project as up to date
-                        this.isUpToDate = true;
-                        this.lastOnlineSyncTimestamp = data.timestamp;
-                        user.markProjectAsClean();
-
-                        db.silentChanges = false;
+                    // Update local data accordingly
+                    this.lastProcessedChangesetIndexByClientId = new Map();
+                    this.lastProcessedIndexByClientId = new Map();
+                    this.nextLocalChangesetIndex = 0;
+                    this.pendingRemoteChangesetsByClientId = new Map();
+                    let i = 0;
+                    for (let changeset of this.pendingLocalChangesets) {
+                        changeset.index = i++;
+                        changeset.targetClient = null;
                     }
+
+                    // Update expired/up to date lists
+                    for (let clientId of data.clients) {
+                        if (clientId !== this.clientId) {
+                            this.expiredClientIds.delete(clientId);
+                            this.upToDateClientIds.set(clientId, true);
+                        }
+                    }
+
+                    // Load master's project
+                    this.loadMasterProject(data.project);
+
+                    // Mark project as up to date
+                    this.isUpToDate = true;
+                    this.lastOnlineSyncTimestamp = data.timestamp;
+                    user.markProjectAsClean();
+
+                    db.silentChanges = false;
+
                 }
                 else if (status === 'verify') {
                     // We received a verify request.
                     // Let's check if we should verify
-                    if (this.isMaster && this.isUpToDate) {
+                    if (this.isMaster) {
 
                         // Compare peer sync time with ours
                         if (this.lastOnlineSyncTimestamp !== data.timestamp) {
@@ -1970,7 +1969,7 @@ class Project extends Model {
 
                         console.log('%c  OK, MASTER SENT IT, LETS HANDLE IT', 'color: #FF00FF');
 
-                        this.historyLocked = true;
+                        history.pause();
 
                         // Not master, got data from master
                         //
@@ -2066,7 +2065,7 @@ class Project extends Model {
                             pendingChangesets.delete(key);
                         }
 
-                        this.historyLocked = false;
+                        history.resume();
 
                         // Notify peer about where we are
                         this.sendPeerMessage(p, 'consumed', {
@@ -2080,7 +2079,7 @@ class Project extends Model {
 
                         console.log('%c  OK, WE ARE MASTER, LETS HANDLE THAT', 'color: #FF00FF');
 
-                        this.historyLocked = true;
+                        history.pause();
 
                         // We are master,
                         // Got data from other peer
@@ -2137,7 +2136,7 @@ class Project extends Model {
                             pendingChangesets.delete(key);
                         }
 
-                        this.historyLocked = false;
+                        history.resume();
 
                         // Notify peer about where we are
                         this.sendPeerMessage(p, 'consumed', {
@@ -2431,11 +2430,14 @@ class Project extends Model {
 
     onDbChange(changeset:{
         newSerialized:any,
-        prevSerialized:any
+        prevSerialized:any,
+        hasHistoryItems:boolean,
+        historyNewSerialized:any,
+        historyPrevSerialized:any
     }) {
 
         let { undoing, redoing, doingItem } = history;
-        let { newSerialized, prevSerialized } = changeset;
+        let { newSerialized, prevSerialized, hasHistoryItems, historyNewSerialized, historyPrevSerialized } = changeset;
 
         let meta:any = {
             owner: this.clientId,
@@ -2551,15 +2553,15 @@ class Project extends Model {
                 meta.project = false;
             }
 
-            // Add history item
-            if (!history.doing && !this.historyLocked) {
-                history.push({
-                    meta: meta,
-                    do: newSerialized,
-                    undo: prevSerialized
-                });
-            }
+        }
 
+        if (hasHistoryItems) {
+            console.log('ADD ITEMS IN HISTORY');
+            history.push({
+                meta: meta,
+                do: historyNewSerialized,
+                undo: historyPrevSerialized,
+            });
         }
 
     }
