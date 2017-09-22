@@ -295,6 +295,9 @@ export class Room extends EventEmitter {
         ]
     };
 
+    /** Hello interval id */
+    private helloIntervalId:any = null;
+
 /// Lifecycle
 
     constructor(roomId:string, clientId?:string) {
@@ -315,7 +318,7 @@ export class Room extends EventEmitter {
         console.log('%cREALTIME subscribe ' + roomId + ':' + this.clientId, 'color: #0000FF');
         console.log('%cREALTIME subscribe ' + roomId, 'color: #0000FF');
 
-        // Add listener to re-send `enter` event in case we were disconnected
+        // Add listener to re-send `hello` event in case we were disconnected
         realtime.addListener('reconnect', this.onRealtimeReconnect);
 
         // Use realtime as a signaling server to let clients know about each others
@@ -353,7 +356,7 @@ export class Room extends EventEmitter {
                     }
                 }
                 else if (data.type === 'reply') {
-                    // A reply to an enter event
+                    // A reply to an hello event
                     let remoteClient = data.value.client;
                     if (remoteClient === this.clientId) return; // This is us
 
@@ -414,7 +417,7 @@ export class Room extends EventEmitter {
             try {
                 let data = JSON.parse(message);
 
-                if ((data.type === 'enter' || data.type === 'reply') && !this.peers.has(data.value.client)) {
+                if ((data.type === 'hello' || data.type === 'reply') && !this.peers.has(data.value.client)) {
                     let remoteClient = data.value.client;
                     if (remoteClient === this.clientId) return; // This is us
 
@@ -439,7 +442,7 @@ export class Room extends EventEmitter {
                             p.configureWebrtcPeer();
                         }
                     }
-                    else if (data.type === 'enter') {
+                    else if (data.type === 'hello') {
                         console.log('%cREPLY', 'color: #FF00FF');
                         // No, then just reply to this client
                         // to let it initiate the connection
@@ -460,15 +463,29 @@ export class Room extends EventEmitter {
 
         // Let others in the roomId know about us
         realtime.send(roomId, JSON.stringify({
-            type: 'enter',
+            type: 'hello',
             value: {
                 client: this.clientId
             }
         }));
+        this.helloIntervalId = setInterval(() => {
+            realtime.send(roomId, JSON.stringify({
+                type: 'hello',
+                value: {
+                    client: this.clientId
+                }
+            }));
+        }, 5000);
 
     } //constructor
 
     destroy() {
+
+        // Remote hello interval
+        if (this.helloIntervalId != null) {
+            clearInterval(this.helloIntervalId);
+            this.helloIntervalId = null;
+        }
 
         // Unsubscribe from realtime
         realtime.unsubscribe(this.roomId);
@@ -497,7 +514,7 @@ export class Room extends EventEmitter {
         // Let others in the roomId know about us,
         // again as we just reconnected
         realtime.send(this.roomId, JSON.stringify({
-            type: 'enter',
+            type: 'hello',
             value: {
                 client: this.clientId
             }
