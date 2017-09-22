@@ -1951,14 +1951,20 @@ class Project extends Model {
             // Handle other kind of message only if the client is up to date
             // Ignore expired peers at this point. Life is hard.
             else if (status === 'change') {
+
+                console.log('%cRECEIVE CHANGE', 'color: #FF00FF');
                 
                 if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
+
+                    console.log('%c  BUT SYNC MISMATCH input=' + data.lastSyncTimestamp + ' ours=' + this.lastOnlineSyncTimestamp+'', 'color: #FF00FF');
                     // Ignore changesets from peers that don't match sync timestamp
                     // Situation should resolve itself when peer verify each other
                     return;
                 }
                 else {
                     if (data.master && this.masterPeer != null && remoteClient === this.masterPeer.remoteClient) {
+
+                        console.log('%c  OK, MASTER SENT IT, LETS HANDLE IT', 'color: #FF00FF');
 
                         this.historyLocked = true;
 
@@ -2065,6 +2071,8 @@ class Project extends Model {
                         
                     }
                     else if (this.isMaster && !data.master) {
+
+                        console.log('%c  OK, WE ARE MASTER, LETS HANDLE THAT', 'color: #FF00FF');
 
                         this.historyLocked = true;
 
