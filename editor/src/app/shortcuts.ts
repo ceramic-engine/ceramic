@@ -100,7 +100,13 @@ class Shortcuts extends EventEmitter {
                                 return;
                             }
                             
-                            history.undo();
+                            if (history.index >= 0) {
+                                let baseTime = history.items[history.index].meta.time;
+                                while (history.index >= 0 && baseTime - history.items[history.index].meta.time < 500) {
+                                    console.log('UNDO TIME');
+                                    history.undo();
+                                }
+                            }
                         }
                     },
                     {

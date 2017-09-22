@@ -353,6 +353,12 @@ export class Database implements HistoryListener {
 // Shared database instance
 export const db = new Database();
 
+interface DirtyObject {
+    model:Model;
+    inHistory:boolean;
+    prevSerialized:any;
+}
+
 // Track actions and invalidate models from it
 let handledEvents = {
     update: true,
@@ -361,14 +367,20 @@ let handledEvents = {
     delete: true,
     create: true
 };
-let dirty = new Set<{model:Model,inHistory:boolean}>();
+let dirtyIds = new Map<string,boolean>();
+let dirty = new Array<DirtyObject>();
 let willClean = false;
 function addDirty(model:Model, inHistory:boolean) {
 
-    if (db.silentChanges) return;
+    if (db.silentChanges || dirtyIds.has(model.id)) return;
 
     // Stack dirty objects and serialize everything at the end of the roadloop
-    dirty.add({ model, inHistory });
+    dirtyIds.set(model.id, true);
+    dirty.push({
+        model,
+        inHistory,
+        prevSerialized: db.getSerialized(model.id)
+    });
     if (!willClean) {
         willClean = true;
         setImmediate(() => {
@@ -376,11 +388,12 @@ function addDirty(model:Model, inHistory:boolean) {
             willClean = false;
 
             // Fill array of items
-            let items:Array<{model:Model,inHistory:boolean}> = [];
-            dirty.forEach((item:{model:Model,inHistory:boolean}) => {
+            let items:Array<DirtyObject> = [];
+            dirty.forEach((item:DirtyObject) => {
                 items.push(item);
             });
-            dirty.clear();
+            dirty = [];
+            dirtyIds = new Map();
 
             // Serialize items and put them in db
             let newSerialized:{ [key: string]: any } = {};
@@ -389,15 +402,14 @@ function addDirty(model:Model, inHistory:boolean) {
             let historyPrevSerialized:{ [key: string]: any } = {};
             let hasHistoryItems:boolean = false;
             for (let item of items) {
-                let serialized = serializeModel(item.model);
-                newSerialized[item.model.id] = serialized;
-                prevSerialized[item.model.id] = db.getSerialized(item.model.id);
+                newSerialized[item.model.id] = serializeModel(item.model);
+                prevSerialized[item.model.id] = item.prevSerialized;
                 if (item.inHistory) {
                     hasHistoryItems = true;
-                    historyNewSerialized[item.model.id] = serialized;
+                    historyNewSerialized[item.model.id] = newSerialized[item.model.id];
                     historyPrevSerialized[item.model.id] = prevSerialized[item.model.id];
                 }
-                db.put(item.model, serialized, false);
+                db.put(item.model, newSerialized[item.model.id], false);
             }
 
             // Notify db changes listener (if any)

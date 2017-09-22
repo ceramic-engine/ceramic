@@ -2556,7 +2556,10 @@ class Project extends Model {
         }
 
         if (hasHistoryItems) {
-            console.log('ADD ITEMS IN HISTORY');
+            meta.time = new Date().getTime();
+            console.warn('ADD HISTORY ITEM');
+            console.log('PREV: ' + JSON.stringify(historyPrevSerialized, null, 4));
+            console.log('NEW: ' + JSON.stringify(historyNewSerialized, null, 4));
             history.push({
                 meta: meta,
                 do: historyNewSerialized,
