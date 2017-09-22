@@ -1890,7 +1890,7 @@ class Project extends Model {
                         }
 
                         // Update expired/up to date lists
-                        for (let clientId of data.updatedClients) {
+                        for (let clientId of data.clients) {
                             if (clientId !== this.clientId) {
                                 this.expiredClientIds.delete(clientId);
                                 this.upToDateClientIds.set(clientId, true);
@@ -2221,7 +2221,6 @@ class Project extends Model {
                 let receipt:PeerMessageReceipt = parsed;
                 
                 // Delete confirmed message
-                console.log(this.pendingMessagesByClientId.get(remoteClient));
                 if (this.pendingMessagesByClientId.has(remoteClient)) {
                     this.pendingMessagesByClientId.get(remoteClient).delete(parsed.index);
                 }
