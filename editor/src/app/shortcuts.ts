@@ -303,7 +303,11 @@ class Shortcuts extends EventEmitter {
             if (dragTimeout != null) clearTimeout(dragTimeout);
             context.draggingOver = false;
 
-            let path = ev.dataTransfer.files[0].path;
+            let path = null;
+            try {
+                path = ev.dataTransfer.files[0].path;
+            }
+            catch (e) {}
             if (path) {
                 project.dropFile(path);
             }
