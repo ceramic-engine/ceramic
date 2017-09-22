@@ -880,9 +880,31 @@ class Project extends Model {
         // Create a new id
         data.id = uuid();
 
+        // Set it to maximum depth (will be normalized right after)
+        data.depth = 9999999999;
+
         // Update name
-        if (data.name != null && !data.name.endsWith(' (copy)')) {
-            data.name += ' (copy)';
+        if (data.name != null) {
+            if (data.name.endsWith(' (copy)')) {
+                let i = 2;
+                let baseName = data.name.substr(0, data.name.length - 7);
+                let itemExistsWithName = false;
+                do {
+                    let composedName = baseName + ' (copy ' + i + ')';
+                    itemExistsWithName = false;
+                    for (let item of scene.items.slice()) {
+                        if (item.name != null && item.name === composedName) {
+                            itemExistsWithName = true;
+                            break;
+                        }
+                    }
+                    i++;
+                } while (itemExistsWithName);
+                data.name = baseName + ' (copy ' + i + ')';
+            }
+            else {
+                data.name += ' (copy)';
+            }
         }
 
         // Put item in db
@@ -893,6 +915,13 @@ class Project extends Model {
 
         // Add item
         scene.items.push(item);
+
+        // Normalize item depths
+        let visuals = scene.visualItemsSorted.slice();
+        let depth = 1;
+        for (let i = visuals.length -1; i >= 0; i--) {
+            visuals[i].depth = depth++;
+        }
 
         // Select item
         this.ui.selectedItemId = item.id;
