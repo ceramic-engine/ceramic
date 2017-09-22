@@ -1000,20 +1000,6 @@ class Project extends Model {
 
     syncWithGithub(resetToGithub:boolean = false, auto:boolean = false, done?:(err?:string) => void):void {
 
-        if (auto) {
-            console.log('AUTO GIT SYNC DISABLED');
-            return;
-        }
-
-        if (!auto && this.manualSyncingWithGithub) {
-            if (done) done('Already syncing.');
-            return;
-        }
-        if (auto && this.autoSyncingWithGithub) {
-            if (done) done('Already syncing.');
-            return;
-        }
-
         if (!context.gitVersion) {
             let err = 'Git is required to save remotely to Github.';
             if (!auto) alert(err);
@@ -1034,6 +1020,45 @@ class Project extends Model {
             if (!auto) alert(err);
             if (done) done(err);
             return;
+        }
+
+        // Prevent parallel syncs
+        if (!auto) {
+            if (this.manualSyncingWithGithub) {
+                if (done) done('Already syncing.');
+                return;
+            }
+            else if (this.autoSyncingWithGithub) {
+                console.log('Plan manual sync, but wait for auto sync to finish\u2026');
+                this.manualSyncingWithGithub = true;
+                this.ui.loadingMessage = 'Waiting for end of auto sync \u2026';
+                let intervalId = setInterval(() => {
+                    if (!this.autoSyncingWithGithub) {
+                        clearInterval(intervalId);
+                        this.manualSyncingWithGithub = false;
+                        this.syncWithGithub(resetToGithub, auto, done);
+                    }
+                }, 250);
+                return;
+            }
+        }
+        if (auto) {
+            if (this.autoSyncingWithGithub) {
+                if (done) done('Already syncing.');
+                return;
+            }
+            else if (this.manualSyncingWithGithub) {
+                console.log('Plan auto sync, but wait for manual sync to finish\u2026');
+                this.autoSyncingWithGithub = true;
+                let intervalId = setInterval(() => {
+                    if (!this.manualSyncingWithGithub) {
+                        clearInterval(intervalId);
+                        this.autoSyncingWithGithub = false;
+                        this.syncWithGithub(resetToGithub, auto, done);
+                    }
+                }, 250);
+                return;
+            }
         }
 
         // Save local version before sync
