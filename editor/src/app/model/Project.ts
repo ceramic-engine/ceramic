@@ -1864,6 +1864,7 @@ class Project extends Model {
                 let status:'update'|'reset'|'expired'|'verify' = data.status;
 
                 if (status === 'update') {
+                    console.log('%cRECEIVE UPDATE', 'color: red');
                     // A peer requests to sync and get updated. In that case, master peer sends its latest data
                     // to everybody and update the sync timestamp. If nobody replies,
                     // That means we are alone and we should just use git data.
@@ -2333,6 +2334,8 @@ class Project extends Model {
 /// Send/Receive project via Realtime
 
     sendMasterProjectToEveryone() {
+
+        console.log('%cSEND TO EVERYONE', 'color: red');
 
         // Update online sync timestamp
         this.lastOnlineSyncTimestamp = new Date().getTime() / 1000.0;
