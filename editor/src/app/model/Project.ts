@@ -1835,11 +1835,13 @@ class Project extends Model {
                 }
 
                 // Then send a message that includes all pending changesets
-                this.sendPeerMessage(this.masterPeer, 'change', {
-                    master: false,
-                    lastSyncTimestamp: this.lastOnlineSyncTimestamp,
-                    changesets: changesetsToSend
-                });
+                if (changesetsToSend.length > 0) {
+                    this.sendPeerMessage(this.masterPeer, 'change', {
+                        master: false,
+                        lastSyncTimestamp: this.lastOnlineSyncTimestamp,
+                        changesets: changesetsToSend
+                    });
+                }
 
             }
 
@@ -2522,7 +2524,7 @@ class Project extends Model {
                     changesetsToSend.push(this.pendingLocalChangesets[this.pendingLocalChangesets.length - 1]);
 
                     // Then send a message that includes all pending changesets
-                    if (this.masterPeer != null) {
+                    if (this.masterPeer != null && changesetsToSend.length > 0) {
                         this.sendPeerMessage(this.masterPeer, 'change', {
                             master: false,
                             lastSyncTimestamp: this.lastOnlineSyncTimestamp,
