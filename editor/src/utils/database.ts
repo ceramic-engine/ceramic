@@ -22,6 +22,8 @@ export class Database implements HistoryListener {
 
     changesListener:DatabaseChangesListener = null;
 
+    silentChanges:boolean = false;
+
     create<T extends Model>(type:new(id?:string) => T, id?:string):T {
 
         this.creating = true;
@@ -356,6 +358,8 @@ let handledEvents = {
 let dirty = new Set<Model>();
 let willClean = false;
 function addDirty(model:Model) {
+
+    if (db.silentChanges) return;
 
     // Stack dirty objects and serialize everything at the end of the roadloop
     dirty.add(model);

@@ -1877,9 +1877,11 @@ class Project extends Model {
                     }
                 }
                 else if (status === 'reset') {
-                    console.log('RECEIVE RESET');
+
                     // We received a reset. If it's from master peer, process it.
                     if ((this.uncheckedMasterPeer != null && this.uncheckedMasterPeer.remoteClient === remoteClient && (!this.isMaster || !this.isUpToDate)) || (this.masterPeer != null && this.masterPeer.remoteClient === remoteClient)) {
+
+                        db.silentChanges = true;
 
                         // Update local data accordingly
                         this.lastProcessedChangesetIndexByClientId = new Map();
@@ -1907,6 +1909,8 @@ class Project extends Model {
                         this.isUpToDate = true;
                         this.lastOnlineSyncTimestamp = data.timestamp;
                         user.markProjectAsClean();
+
+                        db.silentChanges = false;
                     }
                 }
                 else if (status === 'verify') {
@@ -1987,6 +1991,7 @@ class Project extends Model {
                         // Setting this flag will prevent history from being modified automatically
                         // and also prevent the applied changes to be re-sent again in loop
                         this.processingMasterChangeset = true;
+                        db.silentChanges = true;
 
                         // Before applying master changesets, get
                         // every item we need to re-apply after master changes
@@ -2048,6 +2053,7 @@ class Project extends Model {
 
                         // Unlock history/changeset messaging
                         this.processingMasterChangeset = false;
+                        db.silentChanges = false;
 
                         // Cleanup
                         let toRemove:Array<number> = [];
@@ -2437,7 +2443,7 @@ class Project extends Model {
         };
 
         // Nothing to do in those cases
-        if (this.onlineEnabled && this.hasRemotePeers && !this.processingMasterChangeset) {
+        if (this.onlineEnabled && this.hasRemotePeers) {
 
             // Get list if ids that belong to project
             // We need to browse full project for that.
