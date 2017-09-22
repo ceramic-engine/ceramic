@@ -1950,7 +1950,7 @@ class Project extends Model {
             }
             // Handle other kind of message only if the client is up to date
             // Ignore expired peers at this point. Life is hard.
-            else if (status === 'change') {
+            else if (type === 'change') {
 
                 console.log('%cRECEIVE CHANGE', 'color: #FF00FF');
                 
