@@ -2143,7 +2143,7 @@ class Project extends Model {
                     }
                 }
             }
-            else if (status === 'consumed') {
+            else if (type === 'consumed') {
                 
                 if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
                     // Ignore consumed message from out of sync peers
