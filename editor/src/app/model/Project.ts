@@ -1867,7 +1867,8 @@ class Project extends Model {
                     // A peer requests to sync and get updated. In that case, master peer sends its latest data
                     // to everybody and update the sync timestamp. If nobody replies,
                     // That means we are alone and we should just use git data.
-                    if (this.isMaster && this.isUpToDate) {
+                    // TODO check isUpToDate for every case
+                    if (((this.isMaster && this.isUpToDate) || (!this.masterPeer && this.isUncheckedMaster))) {
                         // That's us! Reply!
                         this.sendMasterProjectToEveryone();
                     }
