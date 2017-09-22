@@ -2221,7 +2221,10 @@ class Project extends Model {
                 let receipt:PeerMessageReceipt = parsed;
                 
                 // Delete confirmed message
-                this.pendingMessagesByClientId.get(remoteClient).delete(parsed.index);
+                console.log(this.pendingMessagesByClientId.get(remoteClient));
+                if (this.pendingMessagesByClientId.has(remoteClient)) {
+                    this.pendingMessagesByClientId.get(remoteClient).delete(parsed.index);
+                }
 
             }
             else {
@@ -2268,6 +2271,7 @@ class Project extends Model {
 
                 // Even if it's not the first time we received it,
                 // Reply with a confirmation to let remote peer know about our reception.
+                console.log('SEND RECEIPT ' + p.remoteClient + ' ' + message.index);
                 p.send(JSON.stringify({
                     receipt: true,
                     index: message.index
@@ -2302,7 +2306,9 @@ class Project extends Model {
             this.lastSentIndexByClientId.set(remoteClient, -1);
         }
 
+        // Get message index and increment
         let messageIndex = this.lastSentIndexByClientId.get(remoteClient) + 1;
+        this.lastSentIndexByClientId.set(remoteClient, messageIndex);
 
         let message:PeerMessage = {
             index: messageIndex,
