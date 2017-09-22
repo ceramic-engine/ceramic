@@ -1715,7 +1715,7 @@ class Project extends Model {
             // Start a new timeout
             sessionStatusInterval = setInterval(() => {
 
-                console.log('%cMASTER='+this.isMaster+' UNCHECKED_MASTER='+this.isUncheckedMaster, 'color: #FBAC02');
+                console.log('%cMASTER='+this.isMaster+' UNCHECKED_MASTER='+this.isUncheckedMaster+' MASTER_PEER=' + (this.masterPeer ? 'exists' : 'null'), 'color: #FBAC02');
 
                 // Now, decide whether we are master or not
                 //
@@ -2364,6 +2364,9 @@ class Project extends Model {
         this.pendingRemoteChangesetsByClientId = new Map();
         this.lastProcessedChangesetIndexByClientId = new Map();
         this.lastProcessedIndexByClientId = new Map();
+
+        // We are up to date, now
+        this.isUpToDate = true;
 
         // Send to every peer
         let updatedClients:Array<string> = [this.clientId];
