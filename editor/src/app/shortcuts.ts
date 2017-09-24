@@ -72,7 +72,10 @@ class Shortcuts extends EventEmitter {
                         label: 'Sync with Github',
                         accelerator: 'CmdOrCtrl+Alt+S',
                         click: () => {
-                            project.syncWithGithub();
+                            project.syncWithGithub({
+                                auto: false,
+                                directions: 'auto'
+                            });
                         }
                     },
                     {
@@ -80,7 +83,10 @@ class Shortcuts extends EventEmitter {
                         accelerator: 'Shift+CmdOrCtrl+Alt+S',
                         click: () => {
                             if (confirm('Reset to Github changes?')) {
-                                project.syncWithGithub(true);
+                                project.syncWithGithub({
+                                    auto: false,
+                                    directions: 'remoteToLocal'
+                                });
                             }
                         }
                     }

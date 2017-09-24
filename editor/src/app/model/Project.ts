@@ -15,6 +15,18 @@ import { ncp } from 'ncp';
 import rimraf from 'rimraf';
 import dateformat from 'dateformat';
 
+export interface SyncWithGithubOptions {
+
+    auto?:boolean;
+
+    directions:'auto'|'remoteToLocal'|'localToRemote';
+
+    targetCommit?:string;
+
+    filesOnly?:boolean;
+
+} //SyncWithGithubOptions
+
 interface PeerMessage {
 
     /** The (unique) index of this message. Allows clients to keep strict message orders. */
@@ -124,6 +136,9 @@ class Project extends Model {
     /** Keep the (unix) timestamp of when this project was last synced with Github. */
     @observe @serialize lastGitSyncTimestamp?:number;
 
+    /** Keep the git commit hash of when this project was last synced with Github. */
+    @observe @serialize lastGitSyncCommitHash?:string;
+
     /** Keep last git sync footprint. */
     @observe @serialize lastGitSyncProjectFootprint?:string;
 
@@ -208,15 +223,15 @@ class Project extends Model {
 
 /// Assets
 
+    /** Assets path */
+    @observe @serialize assetsPath?:string;
+
     /** Updating this value will force refresh of assets list */
     @observe assetsUpdatedAt:number;
 
     /** Sometimes, we want to lock assets lists, like when loading a project to prevent
         it from processing in-between values that don't make any sense. */
     @observe assetsLocked:boolean = false;
-
-    /** Assets path */
-    @observe @serialize assetsPath?:string;
 
     /** All assets */
     @observe allAssets?:Array<string>;
@@ -230,6 +245,9 @@ class Project extends Model {
     /** All asset directories */
     @observe allAssetDirsByName?:Map<string, Array<string>>;
 
+    /** All assets paths as key with last modified date as value */
+    @observe allAssetPathsLastModified?:Map<string, number>;
+
     /** Image assets */
     @observe imageAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
 
@@ -241,6 +259,11 @@ class Project extends Model {
 
     /** Font assets */
     @observe fontAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
+
+/// Raw files directory
+
+    /** Raw files path */
+    @observe @serialize rawFilesPath?:string;
 
 /// Computed
 
@@ -272,6 +295,23 @@ class Project extends Model {
         }
 
     } //absoluteAssetsPath
+
+    @compute get absoluteRawFilesPath():string {
+
+        let path = this.rawFilesPath;
+
+        if (!path) return null;
+
+        if (isAbsolute(path)) return path;
+
+        if (!this.path) {
+            return null;
+        }
+        else {
+            return normalize(join(dirname(this.path), path));
+        }
+
+    } //absoluteRawFilesPath
     
     @compute get absoluteEditorPath():string {
 
@@ -493,6 +533,68 @@ class Project extends Model {
                     }
                 }
 
+                let prevAllAssetsLastModified:Map<string,number> = null;
+                if (this.allAssetPathsLastModified != null) {
+                    this.allAssetPathsLastModified.forEach((val, key) => {
+                        prevAllAssetsLastModified.set(key, val);
+                    });
+                }
+
+                // Compute all asset paths with last modified date
+                let allAssetsLastModified = new Map();
+                for (let assetsGroup of [
+                    this.imageAssets,
+                    this.textAssets,
+                    this.soundAssets,
+                    this.fontAssets
+                ]) {
+                    for (let entry of assetsGroup) {
+                        for (let path of entry.paths) {
+                            if (!allAssetsLastModified.has(path)) {
+                                try {
+                                    let lastModified = fs.statSync(join(this.absoluteAssetsPath, path)).mtime;
+                                    allAssetsLastModified.set(path, lastModified);
+                                }
+                                catch (e) {
+                                    console.error('Failed to get last modified date of path ' + path + ': ' + e);
+                                }
+                            }
+                        }
+                    }
+                }
+                this.allAssetPathsLastModified = allAssetsLastModified;
+
+                // If we had a previous assets last modified list,
+                // check if it is different than the new one.
+                // If so, and if online is enabled, we
+                // should sync them with other peers through git
+                if (prevAllAssetsLastModified != null) {
+                    let hasChanged = false;
+                    this.allAssetPathsLastModified.forEach((val, key) => {
+                        if (hasChanged) return;
+                        if (prevAllAssetsLastModified.get(key) !== val) {
+                            hasChanged = true;
+                        }
+                    });
+                    if (!hasChanged) {
+                        prevAllAssetsLastModified.forEach((val, key) => {
+                            if (hasChanged) return;
+                            if (this.allAssetPathsLastModified.get(key) !== val) {
+                                hasChanged = true;
+                            }
+                        });
+                    }
+
+                    if (hasChanged) {
+
+                        // Assets have changed.
+                        // Let's refresh the window for now
+                        // (later we may try to find a less agressive solution)
+                        window.location.reload();
+
+                    }
+                }
+
             });
 
         });
@@ -553,6 +655,9 @@ class Project extends Model {
         // Reset assets path
         this.assetsPath = null;
 
+        // Reset raw files path
+        this.rawFilesPath = null;
+
         // Reset project path
         user.projectPath = null;
 
@@ -582,7 +687,7 @@ class Project extends Model {
 
     @action chooseAssetsPath() {
 
-        let path = files.chooseDirectory();
+        let path = files.chooseDirectory('Assets Directory');
         if (path != null) {
             this.setAssetsPath(path);
         }
@@ -607,6 +712,43 @@ class Project extends Model {
         }
 
     }
+
+    @action chooseRawFilesPath() {
+
+        let path = files.chooseDirectory('Raw Files Directory');
+        if (path != null) {
+            this.setRawFilesPath(path);
+        }
+
+    } //chooseRawFilesPath
+
+    @action setRawFilesPath(path:string) {
+
+        let projectDir = this.path ? normalize(dirname(this.path)) : null;
+        let rawFilesDir = normalize(path);
+        
+        if (projectDir === rawFilesDir) {
+            this.rawFilesPath = '.';
+        }
+        else if (projectDir) {
+            let res = relative(projectDir, rawFilesDir);
+            if (!res.startsWith('.')) res = './' + res;
+            this.rawFilesPath = res;
+        }
+        else {
+            this.rawFilesPath = path;
+        }
+
+    } //setRawFilesPath
+
+    @action chooseEditorPath() {
+
+        let path = files.chooseDirectory('Editor Preview Directory');
+        if (path != null) {
+            this.setEditorPath(path);
+        }
+
+    } //chooseEditorPath
 
     @action setEditorPath(path:string) {
         
@@ -760,7 +902,7 @@ class Project extends Model {
         }
     }
 
-    save(manual:boolean = false):void {
+    save(saveAutoGit:boolean = false):void {
 
         if (!this.path || !fs.existsSync(dirname(this.path))) {
             this.saveAs();
@@ -795,8 +937,8 @@ class Project extends Model {
         // Mark project as `clean`
         user.markProjectAsClean();
 
-        // If we can auto sync with github and the save is manual, do sync
-        if (manual) {
+        // If we should auto sync with github, do sync
+        if (saveAutoGit) {
 
             // Not online, no auto github save
             if (!this.onlineEnabled) return;
@@ -804,18 +946,28 @@ class Project extends Model {
             // Don't save if internet is down or realtime broken
             if (this.realtimeBroken || context.connectionStatus !== 'online') return;
 
-            // Only master peer is responsible to save
-            if (!this.isMaster) return;
-
             // Don't save if not up to date
             if (!this.isUpToDate) return;
 
             // Don't save if project hasn't changed
             if (!user.autoGithubProjectDirty) return;
 
-            this.syncWithGithub(false, true, () => {
-                // Done
-            });
+            // Only master peer is responsible to save
+            if (this.isMaster) {
+                // We are master, do it
+                this.syncWithGithub({
+                    auto: true,
+                    directions: 'localToRemote'
+                }, () => {
+                    // Done
+                });
+            }
+            else if (this.masterPeer != null) {
+                // We are not master, tell master to save
+                this.sendPeerMessage(this.masterPeer, 'save', {
+                    lastSyncTimestamp: this.lastOnlineSyncTimestamp
+                });
+            }
         }
 
     } //save
@@ -838,7 +990,10 @@ class Project extends Model {
             // Keep current absolute assets path
             let assetsPath = this.absoluteAssetsPath;
 
-            // Keep current absolut editor path
+            // Keep current absolute raw files path
+            let rawFilesPath = this.absoluteRawFilesPath;
+
+            // Keep current absolute editor path
             let editorPath = this.absoluteEditorPath;
 
             // Update project path
@@ -847,6 +1002,11 @@ class Project extends Model {
             // Update assets path (make it relative to new project path)
             if (assetsPath) {
                 this.setAssetsPath(assetsPath);
+            }
+
+            // Update raw files path (make it relative to new project path)
+            if (rawFilesPath) {
+                this.setRawFilesPath(rawFilesPath);
             }
 
             // Update editor path as well
@@ -1021,7 +1181,14 @@ class Project extends Model {
 
 /// Remote save
 
-    syncWithGithub(resetToGithub:boolean = false, auto:boolean = false, done?:(err?:string) => void):void {
+    syncWithGithub(options:SyncWithGithubOptions, done?:(err?:string) => void):void {
+
+        let directions = options.directions;
+        let auto = options.auto;
+        let filesOnly = options.filesOnly;
+        let targetCommit = options.targetCommit;
+
+        let resetToGithub = directions === 'remoteToLocal';
 
         if (!context.gitVersion) {
             let err = 'Git is required to save remotely to Github.';
@@ -1059,7 +1226,7 @@ class Project extends Model {
                     if (!this.autoSyncingWithGithub) {
                         clearInterval(intervalId);
                         this.manualSyncingWithGithub = false;
-                        this.syncWithGithub(resetToGithub, auto, done);
+                        this.syncWithGithub(options, done);
                     }
                 }, 250);
                 return;
@@ -1077,7 +1244,7 @@ class Project extends Model {
                     if (!this.manualSyncingWithGithub) {
                         clearInterval(intervalId);
                         this.autoSyncingWithGithub = false;
-                        this.syncWithGithub(resetToGithub, auto, done);
+                        this.syncWithGithub(options, done);
                     }
                 }, 250);
                 return;
@@ -1100,8 +1267,8 @@ class Project extends Model {
         if (!auto) this.ui.loadingMessage = 'Fetching remote repository \u2026';
 
         // Serialize
-        let options = { entries: {}, recursive: true };
-        let serialized = serializeModel(this, options);
+        let opt = { entries: {}, recursive: true };
+        let serialized = serializeModel(this, opt);
 
         // Remove things we don't want to save remotely
         delete serialized.lastGitSyncTimestamp;
@@ -1111,9 +1278,9 @@ class Project extends Model {
         // Keep the stuff we want
         //
         let entries:Array<any> = [];
-        for (let key in options.entries) {
-            if (options.entries.hasOwnProperty(key)) {
-                entries.push(options.entries[key].serialized);
+        for (let key in opt.entries) {
+            if (opt.entries.hasOwnProperty(key)) {
+                entries.push(opt.entries[key].serialized);
             }
         }
         
@@ -1124,103 +1291,198 @@ class Project extends Model {
 
         // Clone repository
         //
-        let tmpDir = join(os.tmpdir(), 'ceramic');
-        if (!fs.existsSync(tmpDir)) {
-            fs.mkdirSync(tmpDir);
+        let gitDir = join(os.homedir(), '.ceramic/git');
+        if (!fs.existsSync(gitDir)) {
+            if (!fs.existsSync(dirname(gitDir))) {
+                fs.mkdirSync(dirname(gitDir));
+            }
+            fs.mkdirSync(gitDir);
         }
-
-        let uniqId = uuid();
-        let repoDir = join(tmpDir, uniqId);
-        let localAssetsPath = this.absoluteAssetsPath;
-        let branch = auto ? 'auto' : 'master';
 
         let authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
 
-        // TODO optimize?
-        // Ideally, this could be optimized so that we don't have to pull the whole data set of repo's latest commit.
-        // In practice, as we are already doing a shallow clone (only getting latest commit), it should be OK.
-        // Things can be kept simpler as we never need to keep a permanent local git repository.
-        // That said, we may want to reuse local clones in the future to play better with large projects with many assets.
-
-        // Clone (shallow, only latest commit)
-        git.run(['clone', '--depth', '1', '--branch', branch, authenticatedUrl, uniqId], tmpDir, (code, out, err) => {
+        let repoHash = createHash('md5').update(this.footprint + ' ~? ' + authenticatedUrl).digest('hex');
+        let repoDirName = auto ? repoHash + '-a' : repoHash + '-m';
+        let repoDir = join(gitDir, repoDirName);
+        let localAssetsPath = this.absoluteAssetsPath;
+        let branch = auto ? 'auto' : 'master';
+        
+        this.cloneOrPullGitRepository(gitDir, repoDirName, authenticatedUrl, branch, targetCommit, (code, out, err) => {
+            
             if (code !== 0) {
                 if (!auto) this.manualSyncingWithGithub = false;
                 if (auto) this.autoSyncingWithGithub = false;
                 this.lastGithubSyncStatus = 'failure';
                 this.ui.loadingMessage = null;
-                let error = 'Failed to pull latest commit: ' + (''+err).split(user.githubToken + '@').join('');
+                let error = 'Failed to get latest commit: ' + (''+err).split(user.githubToken + '@').join('');
                 if (!auto) alert(error);
                 if (done) done(error);
-                rimraf.sync(repoDir);
                 return;
             }
-            
-            // Get latest commit timestamp
-            git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
+
+            // Get commit hash
+            git.run(['rev-parse', 'HEAD'], repoDir, (code, out, err) => {
                 if (code !== 0) {
                     if (!auto) this.manualSyncingWithGithub = false;
                     if (auto) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = 'failure';
                     this.ui.loadingMessage = null;
-                    let error = 'Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join('');
+                    let error = 'Failed to get latest commit hash: ' + (''+err).split(user.githubToken + '@').join('');
                     if (!auto) alert(error);
                     if (done) done(error);
-                    rimraf.sync(repoDir);
                     return;
                 }
 
-                let timestamp = parseInt(out, 10);
-                let hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
-                this.ui.loadingMessage = null;
+                let commitHash = out.trim();
+            
+                // Get latest commit timestamp
+                git.run(['log', '-1', '--pretty=format:%ct'], repoDir, (code, out, err) => {
+                    if (code !== 0) {
+                        if (!auto) this.manualSyncingWithGithub = false;
+                        if (auto) this.autoSyncingWithGithub = false;
+                        this.lastGithubSyncStatus = 'failure';
+                        this.ui.loadingMessage = null;
+                        let error = 'Failed to get latest commit timestamp: ' + (''+err).split(user.githubToken + '@').join('');
+                        if (!auto) alert(error);
+                        if (done) done(error);
+                        return;
+                    }
 
-                if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
-                    // Apply remote version
-                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
-                }
-                else if (hasProjectInRepo && timestamp > this.lastGitSyncTimestamp) {
+                    let commitTimestamp = parseInt(out, 10);
+                    let hasProjectInRepo = fs.existsSync(join(repoDir, 'project.ceramic'));
+                    this.ui.loadingMessage = null;
 
-                    if (auto) {
-                        // Always get most recent changes in automatic mode
-                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
+                    if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
+                        // Apply remote version
+                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                    }
+                    else if (hasProjectInRepo && (commitTimestamp > this.lastGitSyncTimestamp || directions === 'remoteToLocal')) {
+
+                        if (auto || directions === 'remoteToLocal') {
+                            // Always get most recent changes in automatic mode
+                            this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                        }
+                        else if (directions === 'localToRemote') {
+                            // Apply local version
+                            this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
+                        }
+                        else {
+                            // There are more recent commits from remote.
+                            // Prompt user to know which version he wants to keep (local or remote)
+                            this.promptChoice({
+                                    title: "Resolve conflict",
+                                    message: "Remote project has new changes.\nWhich version do you want to keep?",
+                                    choices: [
+                                        "Local",
+                                        "Remote"
+                                    ]
+                                },
+                                (result) => {
+                                    
+                                    if (result === 0) {
+                                        // Apply local version
+                                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
+                                    }
+                                    else if (result === 1) {
+                                        // Apply remote version
+                                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                                    }
+                                }
+                            );
+                        }
                     }
                     else {
-                        // There are more recent commits from remote.
-                        // Prompt user to know which version he wants to keep (local or remote)
-                        this.promptChoice({
-                                title: "Resolve conflict",
-                                message: "Remote project has new changes.\nWhich version do you want to keep?",
-                                choices: [
-                                    "Local",
-                                    "Remote"
-                                ]
-                            },
-                            (result) => {
-                                
-                                if (result === 0) {
-                                    // Apply local version
-                                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, done);
-                                }
-                                else if (result === 1) {
-                                    // Apply remote version
-                                    this.applyRemoteGitToLocal(repoDir, localAssetsPath, timestamp, auto, done);
-                                }
-                            }
-                        );
+                        // Apply local version
+                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
                     }
-                }
-                else {
-                    // Apply local version
-                    this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, done);
-                }
 
+                });
             });
             
         });
 
     } //syncWithGithub
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, done?:(err?:string) => void, commitMessage?:string) {
+    cloneOrPullGitRepository(gitDir:string, repoDirName:string, authenticatedUrl:string, branch:string, targetCommit:string, callback:(code:number, stdout:string, stderr:string) => void) {
+
+        let repoDir = join(gitDir, repoDirName);
+        let shouldClone = !fs.existsSync(join(repoDir, '.git'));
+
+        if (shouldClone) {
+
+            // Clone
+            git.run(['clone', '--branch', branch, '--single-branch', authenticatedUrl, repoDirName], gitDir, (code, out, err) => {
+                if (code !== 0) {
+                    callback(code, out, err);
+                    return;
+                }
+
+                if (targetCommit) {
+                    this.checkoutGitCommit(gitDir, targetCommit, (code, out, err) => {
+                        callback(code, out, err);
+                    });
+                }
+                else {
+                    callback(code, out, err);
+                }
+            });
+        }
+        else {
+
+            // Cleanup repo (just to be sure, remove local changes)
+            git.run(['reset', '--hard', 'HEAD'], repoDir, (code, out, err) => {
+                if (code !== 0) {
+                    callback(code, out, err);
+                    return;
+                }
+
+                // Remove untracked files and directories
+                git.run(['clean', '-df'], repoDir, (code, out, err) => {
+                    if (code !== 0) {
+                        callback(code, out, err);
+                        return;
+                    }
+
+                    // Then pull
+                    git.run(['pull'], repoDir, (code, out, err) => {
+
+                        if (targetCommit) {
+                            this.checkoutGitCommit(repoDir, targetCommit, (code, out, err) => {
+                                callback(code, out, err);
+                            });
+                        }
+                        else {
+                            callback(code, out, err);
+                        }
+                    });
+                });
+            });
+        }
+
+    } //cloneOrPullGitRepository
+
+    checkoutGitCommit(repoDir:string, targetCommit:string, callback:(code:number, stdout:string, stderr:string) => void) {
+
+        // Assume git repo is up to date, checkout target commit/revision
+        git.run(['reset', '--hard', targetCommit], repoDir, (code, out, err) => {
+
+            if (code !== 0) {
+                callback(code, out, err);
+                return;
+            }
+
+            // Clean again
+            git.run(['clean', '-df'], repoDir, (code, out, err) => {
+
+                callback(code, out, err);
+
+            });
+            
+        });
+
+    } //checkoutGitCommit
+
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, filesOnly:boolean, done?:(err?:string) => void, commitMessage?:string) {
 
         if (autoSave && !commitMessage) {
             commitMessage = 'Auto-save on ' + dateformat(new Date().getTime());
@@ -1241,11 +1503,10 @@ class Project extends Model {
                     if (autoSave) this.autoSyncingWithGithub = false;
                     this.lastGithubSyncStatus = null;
                     this.ui.loadingMessage = null;
-                    rimraf.sync(repoDir);
                     return;
                 }
 
-                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, done, result);
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, filesOnly, done, result);
             });
 
             return;
@@ -1271,7 +1532,6 @@ class Project extends Model {
                     let error = 'Failed to copy asset: ' + err;
                     if (!autoSave) alert(error);
                     if (done) done(error);
-                    rimraf.sync(repoDir);
                     return;
                 }
 
@@ -1294,6 +1554,9 @@ class Project extends Model {
 
         // Sync project file
         let syncProjectFileAndPush = () => {
+
+            // Even if we only want to sync files, we still save project data
+            // as it doesn't make sense to keep them out of sync.
             let repoProjectFile = join(repoDir, 'project.ceramic');
             fs.writeFileSync(repoProjectFile, data);
 
@@ -1307,7 +1570,6 @@ class Project extends Model {
                     let error = 'Failed to stage modified files: ' + (''+err).split(user.githubToken + '@').join('');
                     if (!autoSave) alert(error);
                     if (done) done(error);
-                    rimraf.sync(repoDir);
                     return;
                 }
 
@@ -1321,7 +1583,6 @@ class Project extends Model {
                         let error = 'Failed commit changes: ' + (''+err).split(user.githubToken + '@').join('');
                         if (!autoSave) alert(error);
                         if (done) done(error);
-                        rimraf.sync(repoDir);
                         return;
                     }
 
@@ -1335,42 +1596,56 @@ class Project extends Model {
                             let error = 'Failed to get new commit timestamp: ' + (''+err).split(user.githubToken + '@').join('');
                             if (!autoSave) alert(error);
                             if (done) done(error);
-                            rimraf.sync(repoDir);
                             return;
                         }
 
                         // Keep timestamp
-                        let timestamp = parseInt(out, 10);
+                        let commitTimestamp = parseInt(out, 10);
 
-                        // Push
-                        git.run(['push'], repoDir, (code, out, err) => {
+                        // Get commit hash
+                        git.run(['rev-parse', 'HEAD'], repoDir, (code, out, err) => {
                             if (code !== 0) {
                                 if (!autoSave) this.manualSyncingWithGithub = false;
                                 if (autoSave) this.autoSyncingWithGithub = false;
                                 this.lastGithubSyncStatus = 'failure';
                                 this.ui.loadingMessage = null;
-                                let error = 'Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join('');
+                                let error = 'Failed to get new commit hash: ' + (''+err).split(user.githubToken + '@').join('');
                                 if (!autoSave) alert(error);
                                 if (done) done(error);
-                                rimraf.sync(repoDir);
                                 return;
                             }
 
-                            // Save project with new timestamp and footprint
-                            this.lastGitSyncTimestamp = timestamp;
-                            this.lastGitSyncProjectFootprint = this.footprint;
-                            this.save();
-                            
-                            // Finish
-                            if (!autoSave) this.manualSyncingWithGithub = false;
-                            if (autoSave) this.autoSyncingWithGithub = false;
-                            rimraf.sync(repoDir);
-                            this.lastGithubSyncStatus = 'success';
-                            this.ui.loadingMessage = null;
-                            if (!autoSave) user.markManualGithubProjectAsClean();
-                            if (autoSave) user.markAutoGithubProjectAsClean();
+                            let commitHash = out.trim();
 
-                            if (done) done();
+                            // Push
+                            git.run(['push'], repoDir, (code, out, err) => {
+                                if (code !== 0) {
+                                    if (!autoSave) this.manualSyncingWithGithub = false;
+                                    if (autoSave) this.autoSyncingWithGithub = false;
+                                    this.lastGithubSyncStatus = 'failure';
+                                    this.ui.loadingMessage = null;
+                                    let error = 'Failed to push to remote repository: ' + (''+err).split(user.githubToken + '@').join('');
+                                    if (!autoSave) alert(error);
+                                    if (done) done(error);
+                                    return;
+                                }
+
+                                // Save project with new timestamp and footprint
+                                this.lastGitSyncTimestamp = commitTimestamp;
+                                this.lastGitSyncCommitHash = commitHash;
+                                this.lastGitSyncProjectFootprint = this.footprint;
+                                this.save();
+                                
+                                // Finish
+                                if (!autoSave) this.manualSyncingWithGithub = false;
+                                if (autoSave) this.autoSyncingWithGithub = false;
+                                this.lastGithubSyncStatus = 'success';
+                                this.ui.loadingMessage = null;
+                                if (!autoSave) user.markManualGithubProjectAsClean();
+                                if (autoSave) user.markAutoGithubProjectAsClean();
+
+                                if (done) done();
+                            });
                         });
                     });
                 });
@@ -1379,7 +1654,7 @@ class Project extends Model {
 
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, autoLoad:boolean, done?:(err?:string) => void) {
+    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, commitHash:string, autoLoad:boolean, filesOnly:boolean, done?:(err?:string) => void) {
 
         if (!autoLoad) this.ui.loadingMessage = 'Updating local files \u2026';
 
@@ -1390,27 +1665,26 @@ class Project extends Model {
         let repoProjectFile = join(repoDir, 'project.ceramic');
         let data = JSON.parse('' + fs.readFileSync(repoProjectFile));
 
-        // Assign new data
-        let serialized = data.project;
+        // If we only want to update files, no need to update project data
+        if (!filesOnly) {
 
-        // Remove footprint (we will compute ours)
-        delete serialized.footprint;
+            // Assign new data
+            let serialized = data.project;
 
-        /*// Remove assets path (if current already set)
-        if (prevAssetsPath) {
-            delete serialized.assetsPath;
-        }*/
+            // Remove footprint (we will compute ours)
+            delete serialized.footprint;
 
-        // Update db from project data
-        for (let serializedItem of data.entries) {
-            db.putSerialized(serializedItem, false);
+            // Update db from project data
+            for (let serializedItem of data.entries) {
+                db.putSerialized(serializedItem, false);
+            }
+            for (let serializedItem of data.entries) {
+                db.putSerialized(serializedItem, true);
+            }
+
+            // Put project (and trigger its update)
+            db.putSerialized(serialized);
         }
-        for (let serializedItem of data.entries) {
-            db.putSerialized(serializedItem, true);
-        }
-
-        // Put project (and trigger its update)
-        db.putSerialized(serialized);
 
         // Get new assets path
         let localAssetsPath = this.absoluteAssetsPath;
@@ -1454,7 +1728,6 @@ class Project extends Model {
                         let error = 'Failed to copy asset: ' + err;
                         if (!autoLoad) alert(error);
                         if (done) done(error);
-                        rimraf.sync(repoDir);
                         return;
                     }
 
@@ -1477,6 +1750,7 @@ class Project extends Model {
 
             // Save project with changed data and new timestamp and footprint
             this.lastGitSyncTimestamp = commitTimestamp;
+            this.lastGitSyncCommitHash = commitHash;
             this.lastGitSyncProjectFootprint = this.footprint;
             this.save();
 
@@ -1486,7 +1760,6 @@ class Project extends Model {
             this.ui.loadingMessage = null;
             if (!autoLoad) user.markManualGithubProjectAsClean();
             if (autoLoad) user.markAutoGithubProjectAsClean();
-            rimraf.sync(repoDir);
             
             // Unlock and force assets list to update
             this.assetsUpdatedAt = new Date().getTime();
@@ -1764,7 +2037,10 @@ class Project extends Model {
 
             // Save
             lastTimeSinceAutoSave = new Date().getTime();
-            this.syncWithGithub(false, true, (err?:string) => {
+            this.syncWithGithub({
+                auto: true,
+                directions: 'localToRemote'
+            }, (err?:string) => {
 
                 // If err
                 if (err) {
@@ -1802,7 +2078,10 @@ class Project extends Model {
                     if (this.isUncheckedMaster || !this.hasRemotePeers) {
 
                         // Sync
-                        this.syncWithGithub(false, true, (err?:string) => {
+                        this.syncWithGithub({
+                            auto: true,
+                            directions: 'remoteToLocal'
+                        }, (err?:string) => {
 
                             // If err
                             if (err) {
@@ -2235,6 +2514,37 @@ class Project extends Model {
                     this.remoteConsumedChangesetByClientId.set(remoteClient, data.lastIndex);
                 }
             }
+            else if (type === 'save') {
+                
+                if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
+                    // Ignore consumed message from out of sync peers
+                    return;
+                }
+                else {
+                    // Only master can be requested to save and auto git-sync
+                    if (this.isMaster) {
+                        // Save project (and auto git-sync) as requested by peer
+                        this.save(true);
+                    }
+                }
+            }
+            else if (type === 'files') {
+                
+                if (data.lastSyncTimestamp !== this.lastOnlineSyncTimestamp) {
+                    // Ignore consumed message from out of sync peers
+                    return;
+                }
+                else {
+                    // Get files from target commit
+                    this.syncWithGithub({
+                        auto: true,
+                        directions: 'remoteToLocal',
+                        filesOnly: true
+                    }, (err) => {
+                        // Done
+                    });
+                }
+            }
 
         });
         
@@ -2306,9 +2616,6 @@ class Project extends Model {
 
             if (parsed.receipt) {
 
-                console.log('RECEIVE PEER RECEIPT ' + p.remoteClient);
-                console.log(parsed);
-
                 // Message has been received by remote peer,
                 // No need to keep it locally anymore
                 let receipt:PeerMessageReceipt = parsed;
@@ -2322,9 +2629,6 @@ class Project extends Model {
             else {
                 // Get received messsage
                 let message:PeerMessage = parsed;
-
-                console.log('RECEIVE PEER MESSAGE ' + p.remoteClient + ' ' + message.type);
-                console.log(message.data);
 
                 // If the message is new, keep it in mapping
                 let lastProcessedIndex = this.lastProcessedIndexByClientId.get(remoteClient);
@@ -2363,7 +2667,6 @@ class Project extends Model {
 
                 // Even if it's not the first time we received it,
                 // Reply with a confirmation to let remote peer know about our reception.
-                console.log('SEND RECEIPT ' + p.remoteClient + ' ' + message.index);
                 p.send(JSON.stringify({
                     receipt: true,
                     index: message.index
@@ -2415,9 +2718,6 @@ class Project extends Model {
             attempts: 1
         });
 
-        console.log('SEND PEER MESSAGE ' + p.remoteClient + ' ' + type);
-        console.log(data);
-
         // Send it
         p.send(JSON.stringify(message));
 
@@ -2426,8 +2726,6 @@ class Project extends Model {
 /// Send/Receive project via Realtime
 
     sendMasterProjectToEveryone() {
-
-        console.log('%cSEND TO EVERYONE', 'color: red');
 
         // Update online sync timestamp
         this.lastOnlineSyncTimestamp = new Date().getTime() / 1000.0;
@@ -2470,7 +2768,20 @@ class Project extends Model {
             }
         }
         for (let peer of this.peers) {
-            this.sendPeerMessage(peer, 'sync', { status: 'reset', project: data, timestamp: this.lastOnlineSyncTimestamp, clients: updatedClients });
+            this.sendPeerMessage(peer, 'sync', {
+                status: 'reset',
+                project: data,
+                timestamp: this.lastOnlineSyncTimestamp,
+                clients: updatedClients
+            });
+
+            // Let others retrieve latest files
+            if (this.lastGitSyncCommitHash) {
+                this.sendPeerMessage(peer, 'files', {
+                    gitCommitHash: this.lastGitSyncCommitHash,
+                    syncTimestamp: this.lastOnlineSyncTimestamp
+                });
+            }
         }
 
     } //sendMasterProjectToEveryone
@@ -2634,9 +2945,6 @@ class Project extends Model {
 
         if (hasHistoryItems) {
             meta.time = new Date().getTime();
-            console.warn('ADD HISTORY ITEM');
-            console.log('PREV: ' + JSON.stringify(historyPrevSerialized, null, 4));
-            console.log('NEW: ' + JSON.stringify(historyNewSerialized, null, 4));
             history.push({
                 meta: meta,
                 do: historyNewSerialized,

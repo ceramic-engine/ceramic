@@ -22,12 +22,11 @@ import FaQuestion from 'react-icons/lib/fa/question';
         let editorsList = ['Default'];
         editorsList.push('Choose a ceramic editor export\u2026');
         if (project.editorPath) {
-            let displayPath = project.absoluteEditorPath;
-            if (displayPath.startsWith(homedir())) {
-                displayPath = '~' + displayPath.substr(homedir().length);
-            }
-            editorsList.push(displayPath);
+            editorsList.push(project.editorPath);
         }
+
+        let assetsPathList = [project.assetsPath ? project.assetsPath : 'None'];
+        assetsPathList.push('Choose assets directory\u2026');
 
         return (
             <Overlay>
@@ -76,10 +75,23 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                         project.editorPath = null;
                                     }
                                     else if (!project.editorPath || selected === 1) {
-                                        let path = files.chooseDirectory('Editor Canvas Directory');
-                                        if (path && fs.existsSync(path)) {
-                                            project.setEditorPath(path);
-                                        }
+                                        project.chooseEditorPath();
+                                    }
+                                }}
+                            />
+                        </Field>
+                    </Form>
+                    <div className="title">Assets</div>
+                    <Form>
+                        <Field label="Assets directory">
+                            <SelectInput
+                                size="large"
+                                empty={project.absoluteAssetsPath ? null : 0}
+                                selected={0}
+                                options={assetsPathList}
+                                onChange={(selected) => {
+                                    if (selected === 1) {
+                                        project.chooseAssetsPath();
                                     }
                                 }}
                             />
