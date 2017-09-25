@@ -25,6 +25,10 @@ export interface SyncWithGithubOptions {
 
     filesOnly?:boolean;
 
+    syncDirNames?:Array<string>;
+
+    branch?:string;
+
 } //SyncWithGithubOptions
 
 interface PeerMessage {
@@ -118,6 +122,9 @@ class Project extends Model {
 
     /** Project custom editor canvas path */
     @observe @serialize editorPath?:string;
+
+    /** Identify the custom editor preview version with a hash */
+    @observe @serialize editorHash?:string;
 
 /// Git (Github) repository
 
@@ -613,6 +620,37 @@ class Project extends Model {
 
         });
 
+        // Update editor preview
+        autorun(() => {
+
+            // Do it everytime the footprint changes
+            if (this.footprint != null) {
+                // Check that we can do it
+                if (this.absoluteEditorPath && this.onlineEnabled && this.gitRepository && user.githubToken) {
+
+                    // Seems ok, check if we should fetch editor
+                    let projectEditorHash = this.editorHash;
+                    if (projectEditorHash == null) {
+                        // No editor hash, nothing to fetch
+                        return;
+                    }
+
+                    // Get current actual editor hash
+                    let actualEditorHash = null;
+                    if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
+                        let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
+                        actualEditorHash = createHash('md5').update(data).digest('hex');
+                    }
+
+                    if (actualEditorHash !== projectEditorHash) {
+                        // Fetch editor
+                        this.syncEditorPreview(true);
+                    }
+                }
+            }
+
+        });
+
         // Update data from ceramic (haxe)
         ceramic.listen('set/*', (message) => {
 
@@ -710,6 +748,8 @@ class Project extends Model {
         else {
             this.assetsPath = path;
         }
+
+        this.assetsUpdatedAt = new Date().getTime();
 
     }
 
@@ -1179,6 +1219,55 @@ class Project extends Model {
 
     } //build
 
+/// Sync editor preview
+
+    syncEditorPreview(auto:boolean = false):void {
+
+        // Get previous editor hash
+        let prevEditorHash:string = null;
+        if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
+            let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
+            prevEditorHash = createHash('md5').update(data).digest('hex');
+        }
+
+        this.syncWithGithub({
+            auto: true,
+            branch: 'editor',
+            directions: 'remoteToLocal',
+            filesOnly: true,
+            syncDirNames: ['editor']
+        }, (err) => {
+
+            if (err) {
+                if (auto) alert(err);
+                return;
+            }
+
+            // Update editor hash
+            let actualEditorHash = null;
+            if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
+                let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
+                actualEditorHash = createHash('md5').update(data).digest('hex');
+            }
+
+            // Reload new editor
+            if (prevEditorHash !== actualEditorHash) {
+                if (actualEditorHash) {
+                    this.editorHash = actualEditorHash;
+                }
+                this.reloadEditorPreview();
+            }
+
+        });
+
+    } //syncEditorPreview
+
+    reloadEditorPreview() {
+
+        // TODO
+
+    } //reloadEditorPreview
+
 /// Remote save
 
     syncWithGithub(options:SyncWithGithubOptions, done?:(err?:string) => void):void {
@@ -1187,6 +1276,8 @@ class Project extends Model {
         let auto = options.auto;
         let filesOnly = options.filesOnly;
         let targetCommit = options.targetCommit;
+        let syncDirNames = options.syncDirNames ? options.syncDirNames : ['assets', 'files'];
+        let branch = options.branch ? options.branch : (auto ? 'auto' : 'master');
 
         let resetToGithub = directions === 'remoteToLocal';
 
@@ -1302,10 +1393,11 @@ class Project extends Model {
         let authenticatedUrl = 'https://' + user.githubToken + '@' + this.gitRepository.substr('https://'.length);
 
         let repoHash = createHash('md5').update(this.footprint + ' ~? ' + authenticatedUrl).digest('hex');
-        let repoDirName = auto ? repoHash + '-a' : repoHash + '-m';
+        let repoDirName = repoHash + '-' + branch;
         let repoDir = join(gitDir, repoDirName);
         let localAssetsPath = this.absoluteAssetsPath;
-        let branch = auto ? 'auto' : 'master';
+        let localRawFilesPath = this.absoluteRawFilesPath;
+        let localEditorPath = this.absoluteEditorPath;
         
         this.cloneOrPullGitRepository(gitDir, repoDirName, authenticatedUrl, branch, targetCommit, (code, out, err) => {
             
@@ -1354,17 +1446,17 @@ class Project extends Model {
 
                     if (resetToGithub || (hasProjectInRepo && (this.footprint !== this.lastGitSyncProjectFootprint || !this.lastGitSyncTimestamp))) {
                         // Apply remote version
-                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                        this.applyRemoteGitToLocal(repoDir, commitTimestamp, commitHash, auto, filesOnly, done);
                     }
                     else if (hasProjectInRepo && (commitTimestamp > this.lastGitSyncTimestamp || directions === 'remoteToLocal')) {
 
                         if (auto || directions === 'remoteToLocal') {
                             // Always get most recent changes in automatic mode
-                            this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                            this.applyRemoteGitToLocal(repoDir, commitTimestamp, commitHash, auto, filesOnly, done);
                         }
                         else if (directions === 'localToRemote') {
                             // Apply local version
-                            this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
+                            this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
                         }
                         else {
                             // There are more recent commits from remote.
@@ -1381,11 +1473,11 @@ class Project extends Model {
                                     
                                     if (result === 0) {
                                         // Apply local version
-                                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
+                                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
                                     }
                                     else if (result === 1) {
                                         // Apply remote version
-                                        this.applyRemoteGitToLocal(repoDir, localAssetsPath, commitTimestamp, commitHash, auto, filesOnly, done);
+                                        this.applyRemoteGitToLocal(repoDir, commitTimestamp, commitHash, auto, filesOnly, done);
                                     }
                                 }
                             );
@@ -1393,7 +1485,7 @@ class Project extends Model {
                     }
                     else {
                         // Apply local version
-                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, auto, filesOnly, done);
+                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
                     }
 
                 });
@@ -1482,7 +1574,7 @@ class Project extends Model {
 
     } //checkoutGitCommit
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, autoSave:boolean, filesOnly:boolean, done?:(err?:string) => void, commitMessage?:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, localRawFilesPath:string, localEditorPath:string, autoSave:boolean, filesOnly:boolean, syncDirNames:Array<string>, done?:(err?:string) => void, commitMessage?:string) {
 
         if (autoSave && !commitMessage) {
             commitMessage = 'Auto-save on ' + dateformat(new Date().getTime());
@@ -1506,7 +1598,7 @@ class Project extends Model {
                     return;
                 }
 
-                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, autoSave, filesOnly, done, result);
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, autoSave, filesOnly, syncDirNames, done, result);
             });
 
             return;
@@ -1514,51 +1606,56 @@ class Project extends Model {
 
         if (!autoSave) this.ui.loadingMessage = 'Pushing changes \u2026';
 
-        // Sync assets
-        if (localAssetsPath) {
-            let repoAssetsDir = join(repoDir, 'assets');
+        let syncFilesDirectory = (localPath:string, pathName:string, next:() => void) => {
 
-            // Copy local assets to repo assets
-            if (fs.existsSync(repoAssetsDir)) {
-                rimraf.sync(repoAssetsDir);
-            }
-            fs.mkdirSync(repoAssetsDir);
-            ncp(localAssetsPath, repoAssetsDir, (err) => {
-                if (err) {
-                    if (!autoSave) this.manualSyncingWithGithub = false;
-                    if (autoSave) this.autoSyncingWithGithub = false;
-                    this.lastGithubSyncStatus = 'failure';
-                    this.ui.loadingMessage = null;
-                    let error = 'Failed to copy asset: ' + err;
-                    if (!autoSave) alert(error);
-                    if (done) done(error);
-                    return;
+            // Sync files
+            if (localPath && syncDirNames.indexOf(pathName) !== -1) {
+                let repoFilesDir = join(repoDir, pathName);
+
+                // Copy local files to repo files
+                if (fs.existsSync(repoFilesDir)) {
+                    rimraf.sync(repoFilesDir);
                 }
+                fs.mkdirSync(repoFilesDir);
+                ncp(localPath, repoFilesDir, (err) => {
+                    if (err) {
+                        if (!autoSave) this.manualSyncingWithGithub = false;
+                        if (autoSave) this.autoSyncingWithGithub = false;
+                        this.lastGithubSyncStatus = 'failure';
+                        this.ui.loadingMessage = null;
+                        let error = 'Failed to copy asset: ' + err;
+                        if (!autoSave) alert(error);
+                        if (done) done(error);
+                        return;
+                    }
 
-                syncProjectFileAndPush();
-            });
-        }
-        else {
-            setImmediate(() => {
-                syncProjectFileAndPush();
-            });
-        }
+                    next();
+                });
+            }
+            else {
+                next();
+            }
+
+        };
 
         // Set .gitignore
         let gitIgnorePath = join(repoDir, '.gitignore');
-        fs.writeFileSync(gitIgnorePath, [
-            '.DS_Store',
-            '__MACOSX',
-            'thumbs.db'
-        ].join(os.EOL));
+        if (!fs.existsSync(gitIgnorePath)) {
+            fs.writeFileSync(gitIgnorePath, [
+                '.DS_Store',
+                '__MACOSX',
+                'thumbs.db'
+            ].join(os.EOL));
+        }
 
         // Sync project file
         let syncProjectFileAndPush = () => {
 
-            // Even if we only want to sync files, we still save project data
-            // as it doesn't make sense to keep them out of sync.
+            // Don't save project if we only are syncing files
             let repoProjectFile = join(repoDir, 'project.ceramic');
-            fs.writeFileSync(repoProjectFile, data);
+            if (!filesOnly) {
+                fs.writeFileSync(repoProjectFile, data);
+            }
 
             // Stage files
             git.run(['add', '-A'], repoDir, (code, out, err) => {
@@ -1652,9 +1749,20 @@ class Project extends Model {
             });
         };
 
+        // Sync files
+        syncFilesDirectory(this.absoluteAssetsPath, 'assets', () => {
+            syncFilesDirectory(this.absoluteRawFilesPath, 'files', () => {
+                syncFilesDirectory(this.absoluteEditorPath, 'editor', () => {
+
+                    syncProjectFileAndPush();
+
+                });
+            });
+        });
+
     } //applyLocalToRemoteGit
 
-    applyRemoteGitToLocal(repoDir:string, prevAssetsPath:string, commitTimestamp:number, commitHash:string, autoLoad:boolean, filesOnly:boolean, done?:(err?:string) => void) {
+    applyRemoteGitToLocal(repoDir:string, commitTimestamp:number, commitHash:string, autoLoad:boolean, filesOnly:boolean, done?:(err?:string) => void) {
 
         if (!autoLoad) this.ui.loadingMessage = 'Updating local files \u2026';
 
@@ -1686,64 +1794,60 @@ class Project extends Model {
             db.putSerialized(serialized);
         }
 
-        // Get new assets path
-        let localAssetsPath = this.absoluteAssetsPath;
+        let syncFilesDirectory = (localPath:string, pathName:string, next:() => void) => {
 
-        // Sync assets
-        if (localAssetsPath) {
-            let repoAssetsDir = join(repoDir, 'assets');
+            // Sync assets
+            if (localPath) {
+                let repoFilesDir = join(repoDir, pathName);
 
-            try {
-                // Copy local assets to repo assets
-                if (fs.existsSync(localAssetsPath)) {
-                    rimraf.sync(localAssetsPath);
-                }
-                fs.mkdirSync(localAssetsPath);
-            } catch (e) {
-                if (!autoLoad) this.manualSyncingWithGithub = false;
-                if (autoLoad) this.autoSyncingWithGithub = false;
-                this.lastGithubSyncStatus = 'failure';
-                this.ui.loadingMessage = null;
-
-                // Unlock assets
-                this.assetsLocked = true;
-
-                console.error(e);
-                let error = 'Failed to update asset directory: ' + e;
-                if (!autoLoad) alert(error);
-                if (done) done(error);
-                return;
-            }
-            if (fs.existsSync(repoAssetsDir)) {
-                ncp(repoAssetsDir, localAssetsPath, (err) => {
-                    if (err) {
-                        if (!autoLoad) this.manualSyncingWithGithub = false;
-                        if (autoLoad) this.autoSyncingWithGithub = false;
-                        this.lastGithubSyncStatus = 'failure';
-                        this.ui.loadingMessage = null;
-
-                        // Unlock assets
-                        this.assetsLocked = true;
-
-                        let error = 'Failed to copy asset: ' + err;
-                        if (!autoLoad) alert(error);
-                        if (done) done(error);
-                        return;
+                try {
+                    // Copy local files path to repo files path
+                    if (fs.existsSync(localPath)) {
+                        rimraf.sync(localPath);
                     }
+                    fs.mkdirSync(localPath);
+                } catch (e) {
+                    if (!autoLoad) this.manualSyncingWithGithub = false;
+                    if (autoLoad) this.autoSyncingWithGithub = false;
+                    this.lastGithubSyncStatus = 'failure';
+                    this.ui.loadingMessage = null;
 
-                    finish();
-                });
-            } else {
-                setImmediate(() => {
-                    finish();
-                });
+                    // Unlock assets
+                    this.assetsLocked = true;
+
+                    console.error(e);
+                    let error = 'Failed to update ' + pathName + ' directory: ' + e;
+                    if (!autoLoad) alert(error);
+                    if (done) done(error);
+                    return;
+                }
+                if (fs.existsSync(repoFilesDir)) {
+                    ncp(repoFilesDir, localPath, (err) => {
+                        if (err) {
+                            if (!autoLoad) this.manualSyncingWithGithub = false;
+                            if (autoLoad) this.autoSyncingWithGithub = false;
+                            this.lastGithubSyncStatus = 'failure';
+                            this.ui.loadingMessage = null;
+
+                            // Unlock assets
+                            this.assetsLocked = true;
+
+                            let error = 'Failed to copy file of ' + pathName + ' directory: ' + err;
+                            if (!autoLoad) alert(error);
+                            if (done) done(error);
+                            return;
+                        }
+
+                        next();
+                    });
+                } else {
+                    next();
+                }
             }
-        }
-        else {
-            setImmediate(() => {
-                finish();
-            });
-        }
+            else {
+                next();
+            }
+        };
 
         // That's it
         let finish = () => {
@@ -1763,10 +1867,21 @@ class Project extends Model {
             
             // Unlock and force assets list to update
             this.assetsUpdatedAt = new Date().getTime();
-            this.assetsLocked = true;
+            this.assetsLocked = false;
 
             if (done) done();
         };
+
+        // Sync files
+        syncFilesDirectory(this.absoluteAssetsPath, 'assets', () => {
+            syncFilesDirectory(this.absoluteRawFilesPath, 'files', () => {
+                syncFilesDirectory(this.absoluteEditorPath, 'editor', () => {
+
+                    finish();
+
+                });
+            });
+        });
 
     } //applyRemoteGitToLocal
 

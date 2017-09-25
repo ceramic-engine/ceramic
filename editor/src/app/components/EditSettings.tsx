@@ -28,6 +28,9 @@ import FaQuestion from 'react-icons/lib/fa/question';
         let assetsPathList = [project.assetsPath ? project.assetsPath : 'None'];
         assetsPathList.push('Choose assets directory\u2026');
 
+        let rawFilesPathList = [project.rawFilesPath ? project.rawFilesPath : 'None'];
+        rawFilesPathList.push('Choose raw files directory\u2026');
+
         return (
             <Overlay>
                 <Dialog title="Ceramic" size="large">
@@ -81,7 +84,7 @@ import FaQuestion from 'react-icons/lib/fa/question';
                             />
                         </Field>
                     </Form>
-                    <div className="title">Assets</div>
+                    <div className="title">Assets &amp; Files</div>
                     <Form>
                         <Field label="Assets directory">
                             <SelectInput
@@ -92,6 +95,19 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                 onChange={(selected) => {
                                     if (selected === 1) {
                                         project.chooseAssetsPath();
+                                    }
+                                }}
+                            />
+                        </Field>
+                        <Field label="Raw files directory">
+                            <SelectInput
+                                size="large"
+                                empty={project.absoluteRawFilesPath ? null : 0}
+                                selected={0}
+                                options={rawFilesPathList}
+                                onChange={(selected) => {
+                                    if (selected === 1) {
+                                        project.chooseRawFilesPath();
                                     }
                                 }}
                             />

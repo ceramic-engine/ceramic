@@ -89,6 +89,13 @@ class Shortcuts extends EventEmitter {
                                 });
                             }
                         }
+                    },
+                    {type: 'separator'},
+                    {
+                        label: 'Sync Editor Preview',
+                        click: () => {
+                            project.syncEditorPreview();
+                        }
                     }
                 ]
             },
