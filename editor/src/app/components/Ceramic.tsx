@@ -167,6 +167,7 @@ export interface Message {
             }
  
         } catch (e) {
+            console.error(e);
             console.error('Failed to decode ' + this.elementId + ' message: ' + event.data);
             return;
         }
