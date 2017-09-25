@@ -148,13 +148,36 @@ server.use(function(req, res, next) {
   next();
 });
 
+let defaultEditorPath = null;
 if (process.env.ELECTRON_DEV) {
-  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/public/ceramic'))))
+  defaultEditorPath = path.normalize(path.join(__dirname, '/public/ceramic'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/public'))))
 } else {
-  server.use('/ceramic', express.static(path.normalize(path.join(__dirname, '/build/ceramic'))))
+  defaultEditorPath = path.normalize(path.join(__dirname, '/build/ceramic'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
 }
+
+exports.editorPath = null;
+server.get('/ceramic/*', function(req, res) {
+  let relativePath = req.path.substr('/ceramic/'.length);
+  let basePath = exports.editorPath && fs.existsSync(path.join(exports.editorPath, 'SceneEditor.js')) ? exports.editorPath : defaultEditorPath;
+
+  if (!fs.existsSync(path.join(basePath, relativePath))) {
+    res.status(404)
+    res.send('Not found')
+  } else {
+    let filePath = path.join(basePath, relativePath);
+    fs.readFile(filePath, function(err, data) {
+      if (err) {
+        res.status(404)
+        res.send('Not found')
+      } else {
+        res.contentType(filePath);
+        res.end(data);
+      }
+    });
+  }
+});
 
 exports.assetsPath = null;
 exports.processingAssets = false;
@@ -180,23 +203,8 @@ server.get('/ceramic/assets/*', function(req, res) {
           res.status(404)
           res.send('Not found')
         } else {
-          let lowerCase = assetPath.toLowerCase()
-          if (lowerCase.endsWith('.png')) {
-            res.contentType('image/png');
-            res.end(data, 'binary');
-          }
-          else if (lowerCase.endsWith('.fnt')) {
-            res.contentType('text/plain');
-            res.end(data, 'utf8');
-          }
-          else if (lowerCase.endsWith('.json')) {
-            res.contentType('application/json');
-            res.end(data, 'utf8');
-          }
-          else {
-            res.status(403)
-            res.send('Forbidden')
-          }
+          res.contentType(assetPath);
+          res.end(data);
         }
       });
     }
@@ -218,15 +226,8 @@ server.get('/ceramic/source-assets/*', function(req, res) {
         res.status(404)
         res.send('Not found')
       } else {
-        let lowerCase = assetPath.toLowerCase()
-        if (lowerCase.endsWith('.png')) {
-          res.contentType('image/png');
-          res.end(data, 'binary');
-        }
-        else {
-          res.status(403)
-          res.send('Forbidden')
-        }
+        res.contentType(assetPath);
+        res.end(data);
       }
     });
   }

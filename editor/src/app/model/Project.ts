@@ -123,9 +123,6 @@ class Project extends Model {
     /** Project custom editor canvas path */
     @observe @serialize editorPath?:string;
 
-    /** Identify the custom editor preview version with a hash */
-    @observe @serialize editorHash?:string;
-
 /// Git (Github) repository
 
     /** Whether the editor is currently syncing with Github repository (manual sync). */
@@ -540,7 +537,7 @@ class Project extends Model {
                     }
                 }
 
-                let prevAllAssetsLastModified:Map<string,number> = null;
+                let prevAllAssetsLastModified:Map<string,number> = new Map();
                 if (this.allAssetPathsLastModified != null) {
                     this.allAssetPathsLastModified.forEach((val, key) => {
                         prevAllAssetsLastModified.set(key, val);
@@ -595,9 +592,7 @@ class Project extends Model {
                     if (hasChanged) {
 
                         // Assets have changed.
-                        // Let's refresh the window for now
-                        // (later we may try to find a less agressive solution)
-                        window.location.reload();
+                        // Nothing to do yet however.
 
                     }
                 }
@@ -625,29 +620,21 @@ class Project extends Model {
 
             // Do it everytime the footprint changes
             if (this.footprint != null) {
-                // Check that we can do it
-                if (this.absoluteEditorPath && this.onlineEnabled && this.gitRepository && user.githubToken) {
 
-                    // Seems ok, check if we should fetch editor
-                    let projectEditorHash = this.editorHash;
-                    if (projectEditorHash == null) {
-                        // No editor hash, nothing to fetch
-                        return;
-                    }
+                setImmediate(() => {
+                    // Check that we can do it
+                    if (this.absoluteEditorPath && this.onlineEnabled && this.gitRepository && user.githubToken) {
 
-                    // Get current actual editor hash
-                    let actualEditorHash = null;
-                    if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
-                        let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
-                        actualEditorHash = createHash('md5').update(data).digest('hex');
-                    }
-
-                    if (actualEditorHash !== projectEditorHash) {
-                        // Fetch editor
+                        // Sync editor preview
                         this.syncEditorPreview(true);
                     }
-                }
+                });
             }
+
+        });
+        autorun(() => {
+
+            context.editorPath = this.absoluteEditorPath;
 
         });
 
@@ -1239,7 +1226,7 @@ class Project extends Model {
         }, (err) => {
 
             if (err) {
-                if (auto) alert(err);
+                if (!auto) alert(err);
                 return;
             }
 
@@ -1250,11 +1237,8 @@ class Project extends Model {
                 actualEditorHash = createHash('md5').update(data).digest('hex');
             }
 
-            // Reload new editor
+            // Reload new editor if it has changed
             if (prevEditorHash !== actualEditorHash) {
-                if (actualEditorHash) {
-                    this.editorHash = actualEditorHash;
-                }
                 this.reloadEditorPreview();
             }
 
@@ -1264,13 +1248,16 @@ class Project extends Model {
 
     reloadEditorPreview() {
 
-        // TODO
+        window.location.reload(true);
 
     } //reloadEditorPreview
 
 /// Remote save
 
     syncWithGithub(options:SyncWithGithubOptions, done?:(err?:string) => void):void {
+
+        console.log('%cSYNC WITH GITHUB', 'color: blue');
+        console.log(options);
 
         let directions = options.directions;
         let auto = options.auto;
@@ -1495,7 +1482,7 @@ class Project extends Model {
 
     } //syncWithGithub
 
-    cloneOrPullGitRepository(gitDir:string, repoDirName:string, authenticatedUrl:string, branch:string, targetCommit:string, callback:(code:number, stdout:string, stderr:string) => void) {
+    cloneOrPullGitRepository(gitDir:string, repoDirName:string, authenticatedUrl:string, branch:string, targetCommit:string, callback:(code:number, stdout:string, stderr:string) => void, tryingAgain:boolean = false) {
 
         let repoDir = join(gitDir, repoDirName);
         let shouldClone = !fs.existsSync(join(repoDir, '.git'));
@@ -1524,7 +1511,15 @@ class Project extends Model {
             // Cleanup repo (just to be sure, remove local changes)
             git.run(['reset', '--hard', 'HEAD'], repoDir, (code, out, err) => {
                 if (code !== 0) {
-                    callback(code, out, err);
+                    if (tryingAgain) {
+                        callback(code, out, err);
+                    }
+                    else {
+                        console.error('NEED TO ERASE REPO');
+                        rimraf(repoDir, (err) => {
+                            this.cloneOrPullGitRepository(gitDir, repoDirName, authenticatedUrl, branch, targetCommit, callback, true);
+                        });
+                    }
                     return;
                 }
 

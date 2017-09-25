@@ -1,4 +1,4 @@
-import { observe, ceramic, action, serialize, uuid } from 'utils';
+import { observe, ceramic, action, serialize, uuid, autorun } from 'utils';
 import * as electron from 'electron';
 import shortcuts from './shortcuts';
 import { spawn } from 'child_process';
@@ -25,6 +25,8 @@ export class Context {
     @observe draggingOver:boolean = false;
 
     @observe machineId:string = null;
+
+    @observe editorPath:string = null;
 
     @observe connectionStatus:'pending'|'online'|'offline' = 'pending';
 
@@ -111,6 +113,11 @@ export class Context {
                 this.connectionStatus = 'offline';
             }
         }, 250);
+
+        // Update editor path (electron side)
+        autorun(() => {
+            electronApp.editorPath = this.editorPath;
+        });
 
     } //constructor
 
