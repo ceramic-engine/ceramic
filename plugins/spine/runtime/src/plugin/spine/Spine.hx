@@ -1,7 +1,8 @@
 package plugin.spine;
 
-import spine.atlas.*;
-import spine.animation.*;
+import spine.support.graphics.TextureAtlas;
+import spine.Animation;
+import spine.AnimationState;
 import spine.attachments.*;
 import spine.*;
 
@@ -26,6 +27,10 @@ class Spine extends Visual {
 
     static var _worldVertices:Array<Float> = [0,0,0,0,0,0,0,0];
 
+/// Spine Animation State listener
+
+    var listener:SpineListener;
+
 /// Events
 
     /** Event: when a spine animation has completed/finished. */
@@ -44,11 +49,8 @@ class Spine extends Visual {
             toResume = [];
 
             var i = 0;
-#if spinehaxe
-            var tracks = state.tracks;
-#else //spine-hx
-            var tracks = @:privateAccess state._tracks;
-#end
+            var tracks = state.getTracks();
+
             for (track in tracks) {
 
                 if (track.animation != null) {
@@ -57,11 +59,7 @@ class Spine extends Visual {
                         track.animation.name,
                         track.timeScale,
                         track.loop,
-#if spinehaxe
-                        track.trackTime,
-#else //spine-hx
-                        track.time,
-#end
+                        track.trackTime
                     ]);
                 }
 
@@ -89,12 +87,7 @@ class Spine extends Visual {
                 var animation = skeletonData.findAnimation(animationName);
                 if (animation != null) {
                     var track = state.setAnimationByName(i, animationName, loop);
-#if spinehaxe
                     track.trackTime = trackTime;
-#else //spine-hx
-                    track.time = trackTime;
-#end
-                    track.timeScale = timeScale;
                 }
 
                 i++;
@@ -156,31 +149,30 @@ class Spine extends Visual {
         skeleton = new Skeleton(skeletonData);
 
         // Bind events
+        listener = new SpineListener();
 
-        state.onStart.add(function(track) {
+        listener.onStart = function(track) {
 
             // Reset skeleton at the start of each animation, before next update
             reset();
 
-        });
+        };
 
-#if spinehaxe
-        state.onComplete.add(function(track) {
-#else //spine-hx
-        state.onComplete.add(function(track, count) {
-#end
+        listener.onComplete = function(track) {
             
             emitComplete();
 
-        });
+        };
 
-        state.onEnd.add(function(track) {
+        listener.onEnd = function(track) {
             
-        });
+        };
 
-        state.onEvent.add(function(track, event) {
+        listener.onEvent = function(track, event) {
             
-        });
+        };
+        
+        state.addListener(listener);
 
         contentDirty = false;
 
@@ -257,7 +249,7 @@ class Spine extends Visual {
         var offsetX:Float;
         var offsetY:Float;
         var isAdditive:Bool;
-        var region:RegionAttachment;
+        var regionAttachment:RegionAttachment;
         var atlasRegion:AtlasRegion;
         var texture:Texture;
         var bone:Bone;
@@ -285,21 +277,17 @@ class Spine extends Visual {
             {
                 if (Std.is(slot.attachment, RegionAttachment))
                 {
-                    region = cast slot.attachment;
-                    atlasRegion = cast region.rendererObject;
+                    regionAttachment = cast slot.attachment;
+                    atlasRegion = cast regionAttachment.getRegion();
                     texture = cast atlasRegion.page.rendererObject;
                     bone = slot.bone;
 
-                    r = skeleton.r * slot.r * region.r;
-                    g = skeleton.g * slot.g * region.g;
-                    b = skeleton.b * slot.b * region.b;
-                    a = skeleton.a * slot.a * region.a * alpha;
+                    r = skeleton.color.r * slot.color.r * regionAttachment.getColor().r;
+                    g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
+                    b = skeleton.color.b * slot.color.b * regionAttachment.getColor().b;
+                    a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
 
-#if spinehaxe
                     isAdditive = slot.data.blendMode == BlendMode.additive;
-#else //spine-hx
-                    isAdditive = slot.data.blendMode == BlendMode.Additive;
-#end
                     
                     // Reuse or create quad
                     quad = usedQuads < animQuads.length ? animQuads[usedQuads] : null;
@@ -318,13 +306,9 @@ class Spine extends Visual {
 
                     flip = flipX * flipY;
 
-#if spinehaxe
-                    offsetX = region.offset[2];
-                    offsetY = region.offset[3];
-#else //spine-hx
-                    offsetX = region.offset.unsafeGet(2);
-                    offsetY = region.offset.unsafeGet(3);
-#end
+                    offsetX = regionAttachment.getOffset().unsafeGet(2);
+                    offsetY = regionAttachment.getOffset().unsafeGet(3);
+
                     tx = skeleton.x + offsetX * bone.a + offsetY * bone.b + bone.worldX;
                     ty = skeleton.y - (offsetX * bone.c + offsetY * bone.d + bone.worldY);
 
@@ -347,12 +331,12 @@ class Spine extends Visual {
                     quad.frameY = atlasRegion.y / texture.density;
                     quad.frameWidth = atlasRegion.width / texture.density;
                     quad.frameHeight = atlasRegion.height / texture.density;
-                    quad.scaleX = region.width / quad.frameWidth;
-                    quad.scaleY = region.height / quad.frameHeight;
+                    quad.scaleX = regionAttachment.getWidth() / quad.frameWidth;
+                    quad.scaleY = regionAttachment.getHeight() / quad.frameHeight;
                     quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
 
                 }
-                else if (Std.is(slot.attachment, MeshAttachment)) {
+                /*else if (Std.is(slot.attachment, MeshAttachment)) {
 
                     mesh = cast slot.attachment;
 
@@ -387,11 +371,7 @@ class Spine extends Visual {
                         wrapper.uvs = mesh.uvs;
                         wrapper.indices = mesh.triangles;
 
-#if spinehaxe
-                        isAdditive = slot.data.blendMode == BlendMode.additive;
-#else //spine-hx
                         isAdditive = slot.data.blendMode == BlendMode.Additive;
-#end
 
                         r = skeleton.r * slot.r * mesh.r;
                         g = skeleton.g * slot.g * mesh.g;
@@ -418,7 +398,7 @@ class Spine extends Visual {
                         wrapper.depth = z++;
                     }
 
-                }
+                }*/
             }
         }
 
@@ -447,3 +427,47 @@ class Spine extends Visual {
     } //render
 
 } //Visual
+
+class SpineListener implements AnimationStateListener {
+
+    public function new() {}
+    
+    /** Invoked when this entry has been set as the current entry. */
+    public dynamic function onStart(entry:TrackEntry):Void {};
+    public function start(entry:TrackEntry):Void {
+        if (onStart != null) onStart(entry);
+    }
+
+    /** Invoked when another entry has replaced this entry as the current entry. This entry may continue being applied for
+     * mixing. */
+    public dynamic function onInterrupt(entry:TrackEntry):Void {}
+    public function interrupt(entry:TrackEntry):Void {
+        if (onInterrupt != null) onInterrupt(entry);
+    }
+
+    /** Invoked when this entry is no longer the current entry and will never be applied again. */
+    public dynamic function onEnd(entry:TrackEntry):Void {}
+    public function end(entry:TrackEntry):Void {
+        if (onEnd != null) onEnd(entry);
+    }
+
+    /** Invoked when this entry will be disposed. This may occur without the entry ever being set as the current entry.
+     * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused. */
+    public dynamic function onDispose(entry:TrackEntry):Void {}
+    public function dispose(entry:TrackEntry):Void {
+        if (onDispose != null) onDispose(entry);
+    }
+
+    /** Invoked every time this entry's animation completes a loop. */
+    public dynamic function onComplete(entry:TrackEntry):Void {}
+    public function complete(entry:TrackEntry):Void {
+        if (onComplete != null) onComplete(entry);
+    }
+
+    /** Invoked when this entry's animation triggers an event. */
+    public dynamic function onEvent(entry:TrackEntry, event:Event) {}
+    public function event(entry:TrackEntry, event:Event) {
+        if (onEvent != null) onEvent(entry, event);
+    }
+
+}

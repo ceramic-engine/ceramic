@@ -1,8 +1,7 @@
 package plugin.spine;
 
-import spine.atlas.AtlasPage;
-import spine.atlas.AtlasRegion;
-import spine.atlas.TextureLoader;
+import spine.support.graphics.TextureAtlas;
+import spine.support.graphics.TextureLoader;
 
 @:access(plugin.spine.SpineAsset)
 class SpineTextureLoader implements TextureLoader

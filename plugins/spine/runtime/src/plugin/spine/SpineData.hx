@@ -2,7 +2,8 @@ package plugin.spine;
 
 import ceramic.Entity;
 
-import spine.atlas.*;
+import spine.support.graphics.TextureAtlas;
+import spine.support.files.FileHandle;
 import spine.attachments.*;
 import spine.*;
 
@@ -14,30 +15,25 @@ class SpineData extends Entity {
 
     public var skeletonData(default,null):SkeletonData;
 
-    public var atlas(default,null):Atlas;
+    public var atlas(default,null):TextureAtlas;
 
     public var asset:SpineAsset;
 
-    public var name:String;
-
     public function new(
-        atlas:Atlas,
-        json:String,
-        name:String,
+        atlas:TextureAtlas,
+        json:FileHandle,
         scale:Float = 1.0
     ) {
 
         this.atlas = atlas;
-        this.name = name;
 
         var spineJson:SkeletonJson = new SkeletonJson(
             new AtlasAttachmentLoader(atlas)
         );
-        spineJson.scale = scale;
+        spineJson.setScale(scale);
 
         skeletonData = spineJson.readSkeletonData(
-            json,
-            name
+            json
         );
 
     } //new

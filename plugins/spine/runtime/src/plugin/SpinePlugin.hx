@@ -29,9 +29,6 @@ class SpinePlugin {
     static function __init__():Void {
         App.oncePreInit(function() {
 
-            // Setting yDown to true because it matches better ceramic positions
-            Bone.yDown = true;
-
             App.app.logger.log('Init spine plugin');
 
             // Extend assets with `spine` kind

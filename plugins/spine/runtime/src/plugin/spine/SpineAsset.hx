@@ -1,6 +1,6 @@
 package plugin.spine;
 
-import spine.atlas.*;
+import spine.support.graphics.TextureAtlas;
 import spine.attachments.*;
 import spine.*;
 import haxe.io.Path;
@@ -17,7 +17,7 @@ class SpineAsset extends Asset {
 
     public var json:String = null;
 
-    public var atlas:Atlas = null;
+    public var atlas:TextureAtlas = null;
 
     public var spineData:SpineData = null;
 
@@ -97,7 +97,7 @@ class SpineAsset extends Asset {
 
         assets.onceComplete(this, function(success) {
 
-            var json = jsonAsset.text;
+            var json = new SpineFile(jsonAsset.path, jsonAsset.text);
             var atlas = atlasAsset.text;
 
             if (json != null && atlas != null) {
@@ -107,7 +107,7 @@ class SpineAsset extends Asset {
                 pages = new Map();
 
                 // Create atlas, which will trigger page loads
-                var spineAtlas = new Atlas(
+                var spineAtlas = new TextureAtlas(
                     atlas,
                     new SpineTextureLoader(this)
                 );
@@ -132,7 +132,6 @@ class SpineAsset extends Asset {
                         spineData = new SpineData(
                             spineAtlas,
                             json,
-                            name,
                             scale
                         );
 
