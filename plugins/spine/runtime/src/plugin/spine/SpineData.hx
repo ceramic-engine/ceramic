@@ -18,6 +18,8 @@ class SpineData extends Entity {
 
     public var asset:SpineAsset;
 
+    public var name:String;
+
     public function new(
         atlas:Atlas,
         json:String,
