@@ -168,6 +168,9 @@ class ProjectLoader {
                 unifill: '0.4.1'
             });
 
+            if (app.paths == null) {
+                app.paths = [];
+            }
             if (app.icon == null) {
                 app.icon = 'resources/AppIcon.png';
             }
@@ -286,7 +289,7 @@ class ProjectLoader {
 
         return plugin;
 
-    } //loadAppConfig
+    } //loadPluginConfig
 
 /// Internal
 

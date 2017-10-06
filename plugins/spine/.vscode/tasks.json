@@ -3,6 +3,7 @@
     "description": "ceramic plugin build --tools",
     "tasks": [
         {
+            "type": "shell",
             "taskName": "build",
             "presentation": {
                 "echo": true,

@@ -30,6 +30,8 @@ class AddPlugin extends tools.Task {
         var relative = !extractArgFlag(args, 'absolute', true) && (extractArgFlag(args, 'relative', true) || context.isLocalDotCeramic);
 
         // Parse plugin
+        if (!Path.isAbsolute(path)) path = Path.join([cwd, path]);
+        
         var pluginProjectPath = Path.join([path, 'ceramic.yml']);
         var project = new Project();
         project.loadPluginFile(pluginProjectPath);
