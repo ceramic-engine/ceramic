@@ -347,6 +347,8 @@ class Spine extends Visual {
                     quad.frameY = atlasRegion.y / texture.density;
                     quad.frameWidth = atlasRegion.width / texture.density;
                     quad.frameHeight = atlasRegion.height / texture.density;
+                    quad.scaleX = region.width / quad.frameWidth;
+                    quad.scaleY = region.height / quad.frameHeight;
                     quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
 
                 }
