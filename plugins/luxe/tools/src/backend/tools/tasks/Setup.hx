@@ -120,7 +120,8 @@ class Setup extends tools.Task {
         var classPaths = '';
         for (entry in (project.app.paths:Array<String>)) {
             if (Path.isAbsolute(entry)) {
-                classPaths += Json.stringify(entry) + ',\n        ';
+                var relativePath = getRelativePath(entry, targetPath);
+                classPaths += Json.stringify(relativePath) + ',\n        ';
             }
             else {
                 var relativePath = getRelativePath(Path.join([cwd, entry]), targetPath);
