@@ -101,7 +101,7 @@ class Setup extends tools.Task {
         if (project.app.hxml != null) {
             var parsedHxml = tools.Hxml.parse(project.app.hxml);
             if (parsedHxml != null && parsedHxml.length > 0) {
-                parsedHxml = tools.Hxml.formatAndchangeRelativeDir(parsedHxml, cwd, targetPath);
+                parsedHxml = tools.Hxml.formatAndChangeRelativeDir(parsedHxml, cwd, targetPath);
                 for (flag in parsedHxml) {
                     haxeflags.push(Json.stringify(flag));
                 }

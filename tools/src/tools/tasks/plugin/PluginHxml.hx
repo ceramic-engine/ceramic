@@ -89,7 +89,7 @@ class PluginHxml extends tools.Task {
         if (project.plugin.hxml != null) {
             var parsedHxml = tools.Hxml.parse(project.plugin.hxml);
             if (parsedHxml != null && parsedHxml.length > 0) {
-                parsedHxml = tools.Hxml.formatAndchangeRelativeDir(parsedHxml, cwd, cwd);
+                parsedHxml = tools.Hxml.formatAndChangeRelativeDir(parsedHxml, cwd, cwd);
                 for (flag in parsedHxml) {
                     extraHxml.push(flag);
                 }
@@ -129,7 +129,7 @@ class PluginHxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
-        var finalHxml = tools.Hxml.formatAndchangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
+        var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
 
         var output = extractArgValue(args, 'output');
         if (output != null) {

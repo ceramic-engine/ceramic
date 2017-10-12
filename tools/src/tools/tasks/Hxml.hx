@@ -96,10 +96,11 @@ class Hxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
-        var finalHxml = tools.Hxml.formatAndchangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
-
+        var hxmlTargetCwd = cwd;
         var output = extractArgValue(args, 'output');
+
         if (output != null) {
+            
             if (!Path.isAbsolute(output)) {
                 output = Path.join([cwd, output]);
             }
@@ -107,6 +108,16 @@ class Hxml extends tools.Task {
             if (!FileSystem.exists(outputDir)) {
                 FileSystem.createDirectory(outputDir);
             }
+
+            // Ensure hxml is relative to output (if output dir != cwd dir)
+            if (Path.normalize(outputDir) != Path.normalize(hxmlTargetCwd)) {
+                hxmlTargetCwd = outputDir;
+            }
+        }
+
+        var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
+
+        if (output != null) {
 
             // Compare with existing
             var prevHxml = null;

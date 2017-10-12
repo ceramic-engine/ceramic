@@ -71,7 +71,7 @@ class Hxml {
         return args;
     }
 
-    public static function formatAndchangeRelativeDir(hxmlData:Array<String>, originalDir:String, targetDir:String):Array<String> {
+    public static function formatAndChangeRelativeDir(hxmlData:Array<String>, originalDir:String, targetDir:String):Array<String> {
 
         // Add required hxml
         var updatedData = [];

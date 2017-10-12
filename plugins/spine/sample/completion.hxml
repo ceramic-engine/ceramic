@@ -49,9 +49,9 @@
 -resource phoenix/defaults/shaders/frag.bitmapfont.gl3.glsl@default.frag.bitmapfont.gl3.glsl
 -resource luxe/defaults/fonts/default.png@default.png
 -resource luxe/defaults/fonts/default.fnt@default.fnt
--D no-compilation
 -D variant=plugin
 -D plugin
+-D debug
 -D assets_path=/Users/jeremyfa/Developer/ceramic/plugins/spine/sample/assets
 -D ceramic_assets_path=/Users/jeremyfa/Developer/ceramic/tools/assets
 -D HXCPP_STACK_LINE
