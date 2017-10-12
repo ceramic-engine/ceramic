@@ -142,9 +142,23 @@ class ProjectLoader {
 
             // Defines (before evaluating conditions)
             if (app.defines != null) {
+                if (Std.is(app.defines, Array)) {
+                    var appDefinesList:Array<Dynamic> = app.defines;
+                    app.defines = {};
+                    for (item in appDefinesList) {
+                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                            Reflect.setField(app.defines, item, true);
+                        } else {
+                            for (key in Reflect.fields(item)) {
+                                Reflect.setField(app.defines, key, Reflect.field(item, key));
+                            }
+                        }
+                    }
+                }
                 for (key in Reflect.fields(app.defines)) {
                     if (!defines.exists(key)) {
-                        defines.set(key, Reflect.field(app.defines, key));
+                        var val = Reflect.field(app.defines, key);
+                        defines.set(key, val == true ? '' : '' + val);
                     }
                 }
             }
@@ -196,7 +210,8 @@ class ProjectLoader {
             if (app.defines != null) {
                 for (key in Reflect.fields(app.defines)) {
                     if (!defines.exists(key)) {
-                        defines.set(key, Reflect.field(app.defines, key));
+                        var val = Reflect.field(app.defines, key);
+                        defines.set(key, val == true ? '' : '' + val);
                     }
                 }
             }
@@ -248,9 +263,23 @@ class ProjectLoader {
             defines = newDefines;
             // Defines (before evaluating conditions)
             if (plugin.defines != null) {
+                if (Std.is(plugin.defines, Array)) {
+                    var pluginDefinesList:Array<Dynamic> = plugin.defines;
+                    plugin.defines = {};
+                    for (item in pluginDefinesList) {
+                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                            Reflect.setField(plugin.defines, item, true);
+                        } else {
+                            for (key in Reflect.fields(item)) {
+                                Reflect.setField(plugin.defines, key, Reflect.field(item, key));
+                            }
+                        }
+                    }
+                }
                 for (key in Reflect.fields(plugin.defines)) {
                     if (!defines.exists(key)) {
-                        defines.set(key, Reflect.field(plugin.defines, key));
+                        var val = Reflect.field(plugin.defines, key);
+                        defines.set(key, val == true ? '' : '' + val);
                     }
                 }
             }
@@ -272,7 +301,8 @@ class ProjectLoader {
             if (plugin.defines != null) {
                 for (key in Reflect.fields(plugin.defines)) {
                     if (!defines.exists(key)) {
-                        defines.set(key, Reflect.field(plugin.defines, key));
+                        var val = Reflect.field(plugin.defines, key);
+                        defines.set(key, val == true ? '' : '' + val);
                     }
                 }
             } else {
@@ -344,8 +374,25 @@ class ProjectLoader {
                 modifier = '-';
                 key = key.substring(1);
             }
-            var orig = Reflect.field(app, key);
-            var value = Reflect.field(extra, (modifier != null ? modifier : '') + key);
+            var orig:Dynamic = Reflect.field(app, key);
+            var value:Dynamic = Reflect.field(extra, (modifier != null ? modifier : '') + key);
+
+            // Ensure defines is a map and not an array
+            if (key == 'defines') {
+                if (Std.is(value, Array)) {
+                    var valueList:Array<Dynamic> = value;
+                    value = {};
+                    for (item in valueList) {
+                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                            Reflect.setField(value, item, true);
+                        } else {
+                            for (key in Reflect.fields(item)) {
+                                Reflect.setField(value, key, Reflect.field(item, key));
+                            }
+                        }
+                    }
+                }
+            }
 
             if (orig != null && modifier == '+') {
                 // Add in array
