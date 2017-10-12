@@ -5,4 +5,5 @@ app:
     author: My Company
     version: '1.0'
 
-    libs: []
+    libs:
+        - spine-hx

@@ -1,21 +1,17 @@
 package;
 
-import ceramic.Entity;
-import ceramic.Color;
-import ceramic.Quad;
-import ceramic.Settings;
-import ceramic.Assets;
-import ceramic.Shortcuts.*;
-
 class Project extends Entity {
+
+    var assets = new Assets();
 
     function new(settings:InitSettings) {
 
         settings.antialiasing = true;
         settings.background = Color.GRAY;
-        settings.targetWidth = 640;
-        settings.targetHeight = 480;
+        settings.targetWidth = 800;
+        settings.targetHeight = 600;
         settings.scaling = FILL;
+        settings.resizable = false;
 
         app.onceReady(ready);
 
@@ -23,33 +19,23 @@ class Project extends Entity {
 
     function ready() {
 
-        // Hello World?
-        //
+        assets.add(Spines.STRETCHYMAN, { scale: 0.8 });
+        assets.onceComplete(this, function(_success) {
 
-        var quad1 = new Quad();
-        quad1.color = Color.RED;
-        quad1.depth = 2;
-        quad1.size(50, 50);
-        quad1.anchor(0.5, 0.5);
-        quad1.pos(640 * 0.5, 480 * 0.5);
-        quad1.rotation = 30;
-        quad1.scale(2.0, 0.5);
+            if (!_success) {
+                error('Failed to load some resources');
+            } else {
+                success('Finished loading');
+            }
 
-        var quad2 = new Quad();
-        quad2.depth = 1;
-        quad2.color = Color.YELLOW;
-        quad2.size(50, 50);
-        quad2.anchor(0.5, 0.5);
-        quad2.pos(640 * 0.5, 480 * 0.5 + 20);
-        quad2.rotation = 30;
-        quad2.scale(2.0, 0.5);
-
-        app.onUpdate(this, function(delta) {
-
-            quad1.rotation = (quad1.rotation + delta * 100) % 360;
-            quad2.rotation = (quad2.rotation + delta * 100) % 360;
+            var anim = new Spine();
+            anim.spineData = assets.spine(Spines.STRETCHYMAN);
+            anim.pos(0, screen.height * 0.9);
+            anim.animate('sneak', true);
 
         });
+
+        assets.load();
 
     } //ready
 
