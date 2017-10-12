@@ -277,6 +277,11 @@ class Helpers {
                     }
                 });
 
+                proc.on('error', function(err) {
+                    error(err + ' (' + options.cwd + ')');
+                    fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
+                });
+
                 proc.on('close', function(code) {
                     result.status = code;
                     done();
