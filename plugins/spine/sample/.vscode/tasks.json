@@ -1,6 +1,7 @@
 {
-    "displayName": "▶︎ Runtime plugin",
-    "description": "ceramic luxe run web --debug --setup --assets --variant plugin",
+    "version": "2.0.0",
+    "displayName": "▶︎ Run Mac",
+    "description": "ceramic luxe run mac --setup --assets",
     "tasks": [
         {
             "type": "shell",
@@ -15,17 +16,12 @@
             "args": [
                 "luxe",
                 "run",
-                "web",
-                "--debug",
+                "mac",
                 "--setup",
                 "--assets",
                 "--vscode-editor",
                 "--hxml-output",
-                "../completion.hxml",
-                "--cwd",
-                "sample",
-                "--variant",
-                "plugin"
+                "completion.hxml"
             ],
             "group": {
                 "kind": "build",
@@ -34,6 +30,5 @@
             "problemMatcher": "$haxe"
         }
     ],
-    "version": "2.0.0",
-    "chooserIndex": 1
+    "chooserIndex": 0
 }

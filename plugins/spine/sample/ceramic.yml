@@ -1,0 +1,8 @@
+app:
+    package: mycompany.SpineSample
+    name: SpineSample
+    displayName: SpineSample
+    author: My Company
+    version: '1.0'
+
+    libs: []

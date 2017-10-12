@@ -88,6 +88,7 @@ class Spine extends Visual {
                 if (animation != null) {
                     var track = state.setAnimationByName(i, animationName, loop);
                     track.trackTime = trackTime;
+                    track.timeScale = timeScale;
                 }
 
                 i++;
@@ -256,8 +257,8 @@ class Spine extends Visual {
         var quad:Quad;
         var slot:Slot;
         var usedQuads = 0;
-        var mesh:MeshAttachment;
-        var wrapper:Mesh;
+        var meshAttachment:MeshAttachment;
+        var mesh:Mesh;
         var verticesLength:Int;
         var colors:Array<AlphaColor>;
         var alphaColor:AlphaColor;
@@ -278,7 +279,7 @@ class Spine extends Visual {
                 if (Std.is(slot.attachment, RegionAttachment))
                 {
                     regionAttachment = cast slot.attachment;
-                    atlasRegion = cast regionAttachment.getRegion();
+                    atlasRegion = cast(regionAttachment.getRegion(), AtlasRegion);
                     texture = cast atlasRegion.page.rendererObject;
                     bone = slot.bone;
 
@@ -314,11 +315,11 @@ class Spine extends Visual {
 
                     quad.transform.setTo(
                         bone.a,
-                        bone.c * flip,
+                        bone.c * flip * -1,
                         bone.b * flip * -1,
-                        bone.d * -1,
+                        bone.d,
                         tx,
-                        ty * -1
+                        ty
                     );
 
                     quad.anchor(0, 0);
@@ -336,52 +337,50 @@ class Spine extends Visual {
                     quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
 
                 }
-                /*else if (Std.is(slot.attachment, MeshAttachment)) {
+                else if (Std.is(slot.attachment, MeshAttachment)) {
 
-                    mesh = cast slot.attachment;
+                    meshAttachment = cast slot.attachment;
 
-                    if (Std.is(mesh.rendererObject, Mesh))
+                    if (meshAttachment.rendererObject != null)
                     {
-                        wrapper = cast mesh.rendererObject;
+                        mesh = cast meshAttachment.rendererObject;
                     }
                     else
                     {
-                        atlasRegion = cast mesh.rendererObject;
+                        atlasRegion = cast(meshAttachment.getRegion(), AtlasRegion);
                         texture = cast atlasRegion.page.rendererObject;
-                        wrapper = new Mesh();
-                        add(wrapper);
-                        mesh.rendererObject = wrapper;
-                        wrapper.texture = texture;
+                        mesh = new Mesh();
+                        add(mesh);
+                        meshAttachment.rendererObject = mesh;
+                        mesh.texture = texture;
                     }
 
                     if (usedMeshes == null) usedMeshes = new Map();
-                    usedMeshes.set(wrapper, true);
+                    usedMeshes.set(mesh, true);
 
-                    verticesLength = mesh.vertices.length;
+                    verticesLength = meshAttachment.vertices.length;
                     if (verticesLength == 0) {
-                        wrapper.visible = false;
+                        mesh.visible = false;
                     }
                     else {
-                        wrapper.visible = true;
+                        mesh.visible = true;
 
-                        mesh.computeWorldVertices(slot, wrapper.vertices);
-                        if (wrapper.vertices.length > verticesLength) {
-                            wrapper.vertices.splice(verticesLength, wrapper.vertices.length - verticesLength);
+                        meshAttachment.computeWorldVertices(slot, 0, verticesLength * 2, mesh.vertices, 0, 2);
+                        if (mesh.vertices.length > verticesLength) {
+                            mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
                         }
-                        wrapper.uvs = mesh.uvs;
-                        wrapper.indices = mesh.triangles;
+                        mesh.uvs = meshAttachment.getUVs();
+                        mesh.indices = meshAttachment.getTriangles();
 
-                        isAdditive = slot.data.blendMode == BlendMode.Additive;
+                        isAdditive = slot.data.blendMode == BlendMode.additive;
 
-                        r = skeleton.r * slot.r * mesh.r;
-                        g = skeleton.g * slot.g * mesh.g;
-                        b = skeleton.b * slot.b * mesh.b;
-                        a = skeleton.a * slot.a * mesh.a * alpha;
-
-                        wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                        r = skeleton.color.r * slot.color.r * meshAttachment.getColor().r;
+                        g = skeleton.color.g * slot.color.g * meshAttachment.getColor().g;
+                        b = skeleton.color.b * slot.color.b * meshAttachment.getColor().b;
+                        a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
 
                         alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
-                        colors = wrapper.colors;
+                        colors = mesh.colors;
                         if (colors.length < verticesLength) {
                             for (j in 0...verticesLength) {
                                 colors[j] = alphaColor;
@@ -394,11 +393,12 @@ class Spine extends Visual {
                                 colors.splice(verticesLength, colors.length - verticesLength);
                             }
                         }
-                        wrapper.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                        wrapper.depth = z++;
+                        mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                        mesh.depth = z++;
+                        mesh.scaleY = -1;
                     }
 
-                }*/
+                }
             }
         }
 
