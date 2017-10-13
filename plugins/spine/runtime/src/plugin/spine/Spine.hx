@@ -23,6 +23,8 @@ class Spine extends Visual {
 
 /// Internal
 
+    static var _degRad:Float = Math.PI / 180.0;
+
     static var _matrix:Transform = new Transform();
 
     static var _worldVertices:Array<Float> = [0,0,0,0,0,0,0,0];
@@ -237,7 +239,6 @@ class Spine extends Visual {
 
         var drawOrder:Array<Slot> = skeleton.drawOrder;
         var len:Int = drawOrder.length;
-        var vertices = new Array<Float>();
 
         var r:Float;
         var g:Float;
@@ -313,15 +314,6 @@ class Spine extends Visual {
                     tx = skeleton.x + offsetX * bone.a + offsetY * bone.b + bone.worldX;
                     ty = skeleton.y - (offsetX * bone.c + offsetY * bone.d + bone.worldY);
 
-                    quad.transform.setTo(
-                        bone.a,
-                        bone.c * flip * -1,
-                        bone.b * flip * -1,
-                        bone.d,
-                        tx,
-                        ty
-                    );
-
                     quad.anchor(0, 0);
                     quad.color = Color.fromRGBFloat(r, g, b);
                     quad.alpha = a;
@@ -334,7 +326,29 @@ class Spine extends Visual {
                     quad.frameHeight = atlasRegion.height / texture.density;
                     quad.scaleX = regionAttachment.getWidth() / quad.frameWidth;
                     quad.scaleY = regionAttachment.getHeight() / quad.frameHeight;
+                    quad.scaleX *= regionAttachment.getScaleX();
+                    quad.scaleY *= regionAttachment.getScaleY();
                     quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
+
+                    quad.transform.identity();
+
+                    if (regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0) {
+                        flip *= -1;
+                        quad.transform.rotate(regionAttachment.getRotation() * _degRad);
+                    } else {
+                        quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
+                    }
+
+                    _matrix.setTo(
+                        bone.a,
+                        bone.c * flip * -1,
+                        bone.b * flip * -1,
+                        bone.d,
+                        tx,
+                        ty
+                    );
+
+                    quad.transform.concat(_matrix);
 
                 }
                 else if (Std.is(slot.attachment, MeshAttachment)) {
