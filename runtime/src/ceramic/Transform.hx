@@ -235,6 +235,7 @@ class Transform implements Events {
 
     } //invert
 
+    /** Rotate by angle (in radians) */
     inline public function rotate(angle:Float):Void {
 
         var cos = Math.cos(angle);
