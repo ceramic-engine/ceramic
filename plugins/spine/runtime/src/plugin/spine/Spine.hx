@@ -333,8 +333,7 @@ class Spine extends Visual {
                     quad.transform.identity();
 
                     if (regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0) {
-                        flip *= -1;
-                        quad.transform.rotate(regionAttachment.getRotation() * _degRad);
+                        quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
                     } else {
                         quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
                     }
