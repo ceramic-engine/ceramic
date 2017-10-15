@@ -33,6 +33,8 @@ class Spine extends Visual {
 
     var listener:SpineListener;
 
+    var slotMeshes:Map<Int,Mesh> = new Map();
+
 /// Events
 
     /** Event: when a spine animation has completed/finished. */
@@ -202,6 +204,11 @@ class Spine extends Visual {
 
     function destroy() {
 
+        for (mesh in slotMeshes) {
+            if (mesh != null) mesh.destroy();
+        }
+        slotMeshes = null;
+
     } //destroy
 
 /// Internal
@@ -233,7 +240,6 @@ class Spine extends Visual {
     } //update
 
     var animQuads:Array<Quad> = [];
-    var usedMeshes:Map<Mesh,Bool> = null;
 
     function render() {
 
@@ -263,18 +269,12 @@ class Spine extends Visual {
         var verticesLength:Int;
         var colors:Array<AlphaColor>;
         var alphaColor:AlphaColor;
-
-        // Mark all meshes as unused, in order to see if
-        // They will be used after
-        if (usedMeshes != null) {
-            for (key in usedMeshes.keys()) {
-                usedMeshes.set(key, false);
-            }
-        }
+        var emptySlotMesh:Bool = false;
 
         for (i in 0...len)
         {
             slot = drawOrder[i];
+            emptySlotMesh = true;
             if (slot.attachment != null)
             {
                 if (Std.is(slot.attachment, RegionAttachment))
@@ -352,24 +352,20 @@ class Spine extends Visual {
                 }
                 else if (Std.is(slot.attachment, MeshAttachment)) {
 
+                    emptySlotMesh = false;
+
                     meshAttachment = cast slot.attachment;
 
-                    if (meshAttachment.rendererObject != null)
-                    {
-                        mesh = cast meshAttachment.rendererObject;
-                    }
-                    else
+                    mesh = slotMeshes.get(slot.data.index);
+                    if (mesh == null)
                     {
                         atlasRegion = cast(meshAttachment.getRegion(), AtlasRegion);
                         texture = cast atlasRegion.page.rendererObject;
                         mesh = new Mesh();
                         add(mesh);
-                        meshAttachment.rendererObject = mesh;
+                        slotMeshes.set(slot.data.index, mesh);
                         mesh.texture = texture;
                     }
-
-                    if (usedMeshes == null) usedMeshes = new Map();
-                    usedMeshes.set(mesh, true);
 
                     verticesLength = meshAttachment.vertices.length;
                     if (verticesLength == 0) {
@@ -413,28 +409,20 @@ class Spine extends Visual {
 
                 }
             }
+
+            if (emptySlotMesh) {
+                mesh = slotMeshes.get(slot.data.index);
+                if (mesh != null) {
+                    mesh.destroy();
+                    slotMeshes.remove(slot.data.index);
+                }
+            }
         }
 
         // Remove unused quads
         while (usedQuads < animQuads.length) {
             var quad = animQuads.pop();
             quad.destroy();
-        }
-
-        // Remove unused meshes
-        if (usedMeshes != null) {
-            len = 0;
-            for (key in usedMeshes.keys()) {
-                len++;
-                var used = usedMeshes.get(key);
-                if (!used) {
-                    usedMeshes.remove(key);
-                    key.destroy();
-                }
-            }
-            if (len == 0) {
-                usedMeshes = null;
-            }
         }
 
     } //render
