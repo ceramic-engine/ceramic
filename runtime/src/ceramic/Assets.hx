@@ -18,10 +18,11 @@ enum AssetStatus {
     BROKEN;
 }
 
-abstract AssetId(String) {
+@:forward
+abstract AssetId<T:String>(T) from T to T {
 
-    inline public function new(string:String) {
-        this = string;
+    inline public function new(value:T) {
+        this = value;
     }
 
 } //AssetId
@@ -951,9 +952,9 @@ class Assets extends Entity {
 
 /// Add assets to load
 
-    public function add(id:AssetId, ?options:AssetOptions):Void {
+    public function add(id:AssetId<Dynamic>, ?options:AssetOptions):Void {
 
-        var value:String = cast id;
+        var value:String = Std.is(id, String) ? cast id : cast Reflect.field(id, '_id');
         var colonIndex = value.indexOf(':');
 
         if (colonIndex == -1) {
@@ -1042,9 +1043,9 @@ class Assets extends Entity {
 
     } //addAsset
     
-    public function asset(idOrName:Either<AssetId, String>, ?kind:String):Asset {
+    public function asset(idOrName:Either<AssetId<Dynamic>, String>, ?kind:String):Asset {
 
-        var value:String = cast idOrName;
+        var value:String = Std.is(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
         var colonIndex = value.indexOf(':');
 
         var name:String = value;
@@ -1129,7 +1130,7 @@ class Assets extends Entity {
 
 /// Get
 
-    public function texture(name:Either<String,AssetId>):Texture {
+    public function texture(name:Either<String,AssetId<String>>):Texture {
 
         var realName:String = cast name;
         if (realName.startsWith('image:')) realName = realName.substr(6);
@@ -1142,7 +1143,7 @@ class Assets extends Entity {
 
     } //texture
 
-    public function font(name:Either<String,AssetId>):BitmapFont {
+    public function font(name:Either<String,AssetId<String>>):BitmapFont {
 
         var realName:String = cast name;
         if (realName.startsWith('font:')) realName = realName.substr(5);
@@ -1155,7 +1156,7 @@ class Assets extends Entity {
 
     } //font
 
-    public function sound(name:Either<String,AssetId>):Sound {
+    public function sound(name:Either<String,AssetId<String>>):Sound {
 
         var realName:String = cast name;
         if (realName.startsWith('sound:')) realName = realName.substr(6);
@@ -1168,7 +1169,7 @@ class Assets extends Entity {
 
     } //font
 
-    public function text(name:Either<String,AssetId>):String {
+    public function text(name:Either<String,AssetId<String>>):String {
 
         var realName:String = cast name;
         if (realName.startsWith('text:')) realName = realName.substr(5);
@@ -1181,7 +1182,7 @@ class Assets extends Entity {
 
     } //text
 
-    public function shader(name:Either<String,AssetId>):Shader {
+    public function shader(name:Either<String,AssetId<String>>):Shader {
 
         var realName:String = cast name;
         if (realName.startsWith('shader:')) realName = realName.substr(7);

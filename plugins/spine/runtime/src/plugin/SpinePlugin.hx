@@ -17,7 +17,7 @@ typedef SpineAsset = plugin.spine.SpineAsset;
 typedef SpineTextureLoader = plugin.spine.SpineTextureLoader;
 
 #if !macro
-@:build(ceramic.macros.AssetsMacro.buildNames('spine', ['spine'], true))
+@:build(plugin.spine.macros.SpineMacros.buildNames())
 #end
 class Spines {}
 
@@ -48,9 +48,9 @@ class SpinePlugin {
     } //addSpine
 
     @:access(ceramic.Assets)
-    public static function spine(assets:Assets, name:Either<String,AssetId>):SpineData {
+    public static function spine(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineData {
 
-        var realName:String = cast name;
+        var realName:String = Std.is(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
         
         if (!assets.assetsByKindAndName.exists('spine')) return null;

@@ -19,9 +19,26 @@ enum ProjectKind {
     Plugin(kinds:Array<PluginKind>);
 }
 
+typedef ProjectFormat = {
+    @:optional var name:String;
+    @:optional var displayName:String;
+    @:optional var author:String;
+    @:optional var version:String;
+}
+
+typedef ProjectApp = {
+    > ProjectFormat,
+}
+
+typedef ProjectPlugin = {
+    > ProjectFormat,
+}
+
 class Project {
 
 /// Properties
+
+    // TODO use project format typedefs
 
     public var app:Dynamic<Dynamic>;
 

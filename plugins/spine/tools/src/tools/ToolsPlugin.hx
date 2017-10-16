@@ -24,6 +24,11 @@ class ToolsPlugin {
         // Use same context as parent
         Helpers.context = context;
 
+        // Add tasks
+        var tasks = context.tasks;
+        tasks.set('spine export', new tools.tasks.spine.ExportSpine());
+        tasks.set('spine run', new tools.tasks.spine.RunSpine());
+
     } //init
 
     public function extendProject(project:Project):Void {

@@ -9,17 +9,19 @@ using StringTools;
 
 class AssetsMacro {
 
-    static var backendInfo:backend.Info = null;
+    public static var backendInfo:backend.Info = null;
 
-    static var allAssets:Array<String> = null;
+    public static var allAssets:Array<String> = null;
 
-    static var allAssetDirs:Array<String> = null;
+    public static var allAssetDirs:Array<String> = null;
 
-    static var assetsByBaseName:Map<String,Array<String>> = null;
+    public static var assetsByBaseName:Map<String,Array<String>> = null;
 
-    static var assetDirsByBaseName:Map<String,Array<String>> = null;
+    public static var assetDirsByBaseName:Map<String,Array<String>> = null;
 
-    static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
+    public static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
+
+    public static var reConstStart = ~/^[a-zA-Z_]$/;
 
     macro static public function buildNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
         
@@ -27,6 +29,16 @@ class AssetsMacro {
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
+
+        for (field in computeNames(fields, pos, kind, extensions, dir)) {
+            fields.push(field);
+        }
+
+        return fields;
+
+    } //buildNames
+
+    static public function computeNames(inFields:Array<Field>, pos:Position, kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
 
         if (extensions == null) extensions = [];
         extensions = extensions.concat(switch (kind) {
@@ -38,6 +50,7 @@ class AssetsMacro {
             default: [];
         });
 
+        var fields = [];
         if (extensions.length == 0) return fields;
 
         var used = new Map<String,String>();
@@ -94,7 +107,7 @@ class AssetsMacro {
             var field = {
                 pos: pos,
                 name: fieldName,
-                kind: FProp('default', 'null', macro :ceramic.Assets.AssetId, expr),
+                kind: FProp('default', 'null', macro :ceramic.Assets.AssetId<String>, expr),
                 access: [AStatic, APublic],
                 doc: fieldDoc.join(', '),
                 meta: []
@@ -105,7 +118,7 @@ class AssetsMacro {
 
         return fields;
 
-    } //buildNames
+    } //computeNames
 
     macro static public function buildLists():Array<Field> {
         
@@ -216,7 +229,7 @@ class AssetsMacro {
 
     } //buildLists
 
-    static function initData(assetsPath:String, ceramicAssetsPath:String):Void {
+    public static function initData(assetsPath:String, ceramicAssetsPath:String):Void {
 
         if (backendInfo == null) backendInfo = new backend.Info();
 
@@ -300,7 +313,7 @@ class AssetsMacro {
 
     } //initData
 
-    static function toAssetConstName(input:String):String {
+    public static function toAssetConstName(input:String):String {
 
         var res = new StringBuf();
         var len = input.length;
@@ -340,6 +353,7 @@ class AssetsMacro {
         }
 
         var str = res.toString();
+        if (!reConstStart.match(str.charAt(0))) str = '_' + str;
         if (str.endsWith('_')) str = str.substr(0, str.length - 1);
 
         return str;
