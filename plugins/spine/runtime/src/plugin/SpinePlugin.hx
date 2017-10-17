@@ -27,9 +27,18 @@ class SpinePlugin {
 /// Init plugin
 
     static function __init__():Void {
+
         App.oncePreInit(function() {
 
             App.app.logger.log('Init spine plugin');
+
+            // Generate spine asset ids
+            var clazz = Type.resolveClass('plugin.Spines');
+            for (key in @:privateAccess Spines._ids.keys()) {
+                var id = @:privateAccess Spines._ids.get(key);
+                var info:Dynamic = Reflect.field(clazz, key);
+                Reflect.setField(info, '_id', id);
+            }
 
             // Extend assets with `spine` kind
             Assets.addAssetKind('spine', addSpine, ['spine'], true);

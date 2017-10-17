@@ -23,6 +23,11 @@ class SpineMacros {
         AssetsMacro.initData(assetsPath, ceramicAssetsPath);
         var nameFields = AssetsMacro.computeNames(fields, pos, 'spine', ['spine'], true);
 
+
+        // Assets by base name
+        //
+        var idsEntries = [];
+
         // We let assets macro do default work but want to extend
         // informations to available animations inside each spine export
         for (field in nameFields) {
@@ -57,21 +62,25 @@ class SpineMacros {
 
             var entries = [];
             for (animName in animations) {
-                entries.push({
-                    expr: {
-                        expr: EConst(CString(animName)),
-                        pos: pos
-                    },
-                    field: AssetsMacro.toAssetConstName(animName)
-                });
+                var constName = AssetsMacro.toAssetConstName(animName);
+                if (!constName.startsWith('_')) {
+                    entries.push({
+                        expr: {
+                            expr: EConst(CString(animName)),
+                            pos: pos
+                        },
+                        field: constName
+                    });
+                }
             }
 
             switch(field.kind) {
                 case FProp(_, _, _, expr):
-                    entries.push({
+                    /*entries.push({
                         expr: { expr: ECast(expr, macro :ceramic.Assets.AssetId<String>), pos: pos },
                         field: '_id'
-                    });
+                    });*/
+                    idsEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(field.name)), pos: pos}, expr), pos: pos});
                 default:
             }
 
@@ -80,6 +89,21 @@ class SpineMacros {
             fields.push(field);
 
         }
+
+        var idsExpr = idsEntries.length == 0 ? (macro new Map()) : {expr: EArrayDecl(idsEntries), pos: pos};
+        var idsField = {
+            pos: pos,
+            name: '_ids',
+            kind: FProp('default', 'null', macro :Map<String,String>, idsExpr),
+            access: [AStatic, APrivate],
+            doc: '',
+            meta: [{
+                name: ':noCompletion',
+                params: [],
+                pos: pos
+            }]
+        };
+        fields.push(idsField);
 
         return fields;
 

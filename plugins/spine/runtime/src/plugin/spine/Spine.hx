@@ -35,13 +35,31 @@ class Spine extends Visual {
 
     var slotMeshes:Map<Int,Mesh> = new Map();
 
+    var slotInfo:SlotInfo = new SlotInfo();
+
+    var subSpines:Array<Spine> = null;
+
+    var boundParentSlots:Map<String,Array<BindSlot>> = null;
+
+    /** Computed from `boundParentSlots` */
+    var boundChildSlots:Map<String,BindSlot> = null;
+
+    var childSlotsDirty:Bool = false;
+
 /// Events
 
-    /** Event: when a spine animation has completed/finished. */
+    /** When a spine animation has completed/finished. */
     @event function complete();
+
+    /** When a slot is about to be updated. */
+    @event function updateSlot(info:SlotInfo);
 
 /// Properties
 
+    /** Is `true` if this spine animation has a parent animation. */
+    public var hasParentSpine(default,null):Bool = false;
+
+    /** The Spine data used to animate this animation. */
     public var spineData(default,set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
@@ -103,12 +121,16 @@ class Spine extends Visual {
         return spineData;
     }
 
+    /** The current pose for a skeleton. */
     public var skeleton(default,null):Skeleton;
 
+    /** The setup pose and all of the stateless data for a skeleton. */
     public var skeletonData(default, null):SkeletonData;
 
+    /** Applies animations over time, queues animations for later playback, mixes (crossfading) between animations, and applies. */
     public var state(default, null):AnimationState;
 
+    /** Stores mix (crossfade) durations to be applied when animations are changed. */
     public var stateData(default, null):AnimationStateData;
 
     /** Is this animation paused? Default is `false`. */
@@ -185,6 +207,7 @@ class Spine extends Visual {
 
 /// Public API
 
+    /** Start running an animation available in the skeleton. **/
     public function animate(animationName:String, loop:Bool = false):Void {
         if (destroyed) return;
 
@@ -211,9 +234,28 @@ class Spine extends Visual {
 
     } //destroy
 
+    public function update(delta:Float):Void {
+
+        if (hasParentSpine) {
+            // Our parent is a spine animation and is responsible
+            // of updating our own data and rendering it.
+            return;
+        }
+
+        // Update skeleton
+        updateSkeleton(delta);
+
+        if (visible) {
+            // We are visible and are root spine animation, let's render
+            render(delta);
+        }
+
+    } //update
+
 /// Internal
 
-    public function update(delta:Float):Void {
+    /** Update skeleton with the given delta time. */
+    function updateSkeleton(delta:Float):Void {
 
         if (contentDirty) {
             computeContent();
@@ -233,15 +275,12 @@ class Spine extends Visual {
         if (state != null && skeleton != null) state.apply(skeleton);
         if (skeleton != null) skeleton.updateWorldTransform();
 
-        if (visible) {
-            render();
-        }
-
-    } //update
+    } //updateSkeleton
 
     var animQuads:Array<Quad> = [];
 
-    function render() {
+    /** Process spine draw order and output quads and meshes. */
+    function render(delta:Float) {
 
         var drawOrder:Array<Slot> = skeleton.drawOrder;
         var len:Int = drawOrder.length;
@@ -270,10 +309,24 @@ class Spine extends Visual {
         var colors:Array<AlphaColor>;
         var alphaColor:AlphaColor;
         var emptySlotMesh:Bool = false;
+        var slotName:String = null;
+
+        // Set flip
+        flipX = skeleton.flipX ? -1 : 1;
+        flipY = skeleton.flipY ? -1 : 1;
+        flip = flipX * flipY;
 
         for (i in 0...len)
         {
             slot = drawOrder[i];
+            bone = slot.bone;
+
+            // Emit event and allow to override drawing of this slot
+            slotInfo.customTransform = null;
+            slotInfo.depth = z + 1;
+            slotInfo.drawDefault = true;
+            slotInfo.slot = slot;
+
             emptySlotMesh = true;
             if (slot.attachment != null)
             {
@@ -282,61 +335,12 @@ class Spine extends Visual {
                     regionAttachment = cast slot.attachment;
                     atlasRegion = cast(regionAttachment.getRegion(), AtlasRegion);
                     texture = cast atlasRegion.page.rendererObject;
-                    bone = slot.bone;
-
-                    r = skeleton.color.r * slot.color.r * regionAttachment.getColor().r;
-                    g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
-                    b = skeleton.color.b * slot.color.b * regionAttachment.getColor().b;
-                    a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
-
-                    isAdditive = slot.data.blendMode == BlendMode.additive;
-                    
-                    // Reuse or create quad
-                    quad = usedQuads < animQuads.length ? animQuads[usedQuads] : null;
-                    if (quad == null) {
-                        quad = new Quad();
-                        quad.transform = new Transform();
-                        animQuads.push(quad);
-                        add(quad);
-                    }
-                    usedQuads++;
-
-                    // Set quad values
-                    //
-                    flipX = skeleton.flipX ? -1 : 1;
-                    flipY = skeleton.flipY ? -1 : 1;
-
-                    flip = flipX * flipY;
 
                     offsetX = regionAttachment.getOffset().unsafeGet(2);
                     offsetY = regionAttachment.getOffset().unsafeGet(3);
 
                     tx = skeleton.x + offsetX * bone.a + offsetY * bone.b + bone.worldX;
                     ty = skeleton.y - (offsetX * bone.c + offsetY * bone.d + bone.worldY);
-
-                    quad.anchor(0, 0);
-                    quad.color = Color.fromRGBFloat(r, g, b);
-                    quad.alpha = a;
-                    quad.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                    quad.depth = z++;
-                    quad.texture = texture;
-                    quad.frameX = atlasRegion.x / texture.density;
-                    quad.frameY = atlasRegion.y / texture.density;
-                    quad.frameWidth = atlasRegion.width / texture.density;
-                    quad.frameHeight = atlasRegion.height / texture.density;
-                    quad.scaleX = regionAttachment.getWidth() / quad.frameWidth;
-                    quad.scaleY = regionAttachment.getHeight() / quad.frameHeight;
-                    quad.scaleX *= regionAttachment.getScaleX();
-                    quad.scaleY *= regionAttachment.getScaleY();
-                    quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
-
-                    quad.transform.identity();
-
-                    if (regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0) {
-                        quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
-                    } else {
-                        quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
-                    }
 
                     _matrix.setTo(
                         bone.a,
@@ -346,65 +350,155 @@ class Spine extends Visual {
                         tx,
                         ty
                     );
+                    slotInfo.transform.setTo(
+                        _matrix.a,
+                        _matrix.b,
+                        _matrix.c,
+                        _matrix.d,
+                        _matrix.tx,
+                        _matrix.ty
+                    );
 
-                    quad.transform.concat(_matrix);
+                    emitUpdateSlot(slotInfo);
+
+                    if (slotInfo.drawDefault) {
+
+                        r = skeleton.color.r * slot.color.r * regionAttachment.getColor().r;
+                        g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
+                        b = skeleton.color.b * slot.color.b * regionAttachment.getColor().b;
+                        a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
+
+                        isAdditive = slot.data.blendMode == BlendMode.additive;
+                        
+                        // Reuse or create quad
+                        quad = usedQuads < animQuads.length ? animQuads[usedQuads] : null;
+                        if (quad == null) {
+                            quad = new Quad();
+                            quad.transform = new Transform();
+                            animQuads.push(quad);
+                            add(quad);
+                        }
+                        usedQuads++;
+
+                        // Set quad values
+                        //
+
+                        quad.anchor(0, 0);
+                        quad.color = Color.fromRGBFloat(r, g, b);
+                        quad.alpha = a;
+                        quad.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                        quad.depth = z++;
+                        quad.texture = texture;
+                        quad.frameX = atlasRegion.x / texture.density;
+                        quad.frameY = atlasRegion.y / texture.density;
+                        quad.frameWidth = atlasRegion.width / texture.density;
+                        quad.frameHeight = atlasRegion.height / texture.density;
+                        quad.scaleX = regionAttachment.getWidth() / quad.frameWidth;
+                        quad.scaleY = regionAttachment.getHeight() / quad.frameHeight;
+                        quad.scaleX *= regionAttachment.getScaleX();
+                        quad.scaleY *= regionAttachment.getScaleY();
+                        quad.rotateFrame = atlasRegion.rotate ? RotateFrame.ROTATE_90 : RotateFrame.NONE;
+
+                        quad.transform.identity();
+
+                        if (regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0) {
+                            quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
+                        } else {
+                            quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
+                        }
+
+                        quad.transform.concat(_matrix);
+
+                        if (slotInfo.customTransform != null) {
+                            quad.transform.concat(slotInfo.customTransform);
+                        }
+                    }
 
                 }
                 else if (Std.is(slot.attachment, MeshAttachment)) {
 
-                    emptySlotMesh = false;
-
                     meshAttachment = cast slot.attachment;
 
-                    mesh = slotMeshes.get(slot.data.index);
-                    if (mesh == null)
-                    {
-                        atlasRegion = cast(meshAttachment.getRegion(), AtlasRegion);
-                        texture = cast atlasRegion.page.rendererObject;
-                        mesh = new Mesh();
-                        add(mesh);
-                        slotMeshes.set(slot.data.index, mesh);
-                        mesh.texture = texture;
-                    }
+                    tx = skeleton.x + bone.worldX;
+                    ty = skeleton.y - bone.worldY;
+                    
+                    slotInfo.transform.setTo(
+                        bone.a,
+                        bone.c * flip * -1,
+                        bone.b * flip * -1,
+                        bone.d,
+                        tx,
+                        ty
+                    );
 
-                    verticesLength = meshAttachment.vertices.length;
-                    if (verticesLength == 0) {
-                        mesh.visible = false;
-                    }
-                    else {
-                        mesh.visible = true;
+                    emitUpdateSlot(slotInfo);
 
-                        meshAttachment.computeWorldVertices(slot, 0, verticesLength * 2, mesh.vertices, 0, 2);
-                        if (mesh.vertices.length > verticesLength) {
-                            mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
+                    if (slotInfo.drawDefault) {
+
+                        emptySlotMesh = false;
+
+                        mesh = slotMeshes.get(slot.data.index);
+                        if (mesh == null)
+                        {
+                            atlasRegion = cast(meshAttachment.getRegion(), AtlasRegion);
+                            texture = cast atlasRegion.page.rendererObject;
+                            mesh = new Mesh();
+                            mesh.transform = new Transform();
+                            add(mesh);
+                            slotMeshes.set(slot.data.index, mesh);
+                            mesh.texture = texture;
                         }
-                        mesh.uvs = meshAttachment.getUVs();
-                        mesh.indices = meshAttachment.getTriangles();
 
-                        isAdditive = slot.data.blendMode == BlendMode.additive;
-
-                        r = skeleton.color.r * slot.color.r * meshAttachment.getColor().r;
-                        g = skeleton.color.g * slot.color.g * meshAttachment.getColor().g;
-                        b = skeleton.color.b * slot.color.b * meshAttachment.getColor().b;
-                        a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
-
-                        alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
-                        colors = mesh.colors;
-                        if (colors.length < verticesLength) {
-                            for (j in 0...verticesLength) {
-                                colors[j] = alphaColor;
-                            }
-                        } else {
-                            for (j in 0...verticesLength) {
-                                colors.unsafeSet(j, alphaColor);
-                            }
-                            if (colors.length > verticesLength) {
-                                colors.splice(verticesLength, colors.length - verticesLength);
-                            }
+                        verticesLength = meshAttachment.vertices.length;
+                        if (verticesLength == 0) {
+                            mesh.visible = false;
                         }
-                        mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                        mesh.depth = z++;
-                        mesh.scaleY = -1;
+                        else {
+                            mesh.visible = true;
+
+                            meshAttachment.computeWorldVertices(slot, 0, verticesLength * 2, mesh.vertices, 0, 2);
+                            if (mesh.vertices.length > verticesLength) {
+                                mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
+                            }
+                            mesh.uvs = meshAttachment.getUVs();
+                            mesh.indices = meshAttachment.getTriangles();
+
+                            isAdditive = slot.data.blendMode == BlendMode.additive;
+
+                            r = skeleton.color.r * slot.color.r * meshAttachment.getColor().r;
+                            g = skeleton.color.g * slot.color.g * meshAttachment.getColor().g;
+                            b = skeleton.color.b * slot.color.b * meshAttachment.getColor().b;
+                            a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
+
+                            alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
+                            colors = mesh.colors;
+                            if (colors.length < verticesLength) {
+                                for (j in 0...verticesLength) {
+                                    colors[j] = alphaColor;
+                                }
+                            } else {
+                                for (j in 0...verticesLength) {
+                                    colors.unsafeSet(j, alphaColor);
+                                }
+                                if (colors.length > verticesLength) {
+                                    colors.splice(verticesLength, colors.length - verticesLength);
+                                }
+                            }
+                            mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                            mesh.depth = z++;
+                            mesh.scaleY = -1;
+                        }
+
+                        if (slotInfo.customTransform != null) {
+                            mesh.transform.setTo(
+                                slotInfo.customTransform.a,
+                                slotInfo.customTransform.b,
+                                slotInfo.customTransform.c,
+                                slotInfo.customTransform.d,
+                                slotInfo.customTransform.tx,
+                                slotInfo.customTransform.ty
+                            );
+                        }
                     }
 
                 }
@@ -417,6 +511,30 @@ class Spine extends Visual {
                     slotMeshes.remove(slot.data.index);
                 }
             }
+
+            // Gather information for child animations if needed
+            if (subSpines != null) {
+                slotName = slot.data.name;
+                for (sub in subSpines) {
+                    if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotName)) {
+                        for (bindInfo in sub.boundParentSlots.get(slotName)) {
+                            
+                            // Keep parent info
+                            bindInfo.parentDepth = slotInfo.depth;
+                            bindInfo.parentTransform.setTo(
+                                slotInfo.transform.a,
+                                slotInfo.transform.b,
+                                slotInfo.transform.c,
+                                slotInfo.transform.d,
+                                slotInfo.transform.tx,
+                                slotInfo.transform.ty
+                            );
+
+                        }
+                    }
+                }
+            }
+
         }
 
         // Remove unused quads
@@ -425,7 +543,73 @@ class Spine extends Visual {
             quad.destroy();
         }
 
+        // Render children (if any)
+        if (subSpines != null) {
+            for (sub in subSpines) {
+                sub.updateSkeleton(delta);
+                sub.render(delta);
+            }
+        }
+
     } //render
+
+/// Spine animations compositing
+
+    /** Add a child visual. If the child is a spine animation,
+        it will be managed by its parent and compositing with `bindBone`
+        becomes possible. */
+    override public function add(visual:Visual):Void {
+
+        // Default behavior
+        super.add(visual);
+
+        // Spine case
+        if (Std.is(visual, Spine)) {
+            if (subSpines == null) subSpines = [];
+            var item = cast(visual, Spine);
+            item.hasParentSpine = true;
+            subSpines.push(item);
+        }
+
+    } //add
+
+    override public function remove(visual:Visual):Void {
+
+        // Default behavior
+        super.remove(visual);
+
+        // Spine case
+        if (Std.is(visual, Spine)) {
+            var item = cast(visual, Spine);
+            item.hasParentSpine = false;
+            subSpines.remove(item);
+        }
+
+    } //add
+
+    /** Bind a slot of parent animation to one of our local slots or bones. */
+    public function bindParentSlot(parentSlot:String, options:BindSlotOptions) {
+
+        var info = new BindSlot();
+        
+        if (options.toLocalBone != null) info.toLocalBone = options.toLocalBone;
+        if (options.toLocalSlot != null) info.toLocalSlot = options.toLocalSlot;
+
+        if (boundParentSlots == null) boundParentSlots = new Map();
+        var bindList = boundParentSlots.get(parentSlot);
+        if (bindList == null) {
+            bindList = [];
+            boundParentSlots.set(parentSlot, bindList);
+        }
+        bindList.push(info);
+
+        childSlotsDirty = true;
+
+    } //bindParentSlot
+
+    function computeBoundChildSlots() {
+
+    } //computeBoundChildSlots
 
 } //Visual
 
@@ -472,3 +656,48 @@ class SpineListener implements AnimationStateListener {
     }
 
 }
+
+typedef BindSlotOptions = {
+
+    @:optional var toLocalBone:String;
+
+    @:optional var toLocalSlot:String;
+
+} //BindSlotOptions
+
+@:allow(plugin.spine.Spine)
+private class BindSlot {
+
+    public var toLocalBone:String = null;
+
+    public var toLocalSlot:String = null;
+
+    public var parentDepth:Float = 0;
+
+    public var parentTransform:Transform = new Transform();
+
+    public function new() {}
+
+} //BindSlot
+
+/** An object to hold every needed info about updating a slot. */
+class SlotInfo {
+
+    /** The slot that is about to have its attachment drawn (if any). */
+    public var slot:spine.Slot = null;
+
+    /** A custom transform applied to this slot (defaults to identity). */
+    public var customTransform:Transform = null;
+
+    /** The bone transform, applied to this slot. */
+    public var transform(default,null):Transform = new Transform();
+
+    /** Set this to `false` if you want to disable drawing of this slot attachment. */
+    public var drawDefault:Bool = true;
+
+    /** The depth in which the slot attachment should be drawn. */
+    public var depth:Float = 0;
+
+    public function new() {}
+
+} //SlotInfo
