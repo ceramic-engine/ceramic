@@ -32,6 +32,7 @@
 .env.test.local
 .env.production.local
 xcuserdata
+/node_modules
 
 npm-debug.log*
 yarn-debug.log*

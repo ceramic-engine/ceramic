@@ -22,7 +22,7 @@ class Help extends tools.Task {
         var tab = '  ';
 
         // Compute tools version
-        var version = 'v' + js.Node.require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
+        var version = 'v' + js.Node.require(Path.join([context.ceramicToolsPath, '../package.json'])).version;
         var versionPath = Path.join([js.Node.__dirname, 'version']);
         if (FileSystem.exists(versionPath)) {
             version = File.getContent(versionPath);

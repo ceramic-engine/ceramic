@@ -1,8 +1,50 @@
 {
-  "name": "ceramic-tools-git-wrapper",
-  "version": "0.1.0",
-  "description": "A wrapper package to allow NPM to install ceramic-tools through git, even if it's in a subfolder.",
+  "name": "ceramic-tools",
+  "version": "0.3.0",
+  "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node tools/post-install.js",
+    "ceramic": "./tools/ceramic"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremyfa/ceramic.git"
+  },
+  "bin": {
+    "ceramic": "./tools/ceramic"
+  },
+  "main": "./tools/index.js",
+  "author": "Jeremy Faivre <contact@jeremyfa.com>",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/jeremyfa/ceramic/issues"
+  },
+  "homepage": "https://github.com/jeremyfa/ceramic#readme",
   "dependencies": {
-    "ceramic-tools": "file:./tools"
+    "applescript": "^1.0.0",
+    "colors": "^1.1.2",
+    "decompress": "^4.2.0",
+    "decompress-targz": "^4.1.0",
+    "download": "^6.2.5",
+    "fibers": "^1.0.15",
+    "glob": "^7.1.1",
+    "handlebars": "^4.0.6",
+    "ip": "^1.1.4",
+    "istextorbinary": "^2.1.0",
+    "lockfile": "^1.0.2",
+    "multi-bin-packer": "^1.1.3",
+    "ncp": "^2.0.0",
+    "plist": "^2.0.1",
+    "portscanner": "^2.1.0",
+    "rimraf": "^2.6.1",
+    "sharp": "^0.16.2",
+    "shell-quote": "^1.6.1",
+    "source-map-support": "^0.4.3",
+    "stream-splitter": "^0.3.2",
+    "to-ico": "^1.1.4",
+    "tree-kill": "^1.1.0",
+    "xcode": "^0.8.9",
+    "yamljs": "^0.2.9"
   }
 }
