@@ -44,7 +44,7 @@ class Spine extends Visual {
     /** Computed from `boundParentSlots` */
     var boundChildSlots:Map<String,BindSlot> = null;
 
-    var childSlotsDirty:Bool = false;
+    var boundChildSlotsDirty:Bool = false;
 
 /// Events
 
@@ -158,8 +158,6 @@ class Spine extends Visual {
 
         super();
 
-        childrenDepthRange = 0.999;
-
         app.onUpdate(this, update);
 
     } //new
@@ -247,8 +245,12 @@ class Spine extends Visual {
 
         if (visible) {
             // We are visible and are root spine animation, let's render
-            render(delta);
+            render(delta, 0);
         }
+
+#if web
+        untyped console.log(skeleton);
+#end
 
     } //update
 
@@ -280,7 +282,11 @@ class Spine extends Visual {
     var animQuads:Array<Quad> = [];
 
     /** Process spine draw order and output quads and meshes. */
-    function render(delta:Float) {
+    function render(delta:Float, z:Float) {
+
+        if (boundChildSlotsDirty) {
+            computeBoundChildSlots();
+        }
 
         var drawOrder:Array<Slot> = skeleton.drawOrder;
         var len:Int = drawOrder.length;
@@ -289,7 +295,6 @@ class Spine extends Visual {
         var g:Float;
         var b:Float;
         var a:Float;
-        var z:Float = 0;
         var flip:Float;
         var flipX:Float;
         var flipY:Float;
@@ -310,6 +315,10 @@ class Spine extends Visual {
         var alphaColor:AlphaColor;
         var emptySlotMesh:Bool = false;
         var slotName:String = null;
+        var boundSlot:BindSlot = null;
+        var microDepth:Float = 0.0001;
+        var flipRegion:Bool = false;
+        var flipBone:Bool = false;
 
         // Set flip
         flipX = skeleton.flipX ? -1 : 1;
@@ -320,12 +329,17 @@ class Spine extends Visual {
         {
             slot = drawOrder[i];
             bone = slot.bone;
+            slotName = slot.data.name;
+            boundSlot = null;
 
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
-            slotInfo.depth = z + 1;
+            slotInfo.depth = z;
             slotInfo.drawDefault = true;
             slotInfo.slot = slot;
+
+            offsetX = 0;
+            offsetY = 0;
 
             emptySlotMesh = true;
             if (slot.attachment != null)
@@ -355,8 +369,8 @@ class Spine extends Visual {
                         _matrix.b,
                         _matrix.c,
                         _matrix.d,
-                        _matrix.tx,
-                        _matrix.ty
+                        skeleton.x + bone.worldX,
+                        skeleton.y - bone.worldY
                     );
 
                     emitUpdateSlot(slotInfo);
@@ -401,16 +415,62 @@ class Spine extends Visual {
 
                         quad.transform.identity();
 
-                        if (regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0) {
-                            quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
-                        } else {
+                        flipRegion = regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0;
+                        flipBone = bone.scaleX * bone.scaleY < 0;
+
+                        /*if (flipRegion && !flipBone) {
+                            //quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
                             quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
-                        }
+                        } else {*/
+                            quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
+                        //}
+
+                        //slotInfo.transform.rotate(-regionAttachment.getRotation() * _degRad);
 
                         quad.transform.concat(_matrix);
 
-                        if (slotInfo.customTransform != null) {
-                            quad.transform.concat(slotInfo.customTransform);
+                        if (boundChildSlots != null) {
+                            boundSlot = boundChildSlots.get(slotName);
+                            if (boundSlot != null) {
+
+                                /*if (id == 'MAKEUP') {
+                                    trace('slot='+slotName+' flipRegion='+flipRegion+' regionRotation='+regionAttachment.getRotation()+' region.scaleX='+regionAttachment.getScaleX()+' region.scaleY='+regionAttachment.getScaleY()+' bone.scaleX='+bone.scaleX+' bone.scaleY='+bone.scaleY);
+                                }*/
+
+                                quad.transform.translate(-slotInfo.transform.tx, -slotInfo.transform.ty);
+
+                                quad.transform.translate(
+                                    -(offsetX * bone.a + offsetY * bone.b),
+                                    (offsetX * bone.c + offsetY * bone.d)
+                                );
+
+                                quad.transform.scale(
+                                    bone.scaleX < 0 ? -1 : 1,
+                                    bone.scaleY < 0 ? -1 : 1
+                                );
+                                
+                                quad.transform.translate(
+                                    bone.scaleX < 0 ? -(offsetX * bone.a + offsetY * bone.b) : (offsetX * bone.a + offsetY * bone.b),
+                                    bone.scaleY < 0 ? (offsetX * bone.c + offsetY * bone.d) : -(offsetX * bone.c + offsetY * bone.d)
+                                );
+
+                                if (slotInfo.customTransform != null) {
+                                    quad.transform.concat(slotInfo.customTransform);
+                                }
+
+                                quad.transform.concat(boundSlot.parentTransform);
+
+                                quad.depth = boundSlot.parentDepth + microDepth;
+                                microDepth += 0.0001;
+
+                                if (id == 'MAKEUP') quad.depth = 999;
+                            }
+                        }
+
+                        if (boundSlot == null) {
+                            if (slotInfo.customTransform != null) {
+                                quad.transform.concat(slotInfo.customTransform);
+                            }
                         }
                     }
 
@@ -489,15 +549,30 @@ class Spine extends Visual {
                             mesh.scaleY = -1;
                         }
 
-                        if (slotInfo.customTransform != null) {
-                            mesh.transform.setTo(
-                                slotInfo.customTransform.a,
-                                slotInfo.customTransform.b,
-                                slotInfo.customTransform.c,
-                                slotInfo.customTransform.d,
-                                slotInfo.customTransform.tx,
-                                slotInfo.customTransform.ty
-                            );
+                        if (boundChildSlots != null) {
+                            boundSlot = boundChildSlots.get(slotName);
+                            if (boundSlot != null) {
+                                mesh.transform.identity();
+                                mesh.transform.translate(-slotInfo.slot.data.boneData.x, slotInfo.slot.data.boneData.y);
+                                if (bone.scaleX < 0) mesh.transform.scale(-1, 1);
+                                if (bone.scaleY < 0) mesh.transform.scale(1, -1);
+                                mesh.transform.concat(boundSlot.parentTransform);
+                                mesh.depth = boundSlot.parentDepth + microDepth;
+                                microDepth += 0.0001;
+                            }
+                        }
+
+                        if (boundSlot == null) {
+                            if (slotInfo.customTransform != null) {
+                                mesh.transform.setToTransform(slotInfo.customTransform);
+                            }
+                            else {
+                                mesh.transform.identity();
+                            }
+                        } else {
+                            if (slotInfo.customTransform != null) {
+                                mesh.transform.concat(slotInfo.customTransform);
+                            }
                         }
                     }
 
@@ -514,7 +589,6 @@ class Spine extends Visual {
 
             // Gather information for child animations if needed
             if (subSpines != null) {
-                slotName = slot.data.name;
                 for (sub in subSpines) {
                     if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotName)) {
                         for (bindInfo in sub.boundParentSlots.get(slotName)) {
@@ -547,7 +621,7 @@ class Spine extends Visual {
         if (subSpines != null) {
             for (sub in subSpines) {
                 sub.updateSkeleton(delta);
-                sub.render(delta);
+                sub.render(delta, z);
             }
         }
 
@@ -556,8 +630,7 @@ class Spine extends Visual {
 /// Spine animations compositing
 
     /** Add a child visual. If the child is a spine animation,
-        it will be managed by its parent and compositing with `bindBone`
-        becomes possible. */
+        it will be managed by its parent and compositing becomes possible. */
     override public function add(visual:Visual):Void {
 
         // Default behavior
@@ -591,7 +664,8 @@ class Spine extends Visual {
     public function bindParentSlot(parentSlot:String, options:BindSlotOptions) {
 
         var info = new BindSlot();
-        
+        info.fromParentSlot = parentSlot;
+
         if (options.toLocalBone != null) info.toLocalBone = options.toLocalBone;
         if (options.toLocalSlot != null) info.toLocalSlot = options.toLocalSlot;
 
@@ -603,11 +677,24 @@ class Spine extends Visual {
         }
         bindList.push(info);
 
-        childSlotsDirty = true;
+        boundChildSlotsDirty = true;
 
     } //bindParentSlot
 
+    /** Compute `boundChildSlots` from `boundParentSlots` to make it more efficient
+        to gather parent slot transformations when drawing child animation. */
     function computeBoundChildSlots() {
+
+        boundChildSlots = new Map();
+
+        for (parentSlot in boundParentSlots.keys()) {
+            var bindList = boundParentSlots.get(parentSlot);
+            for (bindItem in bindList) {
+                if (bindItem.toLocalSlot != null && !boundChildSlots.exists(bindItem.toLocalSlot)) {
+                    boundChildSlots.set(bindItem.toLocalSlot, bindItem);
+                }
+            }
+        }
 
     } //computeBoundChildSlots
 
@@ -668,6 +755,8 @@ typedef BindSlotOptions = {
 @:allow(plugin.spine.Spine)
 private class BindSlot {
 
+    public var fromParentSlot:String = null;
+
     public var toLocalBone:String = null;
 
     public var toLocalSlot:String = null;
@@ -677,6 +766,16 @@ private class BindSlot {
     public var parentTransform:Transform = new Transform();
 
     public function new() {}
+
+    function toString() {
+        var props:Dynamic = {};
+        if (fromParentSlot != null) props.fromParentSlot = fromParentSlot;
+        if (toLocalBone != null) props.toLocalBone = toLocalBone;
+        if (toLocalSlot != null) props.toLocalSlot = toLocalSlot;
+        props.parentDepth = parentDepth;
+        if (parentTransform != null) props.parentTransform = parentTransform;
+        return '' + props;
+    }
 
 } //BindSlot
 
