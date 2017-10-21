@@ -125,7 +125,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "rebuild-native": "electron-rebuild -f",
-    "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install jeremyfa/ceramic"
+    "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install jeremyfa/ceramic && npm run rebuild-native"
   },
   "jest": {
     "mapCoverage": true,

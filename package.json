@@ -1,0 +1,8 @@
+{
+  "name": "ceramic-tools-git-wrapper",
+  "version": "0.1.0",
+  "description": "A wrapper package to allow NPM to install ceramic-tools through git, even if it's in a subfolder.",
+  "dependencies": {
+    "ceramic-tools": "file:./tools"
+  }
+}

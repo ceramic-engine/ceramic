@@ -24,8 +24,14 @@ exports.app = app
 exports.Menu = Menu
 exports.MenuItem = MenuItem
 
+// Handle dev args
+var argv = [].concat(process.argv)
+if (argv[1] == '.' && argv[2] == 'ceramic') {
+  argv.splice(1, 1)
+}
+
 // Ceramic CLI
-if (process.argv[1] == 'ceramic') {
+if (argv[1] == 'ceramic') {
   try {
 
     // Hide dock icon when running ceramic command
@@ -35,10 +41,10 @@ if (process.argv[1] == 'ceramic') {
 
     const ceramicPath = require.resolve('ceramic-tools')
     const ceramicDir = path.dirname(ceramicPath)
-    const args = process.argv.slice(2)
+    const args = argv.slice(2)
     const ceramic = require('ceramic-tools')
 
-    process.stdout.write('[|ceramic:begin|]' + "\n");
+    if (process.platform == 'win32') process.stdout.write('[|ceramic:begin|]' + "\n");
     ceramic(process.cwd(), args, ceramicDir)
 
     return;
