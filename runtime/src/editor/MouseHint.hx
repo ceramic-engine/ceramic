@@ -17,7 +17,7 @@ class MouseHint extends Visual {
         super();
 
         depth = 999999;
-        childrenDepthRange = 0.5;
+        depthRange = 0.5;
 
         text = new Text();
         text.content = 'resize';

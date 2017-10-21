@@ -2,7 +2,7 @@ package editor;
 
 import ceramic.Component;
 import ceramic.Visual;
-import ceramic.Scene;
+import ceramic.Fragment;
 import ceramic.Point;
 import ceramic.Color;
 import ceramic.Quad;
@@ -23,14 +23,14 @@ class Editable extends Component {
 
     var entity:Visual;
 
-    var scene:Scene;
+    var fragment:Fragment;
 
     var point:Point = { x: 0, y: 0 };
 
-    function new(scene:Scene) {
+    function new(fragment:Fragment) {
         
         super();
-        this.scene = scene;
+        this.fragment = fragment;
 
     } //new
 
@@ -57,7 +57,7 @@ class Editable extends Component {
     public function select() {
 
         editor.send({
-            type: 'set/ui.sceneTab',
+            type: 'set/ui.fragmentTab',
             value: 'visuals'
         });
 
@@ -125,14 +125,14 @@ class Editable extends Component {
         // Start dragging
         var entityStartX = entity.x;
         var entityStartY = entity.y;
-        scene.screenToVisual(screen.pointerX, screen.pointerY, point);
+        fragment.screenToVisual(screen.pointerX, screen.pointerY, point);
         var dragStartX = point.x;
         var dragStartY = point.y;
 
         function onMove(info:TouchInfo) {
             editor.render();
 
-            scene.screenToVisual(screen.pointerX, screen.pointerY, point);
+            fragment.screenToVisual(screen.pointerX, screen.pointerY, point);
             entity.x = entityStartX + point.x - dragStartX;
             entity.y = entityStartY + point.y - dragStartY;
 

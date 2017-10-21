@@ -111,7 +111,7 @@ class Highlight extends Visual {
 
         super();
 
-        childrenDepthRange = 0.5;
+        depthRange = 0.5;
 
         cornerTopLeft.depth = 2;
         cornerTopRight.depth = 2;

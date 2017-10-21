@@ -84,8 +84,8 @@ class Visual extends Entity {
     }
 
     /** If set, children will be sort by depth and their computed depth
-        will be within range [parent.depth, parent.depth + childrenDepthRange] */
-    public var childrenDepthRange:Float = -1;
+        will be within range [parent.depth, parent.depth + depthRange] */
+    public var depthRange:Float = -1;
 
     /** If set, the visual will be rendered into this target RenderTexture instance
         instead of being drawn onto screen directly. */
@@ -650,8 +650,8 @@ class Visual extends Entity {
 /// Children
 
     /** Compute children depth. The result depends on whether
-        a parent defines a custom `childrenDepthRange` value or not. */
-    function computeChildrenDepth(depthRange:Float = -1) {
+        a parent defines a custom `depthRange` value or not. */
+    function computeChildrenDepth(computedDepthRange:Float = -1) {
 
         if (children != null && children.length > 0) {
 
@@ -669,10 +669,10 @@ class Visual extends Entity {
 
             var multDepth:Float = -1;
 
-            if (childrenDepthRange != -1) {
+            if (depthRange != -1) {
 
                 if (maxDepth != minDepth) {
-                    multDepth = childrenDepthRange / (maxDepth - minDepth);
+                    multDepth = depthRange / (maxDepth - minDepth);
                 }
                 else {
                     multDepth = 1;
@@ -680,12 +680,12 @@ class Visual extends Entity {
 
             }
 
-            if (depthRange != -1) {
+            if (computedDepthRange != -1) {
 
                 if (multDepth == -1) multDepth = 1;
 
                 if (maxDepth != minDepth) {
-                    multDepth *= depthRange / (maxDepth - minDepth);
+                    multDepth *= computedDepthRange / (maxDepth - minDepth);
                 }
 
             }

@@ -2,7 +2,7 @@ package editor;
 
 import ceramic.Entity;
 import ceramic.Settings;
-import ceramic.Scene;
+import ceramic.Fragment;
 import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Text;
@@ -47,7 +47,7 @@ class Editor extends Entity {
 
     var parentOrigin:String = null;
 
-    var scene:Scene = null;
+    var fragment:Fragment = null;
 
     var selectedItemId:String = null;
 
@@ -73,7 +73,7 @@ class Editor extends Entity {
 
     var assets:Assets = new Assets();
 
-    var sceneItems:Map<String,SceneItem> = new Map();
+    var fragmentItems:Map<String,FragmentItem> = new Map();
 
 /// Lifecycle
 
@@ -142,8 +142,8 @@ class Editor extends Entity {
 #end
         screen.onResize(this, function() {
 
-            // Fit scene
-            fitScene();
+            // Fit fragment
+            fitFragment();
 
             // Render
             render();
@@ -254,17 +254,17 @@ class Editor extends Entity {
 
     } //updateCanvas
 
-    function fitScene() {
+    function fitFragment() {
 
-        if (scene == null) return;
+        if (fragment == null) return;
 
-        // Fit scene
+        // Fit fragment
         var scale = Math.min(
-            screen.width / scene.width,
-            screen.height / scene.height
+            screen.width / fragment.width,
+            screen.height / fragment.height
         );
-        scene.scale(scale, scale);
-        scene.pos(screen.width * 0.5, screen.height * 0.5);
+        fragment.scale(scale, scale);
+        fragment.pos(screen.width * 0.5, screen.height * 0.5);
 
         // Fit outsides
         //
@@ -317,16 +317,16 @@ class Editor extends Entity {
         var pad = 1;
 
         outsideTop.pos(-pad, -pad);
-        outsideTop.size(screen.width + pad * 2, (screen.height - scene.height * scene.scaleY) * 0.5 + pad);
+        outsideTop.size(screen.width + pad * 2, (screen.height - fragment.height * fragment.scaleY) * 0.5 + pad);
 
-        outsideBottom.pos(-pad, scene.height * scene.scaleY + (screen.height - scene.height * scene.scaleY) * 0.5);
-        outsideBottom.size(screen.width + pad * 2, (screen.height - scene.height * scene.scaleY) * 0.5 + pad);
+        outsideBottom.pos(-pad, fragment.height * fragment.scaleY + (screen.height - fragment.height * fragment.scaleY) * 0.5);
+        outsideBottom.size(screen.width + pad * 2, (screen.height - fragment.height * fragment.scaleY) * 0.5 + pad);
 
         outsideLeft.pos(-pad, -pad);
-        outsideLeft.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
+        outsideLeft.size((screen.width - fragment.width * fragment.scaleX) * 0.5 + pad, screen.height + pad * 2);
 
-        outsideRight.pos(scene.width * scene.scaleX + (screen.width - scene.width * scene.scaleX) * 0.5, -pad);
-        outsideRight.size((screen.width - scene.width * scene.scaleX) * 0.5 + pad, screen.height + pad * 2);
+        outsideRight.pos(fragment.width * fragment.scaleX + (screen.width - fragment.width * fragment.scaleX) * 0.5, -pad);
+        outsideRight.size((screen.width - fragment.width * fragment.scaleX) * 0.5 + pad, screen.height + pad * 2);
 
         outsideTopClick.pos(outsideTop.x, outsideTop.y);
         outsideTopClick.size(outsideTop.width, outsideTop.height);
@@ -341,9 +341,9 @@ class Editor extends Entity {
         outsideRightClick.size(outsideRight.width, outsideRight.height);
 
         // Update density
-        settings.targetDensity = Math.ceil(screen.density * scene.scaleX);
+        settings.targetDensity = Math.ceil(screen.density * fragment.scaleX);
 
-    } //fitScene
+    } //fitFragment
 
 /// Messages
 
@@ -402,17 +402,17 @@ class Editor extends Entity {
                     assets.destroy();
                     assets = new Assets();
 
-                    // Reset scene to get updated assets
-                    if (scene != null) {
-                        scene.removeAllItems();
-                        for (key in sceneItems.keys()) {
-                            var item = sceneItems.get(key);
-                            var entity = scene.putItem(item);
+                    // Reset fragment to get updated assets
+                    if (fragment != null) {
+                        fragment.removeAllItems();
+                        for (key in fragmentItems.keys()) {
+                            var item = fragmentItems.get(key);
+                            var entity = fragment.putItem(item);
                             if (Std.is(entity, Visual)) {
                                 var visual:Visual = cast entity;
                                 visual.touchable = !(value.data != null && value.data.locked);
                                 if (!visual.hasComponent('editable')) {
-                                    visual.component('editable', new Editable(scene));
+                                    visual.component('editable', new Editable(fragment));
                                 }
                                 if (selectedItemId == item.id) {
                                     cast(visual.component('editable'), Editable).select();
@@ -436,26 +436,26 @@ class Editor extends Entity {
                     });
                 }
 
-            case 'scene':
-                if (scene != null && value.id != scene.id) {
-                    scene.destroy();
-                    scene = null;
+            case 'fragment':
+                if (fragment != null && value.id != fragment.id) {
+                    fragment.destroy();
+                    fragment = null;
                     selectedItemId = null;
                 }
                 if (action == 'put') {
-                    if (scene == null) {
-                        scene = new Scene();
-                        scene.id = value.id;
-                        scene.childrenDepthRange = 10000;
-                        scene.color = 0x2f2f2f;
-                        scene.anchor(0.5, 0.5);
-                        scene.onDown(scene, function(info) {
+                    if (fragment == null) {
+                        fragment = new Fragment();
+                        fragment.id = value.id;
+                        fragment.depthRange = 10000;
+                        fragment.color = 0x2f2f2f;
+                        fragment.anchor(0.5, 0.5);
+                        fragment.onDown(fragment, function(info) {
                             if (Editable.highlight != null) {
                                 Editable.highlight.destroy();
                             }
                         });
 
-                        scene.deserializers.set('ceramic.Quad', function(scene:Scene, instance:Entity, item:SceneItem) {
+                        fragment.deserializers.set('ceramic.Quad', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
                             if (instance.destroyed) return;
                             if (item.props != null) {
 
@@ -464,7 +464,7 @@ class Editor extends Entity {
                                 function updateSize() {
                                     if (quad.texture != null) {
                                         send({
-                                            type: 'set/scene.item.${item.id}',
+                                            type: 'set/fragment.item.${item.id}',
                                             value: {
                                                 width: quad.width,
                                                 height: quad.height
@@ -546,7 +546,7 @@ class Editor extends Entity {
                             }
                         });
 
-                        scene.deserializers.set('ceramic.Text', function(scene:Scene, instance:Entity, item:SceneItem) {
+                        fragment.deserializers.set('ceramic.Text', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
                             if (instance.destroyed) return;
                             if (item.props != null) {
 
@@ -554,7 +554,7 @@ class Editor extends Entity {
 
                                 function updateSize() {
                                     send({
-                                        type: 'set/scene.item.${item.id}',
+                                        type: 'set/fragment.item.${item.id}',
                                         value: {
                                             width: text.width,
                                             height: text.height
@@ -641,31 +641,31 @@ class Editor extends Entity {
                             }
                         });
                     }
-                    scene.putData(value);
-                    fitScene();
+                    fragment.putData(value);
+                    fitFragment();
                 }
                 else if (action == 'delete') {
-                    if (scene != null && value.id == scene.id) {
-                        scene.destroy();
-                        scene = null;
+                    if (fragment != null && value.id == fragment.id) {
+                        fragment.destroy();
+                        fragment = null;
                         selectedItemId = null;
                     }
                 }
 
-            case 'scene-item':
+            case 'fragment-item':
                 if (action == 'put') {
-                    sceneItems.set(value.id, value);
-                    var entity = scene.putItem(value);
+                    fragmentItems.set(value.id, value);
+                    var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
                         var visual:Visual = cast entity;
                         visual.touchable = !(value.data != null && value.data.locked);
                         if (!visual.hasComponent('editable')) {
-                            visual.component('editable', new Editable(scene));
+                            visual.component('editable', new Editable(fragment));
                         }
                     }
                 }
                 else if (action == 'select') {
-                    var entity = value != null && value.id != null ? scene.getItem(value.id) : null;
+                    var entity = value != null && value.id != null ? fragment.getItem(value.id) : null;
                     if (entity != null && entity.hasComponent('editable')) {
                         cast(entity.component('editable'), Editable).select();
                         selectedItemId = value.id;
@@ -678,8 +678,8 @@ class Editor extends Entity {
                     }
                 }
                 else if (action == 'delete') {
-                    sceneItems.remove(value.id);
-                    scene.removeItem(value.id);
+                    fragmentItems.remove(value.id);
+                    fragment.removeItem(value.id);
                 }
 
             default:

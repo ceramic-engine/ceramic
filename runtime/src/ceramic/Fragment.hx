@@ -4,26 +4,26 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-typedef SceneData = {
+typedef FragmentData = {
 
-    /** Identifier of the scene. */
+    /** Identifier of the fragment. */
     public var id:String;
 
-    /** Arbitrary data hold by this scene. */
+    /** Arbitrary data hold by this fragment. */
     public var data:Dynamic<Dynamic>;
 
-    /** Scene width */
+    /** Fragment width */
     public var width:Float;
 
-    /** Scene height */
+    /** Fragment height */
     public var height:Float;
 
-    /** Scene items (visuals or other entities) */
-    @:optional public var items:Array<SceneItem>;
+    /** Fragment items (visuals or other entities) */
+    @:optional public var items:Array<FragmentItem>;
 
-} //SceneData
+} //FragmentData
 
-typedef SceneItem = {
+typedef FragmentItem = {
 
     /** Entity class (ex: ceramic.Visual, ceramic.Quad, ...). */
     public var entity:String;
@@ -37,14 +37,14 @@ typedef SceneItem = {
     /** Arbitrary data hold by this item. */
     public var data:Dynamic<Dynamic>;
 
-} //SceneEntities
+} //FragmentEntities
 
-/** A scene is a group of visuals rendered from data (.scene file) */
-class Scene extends Quad {
+/** A fragment is a group of visuals rendered from data (.fragment file) */
+class Fragment extends Quad {
 
     public var entities(default,null):Array<Entity>;
 
-    public var deserializers:Map<String,Scene->Entity->SceneItem->Void> = new Map();
+    public var deserializers:Map<String,Fragment->Entity->FragmentItem->Void> = new Map();
 
 /// Lifecycle
 
@@ -58,19 +58,19 @@ class Scene extends Quad {
 
 /// Data
 
-    public function putData(sceneData:SceneData):SceneData {
+    public function putData(fragmentData:FragmentData):FragmentData {
 
-        if (sceneData != null) {
+        if (fragmentData != null) {
 
-            id = sceneData.id;
-            data = sceneData.data;
-            width = sceneData.width;
-            height = sceneData.height;
+            id = fragmentData.id;
+            data = fragmentData.data;
+            width = fragmentData.width;
+            height = fragmentData.height;
 
             var usedIds = new Map<String,Bool>();
-            if (sceneData.items != null) {
+            if (fragmentData.items != null) {
                 // Add/Update items
-                for (item in sceneData.items) {
+                for (item in fragmentData.items) {
                     putItem(item);
                     usedIds.set(item.id, true);
                 }
@@ -89,13 +89,13 @@ class Scene extends Quad {
 
         }
 
-        return sceneData;
+        return fragmentData;
 
     } //putData
 
 /// Public API
 
-    public function putItem(item:SceneItem):Entity {
+    public function putItem(item:FragmentItem):Entity {
 
         var existing = getItem(item.id);
         var existingWasVisual = false;
@@ -184,4 +184,4 @@ class Scene extends Quad {
 
     } //removeAllItems
 
-} //Scene
+} //Fragment

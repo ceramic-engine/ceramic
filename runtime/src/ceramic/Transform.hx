@@ -330,6 +330,19 @@ class Transform implements Events {
 
     } //setTo
 
+    inline public function setToTransform(transform:Transform):Void {
+
+        this.a = transform.a;
+        this.b = transform.b;
+        this.c = transform.c;
+        this.d = transform.d;
+        this.tx = transform.tx;
+        this.ty = transform.ty;
+
+        changed = true;
+
+    } //setTo
+
     public function toString():String {
 
         return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + ")";
