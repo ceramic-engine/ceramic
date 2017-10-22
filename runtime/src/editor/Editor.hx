@@ -654,6 +654,7 @@ class Editor extends Entity {
 
             case 'fragment-item':
                 if (action == 'put') {
+                    console.log(value);
                     fragmentItems.set(value.id, value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {

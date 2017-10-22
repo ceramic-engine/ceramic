@@ -1,4 +1,11 @@
 {
     "window.title": "${activeEditorShort} — Ceramic Editor (React)",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "/out": true,
+        "/build": true
+    }
 }

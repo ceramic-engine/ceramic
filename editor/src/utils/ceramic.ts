@@ -1,6 +1,8 @@
 import { spawn } from 'child_process';
 import { join, normalize } from 'path';
 import * as fs from 'fs';
+import * as electron from 'electron';
+const electronApp = electron.remote.require('./app.js');
 
 interface Message {
 
@@ -80,30 +82,45 @@ class CeramicProxy {
         let cmd = 'ceramic';
 
         if (process.platform === 'darwin') {
-            let macElectronPath = join(__dirname, '../../MacOS/Ceramic');
-            if (fs.existsSync(macElectronPath)) {
-                cmd = macElectronPath;
+            if (electronApp.electronDev) {
+                let electronPath = join(process.cwd(), 'node_modules/.bin/electron');
+                cmd = electronPath;
                 args.unshift('ceramic');
-            }
-            else {
-                let macGlobalPath = '/usr/local/bin/ceramic';
-                if (fs.existsSync(macGlobalPath)) {
-                    cmd = macGlobalPath;
+                args.unshift('.');
+            } else {
+                let macElectronPath = join(__dirname, '../../MacOS/Ceramic');
+                if (fs.existsSync(macElectronPath)) {
+                    cmd = macElectronPath;
+                    args.unshift('ceramic');
+                }
+                else {
+                    let macGlobalPath = '/usr/local/bin/ceramic';
+                    if (fs.existsSync(macGlobalPath)) {
+                        cmd = macGlobalPath;
+                    }
                 }
             }
         }
         else if (process.platform === 'win32') {
             // TODO handle packaged windows app
-            let linkedCeramic = normalize('C:/HaxeToolkit/haxe/ceramic.bat');
-            if (fs.existsSync(linkedCeramic)) {
-                cmd = linkedCeramic;
+            if (electronApp.electronDev) {
+                let electronPath = join(process.cwd(), 'node_modules/.bin/electron');
+                cmd = electronPath;
+                args.unshift('ceramic');
+                args.unshift('.');
+            } else {
+                let linkedCeramic = normalize('C:/HaxeToolkit/haxe/ceramic.bat');
+                if (fs.existsSync(linkedCeramic)) {
+                    cmd = linkedCeramic;
+                }
+                /*else {
+                    cmd = 'cmd';
+                    args = ['/c', 'ceramic'].concat(args);
+                }*/
             }
-            /*else {
-                cmd = 'cmd';
-                args = ['/c', 'ceramic'].concat(args);
-            }*/
         }
 
+        console.log('RUN ' + cmd + ' ' + args.join(' '));
         let proc = spawn(cmd, args, { cwd: cwd } );
         
         var out = '';

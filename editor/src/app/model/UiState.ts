@@ -1,15 +1,15 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
 import { context } from '../context';
-import { Scene, VisualItem, QuadItem, SceneItem, TextItem } from './index';
+import { Fragment, VisualItem, QuadItem, FragmentItem, TextItem } from './index';
 
 class UiState extends Model {
 
 /// Properties
 
-    @observe @serialize editor:'scene'|'atlas' = 'scene';
+    @observe @serialize editor:'fragment'|'atlas' = 'fragment';
     
-    @observe @serialize sceneTab:'visuals'|'scenes'|'assets';
+    @observe @serialize fragmentTab:'visuals'|'fragments'|'assets';
 
     @observe assetInfo:{asset:{name:string, constName:string, paths:Array<string>}, y:number};
 
@@ -23,7 +23,7 @@ class UiState extends Model {
 
     @observe selectedItemId:string;
 
-    @observe @serialize selectedSceneId:string;
+    @observe @serialize selectedFragmentId:string;
 
 /// Status bar text
 
@@ -75,23 +75,23 @@ class UiState extends Model {
 
     } //canDragFileIntoWindow
 
-    @compute get selectedScene():Scene {
+    @compute get selectedFragment():Fragment {
 
-        for (let scene of project.scenes) {
-            if (scene != null && scene.id === this.selectedSceneId) {
-                return scene;
+        for (let fragment of project.fragments) {
+            if (fragment != null && fragment.id === this.selectedFragmentId) {
+                return fragment;
             }
         }
 
         return null;
 
-    } //selectedScene
+    } //selectedFragment
 
-    @compute get selectedItem():VisualItem|QuadItem|SceneItem {
+    @compute get selectedItem():VisualItem|QuadItem|FragmentItem {
 
-        if (!this.selectedScene) return null;
+        if (!this.selectedFragment) return null;
 
-        for (let item of this.selectedScene.items) {
+        for (let item of this.selectedFragment.items) {
             if (item != null && item.id === this.selectedItemId) {
                 return item;
             }
@@ -139,6 +139,6 @@ class UiState extends Model {
 
     } //constructor
 
-} //Scene
+} //Fragment
 
 export default UiState;

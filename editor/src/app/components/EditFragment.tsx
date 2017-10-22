@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { observer } from 'utils';
 import { Center, Tabs, Form, Panel, Title, NumberInput, Field, Button, Alt } from 'components';
-import { Ceramic, AssetInfo, VisualsPanel, ScenesPanel, AssetsPanel, StatusBar } from 'app/components';
+import { Ceramic, AssetInfo, VisualsPanel, FragmentsPanel, AssetsPanel, StatusBar } from 'app/components';
 import { project } from 'app/model';
 import { context } from 'app/context';
 
-@observer class EditScene extends React.Component {
+@observer class EditFragment extends React.Component {
 
     props:{
         /** Available width */
@@ -23,7 +23,7 @@ import { context } from 'app/context';
     render() {
 
         let tabHeight = 28;
-        let scene = project.ui.selectedScene;
+        let fragment = project.ui.selectedFragment;
 
         return (
             <div
@@ -48,14 +48,14 @@ import { context } from 'app/context';
                 >
                     <div className="rightside">
                         {project.assetsPath != null ?
-                            scene ?
+                            fragment ?
                                 <Tabs
-                                    tabs={["Visuals", "Scenes", "Assets"]}
+                                    tabs={["Visuals", "Fragments", "Assets"]}
                                     active={
                                         function() {
-                                            switch(project.ui.sceneTab) {
+                                            switch(project.ui.fragmentTab) {
                                                 case 'visuals': return 0;
-                                                case 'scenes': return 1;
+                                                case 'fragments': return 1;
                                                 case 'assets': return 2;
                                                 default: 1;
                                             }
@@ -64,21 +64,21 @@ import { context } from 'app/context';
                                     }
                                     onChange={
                                         (i) => {
-                                            project.ui.sceneTab = ['visuals', 'scenes', 'assets'][i] as any;
+                                            project.ui.fragmentTab = ['visuals', 'fragments', 'assets'][i] as any;
                                         }
                                     }
                                 >
                                     <VisualsPanel height={this.props.height - tabHeight} />
-                                    <ScenesPanel height={this.props.height - tabHeight} />
+                                    <FragmentsPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
                             :
                                 <Tabs
-                                    tabs={["Scenes", "Assets"]}
+                                    tabs={["Fragments", "Assets"]}
                                     active={
                                         function() {
-                                            switch(project.ui.sceneTab) {
-                                                case 'scenes': return 0;
+                                            switch(project.ui.fragmentTab) {
+                                                case 'fragments': return 0;
                                                 case 'assets': return 1;
                                                 default: 0;
                                             }
@@ -87,11 +87,11 @@ import { context } from 'app/context';
                                     }
                                     onChange={
                                         (i) => {
-                                            project.ui.sceneTab = ['scenes', 'assets'][i] as any;
+                                            project.ui.fragmentTab = ['fragments', 'assets'][i] as any;
                                         }
                                     }
                                 >
-                                    <ScenesPanel height={this.props.height - tabHeight} />
+                                    <FragmentsPanel height={this.props.height - tabHeight} />
                                     <AssetsPanel height={this.props.height} />
                                 </Tabs>
                         :
@@ -125,4 +125,4 @@ import { context } from 'app/context';
     
 }
 
-export default EditScene;
+export default EditFragment;

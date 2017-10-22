@@ -1,4 +1,5 @@
 {
+    "window.title": "${activeEditorShort} — Editor (Haxe)",
     "haxe.displayConfigurations": [
         [
             "completion.hxml"

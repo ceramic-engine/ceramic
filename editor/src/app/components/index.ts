@@ -1,6 +1,6 @@
 
 export { default as App } from './App';
-export { default as EditScene } from './EditScene';
+export { default as EditFragment } from './EditFragment';
 export { default as Ceramic } from './Ceramic';
 export { default as AssetInfo } from './AssetInfo';
 export { default as MenuInfo } from './MenuInfo';
@@ -14,6 +14,6 @@ export { default as EditSettings } from './EditSettings';
 export { default as DragOver } from './DragOver';
 export { default as LoadingOverlay } from './LoadingOverlay';
 export { default as OnlineBroken } from './OnlineBroken';
-export { default as ScenesPanel } from './ScenesPanel';
+export { default as FragmentsPanel } from './FragmentsPanel';
 export { default as VisualsPanel } from './VisualsPanel';
 export { default as AssetsPanel } from './AssetsPanel';

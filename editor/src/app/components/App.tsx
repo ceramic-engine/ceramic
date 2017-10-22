@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { project, user } from 'app/model';
 import { context } from 'app/context';
-import { EditScene, AddVisual, EditSettings, DragOver, MenuInfo, PromptChoice, PromptText, LoadingOverlay, OnlineBroken } from 'app/components';
+import { EditFragment, AddVisual, EditSettings, DragOver, MenuInfo, PromptChoice, PromptText, LoadingOverlay, OnlineBroken } from 'app/components';
 import MdImage from 'react-icons/lib/md/image';
 import MdGridOn from 'react-icons/lib/md/grid-on';
 
@@ -138,13 +138,13 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             className="leftside-button selected"
                             onMouseOver={(e) => { project.ui.menuInfo = {
                                 y: (e.currentTarget as HTMLElement).getClientRects()[0].top,
-                                text: 'Scene Editor'
+                                text: 'Fragment Editor'
                             }; }}
                             onMouseOut={() => { project.ui.menuInfo = null; }}
                         >
                             <MdImage size={22} style={{ position: 'relative', left: 0.5, top: 2 }} />
                         </div>
-                        <div
+                        {/*<div
                             className="leftside-button"
                             onMouseOver={(e) => { project.ui.menuInfo = {
                                 y: (e.currentTarget as HTMLElement).getClientRects()[0].top,
@@ -153,7 +153,7 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             onMouseOut={() => { project.ui.menuInfo = null; }}
                         >
                             <MdGridOn size={20} style={{ position: 'relative', left: 0.5, top: 2.5 }} />
-                        </div>
+                        </div>*/}
                     </div>
                     <div
                         style={{
@@ -167,7 +167,7 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                         <div>
                             <MenuInfo />
                         </div>
-                        <EditScene width={context.width - leftSideWidth} height={context.height - navHeight} />
+                        <EditFragment width={context.width - leftSideWidth} height={context.height - navHeight} />
                     </div>
                 </div>
             </div>

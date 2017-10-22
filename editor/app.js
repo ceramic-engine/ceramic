@@ -23,6 +23,7 @@ app.setName(appName)
 exports.app = app
 exports.Menu = Menu
 exports.MenuItem = MenuItem
+exports.electronDev = process.env.ELECTRON_DEV;
 
 // Handle dev args
 var argv = [].concat(process.argv)
@@ -34,6 +35,18 @@ if (argv[1] == '.' && argv[2] == 'ceramic') {
 if (argv[1] == 'ceramic') {
   try {
 
+    // Expose global require
+    global.rReqOrig = require
+    global.rReq = function(module) {
+      if (rReqOrig.resolve(module)) {
+        return rReqOrig(module)
+      } else {
+        return require.main.require(module)
+      }
+    }
+
+    var hasProxy = argv.indexOf('--electron-proxy') != -1;
+
     // Hide dock icon when running ceramic command
     if (app.dock != null) {
       app.dock.hide();
@@ -44,7 +57,7 @@ if (argv[1] == 'ceramic') {
     const args = argv.slice(2)
     const ceramic = require('ceramic-tools')
 
-    if (process.platform == 'win32') process.stdout.write('[|ceramic:begin|]' + "\n");
+    if (hasProxy) process.stdout.write('[|ceramic:begin|]' + "\n");
     ceramic(process.cwd(), args, ceramicDir)
 
     return;
@@ -126,9 +139,9 @@ app.on('ready', createWindow)
 app.on('window-all-closed', function () {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
+  //if (process.platform !== 'darwin') {
     app.quit()
-  }
+  //}
 })
 
 app.on('activate', function () {
@@ -162,28 +175,6 @@ if (process.env.ELECTRON_DEV) {
   defaultEditorPath = path.normalize(path.join(__dirname, '/build/ceramic'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
 }
-
-exports.editorPath = null;
-server.get('/ceramic/*', function(req, res) {
-  let relativePath = req.path.substr('/ceramic/'.length);
-  let basePath = exports.editorPath && fs.existsSync(path.join(exports.editorPath, 'SceneEditor.js')) ? exports.editorPath : defaultEditorPath;
-
-  if (!fs.existsSync(path.join(basePath, relativePath))) {
-    res.status(404)
-    res.send('Not found')
-  } else {
-    let filePath = path.join(basePath, relativePath);
-    fs.readFile(filePath, function(err, data) {
-      if (err) {
-        res.status(404)
-        res.send('Not found')
-      } else {
-        res.contentType(filePath);
-        res.end(data);
-      }
-    });
-  }
-});
 
 exports.assetsPath = null;
 exports.processingAssets = false;
@@ -233,6 +224,30 @@ server.get('/ceramic/source-assets/*', function(req, res) {
         res.send('Not found')
       } else {
         res.contentType(assetPath);
+        res.end(data);
+      }
+    });
+  }
+});
+
+exports.editorPath = null;
+server.get('/ceramic/*', function(req, res) {
+  let relativePath = req.path.substr('/ceramic/'.length);
+  let basePath = exports.editorPath && fs.existsSync(path.join(exports.editorPath, 'FragmentEditor.js')) ? exports.editorPath : defaultEditorPath;
+
+  if (!fs.existsSync(path.join(basePath, relativePath))) {
+    console.log('REQ PATH: ' + req.path);
+    console.log('NOT FOUND: ' + path.join(basePath, relativePath))
+    res.status(404)
+    res.send('Not found')
+  } else {
+    let filePath = path.join(basePath, relativePath);
+    fs.readFile(filePath, function(err, data) {
+      if (err) {
+        res.status(404)
+        res.send('Not found')
+      } else {
+        res.contentType(filePath);
         res.end(data);
       }
     });

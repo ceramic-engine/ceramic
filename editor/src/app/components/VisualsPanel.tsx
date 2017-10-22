@@ -64,7 +64,7 @@ import FaLock from 'react-icons/lib/fa/lock';
 
         return (
             <Panel>
-                {project.ui.selectedScene.visualItems.length > 0 ?
+                {project.ui.selectedFragment.visualItems.length > 0 ?
                 <div>
                 <div>
                     <Title>All visuals</Title>
@@ -78,7 +78,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                             helperClass={"dragging"}
                             onSortEnd={({oldIndex, newIndex}) => {
                                 if (oldIndex === newIndex) return;
-                                let visuals = project.ui.selectedScene.visualItemsSorted.slice();
+                                let visuals = project.ui.selectedFragment.visualItemsSorted.slice();
                                 visuals = arrayMove(visuals, oldIndex, newIndex);
                                 let depth = 1;
                                 for (let i = visuals.length -1; i >= 0; i--) {
@@ -86,8 +86,8 @@ import FaLock from 'react-icons/lib/fa/lock';
                                 }
                             }}
                         >
-                        {project.ui.selectedScene.visualItemsSorted.length > 0 ?
-                            project.ui.selectedScene.visualItemsSorted.map((visual, i) =>
+                        {project.ui.selectedFragment.visualItemsSorted.length > 0 ?
+                            project.ui.selectedFragment.visualItemsSorted.map((visual, i) =>
                                 <div
                                     key={i}
                                     className={

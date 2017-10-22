@@ -1,20 +1,20 @@
 {
   "name": "ceramic-tools",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "node tools/post-install.js",
-    "ceramic": "./tools/ceramic"
+    "postinstall": "node post-install.js",
+    "ceramic": "./ceramic"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jeremyfa/ceramic.git"
   },
   "bin": {
-    "ceramic": "./tools/ceramic"
+    "ceramic": "./ceramic"
   },
-  "main": "./tools/index.js",
+  "main": "./index.js",
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "private": true,
   "bugs": {

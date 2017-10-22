@@ -1,7 +1,7 @@
 import { serialize, observe, compute, action } from 'utils';
-import SceneItem from './SceneItem';
+import FragmentItem from './FragmentItem';
 
-class VisualItem extends SceneItem {
+class VisualItem extends FragmentItem {
 
 /// Properties
 

@@ -1,6 +1,6 @@
 import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, git, realtime, serializeModel, Model, Room, Peer } from 'utils';
-import Scene from './Scene';
-import SceneItem from './SceneItem';
+import Fragment from './Fragment';
+import FragmentItem from './FragmentItem';
 import UiState from './UiState';
 import * as fs from 'fs';
 import * as electron from 'electron';
@@ -99,14 +99,14 @@ class Project extends Model {
     /** Project save timestamp */
     @observe @serialize saveTimestamp:number;
 
-    /** Project scenes */
-    @observe @serialize(Scene) scenes:Array<Scene> = [];
+    /** Project fragments */
+    @observe @serialize(Fragment) fragments:Array<Fragment> = [];
 
-    /** Default scene bundle (name) */
-    @observe @serialize defaultSceneBundle:string = null;
+    /** Default fragment bundle (name) */
+    @observe @serialize defaultFragmentBundle:string = null;
 
-    /** Custom scene bundles (name) */
-    @observe @serialize sceneBundles:Array<string> = [];
+    /** Custom fragment bundles (name) */
+    @observe @serialize fragmentBundles:Array<string> = [];
 
     /** Project error */
     @observe error?:string;
@@ -369,6 +369,11 @@ class Project extends Model {
 
             if (!this.ui) return;
 
+            // Just to ensure we are compatible with older projects
+            if ((this.ui.editor as any) === 'scene') {
+                this.ui.editor = 'fragment';
+            }
+
             let CtlrOrCmd = process.platform === 'darwin' ? 'Cmd' : 'Ctrl';
             
             if (this.gitRepository) {
@@ -601,14 +606,14 @@ class Project extends Model {
 
         });
 
-        // Deselect item when changing scene tab
+        // Deselect item when changing fragment tab
         autorun(() => {
 
             if (this.ui == null) return;
-            if (this.ui.editor !== 'scene') return;
-            if (this.ui.sceneTab !== 'visuals') {
+            if (this.ui.editor !== 'fragment') return;
+            if (this.ui.fragmentTab !== 'visuals') {
                 ceramic.send({
-                    type: 'scene-item/select',
+                    type: 'fragment-item/select',
                     value: null
                 });
             }
@@ -647,12 +652,13 @@ class Project extends Model {
             if (key.startsWith('ui.')) {
                 keypath.set(this.ui, key.substr(3), message.value);
             }
-            // Change Scene Item
-            else if (key.startsWith('scene.item.')) {
-                if (this.ui.selectedScene == null || this.ui.selectedScene.items == null) return;
+            // Change Fragment Item
+            else if (key.startsWith('fragment.item.')) {
 
-                let itemId = key.substr(11);
-                let item = this.ui.selectedScene.itemsById.get(itemId);
+                if (this.ui.selectedFragment == null || this.ui.selectedFragment.items == null) return;
+
+                let itemId = key.substr('fragment.item.'.length);
+                let item = this.ui.selectedFragment.itemsById.get(itemId);
 
                 if (item != null) {
                     for (let k in message.value) {
@@ -698,12 +704,12 @@ class Project extends Model {
         // Save timestamp
         this.saveTimestamp = null;
 
-        // Scene bundles
-        this.defaultSceneBundle = null;
-        this.sceneBundles = [];
+        // Fragment bundles
+        this.defaultFragmentBundle = null;
+        this.fragmentBundles = [];
 
-        // Set scene
-        this.scenes = [];
+        // Set fragment
+        this.fragments = [];
 
         // Set UI state
         this.ui = new UiState('ui');
@@ -801,22 +807,22 @@ class Project extends Model {
 
     } //chooseAssetsPath
 
-    @action createScene() {
+    @action createFragment() {
 
-        let scene = new Scene();
-        scene.name = 'Scene ' + (this.scenes.length + 1);
+        let fragment = new Fragment();
+        fragment.name = 'Fragment ' + (this.fragments.length + 1);
 
-        this.scenes.push(scene);
-        this.ui.selectedSceneId = scene.id;
+        this.fragments.push(fragment);
+        this.ui.selectedFragmentId = fragment.id;
 
-    } //createScene
+    } //createFragment
 
-    @action removeCurrentSceneItem() {
+    @action removeCurrentFragmentItem() {
 
         let itemId = this.ui.selectedItemId;
         if (!itemId) return;
 
-        let item = this.ui.selectedScene.itemsById.get(itemId);
+        let item = this.ui.selectedFragment.itemsById.get(itemId);
 
         if (item != null) {
 
@@ -824,25 +830,25 @@ class Project extends Model {
                 this.ui.selectedItemId = null;
             }
 
-            this.ui.selectedScene.items.splice(
-                this.ui.selectedScene.items.indexOf(item),
+            this.ui.selectedFragment.items.splice(
+                this.ui.selectedFragment.items.indexOf(item),
                 1
             );
             item = null;
         }
 
-    } //removeCurrentSceneItem
+    } //removeCurrentFragmentItem
 
-    @action removeCurrentScene() {
+    @action removeCurrentFragment() {
 
-        let sceneId = this.ui.selectedSceneId;
+        let fragmentId = this.ui.selectedFragmentId;
 
-        if (!sceneId) return;
+        if (!fragmentId) return;
 
         let index = -1;
         let i = 0;
-        for (let scene of this.scenes) {
-            if (scene.id === sceneId) {
+        for (let fragment of this.fragments) {
+            if (fragment.id === fragmentId) {
                 index = i;
                 break;
             }
@@ -850,11 +856,11 @@ class Project extends Model {
         }
 
         if (index !== -1) {
-            this.ui.selectedSceneId = null;
-            this.scenes.splice(index, 1);
+            this.ui.selectedFragmentId = null;
+            this.fragments.splice(index, 1);
         }
 
-    } //removeCurrentScene
+    } //removeCurrentFragment
 
 /// Save/Open
 
@@ -1044,8 +1050,8 @@ class Project extends Model {
             // Set project name from file path
             this.name = basename(path).split('.')[0];
 
-            // Set project default scene bundle from project name
-            this.defaultSceneBundle = this.name.split(' ').join('_');
+            // Set project default fragment bundle from project name
+            this.defaultFragmentBundle = this.name.split(' ').join('_');
 
             // Save
             this.save();
@@ -1055,12 +1061,12 @@ class Project extends Model {
 
 /// Clipboard
 
-    copySelectedSceneItem(cut:boolean = false):string {
+    copySelectedFragmentItem(cut:boolean = false):string {
 
-        let scene = this.ui.selectedScene;
-        if (!scene) return null;
+        let fragment = this.ui.selectedFragment;
+        if (!fragment) return null;
 
-        // Get scene item
+        // Get fragment item
         let item = this.ui.selectedItem;
         if (!item) return null;
 
@@ -1069,9 +1075,9 @@ class Project extends Model {
 
         // Cut?
         if (cut) {
-            let index = scene.items.indexOf(item);
+            let index = fragment.items.indexOf(item);
             if (index !== -1) {
-                scene.items.splice(index, 1);
+                fragment.items.splice(index, 1);
             }
         }
 
@@ -1079,10 +1085,10 @@ class Project extends Model {
 
     } //copySelectedItem
 
-    pasteSceneItem(strData:string) {
+    pasteFragmentItem(strData:string) {
 
-        let scene = this.ui.selectedScene;
-        if (!scene) return;
+        let fragment = this.ui.selectedFragment;
+        if (!fragment) return;
 
         // Parse data
         let data = JSON.parse(strData);
@@ -1102,7 +1108,7 @@ class Project extends Model {
                 do {
                     let composedName = baseName + ' (copy ' + i + ')';
                     itemExistsWithName = false;
-                    for (let item of scene.items.slice()) {
+                    for (let item of fragment.items.slice()) {
                         if (item.name != null && item.name === composedName) {
                             itemExistsWithName = true;
                             break;
@@ -1121,13 +1127,13 @@ class Project extends Model {
         db.putSerialized(data);
 
         // Create instance
-        let item = db.getOrCreate(Model, data.id) as SceneItem;
+        let item = db.getOrCreate(Model, data.id) as FragmentItem;
 
         // Add item
-        scene.items.push(item);
+        fragment.items.push(item);
 
         // Normalize item depths
-        let visuals = scene.visualItemsSorted.slice();
+        let visuals = fragment.visualItemsSorted.slice();
         let depth = 1;
         for (let i = visuals.length -1; i >= 0; i--) {
             visuals[i].depth = depth++;
@@ -1150,7 +1156,7 @@ class Project extends Model {
 
 /// Build
 
-    /** Build/Export scene files */
+    /** Build/Export fragment files */
     build():void {
 
         if (!this.absoluteAssetsPath) {
@@ -1165,26 +1171,26 @@ class Project extends Model {
 
         let perBundle:Map<string,any> = new Map();
 
-        // Serialize each scene
-        for (let scene of this.scenes) {
+        // Serialize each fragment
+        for (let fragment of this.fragments) {
 
-            let sceneData = scene.serializeForCeramic();
+            let fragmentData = fragment.serializeForCeramic();
 
-            // Include scene items
-            sceneData.items = [];
-            for (let item of scene.items) {
+            // Include fragment items
+            fragmentData.items = [];
+            for (let item of fragment.items) {
                 let serialized = item.serializeForCeramic();
-                sceneData.items.push(serialized);
+                fragmentData.items.push(serialized);
             }
 
-            let bundleName = scene.bundle ? scene.bundle : this.defaultSceneBundle;
+            let bundleName = fragment.bundle ? fragment.bundle : this.defaultFragmentBundle;
             if (bundleName) {
                 let bundleData:any = perBundle.get(bundleName);
                 if (bundleData == null) {
                     bundleData = {};
                     perBundle.set(bundleName, bundleData);
                 }
-                bundleData[scene.id] = sceneData;
+                bundleData[fragment.id] = fragmentData;
             }
             else {
                 alert('Save project before building it.');
@@ -1195,12 +1201,12 @@ class Project extends Model {
 
         perBundle.forEach((val, key) => {
 
-            let scenesPath = join(this.absoluteAssetsPath, key + '.scenes');
-            let scenesData = JSON.stringify(val, null, 2);
+            let fragmentsPath = join(this.absoluteAssetsPath, key + '.fragments');
+            let fragmentsData = JSON.stringify(val, null, 2);
             
-            console.log('Export: ' + scenesPath);
+            console.log('Export: ' + fragmentsPath);
 
-            fs.writeFileSync(scenesPath, scenesData);
+            fs.writeFileSync(fragmentsPath, fragmentsData);
 
         });
 
@@ -1212,8 +1218,8 @@ class Project extends Model {
 
         // Get previous editor hash
         let prevEditorHash:string = null;
-        if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
-            let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
+        if (fs.existsSync(join(this.absoluteEditorPath, 'FragmentEditor.js'))) {
+            let data = fs.readFileSync(join(this.absoluteEditorPath, 'FragmentEditor.js'));
             prevEditorHash = createHash('md5').update(data).digest('hex');
         }
 
@@ -1232,8 +1238,8 @@ class Project extends Model {
 
             // Update editor hash
             let actualEditorHash = null;
-            if (fs.existsSync(join(this.absoluteEditorPath, 'SceneEditor.js'))) {
-                let data = fs.readFileSync(join(this.absoluteEditorPath, 'SceneEditor.js'));
+            if (fs.existsSync(join(this.absoluteEditorPath, 'FragmentEditor.js'))) {
+                let data = fs.readFileSync(join(this.absoluteEditorPath, 'FragmentEditor.js'));
                 actualEditorHash = createHash('md5').update(data).digest('hex');
             }
 
@@ -2177,8 +2183,6 @@ class Project extends Model {
 
             // Start a new timeout
             sessionStatusInterval = setInterval(() => {
-
-                console.log('%cMASTER='+this.isMaster+' UNCHECKED_MASTER='+this.isUncheckedMaster+' MASTER_PEER=' + (this.masterPeer ? 'exists' : 'null'), 'color: #FBAC02');
 
                 // Now, decide whether we are master or not
                 //

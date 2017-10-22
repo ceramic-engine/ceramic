@@ -1,6 +1,6 @@
 import { serialize, observe, serializeModel, Model } from 'utils';
 
-class SceneItem extends Model {
+class FragmentItem extends Model {
 
 /// Sort
 
@@ -52,6 +52,6 @@ class SceneItem extends Model {
 
     } //serializeForCeramic
 
-} //SceneItem
+} //FragmentItem
 
-export default SceneItem;
+export default FragmentItem;

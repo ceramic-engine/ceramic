@@ -5,7 +5,7 @@ import { Button, Form, Field, Panel, NumberInput, Title, Alt } from 'components'
 import { project } from 'app/model';
 import { context } from 'app/context';
 
-@observer class ScenePanel extends React.Component {
+@observer class FragmentPanel extends React.Component {
 
     props:{
         /** Available height */
@@ -121,4 +121,4 @@ import { context } from 'app/context';
     
 }
 
-export default ScenePanel;
+export default FragmentPanel;

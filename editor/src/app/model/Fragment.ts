@@ -1,37 +1,37 @@
 import { serialize, observe, compute, serializeModel, stableSort, Model } from 'utils';
-import SceneItem from './SceneItem';
+import FragmentItem from './FragmentItem';
 import VisualItem from './VisualItem';
 import QuadItem from './QuadItem';
 import TextItem from './TextItem';
 import { project } from './index';
 
-class Scene extends Model {
+class Fragment extends Model {
 
 /// Properties
 
-    /** Scene arbitrary data */
+    /** Fragment arbitrary data */
     @observe @serialize data:Map<string, any> = new Map();
 
-    /** Scene bundle name (default: project's default bundle) */
+    /** Fragment bundle name (default: project's default bundle) */
     @observe @serialize bundle:string = null;
 
-    /** Scene name */
+    /** Fragment name */
     @observe @serialize name:string = '';
 
-    /** Scene width */
+    /** Fragment width */
     @observe @serialize width:number = 800;
 
-    /** Scene height */
+    /** Fragment height */
     @observe @serialize height:number = 600;
 
-    /** Scene items */
-    @observe @serialize(SceneItem) items:Array<SceneItem|VisualItem|QuadItem|TextItem> = [];
+    /** Fragment items */
+    @observe @serialize(FragmentItem) items:Array<FragmentItem|VisualItem|QuadItem|TextItem> = [];
 
 /// Computed
 
     @compute get itemsById() {
         
-        let byName:Map<string, SceneItem|VisualItem|QuadItem|TextItem> = new Map();
+        let byName:Map<string, FragmentItem|VisualItem|QuadItem|TextItem> = new Map();
 
         for (let item of this.items) {
             byName.set(item.id, item);
@@ -109,6 +109,6 @@ class Scene extends Model {
 
     } //serializeForCeramic
 
-} //Scene
+} //Fragment
 
-export default Scene;
+export default Fragment;

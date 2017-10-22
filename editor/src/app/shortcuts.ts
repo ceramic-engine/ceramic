@@ -146,9 +146,9 @@ class Shortcuts extends EventEmitter {
                             if (global['focusedInput'] != null) {
                                 clipboard.writeText(global['focusedInput'].copySelected(true));
                             }
-                            else if (project.ui.selectedScene != null && project.ui.selectedItem != null) {
+                            else if (project.ui.selectedFragment != null && project.ui.selectedItem != null) {
                                 clipboard.writeText(
-                                    '[|ceramic/scene-item|]' + project.copySelectedSceneItem(true)
+                                    '[|ceramic/fragment-item|]' + project.copySelectedFragmentItem(true)
                                 );
                             }
                         }
@@ -161,9 +161,9 @@ class Shortcuts extends EventEmitter {
                             if (global['focusedInput'] != null) {
                                 clipboard.writeText(global['focusedInput'].copySelected(false));
                             }
-                            else if (project.ui.selectedScene != null && project.ui.selectedItem != null) {
+                            else if (project.ui.selectedFragment != null && project.ui.selectedItem != null) {
                                 clipboard.writeText(
-                                    '[|ceramic/scene-item|]' + project.copySelectedSceneItem(false)
+                                    '[|ceramic/fragment-item|]' + project.copySelectedFragmentItem(false)
                                 );
                             }
                         }
@@ -178,10 +178,10 @@ class Shortcuts extends EventEmitter {
                                     global['focusedInput'].pasteToSelected(text);
                                 }
                             }
-                            else if (project.ui.selectedScene != null) {
+                            else if (project.ui.selectedFragment != null) {
                                 let text = clipboard.readText();
-                                if (text != null && text.startsWith('[|ceramic/scene-item|]')) {
-                                    project.pasteSceneItem(text.substr('[|ceramic/scene-item|]'.length));
+                                if (text != null && text.startsWith('[|ceramic/fragment-item|]')) {
+                                    project.pasteFragmentItem(text.substr('[|ceramic/fragment-item|]'.length));
                                 }
                             }
                         }
@@ -193,13 +193,13 @@ class Shortcuts extends EventEmitter {
                         accelerator: 'Backspace',
                         click: () => {
                             if (document.activeElement.nodeName.toLowerCase() !== 'body') return;
-                            if (project.ui.editor === 'scene') {
-                                if (project.ui.sceneTab === 'visuals') {
-                                    project.removeCurrentSceneItem();
+                            if (project.ui.editor === 'fragment') {
+                                if (project.ui.fragmentTab === 'visuals') {
+                                    project.removeCurrentFragmentItem();
                                 }
-                                else if (project.ui.sceneTab === 'scenes') {
-                                    if (confirm('Delete current scene?')) {
-                                        project.removeCurrentScene();
+                                else if (project.ui.fragmentTab === 'fragments') {
+                                    if (confirm('Delete current fragment?')) {
+                                        project.removeCurrentFragment();
                                     }
                                 }
                             }

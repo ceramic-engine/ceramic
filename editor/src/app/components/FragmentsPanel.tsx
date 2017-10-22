@@ -3,7 +3,7 @@ import { observer, arrayMove } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, SelectInput, TextInput, Title, Alt, Sortable } from 'components';
 import { project } from 'app/model';
 
-@observer class ScenesPanel extends React.Component {
+@observer class FragmentsPanel extends React.Component {
 
     props:{
         /** Available height */
@@ -14,20 +14,20 @@ import { project } from 'app/model';
 
     render() {
 
-        let selectedScene = project.ui.selectedScene;
-        let sceneBundleIndex = 0;
-        let sceneBundleList:Array<string> = [];
-        if (project.defaultSceneBundle) {
-            sceneBundleList.push(project.defaultSceneBundle + '.scenes');
+        let selectedFragment = project.ui.selectedFragment;
+        let fragmentBundleIndex = 0;
+        let fragmentBundleList:Array<string> = [];
+        if (project.defaultFragmentBundle) {
+            fragmentBundleList.push(project.defaultFragmentBundle + '.fragments');
         } else {
-            sceneBundleList.push('default');
+            fragmentBundleList.push('default');
         }
         let n = 1;
-        for (let bundle of project.sceneBundles) {
-            if (selectedScene != null && bundle === selectedScene.bundle) {
-                sceneBundleIndex = n;
+        for (let bundle of project.fragmentBundles) {
+            if (selectedFragment != null && bundle === selectedFragment.bundle) {
+                fragmentBundleIndex = n;
             }
-            sceneBundleList.push(bundle + '.scenes');
+            fragmentBundleList.push(bundle + '.fragments');
             n++;
         }
 
@@ -35,7 +35,7 @@ import { project } from 'app/model';
             <Panel>
 
                 <div>
-                    <Title>All scenes</Title>
+                    <Title>All fragments</Title>
                     <Alt>
                         
                     <div style={{ height: this.props.height * 0.3 - 24 * 2, overflowY: 'auto' }}>
@@ -46,33 +46,33 @@ import { project } from 'app/model';
                             helperClass={"dragging"}
                             onSortEnd={({oldIndex, newIndex}) => {
                                 if (oldIndex === newIndex) return;
-                                let scenes = project.scenes.slice();
-                                scenes = arrayMove(scenes, oldIndex, newIndex);
-                                project.scenes = scenes;
+                                let fragments = project.fragments.slice();
+                                fragments = arrayMove(fragments, oldIndex, newIndex);
+                                project.fragments = fragments;
                             }}
                         >
-                        {project.scenes.length > 0 ?
-                            project.scenes.map((scene, i) =>
+                        {project.fragments.length > 0 ?
+                            project.fragments.map((fragment, i) =>
                                 <div
                                     key={i}
                                     className={
                                         'entry in-alt with-separator'
-                                        + (project.ui.selectedSceneId === scene.id ? ' selected' : '')}
+                                        + (project.ui.selectedFragmentId === fragment.id ? ' selected' : '')}
                                     onClick={() => {
-                                        project.ui.selectedSceneId = scene.id;
+                                        project.ui.selectedFragmentId = fragment.id;
                                     }}
                                 >
                                     <div className="name">
                                     {
-                                        scene.name
+                                        fragment.name
                                     }
                                     </div>
                                     <div className="info">{
-                                        scene.bundle != null ?
-                                            scene.bundle + '.scenes'
+                                        fragment.bundle != null ?
+                                            fragment.bundle + '.fragments'
                                         :
-                                            (project.defaultSceneBundle ?
-                                                project.defaultSceneBundle + '.scenes'
+                                            (project.defaultFragmentBundle ?
+                                                project.defaultFragmentBundle + '.fragments'
                                             : 'default')
                                     }</div>
                                 </div>
@@ -82,27 +82,27 @@ import { project } from 'app/model';
                     </div>
                     </Alt>
                 </div>
-                {selectedScene ?
+                {selectedFragment ?
                 <div>
-                    <Title>Selected scene</Title>
+                    <Title>Selected fragment</Title>
                     <Alt>
                         <Form>
                             <Field label="Name">
-                                <TextInput value={selectedScene.name} onChange={(val) => { selectedScene.name = val; }} />
+                                <TextInput value={selectedFragment.name} onChange={(val) => { selectedFragment.name = val; }} />
                             </Field>
                             <Field label="Width">
-                                <NumberInput value={selectedScene.width} onChange={(val) => { selectedScene.width = val; }} />
+                                <NumberInput value={selectedFragment.width} onChange={(val) => { selectedFragment.width = val; }} />
                             </Field>
                             <Field label="Height">
-                                <NumberInput value={selectedScene.height} onChange={(val) => { selectedScene.height = val; }} />
+                                <NumberInput value={selectedFragment.height} onChange={(val) => { selectedFragment.height = val; }} />
                             </Field>
                             <Field label="Bundle">
                                 <SelectInput
                                     empty={0}
-                                    selected={sceneBundleIndex}
-                                    options={sceneBundleList}
+                                    selected={fragmentBundleIndex}
+                                    options={fragmentBundleList}
                                     onChange={(selected) => {
-                                        selectedScene.bundle = selected === 0 ? null : sceneBundleList[selected].substr(0, sceneBundleList[selected].length - '.scenes'.length);
+                                        selectedFragment.bundle = selected === 0 ? null : fragmentBundleList[selected].substr(0, fragmentBundleList[selected].length - '.fragments'.length);
                                     }}
                                 />
                             </Field>
@@ -111,7 +111,7 @@ import { project } from 'app/model';
                 </div>
                 : null}
                 <div>
-                    <Title>Scene bundles</Title>
+                    <Title>Fragment bundles</Title>
                     <Alt>
                         <Form>
                             <Field label="Custom bundles">
@@ -119,7 +119,7 @@ import { project } from 'app/model';
                                     multiline={true}
                                     separator={','}
                                     placeholder={"Bundle1, Bundle2\u2026"}
-                                    value={project.sceneBundles.join(",\n")}
+                                    value={project.fragmentBundles.join(",\n")}
                                     onChange={(val) => {
                                         let result = [];
                                         for (let item of val.split(",").join("\n").split("\n")) {
@@ -128,7 +128,7 @@ import { project } from 'app/model';
                                                 result.push(trimmed);
                                             }
                                         }
-                                        project.sceneBundles = result;
+                                        project.fragmentBundles = result;
                                     }}
                                 />
                             </Field>
@@ -138,8 +138,8 @@ import { project } from 'app/model';
                 <Form>
                     <Field>
                         <Button
-                            value="Add scene"
-                            onClick={() => { project.createScene(); }}
+                            value="Add fragment"
+                            onClick={() => { project.createFragment(); }}
                         />
                     </Field>
                 </Form>
@@ -150,4 +150,4 @@ import { project } from 'app/model';
     
 }
 
-export default ScenesPanel;
+export default FragmentsPanel;

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer, observe, autorun, uuid, autobind, ceramic, history, serializeModel } from 'utils';
 import { context } from 'app/context';
-import { project, SceneItem } from 'app/model';
+import { project, FragmentItem } from 'app/model';
 import { IReactionDisposer } from 'mobx';
 
 export interface Message {
@@ -40,7 +40,7 @@ export interface Message {
                 (window as any)._ceramicBaseUrl = "http://localhost:" + context.serverPort;
 
                 const script = document.createElement("script");
-                script.src = "http://localhost:" + context.serverPort + "/ceramic/SceneEditor.js";
+                script.src = "http://localhost:" + context.serverPort + "/ceramic/FragmentEditor.js";
                 script.async = true;
 
                 document.body.appendChild(script);
@@ -210,47 +210,47 @@ export interface Message {
         // Start history
         history.start();
 
-        // Watch scene && items
-        let sceneInCeramic:string = null;
-        let itemsInCeramic = new Map<SceneItem, IReactionDisposer>();
+        // Watch fragment && items
+        let fragmentInCeramic:string = null;
+        let itemsInCeramic = new Map<FragmentItem, IReactionDisposer>();
         autorun(() => {
 
-            let scene = project.ui.selectedScene;
+            let fragment = project.ui.selectedFragment;
 
-            if (scene != null) {
-                sceneInCeramic = scene.id;
+            if (fragment != null) {
+                fragmentInCeramic = fragment.id;
                 this.send({
-                    type: 'scene/put',
-                    value: scene.serializeForCeramic()
+                    type: 'fragment/put',
+                    value: fragment.serializeForCeramic()
                 });
             }
             else {
-                if (sceneInCeramic != null) {
+                if (fragmentInCeramic != null) {
                     this.send({
-                        type: 'scene/delete',
+                        type: 'fragment/delete',
                         value: {
-                            id: sceneInCeramic,
+                            id: fragmentInCeramic,
                         }
                     });
-                    sceneInCeramic = null;
+                    fragmentInCeramic = null;
                 }
             }
         });
         autorun(() => {
 
-            let scene = project.ui.selectedScene;
+            let fragment = project.ui.selectedFragment;
 
-            if (scene != null) {
-                if (!sceneInCeramic) {
-                    sceneInCeramic = scene.id;
+            if (fragment != null) {
+                if (!fragmentInCeramic) {
+                    fragmentInCeramic = fragment.id;
                     this.send({
-                        type: 'scene/put',
-                        value: scene.serializeForCeramic()
+                        type: 'fragment/put',
+                        value: fragment.serializeForCeramic()
                     });
                 }
 
-                let itemsToKeep = new Map<SceneItem, boolean>();
-                for (let item of scene.items) {
+                let itemsToKeep = new Map<FragmentItem, boolean>();
+                for (let item of fragment.items) {
                     itemsToKeep.set(item, true);
 
                     if (!itemsInCeramic.has(item)) {
@@ -258,7 +258,7 @@ export interface Message {
                         // Add item and watch for changes
                         itemsInCeramic.set(item, autorun(() => {
                             this.send({
-                                type: 'scene-item/put',
+                                type: 'fragment-item/put',
                                 value: item.serializeForCeramic()
                             });
                         }));
@@ -273,7 +273,7 @@ export interface Message {
                         // Remove item
                         itemsInCeramic.delete(item);
                         this.send({
-                            type: 'scene-item/delete',
+                            type: 'fragment-item/delete',
                             value: {
                                 id: item.id
                             }
@@ -292,7 +292,7 @@ export interface Message {
             if (project.ui.selectedItem != null) {
                 // Select item
                 this.send({
-                    type: 'scene-item/select',
+                    type: 'fragment-item/select',
                     value: {
                         id: project.ui.selectedItem.id
                     }
@@ -301,7 +301,7 @@ export interface Message {
             else {
                 // Deselect
                 this.send({
-                    type: 'scene-item/select',
+                    type: 'fragment-item/select',
                     value: null
                 });
             }

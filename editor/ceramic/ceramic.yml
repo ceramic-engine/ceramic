@@ -1,7 +1,7 @@
 app:
-    package: mycompany.SceneEditor
-    name: SceneEditor
-    displayName: SceneEditor
+    package: mycompany.FragmentEditor
+    name: FragmentEditor
+    displayName: FragmentEditor
     author: My Company
     version: '1.0'
 

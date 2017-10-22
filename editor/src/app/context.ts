@@ -36,6 +36,8 @@ export class Context {
 
     @observe gitVersion?:string;
 
+    electronDev:boolean = false;
+
 /// Constructor
 
     constructor() {
@@ -118,6 +120,9 @@ export class Context {
         autorun(() => {
             electronApp.editorPath = this.editorPath;
         });
+
+        // Get electronDev flag
+        this.electronDev = electronApp.electronDev;
 
     } //constructor
 

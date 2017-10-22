@@ -2,12 +2,13 @@
 import { db, uuid, registerModel } from 'utils';
 import Project from './Project';
 import User from './User';
+import { context } from '../context';
 
 // Register model types
-import Scene from './Scene';
-registerModel(Scene);
-import SceneItem from './SceneItem';
-registerModel(SceneItem);
+import Fragment from './Fragment';
+registerModel(Fragment);
+import FragmentItem from './FragmentItem';
+registerModel(FragmentItem);
 import VisualItem from './VisualItem';
 registerModel(VisualItem);
 import QuadItem from './QuadItem';
@@ -20,8 +21,8 @@ registerModel(UiState);
 // Export store classes
 export { default as Project } from './Project';
 export { default as User } from './User';
-export { default as Scene } from './Scene';
-export { default as SceneItem } from './SceneItem';
+export { default as Fragment } from './Fragment';
+export { default as FragmentItem } from './FragmentItem';
 export { default as VisualItem } from './VisualItem';
 export { default as QuadItem } from './QuadItem';
 export { default as TextItem } from './TextItem';
