@@ -10,11 +10,19 @@ using StringTools;
 
 class AppMacro {
 
+    static var rawInfo:String;
+
+    static public function setInfo(rawInfo:String):Void {
+
+        AppMacro.rawInfo = rawInfo;
+
+    } //setInfo
+
     macro static public function build():Array<Field> {
 
         var fields = Context.getBuildFields();
 
-        var data = convertArrays(Json.parse(Context.definedValue('ceramic_yml')));
+        var data:Dynamic = convertArrays(Json.parse(AppMacro.rawInfo));
         var expr = Context.makeExpr(data, Context.currentPos());
 
          // Load collection types from ceramic.yml

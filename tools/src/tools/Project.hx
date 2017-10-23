@@ -91,7 +91,7 @@ class Project {
 
         if (app.hxml == null) app.hxml = '';
 
-        Reflect.setField(app.defines, 'ceramic_yml', Json.stringify(app));
+        app.hxml += "\n" + "--macro ceramic.macros.AppMacro.setInfo(" + Json.stringify(Json.stringify(app)) + ")";
 
     } //loadAppFile
 
