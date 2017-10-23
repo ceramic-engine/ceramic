@@ -17,6 +17,7 @@ import ceramic.Shortcuts.*;
 import editor.Message;
 import editor.Editable;
 
+import haxe.rtti.Meta;
 import haxe.Json;
 #if web
 import js.Browser.*;
@@ -75,6 +76,8 @@ class Editor extends Entity {
 
     var fragmentItems:Map<String,FragmentItem> = new Map();
 
+    var editableTypes:Array<EditableType> = [];
+
 /// Lifecycle
 
     public function new(settings:InitSettings) {
@@ -126,6 +129,28 @@ class Editor extends Entity {
 
         //Luxe.core.update_rate = 0.1;
         Luxe.core.auto_render = false;
+
+        // Compute editables
+        for (key in Reflect.fields(app.info.editable)) {
+            var classPath = Reflect.field(app.info.editable, key);
+            var clazz = Type.resolveClass(classPath);
+            var fields = [];
+            var meta = Meta.getFields(clazz);
+            for (k in Reflect.fields(meta)) {
+                var v = Reflect.field(meta, k);
+                if (Reflect.hasField(v, 'editable')) {
+                    fields.push({
+                        name: k,
+                        meta: Reflect.field(meta, k),
+                    });
+                }
+            }
+            editableTypes.push({
+                entity: classPath,
+                fields: fields,
+                isVisual: true // TODO handle non-visuals
+            });
+        }
 
         // Setup
 #if web
@@ -440,6 +465,14 @@ class Editor extends Entity {
                         }
                     });
                 }
+            
+            case 'editables':
+                if (action == 'list') {
+                    send({
+                        type: 'editables/list',
+                        value: editableTypes
+                    });
+                }
 
             case 'fragment':
                 if (fragment != null && value.id != fragment.id) {
@@ -709,3 +742,21 @@ class Editor extends Entity {
     } //send
 
 } //Editor
+
+typedef EditableType = {
+
+    var entity:String;
+
+    var isVisual:Bool;
+
+    var fields:Array<EditableTypeField>;
+
+} //EditableType
+
+typedef EditableTypeField = {
+
+    var name:String;
+
+    var meta:Dynamic;
+
+} //EditableTypeField

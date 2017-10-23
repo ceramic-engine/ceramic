@@ -5,6 +5,7 @@ import tools.Helpers.*;
 import sys.FileSystem;
 import sys.io.File;
 import haxe.io.Path;
+import haxe.Json;
 
 using StringTools;
 
@@ -89,6 +90,8 @@ class Project {
         }
 
         if (app.hxml == null) app.hxml = '';
+
+        Reflect.setField(app.defines, 'ceramic_yml', Json.stringify(app));
 
     } //loadAppFile
 

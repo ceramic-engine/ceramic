@@ -120,7 +120,6 @@ class CeramicProxy {
             }
         }
 
-        console.log('RUN ' + cmd + ' ' + args.join(' '));
         let proc = spawn(cmd, args, { cwd: cwd } );
         
         var out = '';

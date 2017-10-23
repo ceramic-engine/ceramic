@@ -264,6 +264,10 @@ class Project extends Model {
     /** Font assets */
     @observe fontAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
 
+/// Fragment item types
+
+    @observe editableTypes:Array<{entity:string, meta:any}> = [];
+
 /// Raw files directory
 
     /** Raw files path */
@@ -670,6 +674,29 @@ class Project extends Model {
             }
 
         });
+
+        ceramic.send({ type: 'editables/list' }, (message) => {
+
+            console.log(message);
+
+        });
+
+        var editorPreviewLastModified:Date = null;
+        setInterval(() => {
+
+            if (context.electronDev && this.absolutePreviewPath != null) {
+                fs.stat(join(this.absolutePreviewPath, 'index.html'), (err, stats) => {
+                    if (editorPreviewLastModified != null && editorPreviewLastModified.getTime() !== stats.mtime.getTime()) {
+                        setTimeout(() => {
+                            document.location.reload();
+                        }, 2000);
+                    } else {
+                        editorPreviewLastModified = stats.mtime;
+                    }
+                });
+            }
+
+        }, 5000);
 
     } //constructor
 

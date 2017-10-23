@@ -5,6 +5,9 @@ import ceramic.Assets;
 import ceramic.Shortcuts.*;
 import backend.Backend;
 
+#if !macro
+@:build(ceramic.macros.AppMacro.build())
+#end
 @:allow(ceramic.Visual)
 @:allow(ceramic.Screen)
 class App extends Entity {

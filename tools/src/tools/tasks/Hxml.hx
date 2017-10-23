@@ -71,7 +71,7 @@ class Hxml extends tools.Task {
         }
         // We hardcoded nape and spinehaxe/spine classpaths because they are common dependencies that won't change.
         // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
-        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
+        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'plugin', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
         rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
 
         // Let plugins extend completion HXML

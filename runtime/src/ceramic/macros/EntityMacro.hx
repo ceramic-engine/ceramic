@@ -7,6 +7,11 @@ class EntityMacro {
 
     static var processed = new Map<String,Bool>();
 
+    static var defaultCeramicEditableTypeFields = [
+        "Texture" => true,
+        "Color" => true
+    ];
+
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
@@ -119,6 +124,8 @@ class EntityMacro {
             else {
                 newFields.push(field);
             }
+
+            completeEditableMeta(field);
         }
 
         for (field in newFields) {
@@ -185,5 +192,30 @@ class EntityMacro {
         return false;
 
     } //hasComponentMeta
+
+    static function completeEditableMeta(field:Field):Void {
+
+        if (field.meta == null || field.meta.length == 0) return;
+
+        for (meta in field.meta) {
+            if (meta.name == 'editable') {
+                switch (field.kind) {
+                    case FVar(type, _), FProp(_, _, type, _):
+                        switch (type) {
+                            case TPath(p):
+                                var fullType = p.pack.join('.') + (p.pack.length > 0 ? '.' : '') + p.name;
+                                if (defaultCeramicEditableTypeFields.exists(fullType)) {
+                                    fullType = 'ceramic.' + fullType;
+                                }
+                                meta.params.unshift(Context.makeExpr(fullType, Context.currentPos()));
+                            default:
+                        }
+                    default:
+                }
+                break;
+            }
+        }
+
+    } //completeEditableMeta
 
 }

@@ -1,2 +1,0 @@
-package ceramic.macros;
-
