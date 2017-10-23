@@ -167,12 +167,12 @@ server.use(function(req, res, next) {
   next();
 });
 
-let defaultEditorPath = null;
+let defaultPreviewPath = null;
 if (process.env.ELECTRON_DEV) {
-  defaultEditorPath = path.normalize(path.join(__dirname, '/public/ceramic'))
+  defaultPreviewPath = path.normalize(path.join(__dirname, '/public/ceramic'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/public'))))
 } else {
-  defaultEditorPath = path.normalize(path.join(__dirname, '/build/ceramic'))
+  defaultPreviewPath = path.normalize(path.join(__dirname, '/build/ceramic'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
 }
 
@@ -230,14 +230,12 @@ server.get('/ceramic/source-assets/*', function(req, res) {
   }
 });
 
-exports.editorPath = null;
+exports.previewPath = null;
 server.get('/ceramic/*', function(req, res) {
   let relativePath = req.path.substr('/ceramic/'.length);
-  let basePath = exports.editorPath && fs.existsSync(path.join(exports.editorPath, 'FragmentEditor.js')) ? exports.editorPath : defaultEditorPath;
+  let basePath = exports.previewPath && fs.existsSync(path.join(exports.previewPath, 'index.html')) ? exports.previewPath : defaultPreviewPath;
 
   if (!fs.existsSync(path.join(basePath, relativePath))) {
-    console.log('REQ PATH: ' + req.path);
-    console.log('NOT FOUND: ' + path.join(basePath, relativePath))
     res.status(404)
     res.send('Not found')
   } else {

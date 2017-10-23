@@ -26,7 +26,7 @@ export class Context {
 
     @observe machineId:string = null;
 
-    @observe editorPath:string = null;
+    @observe previewPath:string = null;
 
     @observe connectionStatus:'pending'|'online'|'offline' = 'pending';
 
@@ -116,9 +116,9 @@ export class Context {
             }
         }, 250);
 
-        // Update editor path (electron side)
+        // Update preview path (electron side)
         autorun(() => {
-            electronApp.editorPath = this.editorPath;
+            electronApp.previewPath = this.previewPath;
         });
 
         // Get electronDev flag

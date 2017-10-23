@@ -120,6 +120,10 @@ class Editor extends Entity {
 
     public function start() {
 
+        // Render when assets get updated
+        assets.onUpdate(this, function(_) render());
+        app.assets.onUpdate(this, function(_) render());
+
         //Luxe.core.update_rate = 0.1;
         Luxe.core.auto_render = false;
 
@@ -401,6 +405,7 @@ class Editor extends Entity {
                     // Reset assets
                     assets.destroy();
                     assets = new Assets();
+                    assets.onUpdate(this, function(_) render());
 
                     // Reset fragment to get updated assets
                     if (fragment != null) {

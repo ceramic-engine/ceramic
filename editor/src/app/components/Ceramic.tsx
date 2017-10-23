@@ -3,6 +3,8 @@ import { observer, observe, autorun, uuid, autobind, ceramic, history, serialize
 import { context } from 'app/context';
 import { project, FragmentItem } from 'app/model';
 import { IReactionDisposer } from 'mobx';
+import { join } from 'path';
+import { readFileSync, existsSync } from 'fs';
 
 export interface Message {
 
@@ -40,7 +42,16 @@ export interface Message {
                 (window as any)._ceramicBaseUrl = "http://localhost:" + context.serverPort;
 
                 const script = document.createElement("script");
-                script.src = "http://localhost:" + context.serverPort + "/ceramic/FragmentEditor.js";
+                let url = "http://localhost:" + context.serverPort + "/ceramic/FragmentEditor.js";
+                if (project.absolutePreviewPath != null) {
+                    let indexPath = join(project.absolutePreviewPath, 'index.html');
+                    if (existsSync(indexPath)) {
+                        let data = '' + readFileSync(indexPath);
+                        let m = data.match(/<script[^>]+src="([^"]+)"/);
+                        url = "http://localhost:" + context.serverPort + '/' + join("ceramic", m[1]);
+                    }
+                }
+                script.src = url;
                 script.async = true;
 
                 document.body.appendChild(script);

@@ -121,7 +121,7 @@ class Project extends Model {
 /// Editor canvas
 
     /** Project custom editor canvas path */
-    @observe @serialize editorPath?:string;
+    @observe @serialize previewPath?:string;
 
 /// Git (Github) repository
 
@@ -317,9 +317,9 @@ class Project extends Model {
 
     } //absoluteRawFilesPath
     
-    @compute get absoluteEditorPath():string {
+    @compute get absolutePreviewPath():string {
 
-        let path = this.editorPath;
+        let path = this.previewPath;
 
         if (!path) return null;
 
@@ -332,17 +332,17 @@ class Project extends Model {
             return normalize(join(dirname(this.path), path));
         }
 
-    } //absoluteEditorPath
+    } //absolutePreviewPath
     
-    @compute get hasValidEditorPath():boolean {
+    @compute get hasValidPreviewPath():boolean {
 
-        let path = this.absoluteEditorPath;
+        let path = this.absolutePreviewPath;
 
         // TODO
 
         return false;
 
-    } //hasValidEditorPath
+    } //hasValidPreviewPath
 
     @compute get cwd():string {
 
@@ -628,7 +628,7 @@ class Project extends Model {
 
                 setImmediate(() => {
                     // Check that we can do it
-                    if (this.absoluteEditorPath && this.onlineEnabled && this.gitRepository && user.githubToken) {
+                    if (this.absolutePreviewPath && this.onlineEnabled && this.gitRepository && user.githubToken) {
 
                         // Sync editor preview
                         this.syncEditorPreview(true);
@@ -639,7 +639,7 @@ class Project extends Model {
         });
         autorun(() => {
 
-            context.editorPath = this.absoluteEditorPath;
+            context.previewPath = this.absolutePreviewPath;
 
         });
 
@@ -692,8 +692,8 @@ class Project extends Model {
         // Reset project path
         user.projectPath = null;
 
-        // Reset editor path
-        this.editorPath = null;
+        // Reset preview path
+        this.previewPath = null;
 
         // Reset git stuff
         this.gitRepository = null;
@@ -774,16 +774,16 @@ class Project extends Model {
 
     } //setRawFilesPath
 
-    @action chooseEditorPath() {
+    @action choosePreviewPath() {
 
         let path = files.chooseDirectory('Editor Preview Directory');
         if (path != null) {
-            this.setEditorPath(path);
+            this.setPreviewPath(path);
         }
 
-    } //chooseEditorPath
+    } //choosePreviewPath
 
-    @action setEditorPath(path:string) {
+    @action setPreviewPath(path:string) {
         
         if (path) {
 
@@ -793,16 +793,16 @@ class Project extends Model {
             let editorDir = normalize(path);
             
             if (projectDir === editorDir) {
-                this.editorPath = '.';
+                this.previewPath = '.';
             } else {
                 let res = relative(projectDir, editorDir);
                 if (!res.startsWith('.')) res = './' + res;
-                this.editorPath = res;
+                this.previewPath = res;
             }
             
         }
         else {
-            this.editorPath = null;
+            this.previewPath = null;
         }
 
     } //chooseAssetsPath
@@ -1026,8 +1026,8 @@ class Project extends Model {
             // Keep current absolute raw files path
             let rawFilesPath = this.absoluteRawFilesPath;
 
-            // Keep current absolute editor path
-            let editorPath = this.absoluteEditorPath;
+            // Keep current absolute preview path
+            let previewPath = this.absolutePreviewPath;
 
             // Update project path
             user.projectPath = path;
@@ -1042,9 +1042,9 @@ class Project extends Model {
                 this.setRawFilesPath(rawFilesPath);
             }
 
-            // Update editor path as well
-            if (editorPath) {
-                this.setEditorPath(editorPath);
+            // Update preview path as well
+            if (previewPath) {
+                this.setPreviewPath(previewPath);
             }
 
             // Set project name from file path
@@ -1218,8 +1218,8 @@ class Project extends Model {
 
         // Get previous editor hash
         let prevEditorHash:string = null;
-        if (fs.existsSync(join(this.absoluteEditorPath, 'FragmentEditor.js'))) {
-            let data = fs.readFileSync(join(this.absoluteEditorPath, 'FragmentEditor.js'));
+        if (fs.existsSync(join(this.absolutePreviewPath, 'FragmentEditor.js'))) {
+            let data = fs.readFileSync(join(this.absolutePreviewPath, 'FragmentEditor.js'));
             prevEditorHash = createHash('md5').update(data).digest('hex');
         }
 
@@ -1238,8 +1238,8 @@ class Project extends Model {
 
             // Update editor hash
             let actualEditorHash = null;
-            if (fs.existsSync(join(this.absoluteEditorPath, 'FragmentEditor.js'))) {
-                let data = fs.readFileSync(join(this.absoluteEditorPath, 'FragmentEditor.js'));
+            if (fs.existsSync(join(this.absolutePreviewPath, 'FragmentEditor.js'))) {
+                let data = fs.readFileSync(join(this.absolutePreviewPath, 'FragmentEditor.js'));
                 actualEditorHash = createHash('md5').update(data).digest('hex');
             }
 
@@ -1390,7 +1390,7 @@ class Project extends Model {
         let repoDir = join(gitDir, repoDirName);
         let localAssetsPath = this.absoluteAssetsPath;
         let localRawFilesPath = this.absoluteRawFilesPath;
-        let localEditorPath = this.absoluteEditorPath;
+        let localPreviewPath = this.absolutePreviewPath;
         
         this.cloneOrPullGitRepository(gitDir, repoDirName, authenticatedUrl, branch, targetCommit, (code, out, err) => {
             
@@ -1449,7 +1449,7 @@ class Project extends Model {
                         }
                         else if (directions === 'localToRemote') {
                             // Apply local version
-                            this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
+                            this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localPreviewPath, auto, filesOnly, syncDirNames, done);
                         }
                         else {
                             // There are more recent commits from remote.
@@ -1466,7 +1466,7 @@ class Project extends Model {
                                     
                                     if (result === 0) {
                                         // Apply local version
-                                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
+                                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localPreviewPath, auto, filesOnly, syncDirNames, done);
                                     }
                                     else if (result === 1) {
                                         // Apply remote version
@@ -1478,7 +1478,7 @@ class Project extends Model {
                     }
                     else {
                         // Apply local version
-                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, auto, filesOnly, syncDirNames, done);
+                        this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localPreviewPath, auto, filesOnly, syncDirNames, done);
                     }
 
                 });
@@ -1575,7 +1575,7 @@ class Project extends Model {
 
     } //checkoutGitCommit
 
-    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, localRawFilesPath:string, localEditorPath:string, autoSave:boolean, filesOnly:boolean, syncDirNames:Array<string>, done?:(err?:string) => void, commitMessage?:string) {
+    applyLocalToRemoteGit(repoDir:string, data:string, localAssetsPath:string, localRawFilesPath:string, localPreviewPath:string, autoSave:boolean, filesOnly:boolean, syncDirNames:Array<string>, done?:(err?:string) => void, commitMessage?:string) {
 
         if (autoSave && !commitMessage) {
             commitMessage = 'Auto-save on ' + dateformat(new Date().getTime());
@@ -1599,7 +1599,7 @@ class Project extends Model {
                     return;
                 }
 
-                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localEditorPath, autoSave, filesOnly, syncDirNames, done, result);
+                this.applyLocalToRemoteGit(repoDir, data, localAssetsPath, localRawFilesPath, localPreviewPath, autoSave, filesOnly, syncDirNames, done, result);
             });
 
             return;
@@ -1753,7 +1753,7 @@ class Project extends Model {
         // Sync files
         syncFilesDirectory(this.absoluteAssetsPath, 'assets', () => {
             syncFilesDirectory(this.absoluteRawFilesPath, 'files', () => {
-                syncFilesDirectory(this.absoluteEditorPath, 'editor', () => {
+                syncFilesDirectory(this.absolutePreviewPath, 'editor', () => {
 
                     syncProjectFileAndPush();
 
@@ -1876,7 +1876,7 @@ class Project extends Model {
         // Sync files
         syncFilesDirectory(this.absoluteAssetsPath, 'assets', () => {
             syncFilesDirectory(this.absoluteRawFilesPath, 'files', () => {
-                syncFilesDirectory(this.absoluteEditorPath, 'editor', () => {
+                syncFilesDirectory(this.absolutePreviewPath, 'editor', () => {
 
                     finish();
 

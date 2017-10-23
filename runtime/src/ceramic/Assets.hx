@@ -278,6 +278,18 @@ class Asset extends Entity {
 
     } //toString
 
+/// Complete event hook
+
+    inline function willEmitComplete(success:Bool) {
+
+        trace(this + ' willEmitComplete ' + success);
+
+        if (success && owner != null) {
+            owner.emitUpdate(this);
+        }
+
+    } //willEmitComplete
+
 } //Asset
 
 class ImageAsset extends Asset {
@@ -923,6 +935,8 @@ class Assets extends Entity {
 /// Events
 
     @event function complete(success:Bool);
+
+    @event function update(asset:Asset);
 
 /// Properties
 

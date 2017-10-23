@@ -21,8 +21,8 @@ import FaQuestion from 'react-icons/lib/fa/question';
 
         let editorsList = ['Default'];
         editorsList.push('Choose a ceramic editor export\u2026');
-        if (project.editorPath) {
-            editorsList.push(project.editorPath);
+        if (project.previewPath) {
+            editorsList.push(project.previewPath);
         }
 
         let assetsPathList = [project.assetsPath ? project.assetsPath : 'None'];
@@ -67,18 +67,18 @@ import FaQuestion from 'react-icons/lib/fa/question';
                     </Form>
                     <div className="title">Editor preview</div>
                     <Form>
-                        <Field label="Local path">
+                        <Field label="Local preview path">
                             <SelectInput
                                 size="large"
                                 empty={0}
-                                selected={project.editorPath ? 2 : 0}
+                                selected={project.previewPath ? 2 : 0}
                                 options={editorsList}
                                 onChange={(selected) => {
                                     if (selected === 0) {
-                                        project.editorPath = null;
+                                        project.previewPath = null;
                                     }
-                                    else if (!project.editorPath || selected === 1) {
-                                        project.chooseEditorPath();
+                                    else if (!project.previewPath || selected === 1) {
+                                        project.choosePreviewPath();
                                     }
                                 }}
                             />
