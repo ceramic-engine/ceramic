@@ -59,6 +59,7 @@ import { autobind, observe, observer } from 'utils';
                     onBlur={this.handleBlur}
                     autoFocus={this.props.autoFocus}
                     placeholder={placeholder}
+                    onDragStart={this.stopDrag}
                     ref={(el) => { this.inputElement = el; }}
                     style={styles}
                 />
@@ -82,12 +83,19 @@ import { autobind, observe, observer } from 'utils';
                     onBlur={this.handleBlur}
                     placeholder={placeholder}
                     style={styles}
+                    onDragStart={this.stopDrag}
                     ref={(el) => { this.inputElement = el; }}
                 />
             );
         }
 
     } //render
+
+    @autobind stopDrag(e:any) {
+
+        e.preventDefault();
+
+    } //stopDrag
 
     @autobind handleChange(e:any) {
 

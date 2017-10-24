@@ -37,11 +37,18 @@ import { autobind, observer, observe } from 'utils';
                 onChange={this.handleChange}
                 onFocus={this.handleFocus}
                 onBlur={this.handleBlur}
+                onDragStart={this.stopDrag}
                 ref={(el) => { this.inputElement = el; }}
             />
         );
 
     } //render
+
+    @autobind stopDrag(e:any) {
+
+        e.preventDefault();
+
+    } //stopDrag
 
     @autobind handleChange(e:any) {
 
