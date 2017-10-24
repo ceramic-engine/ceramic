@@ -88,6 +88,9 @@ class Project {
                 }
             }
         }
+        
+        app.editable.push('ceramic.Quad');
+        app.editable.push('ceramic.Text');
 
         if (app.hxml == null) app.hxml = '';
 
@@ -195,6 +198,9 @@ class ProjectLoader {
             }
             if (app.paths == null) {
                 app.paths = [];
+            }
+            if (app.editable == null) {
+                app.editable = [];
             }
 
             // Add required libs

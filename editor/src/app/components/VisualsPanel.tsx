@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { observer, arrayMove } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
+import { FragmentItemField } from 'app/components';
 import { project, VisualItem, QuadItem } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
@@ -45,7 +46,7 @@ import FaLock from 'react-icons/lib/fa/lock';
 
         // Fonts list
 
-        // Textures list
+        // Fonts list
         let fontsList = ['default'];
         let textFontIndex = 0;
         n = 1;
@@ -82,7 +83,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                 visuals = arrayMove(visuals, oldIndex, newIndex);
                                 let depth = 1;
                                 for (let i = visuals.length -1; i >= 0; i--) {
-                                    visuals[i].depth = depth++;
+                                    visuals[i].props.set('depth', depth++);
                                 }
                             }}
                         >
@@ -118,8 +119,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     }
                                     </div>
                                     <div className="info">{
-                                        'x='+visual.x+
-                                        ' y='+visual.y
+                                        visual.entity
                                     }</div>
                                 </div>
                             )
@@ -132,10 +132,10 @@ import FaLock from 'react-icons/lib/fa/lock';
                     selectedVisual != null
                     ?
                         <div>
-                            <Title>Selected {selectedVisual.entity.split('ceramic.').join('').toLowerCase()}</Title>
+                            <Title>Selected {this.simpleName(selectedVisual.entity, true)}</Title>
                             <Alt>
                                 <div style={{ height: this.props.height * 0.7 - 24 * 2 - 4, overflowY: 'auto' }}>
-                                <Form>
+                                {/*<Form>
                                     {
                                         selectedQuad != null ?
                                         <div className="visual-extra-options">
@@ -253,6 +253,14 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     <Field label="Alpha">
                                         <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
                                     </Field>
+                                </Form>*/}
+                                <Form>
+                                    <Field label="name">
+                                        <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />
+                                    </Field>
+                                    {this.mapEntries(selectedVisual.props).map((entry) => 
+                                        <FragmentItemField key={entry.key} item={selectedVisual} field={entry.key} />
+                                    )}
                                 </Form>
                                 </div>
                             </Alt>
@@ -276,6 +284,33 @@ import FaLock from 'react-icons/lib/fa/lock';
         );
 
     } //render
+
+/// Helpers
+
+    simpleName(inName:string, lowercaseFirst:boolean = false):string {
+
+        let dotIndex = inName.lastIndexOf('.');
+        if (dotIndex !== -1) inName = inName.slice(dotIndex + 1);
+
+        if (lowercaseFirst) {
+            inName = inName.slice(0, 1).toLowerCase() + inName.slice(1);
+        }
+
+        return inName;
+
+    } //simpleName
+
+    mapEntries(map:Map<string,any>):Array<{key:string, value:any}> {
+
+        let entries:Array<{key:string, value:any}> = [];
+
+        map.forEach((value, key) => {
+            entries.push({ key, value });
+        });
+
+        return entries;
+
+    } //mapEntries
     
 }
 

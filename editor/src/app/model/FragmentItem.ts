@@ -20,6 +20,9 @@ class FragmentItem extends Model {
     /** Item name */
     @observe @serialize name:string = '';
 
+    /** Props */
+    @observe @serialize props:Map<string,any> = new Map();
+
 /// Helpers
 
     serializeForCeramic() {

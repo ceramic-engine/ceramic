@@ -92,8 +92,8 @@ class Fragment extends Model {
         }
 
         stableSort(result, function(a, b) {
-            if (a.depth < b.depth) return 1;
-            if (a.depth > b.depth) return -1;
+            if (a.props.get('depth') < b.props.get('depth')) return 1;
+            if (a.props.get('depth') > b.props.get('depth')) return -1;
             return 0;
         });
 

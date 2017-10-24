@@ -3,13 +3,16 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+using haxe.macro.ExprTools;
+
 class EntityMacro {
 
     static var processed = new Map<String,Bool>();
 
     static var defaultCeramicEditableTypeFields = [
         "Texture" => true,
-        "Color" => true
+        "Color" => true,
+        "BitmapFont" => true
     ];
 
     macro static public function build():Array<Field> {
@@ -200,14 +203,21 @@ class EntityMacro {
         for (meta in field.meta) {
             if (meta.name == 'editable') {
                 switch (field.kind) {
-                    case FVar(type, _), FProp(_, _, type, _):
+                    case FVar(type, expr), FProp(_, _, type, expr):
                         switch (type) {
                             case TPath(p):
                                 var fullType = p.pack.join('.') + (p.pack.length > 0 ? '.' : '') + p.name;
                                 if (defaultCeramicEditableTypeFields.exists(fullType)) {
                                     fullType = 'ceramic.' + fullType;
                                 }
-                                meta.params.unshift(Context.makeExpr(fullType, Context.currentPos()));
+
+                                // Compute additional editable info from code
+                                var options:Dynamic = meta.params.length > 0 ? meta.params[0].getValue() : {};
+                                if (options.type == null) {
+                                    options.type = fullType;
+                                }
+                                meta.params[0] = Context.makeExpr(options, Context.currentPos());
+
                             default:
                         }
                     default:

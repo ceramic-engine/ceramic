@@ -102,6 +102,7 @@ class Visual extends Entity {
         return this.blending = blending;
     }
 
+    @editable
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
         if (this.visible == visible) return visible;
@@ -110,6 +111,7 @@ class Visual extends Entity {
         return visible;
     }
 
+    @editable
     public var alpha(default,set):Float = 1;
     function set_alpha(alpha:Float):Float {
         if (this.alpha == alpha) return alpha;
@@ -118,6 +120,7 @@ class Visual extends Entity {
         return alpha;
     }
 
+    @editable
     public var x(default,set):Float = 0;
     function set_x(x:Float):Float {
         if (this.x == x) return x;
@@ -126,6 +129,7 @@ class Visual extends Entity {
         return x;
     }
 
+    @editable
     public var y(default,set):Float = 0;
     function set_y(y:Float):Float {
         if (this.y == y) return y;
@@ -134,6 +138,7 @@ class Visual extends Entity {
         return y;
     }
 
+    @editable
     public var depth(default,set):Float = 0;
     function set_depth(depth:Float):Float {
         if (this.depth == depth) return depth;
@@ -142,6 +147,7 @@ class Visual extends Entity {
         return depth;
     }
 
+    @editable
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
         if (this.rotation == rotation) return rotation;
@@ -150,6 +156,7 @@ class Visual extends Entity {
         return rotation;
     }
 
+    @editable
     public var scaleX(default,set):Float = 1;
     function set_scaleX(scaleX:Float):Float {
         if (this.scaleX == scaleX) return scaleX;
@@ -158,6 +165,7 @@ class Visual extends Entity {
         return scaleX;
     }
 
+    @editable
     public var scaleY(default,set):Float = 1;
     function set_scaleY(scaleY:Float):Float {
         if (this.scaleY == scaleY) return scaleY;
@@ -166,6 +174,7 @@ class Visual extends Entity {
         return scaleY;
     }
 
+    @editable
     public var skewX(default,set):Float = 0;
     function set_skewX(skewX:Float):Float {
         if (this.skewX == skewX) return skewX;
@@ -174,6 +183,7 @@ class Visual extends Entity {
         return skewX;
     }
 
+    @editable
     public var skewY(default,set):Float = 0;
     function set_skewY(skewY:Float):Float {
         if (this.skewY == skewY) return skewY;
@@ -182,6 +192,7 @@ class Visual extends Entity {
         return skewY;
     }
 
+    @editable
     public var anchorX(default,set):Float = 0;
     function set_anchorX(anchorX:Float):Float {
         if (this.anchorX == anchorX) return anchorX;
@@ -190,6 +201,7 @@ class Visual extends Entity {
         return anchorX;
     }
 
+    @editable
     public var anchorY(default,set):Float = 0;
     function set_anchorY(anchorY:Float):Float {
         if (this.anchorY == anchorY) return anchorY;
@@ -198,8 +210,9 @@ class Visual extends Entity {
         return anchorY;
     }
 
-    var _width:Float = 0;
+    @editable
     public var width(get,set):Float;
+    var _width:Float = 0;
     function get_width():Float {
         return _width;
     }
@@ -210,8 +223,9 @@ class Visual extends Entity {
         return width;
     }
 
-    var _height:Float = 0;
+    @editable
     public var height(get,set):Float;
+    var _height:Float = 0;
     function get_height():Float {
         return _height;
     }

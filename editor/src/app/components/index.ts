@@ -17,3 +17,4 @@ export { default as OnlineBroken } from './OnlineBroken';
 export { default as FragmentsPanel } from './FragmentsPanel';
 export { default as VisualsPanel } from './VisualsPanel';
 export { default as AssetsPanel } from './AssetsPanel';
+export { default as FragmentItemField } from './FragmentItemField';

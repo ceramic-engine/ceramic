@@ -15,6 +15,19 @@ import { ncp } from 'ncp';
 import rimraf from 'rimraf';
 import dateformat from 'dateformat';
 
+export interface EditableType {
+
+    entity:string;
+
+    isVisual:boolean;
+
+    fields:Array<{
+        meta:any,
+        name:string
+    }>;
+
+} //EditableType
+
 export interface SyncWithGithubOptions {
 
     auto?:boolean;
@@ -266,7 +279,7 @@ class Project extends Model {
 
 /// Fragment item types
 
-    @observe editableTypes:Array<{entity:string, meta:any}> = [];
+    @observe editableTypes:Array<EditableType> = [];
 
 /// Raw files directory
 
@@ -347,6 +360,42 @@ class Project extends Model {
         return false;
 
     } //hasValidPreviewPath
+
+    @compute get editableVisuals() {
+
+        let result = [];
+
+        for (let item of this.editableTypes) {
+            if (item.isVisual) result.push(item);
+        }
+
+        return result;
+
+    } //editableVisuals
+
+    @compute get editableTypesByKey() {
+
+        let result:Map<string,EditableType> = new Map();
+
+        for (let item of this.editableTypes) {
+            result.set(item.entity, item);
+        }
+
+        return result;
+
+    } //editableTypesByKey
+
+    @compute get editableVisualsByKey() {
+
+        let result:Map<string,EditableType> = new Map();
+
+        for (let item of this.editableVisuals) {
+            result.set(item.entity, item);
+        }
+
+        return result;
+
+    } //editableVisualsByKey
 
     @compute get cwd():string {
 
@@ -678,6 +727,7 @@ class Project extends Model {
         ceramic.send({ type: 'editables/list' }, (message) => {
 
             console.log(message);
+            this.editableTypes = message.value;
 
         });
 
@@ -1163,7 +1213,7 @@ class Project extends Model {
         let visuals = fragment.visualItemsSorted.slice();
         let depth = 1;
         for (let i = visuals.length -1; i >= 0; i--) {
-            visuals[i].depth = depth++;
+            visuals[i].props.set('depth', depth++);
         }
 
         // Select item

@@ -134,22 +134,31 @@ class Editor extends Entity {
         for (key in Reflect.fields(app.info.editable)) {
             var classPath = Reflect.field(app.info.editable, key);
             var clazz = Type.resolveClass(classPath);
+            var usedFields = new Map();
             var fields = [];
-            var meta = Meta.getFields(clazz);
-            for (k in Reflect.fields(meta)) {
-                var v = Reflect.field(meta, k);
-                if (Reflect.hasField(v, 'editable')) {
-                    fields.push({
-                        name: k,
-                        meta: Reflect.field(meta, k),
-                    });
-                }
-            }
             editableTypes.push({
                 entity: classPath,
                 fields: fields,
                 isVisual: true // TODO handle non-visuals
             });
+
+            while (clazz != null) {
+
+                var meta = Meta.getFields(clazz);
+                for (k in Reflect.fields(meta)) {
+                    var v = Reflect.field(meta, k);
+                    if (Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+                        usedFields.set(k, true);
+                        fields.push({
+                            name: k,
+                            meta: Reflect.field(meta, k),
+                        });
+                    }
+                }
+
+                clazz = Type.getSuperClass(clazz);
+
+            }
         }
 
         // Setup

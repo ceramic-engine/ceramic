@@ -5,9 +5,9 @@ import ceramic.Visual._degToRad;
 
 class Quad extends Visual {
 
-    public var color:Color = Color.WHITE;
+    @editable public var color:Color = Color.WHITE;
 
-    public var texture(default,set):Texture = null;
+    @editable public var texture(default,set):Texture = null;
     inline function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
 

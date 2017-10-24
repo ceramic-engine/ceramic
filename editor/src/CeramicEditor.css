@@ -386,6 +386,20 @@ body, html {
     border: 1px solid #6b6b6b;
 }
 
+#body input.input.input-button.large {
+    background-color: #343434;
+    border: none;
+    width: 140px;
+    height: 40px;
+    margin: 3px;
+    border: 1px solid #666666;
+}
+
+#body input.input.input-button.large:not(.disabled):hover {
+    background-color: #3a3a3a;
+    border: 1px solid #6b6b6b;
+}
+
 #body input.input.input-button.default:active {
     border-color: #2798eb;
     background-color: #2798eb;

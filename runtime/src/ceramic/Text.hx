@@ -14,6 +14,7 @@ enum TextAlign {
 
 class Text extends Visual {
 
+    @editable
     public var color(default,set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
@@ -27,6 +28,7 @@ class Text extends Visual {
         return color;
     }
 
+    @editable({ multiline: true })
     public var content(default,set):String = '';
     function set_content(content:String):String {
         if (this.content == content) return content;
@@ -35,6 +37,7 @@ class Text extends Visual {
         return content;
     }
 
+    @editable
     public var pointSize(default,set):Float = 20;
     function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
@@ -43,6 +46,7 @@ class Text extends Visual {
         return pointSize;
     }
 
+    @editable
     public var lineHeight(default,set):Float = 1.0;
     function set_lineHeight(lineHeight:Float):Float {
         if (this.lineHeight == lineHeight) return lineHeight;
@@ -51,6 +55,7 @@ class Text extends Visual {
         return lineHeight;
     }
 
+    @editable
     public var letterSpacing(default,set):Float = 0.0;
     function set_letterSpacing(letterSpacing:Float):Float {
         if (this.letterSpacing == letterSpacing) return letterSpacing;
@@ -59,6 +64,7 @@ class Text extends Visual {
         return letterSpacing;
     }
 
+    @editable
     public var font(default,set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
         if (this.font == font) return font;
@@ -79,6 +85,7 @@ class Text extends Visual {
         return font;
     }
 
+    @editable({ options: ['left', 'right', 'center'] })
     public var align(default,set):TextAlign = LEFT;
     function set_align(align:TextAlign):TextAlign {
         if (this.align == align) return align;

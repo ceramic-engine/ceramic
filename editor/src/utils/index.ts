@@ -1,4 +1,7 @@
 
+import * as fields from './fields';
+export { fields };
+
 export { clipboard } from 'electron';
 
 export { default as files } from './files';
