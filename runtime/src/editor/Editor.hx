@@ -172,7 +172,7 @@ class Editor extends Entity {
                             fieldType = v.type[0];
                             if (!basicTypes.exists(fieldType)) {
                                 var resolvedEnum = Type.resolveEnum(fieldType);
-                                if (resolvedEnum != null) {
+                                if (resolvedEnum != null && fieldMeta.editable[0].options == null) {
                                     var rawOptions = Type.getEnumConstructs(resolvedEnum);
                                     var options = [];
                                     for (item in rawOptions) {
