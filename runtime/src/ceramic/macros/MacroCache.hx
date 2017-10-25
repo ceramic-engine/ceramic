@@ -24,6 +24,7 @@ class MacroCache {
     static var entries:Map<String,MacroCacheEntry>;
 
     public static function init():Void {
+
         var cacheFilePath = getCacheFilePath();
         
         loadEntries();

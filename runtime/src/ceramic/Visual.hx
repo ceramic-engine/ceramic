@@ -708,7 +708,6 @@ class Visual extends Entity {
 
                 for (child in children) {
 
-                    var prevD = child.computedDepth;
                     child.computedDepth = computedDepth + (child.computedDepth - minDepth) * multDepth;
                     
                     if (child.children != null) {

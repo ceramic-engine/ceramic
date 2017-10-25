@@ -61,11 +61,20 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                     );
                 }
                 else if (type === 'Float' || type === 'Int') {
-                    return (
-                        <Field label={this.toFieldName(field.name)}>
-                            <NumberInput value={item.props.get(field.name)} onChange={(val) => { item.props.set(field.name, val); }} />
-                        </Field>
-                    );
+                    if ((field.name === 'width' || field.name === 'height') && item.implicitSize) {
+                        return (
+                            <Field label={this.toFieldName(field.name)}>
+                                <NumberInput disabled={true} value={item.props.get(field.name)} onChange={(val) => { item.props.set(field.name, val); }} />
+                            </Field>
+                        );
+                    }
+                    else {
+                        return (
+                            <Field label={this.toFieldName(field.name)}>
+                                <NumberInput value={item.props.get(field.name)} onChange={(val) => { item.props.set(field.name, val); }} />
+                            </Field>
+                        );
+                    }
                 }
                 else if (type === 'Bool') {
                     let selectedIndex = !!item.props.get(field.name) ? 1 : 0;

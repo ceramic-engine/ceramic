@@ -145,7 +145,7 @@ class Editable extends Component {
             screen.offMove(onMove);
 
             entity.x = Math.round(entity.x);
-            entity.y = Math.round(entity.y);
+            entity.y = Math.round(entity.y); 
 
             // Update pos on react side
             editor.send({

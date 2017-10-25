@@ -3,6 +3,7 @@ package ceramic;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
 using StringTools;
 
 class Texture extends Entity {

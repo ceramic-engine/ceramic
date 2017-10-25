@@ -3,12 +3,15 @@ package ceramic;
 import ceramic.Visual._matrix;
 import ceramic.Visual._degToRad;
 
+@editable({ implicitSizeUnlessNull: 'texture' })
 class Quad extends Visual {
 
     @editable public var color:Color = Color.WHITE;
 
-    @editable public var texture(default,set):Texture = null;
+    @editable
+    public var texture(default,set):Texture = null;
     inline function set_texture(texture:Texture):Texture {
+
         if (this.texture == texture) return texture;
 
         // Unbind previous texture destroy event
@@ -57,7 +60,7 @@ class Quad extends Visual {
         this.frameWidth = frameWidth;
 
         // Update width
-        width = frameWidth;
+        if (frameWidth != -1) width = frameWidth;
 
         return frameWidth;
     }
@@ -68,7 +71,7 @@ class Quad extends Visual {
         this.frameHeight = frameHeight;
 
         // Update height
-        height = frameHeight;
+        if (frameHeight != -1) height = frameHeight;
 
         return frameHeight;
     }

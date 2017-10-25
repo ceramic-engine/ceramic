@@ -2,6 +2,9 @@ package ceramic;
 
 import ceramic.Settings;
 import ceramic.Assets;
+import ceramic.Fragment;
+import ceramic.Texture;
+import ceramic.BitmapFont;
 import ceramic.Shortcuts.*;
 import backend.Backend;
 
@@ -62,6 +65,12 @@ class App extends Entity {
 
     /** App level assets. Used to load default bitmap font. */
     public var assets(default,null):Assets = new Assets();
+
+    /** Default font */
+    public var defaultFont(get,null):BitmapFont;
+    inline function get_defaultFont():BitmapFont {
+        return assets.font(Fonts.ARIAL_20);
+    }
 
 /// Internal
 

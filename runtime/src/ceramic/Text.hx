@@ -12,6 +12,7 @@ enum TextAlign {
     CENTER;
 }
 
+@editable({ implicitSize: true })
 class Text extends Visual {
 
     @editable
@@ -67,6 +68,11 @@ class Text extends Visual {
     @editable
     public var font(default,set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
+        
+        if (font == null) {
+            font = app.defaultFont;
+        }
+
         if (this.font == font) return font;
 
         // Unbind previous font destroy event
@@ -85,7 +91,7 @@ class Text extends Visual {
         return font;
     }
 
-    @editable({ options: ['left', 'right', 'center'] })
+    @editable
     public var align(default,set):TextAlign = LEFT;
     function set_align(align:TextAlign):TextAlign {
         if (this.align == align) return align;
@@ -149,7 +155,7 @@ class Text extends Visual {
         super();
 
         // Default font
-        font = app.assets.font(Fonts.ARIAL_20);
+        font = app.defaultFont;
 
     } //new
 
@@ -286,7 +292,7 @@ class Text extends Visual {
     function fontDestroyed() {
 
         // Remove font (and set default one) because it has been destroyed
-        this.font = app.assets.font(Fonts.ARIAL_20);
+        this.font = app.defaultFont;
 
     } //fontDestroyed
 

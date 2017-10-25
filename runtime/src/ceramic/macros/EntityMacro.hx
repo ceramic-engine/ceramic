@@ -9,12 +9,6 @@ class EntityMacro {
 
     static var processed = new Map<String,Bool>();
 
-    static var defaultCeramicEditableTypeFields = [
-        "Texture" => true,
-        "Color" => true,
-        "BitmapFont" => true
-    ];
-
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
@@ -128,7 +122,7 @@ class EntityMacro {
                 newFields.push(field);
             }
 
-            completeEditableMeta(field);
+            completeMeta(field);
         }
 
         for (field in newFields) {
@@ -196,36 +190,64 @@ class EntityMacro {
 
     } //hasComponentMeta
 
-    static function completeEditableMeta(field:Field):Void {
+    static function completeMeta(field:Field):Void {
 
-        if (field.meta == null || field.meta.length == 0) return;
+        switch (field.kind) {
+            case FVar(type, expr), FProp(_, _, type, expr):
+                var resolvedType = null;
+                var flatResolvedType = null;
+                try {
+                    resolvedType = Context.resolveType(type, field.pos);
+                } catch (e:Dynamic) {}
+                if (resolvedType != null) {
+                    switch (resolvedType) {
+                        case TEnum(t, _):
+                            flatResolvedType = '' + t;
+                        case TInst(t, _):
+                            flatResolvedType = '' + t;
+                        case TType(t, _):
+                            flatResolvedType = '' + t;
+                        case TMono(t):
+                            flatResolvedType = '' + t;
+                        case TAbstract(t, _):
+                            flatResolvedType = '' + t;
+                        case TAnonymous(a):
+                            flatResolvedType = '' + a;
+                        default:
+                    }
+                }
+                switch (type) {
+                    case TPath(p):
 
-        for (meta in field.meta) {
-            if (meta.name == 'editable') {
-                switch (field.kind) {
-                    case FVar(type, expr), FProp(_, _, type, expr):
-                        switch (type) {
-                            case TPath(p):
-                                var fullType = p.pack.join('.') + (p.pack.length > 0 ? '.' : '') + p.name;
-                                if (defaultCeramicEditableTypeFields.exists(fullType)) {
-                                    fullType = 'ceramic.' + fullType;
+                        var fullType = p.pack.join('.') + (p.pack.length > 0 ? '.' : '') + p.name;
+                        if (flatResolvedType != null) fullType = flatResolvedType;
+
+                        if (field.meta != null && field.meta.length > 0) {
+
+                            for (meta in field.meta) {
+                                if (meta.name == 'editable') {
+
+                                    // Compute additional editable info from code
+                                    var options:Dynamic = meta.params.length > 0 ? meta.params[0].getValue() : {};
+                                    if (options.type == null) {
+                                        options.type = fullType;
+                                    }
+                                    meta.params[0] = Context.makeExpr(options, Context.currentPos());
                                 }
-
-                                // Compute additional editable info from code
-                                var options:Dynamic = meta.params.length > 0 ? meta.params[0].getValue() : {};
-                                if (options.type == null) {
-                                    options.type = fullType;
-                                }
-                                meta.params[0] = Context.makeExpr(options, Context.currentPos());
-
-                            default:
+                            }
                         }
+
+                        field.meta.push({
+                            name: 'type',
+                            params: [Context.makeExpr(fullType, Context.currentPos())],
+                            pos: Context.currentPos()
+                        });
+
                     default:
                 }
-                break;
-            }
+            default:
         }
 
-    } //completeEditableMeta
+    } //completeMeta
 
 }

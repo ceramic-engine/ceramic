@@ -29,7 +29,10 @@ class Texts implements spec.Texts {
             }
 
             var text = res.asset.text;
-            res.destroy(true);
+            try {
+                // May fail if text failed to load first
+                res.destroy(true);
+            } catch (e:Dynamic) {}
             done(text);
         },
         function(_) {

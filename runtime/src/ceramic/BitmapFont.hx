@@ -7,6 +7,7 @@ import ceramic.Assets;
 import ceramic.internal.BitmapFontParser;
 
 using unifill.Unifill;
+using ceramic.Extensions;
 
 class BitmapFont extends Entity {
 

@@ -22,40 +22,45 @@ class AppMacro {
 
         var fields = Context.getBuildFields();
 
-        var data:Dynamic = convertArrays(Json.parse(AppMacro.rawInfo));
-        var expr = Context.makeExpr(data, Context.currentPos());
+        var data:Dynamic = {};
+        if (AppMacro.rawInfo != null) {
+            // AppMacro.rawInfo can be null when running stuff like "go to definition" from compiler
+            data = convertArrays(Json.parse(AppMacro.rawInfo));
+        }
 
-         // Load collection types from ceramic.yml
-        if (data.collections != null) {
-            for (key in Reflect.fields(data.collections)) {
-                var val = Reflect.field(data.collections, key);
-                if (Std.is(val, String)) {
-                    Context.getType(val);
-                }
-                else {
-                    for (k in Reflect.fields(val)) {
-                        var v = Reflect.field(val, k);
-                        Context.getType(v);
-                    }
+        // Add required info
+        if (data.collections == null) data.collections = {};
+        if (data.editable == null) data.editable = [];
+
+        // Load collection types from ceramic.yml
+        for (key in Reflect.fields(data.collections)) {
+            var val = Reflect.field(data.collections, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v = Reflect.field(val, k);
+                    Context.getType(v);
                 }
             }
         }
 
          // Load editable types from ceramic.yml
-        if (data.editable != null) {
-            for (key in Reflect.fields(data.editable)) {
-                var val = Reflect.field(data.editable, key);
-                if (Std.is(val, String)) {
-                    Context.getType(val);
-                }
-                else {
-                    for (k in Reflect.fields(val)) {
-                        var v = Reflect.field(val, k);
-                        Context.getType(v);
-                    }
+        for (key in Reflect.fields(data.editable)) {
+            var val = Reflect.field(data.editable, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v = Reflect.field(val, k);
+                    Context.getType(v);
                 }
             }
         }
+        
+        var expr = Context.makeExpr(data, Context.currentPos());
 
         fields.push({
             pos: Context.currentPos(),

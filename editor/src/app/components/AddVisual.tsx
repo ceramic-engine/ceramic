@@ -74,13 +74,17 @@ import { EditableType } from 'app/model/Project';
         }
 
         visual.props.set('depth', maxDepth + 1);
+        visual.props.set('anchorX', 0.5);
+        visual.props.set('anchorY', 0.5);
 
-        // Set item props from editable type info
-        /*for (let field of project.editableVisualsByKey.get(visual.entity).fields) {
-            if (!visual.props.has(field.name)) {
-                visual.props.set(field.name, fields.defaultValue(field));
-            }
-        }*/
+        // Specific cases
+        if (info.entity === 'ceramic.Text') {
+            visual.props.set('content', visual.name);
+        }
+        else if (info.entity === 'ceramic.Quad') {
+            visual.props.set('width', 100);
+            visual.props.set('height', 100);
+        }
 
         fragment.items.push(visual);
 

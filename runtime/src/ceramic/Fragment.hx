@@ -1,6 +1,8 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
+import ceramic.Entity;
+import ceramic.Assets;
 
 using ceramic.Extensions;
 
@@ -39,20 +41,78 @@ typedef FragmentItem = {
 
 } //FragmentEntities
 
+typedef FragmentFieldConverter = {
+
+    var toFragmentItem:Dynamic;
+
+    var fromFragmentItem:Dynamic;
+
+} //FragmentFieldConverter
+
+@:structInit
+class FragmentContext {
+
+    public var assets:Assets;
+
+} //FragmentContext
+
 /** A fragment is a group of visuals rendered from data (.fragment file) */
 class Fragment extends Quad {
 
     public var entities(default,null):Array<Entity>;
 
-    public var deserializers:Map<String,Fragment->Entity->FragmentItem->Void> = new Map();
+    public var items(default,null):Array<FragmentItem>;
+
+    public var context:FragmentContext;
+
+/// Converters
+
+    public static var converters:Map<String,FragmentFieldConverter> = new Map();
+
+    static var didAssignDefaultConverters = false;
+
+#if editor
+
+    @event function editableItemUpdate(item:FragmentItem);
+
+    var updatedEditableItems:Map<String,FragmentItem> = null;
+
+#end
+
+/// Internal
+
+    static var basicTypes:Map<String,Bool> = [
+        'Bool' => true,
+        'Int' => true,
+        'Float' => true,
+        'String' => true
+    ];
 
 /// Lifecycle
 
-    public function new() {
+    public function new(context:FragmentContext) {
 
         super();
 
+        this.context = context;
         entities = [];
+        items = [];
+
+        // Assign default converters
+        if (!didAssignDefaultConverters) {
+            if (!converters.exists('ceramic.Texture')) {
+                converters.set('ceramic.Texture', {
+                    fromFragmentItem: FragmentItemFieldDefaultConverters.textureFromFragmentItemField,
+                    toFragmentItem: FragmentItemFieldDefaultConverters.textureToFragmentItemField
+                });
+            }
+            if (!converters.exists('ceramic.BitmapFont')) {
+                converters.set('ceramic.BitmapFont', {
+                    fromFragmentItem: FragmentItemFieldDefaultConverters.fontFromFragmentItemField,
+                    toFragmentItem: FragmentItemFieldDefaultConverters.fontToFragmentItemField
+                });
+            }
+        }
 
     } //new
 
@@ -97,7 +157,7 @@ class Fragment extends Quad {
 
     public function putItem(item:FragmentItem):Entity {
 
-        var existing = getItem(item.id);
+        var existing = getItemInstance(item.id);
         var existingWasVisual = false;
         
         // Remove previous object if entity class is different
@@ -107,6 +167,9 @@ class Fragment extends Quad {
                 removeItem(item.id);
                 existing = null;
             }
+        }
+        else {
+            items.push(item);
         }
 
         var entityClass = Type.resolveClass(item.entity);
@@ -121,14 +184,44 @@ class Fragment extends Quad {
         }
 
         // Copy item properties
-        var deserialize = deserializers.get(item.entity);
-        if (deserialize != null) {
-            deserialize(this, instance, item);
-        }
-        else {
-            if (item.props != null) {
-                for (field in Reflect.fields(item.props)) {
-                    instance.setProperty(field, Reflect.field(item.props, field));
+        if (item.props != null) {
+            for (field in Reflect.fields(item.props)) {
+                var fieldType = Entity.typeOfEntityField(item.entity, field);
+                var converter = fieldType != null ? converters.get(fieldType) : null;
+                if (converter != null) {
+                    function(field) {
+                        converter.fromFragmentItem(
+                            context,
+                            item,
+                            field,
+                            function(value:Dynamic) {
+                                if (!instance.destroyed) {
+
+                                    instance.setProperty(field, value);
+
+#if editor
+                                    // Update editable fields from instance
+                                    updateEditableFieldsFromInstance(item);
+#end
+                                }
+                            }
+                        );
+                    }(field);
+                }
+                else {
+                    var value:Dynamic = Reflect.field(item.props, field);
+                    if (!basicTypes.exists(fieldType)) {
+                        var resolvedEnum = Type.resolveEnum(fieldType);
+                        if (resolvedEnum != null) {
+                            for (name in Type.getEnumConstructs(resolvedEnum)) {
+                                if (name.toLowerCase() == value.toLowerCase()) {
+                                    value = Type.createEnum(resolvedEnum, name);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    instance.setProperty(field, value);
                 }
             }
         }
@@ -142,16 +235,34 @@ class Fragment extends Quad {
             add(cast instance);
         }
 
+#if editor
+        // Update editable fields from instance
+        updateEditableFieldsFromInstance(item);
+#end
+
         return instance;
 
     } //putItem
 
-    public function getItem(itemId:String):Entity {
+    public function getItemInstance(itemId:String):Entity {
 
         for (entity in entities) {
             if (entity.id == itemId) {
                 
                 return entity;
+            }
+        }
+
+        return null;
+
+    } //getItemInstance
+
+    public function getItem(itemId:String):FragmentItem {
+
+        for (item in items) {
+            if (item.id == itemId) {
+                
+                return item;
             }
         }
 
@@ -171,17 +282,255 @@ class Fragment extends Quad {
             }
         }
 
+        for (item in items) {
+            if (item.id == itemId) {
+
+                items.remove(item);
+
+                break;
+            }
+        }
+
     } //removeItem
 
     public function removeAllItems():Void {
 
-        for (entity in entities) {
+        for (entity in [].concat(entities)) {
                 
             entities.remove(entity);
             entity.destroy();
 
         }
 
+        for (item in [].concat(items)) {
+            
+            items.remove(item);
+
+        }
+
     } //removeAllItems
 
+#if editor
+
+    public function updateEditableFieldsFromInstance(item:FragmentItem):Void {
+
+        // Get instance
+        var instance = getItemInstance(item.id);
+        if (instance == null) return;
+
+        // Compute missing data (if any)
+        var entityFields = Entity.editableFieldInfo(item.entity);
+        var hasChanged = false;
+        for (field in entityFields.keys()) {
+            if (!Reflect.hasField(item.props, field)) {
+                var fieldType = Entity.typeOfEntityField(item.entity, field);
+                var converter = fieldType != null ? converters.get(fieldType) : null;
+                var value:Dynamic = null;
+                if (converter != null) {
+                    value = converter.toFragmentItem(
+                        context,
+                        instance,
+                        field
+                    );
+                } else {
+                    value = instance.getProperty(field);
+                    switch (Type.typeof(value)) {
+                        case TEnum(e):
+                            value = Std.string(value);
+                            var fieldInfo = entityFields.get(field);
+                            if (fieldInfo.meta.editable[0].options != null) {
+                                var opts:Array<String> = fieldInfo.meta.editable[0].options;
+                                for (opt in opts) {
+                                    if (value.toLowerCase() == opt.toLowerCase()) {
+                                        value = opt;
+                                        break;
+                                    }
+                                }
+                            }
+                        default:
+                    }
+                }
+                if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
+                    hasChanged = true;
+                    Reflect.setField(item.props, field, value);
+                }
+            }
+        }
+
+        if (hasChanged) {
+            if (updatedEditableItems == null) {
+                updatedEditableItems = new Map();
+                app.onceUpdate(this, function(delta) {
+                    var prevUpdated = updatedEditableItems;
+                    updatedEditableItems = null;
+                    for (itemId in prevUpdated.keys()) {
+                        var anItem = prevUpdated.get(itemId);
+                        emitEditableItemUpdate(anItem);
+                    }
+                });
+            }
+            updatedEditableItems.set(item.id, item);
+        }
+
+    } //updateItemFromInstance
+
+#end
+
 } //Fragment
+
+class FragmentItemFieldDefaultConverters {
+
+/// Texture
+
+    public static function textureToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
+
+        var texture:Texture = entity.getProperty(field);
+
+        if (texture == null || texture.asset == null) {
+            return null;
+        }
+        else {
+            return texture.asset.name;
+        }
+
+    } //textureToFragmentItemField
+
+    public static function textureFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:Texture->Void):Void {
+
+        var assetName:String = Reflect.field(item.props, field);
+        var assets = context.assets;
+
+        untyped console.error('TEXTURE assetName=$assetName field=$field');
+
+        if (assetName != null) {
+            var existing:ImageAsset = cast assets.asset(assetName, 'image');
+            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
+            if (existing == null) {
+                if (asset != null) {
+                    // Create and load asset
+                    assets.addAsset(asset);
+                    asset.onceComplete(function(success) {
+                        if (success) {
+                            done(assets.texture(assetName));
+                        }
+                        else {
+                            warning('Failed to load texture for fragment item: ' + item);
+                            done(null);
+                        }
+                    });
+                    assets.load();
+                }
+                else {
+                    // Nothing to do
+                    done(null);
+                }
+            }
+            else {
+                if (asset.status == READY) {
+                    // Asset already available
+                    done(assets.texture(assetName));
+                }
+                else if (asset.status == LOADING) {
+                    // Asset loading
+                    asset.onceComplete(function(success) {
+                        if (success) {
+                            done(assets.texture(assetName));
+                        }
+                        else {
+                            warning('Failed to load texture for fragment item: ' + item);
+                            done(null);
+                        }
+                    });
+                }
+                else {
+                    // Asset broken?
+                    done(null);
+                }
+            }
+        }
+        else {
+            done(null);
+        }
+
+    } //textureFromFragmentItemField
+
+/// BitmapFont
+
+    public static function fontToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
+
+        var font:BitmapFont = entity.getProperty(field);
+
+        if (font == null || font.asset == null) {
+            return null;
+        }
+        else {
+            return font.asset.name;
+        }
+
+    } //fontToFragmentItemField
+
+    public static function fontFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:BitmapFont->Void):Void {
+
+        var assetName:String = Reflect.field(item.props, field);
+
+        if (assetName == null || assetName == app.defaultFont.asset.name) {
+            done(app.defaultFont);
+            return;
+        }
+        var assets = context.assets;
+
+        untyped console.error('FONT assetName=$assetName field=$field');
+
+        if (assetName != null) {
+            var existing:FontAsset = cast assets.asset(assetName, 'font');
+            var asset:FontAsset = existing != null ? existing : new FontAsset(assetName);
+            if (existing == null) {
+                if (asset != null) {
+                    // Create and load asset
+                    assets.addAsset(asset);
+                    asset.onceComplete(function(success) {
+                        if (success) {
+                            done(assets.font(assetName));
+                        }
+                        else {
+                            warning('Failed to load font for fragment item: ' + item);
+                            done(null);
+                        }
+                    });
+                    assets.load();
+                }
+                else {
+                    // Nothing to do
+                    done(null);
+                }
+            }
+            else {
+                if (asset.status == READY) {
+                    // Asset already available
+                    done(assets.font(assetName));
+                }
+                else if (asset.status == LOADING) {
+                    // Asset loading
+                    asset.onceComplete(function(success) {
+                        if (success) {
+                            done(assets.font(assetName));
+                        }
+                        else {
+                            warning('Failed to load font for fragment item: ' + item);
+                            done(null);
+                        }
+                    });
+                }
+                else {
+                    // Asset broken?
+                    done(null);
+                }
+            }
+        }
+        else {
+            done(null);
+        }
+
+    } //fontFromFragmentItemField
+
+} //FragmentItemFieldDefaultConverters

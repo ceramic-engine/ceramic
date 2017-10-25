@@ -1,9 +1,11 @@
 package ceramic;
 
+import haxe.rtti.Meta;
+
 #if !macro
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
-class Entity implements Events implements Lazy implements Observable {
+class Entity implements Events implements Lazy {
 
 /// Properties
 
@@ -107,5 +109,86 @@ class Entity implements Events implements Lazy implements Observable {
 
     } //removeComponent
 
-}
+/// Helpers
+
+    static var entityFieldInfoMap:Map<String,Map<String,String>> = new Map();
+
+    static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:Dynamic}>> = new Map();
+
+    public static function entityFieldTypes(entityClass:String):Map<String,String> {
+
+        var info = entityFieldInfoMap.get(entityClass);
+
+        if (info == null) {
+            info = new Map();
+            entityFieldInfoMap.set(entityClass, info);
+
+            var clazz = Type.resolveClass(entityClass);
+            var usedFields = new Map();
+
+            while (clazz != null) {
+
+                var meta = Meta.getFields(clazz);
+                for (k in Reflect.fields(meta)) {
+                    var v = Reflect.field(meta, k);
+                    if (Reflect.hasField(v, 'type') && !usedFields.exists(k)) {
+                        usedFields.set(k, true);
+                        info.set(k, v.type);
+                    }
+                }
+
+                clazz = Type.getSuperClass(clazz);
+
+            }
+        }
+
+        return info;
+
+    } //entityFieldTypes
+
+#if editor
+
+    public static function editableFieldInfo(entityClass:String):Map<String,{type:String, meta:Dynamic}> {
+
+        var info = editableFieldInfoMap.get(entityClass);
+
+        if (info == null) {
+            info = new Map();
+            editableFieldInfoMap.set(entityClass, info);
+
+            var clazz = Type.resolveClass(entityClass);
+            var usedFields = new Map();
+
+            while (clazz != null) {
+
+                var meta = Meta.getFields(clazz);
+                for (k in Reflect.fields(meta)) {
+                    var v = Reflect.field(meta, k);
+                    if (Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+                        usedFields.set(k, true);
+                        info.set(k, {
+                            type: v.type,
+                            meta: v
+                        });
+                    }
+                }
+
+                clazz = Type.getSuperClass(clazz);
+
+            }
+        }
+
+        return info;
+
+    } //editableFieldTypes
+
+#end
+
+    public static function typeOfEntityField(entityClass:String, field:String):String {
+
+        return entityFieldTypes(entityClass).get(field);
+
+    } //typeOfField
+
+} //Entity
 

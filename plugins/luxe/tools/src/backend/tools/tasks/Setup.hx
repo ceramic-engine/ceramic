@@ -102,8 +102,23 @@ class Setup extends tools.Task {
             var parsedHxml = tools.Hxml.parse(project.app.hxml);
             if (parsedHxml != null && parsedHxml.length > 0) {
                 parsedHxml = tools.Hxml.formatAndChangeRelativeDir(parsedHxml, cwd, targetPath);
+                var flagParts = [];
                 for (flag in parsedHxml) {
-                    haxeflags.push(Json.stringify(flag));
+                    flag = flag.trim();
+                    if (flag != '') {
+                        if (!flag.startsWith('-')) {
+                            flagParts.push(flag);
+                        }
+                        else {
+                            if (flagParts.length > 0) {
+                                haxeflags.push(Json.stringify(flagParts.join(' ')));
+                            }
+                            flagParts = [flag];
+                        }
+                    }
+                }
+                if (flagParts.length > 0) {
+                    haxeflags.push(Json.stringify(flagParts.join(' ')));
                 }
             }
         }

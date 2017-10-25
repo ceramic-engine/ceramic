@@ -78,6 +78,15 @@ class Editor extends Entity {
 
     var editableTypes:Array<EditableType> = [];
 
+/// Internal
+
+    static var basicTypes:Map<String,Bool> = [
+        'Bool' => true,
+        'Int' => true,
+        'Float' => true,
+        'String' => true
+    ];
+
 /// Lifecycle
 
     public function new(settings:InitSettings) {
@@ -136,7 +145,9 @@ class Editor extends Entity {
             var clazz = Type.resolveClass(classPath);
             var usedFields = new Map();
             var fields = [];
+
             editableTypes.push({
+                meta: Meta.getType(clazz),
                 entity: classPath,
                 fields: fields,
                 isVisual: true // TODO handle non-visuals
@@ -149,9 +160,32 @@ class Editor extends Entity {
                     var v = Reflect.field(meta, k);
                     if (Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
                         usedFields.set(k, true);
+
+                        var fieldMeta:Dynamic = {};
+                        var origMeta = Reflect.field(meta, k);
+                        for (mk in Reflect.fields(origMeta)) {
+                            Reflect.setField(fieldMeta, mk, Reflect.field(origMeta, mk));
+                        }
+
+                        var fieldType = null;
+                        if (Reflect.hasField(v, 'type')) {
+                            fieldType = v.type[0];
+                            if (!basicTypes.exists(fieldType)) {
+                                var resolvedEnum = Type.resolveEnum(fieldType);
+                                if (resolvedEnum != null) {
+                                    var rawOptions = Type.getEnumConstructs(resolvedEnum);
+                                    var options = [];
+                                    for (item in rawOptions) {
+                                        options.push(item.toLowerCase());
+                                    }
+                                    fieldMeta.editable[0].options = options;
+                                }
+                            }
+                        }
+
                         fields.push({
                             name: k,
-                            meta: Reflect.field(meta, k),
+                            meta: fieldMeta
                         });
                     }
                 }
@@ -443,6 +477,7 @@ class Editor extends Entity {
 
                     // Reset fragment to get updated assets
                     if (fragment != null) {
+                        fragment.context.assets = assets;
                         fragment.removeAllItems();
                         for (key in fragmentItems.keys()) {
                             var item = fragmentItems.get(key);
@@ -491,7 +526,9 @@ class Editor extends Entity {
                 }
                 if (action == 'put') {
                     if (fragment == null) {
-                        fragment = new Fragment();
+                        fragment = new Fragment({
+                            assets: assets
+                        });
                         fragment.id = value.id;
                         fragment.depthRange = 10000;
                         fragment.color = 0x2f2f2f;
@@ -501,7 +538,16 @@ class Editor extends Entity {
                                 Editable.highlight.destroy();
                             }
                         });
+                        fragment.onEditableItemUpdate(fragment, function(item) {
+                            untyped console.log('SEND');
+                            untyped console.log(item);
+                            send({
+                                type: 'set/fragment.item.${item.id}',
+                                value: item.props
+                            });
+                        });
 
+                        /*
                         fragment.deserializers.set('ceramic.Quad', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
                             if (instance.destroyed) return;
                             if (item.props != null) {
@@ -591,9 +637,9 @@ class Editor extends Entity {
                                     }
                                 }
                             }
-                        });
+                        });*/
 
-                        fragment.deserializers.set('ceramic.Text', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
+                        /*fragment.deserializers.set('ceramic.Text', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
                             if (instance.destroyed) return;
                             if (item.props != null) {
 
@@ -686,7 +732,7 @@ class Editor extends Entity {
 
                                 updateSize();
                             }
-                        });
+                        });*/
                     }
                     fragment.putData(value);
                     fitFragment();
@@ -701,7 +747,8 @@ class Editor extends Entity {
 
             case 'fragment-item':
                 if (action == 'put') {
-                    console.log(value);
+                    untyped console.log('PUT');
+                    untyped console.log(value);
                     fragmentItems.set(value.id, value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
@@ -713,7 +760,7 @@ class Editor extends Entity {
                     }
                 }
                 else if (action == 'select') {
-                    var entity = value != null && value.id != null ? fragment.getItem(value.id) : null;
+                    var entity = value != null && value.id != null ? fragment.getItemInstance(value.id) : null;
                     if (entity != null && entity.hasComponent('editable')) {
                         cast(entity.component('editable'), Editable).select();
                         selectedItemId = value.id;
@@ -753,6 +800,8 @@ class Editor extends Entity {
 } //Editor
 
 typedef EditableType = {
+
+    var meta:Dynamic;
 
     var entity:String;
 

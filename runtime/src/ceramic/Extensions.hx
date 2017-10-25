@@ -40,4 +40,15 @@ class Extensions {
 
     } //setProperty
 
+    inline public static function getProperty<T>(instance:T, field:String):Dynamic {
+
+        if (#if flash untyped (instance).hasOwnProperty ("get_" + field) #elseif js untyped (instance).__properties__ && untyped (instance).__properties__["get_" + field] #else false #end) {
+            return Reflect.getProperty(instance, field);
+        }
+        else {
+            return Reflect.field(instance, field);
+        }
+
+    } //getProperty
+
 } //Extensions

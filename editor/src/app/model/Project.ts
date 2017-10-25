@@ -17,6 +17,8 @@ import dateformat from 'dateformat';
 
 export interface EditableType {
 
+    meta:any;
+
     entity:string;
 
     isVisual:boolean;
@@ -702,8 +704,12 @@ class Project extends Model {
             let [, key] = message.type.split('/');
 
             // Change UI
-            if (key.startsWith('ui.')) {
-                keypath.set(this.ui, key.substr(3), message.value);
+            // Change Selected Item
+            if (key.startsWith('ui.selectedItem.')) {
+                this.ui.selectedItem.props.set(key.substr('ui.selectedItem.'.length), message.value);
+            }
+            else if (key.startsWith('ui.')) {
+                keypath.set(this.ui, key.substr('ui.'.length), message.value);
             }
             // Change Fragment Item
             else if (key.startsWith('fragment.item.')) {
@@ -716,7 +722,7 @@ class Project extends Model {
                 if (item != null) {
                     for (let k in message.value) {
                         if (message.value.hasOwnProperty(k)) {
-                            keypath.set(item, k, message.value[k]);
+                            item.props.set(k, message.value[k]);
                         }
                     }
                 }

@@ -28,7 +28,7 @@ abstract AssetId<T:String>(T) from T to T {
 } //AssetId
 
 @:allow(ceramic.Assets)
-class Asset extends Entity {
+class Asset extends Entity implements Observable {
 
 /// Events
 
@@ -642,6 +642,7 @@ class TextAsset extends Asset {
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
+                success('Text loaded at $path');
                 this.text = text;
                 status = READY;
                 emitComplete(true);
