@@ -88,13 +88,14 @@ class Project {
                 }
             }
         }
-        
+
         app.editable.push('ceramic.Quad');
         app.editable.push('ceramic.Text');
 
         if (app.hxml == null) app.hxml = '';
 
         app.hxml += "\n" + "--macro ceramic.macros.AppMacro.setInfo(" + Json.stringify(Json.stringify(app)) + ")";
+        app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
 
     } //loadAppFile
 
