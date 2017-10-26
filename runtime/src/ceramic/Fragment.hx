@@ -85,7 +85,8 @@ class Fragment extends Quad {
         'Bool' => true,
         'Int' => true,
         'Float' => true,
-        'String' => true
+        'String' => true,
+        'ceramic.Color' => true
     ];
 
 /// Lifecycle
@@ -201,7 +202,7 @@ class Fragment extends Quad {
 
 #if editor
                                     // Update editable fields from instance
-                                    updateEditableFieldsFromInstance(item);
+                                    updateEditableFieldsFromInstance(item.id);
 #end
                                 }
                             }
@@ -237,7 +238,7 @@ class Fragment extends Quad {
 
 #if editor
         // Update editable fields from instance
-        updateEditableFieldsFromInstance(item);
+        updateEditableFieldsFromInstance(item.id);
 #end
 
         return instance;
@@ -312,48 +313,57 @@ class Fragment extends Quad {
 
 #if editor
 
-    public function updateEditableFieldsFromInstance(item:FragmentItem):Void {
+    public function updateEditableFieldsFromInstance(itemId:String):Void {
+
+        // Get item
+        var item = getItem(itemId);
+        if (item == null) {
+            return;
+        }
 
         // Get instance
         var instance = getItemInstance(item.id);
-        if (instance == null) return;
+        if (instance == null) {
+            return;
+        }
 
         // Compute missing data (if any)
-        var entityFields = Entity.editableFieldInfo(item.entity);
+        var editableFields = Entity.editableFieldInfo(item.entity);
         var hasChanged = false;
-        for (field in entityFields.keys()) {
-            if (!Reflect.hasField(item.props, field)) {
-                var fieldType = Entity.typeOfEntityField(item.entity, field);
-                var converter = fieldType != null ? converters.get(fieldType) : null;
-                var value:Dynamic = null;
-                if (converter != null) {
-                    value = converter.toFragmentItem(
-                        context,
-                        instance,
-                        field
-                    );
-                } else {
-                    value = instance.getProperty(field);
-                    switch (Type.typeof(value)) {
-                        case TEnum(e):
-                            value = Std.string(value);
-                            var fieldInfo = entityFields.get(field);
-                            if (fieldInfo.meta.editable[0].options != null) {
-                                var opts:Array<String> = fieldInfo.meta.editable[0].options;
-                                for (opt in opts) {
-                                    if (value.toLowerCase() == opt.toLowerCase()) {
-                                        value = opt;
-                                        break;
-                                    }
+        for (field in editableFields.keys()) {
+            var fieldType = Entity.typeOfEntityField(item.entity, field);
+            var converter = fieldType != null ? converters.get(fieldType) : null;
+            var value:Dynamic = null;
+            if (converter != null) {
+                value = converter.toFragmentItem(
+                    context,
+                    instance,
+                    field
+                );
+            } else {
+                value = instance.getProperty(field);
+                switch (Type.typeof(value)) {
+                    case TEnum(e):
+                        value = Std.string(value);
+                        var fieldInfo = editableFields.get(field);
+                        if (fieldInfo.meta.editable[0].options != null) {
+                            var opts:Array<String> = fieldInfo.meta.editable[0].options;
+                            for (opt in opts) {
+                                if (value.toLowerCase() == opt.toLowerCase()) {
+                                    value = opt;
+                                    break;
                                 }
                             }
-                        default:
-                    }
+                        }
+                    default:
+                        if (!basicTypes.exists(fieldType)) {
+                            value = null;
+                        }
                 }
-                if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
-                    hasChanged = true;
-                    Reflect.setField(item.props, field, value);
-                }
+            }
+            if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
+                hasChanged = true;
+                Reflect.setField(item.props, field, value);
             }
         }
 
@@ -399,8 +409,6 @@ class FragmentItemFieldDefaultConverters {
 
         var assetName:String = Reflect.field(item.props, field);
         var assets = context.assets;
-
-        untyped console.error('TEXTURE assetName=$assetName field=$field');
 
         if (assetName != null) {
             var existing:ImageAsset = cast assets.asset(assetName, 'image');
@@ -478,8 +486,6 @@ class FragmentItemFieldDefaultConverters {
             return;
         }
         var assets = context.assets;
-
-        untyped console.error('FONT assetName=$assetName field=$field');
 
         if (assetName != null) {
             var existing:FontAsset = cast assets.asset(assetName, 'font');

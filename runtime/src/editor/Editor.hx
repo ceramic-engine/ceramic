@@ -539,8 +539,8 @@ class Editor extends Entity {
                             }
                         });
                         fragment.onEditableItemUpdate(fragment, function(item) {
-                            untyped console.log('SEND');
-                            untyped console.log(item);
+                            //untyped console.log('SEND');
+                            //untyped console.log(item);
                             send({
                                 type: 'set/fragment.item.${item.id}',
                                 value: item.props
@@ -747,8 +747,8 @@ class Editor extends Entity {
 
             case 'fragment-item':
                 if (action == 'put') {
-                    untyped console.log('PUT');
-                    untyped console.log(value);
+                    //untyped console.log('PUT');
+                    //untyped console.log(value);
                     fragmentItems.set(value.id, value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
