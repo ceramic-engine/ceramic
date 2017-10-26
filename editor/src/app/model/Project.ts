@@ -745,14 +745,14 @@ class Project extends Model {
                     if (editorPreviewLastModified != null && editorPreviewLastModified.getTime() !== stats.mtime.getTime()) {
                         setTimeout(() => {
                             document.location.reload();
-                        }, 2000);
+                        }, 1000);
                     } else {
                         editorPreviewLastModified = stats.mtime;
                     }
                 });
             }
 
-        }, 5000);
+        }, 1000);
 
     } //constructor
 
