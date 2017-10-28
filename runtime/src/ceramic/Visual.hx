@@ -663,70 +663,72 @@ class Visual extends Entity {
 
 /// Children
 
+    static var _minDepth:Float = 0;
+
+    static var _maxDepth:Float = 0;
+
     /** Compute children depth. The result depends on whether
         a parent defines a custom `depthRange` value or not. */
-    function computeChildrenDepth(computedDepthRange:Float = -1) {
+    function computeChildrenDepth():Void {
 
-        if (children != null && children.length > 0) {
+        if (children != null) {
 
-            var minDepth = 999999999.0;
-            var maxDepth = -1.0;
-
+            // Compute deepest in hierarchy first
             for (child in children) {
-
                 child.computedDepth = child.depth;
-
-                if (child.depth < minDepth) minDepth = child.depth;
-                if (child.depth > maxDepth) maxDepth = child.depth;
-
+                child.computeChildrenDepth();
             }
 
-            var multDepth:Float = -1;
-
+            // Apply depth range if any
             if (depthRange != -1) {
 
-                if (maxDepth != minDepth) {
-                    multDepth = depthRange / (maxDepth - minDepth);
-                }
-                else {
-                    multDepth = 1;
-                }
+                _minDepth = 9999999999;
+                _maxDepth = -9999999999;
 
-            }
-
-            if (computedDepthRange != -1) {
-
-                if (multDepth == -1) multDepth = 1;
-
-                if (maxDepth != minDepth) {
-                    multDepth *= computedDepthRange / (maxDepth - minDepth);
-                }
-
-            }
-
-            if (multDepth != -1) {
-
+                // Compute min/max depth
                 for (child in children) {
-
-                    child.computedDepth = computedDepth + (child.computedDepth - minDepth) * multDepth;
-                    
-                    if (child.children != null) {
-                        child.computeChildrenDepth((maxDepth - child.depth) * multDepth);
-                    }
+                    child.computeMinMaxDepths();
                 }
 
-            } else {
-
+                // Multiply depth
                 for (child in children) {
-                    
-                    if (child.children != null) {
-                        child.computeChildrenDepth();
-                    }
+                    child.multiplyDepths(computedDepth, depthRange);
                 }
             }
         }
 
     } //computeChildrenDepth
+
+    function computeMinMaxDepths():Void {
+
+        if (_minDepth > computedDepth) _minDepth = computedDepth;
+        if (_maxDepth < computedDepth) _maxDepth = computedDepth;
+
+        if (children != null) {
+
+            for (child in children) {
+                child.computeMinMaxDepths();
+            }
+        }
+
+    } //computeMinMaxDepths
+
+    function multiplyDepths(startDepth:Float, targetRange:Float):Void {
+
+        if (_maxDepth == _minDepth) {
+            computedDepth = startDepth + 0.5 * targetRange;
+        } else {
+            computedDepth = startDepth + ((computedDepth - _minDepth) / (_maxDepth - _minDepth)) * targetRange;
+        }
+
+        // Multiply recursively
+        if (children != null) {
+            for (child in children) {
+                child.multiplyDepths(computedDepth, depthRange);
+            }
+        }
+
+    } //multiplyDepths
 
     public function add(visual:Visual):Void {
 
