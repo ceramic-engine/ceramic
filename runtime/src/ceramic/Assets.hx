@@ -282,8 +282,6 @@ class Asset extends Entity implements Observable {
 
     inline function willEmitComplete(success:Bool) {
 
-        trace(this + ' willEmitComplete ' + success);
-
         if (success && owner != null) {
             owner.emitUpdate(this);
         }
@@ -642,7 +640,6 @@ class TextAsset extends Asset {
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
-                success('Text loaded at $path');
                 this.text = text;
                 status = READY;
                 emitComplete(true);
