@@ -723,8 +723,9 @@ class Visual extends Entity {
 
         // Multiply recursively
         if (children != null) {
+
             for (child in children) {
-                child.multiplyDepths(computedDepth, depthRange);
+                child.multiplyDepths(startDepth, targetRange);
             }
         }
 
