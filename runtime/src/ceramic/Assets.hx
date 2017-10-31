@@ -997,7 +997,7 @@ class Assets extends Entity {
         if (name.startsWith('image:')) name = name.substr(6);
         addAsset(new ImageAsset(name, options));
 
-    } //addTexture
+    } //addImage
 
     public function addFont(name:String, ?options:AssetOptions):Void {
         
