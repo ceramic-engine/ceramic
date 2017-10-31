@@ -190,5 +190,8 @@ class Entity implements Events implements Lazy {
 
     } //typeOfField
 
-} //Entity
+/// Field converters
 
+    static var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
+
+} //Entity

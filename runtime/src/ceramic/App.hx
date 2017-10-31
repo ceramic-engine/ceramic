@@ -5,6 +5,7 @@ import ceramic.Assets;
 import ceramic.Fragment;
 import ceramic.Texture;
 import ceramic.BitmapFont;
+import ceramic.ConvertField;
 import ceramic.Shortcuts.*;
 import backend.Backend;
 
@@ -101,6 +102,7 @@ class App extends Entity {
 
         screen.backendReady();
 
+        // Run pre-init callbacks
         if (preInitCallbacks != null) {
             for (callback in [].concat(preInitCallbacks)) {
                 callback();
@@ -108,6 +110,10 @@ class App extends Entity {
             preInitCallbacks = null;
         }
 
+        // Init field converters
+        initFieldConverters();
+
+        // Load default font
         assets.add(Fonts.ARIAL_20);
         assets.onceComplete(this, function(success) {
 
@@ -122,6 +128,13 @@ class App extends Entity {
         assets.load();
 
     } //backendReady
+
+    function initFieldConverters():Void {
+
+        Entity.converters.set('ceramic.Texture', new ConvertTexture());
+        Entity.converters.set('ceramic.BitmapFont', new ConvertFont());
+
+    } //initFieldConverters
 
     function assetsLoaded():Void {
 

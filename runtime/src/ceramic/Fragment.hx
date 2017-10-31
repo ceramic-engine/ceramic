@@ -65,12 +65,6 @@ class Fragment extends Quad {
 
     public var context:FragmentContext;
 
-/// Converters
-
-    public static var converters:Map<String,FragmentFieldConverter> = new Map();
-
-    static var didAssignDefaultConverters = false;
-
 #if editor
 
     @event function editableItemUpdate(item:FragmentItem);
@@ -98,22 +92,6 @@ class Fragment extends Quad {
         this.context = context;
         entities = [];
         items = [];
-
-        // Assign default converters
-        if (!didAssignDefaultConverters) {
-            if (!converters.exists('ceramic.Texture')) {
-                converters.set('ceramic.Texture', {
-                    fromFragmentItem: FragmentItemFieldDefaultConverters.textureFromFragmentItemField,
-                    toFragmentItem: FragmentItemFieldDefaultConverters.textureToFragmentItemField
-                });
-            }
-            if (!converters.exists('ceramic.BitmapFont')) {
-                converters.set('ceramic.BitmapFont', {
-                    fromFragmentItem: FragmentItemFieldDefaultConverters.fontFromFragmentItemField,
-                    toFragmentItem: FragmentItemFieldDefaultConverters.fontToFragmentItemField
-                });
-            }
-        }
 
     } //new
 
@@ -188,13 +166,13 @@ class Fragment extends Quad {
         if (item.props != null) {
             for (field in Reflect.fields(item.props)) {
                 var fieldType = Entity.typeOfEntityField(item.entity, field);
-                var converter = fieldType != null ? converters.get(fieldType) : null;
+                var value:Dynamic = Reflect.field(item.props, field);
+                var converter = fieldType != null ? Entity.converters.get(fieldType) : null;
                 if (converter != null) {
                     function(field) {
-                        converter.fromFragmentItem(
-                            context,
-                            item,
-                            field,
+                        converter.basicToField(
+                            context.assets,
+                            value,
                             function(value:Dynamic) {
                                 if (!instance.destroyed) {
 
@@ -210,7 +188,6 @@ class Fragment extends Quad {
                     }(field);
                 }
                 else {
-                    var value:Dynamic = Reflect.field(item.props, field);
                     if (!basicTypes.exists(fieldType)) {
                         var resolvedEnum = Type.resolveEnum(fieldType);
                         if (resolvedEnum != null) {
@@ -332,14 +309,10 @@ class Fragment extends Quad {
         var hasChanged = false;
         for (field in editableFields.keys()) {
             var fieldType = Entity.typeOfEntityField(item.entity, field);
-            var converter = fieldType != null ? converters.get(fieldType) : null;
+            var converter = fieldType != null ? Entity.converters.get(fieldType) : null;
             var value:Dynamic = null;
             if (converter != null) {
-                value = converter.toFragmentItem(
-                    context,
-                    instance,
-                    field
-                );
+                value = converter.fieldToBasic(instance.getProperty(field));
             } else {
                 value = instance.getProperty(field);
                 switch (Type.typeof(value)) {
