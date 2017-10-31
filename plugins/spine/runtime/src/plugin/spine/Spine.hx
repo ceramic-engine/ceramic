@@ -248,10 +248,6 @@ class Spine extends Visual {
             render(delta, 0);
         }
 
-#if web
-        untyped console.log(skeleton);
-#end
-
     } //update
 
 /// Internal
@@ -462,8 +458,6 @@ class Spine extends Visual {
 
                                 quad.depth = boundSlot.parentDepth + microDepth;
                                 microDepth += 0.0001;
-
-                                if (id == 'MAKEUP') quad.depth = 999;
                             }
                         }
 
