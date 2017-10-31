@@ -1092,8 +1092,8 @@ class Assets extends Entity {
         var name:String = value;
 
         if (colonIndex != -1) {
-            name = value.substring(0, colonIndex);
-            kind = value.substring(colonIndex + 1);
+            name = value.substring(colonIndex + 1);
+            kind = value.substring(0, colonIndex);
         }
 
         if (kind == null) return null;
