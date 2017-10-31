@@ -56,6 +56,15 @@ class SpinePlugin {
 
     } //addSpine
 
+    public static function ensureSpine(assets:Assets, name:String, ?options:AssetOptions, done:SpineAsset->Void):Void {
+
+        if (!name.startsWith('spine:')) name = 'spine:' + name;
+        assets.ensure(name, options, function(asset) {
+            done(Std.is(asset, SpineAsset) ? cast asset : null);
+        });
+
+    } //ensureSpine
+
     @:access(ceramic.Assets)
     public static function spine(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineData {
 
