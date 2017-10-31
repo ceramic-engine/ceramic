@@ -395,66 +395,17 @@ class FragmentItemFieldDefaultConverters {
     public static function textureToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
 
         var texture:Texture = entity.getProperty(field);
-
-        if (texture == null || texture.asset == null) {
-            return null;
-        }
-        else {
-            return texture.asset.name;
-        }
+        return (texture == null || texture.asset == null) ? null : texture.asset.name;
 
     } //textureToFragmentItemField
 
     public static function textureFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:Texture->Void):Void {
 
-        var assetName:String = Reflect.field(item.props, field);
-        var assets = context.assets;
-
-        if (assetName != null) {
-            var existing:ImageAsset = cast assets.asset(assetName, 'image');
-            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
-            if (existing == null) {
-                if (asset != null) {
-                    // Create and load asset
-                    assets.addAsset(asset);
-                    asset.onceComplete(function(success) {
-                        if (success) {
-                            done(assets.texture(assetName));
-                        }
-                        else {
-                            warning('Failed to load texture for fragment item: ' + item);
-                            done(null);
-                        }
-                    });
-                    assets.load();
-                }
-                else {
-                    // Nothing to do
-                    done(null);
-                }
-            }
-            else {
-                if (asset.status == READY) {
-                    // Asset already available
-                    done(assets.texture(assetName));
-                }
-                else if (asset.status == LOADING) {
-                    // Asset loading
-                    asset.onceComplete(function(success) {
-                        if (success) {
-                            done(assets.texture(assetName));
-                        }
-                        else {
-                            warning('Failed to load texture for fragment item: ' + item);
-                            done(null);
-                        }
-                    });
-                }
-                else {
-                    // Asset broken?
-                    done(null);
-                }
-            }
+        var name:String = Reflect.field(item.props, field);
+        if (name != null) {
+            context.assets.ensureImage(name, null, function(asset:ImageAsset) {
+                done(asset != null ? asset.texture : null);
+            });
         }
         else {
             done(null);
@@ -467,70 +418,21 @@ class FragmentItemFieldDefaultConverters {
     public static function fontToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
 
         var font:BitmapFont = entity.getProperty(field);
-
-        if (font == null || font.asset == null) {
-            return null;
-        }
-        else {
-            return font.asset.name;
-        }
+        return (font == null || font.asset == null) ? null : font.asset.name;
 
     } //fontToFragmentItemField
 
     public static function fontFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:BitmapFont->Void):Void {
 
-        var assetName:String = Reflect.field(item.props, field);
-
-        if (assetName == null || assetName == app.defaultFont.asset.name) {
-            done(app.defaultFont);
-            return;
-        }
-        var assets = context.assets;
-
-        if (assetName != null) {
-            var existing:FontAsset = cast assets.asset(assetName, 'font');
-            var asset:FontAsset = existing != null ? existing : new FontAsset(assetName);
-            if (existing == null) {
-                if (asset != null) {
-                    // Create and load asset
-                    assets.addAsset(asset);
-                    asset.onceComplete(function(success) {
-                        if (success) {
-                            done(assets.font(assetName));
-                        }
-                        else {
-                            warning('Failed to load font for fragment item: ' + item);
-                            done(null);
-                        }
-                    });
-                    assets.load();
-                }
-                else {
-                    // Nothing to do
-                    done(null);
-                }
+        var name:String = Reflect.field(item.props, field);
+        if (name != null) {
+            if (name == app.defaultFont.asset.name) {
+                done(app.defaultFont);
             }
             else {
-                if (asset.status == READY) {
-                    // Asset already available
-                    done(assets.font(assetName));
-                }
-                else if (asset.status == LOADING) {
-                    // Asset loading
-                    asset.onceComplete(function(success) {
-                        if (success) {
-                            done(assets.font(assetName));
-                        }
-                        else {
-                            warning('Failed to load font for fragment item: ' + item);
-                            done(null);
-                        }
-                    });
-                }
-                else {
-                    // Asset broken?
-                    done(null);
-                }
+                context.assets.ensureFont(name, null, function(asset:FontAsset) {
+                    done(asset != null ? asset.font : null);
+                });
             }
         }
         else {
