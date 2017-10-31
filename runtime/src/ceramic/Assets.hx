@@ -1160,6 +1160,101 @@ class Assets extends Entity {
 
     } //load
 
+/// Ensure
+
+    /** Ensures and asset is loaded and return it on the callback.
+        This will check if the requested asset is currently being loaded,
+        already loaded or should be added and loaded. In all cases, it will try
+        its best to deliver the requested asset or `null` if something went wrong. */
+    public function ensure(id:AssetId<Dynamic>, ?options:AssetOptions, done:Asset->Void):Void {
+
+        // Asset already added?
+        var existing = this.asset(id);
+        var asset:Asset = null;
+
+        if (existing == null) {
+            // No? Add it and get it back
+            add(id, options);
+            asset = this.asset(id);
+        } else {
+            // Yes, use it
+            asset = existing;
+        }
+
+        if (asset == null) {
+            // Asset is null? It seems invalid then
+            done(null);
+            return;
+        }
+
+        // Depending on asset status, do the right thing
+        if (asset.status == READY) {
+            // Already available
+            done(asset);
+        }
+        else if (asset.status == LOADING) {
+            // Loading
+            asset.onceComplete(function(success) {
+                if (success) {
+                    done(asset);
+                }
+                else {
+                    done(null);
+                }
+            });
+        }
+        else {
+            // Broken?
+            done(null);
+        }
+
+    } //ensure
+
+    public function ensureImage(name:String, ?options:AssetOptions, done:ImageAsset->Void):Void {
+
+        if (!name.startsWith('image:')) name = 'image:' + name;
+        ensure(name, options, function(asset) {
+            done(Std.is(asset, ImageAsset) ? cast asset : null);
+        });
+
+    } //ensureImage
+
+    public function ensureFont(name:String, ?options:AssetOptions, done:FontAsset->Void):Void {
+
+        if (!name.startsWith('font:')) name = 'font:' + name;
+        ensure(name, options, function(asset) {
+            done(Std.is(asset, FontAsset) ? cast asset : null);
+        });
+
+    } //ensureFont
+
+    public function ensureText(name:String, ?options:AssetOptions, done:TextAsset->Void):Void {
+
+        if (!name.startsWith('text:')) name = 'text:' + name;
+        ensure(name, options, function(asset) {
+            done(Std.is(asset, TextAsset) ? cast asset : null);
+        });
+
+    } //ensureText
+
+    public function ensureSound(name:String, ?options:AssetOptions, done:SoundAsset->Void):Void {
+
+        if (!name.startsWith('sound:')) name = 'sound:' + name;
+        ensure(name, options, function(asset) {
+            done(Std.is(asset, SoundAsset) ? cast asset : null);
+        });
+
+    } //ensureSound
+
+    public function ensureShader(name:String, ?options:AssetOptions, done:ShaderAsset->Void):Void {
+
+        if (!name.startsWith('shader:')) name = 'shader:' + name;
+        ensure(name, options, function(asset) {
+            done(Std.is(asset, ShaderAsset) ? cast asset : null);
+        });
+
+    } //ensureShader
+
 /// Get
 
     public function texture(name:Either<String,AssetId<String>>):Texture {
