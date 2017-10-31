@@ -62,6 +62,11 @@ class Asset extends Entity implements Observable {
     /** Sub assets-list. Defaults to null but some kind of assets (like bitmap fonts) instanciate it to load sub-assets it depends on. */
     public var assets(default,null):Assets = null;
 
+    /** Manage asset retain count. Increase it by calling `retain()` and decrease it by calling `release()`.
+        This can be used when mutliple objects are using the same assets
+        without knowing in advance when they will be needed. */
+    public var refCount(default,null):Int = 0;
+
     @observable public var status:AssetStatus = NONE;
 
     var handleTexturesDensityChange(default,set):Bool = false;
@@ -287,6 +292,21 @@ class Asset extends Entity implements Observable {
         }
 
     } //willEmitComplete
+
+/// Reference counting
+
+    function retain():Void {
+
+        refCount++;
+
+    } //retain
+
+    function release():Void {
+
+        if (refCount == 0) warning('Called release() on asset ' + this + ' when its refCount is already 0');
+        else refCount--;
+
+    } //release
 
 } //Asset
 
