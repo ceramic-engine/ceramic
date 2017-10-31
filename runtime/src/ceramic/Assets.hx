@@ -982,6 +982,15 @@ class Assets extends Entity {
 
     } //destroy
 
+    /** Destroy assets that have their refCount at `0`. */
+    public function flush() {
+
+        for (asset in [].concat(addedAssets)) {
+            if (asset.refCount == 0) asset.destroy();
+        }
+
+    } //flush
+
 /// Add assets to load
 
     public function add(id:AssetId<Dynamic>, ?options:AssetOptions):Void {
