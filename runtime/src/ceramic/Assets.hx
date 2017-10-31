@@ -295,13 +295,13 @@ class Asset extends Entity implements Observable {
 
 /// Reference counting
 
-    function retain():Void {
+    public function retain():Void {
 
         refCount++;
 
     } //retain
 
-    function release():Void {
+    public function release():Void {
 
         if (refCount == 0) warning('Called release() on asset ' + this + ' when its refCount is already 0');
         else refCount--;
