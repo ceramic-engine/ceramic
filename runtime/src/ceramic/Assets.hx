@@ -1201,8 +1201,8 @@ class Assets extends Entity {
             // Already available
             done(asset);
         }
-        else if (asset.status == LOADING) {
-            // Loading
+        else if (asset.status == LOADING || asset.status == NONE) {
+            // Wait until asset is loaded
             asset.onceComplete(function(success) {
                 if (success) {
                     done(asset);
@@ -1211,6 +1211,11 @@ class Assets extends Entity {
                     done(null);
                 }
             });
+
+            if (asset.status == NONE) {
+                // Start loading
+                this.load();
+            }
         }
         else {
             // Broken?
