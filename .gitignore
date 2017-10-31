@@ -40,3 +40,4 @@ yarn-error.log*
 /sample/out
 /sample/.vscode/tasks.json
 /sample/completion.hxml
+/runtime/.vscode/tasks.json
