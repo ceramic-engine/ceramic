@@ -78,6 +78,7 @@ class Text extends Visual {
         // Unbind previous font destroy event
         if (this.font != null) {
             this.font.offDestroy(fontDestroyed);
+            if (this.font.asset != null) this.font.asset.release();
         }
 
         contentDirty = true;
@@ -86,6 +87,7 @@ class Text extends Visual {
         if (this.font != null) {
             // Ensure we remove the font if it gets destroyed
             this.font.onDestroy(this, fontDestroyed);
+            if (this.font.asset != null) this.font.asset.retain();
         }
 
         return font;

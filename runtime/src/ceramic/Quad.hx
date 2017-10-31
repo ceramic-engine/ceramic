@@ -17,6 +17,7 @@ class Quad extends Visual {
         // Unbind previous texture destroy event
         if (this.texture != null) {
             this.texture.offDestroy(textureDestroyed);
+            if (this.texture.asset != null) this.texture.asset.release();
         }
 
         this.texture = texture;
@@ -36,6 +37,7 @@ class Quad extends Visual {
 
             // Ensure we remove the texture if it gets destroyed
             texture.onDestroy(this, textureDestroyed);
+            if (texture.asset != null) texture.asset.retain();
         }
 
         return texture;
