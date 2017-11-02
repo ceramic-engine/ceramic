@@ -15,6 +15,7 @@ typedef Spine = plugin.spine.Spine;
 typedef SpineData = plugin.spine.SpineData;
 typedef SpineAsset = plugin.spine.SpineAsset;
 typedef SpineTextureLoader = plugin.spine.SpineTextureLoader;
+typedef ConvertSpineData = plugin.spine.ConvertSpineData;
 
 #if !macro
 @:build(plugin.spine.macros.SpineMacros.buildNames())
@@ -42,6 +43,9 @@ class SpinePlugin {
 
             // Extend assets with `spine` kind
             Assets.addAssetKind('spine', addSpine, ['spine'], true);
+
+            // Extend converters
+            Entity.converters.set('plugin.SpineData', new ConvertSpineData());
 
         });
     }
