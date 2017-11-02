@@ -94,7 +94,7 @@ class Project {
 
         if (app.hxml == null) app.hxml = '';
 
-        app.hxml += "\n" + "--macro ceramic.macros.AppMacro.setInfo(" + Json.stringify(Json.stringify(app)) + ")";
+        app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(app));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
 
     } //loadAppFile

@@ -10,55 +10,20 @@ using StringTools;
 
 class AppMacro {
 
-    static var rawInfo:String;
+    static var computedInfo:Dynamic;
+    
+    static public function getComputedInfo(rawInfo:String):Dynamic {
 
-    static public function setInfo(rawInfo:String):Void {
+        if (AppMacro.computedInfo == null) AppMacro.computedInfo = computeInfo(rawInfo);
+        return AppMacro.computedInfo;
 
-        AppMacro.rawInfo = rawInfo;
-
-    } //setInfo
+    } //getComputedInfo
 
     macro static public function build():Array<Field> {
 
         var fields = Context.getBuildFields();
 
-        var data:Dynamic = {};
-        if (AppMacro.rawInfo != null) {
-            // AppMacro.rawInfo can be null when running stuff like "go to definition" from compiler
-            data = convertArrays(Json.parse(AppMacro.rawInfo));
-        }
-
-        // Add required info
-        if (data.collections == null) data.collections = {};
-        if (data.editable == null) data.editable = [];
-
-        // Load collection types from ceramic.yml
-        for (key in Reflect.fields(data.collections)) {
-            var val = Reflect.field(data.collections, key);
-            if (Std.is(val, String)) {
-                Context.getType(val);
-            }
-            else {
-                for (k in Reflect.fields(val)) {
-                    var v = Reflect.field(val, k);
-                    Context.getType(v);
-                }
-            }
-        }
-
-         // Load editable types from ceramic.yml
-        for (key in Reflect.fields(data.editable)) {
-            var val = Reflect.field(data.editable, key);
-            if (Std.is(val, String)) {
-                Context.getType(val);
-            }
-            else {
-                for (k in Reflect.fields(val)) {
-                    var v = Reflect.field(val, k);
-                    Context.getType(v);
-                }
-            }
-        }
+        var data = getComputedInfo(Context.definedValue('app_info'));
         
         var expr = Context.makeExpr(data, Context.currentPos());
 
@@ -74,6 +39,51 @@ class AppMacro {
         return fields;
 
     } //build
+
+    static function computeInfo(rawInfo:String):Dynamic {
+
+        var data:Dynamic = {};
+
+        if (rawInfo != null) {
+            // AppMacro.rawInfo can be null when running stuff like "go to definition" from compiler
+            data = convertArrays(Json.parse(Json.parse(rawInfo)));
+        }
+
+        // Add required info
+        if (data.collections == null) data.collections = {};
+        if (data.editable == null) data.editable = [];
+
+        // Load editable types from ceramic.yml
+        for (key in Reflect.fields(data.editable)) {
+            var val = Reflect.field(data.editable, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v = Reflect.field(val, k);
+                    Context.getType(v);
+                }
+            }
+        }
+
+        // Load collection types from ceramic.yml
+        for (key in Reflect.fields(data.collections)) {
+            var val = Reflect.field(data.collections, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v = Reflect.field(val, k);
+                    Context.getType(v);
+                }
+            }
+        }
+
+        return data;
+
+    } //computeInfo
 
     static function convertArrays(data:Dynamic):Dynamic {
 
