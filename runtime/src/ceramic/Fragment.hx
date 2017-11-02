@@ -204,8 +204,15 @@ class Fragment extends Quad {
             }
         }
 
-        // Add instance (if new)
+        // A few more stuff to do if item is new
         if (existing == null) {
+
+            // If instance has an assets property, set it from our fragment context
+            if (Entity.typeOfEntityField(item.entity, 'assets') == 'ceramic.Assets') {
+                instance.setProperty('assets', context.assets);
+            }
+
+            // Add instance (if new)
             entities.push(instance);
         }
         // Add it to display tree if it is a visual
@@ -360,58 +367,3 @@ class Fragment extends Quad {
 #end
 
 } //Fragment
-
-class FragmentItemFieldDefaultConverters {
-
-/// Texture
-
-    public static function textureToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
-
-        var texture:Texture = entity.getProperty(field);
-        return (texture == null || texture.asset == null) ? null : texture.asset.name;
-
-    } //textureToFragmentItemField
-
-    public static function textureFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:Texture->Void):Void {
-
-        var name:String = Reflect.field(item.props, field);
-        if (name != null) {
-            context.assets.ensureImage(name, null, function(asset:ImageAsset) {
-                done(asset != null ? asset.texture : null);
-            });
-        }
-        else {
-            done(null);
-        }
-
-    } //textureFromFragmentItemField
-
-/// BitmapFont
-
-    public static function fontToFragmentItemField(context:FragmentContext, entity:Entity, field:String):String {
-
-        var font:BitmapFont = entity.getProperty(field);
-        return (font == null || font.asset == null) ? null : font.asset.name;
-
-    } //fontToFragmentItemField
-
-    public static function fontFromFragmentItemField(context:FragmentContext, item:FragmentItem, field:String, done:BitmapFont->Void):Void {
-
-        var name:String = Reflect.field(item.props, field);
-        if (name != null) {
-            if (name == app.defaultFont.asset.name) {
-                done(app.defaultFont);
-            }
-            else {
-                context.assets.ensureFont(name, null, function(asset:FontAsset) {
-                    done(asset != null ? asset.font : null);
-                });
-            }
-        }
-        else {
-            done(null);
-        }
-
-    } //fontFromFragmentItemField
-
-} //FragmentItemFieldDefaultConverters

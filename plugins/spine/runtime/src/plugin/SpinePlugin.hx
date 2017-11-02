@@ -60,10 +60,12 @@ class SpinePlugin {
 
     } //addSpine
 
-    public static function ensureSpine(assets:Assets, name:String, ?options:AssetOptions, done:SpineAsset->Void):Void {
+    public static function ensureSpine(assets:Assets, name:Either<String,AssetId<Dynamic>>, ?options:AssetOptions, done:SpineAsset->Void):Void {
 
-        if (!name.startsWith('spine:')) name = 'spine:' + name;
-        assets.ensure(name, options, function(asset) {
+        var realName:String = Std.is(name, String) ? cast name : cast Reflect.field(name, '_id');
+        if (!realName.startsWith('spine:')) realName = 'spine:' + realName;
+
+        assets.ensure(cast realName, options, function(asset) {
             done(Std.is(asset, SpineAsset) ? cast asset : null);
         });
 
