@@ -24,6 +24,40 @@ class AppMacro {
         var fields = Context.getBuildFields();
 
         var data = getComputedInfo(Context.definedValue('app_info'));
+
+        // Load editable types from ceramic.yml
+        for (key in Reflect.fields(data.editable)) {
+            var val = Reflect.field(data.editable, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v = Reflect.field(val, k);
+                    Context.getType(v);
+                }
+            }
+        }
+
+        // Load collection types from ceramic.yml
+        for (key in Reflect.fields(data.collections)) {
+            var val = Reflect.field(data.collections, key);
+            if (Std.is(val, String)) {
+                Context.getType(val);
+            }
+            else {
+                for (k in Reflect.fields(val)) {
+                    var v:Dynamic = Reflect.field(val, k);
+                    if (Std.is(v, String)) {
+                        Context.getType(v);
+                    }
+                    else if (v.type != null) {
+                        Context.getType(v.type);
+                    }
+                }
+            }
+        }
+
         
         var expr = Context.makeExpr(data, Context.currentPos());
 
@@ -52,34 +86,6 @@ class AppMacro {
         // Add required info
         if (data.collections == null) data.collections = {};
         if (data.editable == null) data.editable = [];
-
-        // Load editable types from ceramic.yml
-        for (key in Reflect.fields(data.editable)) {
-            var val = Reflect.field(data.editable, key);
-            if (Std.is(val, String)) {
-                Context.getType(val);
-            }
-            else {
-                for (k in Reflect.fields(val)) {
-                    var v = Reflect.field(val, k);
-                    Context.getType(v);
-                }
-            }
-        }
-
-        // Load collection types from ceramic.yml
-        for (key in Reflect.fields(data.collections)) {
-            var val = Reflect.field(data.collections, key);
-            if (Std.is(val, String)) {
-                Context.getType(val);
-            }
-            else {
-                for (k in Reflect.fields(val)) {
-                    var v = Reflect.field(val, k);
-                    Context.getType(v);
-                }
-            }
-        }
 
         return data;
 
