@@ -25,7 +25,8 @@ export interface EditableType {
 
     fields:Array<{
         meta:any,
-        name:string
+        name:string,
+        type:string
     }>;
 
 } //EditableType

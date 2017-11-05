@@ -21,7 +21,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
             console.warn('No editable type info for entity: ' + item.entity);
             return null;
         }
-        let field:{meta:any, name:string} = null;
+        let field:{meta:any, name:string, type:string} = null;
         for (let f of info.fields) {
             if (f.name === fieldName) {
                 field = f;
@@ -31,6 +31,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
 
         if (field != null) {
             let options:any = field.meta.editable[0];
+            let type = field.type;
             if (options == null) options = {};
             if (options.collection != null) {
                 console.warn('Failed to create form field for property ' + fieldName + ' because collections are not supported yet.');
@@ -52,7 +53,6 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                 );
             }
             else {
-                let type = options.type;
                 if (type === 'String') {
                     return (
                         <Field label={this.toFieldName(field.name)}>
