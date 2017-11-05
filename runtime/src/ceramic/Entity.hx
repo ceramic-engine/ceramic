@@ -1,10 +1,12 @@
 package ceramic;
 
 import haxe.rtti.Meta;
+import haxe.rtti.Rtti;
 
 #if !macro
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
+@:rtti
 class Entity implements Events implements Lazy {
 
 /// Properties
@@ -111,40 +113,7 @@ class Entity implements Events implements Lazy {
 
 /// Helpers
 
-    static var entityFieldInfoMap:Map<String,Map<String,String>> = new Map();
-
     static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:Dynamic}>> = new Map();
-
-    public static function entityFieldTypes(entityClass:String):Map<String,String> {
-
-        var info = entityFieldInfoMap.get(entityClass);
-
-        if (info == null) {
-            info = new Map();
-            entityFieldInfoMap.set(entityClass, info);
-
-            var clazz = Type.resolveClass(entityClass);
-            var usedFields = new Map();
-
-            while (clazz != null) {
-
-                var meta = Meta.getFields(clazz);
-                for (k in Reflect.fields(meta)) {
-                    var v = Reflect.field(meta, k);
-                    if (Reflect.hasField(v, 'type') && !usedFields.exists(k)) {
-                        usedFields.set(k, true);
-                        info.set(k, v.type);
-                    }
-                }
-
-                clazz = Type.getSuperClass(clazz);
-
-            }
-        }
-
-        return info;
-
-    } //entityFieldTypes
 
 #if editor
 
@@ -158,22 +127,26 @@ class Entity implements Events implements Lazy {
 
             var clazz = Type.resolveClass(entityClass);
             var usedFields = new Map();
+            var rtti = Rtti.getRtti(clazz);
 
             while (clazz != null) {
 
                 var meta = Meta.getFields(clazz);
-                for (k in Reflect.fields(meta)) {
+                for (field in rtti.fields) {
+                    var k = field.name;
                     var v = Reflect.field(meta, k);
-                    if (Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+                    var fieldType = FieldInfo.stringFromCType(field.type);
+                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
                         usedFields.set(k, true);
                         info.set(k, {
-                            type: v.type,
+                            type: fieldType,
                             meta: v
                         });
                     }
                 }
 
                 clazz = Type.getSuperClass(clazz);
+                if (clazz != null) rtti = Rtti.getRtti(clazz);
 
             }
         }
@@ -183,15 +156,5 @@ class Entity implements Events implements Lazy {
     } //editableFieldTypes
 
 #end
-
-    public static function typeOfEntityField(entityClass:String, field:String):String {
-
-        return entityFieldTypes(entityClass).get(field);
-
-    } //typeOfField
-
-/// Field converters
-
-    public static var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
 
 } //Entity

@@ -5,6 +5,7 @@ import ceramic.BitmapFont;
 import ceramic.Either;
 import ceramic.Shortcuts.*;
 
+import haxe.DynamicAccess;
 import haxe.io.Path;
 
 using StringTools;
@@ -121,6 +122,7 @@ class Asset extends Entity implements Observable {
                 case 'sound': app.backend.info.soundExtensions();
                 case 'shader': app.backend.info.shaderExtensions();
                 case 'font': ['fnt'];
+                case 'database': ['csv'];
                 default: null;
             }
         }
@@ -682,6 +684,60 @@ class TextAsset extends Asset {
 
 } //TextAsset
 
+class DatabaseAsset extends Asset {
+
+    public var database:Array<DynamicAccess<String>> = null;
+
+    override public function new(name:String, ?options:AssetOptions) {
+
+        super('database', name, options);
+
+    } //name
+
+    override public function load() {
+
+        status = LOADING;
+
+        if (path == null) {
+            warning('Cannot load database asset if path is undefined.');
+            status = BROKEN;
+            emitComplete(false);
+            return;
+        }
+
+        log('Load database $path');
+        app.backend.texts.load(path, function(text) {
+
+            if (text != null) {
+                try {
+                    this.database = Csv.parse(text);
+                } catch (e:Dynamic) {
+                    status = BROKEN;
+                    error('Failed to parse database at path: $path');
+                    emitComplete(false);
+                    return;
+                }
+                status = READY;
+                emitComplete(true);
+            }
+            else {
+                status = BROKEN;
+                error('Failed to load database at path: $path');
+                emitComplete(false);
+            }
+
+        });
+
+    } //load
+
+    function destroy():Void {
+
+        database = null;
+
+    } //destroy
+
+} //DatabaseAsset
+
 class SoundAsset extends Asset {
 
     public var stream:Bool = false;
@@ -855,6 +911,11 @@ class Texts {}
 class Sounds {}
 
 #if !macro
+@:build(ceramic.macros.AssetsMacro.buildNames('database'))
+#end
+class Databases {}
+
+#if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('font'))
 #end
 class Fonts {}
@@ -1009,6 +1070,7 @@ class Assets extends Entity {
             case 'image': addImage(name, options);
             case 'text': addText(name, options);
             case 'sound': addSound(name, options);
+            case 'database': addDatabase(name, options);
             case 'font': addFont(name, options);
             case 'shader': addShader(name, options);
             default:
@@ -1048,6 +1110,13 @@ class Assets extends Entity {
         addAsset(new SoundAsset(name, options));
 
     } //addSound
+
+    public function addDatabase(name:String, ?options:AssetOptions):Void {
+        
+        if (name.startsWith('database:')) name = name.substr(9);
+        addAsset(new DatabaseAsset(name, options));
+
+    } //addDatabase
 
     public function addShader(name:String, ?options:AssetOptions):Void {
         
@@ -1260,6 +1329,15 @@ class Assets extends Entity {
 
     } //ensureSound
 
+    public function ensureDatabase(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:DatabaseAsset->Void):Void {
+
+        if (!name.startsWith('database:')) name = 'database:' + name;
+        ensure(cast name, options, function(asset) {
+            done(Std.is(asset, DatabaseAsset) ? cast asset : null);
+        });
+
+    } //ensureDatabase
+
     public function ensureShader(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ShaderAsset->Void):Void {
 
         if (!name.startsWith('shader:')) name = 'shader:' + name;
@@ -1308,7 +1386,7 @@ class Assets extends Entity {
 
         return asset.sound;
 
-    } //font
+    } //sound
 
     public function text(name:Either<String,AssetId<String>>):String {
 
@@ -1335,6 +1413,19 @@ class Assets extends Entity {
         return asset.shader;
 
     } //shader
+
+    public function database(name:Either<String,AssetId<String>>):Array<DynamicAccess<String>> {
+
+        var realName:String = cast name;
+        if (realName.startsWith('database:')) realName = realName.substr(9);
+        
+        if (!assetsByKindAndName.exists('database')) return null;
+        var asset:DatabaseAsset = cast assetsByKindAndName.get('database').get(realName);
+        if (asset == null) return null;
+
+        return asset.database;
+
+    } //database
 
 /// Iterator
 

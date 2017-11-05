@@ -60,6 +60,7 @@ class RuntimeAssets {
             case 'sound': app.backend.info.soundExtensions();
             case 'shader': app.backend.info.shaderExtensions();
             case 'font': ['fnt'];
+            case 'database': ['csv'];
             default: [];
         });
 

@@ -10,6 +10,7 @@ import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
 import ceramic.Screen;
+import ceramic.FieldInfo;
 import ceramic.Key;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
@@ -18,6 +19,8 @@ import editor.Message;
 import editor.Editable;
 
 import haxe.rtti.Meta;
+import haxe.rtti.Rtti;
+
 import haxe.Json;
 #if web
 import js.Browser.*;
@@ -145,6 +148,7 @@ class Editor extends Entity {
             var clazz = Type.resolveClass(classPath);
             var usedFields = new Map();
             var fields = [];
+            var rtti = Rtti.getRtti(clazz);
 
             editableTypes.push({
                 meta: Meta.getType(clazz),
@@ -156,41 +160,50 @@ class Editor extends Entity {
             while (clazz != null) {
 
                 var meta = Meta.getFields(clazz);
-                for (k in Reflect.fields(meta)) {
+                for (field in rtti.fields) {
+                    var k = field.name;
                     var v = Reflect.field(meta, k);
-                    if (Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+
+                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
                         usedFields.set(k, true);
 
                         var fieldMeta:Dynamic = {};
-                        var origMeta = Reflect.field(meta, k);
+                        var origMeta = v;
                         for (mk in Reflect.fields(origMeta)) {
                             Reflect.setField(fieldMeta, mk, Reflect.field(origMeta, mk));
                         }
 
-                        var fieldType = null;
-                        if (Reflect.hasField(v, 'type')) {
-                            fieldType = v.type[0];
-                            if (!basicTypes.exists(fieldType)) {
-                                var resolvedEnum = Type.resolveEnum(fieldType);
-                                if (resolvedEnum != null && fieldMeta.editable[0].options == null) {
-                                    var rawOptions = Type.getEnumConstructs(resolvedEnum);
-                                    var options = [];
-                                    for (item in rawOptions) {
-                                        options.push(item.toLowerCase());
-                                    }
-                                    fieldMeta.editable[0].options = options;
+                        var fieldType = FieldInfo.stringFromCType(field.type);
+
+                        var editable:Array<Dynamic> = fieldMeta.editable;
+                        if (editable == null) {
+                            fieldMeta.editable = [{}];
+                            editable = fieldMeta.editable;
+                        }
+                        else if (editable.length == 0) editable.push({});
+
+                        if (!basicTypes.exists(fieldType)) {
+                            var resolvedEnum = Type.resolveEnum(fieldType);
+                            if (resolvedEnum != null && editable[0].options == null) {
+                                var rawOptions = Type.getEnumConstructs(resolvedEnum);
+                                var options = [];
+                                for (item in rawOptions) {
+                                    options.push(item.toLowerCase());
                                 }
+                                editable[0].options = options;
                             }
                         }
 
                         fields.push({
                             name: k,
-                            meta: fieldMeta
+                            meta: fieldMeta,
+                            type: fieldType
                         });
                     }
                 }
 
                 clazz = Type.getSuperClass(clazz);
+                if (clazz != null) rtti = Rtti.getRtti(clazz);
 
             }
         }
@@ -502,6 +515,7 @@ class Editor extends Entity {
                             texts: runtimeAssets.getNames('text'),
                             sounds: runtimeAssets.getNames('sound'),
                             fonts: runtimeAssets.getNames('font'),
+                            databases: runtimeAssets.getNames('database'),
                             all: lists.all,
                             allDirs: lists.allDirs,
                             allByName: lists.allByName,
@@ -816,5 +830,7 @@ typedef EditableTypeField = {
     var name:String;
 
     var meta:Dynamic;
+
+    var type:String;
 
 } //EditableTypeField

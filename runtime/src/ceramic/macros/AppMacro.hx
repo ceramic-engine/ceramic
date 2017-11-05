@@ -57,7 +57,6 @@ class AppMacro {
                 }
             }
         }
-
         
         var expr = Context.makeExpr(data, Context.currentPos());
 

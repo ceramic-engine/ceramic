@@ -6,6 +6,7 @@ import ceramic.Fragment;
 import ceramic.Texture;
 import ceramic.BitmapFont;
 import ceramic.ConvertField;
+import ceramic.Collections;
 import ceramic.Shortcuts.*;
 import backend.Backend;
 
@@ -67,11 +68,18 @@ class App extends Entity {
     /** App level assets. Used to load default bitmap font. */
     public var assets(default,null):Assets = new Assets();
 
+    /** App level collections. */
+    public var collections(default,null):Collections = new Collections();
+
     /** Default font */
     public var defaultFont(get,null):BitmapFont;
     inline function get_defaultFont():BitmapFont {
         return assets.font(Fonts.ARIAL_20);
     }
+
+/// Field converters
+
+    public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
 
 /// Internal
 
@@ -113,6 +121,9 @@ class App extends Entity {
         // Init field converters
         initFieldConverters();
 
+        // Init collections
+        initCollections();
+
         // Load default font
         assets.add(Fonts.ARIAL_20);
         assets.onceComplete(this, function(success) {
@@ -131,10 +142,41 @@ class App extends Entity {
 
     function initFieldConverters():Void {
 
-        Entity.converters.set('ceramic.Texture', new ConvertTexture());
-        Entity.converters.set('ceramic.BitmapFont', new ConvertFont());
+        converters.set('ceramic.Texture', new ConvertTexture());
+        converters.set('ceramic.BitmapFont', new ConvertFont());
 
     } //initFieldConverters
+
+    function initCollections():Void {
+
+        var addedAssets = new Map<String,Bool>();
+        var numAdded = 0;
+
+        for (key in Reflect.fields(info.collections)) {
+            for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
+                var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
+                if (!Std.is(collectionInfo, String)) {
+                    var dataName = collectionInfo.data;
+                    if (dataName != null) {
+                        if (!addedAssets.exists(dataName)) {
+                            addedAssets.set(dataName, true);
+                            assets.addDatabase(dataName);
+                            numAdded++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (numAdded > 0) {
+            
+            assets.onceComplete(this, function(success) {
+                // TODO fill collections
+            });
+
+        }
+
+    } //initCollections
 
     function assetsLoaded():Void {
 

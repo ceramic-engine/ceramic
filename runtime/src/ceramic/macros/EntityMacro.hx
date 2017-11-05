@@ -121,8 +121,6 @@ class EntityMacro {
             else {
                 newFields.push(field);
             }
-
-            completeMeta(field);
         }
 
         for (field in newFields) {
@@ -189,65 +187,5 @@ class EntityMacro {
         return false;
 
     } //hasComponentMeta
-
-    static function completeMeta(field:Field):Void {
-
-        switch (field.kind) {
-            case FVar(type, expr), FProp(_, _, type, expr):
-                var resolvedType = null;
-                var flatResolvedType = null;
-                try {
-                    resolvedType = Context.resolveType(type, field.pos);
-                } catch (e:Dynamic) {}
-                if (resolvedType != null) {
-                    switch (resolvedType) {
-                        case TEnum(t, _):
-                            flatResolvedType = '' + t;
-                        case TInst(t, _):
-                            flatResolvedType = '' + t;
-                        case TType(t, _):
-                            flatResolvedType = '' + t;
-                        case TMono(t):
-                            flatResolvedType = '' + t;
-                        case TAbstract(t, _):
-                            flatResolvedType = '' + t;
-                        case TAnonymous(a):
-                            flatResolvedType = '' + a;
-                        default:
-                    }
-                }
-                switch (type) {
-                    case TPath(p):
-
-                        var fullType = p.pack.join('.') + (p.pack.length > 0 ? '.' : '') + p.name;
-                        if (flatResolvedType != null) fullType = flatResolvedType;
-
-                        if (field.meta != null && field.meta.length > 0) {
-
-                            for (meta in field.meta) {
-                                if (meta.name == 'editable') {
-
-                                    // Compute additional editable info from code
-                                    var options:Dynamic = meta.params.length > 0 ? meta.params[0].getValue() : {};
-                                    if (options.type == null) {
-                                        options.type = fullType;
-                                    }
-                                    meta.params[0] = Context.makeExpr(options, Context.currentPos());
-                                }
-                            }
-                        }
-
-                        field.meta.push({
-                            name: 'type',
-                            params: [Context.makeExpr(fullType, Context.currentPos())],
-                            pos: Context.currentPos()
-                        });
-
-                    default:
-                }
-            default:
-        }
-
-    } //completeMeta
 
 }

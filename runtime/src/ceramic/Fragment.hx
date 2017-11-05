@@ -165,9 +165,9 @@ class Fragment extends Quad {
         // Copy item properties
         if (item.props != null) {
             for (field in Reflect.fields(item.props)) {
-                var fieldType = Entity.typeOfEntityField(item.entity, field);
+                var fieldType = FieldInfo.typeOf(item.entity, field);
                 var value:Dynamic = Reflect.field(item.props, field);
-                var converter = fieldType != null ? Entity.converters.get(fieldType) : null;
+                var converter = fieldType != null ? app.converters.get(fieldType) : null;
                 if (converter != null) {
                     function(field) {
                         converter.basicToField(
@@ -208,7 +208,7 @@ class Fragment extends Quad {
         if (existing == null) {
 
             // If instance has an assets property, set it from our fragment context
-            if (Entity.typeOfEntityField(item.entity, 'assets') == 'ceramic.Assets') {
+            if (FieldInfo.typeOf(item.entity, 'assets') == 'ceramic.Assets') {
                 instance.setProperty('assets', context.assets);
             }
 
@@ -315,8 +315,8 @@ class Fragment extends Quad {
         var editableFields = Entity.editableFieldInfo(item.entity);
         var hasChanged = false;
         for (field in editableFields.keys()) {
-            var fieldType = Entity.typeOfEntityField(item.entity, field);
-            var converter = fieldType != null ? Entity.converters.get(fieldType) : null;
+            var fieldType = FieldInfo.typeOf(item.entity, field);
+            var converter = fieldType != null ? app.converters.get(fieldType) : null;
             var value:Dynamic = null;
             if (converter != null) {
                 value = converter.fieldToBasic(instance.getProperty(field));
@@ -326,7 +326,7 @@ class Fragment extends Quad {
                     case TEnum(e):
                         value = Std.string(value);
                         var fieldInfo = editableFields.get(field);
-                        if (fieldInfo.meta.editable[0].options != null) {
+                        if (fieldInfo.meta.editable != null && fieldInfo.meta.editable.length > 0 && fieldInfo.meta.editable[0].options != null) {
                             var opts:Array<String> = fieldInfo.meta.editable[0].options;
                             for (opt in opts) {
                                 if (value.toLowerCase() == opt.toLowerCase()) {

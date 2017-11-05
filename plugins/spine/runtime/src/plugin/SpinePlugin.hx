@@ -31,7 +31,7 @@ class SpinePlugin {
 
         App.oncePreInit(function() {
 
-            App.app.logger.log('Init spine plugin');
+            app.logger.log('Init spine plugin');
 
             // Generate spine asset ids
             var clazz = Type.resolveClass('plugin.Spines');
@@ -45,7 +45,7 @@ class SpinePlugin {
             Assets.addAssetKind('spine', addSpine, ['spine'], true);
 
             // Extend converters
-            Entity.converters.set('plugin.SpineData', new ConvertSpineData());
+            app.converters.set('plugin.SpineData', new ConvertSpineData());
 
         });
     }

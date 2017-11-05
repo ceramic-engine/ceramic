@@ -3,6 +3,7 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.io.Path;
+import haxe.Json;
 import sys.FileSystem;
 
 using StringTools;
@@ -12,6 +13,7 @@ class CollectionsMacro {
     macro static public function build():Array<Field> {
 
         var fields = Context.getBuildFields();
+        
         var data = ceramic.macros.AppMacro.getComputedInfo(Context.definedValue('app_info'));
         var pos = Context.currentPos();
         
@@ -20,7 +22,7 @@ class CollectionsMacro {
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(data.collections, key), collectionName);
                 var collectionClass:String;
                 if (Std.is(collectionInfo, String)) {
-                    collectionClass = collectionInfo
+                    collectionClass = collectionInfo;
                 } else if (collectionInfo.type != null) {
                     collectionClass = collectionInfo.type;
                 } else {
@@ -46,7 +48,7 @@ class CollectionsMacro {
                         pos: pos,
                         name: collectionName,
                         kind: FVar(fieldType, macro new Collection()),
-                        access: [AStatic, APublic],
+                        access: [APublic],
                         doc: 'Collection',
                         meta: []
                     });

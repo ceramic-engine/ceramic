@@ -29,6 +29,10 @@ class Shortcuts {
     public static var project(get,never):Project;
     inline static function get_project():Project { return App.app.project; }
 
+    /** Shared collections instance */
+    public static var collections(get,never):Collections;
+    inline static function get_collections():Collections { return App.app.collections; }
+
 #if editor
 
     /** Shared editor instance */

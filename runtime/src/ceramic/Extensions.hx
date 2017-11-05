@@ -29,6 +29,8 @@ class Extensions {
 #end
     } //unsafeSet
 
+/// Generic extensions
+
     inline public static function setProperty<T>(instance:T, field:String, value:Dynamic):Void {
 
         if (#if flash untyped (instance).hasOwnProperty ("set_" + field) #elseif js untyped (instance).__properties__ && untyped (instance).__properties__["set_" + field] #else false #end) {

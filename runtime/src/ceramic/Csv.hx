@@ -1,5 +1,6 @@
 package ceramic;
 
+import haxe.DynamicAccess;
 import ceramic.Shortcuts.*;
 
 using unifill.Unifill;
@@ -8,7 +9,7 @@ using StringTools;
 /** Utilities to parse CSV and related */
 class Csv {
 
-    public static function parse(csv:String):Array<Dynamic> {
+    public static function parse(csv:String):Array<DynamicAccess<String>> {
 
         // Cleanup
         csv = csv.replace("\r", '').trim();
