@@ -2,6 +2,7 @@ import { serialize, observe, action, compute, files, autorun, ceramic, keypath, 
 import Fragment from './Fragment';
 import FragmentItem from './FragmentItem';
 import UiState from './UiState';
+import CollectionEntry from './CollectionEntry';
 import * as fs from 'fs';
 import * as electron from 'electron';
 import * as os from 'os';
@@ -30,6 +31,24 @@ export interface EditableType {
     }>;
 
 } //EditableType
+
+export interface Collection {
+
+    meta:any;
+
+    name:string;
+
+    type:string;
+
+    data:Array<CollectionEntry>;
+
+    fields:Array<{
+        meta:any,
+        name:string,
+        type:string
+    }>;
+
+} //Collection
 
 export interface SyncWithGithubOptions {
 
@@ -280,9 +299,16 @@ class Project extends Model {
     /** Font assets */
     @observe fontAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
 
-/// Fragment item types
+    /** Database assets */
+    @observe databaseAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
+
+/// Editable fragment item types
 
     @observe editableTypes:Array<EditableType> = [];
+
+/// Collections
+
+    @observe collections:Array<Collection> = [];
 
 /// Raw files directory
 
@@ -399,6 +425,30 @@ class Project extends Model {
         return result;
 
     } //editableVisualsByKey
+
+    @compute get collectionsByName() {
+
+        let result:Map<string,Collection> = new Map();
+
+        for (let item of this.collections) {
+            result.set(item.name, item);
+        }
+
+        return result;
+
+    } //collectionsByName
+
+    @compute get collectionsByType() {
+
+        let result:Map<string,Collection> = new Map();
+
+        for (let item of this.collections) {
+            result.set(item.type, item);
+        }
+
+        return result;
+
+    } //collectionsByType
 
     @compute get cwd():string {
 
@@ -548,6 +598,7 @@ class Project extends Model {
                 this.textAssets = null;
                 this.soundAssets = null;
                 this.fontAssets = null;
+                this.databaseAssets = null;
                 this.allAssets = null;
                 this.allAssetDirs = null;
                 this.allAssetsByName = null;
@@ -560,6 +611,7 @@ class Project extends Model {
                 this.textAssets = [];
                 this.soundAssets = [];
                 this.fontAssets = [];
+                this.databaseAssets = [];
                 this.allAssets = [];
                 this.allAssetDirs = [];
                 this.allAssetsByName = new Map();
@@ -580,6 +632,7 @@ class Project extends Model {
                 this.textAssets = message.value.texts;
                 this.soundAssets = message.value.sounds;
                 this.fontAssets = message.value.fonts;
+                this.databaseAssets = message.value.databases;
 
                 this.allAssets = message.value.all;
                 this.allAssetDirs = message.value.allDirs;
@@ -611,7 +664,8 @@ class Project extends Model {
                     this.imageAssets,
                     this.textAssets,
                     this.soundAssets,
-                    this.fontAssets
+                    this.fontAssets,
+                    this.databaseAssets
                 ]) {
                     for (let entry of assetsGroup) {
                         for (let path of entry.paths) {
@@ -735,6 +789,13 @@ class Project extends Model {
 
             console.log(message);
             this.editableTypes = message.value;
+
+        });
+
+        ceramic.send({ type: 'collections/list' }, (message) => {
+
+            console.log(message);
+            this.collections = message.value;
 
         });
 

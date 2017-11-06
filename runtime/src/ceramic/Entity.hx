@@ -1,8 +1,5 @@
 package ceramic;
 
-import haxe.rtti.Meta;
-import haxe.rtti.Rtti;
-
 #if !macro
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
@@ -110,51 +107,5 @@ class Entity implements Events implements Lazy {
         }
 
     } //removeComponent
-
-/// Helpers
-
-    static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:Dynamic}>> = new Map();
-
-#if editor
-
-    public static function editableFieldInfo(entityClass:String):Map<String,{type:String, meta:Dynamic}> {
-
-        var info = editableFieldInfoMap.get(entityClass);
-
-        if (info == null) {
-            info = new Map();
-            editableFieldInfoMap.set(entityClass, info);
-
-            var clazz = Type.resolveClass(entityClass);
-            var usedFields = new Map();
-            var rtti = Rtti.getRtti(clazz);
-
-            while (clazz != null) {
-
-                var meta = Meta.getFields(clazz);
-                for (field in rtti.fields) {
-                    var k = field.name;
-                    var v = Reflect.field(meta, k);
-                    var fieldType = FieldInfo.stringFromCType(field.type);
-                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
-                        usedFields.set(k, true);
-                        info.set(k, {
-                            type: fieldType,
-                            meta: v
-                        });
-                    }
-                }
-
-                clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Rtti.getRtti(clazz);
-
-            }
-        }
-
-        return info;
-
-    } //editableFieldTypes
-
-#end
 
 } //Entity

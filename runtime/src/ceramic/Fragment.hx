@@ -312,7 +312,7 @@ class Fragment extends Quad {
         }
 
         // Compute missing data (if any)
-        var editableFields = Entity.editableFieldInfo(item.entity);
+        var editableFields = FieldInfo.editableFieldInfo(item.entity);
         var hasChanged = false;
         for (field in editableFields.keys()) {
             var fieldType = FieldInfo.typeOf(item.entity, field);
@@ -326,8 +326,9 @@ class Fragment extends Quad {
                     case TEnum(e):
                         value = Std.string(value);
                         var fieldInfo = editableFields.get(field);
-                        if (fieldInfo.meta.editable != null && fieldInfo.meta.editable.length > 0 && fieldInfo.meta.editable[0].options != null) {
-                            var opts:Array<String> = fieldInfo.meta.editable[0].options;
+                        var metaEditable = fieldInfo.meta.get('editable');
+                        if (metaEditable != null && metaEditable.length > 0 && metaEditable[0].options != null) {
+                            var opts:Array<String> = metaEditable[0].options;
                             for (opt in opts) {
                                 if (value.toLowerCase() == opt.toLowerCase()) {
                                     value = opt;

@@ -1,7 +1,7 @@
 import { serialize, observe, compute, Model } from 'utils';
 import { project } from './index';
 import { context } from '../context';
-import { Fragment, VisualItem, QuadItem, FragmentItem, TextItem } from './index';
+import { Fragment, VisualItem, FragmentItem } from './index';
 
 class UiState extends Model {
 
@@ -87,7 +87,7 @@ class UiState extends Model {
 
     } //selectedFragment
 
-    @compute get selectedItem():VisualItem|QuadItem|FragmentItem {
+    @compute get selectedItem():VisualItem|FragmentItem {
 
         if (!this.selectedFragment) return null;
 
@@ -110,26 +110,6 @@ class UiState extends Model {
         return null;
 
     } //selectedVisual
-
-    @compute get selectedQuad():QuadItem {
-
-        if (this.selectedItem != null && this.selectedItem instanceof QuadItem) {
-            return this.selectedItem;
-        }
-
-        return null;
-
-    } //selectedQuad
-
-    @compute get selectedText():TextItem {
-
-        if (this.selectedItem != null && this.selectedItem instanceof TextItem) {
-            return this.selectedItem;
-        }
-
-        return null;
-
-    } //selectedText
 
 /// Lifecycle
 

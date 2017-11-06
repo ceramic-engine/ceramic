@@ -92,6 +92,21 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                <Title>Databases</Title>
+                                <Alt>
+                                    {project.databaseAssets.map((val, i) =>
+                                        <div
+                                            key={i}
+                                            className={
+                                                'entry in-alt'
+                                                + (i < project.databaseAssets.length - 1 ? ' with-separator' : '')
+                                            }
+                                        >
+                                            <div className="name">{val.name}</div>
+                                            <div className="info">{val.paths.join(', ')}</div>
+                                        </div>
+                                    )}
+                                </Alt>
                                 <Form>
                                     <Field>
                                         <Button

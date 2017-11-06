@@ -37,12 +37,6 @@ class MacroCache {
             }
 
             try {
-
-                /*var json:Dynamic = {};
-                for (key in entries.keys()) {
-                    Reflect.setField(json, key, entries.get(key));
-                }
-                File.saveContent(cacheFilePath, Json.stringify(json));*/
                 var serializer = new Serializer();
                 serializer.serialize(entries);
                 File.saveContent(cacheFilePath, serializer.toString());

@@ -3,7 +3,7 @@ import { observer, autobind, ceramic } from 'utils';
 import { Button, Inline } from 'components';
 import Overlay from './Overlay';
 import Dialog from './Dialog';
-import { project, VisualItem, QuadItem, TextItem } from 'app/model';
+import { project, VisualItem } from 'app/model';
 
 @observer class OnlineBroken extends React.Component {
 

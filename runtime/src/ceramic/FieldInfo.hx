@@ -3,20 +3,21 @@ package ceramic;
 import haxe.rtti.Meta;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
+import haxe.DynamicAccess;
 
 class FieldInfo {
 
     static var fieldInfoMap:Map<String,Map<String,String>> = new Map();
 
-    public static function types(entityClass:String):Map<String,String> {
+    public static function types(targetClass:String):Map<String,String> {
 
-        var info = fieldInfoMap.get(entityClass);
+        var info = fieldInfoMap.get(targetClass);
 
         if (info == null) {
             info = new Map();
-            fieldInfoMap.set(entityClass, info);
+            fieldInfoMap.set(targetClass, info);
 
-            var clazz = Type.resolveClass(entityClass);
+            var clazz = Type.resolveClass(targetClass);
             var usedFields = new Map();
             var rtti = Rtti.getRtti(clazz);
 
@@ -42,9 +43,9 @@ class FieldInfo {
 
     } //types
 
-    public static function typeOf(entityClass:String, field:String):String {
+    public static function typeOf(targetClass:String, field:String):String {
 
-        return types(entityClass).get(field);
+        return types(targetClass).get(field);
 
     } //typeOf
 
@@ -74,5 +75,49 @@ class FieldInfo {
         return result;
 
     } //stringFromCType
+
+#if editor
+
+    static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:DynamicAccess<Dynamic>}>> = new Map();
+
+    public static function editableFieldInfo(targetClass:String):Map<String,{type:String, meta:DynamicAccess<Dynamic>}> {
+
+        var info = editableFieldInfoMap.get(targetClass);
+
+        if (info == null) {
+            info = new Map();
+            editableFieldInfoMap.set(targetClass, info);
+
+            var clazz = Type.resolveClass(targetClass);
+            var usedFields = new Map();
+            var rtti = Rtti.getRtti(clazz);
+
+            while (clazz != null) {
+
+                var meta = Meta.getFields(clazz);
+                for (field in rtti.fields) {
+                    var k = field.name;
+                    var v = Reflect.field(meta, k);
+                    var fieldType = FieldInfo.stringFromCType(field.type);
+                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+                        usedFields.set(k, true);
+                        info.set(k, {
+                            type: fieldType,
+                            meta: v
+                        });
+                    }
+                }
+
+                clazz = Type.getSuperClass(clazz);
+                if (clazz != null) rtti = Rtti.getRtti(clazz);
+
+            }
+        }
+
+        return info;
+
+    } //editableFieldTypes
+
+#end
 
 } //FieldInfo

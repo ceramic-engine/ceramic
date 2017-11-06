@@ -152,6 +152,8 @@ class App extends Entity {
         var addedAssets = new Map<String,Bool>();
         var numAdded = 0;
 
+        // Compute databases to load
+        //
         for (key in Reflect.fields(info.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
@@ -171,7 +173,31 @@ class App extends Entity {
         if (numAdded > 0) {
             
             assets.onceComplete(this, function(success) {
-                // TODO fill collections
+
+                // Fill collections with loaded data
+                //
+                for (key in Reflect.fields(info.collections)) {
+                    for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
+                        var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
+                        if (!Std.is(collectionInfo, String)) {
+                            var dataName = collectionInfo.data;
+                            if (dataName != null) {
+                                
+                                var data = assets.database(dataName);
+                                var collection:Collection<CollectionEntry> = Reflect.field(collections, collectionName);
+                                var entryClass = Type.resolveClass(collectionInfo.type);
+
+                                for (item in data) {
+                                    var instance:CollectionEntry = Type.createInstance(entryClass, []);
+                                    instance.setRawData(item);
+                                    collection.push(instance);
+                                }
+
+                            }
+                        }
+                    }
+                }
+
             });
 
         }

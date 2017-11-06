@@ -11,10 +11,6 @@ import FragmentItem from './FragmentItem';
 registerModel(FragmentItem);
 import VisualItem from './VisualItem';
 registerModel(VisualItem);
-import QuadItem from './QuadItem';
-registerModel(QuadItem);
-import TextItem from './TextItem';
-registerModel(TextItem);
 import UiState from './UiState';
 registerModel(UiState);
 
@@ -24,9 +20,8 @@ export { default as User } from './User';
 export { default as Fragment } from './Fragment';
 export { default as FragmentItem } from './FragmentItem';
 export { default as VisualItem } from './VisualItem';
-export { default as QuadItem } from './QuadItem';
-export { default as TextItem } from './TextItem';
 export { default as UiState } from './UiState';
+export { default as CollectionEntry } from './CollectionEntry';
 
 // Load db (if anything to load)
 db.load();

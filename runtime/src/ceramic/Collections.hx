@@ -1,6 +1,9 @@
 package ceramic;
 
+import haxe.DynamicAccess;
 import haxe.rtti.Meta;
+
+using ceramic.Extensions;
 
 @:build(ceramic.macros.CollectionsMacro.build())
 class Collections {
@@ -18,10 +21,13 @@ abstract Collection<T:CollectionEntry>(Array<T>) from Array<T> to Array<T> {
 
 } //Collection
 
+@:rtti
 class CollectionEntry {
 
+    @editable
     public var id:String;
 
+    @editable
     public var name:String;
 
     /** Set entry fields from given raw data.
@@ -95,6 +101,37 @@ class CollectionEntry {
             }
         }
 
-    } //setToRaw
+    } //setRawData
+
+#if editor
+
+    public function getEditableData():{id:String, name:String, props:DynamicAccess<Dynamic>} {
+
+        var clazz = Type.getClass(this);
+        var classPath = Type.getClassName(clazz);
+        var info = FieldInfo.editableFieldInfo(classPath);
+
+        var result:DynamicAccess<Dynamic> = {};
+        var props:DynamicAccess<Dynamic> = {};
+
+        for (key in info.keys()) {
+            var field = info.get(key);
+
+            if (field.meta.exists('editable')) {
+                if (key == 'id' || key == 'name') {
+                    result.set(key, this.getProperty(key));
+                } else {
+                    props.set(key, this.getProperty(key));
+                }
+            }
+        }
+
+        result.set('props', props);
+
+        return cast result;
+
+    } //getEditableData
+
+#end
 
 } //CollectionEntry

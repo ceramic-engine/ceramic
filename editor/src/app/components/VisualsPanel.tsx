@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer, arrayMove } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
 import { FragmentItemField } from 'app/components';
-import { project, VisualItem, QuadItem } from 'app/model';
+import { project, VisualItem } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
 @observer class VisualsPanel extends React.Component {
@@ -20,48 +20,6 @@ import FaLock from 'react-icons/lib/fa/lock';
 
         // Typed `selected`
         let selectedVisual = project.ui.selectedVisual;
-        let selectedQuad = project.ui.selectedQuad;
-        let selectedText = project.ui.selectedText;
-
-        // Textures list
-        let texturesList = ['none'];
-        let quadTextureIndex = 0;
-        let n = 1;
-        if (selectedQuad != null && project.imageAssets != null) {
-            for (let asset of project.imageAssets) {
-                texturesList.push(asset.name);
-                if (selectedQuad != null && asset.name === selectedQuad.texture) {
-                    quadTextureIndex = n;
-                }
-                n++;
-            }
-        }
-
-        // Text align
-        var textAlignList = VisualsPanel.textAlignList;
-        let textAlignIndex = 0;
-        if (selectedText != null) {
-            textAlignIndex = Math.max(0, textAlignList.indexOf(selectedText.align));
-        }
-
-        // Fonts list
-
-        // Fonts list
-        let fontsList = ['default'];
-        let textFontIndex = 0;
-        n = 1;
-        if (selectedText != null && project.fontAssets != null) {
-            for (let asset of project.fontAssets) {
-                fontsList.push(asset.name);
-                if (selectedText != null && asset.name === selectedText.font) {
-                    textFontIndex = n;
-                }
-                n++;
-            }
-        }
-
-        // Explicit sizes?
-        let allowExplicitSizes = (selectedQuad != null && quadTextureIndex === 0);
 
         return (
             <Panel>
@@ -135,125 +93,6 @@ import FaLock from 'react-icons/lib/fa/lock';
                             <Title>Selected {this.simpleName(selectedVisual.entity, true)}</Title>
                             <Alt>
                                 <div style={{ height: this.props.height * 0.7 - 24 * 2 - 4, overflowY: 'auto' }}>
-                                {/*<Form>
-                                    {
-                                        selectedQuad != null ?
-                                        <div className="visual-extra-options">
-                                            <Field label="Texture">
-                                                <SelectInput
-                                                    empty={0}
-                                                    selected={quadTextureIndex}
-                                                    options={texturesList}
-                                                    onChange={(selected) => {
-                                                        selectedQuad.texture = selected === 0 ? null : texturesList[selected];
-                                                    }}
-                                                />
-                                            </Field>
-                                            <Field label="Color">
-                                                <ColorInput value={selectedQuad.hexColor} onChange={(val) => { selectedQuad.setHexColor(val); }} />
-                                            </Field>
-                                        </div>
-                                        :
-                                            null
-                                    }
-                                    {
-                                        selectedText != null ?
-                                        <div className="visual-extra-options">
-                                            <Field label="Content">
-                                                <TextInput multiline={true} value={selectedText.content} onChange={(val:string) => { selectedText.content = val; }} />
-                                            </Field>
-                                            <Field label="Align">
-                                                <SelectInput
-                                                    selected={textAlignIndex}
-                                                    options={textAlignList}
-                                                    onChange={(selected) => {
-                                                        selectedText.align = textAlignList[selected] as any;
-                                                    }}
-                                                />
-                                            </Field>
-                                            <Field label="Point Size">
-                                                <NumberInput value={selectedText.pointSize} onChange={(val) => { selectedText.pointSize = val; }} />
-                                            </Field>
-                                            <Field label="Line Height">
-                                                <NumberInput value={selectedText.lineHeight} onChange={(val) => { selectedText.lineHeight = val; }} />
-                                            </Field>
-                                            <Field label="Letter Spacing">
-                                                <NumberInput value={selectedText.letterSpacing} onChange={(val) => { selectedText.letterSpacing = val; }} />
-                                            </Field>
-                                            <Field label="Font">
-                                                <SelectInput
-                                                    empty={0}
-                                                    selected={textFontIndex}
-                                                    options={fontsList}
-                                                    onChange={(selected) => {
-                                                        selectedText.font = selected === 0 ? null : fontsList[selected];
-                                                    }}
-                                                />
-                                            </Field>
-                                            <Field label="Color">
-                                                <ColorInput value={selectedText.hexColor} onChange={(val) => { selectedText.setHexColor(val); }} />
-                                            </Field>
-                                        </div>
-                                        :
-                                            null
-                                    }
-                                    <Field label="Name">
-                                        <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />
-                                    </Field>
-                                    {
-                                        allowExplicitSizes ?
-                                        <div>
-                                            <Field label="Width">
-                                                <NumberInput disabled={false} value={selectedVisual['explicitWidth']} onChange={(val) => { selectedVisual['explicitWidth'] = val; }} />
-                                            </Field>
-                                            <Field label="Height">
-                                                <NumberInput disabled={false} value={selectedVisual['explicitHeight']} onChange={(val) => { selectedVisual['explicitHeight'] = val; }} />
-                                            </Field>
-                                        </div>
-                                        :
-                                        <div>
-                                            <Field label="Width">
-                                                <NumberInput disabled={true} value={selectedVisual.width} />
-                                            </Field>
-                                            <Field label="Height">
-                                                <NumberInput disabled={true} value={selectedVisual.height} />
-                                            </Field>
-                                        </div>
-                                    }
-                                    <Field label="Scale X">
-                                        <NumberInput value={selectedVisual.scaleX} onChange={(val) => { selectedVisual.scaleX = val; }} />
-                                    </Field>
-                                    <Field label="Scale Y">
-                                        <NumberInput value={selectedVisual.scaleY} onChange={(val) => { selectedVisual.scaleY = val; }} />
-                                    </Field>
-                                    <Field label="X">
-                                        <NumberInput value={selectedVisual.x} onChange={(val) => { selectedVisual.x = val; }} />
-                                    </Field>
-                                    <Field label="Y">
-                                        <NumberInput value={selectedVisual.y} onChange={(val) => { selectedVisual.y = val; }} />
-                                    </Field>
-                                    <Field label="Anchor X">
-                                        <NumberInput value={selectedVisual.anchorX} onChange={(val) => { selectedVisual.anchorX = val; }} />
-                                    </Field>
-                                    <Field label="Anchor Y">
-                                        <NumberInput value={selectedVisual.anchorY} onChange={(val) => { selectedVisual.anchorY = val; }} />
-                                    </Field>
-                                    <Field label="Rotation">
-                                        <NumberInput value={selectedVisual.rotation} onChange={(val) => { selectedVisual.rotation = val; }} />
-                                    </Field>
-                                    <Field label="Skew X">
-                                        <NumberInput value={selectedVisual.skewX} onChange={(val) => { selectedVisual.skewX = val; }} />
-                                    </Field>
-                                    <Field label="Skew Y">
-                                        <NumberInput value={selectedVisual.skewY} onChange={(val) => { selectedVisual.skewY = val; }} />
-                                    </Field>
-                                    <Field label="Depth">
-                                        <NumberInput value={selectedVisual.depth} onChange={(val) => { selectedVisual.depth = val; }} />
-                                    </Field>
-                                    <Field label="Alpha">
-                                        <NumberInput value={selectedVisual.alpha} onChange={(val) => { selectedVisual.alpha = val; }} />
-                                    </Field>
-                                </Form>*/}
                                 <Form>
                                     <Field label="name">
                                         <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />

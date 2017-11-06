@@ -3,7 +3,7 @@ import { observer, autobind, ceramic, fields } from 'utils';
 import { Button, Inline } from 'components';
 import Overlay from './Overlay';
 import Dialog from './Dialog';
-import { project, VisualItem, QuadItem, TextItem } from 'app/model';
+import { project, VisualItem } from 'app/model';
 import { EditableType } from 'app/model/Project';
 
 @observer class AddVisual extends React.Component {

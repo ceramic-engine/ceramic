@@ -1,8 +1,6 @@
 import { serialize, observe, compute, serializeModel, stableSort, Model } from 'utils';
 import FragmentItem from './FragmentItem';
 import VisualItem from './VisualItem';
-import QuadItem from './QuadItem';
-import TextItem from './TextItem';
 import { project } from './index';
 
 class Fragment extends Model {
@@ -25,13 +23,13 @@ class Fragment extends Model {
     @observe @serialize height:number = 600;
 
     /** Fragment items */
-    @observe @serialize(FragmentItem) items:Array<FragmentItem|VisualItem|QuadItem|TextItem> = [];
+    @observe @serialize(FragmentItem) items:Array<FragmentItem|VisualItem> = [];
 
 /// Computed
 
     @compute get itemsById() {
         
-        let byName:Map<string, FragmentItem|VisualItem|QuadItem|TextItem> = new Map();
+        let byName:Map<string, FragmentItem|VisualItem> = new Map();
 
         for (let item of this.items) {
             byName.set(item.id, item);
@@ -43,7 +41,7 @@ class Fragment extends Model {
 
     @compute get visualItems() {
         
-        let result:Array<VisualItem|QuadItem|TextItem> = [];
+        let result:Array<VisualItem> = [];
 
         for (let item of this.items) {
             if (item instanceof VisualItem) {
@@ -55,37 +53,9 @@ class Fragment extends Model {
 
     } //visualItems
 
-    @compute get quadItems() {
-        
-        let result:Array<QuadItem> = [];
-
-        for (let item of this.items) {
-            if (item instanceof QuadItem) {
-                result.push(item);
-            }
-        }
-
-        return result;
-
-    } //quadItems
-
-    @compute get textItems() {
-        
-        let result:Array<TextItem> = [];
-
-        for (let item of this.items) {
-            if (item instanceof TextItem) {
-                result.push(item);
-            }
-        }
-
-        return result;
-
-    } //textItems
-
     @compute get visualItemsSorted() {
         
-        let result:Array<VisualItem|QuadItem|TextItem> = [];
+        let result:Array<VisualItem> = [];
 
         for (let item of this.visualItems) {
             result.push(item);

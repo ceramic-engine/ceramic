@@ -34,8 +34,32 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
             let type = field.type;
             if (options == null) options = {};
             if (options.collection != null) {
-                console.warn('Failed to create form field for property ' + fieldName + ' because collections are not supported yet.');
-                return null;
+                let collectionOptions:Array<string> = [];
+                let collection = project.collectionsByName.get(options.collection);
+                if (collection == null) {
+                    console.warn('No collection found with name: ' + options.collection);
+                    return null;
+                }
+                let selectedIndex = -1;
+                let index = 0;
+                for (let entry of collection.data) {
+                    collectionOptions.push(entry.name);
+                    if (selectedIndex === -1 && entry.name === item.props.get(field.name)) selectedIndex = index;
+                    index++;
+                }
+                if (selectedIndex === -1) selectedIndex = 0;
+                return (
+                    <Field label={this.toFieldName(field.name)}>
+                        <SelectInput
+                            empty={options.empty}
+                            selected={selectedIndex}
+                            options={collectionOptions}
+                            onChange={(selected) => {
+                                item.props.set(field.name, collectionOptions[selected]);
+                            }}
+                        />
+                    </Field>
+                );
             }
             else if (options.options != null) {
                 let selectedIndex = Math.max(0, options.options.indexOf(item.props.get(field.name)));

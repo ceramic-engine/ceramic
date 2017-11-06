@@ -6,6 +6,7 @@ import ceramic.Fragment;
 import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Text;
+import ceramic.Collections;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
@@ -81,6 +82,8 @@ class Editor extends Entity {
 
     var editableTypes:Array<EditableType> = [];
 
+    var collectionsInfo:Array<CollectionInfo> = [];
+
 /// Internal
 
     static var basicTypes:Map<String,Bool> = [
@@ -142,7 +145,7 @@ class Editor extends Entity {
         //Luxe.core.update_rate = 0.1;
         Luxe.core.auto_render = false;
 
-        // Compute editables
+        // Compute editable types
         for (key in Reflect.fields(app.info.editable)) {
             var classPath = Reflect.field(app.info.editable, key);
             var clazz = Type.resolveClass(classPath);
@@ -156,6 +159,88 @@ class Editor extends Entity {
                 fields: fields,
                 isVisual: true // TODO handle non-visuals
             });
+
+            while (clazz != null) {
+
+                var meta = Meta.getFields(clazz);
+                for (field in rtti.fields) {
+                    var k = field.name;
+                    var v = Reflect.field(meta, k);
+
+                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
+                        usedFields.set(k, true);
+
+                        var fieldMeta:Dynamic = {};
+                        var origMeta = v;
+                        for (mk in Reflect.fields(origMeta)) {
+                            Reflect.setField(fieldMeta, mk, Reflect.field(origMeta, mk));
+                        }
+
+                        var fieldType = FieldInfo.stringFromCType(field.type);
+
+                        var editable:Array<Dynamic> = fieldMeta.editable;
+                        if (editable == null) {
+                            fieldMeta.editable = [{}];
+                            editable = fieldMeta.editable;
+                        }
+                        else if (editable.length == 0) editable.push({});
+
+                        if (!basicTypes.exists(fieldType)) {
+                            var resolvedEnum = Type.resolveEnum(fieldType);
+                            if (resolvedEnum != null && editable[0].options == null) {
+                                var rawOptions = Type.getEnumConstructs(resolvedEnum);
+                                var options = [];
+                                for (item in rawOptions) {
+                                    options.push(item.toLowerCase());
+                                }
+                                editable[0].options = options;
+                            }
+                        }
+
+                        fields.push({
+                            name: k,
+                            meta: fieldMeta,
+                            type: fieldType
+                        });
+                    }
+                }
+
+                clazz = Type.getSuperClass(clazz);
+                if (clazz != null) rtti = Rtti.getRtti(clazz);
+
+            }
+        }
+
+        // Compute collection types
+        for (key in Reflect.fields(app.info.collections)) {
+            var collectionName = '';
+            for (k in Reflect.fields(Reflect.field(app.info.collections, key))) {
+                collectionName = k;
+                break;
+            }
+            var info:{data:String, type:String} = Reflect.field(Reflect.field(app.info.collections, key), collectionName);
+            var classPath = info.type;
+            var clazz = Type.resolveClass(classPath);
+            var usedFields = new Map();
+            var fields = [];
+            var collectionData = [];
+            var rtti = Rtti.getRtti(clazz);
+
+            collectionsInfo.push({
+                meta: Meta.getType(clazz),
+                name: collectionName,
+                type: classPath,
+                data: collectionData,
+                fields: fields
+            });
+
+            // Fill data
+            var collection:Collection<CollectionEntry> = Reflect.field(collections, collectionName);
+            if (collection != null) {
+                for (entry in collection) {
+                    collectionData.push(entry.getEditableData());
+                }
+            }
 
             while (clazz != null) {
 
@@ -531,6 +616,14 @@ class Editor extends Entity {
                         value: editableTypes
                     });
                 }
+            
+            case 'collections':
+                if (action == 'list') {
+                    send({
+                        type: 'collections/list',
+                        value: collectionsInfo
+                    });
+                }
 
             case 'fragment':
                 if (fragment != null && value.id != fragment.id) {
@@ -834,3 +927,37 @@ typedef EditableTypeField = {
     var type:String;
 
 } //EditableTypeField
+
+typedef CollectionInfo = {
+
+    var meta:Dynamic;
+
+    var name:String;
+
+    var type:String;
+
+    var data:Array<CollectionEntryData>;
+
+    var fields:Array<CollectionEntryField>;
+
+} //CollectionInfo
+
+typedef CollectionEntryField = {
+
+    var name:String;
+
+    var meta:Dynamic;
+
+    var type:String;
+
+} //CollectionEntryField
+
+typedef CollectionEntryData = {
+
+    var name:String;
+
+    var id:String;
+
+    var props:Dynamic;
+
+} //CollectionEntryData
