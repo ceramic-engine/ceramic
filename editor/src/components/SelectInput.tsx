@@ -31,6 +31,7 @@ class SelectInput extends React.Component {
                 <select
                     value={this.props.selected}
                     className={'input input-select'}
+                    onKeyDown={this.handleKeyDown}
                     onChange={this.handleChange}
                     onFocus={this.handleFocus}
                     onBlur={this.handleBlur}
@@ -72,6 +73,32 @@ class SelectInput extends React.Component {
         }
 
     } //handleBlur
+
+    @autobind handleKeyDown(e:any) {
+
+        var moveBy = 0;
+        if (e.keyCode === 40) { // Arrow down
+            e.preventDefault();
+            moveBy = 1;
+        }
+        else if (e.keyCode === 38) { // Arrow up
+            e.preventDefault();
+            moveBy = -1;
+        }
+
+        if ((moveBy === -1 && this.props.selected > 0 ) || (moveBy === 1 && this.props.selected < this.props.options.length - 1)) {
+
+            let input = this.inputElement;
+
+            input.selectedIndex += moveBy;
+
+            this.handleChange({
+                target: input
+            });
+
+        }
+
+    } //handleKeyDown
 
 /// Clipboard
 
