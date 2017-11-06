@@ -35,6 +35,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
             if (options == null) options = {};
             if (options.collection != null) {
                 let collectionOptions:Array<string> = [];
+                let collectionOptionIds:Array<string> = [];
                 let collection = project.collectionsByName.get(options.collection);
                 if (collection == null) {
                     console.warn('No collection found with name: ' + options.collection);
@@ -44,7 +45,8 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                 let index = 0;
                 for (let entry of collection.data) {
                     collectionOptions.push(entry.name);
-                    if (selectedIndex === -1 && entry.name === item.props.get(field.name)) selectedIndex = index;
+                    collectionOptionIds.push(entry.id);
+                    if (selectedIndex === -1 && entry.id === item.props.get(field.name)) selectedIndex = index;
                     index++;
                 }
                 if (selectedIndex === -1) selectedIndex = 0;
@@ -55,7 +57,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                             selected={selectedIndex}
                             options={collectionOptions}
                             onChange={(selected) => {
-                                item.props.set(field.name, collectionOptions[selected]);
+                                item.props.set(field.name, collectionOptionIds[selected]);
                             }}
                         />
                     </Field>
