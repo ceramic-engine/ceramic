@@ -140,6 +140,15 @@ class Csv {
             }
         }
 
+        key = keys[keyIndex++];
+        if (key != null && val != '') {
+            Reflect.setField(entry, key, val);
+            entryHasFields = true;
+        } else if (tooManyColumnsAt == -1) {
+            tooManyColumnsAt = result.length;
+        }
+        val = '';
+
         if (entryHasFields) {
             result.push(entry);
         }
