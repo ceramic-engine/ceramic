@@ -511,7 +511,7 @@ class Editor extends Entity {
         outsideRightClick.size(outsideRight.width, outsideRight.height);
 
         // Update density
-        settings.targetDensity = Math.ceil(screen.density * fragment.scaleX);
+        settings.targetDensity = 2; //Math.ceil(screen.density * fragment.scaleX);
 
     } //fitFragment
 
