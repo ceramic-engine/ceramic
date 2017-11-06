@@ -382,6 +382,7 @@ class Visual extends Entity {
         
         app.visuals.remove(this);
 
+        if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
 
         clear();
@@ -391,7 +392,7 @@ class Visual extends Entity {
     public function clear() {
 
         if (children != null) {
-            for (child in children) {
+            for (child in [].concat(children)) {
                 child.destroy();
             }
             children = null;
