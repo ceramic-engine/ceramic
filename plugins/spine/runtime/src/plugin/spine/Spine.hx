@@ -148,6 +148,9 @@ class Spine extends Visual {
         return paused;
     }
 
+    /** Reset at change */
+    public var resetAtChange:Bool = true;
+
 /// Properties (internal)
 
     var resetSkeleton:Bool = false;
@@ -179,7 +182,7 @@ class Spine extends Visual {
         listener.onStart = function(track) {
 
             // Reset skeleton at the start of each animation, before next update
-            reset();
+            if (resetAtChange) reset();
 
         };
 
@@ -209,7 +212,19 @@ class Spine extends Visual {
     public function animate(animationName:String, loop:Bool = false):Void {
         if (destroyed) return;
 
-        state.setAnimationByName(0, animationName, loop);
+        var track;
+
+        if (animationName == null) {
+            track = state.setEmptyAnimation(0, 0);
+        } else {
+            track = state.setAnimationByName(0, animationName, loop);
+        }
+
+        // If we are paused, ensure new anim gets rendered once
+        if (paused) {
+            update(0.1);
+            track.trackTime = 0;
+        }
 
     } //animate
 
@@ -340,6 +355,12 @@ class Spine extends Visual {
             emptySlotMesh = true;
             if (slot.attachment != null)
             {
+                if (boundChildSlots != null) {
+                    boundSlot = boundChildSlots.get(slotName);
+                } else {
+                    boundSlot = null;
+                }
+
                 if (Std.is(slot.attachment, RegionAttachment))
                 {
                     regionAttachment = cast slot.attachment;
@@ -371,7 +392,7 @@ class Spine extends Visual {
 
                     emitUpdateSlot(slotInfo);
 
-                    if (slotInfo.drawDefault) {
+                    if (slotInfo.drawDefault && (boundSlot == null || boundSlot.parentVisible)) {
 
                         r = skeleton.color.r * slot.color.r * regionAttachment.getColor().r;
                         g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
@@ -414,58 +435,46 @@ class Spine extends Visual {
                         flipRegion = regionAttachment.getScaleX() * regionAttachment.getScaleY() < 0;
                         flipBone = bone.scaleX * bone.scaleY < 0;
 
-                        /*if (flipRegion && !flipBone) {
-                            //quad.transform.rotate((180 + regionAttachment.getRotation()) * _degRad);
-                            quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
-                        } else {*/
-                            quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
-                        //}
-
-                        //slotInfo.transform.rotate(-regionAttachment.getRotation() * _degRad);
+                        quad.transform.rotate(-regionAttachment.getRotation() * _degRad);
 
                         quad.transform.concat(_matrix);
 
-                        if (boundChildSlots != null) {
-                            boundSlot = boundChildSlots.get(slotName);
-                            if (boundSlot != null) {
+                        if (boundSlot != null) {
 
-                                /*if (id == 'MAKEUP') {
-                                    trace('slot='+slotName+' flipRegion='+flipRegion+' regionRotation='+regionAttachment.getRotation()+' region.scaleX='+regionAttachment.getScaleX()+' region.scaleY='+regionAttachment.getScaleY()+' bone.scaleX='+bone.scaleX+' bone.scaleY='+bone.scaleY);
-                                }*/
+                            quad.transform.translate(-slotInfo.transform.tx, -slotInfo.transform.ty);
 
-                                quad.transform.translate(-slotInfo.transform.tx, -slotInfo.transform.ty);
+                            quad.transform.translate(
+                                -(offsetX * bone.a + offsetY * bone.b),
+                                (offsetX * bone.c + offsetY * bone.d)
+                            );
 
-                                quad.transform.translate(
-                                    -(offsetX * bone.a + offsetY * bone.b),
-                                    (offsetX * bone.c + offsetY * bone.d)
-                                );
+                            quad.transform.scale(
+                                bone.scaleX < 0 ? -1 : 1,
+                                bone.scaleY < 0 ? -1 : 1
+                            );
+                            
+                            quad.transform.translate(
+                                bone.scaleX < 0 ? -(offsetX * bone.a + offsetY * bone.b) : (offsetX * bone.a + offsetY * bone.b),
+                                bone.scaleY < 0 ? (offsetX * bone.c + offsetY * bone.d) : -(offsetX * bone.c + offsetY * bone.d)
+                            );
 
-                                quad.transform.scale(
-                                    bone.scaleX < 0 ? -1 : 1,
-                                    bone.scaleY < 0 ? -1 : 1
-                                );
-                                
-                                quad.transform.translate(
-                                    bone.scaleX < 0 ? -(offsetX * bone.a + offsetY * bone.b) : (offsetX * bone.a + offsetY * bone.b),
-                                    bone.scaleY < 0 ? (offsetX * bone.c + offsetY * bone.d) : -(offsetX * bone.c + offsetY * bone.d)
-                                );
-
-                                if (slotInfo.customTransform != null) {
-                                    quad.transform.concat(slotInfo.customTransform);
-                                }
-
-                                quad.transform.concat(boundSlot.parentTransform);
-
-                                quad.depth = boundSlot.parentDepth + microDepth;
-                                microDepth += 0.0001;
+                            if (slotInfo.customTransform != null) {
+                                quad.transform.concat(slotInfo.customTransform);
                             }
-                        }
 
-                        if (boundSlot == null) {
+                            quad.transform.concat(boundSlot.parentTransform);
+
+                            quad.depth = boundSlot.parentDepth + microDepth;
+                            microDepth += 0.0001;
+                        }
+                        else {
                             if (slotInfo.customTransform != null) {
                                 quad.transform.concat(slotInfo.customTransform);
                             }
                         }
+                    }
+                    else {
+                        
                     }
 
                 }
@@ -487,11 +496,12 @@ class Spine extends Visual {
 
                     emitUpdateSlot(slotInfo);
 
-                    if (slotInfo.drawDefault) {
+                    mesh = slotMeshes.get(slot.data.index);
+
+                    if (slotInfo.drawDefault && (boundSlot == null || boundSlot.parentVisible)) {
 
                         emptySlotMesh = false;
 
-                        mesh = slotMeshes.get(slot.data.index);
                         if (mesh == null)
                         {
                             atlasRegion = cast(meshAttachment.getRegion(), AtlasRegion);
@@ -543,30 +553,33 @@ class Spine extends Visual {
                             mesh.scaleY = -1;
                         }
 
-                        if (boundChildSlots != null) {
-                            boundSlot = boundChildSlots.get(slotName);
-                            if (boundSlot != null) {
-                                mesh.transform.identity();
-                                mesh.transform.translate(-slotInfo.slot.data.boneData.x, slotInfo.slot.data.boneData.y);
-                                if (bone.scaleX < 0) mesh.transform.scale(-1, 1);
-                                if (bone.scaleY < 0) mesh.transform.scale(1, -1);
-                                mesh.transform.concat(boundSlot.parentTransform);
-                                mesh.depth = boundSlot.parentDepth + microDepth;
-                                microDepth += 0.0001;
+                        if (boundSlot != null) {
+                            mesh.transform.identity();
+                            mesh.transform.translate(-slotInfo.slot.data.boneData.x, slotInfo.slot.data.boneData.y);
+                            if (bone.scaleX < 0) mesh.transform.scale(-1, 1);
+                            if (bone.scaleY < 0) mesh.transform.scale(1, -1);
+                            mesh.transform.concat(boundSlot.parentTransform);
+                            mesh.depth = boundSlot.parentDepth + microDepth;
+                            microDepth += 0.0001;
+
+                            if (slotInfo.customTransform != null) {
+                                mesh.transform.concat(slotInfo.customTransform);
                             }
                         }
-
-                        if (boundSlot == null) {
+                        else {
                             if (slotInfo.customTransform != null) {
                                 mesh.transform.setToTransform(slotInfo.customTransform);
                             }
                             else {
                                 mesh.transform.identity();
                             }
-                        } else {
-                            if (slotInfo.customTransform != null) {
-                                mesh.transform.concat(slotInfo.customTransform);
-                            }
+                        }
+                    }
+                    else {
+                        if (mesh != null) {
+                            // If the mesh was visible before during the animation,
+                            // Let's not destroy it and just make it not visible.
+                            mesh.visible = false;
                         }
                     }
 
@@ -588,15 +601,21 @@ class Spine extends Visual {
                         for (bindInfo in sub.boundParentSlots.get(slotName)) {
                             
                             // Keep parent info
-                            bindInfo.parentDepth = slotInfo.depth;
-                            bindInfo.parentTransform.setTo(
-                                slotInfo.transform.a,
-                                slotInfo.transform.b,
-                                slotInfo.transform.c,
-                                slotInfo.transform.d,
-                                slotInfo.transform.tx,
-                                slotInfo.transform.ty
-                            );
+                            if (slot.attachment == null) {
+                                bindInfo.parentVisible = false;
+                            }
+                            else {
+                                bindInfo.parentVisible = true;
+                                bindInfo.parentDepth = slotInfo.depth;
+                                bindInfo.parentTransform.setTo(
+                                    slotInfo.transform.a,
+                                    slotInfo.transform.b,
+                                    slotInfo.transform.c,
+                                    slotInfo.transform.d,
+                                    slotInfo.transform.tx,
+                                    slotInfo.transform.ty
+                                );
+                            }
 
                         }
                     }
@@ -757,6 +776,8 @@ private class BindSlot {
 
     public var parentDepth:Float = 0;
 
+    public var parentVisible:Bool = false;
+
     public var parentTransform:Transform = new Transform();
 
     public function new() {}
@@ -768,6 +789,7 @@ private class BindSlot {
         if (toLocalSlot != null) props.toLocalSlot = toLocalSlot;
         props.parentDepth = parentDepth;
         if (parentTransform != null) props.parentTransform = parentTransform;
+        if (parentVisible != null) props.parentVisible = parentVisible;
         return '' + props;
     }
 
