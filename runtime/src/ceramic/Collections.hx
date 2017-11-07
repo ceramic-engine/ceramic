@@ -81,7 +81,7 @@ class CollectionEntry {
                         }
 
                     case 'String':
-                        value = ''+rawValue;
+                        value = rawValue == null || rawValue == 'null' ? null : ''+rawValue;
 
                     default:
                         var rawValue = ''+rawValue.toLowerCase().trim();
