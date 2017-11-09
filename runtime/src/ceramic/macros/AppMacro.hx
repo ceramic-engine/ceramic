@@ -48,12 +48,8 @@ class AppMacro {
             else {
                 for (k in Reflect.fields(val)) {
                     var v:Dynamic = Reflect.field(val, k);
-                    if (Std.is(v, String)) {
-                        Context.getType(v);
-                    }
-                    else if (v.type != null) {
-                        Context.getType(v.type);
-                    }
+                    if (v.type == null) v.type = 'ceramic.CollectionEntry';
+                    Context.getType(v.type);
                 }
             }
         }

@@ -20,14 +20,8 @@ class CollectionsMacro {
         for (key in Reflect.fields(data.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(data.collections, key))) {
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(data.collections, key), collectionName);
-                var collectionClass:String;
-                if (Std.is(collectionInfo, String)) {
-                    collectionClass = collectionInfo;
-                } else if (collectionInfo.type != null) {
-                    collectionClass = collectionInfo.type;
-                } else {
-                    throw 'Invalid collection: $collectionName';
-                }
+                var collectionClass:String = collectionInfo.type;
+                if (collectionClass == null) collectionClass = 'ceramic.CollectionEntry';
                 var collectionType = null;
 
                 switch(Context.parse('var a:' + collectionClass, pos).expr) {
