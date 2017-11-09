@@ -330,6 +330,8 @@ class Spine extends Visual {
         var microDepth:Float = 0.0001;
         var flipRegion:Bool = false;
         var flipBone:Bool = false;
+        var boneData:BoneData = null;
+        var setupRotation:Float = 0;
 
         // Set flip
         flipX = skeleton.flipX ? -1 : 1;
@@ -418,7 +420,7 @@ class Spine extends Visual {
                         quad.color = Color.fromRGBFloat(r, g, b);
                         quad.alpha = a;
                         quad.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                        quad.depth = z++;
+                        quad.depth = z;
                         quad.texture = texture;
                         quad.frameX = atlasRegion.x / texture.density;
                         quad.frameY = atlasRegion.y / texture.density;
@@ -441,6 +443,13 @@ class Spine extends Visual {
 
                         if (boundSlot != null) {
 
+                            setupRotation = 0.0;
+                            boneData = bone.getData();
+                            while (boneData != null) {
+                                setupRotation += boneData.getRotation();
+                                boneData = boneData.getParent();
+                            }
+
                             quad.transform.translate(-slotInfo.transform.tx, -slotInfo.transform.ty);
 
                             quad.transform.translate(
@@ -458,6 +467,8 @@ class Spine extends Visual {
                                 bone.scaleY < 0 ? (offsetX * bone.c + offsetY * bone.d) : -(offsetX * bone.c + offsetY * bone.d)
                             );
 
+                            if (setupRotation != 0.0) quad.transform.rotate(90 * _degRad);
+
                             if (slotInfo.customTransform != null) {
                                 quad.transform.concat(slotInfo.customTransform);
                             }
@@ -472,9 +483,6 @@ class Spine extends Visual {
                                 quad.transform.concat(slotInfo.customTransform);
                             }
                         }
-                    }
-                    else {
-                        
                     }
 
                 }
@@ -549,16 +557,28 @@ class Spine extends Visual {
                                 }
                             }
                             mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                            mesh.depth = z++;
+                            mesh.depth = z;
                             mesh.scaleY = -1;
                         }
 
                         if (boundSlot != null) {
+
+                            setupRotation = 0.0;
+                            boneData = bone.getData();
+                            while (boneData != null) {
+                                setupRotation += boneData.getRotation();
+                                boneData = boneData.getParent();
+                            }
+
                             mesh.transform.identity();
                             mesh.transform.translate(-slotInfo.slot.data.boneData.x, slotInfo.slot.data.boneData.y);
-                            if (bone.scaleX < 0) mesh.transform.scale(-1, 1);
-                            if (bone.scaleY < 0) mesh.transform.scale(1, -1);
+                            mesh.transform.scale(
+                                bone.scaleX < 0 ? -1 : 1,
+                                bone.scaleY < 0 ? -1 : 1
+                            );
+                            if (setupRotation != 0.0) mesh.transform.rotate(90 * _degRad);
                             mesh.transform.concat(boundSlot.parentTransform);
+
                             mesh.depth = boundSlot.parentDepth + microDepth;
                             microDepth += 0.0001;
 
@@ -584,6 +604,8 @@ class Spine extends Visual {
                     }
 
                 }
+
+                z++;
             }
 
             if (emptySlotMesh) {
