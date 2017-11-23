@@ -53,8 +53,21 @@ class Spine extends Visual {
     /** When a spine animation has completed/finished. */
     @event function complete();
 
+    /** When a render begins. */
+    @event function beginRender(delta:Float);
+
+    /** When a render ends. */
+    @event function endRender(delta:Float);
+
     /** When a slot is about to be updated. */
     @event function updateSlot(info:SlotInfo);
+
+    /** When the skeleton is going to be updated. */
+    @event function updateSkeleton(delta:Float);
+
+    /** When the world transform is going to be updated.
+        Hook into this event to set custom bone transforms. */
+    @event function updateWorldTransform(delta:Float);
 
 /// Properties
 
@@ -287,15 +300,26 @@ class Spine extends Visual {
             return;
         }
 
+        emitUpdateSkeleton(delta);
+
         if (resetSkeleton) {
             resetSkeleton = false;
             if (skeleton != null) skeleton.setToSetupPose();
         }
 
-        if (skeleton != null) skeleton.update(delta);
-        if (state != null) state.update(delta);
-        if (state != null && skeleton != null) state.apply(skeleton);
-        if (skeleton != null) skeleton.updateWorldTransform();
+        if (skeleton != null) {
+
+            skeleton.update(delta);
+
+            if (state != null) {
+                state.update(delta);
+                state.apply(skeleton);
+            }
+
+            emitUpdateWorldTransform(delta);
+
+            skeleton.updateWorldTransform();
+        }
 
     } //updateSkeleton
 
@@ -339,6 +363,10 @@ class Spine extends Visual {
         var boneSetupTransform:Transform = null;
         var regularRender:Bool = !setup && !animStart;
         var didFlipX:Bool = false;
+
+        if (regularRender) {
+            emitBeginRender(delta);
+        }
 
         if (setup) {
             setupBoneTransforms = new Map();
@@ -616,6 +644,10 @@ class Spine extends Visual {
                 }
             }
 
+        }
+
+        if (regularRender) {
+            emitEndRender(delta);
         }
 
         // Render children (if any)
