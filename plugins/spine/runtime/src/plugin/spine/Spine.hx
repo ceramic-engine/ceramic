@@ -27,6 +27,8 @@ class Spine extends Visual {
 
     static var _quadTriangles:Array<Int> = [0,1,2,2,3,0];
 
+    static var _trackTimes:Array<Float> = [];
+
 /// Spine Animation State listener
 
     var listener:SpineListener;
@@ -45,8 +47,6 @@ class Spine extends Visual {
     var boundChildSlotsDirty:Bool = false;
 
     var setupBoneTransforms:Map<String,Transform> = null;
-
-    var animStartSlotTransforms:Map<String,Transform> = null;
 
 /// Events
 
@@ -222,30 +222,37 @@ class Spine extends Visual {
         // Perform setup render to gather required information
         resetSkeleton = true;
         updateSkeleton(0);
-        render(0, 0, true, false);
+        render(0, 0, true);
 
     } //computeContent
 
 /// Public API
 
     /** Start running an animation available in the skeleton. **/
-    public function animate(animationName:String, loop:Bool = false):Void {
+    public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0):Void {
         if (destroyed) return;
 
         var track;
 
         if (animationName == null) {
-            track = state.setEmptyAnimation(0, 0);
+            track = state.setEmptyAnimation(trackIndex, 0);
         } else {
-            track = state.setAnimationByName(0, animationName, loop);
+            track = state.setAnimationByName(trackIndex, animationName, loop);
         }
 
         // If we are paused, ensure new anim gets rendered once
         if (paused) {
+            var i = 0;
+            for (aTrack in state.tracks) {
+                if (aTrack == null) break;
+                _trackTimes[i++] = aTrack.trackTime;
+            }
             update(0.1);
-            track.trackTime = 0;
+            while (i-- > 0) {
+                state.tracks[i].trackTime = _trackTimes[i];
+            }
             updateSkeleton(0);
-            render(0, 0, false, true);
+            render(0, 0, false);
         }
 
     } //animate
@@ -282,7 +289,7 @@ class Spine extends Visual {
 
         if (visible) {
             // We are visible and are root spine animation, let's render
-            render(delta, 0, false, false);
+            render(delta, 0, false);
         }
 
     } //update
@@ -324,7 +331,7 @@ class Spine extends Visual {
     } //updateSkeleton
 
     /** Process spine draw order and output quads and meshes. */
-    function render(delta:Float, z:Float, setup:Bool, animStart:Bool) {
+    function render(delta:Float, z:Float, setup:Bool) {
 
         if (boundChildSlotsDirty) {
             computeBoundChildSlots();
@@ -359,9 +366,8 @@ class Spine extends Visual {
         var microDepth:Float = 0.0001;
         var boneData:BoneData = null;
         var setupRotation:Float = 0;
-        var animStartTransform:Transform = null;
         var boneSetupTransform:Transform = null;
-        var regularRender:Bool = !setup && !animStart;
+        var regularRender:Bool = !setup;
         var didFlipX:Bool = false;
 
         if (regularRender) {
@@ -370,9 +376,6 @@ class Spine extends Visual {
 
         if (setup) {
             setupBoneTransforms = new Map();
-        }
-        if (animStart && animStartSlotTransforms == null) {
-            animStartSlotTransforms = new Map();
         }
 
         // Set flip
@@ -425,11 +428,6 @@ class Spine extends Visual {
                         boneSetupTransform = new Transform();
                         boneSetupTransform.setToTransform(slotInfo.transform);
                         setupBoneTransforms.set(bone.data.name, boneSetupTransform);
-                    }
-                    if (animStart) {
-                        var animStartTransform = new Transform();
-                        animStartTransform.setToTransform(slotInfo.transform);
-                        animStartSlotTransforms.set(slotName, animStartTransform);
                     }
 
                     if (regularRender) {
@@ -527,18 +525,11 @@ class Spine extends Visual {
 
                                 mesh.transform.identity();
 
-                                animStartTransform = animStartSlotTransforms.get(slotName);
                                 boneSetupTransform = setupBoneTransforms.get(bone.data.name);
                                 if (boneSetupTransform != null) {
                                     mesh.transform.translate(
                                         -boneSetupTransform.tx,
                                         -boneSetupTransform.ty
-                                    );
-                                }
-                                else if (animStartTransform != null) {
-                                    mesh.transform.translate(
-                                        -animStartTransform.tx,
-                                        -animStartTransform.ty
                                     );
                                 } else {
                                     mesh.transform.translate(
@@ -651,10 +642,10 @@ class Spine extends Visual {
         }
 
         // Render children (if any)
-        if (!setup && !animStart && subSpines != null) {
+        if (!setup && subSpines != null) {
             for (sub in subSpines) {
                 sub.updateSkeleton(delta);
-                sub.render(delta, z, false, false);
+                sub.render(delta, z, false);
             }
         }
 
