@@ -344,6 +344,8 @@ class Spine extends Visual {
         var g:Float;
         var b:Float;
         var a:Float;
+        var tx:Float;
+        var ty:Float;
         var flip:Float;
         var flipX:Float;
         var flipY:Float;
@@ -599,8 +601,7 @@ class Spine extends Visual {
                 if (emptySlotMesh) {
                     mesh = slotMeshes.get(slot.data.index);
                     if (mesh != null) {
-                        mesh.destroy();
-                        slotMeshes.remove(slot.data.index);
+                        mesh.visible = false;
                     }
                 }
 
