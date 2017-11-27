@@ -107,17 +107,6 @@ class Transform implements Events {
 
     } //concat
 
-    inline public function copyFrom(other:Transform):Void {
-
-        this.a = other.a;
-        this.b = other.b;
-        this.c = other.c;
-        this.d = other.d;
-        this.tx = other.tx;
-        this.ty = other.ty;
-
-    } //copyFrom
-
     inline public function decompose(?output:DecomposedTransform):DecomposedTransform {
 
         if (output == null) output = new DecomposedTransform();
