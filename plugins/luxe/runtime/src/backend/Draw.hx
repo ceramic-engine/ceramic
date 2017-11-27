@@ -105,6 +105,8 @@ class Draw implements spec.Draw {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
+        if (!Luxe.core.auto_render) return;
+
         var quad:ceramic.Quad;
         var quadGeom:phoenix.geometry.QuadGeometry;
         var rect = new luxe.Rectangle();
