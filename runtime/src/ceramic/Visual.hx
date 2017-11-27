@@ -44,8 +44,8 @@ class Visual extends Entity {
     /** Setting this to true will force the visual's matrix to be re-computed */
     public var matrixDirty(default,set):Bool = true;
     inline function set_matrixDirty(matrixDirty:Bool):Bool {
-        if (!this.matrixDirty && matrixDirty) {
-            this.matrixDirty = true;
+        this.matrixDirty = matrixDirty;
+        if (matrixDirty) {
             if (children != null) {
                 for (child in children) {
                     child.matrixDirty = true;
@@ -58,8 +58,8 @@ class Visual extends Entity {
     /** Setting this to true will force the visual's computed render target to be re-computed */
     public var renderTargetDirty(default,set):Bool = true;
     inline function set_renderTargetDirty(renderTargetDirty:Bool):Bool {
-        if (!this.renderTargetDirty && renderTargetDirty) {
-            this.renderTargetDirty = true;
+        this.renderTargetDirty = renderTargetDirty;
+        if (renderTargetDirty) {
             if (children != null) {
                 for (child in children) {
                     child.renderTargetDirty = true;
@@ -72,8 +72,8 @@ class Visual extends Entity {
     /** Setting this to true will force the visual to compute it's visility in hierarchy */
     public var visibilityDirty(default,set):Bool = true;
     inline function set_visibilityDirty(visibilityDirty:Bool):Bool {
-        if (!this.visibilityDirty && visibilityDirty) {
-            this.visibilityDirty = true;
+        this.visibilityDirty = visibilityDirty;
+        if (visibilityDirty) {
             if (children != null) {
                 for (child in children) {
                     child.visibilityDirty = true;
