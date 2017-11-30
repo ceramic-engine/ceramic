@@ -17,6 +17,7 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+@editable
 class Spine extends Visual {
 
 /// Internal
@@ -28,6 +29,8 @@ class Spine extends Visual {
     static var _quadTriangles:Array<Int> = [0,1,2,2,3,0];
 
     static var _trackTimes:Array<Float> = [];
+
+    static var _globalBindDepthRange:Float = 100;
 
 /// Spine Animation State listener
 
@@ -41,10 +44,17 @@ class Spine extends Visual {
 
     var boundParentSlots:Map<String,Array<BindSlot>> = null;
 
-    /** Computed from `boundParentSlots` */
     var boundChildSlots:Map<String,BindSlot> = null;
 
     var boundChildSlotsDirty:Bool = false;
+
+    var globalBoundParentSlotName:String = null;
+
+    var globalBoundParentSlot:Slot = null;
+
+    var globalBoundParentSlotDepth:Float = 0.0;
+
+    var globalBoundParentSlotVisible:Bool = false;
 
     var setupBoneTransforms:Map<String,Transform> = null;
 
@@ -71,10 +81,31 @@ class Spine extends Visual {
 
 /// Properties
 
+    /** Skeleton origin X */
+    @editable
+    public var skeletonOriginX(default,set):Float = 0.5;
+    function set_skeletonOriginX(skeletonOriginX:Float):Float {
+        if (this.skeletonOriginX == skeletonOriginX) return skeletonOriginX;
+        this.skeletonOriginX = skeletonOriginX;
+        if (paused) render(0, 0, false);
+        return skeletonOriginX;
+    }
+
+    /** Skeleton origin Y */
+    @editable
+    public var skeletonOriginY(default,set):Float = 0.5;
+    function set_skeletonOriginY(skeletonOriginY:Float):Float {
+        if (this.skeletonOriginY == skeletonOriginY) return skeletonOriginY;
+        this.skeletonOriginY = skeletonOriginY;
+        if (paused) render(0, 0, false);
+        return skeletonOriginY;
+    }
+
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
 
     /** The Spine data used to animate this animation. */
+    @editable
     public var spineData(default,set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
@@ -149,6 +180,7 @@ class Spine extends Visual {
     public var stateData(default, null):AnimationStateData;
 
     /** Is this animation paused? Default is `false`. */
+    @editable
     public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
@@ -176,7 +208,7 @@ class Spine extends Visual {
 
         super();
 
-        app.onUpdate(this, update);
+        if (!paused) app.onUpdate(this, update);
 
     } //new
 
@@ -184,6 +216,30 @@ class Spine extends Visual {
 
     override function computeContent():Void {
 
+        if (state != null && listener != null) {
+            state.removeListener(listener);
+        }
+
+        // Clean meshes
+        for (mesh in slotMeshes) {
+            mesh.destroy();
+        }
+        slotMeshes = new Map();
+
+        // Handle empty spine data
+        if (spineData == null) {
+            skeletonData = null;
+            stateData = null;
+            state = null;
+            skeleton = null;
+            listener = null;
+
+            contentDirty = false;
+            return;
+        }
+
+        // Normal init
+        //
         skeletonData = spineData.skeletonData;
 
         stateData = new AnimationStateData(skeletonData);
@@ -224,6 +280,11 @@ class Spine extends Visual {
         updateSkeleton(0);
         render(0, 0, true);
 
+        // If we are paused, ensure setup pos gets rendered once
+        if (paused) {
+            render(0, 0, false);
+        }
+
     } //computeContent
 
 /// Public API
@@ -242,20 +303,29 @@ class Spine extends Visual {
 
         // If we are paused, ensure new anim gets rendered once
         if (paused) {
-            var i = 0;
-            for (aTrack in state.tracks) {
-                if (aTrack == null) break;
-                _trackTimes[i++] = aTrack.trackTime;
-            }
-            update(0.1);
-            while (i-- > 0) {
-                state.tracks[i].trackTime = _trackTimes[i];
-            }
-            updateSkeleton(0);
-            render(0, 0, false);
+            forceRender();
         }
 
     } //animate
+
+    public function forceRender():Void {
+
+        if (state == null) return;
+
+        var i = 0;
+        for (aTrack in state.tracks) {
+            if (aTrack == null) break;
+            _trackTimes[i++] = aTrack.trackTime;
+        }
+        
+        update(0.1);
+        while (i-- > 0) {
+            state.tracks[i].trackTime = _trackTimes[i];
+        }
+        updateSkeleton(0);
+        render(0, 0, false);
+
+    } //forceRender
 
     /** Reset the animation (set to setup pose). */
     public function reset():Void {
@@ -274,6 +344,10 @@ class Spine extends Visual {
         }
         slotMeshes = null;
 
+        if (state != null && listener != null) {
+            state.removeListener(listener);
+        }
+
     } //destroy
 
     public function update(delta:Float):Void {
@@ -283,6 +357,9 @@ class Spine extends Visual {
             // of updating our own data and rendering it.
             return;
         }
+
+        // No spine data? Then nothing to animate
+        if (spineData == null) return;
 
         // Update skeleton
         updateSkeleton(delta);
@@ -333,6 +410,8 @@ class Spine extends Visual {
     /** Process spine draw order and output quads and meshes. */
     function render(delta:Float, z:Float, setup:Bool) {
 
+        if (skeleton == null) return;
+
         if (boundChildSlotsDirty) {
             computeBoundChildSlots();
         }
@@ -371,6 +450,9 @@ class Spine extends Visual {
         var boneSetupTransform:Transform = null;
         var regularRender:Bool = !setup;
         var didFlipX:Bool = false;
+
+        var diffX:Float = width * skeletonOriginX;
+        var diffY:Float = height * skeletonOriginY;
 
         if (regularRender) {
             emitBeginRender(delta);
@@ -583,6 +665,8 @@ class Spine extends Visual {
                                     mesh.transform.identity();
                                 }
                             }
+
+                            mesh.transform.translate(diffX, diffY);
                         }
                         else {
                             if (mesh != null) {
@@ -608,6 +692,8 @@ class Spine extends Visual {
                 // Gather information for child animations if needed
                 if (subSpines != null) {
                     for (sub in subSpines) {
+
+                        // Parent slot to child slot
                         if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotName)) {
                             for (bindInfo in sub.boundParentSlots.get(slotName)) {
                                 
@@ -631,6 +717,36 @@ class Spine extends Visual {
                                 }
 
                             }
+                        }
+
+                        // Parent slot to every children
+                        if (sub.globalBoundParentSlotName != null && sub.globalBoundParentSlotName == slotName) {
+
+                            // Keep parent info
+                            if (slot.attachment == null) {
+                                sub.globalBoundParentSlotVisible = false;
+                            }
+                            else {
+
+                                sub.globalBoundParentSlotVisible = true;
+                                sub.globalBoundParentSlotDepth = slotInfo.depth;
+                                sub.globalBoundParentSlot = slotInfo.slot;
+                                sub.transform.setTo(
+                                    slotInfo.transform.a,
+                                    slotInfo.transform.b,
+                                    slotInfo.transform.c,
+                                    slotInfo.transform.d,
+                                    slotInfo.transform.tx,
+                                    slotInfo.transform.ty
+                                );
+                                sub.depth = z;
+                                sub.depthRange = _globalBindDepthRange;
+
+                            }
+
+                            // Increase z to give more precise depth 'space' in sub animation
+                            z += _globalBindDepthRange;
+
                         }
                     }
                 }
@@ -686,24 +802,39 @@ class Spine extends Visual {
     } //add
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
-    public function bindParentSlot(parentSlot:String, options:BindSlotOptions) {
+    public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
+        
+        if (options != null) {
 
-        var info = new BindSlot();
-        info.fromParentSlot = parentSlot;
+            var info = new BindSlot();
+            info.fromParentSlot = parentSlot;
 
-        if (options.toLocalBone != null) info.toLocalBone = options.toLocalBone;
-        if (options.toLocalSlot != null) info.toLocalSlot = options.toLocalSlot;
-        if (options.flipXOnConcat != null) info.flipXOnConcat = options.flipXOnConcat;
+            // Bind parent slot to child slot
+            //
+            if (options.toLocalSlot != null) {
+                info.toLocalSlot = options.toLocalSlot;
+                boundChildSlotsDirty = true;
+            }
 
-        if (boundParentSlots == null) boundParentSlots = new Map();
-        var bindList = boundParentSlots.get(parentSlot);
-        if (bindList == null) {
-            bindList = [];
-            boundParentSlots.set(parentSlot, bindList);
+            if (options.flipXOnConcat != null) info.flipXOnConcat = options.flipXOnConcat;
+
+            if (boundParentSlots == null) boundParentSlots = new Map();
+            var bindList = boundParentSlots.get(parentSlot);
+            if (bindList == null) {
+                bindList = [];
+                boundParentSlots.set(parentSlot, bindList);
+            }
+
+            bindList.push(info);
         }
-        bindList.push(info);
+        else {
 
-        boundChildSlotsDirty = true;
+            // Bind parent slot to every children
+            //
+            globalBoundParentSlotName = parentSlot;
+            if (transform == null) transform = new Transform();
+
+        }
 
     } //bindParentSlot
 
@@ -772,8 +903,6 @@ class SpineListener implements AnimationStateListener {
 
 typedef BindSlotOptions = {
 
-    @:optional var toLocalBone:String;
-
     @:optional var toLocalSlot:String;
 
     @:optional var flipXOnConcat:Bool;
@@ -784,8 +913,6 @@ typedef BindSlotOptions = {
 private class BindSlot {
 
     public var fromParentSlot:String = null;
-
-    public var toLocalBone:String = null;
 
     public var toLocalSlot:String = null;
 
@@ -804,7 +931,6 @@ private class BindSlot {
     function toString() {
         var props:Dynamic = {};
         if (fromParentSlot != null) props.fromParentSlot = fromParentSlot;
-        if (toLocalBone != null) props.toLocalBone = toLocalBone;
         if (toLocalSlot != null) props.toLocalSlot = toLocalSlot;
         props.parentDepth = parentDepth;
         if (parentTransform != null) props.parentTransform = parentTransform;

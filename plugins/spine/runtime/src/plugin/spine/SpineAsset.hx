@@ -134,6 +134,7 @@ class SpineAsset extends Asset {
                             json,
                             scale
                         );
+                        spineData.asset = this;
 
                         // Update prev spine data
                         if (prevSpineData != null) {

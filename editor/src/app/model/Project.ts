@@ -302,6 +302,12 @@ class Project extends Model {
     /** Database assets */
     @observe databaseAssets?:Array<{name:string, constName:string, paths:Array<string>}>;
 
+    /** Custom assets */
+    @observe customAssets?:Map<string, Array<{name:string, constName:string, paths:Array<string>}>>;
+
+    /** Custom assets info */
+    @observe customAssetsInfo?:Map<string, {type:string}>;
+
 /// Editable fragment item types
 
     @observe editableTypes:Array<EditableType> = [];
@@ -599,6 +605,8 @@ class Project extends Model {
                 this.soundAssets = null;
                 this.fontAssets = null;
                 this.databaseAssets = null;
+                this.customAssets = null;
+                this.customAssetsInfo = null;
                 this.allAssets = null;
                 this.allAssetDirs = null;
                 this.allAssetsByName = null;
@@ -612,6 +620,8 @@ class Project extends Model {
                 this.soundAssets = [];
                 this.fontAssets = [];
                 this.databaseAssets = [];
+                this.customAssets = new Map();
+                this.customAssetsInfo = new Map();
                 this.allAssets = [];
                 this.allAssetDirs = [];
                 this.allAssetsByName = new Map();
@@ -627,12 +637,26 @@ class Project extends Model {
                     list: rawList
                 }
             }, (message) => {
+
+                console.error('ASSETS');
+                console.log(message);
                 
                 this.imageAssets = message.value.images;
                 this.textAssets = message.value.texts;
                 this.soundAssets = message.value.sounds;
                 this.fontAssets = message.value.fonts;
                 this.databaseAssets = message.value.databases;
+
+                this.customAssets = new Map();
+                this.customAssetsInfo = new Map();
+                if (message.value.custom) {
+                    for (let key in message.value.custom) {
+                        this.customAssets.set(key, message.value.custom[key].lists);
+                        this.customAssetsInfo.set(key, {
+                            type: message.value.custom[key].type
+                        });
+                    }
+                }
 
                 this.allAssets = message.value.all;
                 this.allAssetDirs = message.value.allDirs;
@@ -659,6 +683,8 @@ class Project extends Model {
                 }
 
                 // Compute all asset paths with last modified date
+                // TODO handle custom assets here.
+                // But not too much worries: this is not even used.
                 let allAssetsLastModified = new Map();
                 for (let assetsGroup of [
                     this.imageAssets,

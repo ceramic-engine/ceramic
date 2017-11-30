@@ -41,3 +41,4 @@ yarn-error.log*
 /sample/.vscode/tasks.json
 /sample/completion.hxml
 /runtime/.vscode/tasks.json
+/plugins/spine/.vscode/tasks.json

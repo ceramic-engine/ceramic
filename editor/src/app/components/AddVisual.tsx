@@ -81,7 +81,7 @@ import { EditableType } from 'app/model/Project';
         if (info.entity === 'ceramic.Text') {
             visual.props.set('content', visual.name);
         }
-        else if (info.entity === 'ceramic.Quad') {
+        else /*if (info.entity === 'ceramic.Quad') */{
             visual.props.set('width', 100);
             visual.props.set('height', 100);
         }

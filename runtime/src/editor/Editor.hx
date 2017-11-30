@@ -21,6 +21,7 @@ import editor.Editable;
 
 import haxe.rtti.Meta;
 import haxe.rtti.Rtti;
+import haxe.DynamicAccess;
 
 import haxe.Json;
 #if web
@@ -593,6 +594,20 @@ class Editor extends Entity {
                         }
                     }
 
+                    var customAssets:DynamicAccess<Dynamic> = {};
+                    for (kindName in @:privateAccess Assets.customAssetKinds.keys()) {
+                        var assetKind = @:privateAccess Assets.customAssetKinds.get(kindName);
+                        var info = runtimeAssets.getNames(
+                            assetKind.kind,
+                            assetKind.extensions,
+                            assetKind.dir
+                        );
+                        customAssets.set(assetKind.kind, {
+                            lists: info,
+                            type: assetKind.type
+                        });
+                    }
+
                     send({
                         type: 'assets/lists',
                         value: {
@@ -601,6 +616,7 @@ class Editor extends Entity {
                             sounds: runtimeAssets.getNames('sound'),
                             fonts: runtimeAssets.getNames('font'),
                             databases: runtimeAssets.getNames('database'),
+                            custom: customAssets,
                             all: lists.all,
                             allDirs: lists.allDirs,
                             allByName: lists.allByName,

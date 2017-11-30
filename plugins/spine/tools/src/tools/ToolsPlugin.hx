@@ -37,6 +37,8 @@ class ToolsPlugin {
         
         app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
 
+        app.editable.push('plugin.spine.Spine');
+
     } //extendProject
 
 } //ToolsPlugin

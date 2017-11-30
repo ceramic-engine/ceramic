@@ -183,8 +183,46 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                     );
                 }
                 else {
-                    console.warn('Failed to create form field for property ' + fieldName + ' of type ' + type);
-                    return null;
+                    let result:any = null;
+
+                    if (project.customAssetsInfo) {
+                        project.customAssetsInfo.forEach((value, key) => {
+                            if (!result && value.type === type) {
+
+                                let list = ['none'];
+                                let n = 1;
+                                let index = 0;
+                                let assetInstance = item.props.get(field.name);
+                                if (project.fontAssets != null) {
+                                    for (let asset of project.customAssets.get(key)) {
+                                        list.push(asset.name);
+                                        if (asset.name === assetInstance) {
+                                            index = n;
+                                        }
+                                        n++;
+                                    }
+                                }
+
+                                result = (
+                                    <Field label={this.toFieldName(field.name)}>
+                                        <SelectInput
+                                            empty={0}
+                                            selected={index}
+                                            options={list}
+                                            onChange={(selected) => {
+                                                item.props.set(field.name, selected === 0 ? null : list[selected]);
+                                            }}
+                                        />
+                                    </Field>
+                                );
+                            }
+                        });
+                    }
+                    
+                    if (!result) {
+                        console.warn('Failed to create form field for property ' + fieldName + ' of type ' + type);
+                    }
+                    return result;
                 }
             }
         }

@@ -1003,6 +1003,8 @@ class CustomAssetKind {
 
     public var dir:Bool;
 
+    public var type:String;
+
 } //CustomAssetKind
 
 #if !macro
@@ -1451,7 +1453,7 @@ class Assets extends Entity {
 
     } //decodePath
 
-    public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool = false):Void {
+    public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool, type:String):Void {
 
         if (customAssetKinds == null) {
             customAssetKinds = new Map();
@@ -1460,7 +1462,8 @@ class Assets extends Entity {
             kind: kind,
             add: add,
             extensions: extensions,
-            dir: dir
+            dir: dir,
+            type: type
         });
 
     } //addAssetKind

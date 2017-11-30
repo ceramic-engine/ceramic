@@ -107,6 +107,24 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                {project.customAssets ?
+                                this.mapEntries(project.customAssets).map((entry) => <div>
+                                    <Title>{this.assetListName(entry.key)}</Title>
+                                    <Alt>
+                                        {project.customAssets.get(entry.key).map((val, i) =>
+                                            <div
+                                                key={i}
+                                                className={
+                                                    'entry in-alt'
+                                                    + (i < project.customAssets.get(entry.key).length - 1 ? ' with-separator' : '')
+                                                }
+                                            >
+                                                <div className="name">{val.name}</div>
+                                                <div className="info">{val.paths.join(', ')}</div>
+                                            </div>
+                                        )}
+                                    </Alt>
+                                </div>) : null}
                                 <Form>
                                     <Field>
                                         <Button
@@ -133,6 +151,24 @@ import { context } from 'app/context';
         );
 
     } //render
+
+    mapEntries(map:Map<string,any>):Array<{key:string, value:any}> {
+
+        let entries:Array<{key:string, value:any}> = [];
+
+        map.forEach((value, key) => {
+            entries.push({ key, value });
+        });
+
+        return entries;
+
+    } //mapEntries
+
+    assetListName(key:string):string {
+
+        return key.charAt(0).toUpperCase() + key.slice(1) + 's';
+
+    } //assetListName
     
 }
 
