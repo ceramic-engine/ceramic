@@ -52,18 +52,25 @@ typedef FragmentFieldConverter = {
 @:structInit
 class FragmentContext {
 
+    /** The assets registry used to load/unload assets in this fragment */
     public var assets:Assets;
+
+    /** Whether the items are edited items or not */
+    public var editedItems:Bool;
 
 } //FragmentContext
 
 /** A fragment is a group of visuals rendered from data (.fragment file) */
-class Fragment extends Quad {
+@editable
+class Fragment extends Visual {
 
     public var entities(default,null):Array<Entity>;
 
     public var items(default,null):Array<FragmentItem>;
 
     public var context:FragmentContext;
+
+    public var fragmentData(default,set):FragmentData;
 
 #if editor
 
@@ -97,7 +104,10 @@ class Fragment extends Quad {
 
 /// Data
 
-    public function putData(fragmentData:FragmentData):FragmentData {
+    function set_fragmentData(fragmentData:FragmentData):FragmentData {
+
+        this.fragmentData = fragmentData;
+        var usedIds = new Map<String,Bool>();
 
         if (fragmentData != null) {
 
@@ -106,26 +116,25 @@ class Fragment extends Quad {
             width = fragmentData.width;
             height = fragmentData.height;
 
-            var usedIds = new Map<String,Bool>();
             if (fragmentData.items != null) {
                 // Add/Update items
                 for (item in fragmentData.items) {
                     putItem(item);
                     usedIds.set(item.id, true);
                 }
-
-                // Remove unused items
-                var toRemove = [];
-                for (entity in entities) {
-                    if (!usedIds.exists(entity.id)) {
-                        toRemove.push(entity.id);
-                    }
-                }
-                for (id in toRemove) {
-                    removeItem(id);
-                }
             }
 
+        }
+
+        // Remove unused items
+        var toRemove = [];
+        for (entity in entities) {
+            if (!usedIds.exists(entity.id)) {
+                toRemove.push(entity.id);
+            }
+        }
+        for (id in toRemove) {
+            removeItem(id);
         }
 
         return fragmentData;
@@ -154,6 +163,10 @@ class Fragment extends Quad {
         var entityClass = Type.resolveClass(item.entity);
         var instance:Entity = existing != null ? existing : cast Type.createInstance(entityClass, []);
         instance.id = item.id;
+
+#if editor
+        instance.edited = context.editedItems;
+#end
 
         // Copy item data
         if (item.data != null) {

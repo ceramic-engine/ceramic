@@ -108,4 +108,11 @@ class Entity implements Events implements Lazy {
 
     } //removeComponent
 
+#if editor
+
+    /** If set to true, that means this entity is managed by editor. */
+    public var edited:Bool = false;
+
+#end
+
 } //Entity

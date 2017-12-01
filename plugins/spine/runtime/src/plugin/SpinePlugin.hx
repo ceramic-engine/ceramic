@@ -42,10 +42,12 @@ class SpinePlugin {
             }
 
             // Extend assets with `spine` kind
-            Assets.addAssetKind('spine', addSpine, ['spine'], true, 'plugin.spine.SpineData');
+            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['plugin.SpineData', 'plugin.spine.SpineData']);
 
             // Extend converters
-            app.converters.set('plugin.spine.SpineData', new ConvertSpineData());
+            var convertSpineData = new ConvertSpineData();
+            app.converters.set('plugin.SpineData', convertSpineData);
+            app.converters.set('plugin.spine.SpineData', convertSpineData);
 
         });
     }

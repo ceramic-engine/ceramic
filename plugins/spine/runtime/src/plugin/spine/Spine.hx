@@ -1,7 +1,6 @@
 package plugin.spine;
 
 import spine.support.graphics.TextureAtlas;
-import spine.Animation;
 import spine.AnimationState;
 import spine.attachments.*;
 import spine.*;
@@ -13,8 +12,10 @@ import ceramic.Transform;
 import ceramic.Color;
 import ceramic.AlphaColor;
 import ceramic.Blending;
+import ceramic.Collections;
 import ceramic.Shortcuts.*;
 
+using plugin.SpinePlugin;
 using ceramic.Extensions;
 
 @editable
@@ -101,6 +102,16 @@ class Spine extends Visual {
         return skeletonOriginY;
     }
 
+    /** Skeleton scale */
+    @editable
+    public var skeletonScale(default,set):Float = 1.0;
+    function set_skeletonScale(skeletonScale:Float):Float {
+        if (this.skeletonScale == skeletonScale) return skeletonScale;
+        this.skeletonScale = skeletonScale;
+        if (paused) render(0, 0, false);
+        return skeletonScale;
+    }
+
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
 
@@ -113,7 +124,7 @@ class Spine extends Visual {
         // Save animation info
         var prevSpineData = this.spineData;
         var toResume:Array<Dynamic> = null;
-        if (prevSpineData != null) {
+        if (prevSpineData != null && animation == null && state != null) {
             toResume = [];
 
             var i = 0;
@@ -137,6 +148,10 @@ class Spine extends Visual {
         }
 
         this.spineData = spineData;
+
+#if editor
+        computeAnimationList();
+#end
 
         contentDirty = true;
         computeContent();
@@ -164,7 +179,21 @@ class Spine extends Visual {
 
         }
 
+        // Restore explicit animation name
+        if (animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
+            animate(animation, true, 0);
+        }
+
         return spineData;
+    }
+
+    @editable({ localCollection: 'animationList', empty: 0 })
+    public var animation(default,set):String = null;
+    function set_animation(animation:String):String {
+        if (this.animation == animation) return animation;
+        this.animation = animation;
+        if (spineData != null) animate(animation, true, 0);
+        return animation;
     }
 
     /** The current pose for a skeleton. */
@@ -179,9 +208,8 @@ class Spine extends Visual {
     /** Stores mix (crossfade) durations to be applied when animations are changed. */
     public var stateData(default, null):AnimationStateData;
 
-    /** Is this animation paused? Default is `false`. */
-    @editable
-    public var paused(default, set):Bool = false;
+    /** Is this animation paused? */
+    public var paused(default,set):Bool = #if editor true #else false #end;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
 
@@ -198,6 +226,14 @@ class Spine extends Visual {
     /** Reset at change */
     public var resetAtChange:Bool = true;
 
+/// Editor collections
+
+#if editor
+
+    public var animationList:Collection<CollectionEntry> = new Collection();
+
+#end
+
 /// Properties (internal)
 
     var resetSkeleton:Bool = false;
@@ -209,6 +245,28 @@ class Spine extends Visual {
         super();
 
         if (!paused) app.onUpdate(this, update);
+
+#if editor
+
+        function render(delta:Float) {
+            editor.render();
+        }
+
+        onDown(this, function(info) {
+
+            // Do nothing if this is not the object being edited
+            if (!edited) return;
+
+            app.onUpdate(this, render);
+            paused = false;
+
+            screen.onceUp(this, function(info) {
+                app.offUpdate(render);
+                paused = true;
+            });
+        });
+
+#end
 
     } //new
 
@@ -286,6 +344,22 @@ class Spine extends Visual {
         }
 
     } //computeContent
+
+/// Size
+
+    override function set_width(width:Float):Float {
+        if (_width == width) return width;
+        super.set_width(width);
+        if (paused) render(0, 0, false);
+        return width;
+    }
+
+    override function set_height(height:Float):Float {
+        if (_height == height) return height;
+        super.set_height(height);
+        if (paused) render(0, 0, false);
+        return height;
+    }
 
 /// Public API
 
@@ -666,6 +740,7 @@ class Spine extends Visual {
                                 }
                             }
 
+                            if (skeletonScale != 1.0) mesh.transform.scale(skeletonScale, skeletonScale);
                             mesh.transform.translate(diffX, diffY);
                         }
                         else {
@@ -854,6 +929,55 @@ class Spine extends Visual {
         }
 
     } //computeBoundChildSlots
+
+/// Editor stuff
+
+#if editor
+
+    function computeAnimationList():Void {
+
+        // If not edited, nothing to do
+        if (!edited) return;
+
+        // Clear previous
+        animationList.splice(0, animationList.length);
+
+        // Create initial list
+        var collectionData = [{
+            id: null,
+            name: 'none'
+        }];
+
+        // Fill list
+        if (spineData != null) {
+
+            // Compute content
+            for (animation in spineData.skeletonData.animations) {
+                animationList.push({
+                    id: animation.name,
+                    name: animation.name
+                });
+            }
+
+            // Send to editor
+            for (entry in animationList) {
+                collectionData.push(entry.getEditableData());
+            }
+        }
+
+        // Send
+        editor.send({
+            type: 'collections/local',
+            value: {
+                owner: id,
+                name: 'animationList',
+                data: collectionData
+            }
+        });
+
+    } //computeAnimationList
+
+#end
 
 } //Visual
 

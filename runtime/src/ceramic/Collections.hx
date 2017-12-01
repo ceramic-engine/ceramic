@@ -22,6 +22,7 @@ abstract Collection<T:CollectionEntry>(Array<T>) from Array<T> to Array<T> {
 } //Collection
 
 @:rtti
+@:structInit
 class CollectionEntry {
 
     @editable
@@ -29,6 +30,14 @@ class CollectionEntry {
 
     @editable
     public var name:String;
+
+    /** Constructor */
+    public function new(id:String, name:String) {
+
+        this.id = id;
+        this.name = name;
+
+    } //new
 
     /** Set entry fields from given raw data.
         Takes care of converting types when needed, and possible.

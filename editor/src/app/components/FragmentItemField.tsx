@@ -63,6 +63,36 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                     </Field>
                 );
             }
+            else if (options.localCollection != null) {
+                let collectionOptions:Array<string> = [];
+                let collectionOptionIds:Array<string> = [];
+                let localCollection = project.localCollections.get(item.id + '#' + options.localCollection);
+                if (localCollection == null) {
+                    console.warn('No local collection found with name: ' + options.localCollection);
+                    return null;
+                }
+                let selectedIndex = -1;
+                let index = 0;
+                for (let entry of localCollection.data) {
+                    collectionOptions.push(entry.name);
+                    collectionOptionIds.push(entry.id);
+                    if (selectedIndex === -1 && entry.id === item.props.get(field.name)) selectedIndex = index;
+                    index++;
+                }
+                if (selectedIndex === -1) selectedIndex = 0;
+                return (
+                    <Field label={this.toFieldName(field.name)}>
+                        <SelectInput
+                            empty={options.empty}
+                            selected={selectedIndex}
+                            options={collectionOptions}
+                            onChange={(selected) => {
+                                item.props.set(field.name, collectionOptionIds[selected]);
+                            }}
+                        />
+                    </Field>
+                );
+            }
             else if (options.options != null) {
                 let selectedIndex = Math.max(0, options.options.indexOf(item.props.get(field.name)));
                 return (
@@ -187,7 +217,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
 
                     if (project.customAssetsInfo) {
                         project.customAssetsInfo.forEach((value, key) => {
-                            if (!result && value.type === type) {
+                            if (!result && value.types != null && value.types.indexOf(type) !== -1) {
 
                                 let list = ['none'];
                                 let n = 1;

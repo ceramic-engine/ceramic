@@ -50,6 +50,16 @@ export interface Collection {
 
 } //Collection
 
+export interface LocalCollection {
+
+    owner:string;
+
+    name:string;
+
+    data:Array<CollectionEntry>;
+
+} //LocalCollection
+
 export interface SyncWithGithubOptions {
 
     auto?:boolean;
@@ -306,7 +316,7 @@ class Project extends Model {
     @observe customAssets?:Map<string, Array<{name:string, constName:string, paths:Array<string>}>>;
 
     /** Custom assets info */
-    @observe customAssetsInfo?:Map<string, {type:string}>;
+    @observe customAssetsInfo?:Map<string, {types:Array<string>}>;
 
 /// Editable fragment item types
 
@@ -315,6 +325,8 @@ class Project extends Model {
 /// Collections
 
     @observe collections:Array<Collection> = [];
+
+    @observe localCollections:Map<string,LocalCollection> = new Map();
 
 /// Raw files directory
 
@@ -653,7 +665,7 @@ class Project extends Model {
                     for (let key in message.value.custom) {
                         this.customAssets.set(key, message.value.custom[key].lists);
                         this.customAssetsInfo.set(key, {
-                            type: message.value.custom[key].type
+                            types: message.value.custom[key].types
                         });
                     }
                 }
@@ -808,6 +820,13 @@ class Project extends Model {
                     }
                 }
             }
+
+        });
+
+        // Keep track of local collections
+        ceramic.listen('collections/local', (message) => {
+
+            this.localCollections.set(message.value.owner + '#' + message.value.name, message.value);
 
         });
 

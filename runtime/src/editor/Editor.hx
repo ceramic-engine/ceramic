@@ -55,6 +55,8 @@ class Editor extends Entity {
 
     var fragment:Fragment = null;
 
+    var fragmentBackground:Quad = null;
+
     var selectedItemId:String = null;
 
     var outsideTop:Quad = null;
@@ -437,6 +439,13 @@ class Editor extends Entity {
         fragment.scale(scale, scale);
         fragment.pos(screen.width * 0.5, screen.height * 0.5);
 
+        // Fit background as well
+        fragmentBackground.scale(fragment.scaleX, fragment.scaleY);
+        fragmentBackground.pos(fragment.x, fragment.y);
+        fragmentBackground.size(fragment.width, fragment.height);
+        fragmentBackground.anchor(fragment.anchorX, fragment.anchorY);
+        fragmentBackground.depth = fragment.depth - 1;
+
         // Fit outsides
         //
         if (outsideTop == null) {
@@ -604,7 +613,7 @@ class Editor extends Entity {
                         );
                         customAssets.set(assetKind.kind, {
                             lists: info,
-                            type: assetKind.type
+                            types: assetKind.types
                         });
                     }
 
@@ -649,12 +658,13 @@ class Editor extends Entity {
                 }
                 if (action == 'put') {
                     if (fragment == null) {
+                        // Create fragment
                         fragment = new Fragment({
-                            assets: assets
+                            assets: assets,
+                            editedItems: true
                         });
                         fragment.id = value.id;
                         fragment.depthRange = 10000;
-                        fragment.color = 0x2f2f2f;
                         fragment.anchor(0.5, 0.5);
                         fragment.onDown(fragment, function(info) {
                             if (Editable.highlight != null) {
@@ -662,202 +672,17 @@ class Editor extends Entity {
                             }
                         });
                         fragment.onEditableItemUpdate(fragment, function(item) {
-                            //untyped console.log('SEND');
-                            //untyped console.log(item);
                             send({
                                 type: 'set/fragment.item.${item.id}',
                                 value: item.props
                             });
                         });
 
-                        /*
-                        fragment.deserializers.set('ceramic.Quad', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
-                            if (instance.destroyed) return;
-                            if (item.props != null) {
-
-                                var quad:Quad = cast instance;
-
-                                function updateSize() {
-                                    if (quad.texture != null) {
-                                        send({
-                                            type: 'set/fragment.item.${item.id}',
-                                            value: {
-                                                width: quad.width,
-                                                height: quad.height
-                                            }
-                                        });
-                                    }
-                                    else {
-                                        quad.width = item.props.width;
-                                        quad.height = item.props.height;
-                                    }
-                                }
-
-                                for (field in Reflect.fields(item.props)) {
-
-                                    if (field == 'texture') {
-                                        if (runtimeAssets == null) {
-                                            return;
-                                        }
-                                        var assetName:String = Reflect.field(item.props, field);
-                                        if (assetName != null) {
-                                            var existing:ImageAsset = cast assets.asset(assetName, 'image');
-                                            var asset:ImageAsset = existing != null ? existing : new ImageAsset(assetName);
-                                            if (existing == null) {
-                                                if (asset != null) {
-                                                    // Create and load asset
-                                                    asset.runtimeAssets = runtimeAssets;
-                                                    assets.addAsset(asset);
-                                                    asset.onceComplete(function(success) {
-                                                        if (success && !instance.destroyed) {
-                                                            quad.texture = assets.texture(assetName);
-                                                            updateSize();
-                                                            render();
-                                                        }
-                                                        else if (!instance.destroyed) {
-                                                            warning('Failed to load texture for visual: ' + instance);
-                                                        }
-                                                    });
-                                                    assets.load();
-                                                }
-                                                else {
-                                                    // Nothing to do
-                                                }
-                                            }
-                                            else {
-                                                if (asset.status == READY) {
-                                                    // Asset already available
-                                                    quad.texture = assets.texture(assetName);
-                                                    updateSize();
-                                                }
-                                                else if (asset.status == LOADING) {
-                                                    // Asset loading
-                                                    asset.onceComplete(function(success) {
-                                                        if (success && !instance.destroyed) {
-                                                            quad.texture = assets.texture(assetName);
-                                                            updateSize();
-                                                            render();
-                                                        }
-                                                        else if (!instance.destroyed) {
-                                                            warning('Failed to load texture for visual: ' + instance);
-                                                        }
-                                                    });
-                                                }
-                                                else {
-                                                    // Asset broken?
-                                                    quad.texture = null;
-                                                    updateSize();
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            quad.texture = null;
-                                            updateSize();
-                                        }
-                                    }
-                                    else {
-                                        instance.setProperty(field, Reflect.field(item.props, field));
-                                    }
-                                }
-                            }
-                        });*/
-
-                        /*fragment.deserializers.set('ceramic.Text', function(fragment:Fragment, instance:Entity, item:FragmentItem) {
-                            if (instance.destroyed) return;
-                            if (item.props != null) {
-
-                                var text:Text = cast instance;
-
-                                function updateSize() {
-                                    send({
-                                        type: 'set/fragment.item.${item.id}',
-                                        value: {
-                                            width: text.width,
-                                            height: text.height
-                                        }
-                                    });
-                                }
-
-                                for (field in Reflect.fields(item.props)) {
-
-                                    if (field == 'font') {
-                                        if (runtimeAssets == null) {
-                                            return;
-                                        }
-                                        var assetName:String = Reflect.field(item.props, field);
-                                        if (assetName != null) {
-                                            var existing:FontAsset = cast assets.asset(assetName, 'font');
-                                            var asset:FontAsset = existing != null ? existing : new FontAsset(assetName);
-                                            if (existing == null) {
-                                                if (asset != null) {
-                                                    // Create and load asset
-                                                    asset.runtimeAssets = runtimeAssets;
-                                                    assets.addAsset(asset);
-                                                    asset.onceComplete(function(success) {
-
-                                                        if (success && !instance.destroyed) {
-                                                            text.font = assets.font(assetName);
-                                                            updateSize();
-                                                            render();
-                                                        }
-                                                    });
-                                                    assets.load();
-                                                }
-                                                else {
-                                                    // Nothing to do
-                                                }
-                                            }
-                                            else {
-                                                if (asset.status == READY) {
-                                                    // Asset already available
-                                                    text.font = assets.font(assetName);
-                                                }
-                                                else if (asset.status == LOADING) {
-                                                    // Asset loading
-                                                    asset.onceComplete(function(success) {
-                                                        if (success && !instance.destroyed) {
-                                                            text.font = assets.font(assetName);
-                                                            updateSize();
-                                                            render();
-                                                        }
-                                                    });
-                                                }
-                                                else {
-                                                    // Asset broken?
-                                                    text.font = app.assets.font(Fonts.ARIAL_20);
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            text.font = app.assets.font(Fonts.ARIAL_20);
-                                        }
-                                    }
-                                    else if (field == 'align') {
-                                        text.align = switch(item.props.align) {
-                                            case 'right': RIGHT;
-                                            case 'center': CENTER;
-                                            default: LEFT;
-                                        }
-                                    }
-                                    else if (field == 'pointSize') {
-                                        text.pointSize = item.props.pointSize;
-                                    }
-                                    else if (field == 'lineHeight') {
-                                        text.lineHeight = item.props.lineHeight;
-                                    }
-                                    else if (field == 'letterSpacing') {
-                                        text.letterSpacing = item.props.letterSpacing;
-                                    }
-                                    else {
-                                        instance.setProperty(field, Reflect.field(item.props, field));
-                                    }
-                                }
-
-                                updateSize();
-                            }
-                        });*/
+                        // And create its dark gray background as well
+                        fragmentBackground = new Quad();
+                        fragmentBackground.color = 0x2F2F2F;
                     }
-                    fragment.putData(value);
+                    fragment.fragmentData = value;
                     fitFragment();
                 }
                 else if (action == 'delete') {
