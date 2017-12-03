@@ -819,7 +819,15 @@ class Project extends Model {
                 if (item != null) {
                     for (let k in message.value) {
                         if (message.value.hasOwnProperty(k)) {
-                            item.props.set(k, message.value[k]);
+                            // Don't replace item fragment data. Ours is already the reference one.
+                            if (item.entity !== 'ceramic.Fragment'
+                             || k !== 'fragmentData'
+                             || !item.props.has(k)
+                             || (item.props.get(k) == null && message.value[k] != null)
+                             || (item.props.get(k) != null && message.value[k] == null)
+                            ) {
+                                item.props.set(k, message.value[k]);
+                            }
                         }
                     }
                 }
