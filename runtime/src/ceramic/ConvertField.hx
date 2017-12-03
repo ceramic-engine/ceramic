@@ -2,6 +2,9 @@ package ceramic;
 
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
+import ceramic.Fragment;
+
+import haxe.Json;
 
 /** Interface to convert from/to basic type and field values with complex types. */
 interface ConvertField<BasicType,FieldType> {
@@ -73,3 +76,21 @@ class ConvertFont implements ConvertField<String,BitmapFont> {
     } //fieldToBasic
 
 } //ConvertFont
+
+class ConvertFragmentData implements ConvertField<Dynamic,FragmentData> {
+
+    public function new() {}
+
+    public function basicToField(assets:Assets, basic:Dynamic, done:FragmentData->Void):Void {
+
+        done(basic);
+
+    } //basicToField
+
+    public function fieldToBasic(value:FragmentData):Dynamic {
+
+        return value;
+
+    } //fieldToBasic
+
+} //ConvertFragmentData

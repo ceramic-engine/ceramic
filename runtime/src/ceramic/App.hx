@@ -144,6 +144,7 @@ class App extends Entity {
 
         converters.set('ceramic.Texture', new ConvertTexture());
         converters.set('ceramic.BitmapFont', new ConvertFont());
+        converters.set('ceramic.FragmentData', new ConvertFragmentData());
 
     } //initFieldConverters
 
