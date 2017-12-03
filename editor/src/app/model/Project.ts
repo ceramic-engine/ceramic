@@ -799,7 +799,11 @@ class Project extends Model {
             // Change UI
             // Change Selected Item
             if (key.startsWith('ui.selectedItem.')) {
-                this.ui.selectedItem.props.set(key.substr('ui.selectedItem.'.length), message.value);
+                if (this.ui.selectedItem == null) {
+                    console.warn('Cannot update key ' + key.substr('ui.selectedItem.'.length) + ' of selected item because there is no selected item.');
+                } else {
+                    this.ui.selectedItem.props.set(key.substr('ui.selectedItem.'.length), message.value);
+                }
             }
             else if (key.startsWith('ui.')) {
                 keypath.set(this.ui, key.substr('ui.'.length), message.value);
