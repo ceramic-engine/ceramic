@@ -124,7 +124,7 @@ class Spine extends Visual {
         // Save animation info
         var prevSpineData = this.spineData;
         var toResume:Array<Dynamic> = null;
-        if (prevSpineData != null && animation == null && state != null) {
+        if (!destroyed && prevSpineData != null && animation == null && state != null) {
             toResume = [];
 
             var i = 0;
@@ -180,7 +180,7 @@ class Spine extends Visual {
         }
 
         // Restore explicit animation name
-        if (animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
+        if (!destroyed && animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
             animate(animation, true, 0);
         }
 
@@ -273,6 +273,8 @@ class Spine extends Visual {
 /// Content
 
     override function computeContent():Void {
+
+        if (destroyed) return;
 
         if (state != null && listener != null) {
             state.removeListener(listener);
@@ -413,6 +415,8 @@ class Spine extends Visual {
 
     function destroy() {
 
+        spineData = null;
+
         for (mesh in slotMeshes) {
             if (mesh != null) mesh.destroy();
         }
@@ -421,6 +425,12 @@ class Spine extends Visual {
         if (state != null && listener != null) {
             state.removeListener(listener);
         }
+        
+        skeletonData = null;
+        stateData = null;
+        state = null;
+        skeleton = null;
+        listener = null;
 
     } //destroy
 
