@@ -61,7 +61,7 @@ class FragmentContext {
 } //FragmentContext
 
 /** A fragment is a group of visuals rendered from data (.fragment file) */
-@editable
+@editable({ implicitSize: true })
 class Fragment extends Visual {
 
     public var entities(default,null):Array<Entity>;
@@ -70,7 +70,8 @@ class Fragment extends Visual {
 
     public var context:FragmentContext;
 
-    public var fragmentData(default,set):FragmentData;
+    @editable
+    public var fragmentData(default,set):FragmentData = null;
 
 #if editor
 
@@ -106,12 +107,14 @@ class Fragment extends Visual {
 
     function set_fragmentData(fragmentData:FragmentData):FragmentData {
 
+        error('SET FRAGMENT DATA');
+        untyped console.log(fragmentData);
+
         this.fragmentData = fragmentData;
         var usedIds = new Map<String,Bool>();
 
         if (fragmentData != null) {
 
-            id = fragmentData.id;
             data = fragmentData.data;
             width = fragmentData.width;
             height = fragmentData.height;
@@ -119,6 +122,10 @@ class Fragment extends Visual {
             if (fragmentData.items != null) {
                 // Add/Update items
                 for (item in fragmentData.items) {
+                    if (data.name == 'YELLOW') {
+                        error('(YELLOW) PUT ITEM');
+                        untyped console.log(item);
+                    }
                     putItem(item);
                     usedIds.set(item.id, true);
                 }
@@ -161,8 +168,24 @@ class Fragment extends Visual {
         }
 
         var entityClass = Type.resolveClass(item.entity);
-        var instance:Entity = existing != null ? existing : cast Type.createInstance(entityClass, []);
+        var instance:Entity = existing != null ? existing : null;
+        var isFragment = item.entity == 'ceramic.Fragment';
+        if (instance == null) {
+            var newArgs = [];
+            if (isFragment) {
+                var subContext:FragmentContext = {
+                    assets: context.assets,
+                    editedItems: false
+                };
+                newArgs.push(subContext);
+            }
+            instance = cast Type.createInstance(entityClass, newArgs);
+        }
         instance.id = item.id;
+
+        if (isFragment) {
+            cast(instance, ceramic.Fragment).depthRange = 1;
+        }
 
 #if editor
         instance.edited = context.editedItems;
@@ -171,7 +194,11 @@ class Fragment extends Visual {
         // Copy item data
         if (item.data != null) {
             for (key in Reflect.fields(item.data)) {
-                Reflect.setField(instance.data, key, Reflect.field(item.data, key));
+                // The condition is needed, not to check that data exists,
+                // but to ensure it is created when checking for it.
+                if (instance.data != null) {
+                    Reflect.setField(instance.data, key, Reflect.field(item.data, key));
+                }
             }
         }
 

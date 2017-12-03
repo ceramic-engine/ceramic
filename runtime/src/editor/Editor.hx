@@ -651,7 +651,7 @@ class Editor extends Entity {
                 }
 
             case 'fragment':
-                if (fragment != null && value.id != fragment.id) {
+                if (fragment != null && (fragment.fragmentData == null || value.id != fragment.fragmentData.id)) {
                     fragment.destroy();
                     fragment = null;
                     selectedItemId = null;
@@ -686,7 +686,7 @@ class Editor extends Entity {
                     fitFragment();
                 }
                 else if (action == 'delete') {
-                    if (fragment != null && value.id == fragment.id) {
+                    if (fragment != null && (fragment.fragmentData == null || value.id != fragment.fragmentData.id)) {
                         fragment.destroy();
                         fragment = null;
                         selectedItemId = null;
@@ -695,9 +695,9 @@ class Editor extends Entity {
 
             case 'fragment-item':
                 if (action == 'put') {
-                    //untyped console.log('PUT');
-                    //untyped console.log(value);
                     fragmentItems.set(value.id, value);
+                    untyped console.error('PUT');
+                    untyped console.log(value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
                         var visual:Visual = cast entity;

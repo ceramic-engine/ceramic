@@ -89,6 +89,7 @@ class Project {
             }
         }
 
+        app.editable.push('ceramic.Fragment');
         app.editable.push('ceramic.Quad');
         app.editable.push('ceramic.Text');
 
