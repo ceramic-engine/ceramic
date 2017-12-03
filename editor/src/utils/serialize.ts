@@ -161,7 +161,7 @@ export function deserializeValue(value:any, type:any, options?:DeserializeOption
         } else if (typeof(value) === 'boolean') {
             return value;
         } else {
-            return null;
+            return value;
         }
     }
     else if (value == null) {
