@@ -189,7 +189,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                     let n = 1;
                     let index = 0;
                     let texture = item.props.get(field.name);
-                    if (project.fontAssets != null) {
+                    if (project.imageAssets != null) {
                         for (let asset of project.imageAssets) {
                             list.push(asset.name);
                             if (asset.name === texture) {
@@ -211,6 +211,36 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                             />
                         </Field>
                     );
+                }
+                else if (type === 'ceramic.FragmentData') {
+
+                    let list = ['none'];
+                    let n = 1;
+                    let index = 0;
+                    let fragmentData = item.props.get(field.name);
+                    if (project.fragments != null) {
+                        for (let fragment of project.fragments) {
+                            list.push(fragment.name);
+                            if (fragmentData != null && fragmentData.id === fragment.id) {
+                                index = n;
+                            }
+                            n++;
+                        }
+                    }
+
+                    return (
+                        <Field label={this.toFieldName(field.name)}>
+                            <SelectInput
+                                empty={0}
+                                selected={index}
+                                options={list}
+                                onChange={(selected) => {
+                                    item.props.set(field.name, selected === 0 ? null : JSON.parse(JSON.stringify(project.fragments[selected - 1].serializeForCeramic())));
+                                }}
+                            />
+                        </Field>
+                    );
+
                 }
                 else {
                     let result:any = null;
