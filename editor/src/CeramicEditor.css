@@ -472,6 +472,10 @@ body, html {
 
 /* Tags */
 
+#body .input-tags-container:not(.focus) .sortable {
+    display: inline-block;
+}
+
 #body .input-tags-container:not(.focus) .sortable-item {
     display: inline-block;
 }

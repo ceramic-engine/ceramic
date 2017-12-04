@@ -40,7 +40,7 @@ import Sortable from './Sortable';
                     shouldCancelStart={this.handleTagShouldCancelStart}
                     onSortStart={this.handleTagSortStart}
                     onSortEnd={this.handleTagSortEnd}
-                    axis="y"
+                    lockAxis={'y'}
                 >
                     {tags.map((value, index) => {
                         return <div
