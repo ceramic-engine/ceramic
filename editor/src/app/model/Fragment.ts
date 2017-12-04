@@ -79,6 +79,12 @@ class Fragment extends Model {
 
     } //serializeForCeramic
 
+    serializeForCeramicSubFragment() {
+
+        return serializeModel(this, { exclude: ['_model', 'bundle'], recursive: true });
+
+    } //serializeForCeramic
+
 } //Fragment
 
 export default Fragment;

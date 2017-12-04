@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FragmentItem, project } from 'app/model';
-import { observer } from 'utils';
+import { observer, serializeModel } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
 
 @observer class FragmentItemField extends React.Component {
@@ -235,7 +235,13 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                                 selected={index}
                                 options={list}
                                 onChange={(selected) => {
-                                    item.props.set(field.name, selected === 0 ? null : JSON.parse(JSON.stringify(project.fragments[selected - 1].serializeForCeramic())));
+                                    let fragment = selected === 0 ? null : project.fragments[selected - 1];
+                                    if (fragment != null) {
+                                        item.props.set(field.name, fragment.serializeForCeramicSubFragment());
+                                    }
+                                    else {
+                                        item.props.set(field.name, fragment);
+                                    }
                                 }}
                             />
                         </Field>

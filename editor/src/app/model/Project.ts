@@ -791,6 +791,46 @@ class Project extends Model {
 
         });
 
+        // Update sub-fragments content
+        setImmediate(() => {
+            autorun(() => {
+                
+                if (this.fragments == null || this.ui == null) return;
+
+                // Do it everytime the selected fragment changes
+                if (this.ui.selectedFragment != null) {
+
+                    let selectedFragment = this.ui.selectedFragment;
+
+                    setImmediate(() => {
+                        
+                        // For each fragment item of type 'ceramic.Fragment', update fragmentData
+                        for (let item of selectedFragment.items) {
+                            if (item.entity === 'ceramic.Fragment') {
+
+                                // Get previous fragment data
+                                let fragmentData = item.props.get('fragmentData');
+
+                                // Get up to date fragment data
+                                if (fragmentData != null) {
+                                    for (let fragment of this.fragments) {
+                                        if (fragmentData != null && fragmentData.id === fragment.id) {
+                                            fragmentData = fragment.serializeForCeramicSubFragment();
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Update item
+                                item.props.set('fragmentData', fragmentData);
+                            }
+                        }
+                    });
+                }
+
+            });
+        });
+
         // Update data from ceramic (haxe)
         ceramic.listen('set/*', (message) => {
 
