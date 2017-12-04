@@ -107,9 +107,6 @@ class Fragment extends Visual {
 
     function set_fragmentData(fragmentData:FragmentData):FragmentData {
 
-        error('SET FRAGMENT DATA');
-        untyped console.log(fragmentData);
-
         this.fragmentData = fragmentData;
         var usedIds = new Map<String,Bool>();
 
@@ -133,15 +130,18 @@ class Fragment extends Visual {
 
         }
 
-        // Remove unused items
-        var toRemove = [];
-        for (entity in entities) {
-            if (!usedIds.exists(entity.id)) {
-                toRemove.push(entity.id);
+        // Keep items if fragmentData is provided with no property 'items'
+        if (fragmentData == null || Reflect.hasField(fragmentData, 'items')) {
+            // Remove unused items
+            var toRemove = [];
+            for (entity in entities) {
+                if (!usedIds.exists(entity.id)) {
+                    toRemove.push(entity.id);
+                }
             }
-        }
-        for (id in toRemove) {
-            removeItem(id);
+            for (id in toRemove) {
+                removeItem(id);
+            }
         }
 
         return fragmentData;
@@ -334,6 +334,12 @@ class Fragment extends Visual {
         }
 
     } //removeAllItems
+
+    function destroy() {
+
+        removeAllItems();
+
+    } //destroy
 
 #if editor
 
