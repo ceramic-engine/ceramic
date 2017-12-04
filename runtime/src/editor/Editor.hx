@@ -686,7 +686,7 @@ class Editor extends Entity {
                     fitFragment();
                 }
                 else if (action == 'delete') {
-                    if (fragment != null && (fragment.fragmentData == null || value.id != fragment.fragmentData.id)) {
+                    if (fragment != null && (fragment.fragmentData == null || value.id == fragment.fragmentData.id)) {
                         fragment.destroy();
                         fragment = null;
                         selectedItemId = null;
