@@ -77,6 +77,8 @@ class UiState extends Model {
 
     @compute get selectedFragment():Fragment {
 
+        if (project == null || project.fragments == null) return null;
+
         for (let fragment of project.fragments) {
             if (fragment != null && fragment.id === this.selectedFragmentId) {
                 return fragment;
