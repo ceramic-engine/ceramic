@@ -73,6 +73,9 @@ class Fragment extends Visual {
     @editable
     public var fragmentData(default,set):FragmentData = null;
 
+    @editable
+    public var overrides:Array<String> = [];
+
 #if editor
 
     @event function editableItemUpdate(item:FragmentItem);
@@ -383,9 +386,7 @@ class Fragment extends Visual {
                             }
                         }
                     default:
-                        if (!basicTypes.exists(fieldType)) {
-                            value = null;
-                        }
+                        // Keep the value as is
                 }
             }
             if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {

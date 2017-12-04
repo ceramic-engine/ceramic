@@ -108,7 +108,7 @@ import { context } from 'app/context';
                                     )}
                                 </Alt>
                                 {project.customAssets ?
-                                this.mapEntries(project.customAssets).map((entry) => <div>
+                                this.mapEntries(project.customAssets).map((entry, index) => <div key={index}>
                                     <Title>{this.assetListName(entry.key)}</Title>
                                     <Alt>
                                         {project.customAssets.get(entry.key).map((val, i) =>

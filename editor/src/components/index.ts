@@ -12,4 +12,5 @@ export { default as TextInput } from './TextInput';
 export { default as NumberInput } from './NumberInput';
 export { default as SelectInput } from './SelectInput';
 export { default as ColorInput } from './ColorInput';
+export { default as TagsInput } from './TagsInput';
 export { default as Sortable } from './Sortable';

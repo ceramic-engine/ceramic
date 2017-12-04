@@ -1,4 +1,5 @@
 import { serialize, observe, action, compute, files, autorun, ceramic, keypath, history, uuid, db, git, realtime, serializeModel, Model, Room, Peer } from 'utils';
+import { isObservableArray, isObservableMap } from 'mobx';
 import Fragment from './Fragment';
 import FragmentItem from './FragmentItem';
 import UiState from './UiState';
@@ -831,6 +832,17 @@ class Project extends Model {
             });
         });
 
+        function areEqualArrays(a:any, b:any) {
+            if (!Array.isArray(a) && !isObservableArray(a)) return false;
+            if (!Array.isArray(b) && !isObservableArray(b)) return false;
+            var length = a.length;
+            if (length !== b.length) return false;
+            for (var i = 0; i < length; i++) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+
         // Update data from ceramic (haxe)
         ceramic.listen('set/*', (message) => {
 
@@ -866,7 +878,10 @@ class Project extends Model {
                              || (item.props.get(k) == null && message.value[k] != null)
                              || (item.props.get(k) != null && message.value[k] == null)
                             ) {
-                                item.props.set(k, message.value[k]);
+                                // Don't replace if contents are identical
+                                if (!areEqualArrays(item.props.get(k), message.value[k])) {
+                                    item.props.set(k, message.value[k]);
+                                }
                             }
                         }
                     }

@@ -280,10 +280,10 @@ body, html {
     padding-top: 5px;
 }
 
-#body input.input, #body .input-select-container, #body textarea.input {
+#body input.input, #body .input-select-container, #body .input-tags-container, #body textarea.input {
     background-color: #454545;
     border: 1px solid #666666;
-    height: 19px;
+    min-height: 19px;
 }
 
 #body input.input.disabled {
@@ -299,7 +299,7 @@ body, html {
     height: 19px;
 }
 
-#body input.input::selection, #body select.input::selection, #body textarea.input::selection {
+#body input.input::selection, #body select.input::selection, #body textarea.input::selection, #body div.tag-input::selection {
     background-color: #2798eb;
 }
 
@@ -326,7 +326,8 @@ body, html {
 #body input.input.input-text:focus,
 #body input.input.input-number:focus,
 #body input.input.input-color:focus,
-#body .input-select-container.focus {
+#body .input-select-container.focus,
+#body .input-tags-container.focus {
     border-color: #2798eb;
 }
 
@@ -467,6 +468,49 @@ body, html {
 
 #body .input-select-container.empty select.input.input-select {
     color: #bbbbbb;
+}
+
+/* Tags */
+
+#body .input-tags-container:not(.focus) .sortable-item {
+    display: inline-block;
+}
+
+#body .input-tags-container:not(.large) {
+    width: 144px;
+    padding: 4px 0 0 4px;
+    min-height: 15px;
+}
+
+#body .input-tags-container.windows.large {
+    padding-left: 1px;
+    padding-right: 3px;
+}
+
+#body .tag-item {
+    display: inline-block;
+    background-color: #777777;
+    font-size: 10px;
+    color: white;
+    margin: 0px 4px 4px 0px;
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+#body .tag-item.selected {
+    background-color: #2798eb;
+}
+
+#body .input-tags-container .tag-input {
+    display: inline-block;
+    background-color: transparent;
+    border: none;
+    color: #f3f3f3;
+    font-size: 10px;
+    margin: 0px 0px 4px 0px;
+    outline: none;
+    min-width: 1px;
+    min-height: 10px;
 }
 
 /* Asset info */

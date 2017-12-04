@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FragmentItem, project } from 'app/model';
 import { observer, serializeModel } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, TagsInput, Title, Alt, Sortable } from 'components';
 
 @observer class FragmentItemField extends React.Component {
 
@@ -247,6 +247,21 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                         </Field>
                     );
 
+                }
+                else if (type === 'Array<String>') {
+
+                    let value = item.props.get(field.name);
+
+                    return (
+                        <Field label={this.toFieldName(field.name)}>
+                            <TagsInput
+                                value={value}
+                                onChange={(newValue) => {
+                                    item.props.set(field.name, newValue);
+                                }}
+                            />
+                        </Field>
+                    );
                 }
                 else {
                     let result:any = null;
