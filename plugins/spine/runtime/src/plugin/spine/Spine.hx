@@ -252,17 +252,20 @@ class Spine extends Visual {
             editor.render();
         }
 
-        onDown(this, function(info) {
+        app.onceUpdate(this, function(delta) {
 
             // Do nothing if this is not the object being edited
             if (!edited) return;
 
-            app.onUpdate(this, render);
-            paused = false;
+            onDown(this, function(info) {
 
-            screen.onceUp(this, function(info) {
-                app.offUpdate(render);
-                paused = true;
+                app.onUpdate(this, render);
+                paused = false;
+
+                screen.onceUp(this, function(info) {
+                    app.offUpdate(render);
+                    paused = true;
+                });
             });
         });
 
