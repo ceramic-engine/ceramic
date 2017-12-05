@@ -33,7 +33,7 @@ import Sortable from './Sortable';
 
         return (
             <div
-                className={className + (this.props.size === 'large' ? ' large' : '') + (tags.length == 0 ? ' no-tags' : '')}
+                className={className + (this.props.size === 'large' ? ' large' : '') + (tags.length === 0 ? ' no-tags' : '')}
                 onMouseDown={this.handleContainerFocus}
             >
                 <Sortable

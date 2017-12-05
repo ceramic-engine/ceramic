@@ -23,6 +23,7 @@ import { context } from 'app/context';
                     context.ceramicReady ?
                         project.allAssets != null ?
                             <div>
+                                {project.imageAssets.length > 0 ? <div>
                                 <Title>Images</Title>
                                 <Alt>
                                     {project.imageAssets.map((val, i) =>
@@ -47,6 +48,8 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                </div> : null}
+                                {project.textAssets.length > 0 ? <div>
                                 <Title>Texts</Title>
                                 <Alt>
                                     {project.textAssets.map((val, i) =>
@@ -62,6 +65,8 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                </div> : null}
+                                {project.soundAssets.length > 0 ? <div>
                                 <Title>Sounds</Title>
                                 <Alt>
                                     {project.soundAssets.map((val, i) =>
@@ -77,6 +82,8 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                </div> : null}
+                                {project.fontAssets.length > 0 ? <div>
                                 <Title>Fonts</Title>
                                 <Alt>
                                     {project.fontAssets.map((val, i) =>
@@ -92,6 +99,8 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                </div> : null}
+                                {project.databaseAssets.length > 0 ? <div>
                                 <Title>Databases</Title>
                                 <Alt>
                                     {project.databaseAssets.map((val, i) =>
@@ -107,23 +116,26 @@ import { context } from 'app/context';
                                         </div>
                                     )}
                                 </Alt>
+                                </div> : null}
                                 {project.customAssets ?
                                 this.mapEntries(project.customAssets).map((entry, index) => <div key={index}>
-                                    <Title>{this.assetListName(entry.key)}</Title>
-                                    <Alt>
-                                        {project.customAssets.get(entry.key).map((val, i) =>
-                                            <div
-                                                key={i}
-                                                className={
-                                                    'entry in-alt'
-                                                    + (i < project.customAssets.get(entry.key).length - 1 ? ' with-separator' : '')
-                                                }
-                                            >
-                                                <div className="name">{val.name}</div>
-                                                <div className="info">{val.paths.join(', ')}</div>
-                                            </div>
-                                        )}
-                                    </Alt>
+                                    {project.customAssets.get(entry.key).length > 0 ? <div>
+                                        <Title>{this.assetListName(entry.key)}</Title>
+                                        <Alt>
+                                            {project.customAssets.get(entry.key).map((val, i) =>
+                                                <div
+                                                    key={i}
+                                                    className={
+                                                        'entry in-alt'
+                                                        + (i < project.customAssets.get(entry.key).length - 1 ? ' with-separator' : '')
+                                                    }
+                                                >
+                                                    <div className="name">{val.name}</div>
+                                                    <div className="info">{val.paths.join(', ')}</div>
+                                                </div>
+                                            )}
+                                        </Alt>
+                                    </div> : null}
                                 </div>) : null}
                                 <Form>
                                     <Field>

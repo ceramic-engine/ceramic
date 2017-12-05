@@ -28,6 +28,8 @@ export class Context {
 
     @observe previewPath:string = null;
 
+    @observe defaultAssetsPath:string = null;
+
     @observe connectionStatus:'pending'|'online'|'offline' = 'pending';
 
 /// External commands versions
@@ -82,6 +84,9 @@ export class Context {
             }
         };
         checkServerPort();
+
+        // Get default assets path
+        this.defaultAssetsPath = electronApp.defaultAssetsPath;
 
         // Get machine identifier
         var dotCeramicDir = join(os.homedir(), '.ceramic');

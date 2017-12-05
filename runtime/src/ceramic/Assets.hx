@@ -127,7 +127,7 @@ class Asset extends Entity implements Observable {
             }
         }
         if (extensions == null || dir == null) {
-            if (Assets.customAssetKinds != null && Assets.customAssetKinds.exists(kind)) {
+            if (Assets.customAssetKinds.exists(kind)) {
                 var kindInfo = Assets.customAssetKinds.get(kind);
                 if (extensions == null) extensions = kindInfo.extensions;
                 if (dir == null) dir = kindInfo.dir;
@@ -1027,7 +1027,7 @@ class Assets extends Entity {
 
 /// Internal
 
-    static var customAssetKinds:Map<String,CustomAssetKind>;
+    static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
 
 /// Lifecycle
 
@@ -1076,7 +1076,7 @@ class Assets extends Entity {
             case 'font': addFont(name, options);
             case 'shader': addShader(name, options);
             default:
-                if (customAssetKinds != null && customAssetKinds.exists(kind)) {
+                if (customAssetKinds.exists(kind)) {
                     customAssetKinds.get(kind).add(this, name, options);
                 } else {
                     throw "Assets: invalid asset kind for id: " + id;
@@ -1455,9 +1455,6 @@ class Assets extends Entity {
 
     public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool, types:Array<String>):Void {
 
-        if (customAssetKinds == null) {
-            customAssetKinds = new Map();
-        }
         customAssetKinds.set(kind, {
             kind: kind,
             add: add,

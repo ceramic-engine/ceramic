@@ -352,7 +352,9 @@ class Project extends Model {
 
         let path = this.assetsPath;
 
-        if (!path) return null;
+        if (!path) {
+            return null;
+        }
 
         if (isAbsolute(path)) return path;
 
@@ -844,8 +846,8 @@ class Project extends Model {
         }
 
         function areEqualObjs(a:any, b:any) {
-            if (typeof(a) != 'object' || a == null || a instanceof Array || isObservableArray(a)) return false;
-            if (typeof(b) != 'object' || b == null || b instanceof Array || isObservableArray(b)) return false;
+            if (typeof(a) !== 'object' || a == null || a instanceof Array || isObservableArray(a)) return false;
+            if (typeof(b) !== 'object' || b == null || b instanceof Array || isObservableArray(b)) return false;
             var areEqual = true;
             for (let key in a) {
                 if (a.hasOwnProperty(key)) {

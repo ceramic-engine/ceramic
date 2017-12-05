@@ -168,13 +168,18 @@ server.use(function(req, res, next) {
 });
 
 let defaultPreviewPath = null;
+let defaultProcessedAssetsPath = null;
 if (process.env.ELECTRON_DEV) {
   defaultPreviewPath = path.normalize(path.join(__dirname, '/public/ceramic'))
+  defaultProcessedAssetsPath = path.normalize(path.join(__dirname, '/public/ceramic/assets'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/public'))))
 } else {
   defaultPreviewPath = path.normalize(path.join(__dirname, '/build/ceramic'))
+  defaultProcessedAssetsPath = path.normalize(path.join(__dirname, '/build/ceramic/assets'))
   server.use('/app', express.static(path.normalize(path.join(__dirname, '/build'))))
 }
+
+// TODO find something else to handle default assets
 
 exports.assetsPath = null;
 exports.processingAssets = false;
@@ -190,10 +195,25 @@ server.get('/ceramic/assets/*', function(req, res) {
       return;
     }
 
-    if (exports.assetsPath == null || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
-      res.status(404)
-      res.send('Not found')
-    } else {
+    if (exports.assetsPath == null) {
+      if (fs.existsSync(path.join(defaultProcessedAssetsPath, relativePath))) {
+        let assetPath = path.join(defaultProcessedAssetsPath, relativePath);
+        fs.readFile(assetPath, function(err, data) {
+          if (err) {
+            res.status(404)
+            res.send('Not found')
+          } else {
+            res.contentType(assetPath);
+            res.end(data);
+          }
+        });
+      }
+      else {
+        res.status(404)
+        res.send('Not found')
+      }
+    }
+    else if (fs.existsSync(path.join(exports.assetsPath, relativePath))) {
       let assetPath = path.join(exports.assetsPath, relativePath);
       fs.readFile(assetPath, function(err, data) {
         if (err) {
@@ -204,6 +224,10 @@ server.get('/ceramic/assets/*', function(req, res) {
           res.end(data);
         }
       });
+    }
+    else {
+      res.status(404)
+      res.send('Not found')
     }
   }
   handleAsset();

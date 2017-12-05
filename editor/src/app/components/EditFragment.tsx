@@ -47,7 +47,7 @@ import { context } from 'app/context';
                     }}
                 >
                     <div className="rightside">
-                        {project.assetsPath != null ?
+                        {project.absoluteAssetsPath != null ?
                             fragment ?
                                 <Tabs
                                     tabs={["Visuals", "Fragments", "Assets"]}
