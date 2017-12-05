@@ -74,7 +74,10 @@ class Fragment extends Visual {
     public var fragmentData(default,set):FragmentData = null;
 
     @editable
-    public var overrides:Array<String> = [];
+    public var listTest:Array<String> = [];
+
+    @editable
+    public var mapTest:Map<String,String> = new Map();
 
 #if editor
 
@@ -122,10 +125,6 @@ class Fragment extends Visual {
             if (fragmentData.items != null) {
                 // Add/Update items
                 for (item in fragmentData.items) {
-                    if (data.name == 'YELLOW') {
-                        error('(YELLOW) PUT ITEM');
-                        untyped console.log(item);
-                    }
                     putItem(item);
                     usedIds.set(item.id, true);
                 }
@@ -211,6 +210,11 @@ class Fragment extends Visual {
                 var fieldType = FieldInfo.typeOf(item.entity, field);
                 var value:Dynamic = Reflect.field(item.props, field);
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
+                /*if (field == 'mapTest') {
+                    untyped console.error('CONVERTER $fieldType ' + item.data.name);
+                    untyped console.log(converter);
+                    untyped console.log(value);
+                }*/
                 if (converter != null) {
                     function(field) {
                         converter.basicToField(

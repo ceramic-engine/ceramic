@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FragmentItem, project } from 'app/model';
 import { observer, serializeModel } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, TagsInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, TagsInput, MapInput, Title, Alt, Sortable } from 'components';
 
 @observer class FragmentItemField extends React.Component {
 
@@ -258,6 +258,36 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                                 value={value}
                                 onChange={(newValue) => {
                                     item.props.set(field.name, newValue);
+                                }}
+                            />
+                        </Field>
+                    );
+                }
+                else if (type === 'Map<String,String>') {
+
+                    let mapValue = item.props.get(field.name);
+                    let value:Array<{key:string,value:string}> = [];
+                    if (mapValue != null) {
+                        for (let key in mapValue) {
+                            if (mapValue.hasOwnProperty(key)) {
+                                value.push({
+                                    key: key,
+                                    value: mapValue[key]
+                                });
+                            }
+                        }
+                    }
+
+                    return (
+                        <Field label={this.toFieldName(field.name)}>
+                            <MapInput
+                                value={value}
+                                onChange={(newValue) => {
+                                    let result = {};
+                                    for (let entry of newValue) {
+                                        result[entry.key] = entry.value;
+                                    }
+                                    item.props.set(field.name, result);
                                 }}
                             />
                         </Field>

@@ -843,6 +843,31 @@ class Project extends Model {
             return true;
         }
 
+        function areEqualObjs(a:any, b:any) {
+            if (typeof(a) != 'object' || a == null || a instanceof Array || isObservableArray(a)) return false;
+            if (typeof(b) != 'object' || b == null || b instanceof Array || isObservableArray(b)) return false;
+            var areEqual = true;
+            for (let key in a) {
+                if (a.hasOwnProperty(key)) {
+                    if (a[key] !== b[key]) {
+                        areEqual = false;
+                        break;
+                    }
+                }
+            }
+            if (areEqual) {
+                for (let key in b) {
+                    if (b.hasOwnProperty(key)) {
+                        if (b[key] !== a[key]) {
+                            areEqual = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            return areEqual;
+        }
+
         // Update data from ceramic (haxe)
         ceramic.listen('set/*', (message) => {
 
@@ -879,7 +904,7 @@ class Project extends Model {
                              || (item.props.get(k) != null && message.value[k] == null)
                             ) {
                                 // Don't replace if contents are identical
-                                if (!areEqualArrays(item.props.get(k), message.value[k])) {
+                                if (!areEqualArrays(item.props.get(k), message.value[k]) && !areEqualObjs(item.props.get(k), message.value[k])) {
                                     item.props.set(k, message.value[k]);
                                 }
                             }

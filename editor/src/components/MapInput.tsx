@@ -2,16 +2,16 @@ import * as React from 'react';
 import { autobind, observer, observe, arrayMove } from 'utils';
 import Sortable from './Sortable';
 
-/** Tags input */
-@observer class TagsInput extends React.Component {
+/** Map input */
+@observer class MapInput extends React.Component {
 
     props:{
         /** Value */
-        value:Array<string>,
+        value:Array<{key:string,value:string}>,
         /** Width */
         size?:"large",
         /** onChange */
-        onChange?:(value:Array<string>) => void,
+        onChange?:(value:Array<{key:string,value:string}>) => void,
         /** Disabled */
         disabled?:boolean
     };
@@ -20,13 +20,15 @@ import Sortable from './Sortable';
 
     focusing:boolean = false;
 
+    @observe awaitingKey:string = null;
+
     @observe nextValue:string = '';
 
     render() {
 
-        let className = 'input-tags-container' + (process.platform === 'win32' ? ' windows' : ' mac');
+        let className = 'input-tags-container tag-map' + (process.platform === 'win32' ? ' windows' : ' mac');
 
-        let tags = this.props.value;
+        let tags = this.props.value.slice();
         if (tags == null) tags = [];
 
         return (
@@ -41,18 +43,33 @@ import Sortable from './Sortable';
                     onSortStart={this.handleTagSortStart}
                     onSortEnd={this.handleTagSortEnd}
                 >
-                    {tags.map((value, index) => {
-                        return <div
-                            key={index}
-                            className="tag-item tag-item-simple"
-                        >
-                            {value}
+                    {tags.map((entry, index) => {
+                        return <div className="tag-map-entry" key={index}>
+                            <div
+                                className="tag-item tag-item-key"
+                            >
+                                {entry.key}
+                            </div>
+                            <div
+                                className="tag-item tag-item-value"
+                            >
+                                {entry.value}
+                            </div>
                         </div>;
                     })}
                 </Sortable>
+                {this.awaitingKey != null ?
+                <div className="tag-map-entry awaiting-key">
+                    <div
+                        className="tag-item tag-item-key"
+                    >
+                        {this.awaitingKey}
+                    </div>
+                </div>
+                : null}
                 <div
                     contentEditable={true}
-                    className={'tag-input'}
+                    className={'tag-input' + (this.awaitingKey ? ' awaiting-key' : '')}
                     value={this.nextValue}
                     onKeyDown={this.handleInputKeyDown}
                     onInput={this.handleInputChange}
@@ -83,13 +100,13 @@ import Sortable from './Sortable';
 
         if (this.props.disabled) return;
 
-        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
         for (let item of items) {
             item.classList.remove('selected');
         }
 
         if (e.target.classList.contains('tag-item')) {
-            e.target.classList.add('selected');
+            e.target.parentNode.classList.add('selected');
             this.inputElement.style.opacity = '0';
         }
         else {
@@ -121,7 +138,7 @@ import Sortable from './Sortable';
 
             (this.inputElement as any).parentNode.classList.remove('focus');
 
-            let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+            let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
             for (let item of items) {
                 item.classList.remove('selected');
             }
@@ -130,6 +147,8 @@ import Sortable from './Sortable';
 
             this.inputElement.textContent = '';
             this.nextValue = '';
+
+            this.awaitingKey = null;
         }
 
         if (global['focusedInput'] === this) {
@@ -143,20 +162,20 @@ import Sortable from './Sortable';
         if (e.keyCode === 8 && this.inputElement.textContent === '') { // Backspace
             e.preventDefault();
 
-            let selectedTag = this.selectedTag();
+            let selectedEntry = this.selectedEntry();
 
-            if (selectedTag != null) {
+            if (selectedEntry != null) {
 
                 let i = 0;
                 let prevValue = this.props.value;
                 let newValue = [];
-                let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+                let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
                 for (let item of items) {
-                    if (items[i + 1] === selectedTag) {
+                    if (items[i + 1] === selectedEntry) {
                         item.classList.add('selected');
                         newValue.push(prevValue[i]);
                     }
-                    else if (item === selectedTag) {
+                    else if (item === selectedEntry) {
                         item.classList.remove('selected');
                     }
                     else {
@@ -172,16 +191,25 @@ import Sortable from './Sortable';
                 if (newValue.length === 0) {
                     this.inputElement.style.opacity = '1';
                 }
+
+                if (selectedEntry.classList.contains('awaiting-key')) {
+                    this.awaitingKey = null;
+                }
             }
             else {
 
-                let value = this.props.value;
-                if (value == null) value = [];
-                let newValue = value.slice();
-                if (newValue.length > 0) newValue.pop();
+                if (this.awaitingKey) {
+                    this.awaitingKey = null;
+                }
+                else {
+                    let value = this.props.value;
+                    if (value == null) value = [];
+                    let newValue = value.slice();
+                    if (newValue.length > 0) newValue.pop();
 
-                if (this.props.onChange) {
-                    this.props.onChange(newValue);
+                    if (this.props.onChange) {
+                        this.props.onChange(newValue);
+                    }
                 }
             }
         }
@@ -189,31 +217,41 @@ import Sortable from './Sortable';
             e.preventDefault();
 
             let tag = this.inputElement.textContent.split("\r").join('').split("\n").join(' ').trim();
-            let value = this.props.value;
-            if (value == null) value = [];
-            let newValue = value.concat(tag);
+
+            if (!this.awaitingKey) {
+                this.awaitingKey = tag;
+            }
+            else {
+                let value = this.props.value;
+                if (value == null) value = [];
+                let newValue = value.concat({
+                    key: this.awaitingKey,
+                    value: tag
+                });
+                this.awaitingKey = null;
+
+                if (this.props.onChange) {
+                    this.props.onChange(newValue);
+                }
+            }
 
             this.inputElement.textContent = '';
             this.nextValue = '';
-
-            if (this.props.onChange) {
-                this.props.onChange(newValue);
-            }
         }
         else if (e.keyCode === 37 || e.keyCode === 39 || e.keyCode === 40 || e.keyCode === 38) {
 
-            let selectedTag = this.selectedTag();
+            let selectedEntry = this.selectedEntry();
 
-            let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
-            if (selectedTag != null) {
+            let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
+            if (selectedEntry != null) {
                 
                 let i = 0;
-                if ((e.keyCode === 39 || e.keyCode === 40) || items[0] !== selectedTag) {
+                if ((e.keyCode === 39 || e.keyCode === 40) || items[0] !== selectedEntry) {
                     for (let item of items) {
-                        if ((e.keyCode === 37 || e.keyCode === 38) && items[i + 1] === selectedTag) {
+                        if ((e.keyCode === 37 || e.keyCode === 38) && items[i + 1] === selectedEntry) {
                             item.classList.add('selected');
                         }
-                        else if (item === selectedTag) {
+                        else if (item === selectedEntry) {
                             item.classList.remove('selected');
                             if ((e.keyCode === 39 || e.keyCode === 40) && items[i + 1] != null) {
                                 items[i + 1].classList.add('selected');
@@ -223,7 +261,7 @@ import Sortable from './Sortable';
                     }
                 }
 
-                if ((e.keyCode === 39 || e.keyCode === 40) && selectedTag === items[items.length - 1]) {
+                if ((e.keyCode === 39 || e.keyCode === 40) && selectedEntry === items[items.length - 1]) {
                     this.inputElement.style.opacity = '1';
                 }
             }
@@ -250,7 +288,7 @@ import Sortable from './Sortable';
         if (oldIndex === newIndex) return;
         let newValue = this.props.value.slice();
 
-        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
         let i = 0;
         for (let item of items) {
             if (i === newIndex) {
@@ -277,9 +315,9 @@ import Sortable from './Sortable';
 
 /// Helpers
 
-    selectedTag() {
+    selectedEntry() {
 
-        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+        let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
         for (let item of items) {
             if (item.classList.contains('selected')) {
                 return item;
@@ -288,22 +326,22 @@ import Sortable from './Sortable';
 
         return null;
 
-    } //selectedTag
+    } //selectedEntry
 
 /// Clipboard
 
     copySelected(cut:boolean = false) {
 
-        let selectedTag = this.selectedTag();
-        if (selectedTag != null) {
-            let content = selectedTag.textContent;
+        let selectedEntry = this.selectedEntry();
+        if (selectedEntry != null) {
+            let content = selectedEntry.textContent;
             if (cut) {
                 let i = 0;
                 let prevValue = this.props.value;
                 let newValue = [];
                 let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
                 for (let item of items) {
-                    if (item === selectedTag) {
+                    if (item === selectedEntry) {
                         item.classList.remove('selected');
                     }
                     else {
@@ -326,7 +364,9 @@ import Sortable from './Sortable';
 
     pasteToSelected(content:string) {
 
-        let selectedTag = this.selectedTag();
+        // TODO
+
+        /*let selectedTag = this.selectedTag();
         if (content != null && content.trim() !== '') {
             content = content.split("\r").join('').split("\n").join(' ').trim();
             if (selectedTag != null) {
@@ -358,10 +398,10 @@ import Sortable from './Sortable';
                     this.props.onChange(newValue);
                 }
             }
-        }
+        }*/
 
     } //pasteToSelected
 
 }
 
-export default TagsInput;
+export default MapInput;

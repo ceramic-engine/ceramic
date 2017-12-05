@@ -4,7 +4,7 @@ import ceramic.Assets;
 import ceramic.Shortcuts.*;
 import ceramic.Fragment;
 
-import haxe.Json;
+import haxe.DynamicAccess;
 
 /** Interface to convert from/to basic type and field values with complex types. */
 interface ConvertField<BasicType,FieldType> {
@@ -94,3 +94,51 @@ class ConvertFragmentData implements ConvertField<Dynamic,FragmentData> {
     } //fieldToBasic
 
 } //ConvertFragmentData
+
+
+class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
+
+    public function new() {}
+
+    public function basicToField(assets:Assets, basic:DynamicAccess<T>, done:Map<String,T>->Void):Void {
+
+        if (basic == null) {
+            done(null);
+            return;
+        }
+
+        var value = new Map<String,T>();
+
+        for (key in basic.keys()) {
+            value.set(key, basic.get(key));
+        }
+
+        /*untyped console.error('CONVERT TO MAP');
+        untyped console.log(basic);
+        untyped console.log(value);*/
+
+        done(value);
+
+    } //basicToField
+
+    public function fieldToBasic(value:Map<String,T>):DynamicAccess<T> {
+
+        if (value == null) return null;
+
+        var basic:DynamicAccess<T> = {};
+
+        for (key in value.keys()) {
+            basic.set(key, value.get(key));
+        }
+
+        /*untyped console.error('CONVERT TO DYNAMIC');
+        untyped console.log(value);
+        untyped console.log(basic);*/
+
+        //throw 'OK';
+
+        return basic;
+
+    } //fieldToBasic
+
+} //ConvertMap
