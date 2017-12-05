@@ -40,7 +40,6 @@ import Sortable from './Sortable';
                     shouldCancelStart={this.handleTagShouldCancelStart}
                     onSortStart={this.handleTagSortStart}
                     onSortEnd={this.handleTagSortEnd}
-                    lockAxis={'y'}
                 >
                     {tags.map((value, index) => {
                         return <div
@@ -54,7 +53,6 @@ import Sortable from './Sortable';
                 <div
                     contentEditable={true}
                     className="tag-input"
-                    placeholder={''}
                     value={this.nextValue}
                     onKeyDown={this.handleInputKeyDown}
                     onInput={this.handleInputChange}
