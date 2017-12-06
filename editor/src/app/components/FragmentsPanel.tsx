@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, arrayMove } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, SelectInput, TextInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, SelectInput, TextInput, TagsInput, Title, Alt, Sortable } from 'components';
 import { project } from 'app/model';
 
 @observer class FragmentsPanel extends React.Component {
@@ -115,20 +115,10 @@ import { project } from 'app/model';
                     <Alt>
                         <Form>
                             <Field label="Custom bundles">
-                                <TextInput
-                                    multiline={true}
-                                    separator={','}
-                                    placeholder={"Bundle1, Bundle2\u2026"}
-                                    value={project.fragmentBundles.join(",\n")}
-                                    onChange={(val) => {
-                                        let result = [];
-                                        for (let item of val.split(",").join("\n").split("\n")) {
-                                            let trimmed = item.trim();
-                                            if (trimmed.length > 0) {
-                                                result.push(trimmed);
-                                            }
-                                        }
-                                        project.fragmentBundles = result;
+                                <TagsInput
+                                    value={project.fragmentBundles}
+                                    onChange={(newValue) => {
+                                        project.fragmentBundles = newValue;
                                     }}
                                 />
                             </Field>
