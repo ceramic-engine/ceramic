@@ -581,6 +581,7 @@ class Editor extends Entity {
                     // Reset assets
                     assets.destroy();
                     assets = new Assets();
+                    assets.runtimeAssets = runtimeAssets;
                     assets.onUpdate(this, function(_) render());
 
                     // Reset fragment to get updated assets

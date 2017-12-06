@@ -482,6 +482,10 @@ class FontAsset extends Asset {
         }
 
         log('Load font $path');
+
+        // Use runtime assets if provided
+        assets.runtimeAssets = runtimeAssets;
+        
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
         asset.path = path;
@@ -1025,6 +1029,9 @@ class Assets extends Entity {
 
     var assetsByKindAndName:Map<String,Map<String,Asset>> = new Map();
 
+    /** If set, will be provided to each added asset in this `Assets` instance. */
+    public var runtimeAssets:RuntimeAssets = null;
+
 /// Internal
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
@@ -1150,6 +1157,7 @@ class Assets extends Entity {
         }
         addedAssets.push(asset);
         asset.owner = this;
+        asset.runtimeAssets = this.runtimeAssets;
 
         return previousAsset;
 

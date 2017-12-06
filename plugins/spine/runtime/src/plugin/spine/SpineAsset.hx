@@ -54,6 +54,9 @@ class SpineAsset extends Asset {
         status = LOADING;
         log('Load spine $path');
 
+        // Use runtime assets if provided
+        assets.runtimeAssets = runtimeAssets;
+
         // Retrieve json asset
         //
         var prefix = path + '/';
@@ -77,20 +80,20 @@ class SpineAsset extends Asset {
 
         var jsonAsset = new TextAsset(baseName + '.json');
         jsonAsset.handleTexturesDensityChange = false;
-        jsonAsset.computePath(['json']);
 
         // Retrieve atlas asset
         //
         if (atlasAsset == null) {
             atlasAsset = new TextAsset(baseName + '.atlas');
             atlasAsset.handleTexturesDensityChange = false;
-            atlasAsset.computePath(['atlas']);
             assets.addAsset(atlasAsset);
+            atlasAsset.computePath(['atlas'], false, runtimeAssets);
         }
 
         // Load json and atlas assets
         //
         var prevAsset = assets.addAsset(jsonAsset);
+        jsonAsset.computePath(['json'], false, runtimeAssets);
 
         // Remove previous json asset if different
         if (prevAsset != null) prevAsset.destroy();
