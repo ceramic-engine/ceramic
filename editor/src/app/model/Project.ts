@@ -1174,6 +1174,8 @@ class Project extends Model {
         this.assetsLocked = true;
 
         try {
+            this.ui.selectedItemId = null;
+
             let data = JSON.parse(''+fs.readFileSync(path));
             
             let serialized = data.project;
