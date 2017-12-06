@@ -537,6 +537,10 @@ body, html {
     display: inline-block;
 }
 
+#body .input-tags-container .tag-map-entry.no-tags.awaiting-key {
+    margin-top: 4px;
+}
+
 #body .tag-map-entry .tag-item.tag-item-key {
     display: table-cell;
     border-top-right-radius: 0px;
@@ -590,6 +594,10 @@ body, html {
     padding-top: 2px;
     padding-left: 2px;
     margin: 3px 4px 2px 4px;
+}
+
+#body .input-tags-container .tag-input.no-tags.awaiting-key {
+    padding-top: 6px;
 }
 
 #body .input-tags-container:not(.focus) .tag-input {

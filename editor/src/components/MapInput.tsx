@@ -33,7 +33,7 @@ import Sortable from './Sortable';
 
         return (
             <div
-                className={className + (this.props.size === 'large' ? ' large' : '') + (tags.length === 0 ? ' no-tags' : '')}
+                className={className + (this.props.size === 'large' ? ' large' : '')}
                 onMouseDown={this.handleContainerFocus}
             >
                 <Sortable
@@ -59,7 +59,7 @@ import Sortable from './Sortable';
                     })}
                 </Sortable>
                 {this.awaitingKey != null ?
-                <div className="tag-map-entry awaiting-key">
+                <div className={'tag-map-entry awaiting-key' + (tags.length === 0 ? ' no-tags' : '')}>
                     <div
                         className="tag-item tag-item-key"
                     >
@@ -69,7 +69,7 @@ import Sortable from './Sortable';
                 : null}
                 <div
                     contentEditable={true}
-                    className={'tag-input' + (this.awaitingKey ? ' awaiting-key' : '')}
+                    className={'tag-input' + (this.awaitingKey ? ' awaiting-key' : '') + (tags.length === 0 ? ' no-tags' : '')}
                     value={this.nextValue}
                     onKeyDown={this.handleInputKeyDown}
                     onInput={this.handleInputChange}
