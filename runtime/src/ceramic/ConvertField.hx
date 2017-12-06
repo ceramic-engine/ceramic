@@ -95,7 +95,6 @@ class ConvertFragmentData implements ConvertField<Dynamic,FragmentData> {
 
 } //ConvertFragmentData
 
-
 class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
 
     public function new() {}
@@ -113,10 +112,6 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
             value.set(key, basic.get(key));
         }
 
-        /*untyped console.error('CONVERT TO MAP');
-        untyped console.log(basic);
-        untyped console.log(value);*/
-
         done(value);
 
     } //basicToField
@@ -130,10 +125,6 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
         for (key in value.keys()) {
             basic.set(key, value.get(key));
         }
-
-        /*untyped console.error('CONVERT TO DYNAMIC');
-        untyped console.log(value);
-        untyped console.log(basic);*/
 
         //throw 'OK';
 

@@ -293,6 +293,33 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                         </Field>
                     );
                 }
+                else if (type === 'Map<String,Bool>') {
+
+                    let mapValue = item.props.get(field.name);
+                    let value:Array<string> = [];
+                    if (mapValue != null) {
+                        for (let key in mapValue) {
+                            if (mapValue.hasOwnProperty(key)) {
+                                value.push(key);
+                            }
+                        }
+                    }
+
+                    return (
+                        <Field label={this.toFieldName(field.name)}>
+                            <TagsInput
+                                value={value}
+                                onChange={(newValue) => {
+                                    let result = {};
+                                    for (let key of newValue) {
+                                        result[key] = true;
+                                    }
+                                    item.props.set(field.name, result);
+                                }}
+                            />
+                        </Field>
+                    );
+                }
                 else {
                     let result:any = null;
 

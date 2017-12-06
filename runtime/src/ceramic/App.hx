@@ -146,6 +146,7 @@ class App extends Entity {
         converters.set('ceramic.BitmapFont', new ConvertFont());
         converters.set('ceramic.FragmentData', new ConvertFragmentData());
         converters.set('Map<String,String>', new ConvertMap<String>());
+        converters.set('Map<String,Bool>', new ConvertMap<String>());
 
     } //initFieldConverters
 
