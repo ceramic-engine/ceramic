@@ -579,7 +579,7 @@ body, html {
     min-height: 10px;
 }
 
-#body .input-tags-container.no-tags .tag-input {
+#body .input-tags-container .tag-input.no-tags {
     margin-top: 4px;
 }
 
@@ -593,9 +593,13 @@ body, html {
 }
 
 #body .input-tags-container:not(.focus) .tag-input {
-    position: absolute;
+    position: relative;
     left: -99999px;
     top: -99999px;
+}
+
+#body .input-tags-container:not(.focus) .tag-input:not(.no-tags) {
+    position: absolute;
 }
 
 /* Asset info */

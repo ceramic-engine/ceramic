@@ -31,7 +31,7 @@ import Sortable from './Sortable';
 
         return (
             <div
-                className={className + (this.props.size === 'large' ? ' large' : '') + (tags.length === 0 ? ' no-tags' : '')}
+                className={className + (this.props.size === 'large' ? ' large' : '')}
                 onMouseDown={this.handleContainerFocus}
             >
                 <Sortable
@@ -52,14 +52,16 @@ import Sortable from './Sortable';
                 </Sortable>
                 <div
                     contentEditable={true}
-                    className={'tag-input'}
+                    className={'tag-input' + (tags.length === 0 ? ' no-tags' : '')}
                     value={this.nextValue}
                     onKeyDown={this.handleInputKeyDown}
                     onInput={this.handleInputChange}
                     onPaste={this.handleInputChange}
                     onFocus={this.handleInputFocus}
                     onBlur={this.handleInputBlur}
-                    ref={(el) => { this.inputElement = el; }}
+                    ref={(el) => {
+                        this.inputElement = el;
+                    }}
                 />
             </div>
         );
@@ -199,6 +201,7 @@ import Sortable from './Sortable';
             if (this.props.onChange) {
                 this.props.onChange(newValue);
             }
+
         }
         else if (e.keyCode === 37 || e.keyCode === 39 || e.keyCode === 40 || e.keyCode === 38) {
 
