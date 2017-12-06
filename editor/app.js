@@ -195,7 +195,7 @@ server.get('/ceramic/assets/*', function(req, res) {
       return;
     }
 
-    if (exports.assetsPath == null) {
+    if (exports.assetsPath == null || !fs.existsSync(path.join(exports.assetsPath, relativePath))) {
       if (fs.existsSync(path.join(defaultProcessedAssetsPath, relativePath))) {
         let assetPath = path.join(defaultProcessedAssetsPath, relativePath);
         fs.readFile(assetPath, function(err, data) {
@@ -213,7 +213,7 @@ server.get('/ceramic/assets/*', function(req, res) {
         res.send('Not found')
       }
     }
-    else if (fs.existsSync(path.join(exports.assetsPath, relativePath))) {
+    else {
       let assetPath = path.join(exports.assetsPath, relativePath);
       fs.readFile(assetPath, function(err, data) {
         if (err) {
@@ -224,10 +224,6 @@ server.get('/ceramic/assets/*', function(req, res) {
           res.end(data);
         }
       });
-    }
-    else {
-      res.status(404)
-      res.send('Not found')
     }
   }
   handleAsset();
