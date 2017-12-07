@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer, arrayMove } from 'utils';
 import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectInput, Title, Alt, Sortable } from 'components';
 import { FragmentItemField } from 'app/components';
-import { project, VisualItem } from 'app/model';
+import { project, VisualItem, Fragment } from 'app/model';
 import FaLock from 'react-icons/lib/fa/lock';
 
 @observer class VisualsPanel extends React.Component {
@@ -20,6 +20,32 @@ import FaLock from 'react-icons/lib/fa/lock';
 
         // Typed `selected`
         let selectedVisual = project.ui.selectedVisual;
+
+        // Fragment overrides?
+        let fragmentOverrides:Array<{key:string, value:string}> = [];
+        let isFragment = selectedVisual && selectedVisual.entity === 'ceramic.Fragment';
+        let fragment:Fragment = null;
+        let fragmentData = null;
+        if (isFragment) {
+            fragmentData = selectedVisual.props.get('fragmentData');
+            if (fragmentData != null && project.fragments != null) {
+
+                for (let aFragment of project.fragments) {
+                    if (fragmentData.id === aFragment.id) {
+                        fragment = aFragment;
+                        break;
+                    }
+                }
+            }
+            if (fragment != null && fragment.overrides != null) {
+                fragment.overrides.forEach((value, key) => {
+                    fragmentOverrides.push({
+                        key: key,
+                        value: value
+                    });
+                });
+            }
+        }
 
         return (
             <Panel>
@@ -99,6 +125,9 @@ import FaLock from 'react-icons/lib/fa/lock';
                                     </Field>
                                     {this.mapEntries(selectedVisual.props).map((entry) => 
                                         <FragmentItemField key={entry.key} item={selectedVisual} field={entry.key} />
+                                    )}
+                                    {fragmentOverrides.map((entry) => 
+                                        <FragmentItemField key={entry.key} item={selectedVisual} field={entry.key} overridesFragment={fragment} />
                                     )}
                                 </Form>
                                 </div>

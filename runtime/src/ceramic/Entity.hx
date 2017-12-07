@@ -1,5 +1,8 @@
 package ceramic;
 
+using ceramic.Extensions;
+
+@editable
 #if !macro
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
@@ -61,33 +64,74 @@ class Entity implements Events implements Lazy {
 
 /// Components
 
-    var components:Map<String,Component> = null;
+    /** Public components mapping. Does not contain components
+        created separatelywith `component()` or macro-based components. */
+    @editable
+    public var components(default,set):ImmutableMap<String,Component> = null;
+    function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+        if (this.components == components) return components;
+
+        // Remove older components
+        if (this.components != null) {
+            for (name in this.components.keys()) {
+                if (!components.exists(name)) {
+                    removeComponent(name);
+                }
+            }
+        }
+
+        // Add new components
+        for (name in components.keys()) {
+            var newComponent = components.get(name);
+            if (this.components != null) {
+                var existing = this.components.get(name);
+                if (existing != null) {
+                    if (existing != newComponent) {
+                        removeComponent(name);
+                        component(name, newComponent);
+                    }
+                } else {
+                    component(name, newComponent);
+                }
+            } else {
+                component(name, newComponent);
+            }
+        }
+
+        // Update mapping
+        this.components = components;
+
+        return components;
+    }
+
+    /** Internal components representation. */
+    var _components:Map<String,Component> = null;
 
     public function component(name:String, ?component:Component):Component {
 
         if (component != null) {
-            if (components == null) {
-                components = new Map();
+            if (_components == null) {
+                _components = new Map();
             }
             else {
-                var existing = components.get(name);
+                var existing = _components.get(name);
                 if (existing != null) {
                     existing.destroy();
                 }
             }
-            components.set(name, component);
-            Reflect.setField(component, 'entity', this);
+            _components.set(name, component);
+            component.setProperty('entity', this);
             component.onceDestroy(this, function() {
-                if (Reflect.field(component, 'entity') == this) {
-                    Reflect.setField(component, 'entity', null);
+                if (component.getProperty('entity') == this) {
+                    component.setProperty('entity', null);
                 }
             });
             @:privateAccess component.init();
             return component;
 
         } else {
-            if (components == null) return null;
-            return components.get(name);
+            if (_components == null) return null;
+            return _components.get(name);
         }
 
     } //component
@@ -100,9 +144,9 @@ class Entity implements Events implements Lazy {
 
     public function removeComponent(name:String):Void {
 
-        var existing = components.get(name);
+        var existing = _components.get(name);
         if (existing != null) {
-            components.remove(name);
+            _components.remove(name);
             existing.destroy();
         }
 

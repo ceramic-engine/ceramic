@@ -81,6 +81,8 @@ class App extends Entity {
 
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
 
+    public var componentInitializers:Map<String,Array<Dynamic>->Component> = new Map();
+
 /// Internal
 
     var hierarchyDirty:Bool = false;
@@ -121,6 +123,9 @@ class App extends Entity {
         // Init field converters
         initFieldConverters();
 
+        // Init component initializers
+        initComponentInitializers();
+
         // Init collections
         initCollections();
 
@@ -146,9 +151,18 @@ class App extends Entity {
         converters.set('ceramic.BitmapFont', new ConvertFont());
         converters.set('ceramic.FragmentData', new ConvertFragmentData());
         converters.set('Map<String,String>', new ConvertMap<String>());
-        converters.set('Map<String,Bool>', new ConvertMap<String>());
+        converters.set('Map<String,Bool>', new ConvertMap<Bool>());
+        converters.set('ImmutableMap<String,String>', new ConvertMap<String>());
+        converters.set('ceramic.ImmutableMap<String,Bool>', new ConvertMap<Bool>());
+        converters.set('ceramic.ImmutableMap<String,ceramic.Component>', new ConvertComponentMap());
 
     } //initFieldConverters
+
+    function initComponentInitializers():Void {
+
+        // TODO
+
+    } //initComponentInitializers
 
     function initCollections():Void {
 

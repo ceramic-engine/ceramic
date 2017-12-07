@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, arrayMove } from 'utils';
-import { Button, Form, Field, Panel, NumberInput, SelectInput, TextInput, TagsInput, Title, Alt, Sortable } from 'components';
+import { Button, Form, Field, Panel, NumberInput, SelectInput, TextInput, TagsInput, MapInput, Title, Alt, Sortable } from 'components';
 import { project } from 'app/model';
 
 @observer class FragmentsPanel extends React.Component {
@@ -29,6 +29,16 @@ import { project } from 'app/model';
             }
             fragmentBundleList.push(bundle + '.fragments');
             n++;
+        }
+
+        let fragmentOverrides:Array<{key:string, value:string}> = [];
+        if (selectedFragment) {
+            selectedFragment.overrides.forEach((value, key) => {
+                fragmentOverrides.push({
+                    key: key,
+                    value: value
+                });
+            });
         }
 
         return (
@@ -103,6 +113,18 @@ import { project } from 'app/model';
                                     options={fragmentBundleList}
                                     onChange={(selected) => {
                                         selectedFragment.bundle = selected === 0 ? null : fragmentBundleList[selected].substr(0, fragmentBundleList[selected].length - '.fragments'.length);
+                                    }}
+                                />
+                            </Field>
+                            <Field label="Overrides">
+                                <MapInput
+                                    value={fragmentOverrides}
+                                    onChange={(newOverrides) => {
+                                        let result = new Map();
+                                        for (let entry of newOverrides) {
+                                            result.set(entry.key, entry.value);
+                                        }
+                                        selectedFragment.overrides = result;
                                     }}
                                 />
                             </Field>

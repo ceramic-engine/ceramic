@@ -24,6 +24,9 @@ class FragmentItem extends Model {
     /** Props */
     @observe @serialize props:Map<string,any> = new Map();
 
+    /** Overrides data */
+    @observe @serialize overridesData:Map<string,any> = null;
+
 /// Helpers
 
     serializeForCeramic() {
@@ -37,17 +40,7 @@ class FragmentItem extends Model {
             if (serialized.hasOwnProperty(key)) {
                 if (key === 'locked' || key === 'name') {
                     data.data[key] = serialized[key];
-                }/* else if (key === 'id' || key === 'entity' || key === 'sortIndex') {
-                    data[key] = serialized[key];
-                } else if (key === 'explicitWidth') {
-                    if (serialized[key] != null) {
-                        data.props.width = serialized[key];
-                    }
-                } else if (key === 'explicitHeight') {
-                    if (serialized[key] != null) {
-                        data.props.height = serialized[key];
-                    }
-                }*/
+                }
                 else if (key === 'props') {
                     for (let k in serialized[key]) {
                         if (serialized[key].hasOwnProperty(k)) {

@@ -1,4 +1,4 @@
-import { serialize, observe, compute, serializeModel, stableSort, Model } from 'utils';
+import { serialize, observe, compute, serializeModel, serializeValue, stableSort, Model } from 'utils';
 import FragmentItem from './FragmentItem';
 import VisualItem from './VisualItem';
 import { project } from './index';
@@ -22,6 +22,9 @@ class Fragment extends Model {
     /** Fragment height */
     @observe @serialize height:number = 600;
 
+    /** Fragment overrides */
+    @observe @serialize overrides:Map<string,string> = new Map();
+
     /** Fragment items */
     @observe @serialize(FragmentItem) items:Array<FragmentItem|VisualItem> = [];
 
@@ -29,10 +32,22 @@ class Fragment extends Model {
 
     @compute get itemsById() {
         
+        let byId:Map<string, FragmentItem|VisualItem> = new Map();
+
+        for (let item of this.items) {
+            byId.set(item.id, item);
+        }
+
+        return byId;
+
+    } //itemsById
+
+    @compute get itemsByName() {
+        
         let byName:Map<string, FragmentItem|VisualItem> = new Map();
 
         for (let item of this.items) {
-            byName.set(item.id, item);
+            if (!byName.has(item.name)) byName.set(item.name, item);
         }
 
         return byName;
@@ -79,9 +94,30 @@ class Fragment extends Model {
 
     } //serializeForCeramic
 
-    serializeForCeramicSubFragment() {
+    serializeForCeramicSubFragment(overridesData?:Map<string,any>) {
 
-        return serializeModel(this, { exclude: ['_model', 'bundle'], recursive: true });
+        let serialized = serializeModel(this, { exclude: ['_model', 'bundle'], recursive: true });
+
+        if (overridesData && this.overrides) {
+            overridesData.forEach((value, key) => {
+                let info = this.overrides.get(key);
+                if (info) {
+                    let dotIndex = info.lastIndexOf('.');
+                    if (dotIndex !== -1) {
+                        let anItemName = info.slice(0, dotIndex);
+                        let aFieldName = info.slice(dotIndex + 1);
+                        for (let serializedItem of serialized.items) {
+                            if (serializedItem.name === anItemName) {
+                                serializedItem.props[aFieldName] = serializeValue(value);
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        return serialized;
 
     } //serializeForCeramic
 

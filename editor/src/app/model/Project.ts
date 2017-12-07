@@ -804,31 +804,43 @@ class Project extends Model {
                 if (this.ui.selectedFragment != null) {
 
                     let selectedFragment = this.ui.selectedFragment;
-
-                    setImmediate(() => {
                         
-                        // For each fragment item of type 'ceramic.Fragment', update fragmentData
-                        for (let item of selectedFragment.items) {
-                            if (item.entity === 'ceramic.Fragment') {
+                    // For each fragment item of type 'ceramic.Fragment', update fragmentData
+                    for (let item of selectedFragment.items) {
+                        if (item.entity === 'ceramic.Fragment') {
 
-                                // Get previous fragment data
-                                let fragmentData = item.props.get('fragmentData');
+                            // Let's depend on every overrides
+                            let data:Array<any> = [];
+                            if (item.overridesData) {
+                                item.overridesData.forEach((value, key) => {
+                                    data.push(item.overridesData.get(key));
+                                });
+                            }
 
-                                // Get up to date fragment data
-                                if (fragmentData != null) {
-                                    for (let fragment of this.fragments) {
-                                        if (fragmentData != null && fragmentData.id === fragment.id) {
-                                            fragmentData = fragment.serializeForCeramicSubFragment();
-                                            break;
+                            let updateData = (item:FragmentItem) => {
+                                setImmediate(() => {
+
+                                    // Get previous fragment data
+                                    let fragmentData = item.props.get('fragmentData');
+
+                                    // Get up to date fragment data
+                                    if (fragmentData != null) {
+                                        for (let fragment of this.fragments) {
+                                            if (fragmentData != null && fragmentData.id === fragment.id) {
+                                                fragmentData = fragment.serializeForCeramicSubFragment(item.overridesData);
+                                                break;
+                                            }
                                         }
                                     }
-                                }
 
-                                // Update item
-                                item.props.set('fragmentData', fragmentData);
-                            }
+                                    // Update item
+                                    item.props.set('fragmentData', fragmentData);
+
+                                });
+                            };
+                            updateData(item);
                         }
-                    });
+                    }
                 }
 
             });
@@ -1416,7 +1428,7 @@ class Project extends Model {
         let item = db.getOrCreate(Model, data.id) as FragmentItem;
 
         // Add item
-        fragment.items.push(item);
+        fragment.items.unshift(item);
 
         // Normalize item depths
         let visuals = fragment.visualItemsSorted.slice();
