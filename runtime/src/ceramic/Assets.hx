@@ -696,7 +696,7 @@ class DatabaseAsset extends Asset {
 
         super('database', name, options);
 
-    } //name
+    } //new
 
     override public function load() {
 
