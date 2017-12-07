@@ -334,18 +334,24 @@ import Sortable from './Sortable';
 
         let selectedEntry = this.selectedEntry();
         if (selectedEntry != null) {
-            let content = selectedEntry.textContent;
+            let selectedItems = selectedEntry.querySelectorAll('.tag-item');
+            let content = {};
+            content[selectedItems[0].textContent.trim()] = selectedItems[1].textContent.trim();
             if (cut) {
                 let i = 0;
                 let prevValue = this.props.value;
                 let newValue = [];
-                let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
+                let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-map-entry');
                 for (let item of items) {
                     if (item === selectedEntry) {
                         item.classList.remove('selected');
                     }
                     else {
-                        newValue.push(prevValue[i]);
+                        let subItems = selectedEntry.querySelectorAll('.tag-item');
+                        newValue.push({
+                            key: subItems[0].textContent.trim(),
+                            value: subItems[1].textContent.trim()
+                        });
                     }
                     i++;
                 }
@@ -354,7 +360,7 @@ import Sortable from './Sortable';
                     this.props.onChange(newValue);
                 }
             }
-            return content;
+            return JSON.stringify(content);
         }
         else {
             return '';
@@ -364,41 +370,25 @@ import Sortable from './Sortable';
 
     pasteToSelected(content:string) {
 
-        // TODO
-
-        /*let selectedTag = this.selectedTag();
-        if (content != null && content.trim() !== '') {
-            content = content.split("\r").join('').split("\n").join(' ').trim();
-            if (selectedTag != null) {
-                selectedTag.textContent = content;
-
-                let i = 0;
-                let prevValue = this.props.value;
-                let newValue = [];
-                let items = (this.inputElement as any).parentNode.querySelectorAll('.tag-item');
-                for (let item of items) {
-                    if (item === selectedTag) {
-                        newValue.push(content);
-                    }
-                    else {
-                        newValue.push(prevValue[i]);
-                    }
-                    i++;
-                }
-
-                if (this.props.onChange) {
-                    this.props.onChange(newValue);
+        // TODO implement it right
+        try {
+            let newValue = [];
+            
+            let data = JSON.parse(content);
+            for (let key in data) {
+                if (data.hasOwnProperty(key)) {
+                    newValue.push({
+                        key: key,
+                        value: ''+data[key]
+                    });
                 }
             }
-            else {
-                let newValue = this.props.value.slice();
-                newValue.push(content);
 
-                if (this.props.onChange) {
-                    this.props.onChange(newValue);
-                }
+            if (this.props.onChange) {
+                this.props.onChange(newValue);
             }
-        }*/
+
+        } catch (e) {}
 
     } //pasteToSelected
 
