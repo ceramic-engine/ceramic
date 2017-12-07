@@ -115,7 +115,7 @@ class Editor extends Entity {
         };
 #end
 
-        settings.targetDensity = 1;
+        settings.targetDensity = 2; // TODO set to 1
 
     } //new
 
