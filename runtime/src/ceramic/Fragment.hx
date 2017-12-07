@@ -11,6 +11,9 @@ typedef FragmentData = {
     /** Identifier of the fragment. */
     public var id:String;
 
+    /** Name of the fragment. */
+    public var name:String;
+
     /** Arbitrary data hold by this fragment. */
     public var data:Dynamic<Dynamic>;
 
@@ -76,6 +79,10 @@ class Fragment extends Visual {
     @editable
     public var fragmentData(default,set):FragmentData = null;
 
+    public var pendingLoads(default,null):Int = 0;
+
+    @event function ready();
+
 #if editor
 
     @event function editableItemUpdate(item:FragmentItem);
@@ -109,6 +116,8 @@ class Fragment extends Visual {
 /// Data
 
     function set_fragmentData(fragmentData:FragmentData):FragmentData {
+        
+        pendingLoads++;
 
         this.fragmentData = fragmentData;
         var usedIds = new Map<String,Bool>();
@@ -142,6 +151,9 @@ class Fragment extends Visual {
                 removeItem(id);
             }
         }
+
+        pendingLoads--;
+        if (pendingLoads == 0) emitReady();
 
         return fragmentData;
 
@@ -191,7 +203,7 @@ class Fragment extends Visual {
 #end
 
         // Set name
-        instance.data.name = item.name;
+        if (instance.data.name == null && item.name != null) instance.data.name = item.name;
 
         // Copy item data
         if (item.data != null) {
@@ -224,19 +236,37 @@ class Fragment extends Visual {
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
                 if (converter != null) {
                     function(field) {
+                        pendingLoads++;
                         converter.basicToField(
                             context.assets,
                             value,
                             function(value:Dynamic) {
+
+                                pendingLoads--;
+                                if (destroyed) return;
+
                                 if (!instance.destroyed) {
 
-                                    instance.setProperty(field, value);
+                                    if (field != 'components') {
+                                        instance.setProperty(field, value);
 
 #if editor
-                                    // Update editable fields from instance
-                                    updateEditableFieldsFromInstance(item.id);
+                                        updateEditableFieldsFromInstance(item.id);
 #end
+                                    }
+                                    else {
+
+                                        onceReady(this, function() {
+                                            instance.setProperty(field, value);
+
+#if editor
+                                            updateEditableFieldsFromInstance(item.id);
+#end
+                                        });
+                                    }
                                 }
+
+                                if (pendingLoads == 0) emitReady();
                             }
                         );
                     }(field);
