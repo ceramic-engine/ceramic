@@ -1,5 +1,6 @@
 package plugin.spine;
 
+import spine.utils.SkeletonClipping;
 import spine.support.graphics.TextureAtlas;
 import spine.AnimationState;
 import spine.attachments.*;
@@ -58,6 +59,8 @@ class Spine extends Visual {
     var globalBoundParentSlotVisible:Bool = false;
 
     var setupBoneTransforms:Map<String,Transform> = null;
+
+    var clipper:SkeletonClipping = new SkeletonClipping();
 
 /// Events
 
@@ -546,6 +549,7 @@ class Spine extends Visual {
         var meshAttachment:MeshAttachment;
         var mesh:Mesh;
         var verticesLength:Int;
+        var clipAttachment:ClippingAttachment = null;
         var colors:Array<AlphaColor>;
         var alphaColor:AlphaColor;
         var emptySlotMesh:Bool = false;
@@ -557,6 +561,8 @@ class Spine extends Visual {
         var boneSetupTransform:Transform = null;
         var regularRender:Bool = !setup;
         var didFlipX:Bool = false;
+        var vertexSize:Int = 0;
+        var count:Int = 0;
 
         var diffX:Float = width * skeletonOriginX;
         var diffY:Float = height * skeletonOriginY;
@@ -580,6 +586,7 @@ class Spine extends Visual {
             bone = slot.bone;
             slotName = slot.data.name;
             boundSlot = null;
+            vertexSize = clipper != null && clipper.isClipping() ? 2 : 5;
 
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
@@ -642,7 +649,14 @@ class Spine extends Visual {
                                 mesh.texture = texture;
                             }
 
-                            verticesLength = meshAttachment != null ? Std.int(meshAttachment.vertices.length * 0.5) : 4;
+                            if (meshAttachment != null) {
+                                count = meshAttachment.getWorldVerticesLength();
+                                verticesLength = (count >> 1) * vertexSize;
+                            } else {
+                                count = 4;
+                                verticesLength = vertexSize << 2;
+                            }
+                            
                             if (verticesLength == 0) {
                                 mesh.visible = false;
                             }
@@ -653,7 +667,7 @@ class Spine extends Visual {
                                     mesh.visible = true;
                                     if (meshAttachment != null) {
 
-                                        meshAttachment.computeWorldVertices(slot, 0, verticesLength * 2, mesh.vertices, 0, 2);
+                                        meshAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, 2);
                                         mesh.uvs = meshAttachment.getUVs();
                                         mesh.indices = meshAttachment.getTriangles();
 
@@ -662,8 +676,8 @@ class Spine extends Visual {
                                         b = skeleton.color.b * slot.color.b * meshAttachment.getColor().b;
                                         a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
 
-                                        if (mesh.vertices.length > verticesLength * 2) {
-                                            mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength * 2);
+                                        if (mesh.vertices.length > verticesLength) {
+                                            mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
                                         }
 
                                     } else {
@@ -683,18 +697,27 @@ class Spine extends Visual {
 
                                     alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
                                     colors = mesh.colors;
-                                    if (colors.length < verticesLength) {
-                                        for (j in 0...verticesLength) {
+                                    if (colors.length < count) {
+                                        for (j in 0...count) {
                                             colors[j] = alphaColor;
                                         }
                                     } else {
-                                        for (j in 0...verticesLength) {
+                                        for (j in 0...count) {
                                             colors.unsafeSet(j, alphaColor);
                                         }
-                                        if (colors.length > verticesLength) {
-                                            colors.splice(verticesLength, colors.length - verticesLength);
+                                        if (colors.length > count) {
+                                            colors.splice(count, colors.length - count);
                                         }
                                     }
+
+                                    if (clipper.isClipping()) {
+                                        /*clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
+                                        var clippedVertices = clipper.getClippedVertices();
+                                        var clippedTriangles = clipper.getClippedTriangles();
+                                        mesh.vertices = clippedVertices.items;
+                                        mesh.indices = clippedTriangles.items;*/
+                                    }
+
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
                                     mesh.depth = z;
                                     mesh.scaleY = -1;
@@ -785,6 +808,15 @@ class Spine extends Visual {
                         }
                     }
                 }
+                else if (Std.is(slot.attachment, ClippingAttachment)) {
+
+                    error('IS CLIPPING ATTACHMENT');
+
+                    clipAttachment = cast slot.attachment;
+                    clipper.clipStart(slot, clipAttachment);
+                    continue;
+
+                }
 
                 z++;
             }
@@ -860,7 +892,10 @@ class Spine extends Visual {
                 }
             }
 
+            clipper.clipEndWithSlot(slot);
+
         }
+        clipper.clipEnd();
 
         if (regularRender) {
             emitEndRender(delta);
@@ -1091,8 +1126,8 @@ private class BindSlot {
         if (toLocalSlot != null) props.toLocalSlot = toLocalSlot;
         props.parentDepth = parentDepth;
         if (parentTransform != null) props.parentTransform = parentTransform;
-        if (parentVisible != null) props.parentVisible = parentVisible;
-        if (flipXOnConcat != null) props.flipXOnConcat = flipXOnConcat;
+        if (parentVisible) props.parentVisible = parentVisible;
+        if (flipXOnConcat) props.flipXOnConcat = flipXOnConcat;
         return '' + props;
     }
 
