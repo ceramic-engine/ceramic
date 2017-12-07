@@ -112,6 +112,26 @@ class Spine extends Visual {
         return skeletonScale;
     }
 
+    /** Hidden slots */
+    @editable
+    public var hiddenSlots(default,set):Map<String,Bool> = null;
+    function set_hiddenSlots(hiddenSlots:Map<String,Bool>):Map<String,Bool> {
+        if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
+        this.hiddenSlots = hiddenSlots;
+        if (paused) render(0, 0, false);
+        return hiddenSlots;
+    }
+
+    /** Animation triggers */
+    @editable
+    public var animationTriggers(default,set):Map<String,String> = null;
+    function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
+        if (this.animationTriggers == animationTriggers) return animationTriggers;
+        this.animationTriggers = animationTriggers;
+        if (paused) render(0, 0, false);
+        return animationTriggers;
+    }
+
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
 
@@ -564,7 +584,7 @@ class Spine extends Visual {
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
             slotInfo.depth = z;
-            slotInfo.drawDefault = true;
+            slotInfo.drawDefault = hiddenSlots == null || !hiddenSlots.exists(slotName);
             slotInfo.slot = slot;
 
             offsetX = 0;
