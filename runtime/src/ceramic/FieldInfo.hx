@@ -9,6 +9,8 @@ class FieldInfo {
 
     static var fieldInfoMap:Map<String,Map<String,String>> = new Map();
 
+    static var rttiMap:Map<String,Classdef> = new Map();
+
     public static function types(targetClass:String):Map<String,String> {
 
         var info = fieldInfoMap.get(targetClass);
@@ -18,8 +20,13 @@ class FieldInfo {
             fieldInfoMap.set(targetClass, info);
 
             var clazz = Type.resolveClass(targetClass);
+            var clazzStr = '' + clazz;
             var usedFields = new Map();
-            var rtti = Rtti.getRtti(clazz);
+            var rtti = rttiMap.get(clazzStr);
+            if (rtti == null) {
+                rtti = Rtti.getRtti(clazz);
+                rttiMap.set(clazzStr, rtti);
+            }
 
             while (clazz != null) {
 
@@ -34,7 +41,14 @@ class FieldInfo {
                 }
 
                 clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Rtti.getRtti(clazz);
+                if (clazz != null) {
+                    clazzStr = '' + clazz;
+                    rtti = rttiMap.get(clazzStr);
+                    if (rtti == null) {
+                        rtti = Rtti.getRtti(clazz);
+                        rttiMap.set(clazzStr, rtti);
+                    }
+                }
 
             }
         }
