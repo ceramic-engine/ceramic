@@ -85,7 +85,14 @@ class Visual extends Entity {
 
     /** If set, children will be sort by depth and their computed depth
         will be within range [parent.depth, parent.depth + depthRange] */
-    public var depthRange:Float = -1;
+    @editable
+    public var depthRange(default,set):Float = -1;
+    inline function set_depthRange(depthRange:Float):Float {
+        if (this.depthRange == depthRange) return depthRange;
+        this.depthRange = depthRange;
+        app.hierarchyDirty = true;
+        return depthRange;
+    }
 
     /** If set, the visual will be rendered into this target RenderTexture instance
         instead of being drawn onto screen directly. */
