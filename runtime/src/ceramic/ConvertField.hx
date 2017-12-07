@@ -156,6 +156,11 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
                     value.set(name, component);
                 }
             }
+            #if debug
+            else {
+                warning('Missing component initializer: ' + initializerName);
+            }
+            #end
         }
 
         done(value);
