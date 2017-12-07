@@ -73,12 +73,6 @@ class Fragment extends Visual {
     @editable
     public var fragmentData(default,set):FragmentData = null;
 
-    @editable
-    public var listTest:Array<String> = [];
-
-    @editable
-    public var mapTest:Map<String,String> = new Map();
-
 #if editor
 
     @event function editableItemUpdate(item:FragmentItem);
