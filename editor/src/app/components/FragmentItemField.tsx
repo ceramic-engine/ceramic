@@ -338,7 +338,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                         </Field>
                     );
                 }
-                else if (type === 'Map<String,String>' || type === 'ceramic.ImmutableMap<String,String>' || type === 'Map<String,Bool>' || type === 'ceramic.ImmutableMap<String,Bool>' || type === 'ceramic.ImmutableMap<String,ceramic.Component>') {
+                else if (type === 'Map<String,String>' || type === 'ceramic.ImmutableMap<String,String>' || type === 'ceramic.ImmutableMap<String,ceramic.Component>') {
 
                     let mapValue = fieldValue;
                     let value:Array<{key:string,value:string}> = [];
@@ -368,7 +368,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
                         </Field>
                     );
                 }
-                else if (type === 'Map<String,Bool>') {
+                else if (type === 'Map<String,Bool>' || type === 'ceramic.ImmutableMap<String,Bool>') {
 
                     let mapValue = fieldValue;
                     let value:Array<string> = [];
