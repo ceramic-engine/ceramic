@@ -74,27 +74,29 @@ class Entity implements Events implements Lazy {
         // Remove older components
         if (this.components != null) {
             for (name in this.components.keys()) {
-                if (!components.exists(name)) {
+                if (components == null || !components.exists(name)) {
                     removeComponent(name);
                 }
             }
         }
 
         // Add new components
-        for (name in components.keys()) {
-            var newComponent = components.get(name);
-            if (this.components != null) {
-                var existing = this.components.get(name);
-                if (existing != null) {
-                    if (existing != newComponent) {
-                        removeComponent(name);
+        if (components != null) {
+            for (name in components.keys()) {
+                var newComponent = components.get(name);
+                if (this.components != null) {
+                    var existing = this.components.get(name);
+                    if (existing != null) {
+                        if (existing != newComponent) {
+                            removeComponent(name);
+                            component(name, newComponent);
+                        }
+                    } else {
                         component(name, newComponent);
                     }
                 } else {
                     component(name, newComponent);
                 }
-            } else {
-                component(name, newComponent);
             }
         }
 

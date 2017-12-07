@@ -33,6 +33,9 @@ typedef FragmentItem = {
     /** Entity identifier. */
     public var id:String;
 
+    /** Entity name. */
+    public var name:String;
+
     /** Properties assigned after creating entity. */
     public var props:Dynamic<Dynamic>;
 
@@ -187,28 +190,38 @@ class Fragment extends Visual {
         instance.edited = context.editedItems;
 #end
 
+        // Set name
+        instance.data.name = item.name;
+
         // Copy item data
         if (item.data != null) {
             for (key in Reflect.fields(item.data)) {
-                // The condition is needed, not to check that data exists,
-                // but to ensure it is created when checking for it.
-                if (instance.data != null) {
-                    Reflect.setField(instance.data, key, Reflect.field(item.data, key));
-                }
+                Reflect.setField(instance.data, key, Reflect.field(item.data, key));
             }
         }
 
         // Copy item properties
         if (item.props != null) {
-            for (field in Reflect.fields(item.props)) {
+            var orderedProps = Reflect.fields(item.props);
+
+            // TODO sort by order of properties in underlying class
+            // For now we just ensure components is the last property being instanced
+            haxe.ds.ArraySort.sort(orderedProps, function(a:String, b:String):Int {
+
+                var nA = 0;
+                var nB = 0;
+
+                if (a == 'components') nA++;
+                else if (b == 'components') nB++;
+
+                return nA - nB;
+
+            });
+            
+            for (field in orderedProps) {
                 var fieldType = FieldInfo.typeOf(item.entity, field);
                 var value:Dynamic = Reflect.field(item.props, field);
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
-                /*if (field == 'mapTest') {
-                    untyped console.error('CONVERTER $fieldType ' + item.data.name);
-                    untyped console.log(converter);
-                    untyped console.log(value);
-                }*/
                 if (converter != null) {
                     function(field) {
                         converter.basicToField(
@@ -283,6 +296,19 @@ class Fragment extends Visual {
 
     } //getItemInstance
 
+    public function getItemInstanceByName(name:String):Entity {
+
+        for (entity in entities) {
+            if (entity.data.name == name) {
+                
+                return entity;
+            }
+        }
+
+        return null;
+
+    } //getItemInstanceByName
+
     public function getItem(itemId:String):FragmentItem {
 
         for (item in items) {
@@ -295,6 +321,19 @@ class Fragment extends Visual {
         return null;
 
     } //getItem
+
+    public function getItemByName(name:String):FragmentItem {
+
+        for (item in items) {
+            if (item.name == name) {
+                
+                return item;
+            }
+        }
+
+        return null;
+
+    } //getItemByName
 
     public function removeItem(itemId:String):Void {
 
