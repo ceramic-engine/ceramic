@@ -25,6 +25,9 @@ class Fragment extends Model {
     /** Fragment overrides */
     @observe @serialize overrides:Map<string,string> = new Map();
 
+    /** Fragment components */
+    @observe @serialize components:Map<string,string> = new Map();
+
     /** Fragment items */
     @observe @serialize(FragmentItem) items:Array<FragmentItem|VisualItem> = [];
 

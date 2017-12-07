@@ -41,6 +41,16 @@ import { project } from 'app/model';
             });
         }
 
+        let fragmentComponents:Array<{key:string, value:string}> = [];
+        if (selectedFragment) {
+            selectedFragment.components.forEach((value, key) => {
+                fragmentComponents.push({
+                    key: key,
+                    value: value
+                });
+            });
+        }
+
         return (
             <Panel>
 
@@ -125,6 +135,18 @@ import { project } from 'app/model';
                                             result.set(entry.key, entry.value);
                                         }
                                         selectedFragment.overrides = result;
+                                    }}
+                                />
+                            </Field>
+                            <Field label="Components">
+                                <MapInput
+                                    value={fragmentComponents}
+                                    onChange={(newComponents) => {
+                                        let result = new Map();
+                                        for (let entry of newComponents) {
+                                            result.set(entry.key, entry.value);
+                                        }
+                                        selectedFragment.components = result;
                                     }}
                                 />
                             </Field>
