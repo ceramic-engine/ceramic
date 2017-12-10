@@ -4,6 +4,8 @@ import ceramic.Shortcuts.*;
 import ceramic.Entity;
 import ceramic.Assets;
 
+import haxe.DynamicAccess;
+
 using ceramic.Extensions;
 
 typedef FragmentData = {
@@ -24,7 +26,10 @@ typedef FragmentData = {
     public var height:Float;
 
     /** Fragment items (visuals or other entities) */
-    @:optional public var items:Array<FragmentItem>;
+    public var items:Array<FragmentItem>;
+
+    /** Fragment-level components */
+    public var components:DynamicAccess<String>;
 
 } //FragmentData
 
@@ -150,6 +155,26 @@ class Fragment extends Visual {
             for (id in toRemove) {
                 removeItem(id);
             }
+        }
+
+        // Add fragment-level components
+        if (fragmentData != null) {
+            pendingLoads++;
+            var converter = app.converters.get('ceramic.ImmutableMap<String,ceramic.Component>');
+            converter.basicToField(
+                context.assets,
+                fragmentData.components,
+                function(value) {
+                    if (destroyed) return;
+                    pendingLoads--;
+
+                    onceReady(this, function() {
+                        this.fragmentComponents = value;
+                    });
+                    
+                    if (pendingLoads == 0) emitReady();
+                }
+            );
         }
 
         pendingLoads--;
@@ -480,5 +505,48 @@ class Fragment extends Visual {
     } //updateItemFromInstance
 
 #end
+
+/// Fragment components
+
+    /** Fragment components mapping. Does not contain components
+        created separatelywith `component()` or macro-based components or components property. */
+    public var fragmentComponents(default,set):ImmutableMap<String,Component> = null;
+    function set_fragmentComponents(fragmentComponents:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+        if (this.fragmentComponents == fragmentComponents) return fragmentComponents;
+
+        // Remove older components
+        if (this.fragmentComponents != null) {
+            for (name in this.fragmentComponents.keys()) {
+                if (fragmentComponents == null || !fragmentComponents.exists(name)) {
+                    removeComponent(name);
+                }
+            }
+        }
+
+        // Add new components
+        if (fragmentComponents != null) {
+            for (name in fragmentComponents.keys()) {
+                var newComponent = fragmentComponents.get(name);
+                if (this.fragmentComponents != null) {
+                    var existing = this.fragmentComponents.get(name);
+                    if (existing != null) {
+                        if (existing != newComponent) {
+                            removeComponent(name);
+                            component(name, newComponent);
+                        }
+                    } else {
+                        component(name, newComponent);
+                    }
+                } else {
+                    component(name, newComponent);
+                }
+            }
+        }
+
+        // Update mapping
+        this.fragmentComponents = fragmentComponents;
+
+        return fragmentComponents;
+    }
 
 } //Fragment
