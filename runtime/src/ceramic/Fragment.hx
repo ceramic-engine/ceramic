@@ -230,13 +230,6 @@ class Fragment extends Visual {
         // Set name
         if (instance.data.name == null && item.name != null) instance.data.name = item.name;
 
-        // Copy item data
-        if (item.data != null) {
-            for (key in Reflect.fields(item.data)) {
-                Reflect.setField(instance.data, key, Reflect.field(item.data, key));
-            }
-        }
-
         // Copy item properties
         if (item.props != null) {
             var orderedProps = Reflect.fields(item.props);
@@ -310,6 +303,13 @@ class Fragment extends Visual {
                     }
                     instance.setProperty(field, value);
                 }
+            }
+        }
+
+        // Copy item data
+        if (item.data != null && instance.data != null) {
+            for (key in Reflect.fields(item.data)) {
+                Reflect.setField(instance.data, key, Reflect.field(item.data, key));
             }
         }
 
