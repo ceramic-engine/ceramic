@@ -158,7 +158,7 @@ class Fragment extends Visual {
         }
 
         // Add fragment-level components
-        if (fragmentData != null) {
+        if (fragmentData != null #if editor && edited #end) {
             pendingLoads++;
             var converter = app.converters.get('ceramic.ImmutableMap<String,ceramic.Component>');
             converter.basicToField(
