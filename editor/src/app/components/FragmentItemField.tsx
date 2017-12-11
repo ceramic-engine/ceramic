@@ -95,6 +95,7 @@ import { Button, Form, Field, Panel, NumberInput, TextInput, ColorInput, SelectI
         // Set value
         const set = (val:any) => {
             if (overridesFragment) {
+                if (item.overridesData == null) item.overridesData = new Map();
                 item.overridesData.set(fieldName, val);
             }
             else {
