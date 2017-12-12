@@ -213,6 +213,10 @@ class Text extends Visual {
             }
 
             glyph = font.chars.get(code);
+            if (glyph == null) {
+                i++;
+                continue;
+            }
 
             if (prevChar != null) {
                 x += font.kerning(prevCode, code) * sizeFactor;
