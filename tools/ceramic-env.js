@@ -7,8 +7,10 @@ var spawnSync = require('child_process').spawnSync;
 // tools ceramic uses can also find them. If the current machine already has haxe/haxelib/neko
 // installed, they will be used (and no patch will be applied).
 
+// EDIT: for now let's not do anything like this.
+
 // Mac
-if (process.platform == 'darwin') {
+/*if (process.platform == 'darwin') {
     var vendorDir = path.join(__dirname, 'vendor/mac');
 
     // Expose Haxe/Haxelib
@@ -55,7 +57,7 @@ if (process.platform == 'darwin') {
         spawnSync('ln', ['-s', '/usr/local/lib/neko/nekotools', 'nekotools'], { cwd: '/usr/local/lib' });
     }
 
-}
+}*/
 
 // Embedded haxe/haxelib/neko is not supported on Windows at the moment.
 // The user must install Haxe (wich includes neko as well) with official installer
