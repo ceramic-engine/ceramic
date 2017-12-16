@@ -810,8 +810,6 @@ class Spine extends Visual {
                 }
                 else if (Std.is(slot.attachment, ClippingAttachment)) {
 
-                    error('IS CLIPPING ATTACHMENT');
-
                     clipAttachment = cast slot.attachment;
                     clipper.clipStart(slot, clipAttachment);
                     continue;
