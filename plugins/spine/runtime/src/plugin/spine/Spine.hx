@@ -510,6 +510,10 @@ class Spine extends Visual {
                 state.apply(skeleton);
             }
 
+            // Could be destroyed by bound events
+            // triggered when updating state
+            if (destroyed) return;
+
             emitUpdateWorldTransform(delta);
 
             skeleton.updateWorldTransform();
