@@ -68,6 +68,7 @@ class Csv {
                 i++;
             }
             else {
+                val += c;
                 i++;
             }
         }
@@ -136,15 +137,17 @@ class Csv {
                 i++;
             }
             else {
+                val += c;
                 i++;
             }
         }
 
         key = keys[keyIndex++];
-        if (key != null && val != '') {
+        if (key != null) {
             Reflect.setField(entry, key, val);
             entryHasFields = true;
         } else if (tooManyColumnsAt == -1) {
+            warning(entry);
             tooManyColumnsAt = result.length;
         }
         val = '';
