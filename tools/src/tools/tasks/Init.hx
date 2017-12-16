@@ -149,7 +149,7 @@ class Project extends Entity {
         success('Project created at path: ' + projectPath);
 
         // Init backend?
-        for (backendName in ['luxe']) {
+        for (backendName in ['luxe', 'snow']) { // TODO compute [snow, luxe] list from plugins
 
             if (extractArgFlag(args, backendName)) {
 
