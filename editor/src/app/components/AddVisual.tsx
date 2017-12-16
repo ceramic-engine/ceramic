@@ -74,6 +74,7 @@ import { EditableType } from 'app/model/Project';
         }
 
         visual.props.set('depth', maxDepth + 1);
+        visual.props.set('depthRange', 1);
         visual.props.set('anchorX', 0.5);
         visual.props.set('anchorY', 0.5);
 
