@@ -271,7 +271,17 @@ class Fragment extends Visual {
 
                                 if (!instance.destroyed) {
 
-                                    if (field != 'components') {
+                                    if (isFragment && field == 'fragmentData') {
+                                        var fragment:Fragment = cast instance;
+                                        pendingLoads++;
+                                        fragment.onceReady(this, function() {
+                                            pendingLoads--;
+                                            if (destroyed) return;
+                                            if (pendingLoads == 0) emitReady();
+                                        });
+                                        fragment.fragmentData = value;
+                                    }
+                                    else if (field != 'components') {
                                         instance.setProperty(field, value);
 
 #if editor
