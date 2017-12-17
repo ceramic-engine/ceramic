@@ -54,6 +54,7 @@ class Hxml extends tools.Task {
 
         // Add completion flag
         rawHxml += "\n" + '-D completion';
+        rawHxml += "\n" + '-D display';
 
         // Add some completion cache optims
         //
