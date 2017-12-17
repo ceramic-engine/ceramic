@@ -1,6 +1,11 @@
 package spec;
 
+#if !completion
 import backend.Textures;
+#else
+typedef LoadTextureOptions = Dynamic;
+typedef Texture = Dynamic;
+#end
 
 interface Textures {
 

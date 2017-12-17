@@ -1,6 +1,11 @@
 package spec;
 
+#if !completion
 import backend.Shaders;
+import backend.Textures.Texture;
+#else
+typedef LoadShaderOptions = Dynamic;
+#end
 
 interface Shaders {
 
@@ -22,6 +27,6 @@ interface Shaders {
 
     function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void;
 
-    function setTexture(shader:Shader, name:String, texture:backend.Textures.Texture):Void;
+    function setTexture(shader:Shader, name:String, texture:Texture):Void;
 
 } //Shaders

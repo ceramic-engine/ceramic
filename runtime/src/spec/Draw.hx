@@ -1,6 +1,10 @@
 package spec;
 
+#if !completion
 import backend.Draw;
+#else
+typedef VisualItem = Dynamic;
+#end
 
 interface Draw {
 

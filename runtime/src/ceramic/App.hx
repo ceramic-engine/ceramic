@@ -8,7 +8,15 @@ import ceramic.BitmapFont;
 import ceramic.ConvertField;
 import ceramic.Collections;
 import ceramic.Shortcuts.*;
+
+#if completion
+// To make compilation faster, we use a minimal backend interface
+import spec.Backend;
+#else
+// But when building for real, we directly bind the underlying backend to remove
+// the interface overhead, allow inlining etc...
 import backend.Backend;
+#end
 
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
@@ -102,9 +110,11 @@ class App extends Entity {
 
         project = @:privateAccess new Project(new InitSettings(settings));
 
+#if !completion
         backend = new Backend();
         backend.onceReady(this, backendReady);
         backend.init(this);
+#end
 
     } //new
 
@@ -227,6 +237,7 @@ class App extends Entity {
 
         screen.resize();
 
+#if !completion
         backend.onUpdate(this, update);
 
         // Forward key events
@@ -237,6 +248,7 @@ class App extends Entity {
         backend.onKeyUp(this, function(key) {
             beginUpdateCallbacks.push(function() emitKeyUp(key));
         });
+#end
 
     } //assetsLoaded
 
