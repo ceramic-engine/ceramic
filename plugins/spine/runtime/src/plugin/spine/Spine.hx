@@ -641,17 +641,19 @@ class Spine extends Visual {
                         if (boundSlot == null || boundSlot.parentVisible) {
 
                             emptySlotMesh = false;
+                            
+                            atlasRegion = cast(meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion(), AtlasRegion);
+                            texture = cast atlasRegion.page.rendererObject;
 
                             if (mesh == null)
                             {
-                                atlasRegion = cast(meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion(), AtlasRegion);
-                                texture = cast atlasRegion.page.rendererObject;
                                 mesh = new Mesh();
                                 mesh.transform = new Transform();
                                 add(mesh);
                                 slotMeshes.set(slot.data.index, mesh);
-                                mesh.texture = texture;
                             }
+                            
+                            mesh.texture = texture;
 
                             if (meshAttachment != null) {
                                 count = meshAttachment.getWorldVerticesLength();
