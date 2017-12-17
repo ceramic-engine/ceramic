@@ -27,7 +27,7 @@ class Settings implements Observable {
     @observable public var targetDensity:Int = 0;
 
     /** Background color. */
-    @observable public var background:Int = Color.BLACK;
+    @observable public var background:Color = Color.BLACK;
 
     /** Screen scaling (FIT or FILL). */
     @observable public var scaling:ScreenScaling = FIT;
@@ -100,8 +100,8 @@ class InitSettings {
     }
 
     /** Background color. */
-    public var background(get,set):Int;
-    inline function get_background():Int {
+    public var background(get,set):Color;
+    inline function get_background():Color {
         return settings.background;
     }
     inline function set_background(background:Int):Int {
