@@ -83,6 +83,20 @@ class Visual extends Entity {
         return visibilityDirty;
     }
 
+    /** Setting this to true will force the visual to compute it's touchability in hierarchy */
+    public var touchableDirty(default,set):Bool = true;
+    inline function set_touchableDirty(touchableDirty:Bool):Bool {
+        this.touchableDirty = touchableDirty;
+        if (touchableDirty) {
+            if (children != null) {
+                for (child in children) {
+                    child.touchableDirty = true;
+                }
+            }
+        }
+        return touchableDirty;
+    }
+
     /** If set, children will be sort by depth and their computed depth
         will be within range [parent.depth, parent.depth + depthRange] */
     @editable
@@ -116,6 +130,15 @@ class Visual extends Entity {
         this.visible = visible;
         visibilityDirty = true;
         return visible;
+    }
+
+    @editable
+    public var touchable(default,set):Bool = true;
+    function set_touchable(touchable:Bool):Bool {
+        if (this.touchable == touchable) return touchable;
+        this.touchable = touchable;
+        touchableDirty = true;
+        return touchable;
     }
 
     @editable
@@ -288,9 +311,7 @@ class Visual extends Entity {
 
     public var computedRenderTarget:RenderTexture = null;
 
-/// Properties (Events)
-
-    public var touchable:Bool = true;
+    public var computedTouchable:Bool = true;
 
 /// Properties (Children)
 
@@ -643,6 +664,30 @@ class Visual extends Entity {
         visibilityDirty = false;
 
     } //computeVisibility
+
+/// Touchable
+
+    function computeTouchable() {
+
+        if (parent != null && parent.touchableDirty) {
+            parent.computeTouchable();
+        }
+
+        computedTouchable = touchable;
+        
+        if (computedTouchable) {
+
+            if (parent != null) {
+                if (!parent.computedTouchable) {
+                    computedTouchable = false;
+                }
+            }
+            
+        }
+
+        touchableDirty = false;
+
+    } //computedTouchable
 
 /// RenderTarget (computed)
 

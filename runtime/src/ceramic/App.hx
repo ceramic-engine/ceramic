@@ -275,6 +275,11 @@ class App extends Entity {
 
         for (visual in visuals) {
 
+            // Compute touchable state
+            if (visual.touchableDirty) {
+                visual.computeTouchable();
+            }
+
             // Compute displayed content
             if (visual.contentDirty) {
 
