@@ -9,14 +9,7 @@ import ceramic.ConvertField;
 import ceramic.Collections;
 import ceramic.Shortcuts.*;
 
-#if completion
-// To make compilation faster, we use a minimal backend interface
-import spec.Backend;
-#else
-// But when building for real, we directly bind the underlying backend to remove
-// the interface overhead, allow inlining etc...
 import backend.Backend;
-#end
 
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
@@ -54,9 +47,6 @@ class App extends Entity {
     }
 
 /// Properties
-
-    /** Project instance */
-    public var project(default,null):Project;
 
     /** Backend instance */
     public var backend(default,null):Backend;
@@ -98,23 +88,26 @@ class App extends Entity {
     /** List of functions that will be called and purged when update iteration begins.
         Useful to run some specific code once exactly before update event is sent. */
     var beginUpdateCallbacks:Array<Void->Void> = [];
+
+/// Public initializer
+
+    public static function init():InitSettings {
+
+        app = new App();
+        return new InitSettings(app.settings);
+        
+    } //init
     
 /// Lifecycle
 
     function new() {
 
-        app = this;
-
         settings = new Settings();
         screen = new Screen();
 
-        project = @:privateAccess new Project(new InitSettings(settings));
-
-#if !completion
         backend = new Backend();
         backend.onceReady(this, backendReady);
         backend.init(this);
-#end
 
     } //new
 

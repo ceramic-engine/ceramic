@@ -111,7 +111,7 @@ class PluginHxml extends tools.Task {
 
         if (completionFlag) {
             extraHxml.push('-D completion');
-            extraHxml.push('-D display');
+            //extraHxml.push('-D display');
         }
 
         // Main entry point

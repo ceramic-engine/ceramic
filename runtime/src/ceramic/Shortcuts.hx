@@ -26,8 +26,10 @@ class Shortcuts {
     inline static function get_settings():Settings { return App.app.settings; }
 
     /** Shared project instance */
+    /*
     public static var project(get,never):Project;
     inline static function get_project():Project { return App.app.project; }
+    */
 
     /** Shared collections instance */
     public static var collections(get,never):Collections;

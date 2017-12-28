@@ -1,11 +1,7 @@
 package spec;
 
-#if !completion
 import backend.Shaders;
 import backend.Textures.Texture;
-#else
-typedef LoadShaderOptions = Dynamic;
-#end
 
 interface Shaders {
 

@@ -110,7 +110,13 @@ class BackendTools implements tools.spec.BackendTools {
         var output = res.stdout;
         if (output == null) return null;
 
-        return output + " --macro server.setModuleCheckPolicy(['luxe','snow','phoenix'], [NoCheckShadowing, NoCheckDependencies], true)";
+        var mainPart = '-main luxe.Game';
+        var mainIndex = output.indexOf(mainPart);
+        if (mainIndex != -1) {
+            output = output.substring(0, mainIndex) + '-main Main' + output.substr(mainIndex + mainPart.length);
+        }
+
+        return output + " -D luxe_no_main --macro server.setModuleCheckPolicy(['luxe','snow','phoenix','glew','sdl','timestamp','opengl','ogg', 'openal','stb'], [NoCheckShadowing, NoCheckDependencies], true)";
 
     } //getHxml
 

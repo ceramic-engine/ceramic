@@ -1,11 +1,6 @@
 package spec;
 
-#if !completion
 import backend.Audio;
-#else
-typedef AudioResource = Dynamic;
-typedef AudioHandle = Dynamic;
-#end
 
 interface Audio {
 

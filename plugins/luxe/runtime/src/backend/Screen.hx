@@ -34,7 +34,11 @@ class Screen implements spec.Screen implements ceramic.Events {
 
     inline public function getDensity():Float {
 
+#if completion
+        return 1;
+#else
         return @:privateAccess Main.lastDevicePixelRatio;
+#end
 
     } //getPixelHeight
 

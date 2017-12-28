@@ -1,10 +1,6 @@
 package spec;
 
-#if !completion
 import backend.Texts;
-#else
-typedef LoadTextOptions = Dynamic;
-#end
 
 interface Texts {
 

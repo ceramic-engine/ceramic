@@ -1,8 +1,26 @@
 package;
 
+#if completion
+
+class Main {
+
+    public static var project:Project = null;
+
+    public static function main():Void {
+
+        project = @:privateAccess new Project(ceramic.App.init());
+
+    } //main
+
+} //Main
+
+#else
+
 import luxe.Input;
 
 class Main extends luxe.Game {
+
+    public static var project:Project = null;
 
     static var lastDevicePixelRatio:Float = -1;
     static var lastWidth:Float = -1;
@@ -19,10 +37,9 @@ class Main extends luxe.Game {
 
     override function config(config:luxe.GameConfig) {
 
-#if (!completion && !display)
-
         instance = this;
-        var app = @:privateAccess new ceramic.App();
+        project = @:privateAccess new Project(ceramic.App.init());
+        var app = @:privateAccess ceramic.App.app;
 
         // Configure luxe
         config.render.antialiasing = app.settings.antialiasing ? 4 : 0;
@@ -43,15 +60,11 @@ class Main extends luxe.Game {
         }
 #end
 
-#end
-
         return config;
 
     } //config
 
     override function ready():Void {
-
-#if (!completion && !display)
 
         // Keep screen size and density value to trigger
         // resize events that might be skipped by the engine
@@ -68,13 +81,9 @@ class Main extends luxe.Game {
         // Emit ready event
         ceramic.App.app.backend.emitReady();
 
-#end
-
     } //ready
 
     override function update(delta:Float):Void {
-
-#if (!completion && !display)
 
         // We may need to trigger resize explicitly as luxe/snow
         // doesn't seem to always detect it automatically.
@@ -83,21 +92,13 @@ class Main extends luxe.Game {
         // Update
         ceramic.App.app.backend.emitUpdate(delta);
 
-#end
-
     } //update
 
     override function onwindowresized(event:luxe.Screen.WindowEvent) {
-        
-#if (!completion && !display)
 
         triggerResizeIfNeeded();
 
-#end
-
     } //onwindowresized
-
-#if (!completion && !display)
 
     override function onmousedown(event:MouseEvent) {
 
@@ -229,13 +230,9 @@ class Main extends luxe.Game {
 
 #end
 
-#end
-
 /// Internal
 
     function triggerResizeIfNeeded():Void {
-        
-#if (!completion && !display)
 
         // Ensure screen data has changed since last time we emit event
         if (   Luxe.screen.device_pixel_ratio == lastDevicePixelRatio
@@ -253,8 +250,8 @@ class Main extends luxe.Game {
         // Update camera size
         Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
 
-#end
-
     }
 
 }
+
+#end

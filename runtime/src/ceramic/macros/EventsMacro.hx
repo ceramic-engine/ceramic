@@ -8,6 +8,8 @@ class EventsMacro {
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
 
+        //Sys.println('-- EXECUTE EVENTS MACRO [ ' + Context.getLocalClass() + ' ] --');
+
         // Check class fields
         var fieldsByName = new Map<String,Bool>();
         for (field in fields) {

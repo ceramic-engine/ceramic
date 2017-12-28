@@ -54,7 +54,7 @@ class Hxml extends tools.Task {
 
         // Add completion flag
         rawHxml += "\n" + '-D completion';
-        rawHxml += "\n" + '-D display';
+        //rawHxml += "\n" + '-D display';
 
         // Add some completion cache optims
         //
@@ -64,9 +64,9 @@ class Hxml extends tools.Task {
             if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
                 if (name.endsWith('.hx')) {
                     var className = name.substr(0, name.length - 3);
-                    if (className != 'Assets') {
+                    //if (className != 'Assets') {
                         pathFilters.push('ceramic.' + className);
-                    }
+                    //}
                 }
             }
         }
@@ -88,11 +88,11 @@ class Hxml extends tools.Task {
             }
         }
 
-        // Required to ensure assets list gets updated
+        /*// Required to ensure assets list gets updated
         var toInvalidate = [
             Path.join([ceramicSrcContentPath, 'Assets.hx'])
         ];
-        rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";
+        rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";*/
         
         // Make every hxml paths absolute (to simplify IDE integration)
         //
