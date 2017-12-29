@@ -26,6 +26,8 @@ typedef UserConfig = {}
 
 class Main extends snow.App {
 
+    static var project:Project = null;
+
     static var lastDevicePixelRatio:Float = -1;
     static var lastWidth:Float = -1;
     static var lastHeight:Float = -1;
@@ -44,7 +46,8 @@ class Main extends snow.App {
     override function config(config:AppConfig) {
 
         instance = this;
-        var ceramicApp = @:privateAccess new ceramic.App();
+        project = @:privateAccess new Project(ceramic.App.init());
+        var ceramicApp = ceramic.App.app;
 
         // Configure luxe
         config.render.antialiasing = ceramicApp.settings.antialiasing ? 4 : 0;

@@ -46,6 +46,7 @@ class Setup extends tools.Task {
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var flowPath = Path.join([targetPath, 'project.flow']);
+        var snowConfigPath = Path.join([targetPath, 'config.json']);
         var force = args.indexOf('--force') != -1;
         var updateProject = args.indexOf('--update-project') != -1;
 
@@ -177,6 +178,12 @@ exports.hook = function(flow, done)
         var content = ('
 {
 
+  snow: {
+    config: {
+      config_path: \'config.json\'
+    }
+  },
+
   project: {
     name: ' + Json.stringify(project.app.name) + ',
     version: ' + Json.stringify(project.app.version) + ',
@@ -203,6 +210,7 @@ exports.hook = function(flow, done)
     },
 
     files : {
+      config : \'config.json\',
       assets : \'assets/\'$customIndex
     }
 
@@ -224,6 +232,9 @@ exports.hook = function(flow, done)
             }
             File.saveContent(hookPrePath, hookPre);
         }
+
+        // Create snow config.json
+        File.saveContent(snowConfigPath, '{}');
 
         // Generate files with flow
         haxelib(['run', 'flow', 'files'], { cwd: targetPath });
