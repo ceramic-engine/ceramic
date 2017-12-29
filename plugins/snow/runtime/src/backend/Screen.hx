@@ -22,19 +22,31 @@ class Screen implements spec.Screen implements ceramic.Events {
 
     inline public function getWidth():Int {
 
+#if completion
+        return 0;
+#else
         return Std.int(@:privateAccess Main.lastWidth);
+#end
 
     } //getPixelWidth
 
     inline public function getHeight():Int {
 
+#if completion
+        return 0;
+#else
         return Std.int(@:privateAccess Main.lastHeight);
+#end
 
     } //getPixelHeight
 
     inline public function getDensity():Float {
 
+#if completion
+        return 1;
+#else
         return @:privateAccess Main.lastDevicePixelRatio;
+#end
 
     } //getPixelHeight
 

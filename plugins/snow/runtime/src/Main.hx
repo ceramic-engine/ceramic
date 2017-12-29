@@ -1,5 +1,23 @@
 package;
 
+#if completion
+
+typedef UserConfig = {}
+
+class Main {
+
+    public static var project:Project = null;
+
+    public static function main():Void {
+
+        project = @:privateAccess new Project(ceramic.App.init());
+
+    } //main
+
+} //Main
+
+#else
+
 import snow.Snow;
 import snow.types.Types;
 import snow.modules.opengl.GL;
@@ -21,9 +39,9 @@ class Main extends snow.App {
 
     static var instance:Main;
 
-    override function config(config:AppConfig) {
+    function new() {}
 
-#if (!completion && !display)
+    override function config(config:AppConfig) {
 
         instance = this;
         var ceramicApp = @:privateAccess new ceramic.App();
@@ -47,15 +65,11 @@ class Main extends snow.App {
         }
 #end
 
-#end
-
         return config;
 
     } //config
 
     override function ready():Void {
-
-#if (!completion && !display)
 
         // Keep screen size and density value to trigger
         // resize events that might be skipped by the engine
@@ -73,11 +87,7 @@ class Main extends snow.App {
         ceramic.App.app.backend.snow = app;
         ceramic.App.app.backend.emitReady();
 
-#end
-
     } //ready
-
-#if (!completion && !display)
 
 /// Update
 
@@ -240,13 +250,9 @@ class Main extends snow.App {
 
 #end
 
-#end
-
 /// Internal
 
     function triggerResizeIfNeeded():Void {
-        
-#if (!completion && !display)
 
         // Ensure screen data has changed since last time we emit event
         if (   app.runtime.window_device_pixel_ratio() == lastDevicePixelRatio
@@ -264,8 +270,8 @@ class Main extends snow.App {
         // Update camera size
         //Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
 
-#end
-
     }
 
 }
+
+#end

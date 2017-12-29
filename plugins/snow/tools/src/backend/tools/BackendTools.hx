@@ -110,7 +110,13 @@ class BackendTools implements tools.spec.BackendTools {
         var output = res.stdout;
         if (output == null) return null;
 
-        return output + " --macro server.setModuleCheckPolicy(['snow'], [NoCheckShadowing, NoCheckDependencies], true)";
+        var mainPart = '-main snow.App';
+        var mainIndex = output.indexOf(mainPart);
+        if (mainIndex != -1) {
+            output = output.substring(0, mainIndex) + '-main Main' + output.substr(mainIndex + mainPart.length);
+        }
+
+        return output + " -D snow_no_main --macro snow.Set.main('snow.AppHostStub') --macro server.setModuleCheckPolicy(['snow','glew','sdl','timestamp','opengl','ogg', 'openal','stb'], [NoCheckShadowing, NoCheckDependencies], true)";
 
     } //getHxml
 
