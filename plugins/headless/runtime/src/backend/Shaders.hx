@@ -73,4 +73,4 @@ class Shaders implements spec.Shaders {
 
     } //setTexture
 
-} //Textures
+} //Shaders
