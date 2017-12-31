@@ -1,7 +1,8 @@
 package spec;
 
-import backend.Shaders;
-import backend.Textures.Texture;
+import backend.LoadShaderOptions;
+import backend.Shader;
+import backend.Texture;
 
 interface Shaders {
 

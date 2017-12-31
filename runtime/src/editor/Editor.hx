@@ -3,6 +3,7 @@ package editor;
 import ceramic.Entity;
 import ceramic.Settings;
 import ceramic.Fragment;
+import ceramic.FragmentItem;
 import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Text;

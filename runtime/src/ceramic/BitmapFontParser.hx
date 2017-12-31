@@ -1,8 +1,6 @@
-package ceramic.internal;
+package ceramic;
 
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/luxe/importers/bitmapfont/BitmapFontParser.hx)
-
-import ceramic.BitmapFont;
 
 class BitmapFontParser {
 

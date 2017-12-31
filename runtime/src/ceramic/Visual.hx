@@ -1,8 +1,7 @@
 package ceramic;
 
-import backend.Draw.VisualItem;
+import backend.VisualItem;
 import ceramic.Point;
-import ceramic.Shortcuts.*;
 
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
@@ -104,7 +103,7 @@ class Visual extends Entity {
     inline function set_depthRange(depthRange:Float):Float {
         if (this.depthRange == depthRange) return depthRange;
         this.depthRange = depthRange;
-        app.hierarchyDirty = true;
+        ceramic.App.app.hierarchyDirty = true;
         return depthRange;
     }
 
@@ -173,7 +172,7 @@ class Visual extends Entity {
     function set_depth(depth:Float):Float {
         if (this.depth == depth) return depth;
         this.depth = depth;
-        app.hierarchyDirty = true;
+        ceramic.App.app.hierarchyDirty = true;
         return depth;
     }
 
@@ -399,16 +398,16 @@ class Visual extends Entity {
 
     public function new() {
 
-        app.visuals.push(this);
-        app.hierarchyDirty = true;
+        ceramic.App.app.visuals.push(this);
+        ceramic.App.app.hierarchyDirty = true;
 
-        backendItem = app.backend.draw.getItem(this);
+        backendItem = ceramic.App.app.backend.draw.getItem(this);
 
     } //new
 
     public function destroy() {
         
-        app.visuals.remove(this);
+        ceramic.App.app.visuals.remove(this);
 
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
@@ -513,7 +512,7 @@ class Visual extends Entity {
 
                 // Concat matrix with screen transform
                 //
-                var m = screen.matrix;
+                var m = ceramic.App.app.screen.matrix;
                 
                 var a1 = _matrix.a * m.a + _matrix.b * m.c;
                 _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
@@ -558,7 +557,7 @@ class Visual extends Entity {
         // Apply whole visual transform
         _matrix.setTo(a, b, c, d, tx, ty);
         // But remove screen transform from it
-        _matrix.concat(screen.reverseMatrix);
+        _matrix.concat(ceramic.App.app.screen.reverseMatrix);
         _matrix.invert();
 
         var testX0 = _matrix.transformX(x, y);
@@ -588,7 +587,7 @@ class Visual extends Entity {
         // But remove screen transform from it if needed
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget == null) {
-            _matrix.concat(screen.reverseMatrix);
+            _matrix.concat(ceramic.App.app.screen.reverseMatrix);
         }
         _matrix.invert();
 
@@ -610,7 +609,7 @@ class Visual extends Entity {
         // But remove screen transform from it if needed
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget == null) {
-            _matrix.concat(screen.reverseMatrix);
+            _matrix.concat(ceramic.App.app.screen.reverseMatrix);
         }
 
         point.x = _matrix.transformX(x, y);
@@ -631,7 +630,7 @@ class Visual extends Entity {
         // Apply whole visual transform
         transform.setTo(a, b, c, d, tx, ty);
         // But remove screen transform from it
-        transform.concat(screen.reverseMatrix);
+        transform.concat(ceramic.App.app.screen.reverseMatrix);
 
     } //visualToTransform
 

@@ -1,7 +1,5 @@
 package ceramic;
 
-//typedef Touches = ceramic.internal.ReadOnlyMap<Int,Touch>;
-
 @:allow(ceramic.Screen)
 abstract Touches(Map<Int,Touch>) {
     

@@ -4,17 +4,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-typedef LoadAudioOptions = {
-
-    @:optional var stream:Bool;
-
-}
-
-abstract AudioResource(luxe.resource.Resource.AudioResource) from luxe.resource.Resource.AudioResource to luxe.resource.Resource.AudioResource {}
-
-abstract AudioHandle(luxe.Audio.AudioHandle) from luxe.Audio.AudioHandle to luxe.Audio.AudioHandle {}
-
-class Audio implements spec.Audio {
+class Audio #if !completion implements spec.Audio #end {
 
 /// Internal
 

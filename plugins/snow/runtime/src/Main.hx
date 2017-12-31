@@ -103,7 +103,14 @@ class Main extends snow.App {
         // Update
         ceramic.App.app.backend.emitUpdate(delta);
     
-    }
+    } //update
+
+    override function tick(delta:Float) {
+
+        GL.clearColor(1.0, 1.0, 1.0, 1.0);
+        GL.clear(GL.COLOR_BUFFER_BIT);
+
+    } //tick
 
 /// Events
 

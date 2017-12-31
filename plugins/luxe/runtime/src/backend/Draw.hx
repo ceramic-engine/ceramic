@@ -5,14 +5,8 @@ import backend.Textures.BatchedRenderTexture;
 
 using ceramic.Extensions;
 
-enum VisualItem {
-    NONE;
-    QUAD;
-    MESH;
-}
-
 @:allow(backend.Backend)
-class Draw implements spec.Draw {
+class Draw #if !completion implements spec.Draw #end {
 
 /// Internal
 

@@ -32,7 +32,7 @@ class MacroCache {
         var isCompletion = Context.defined('completion');
         Context.onAfterGenerate(function() {
 
-            if (isCompletion) {
+            if (isCompletion && FileSystem.exists(cacheFilePath)) {
                 return;
             }
 

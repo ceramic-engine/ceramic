@@ -1,7 +1,6 @@
 package backend;
 
-@:allow(Main)
-class Screen implements spec.Screen implements ceramic.Events {
+class Screen implements ceramic.Events #if !completion implements spec.Screen #end {
 
     public function new() {}
 

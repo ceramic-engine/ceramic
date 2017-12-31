@@ -1,8 +1,8 @@
-package ceramic.internal;
+package ceramic;
 
 @:structInit
 @:allow(ceramic.Screen)
-class ReadOnlyPoint {
+class ImmutablePoint {
 
     public var x(default,null):Float;
 

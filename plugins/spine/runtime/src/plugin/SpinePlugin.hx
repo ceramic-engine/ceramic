@@ -3,24 +3,21 @@ package plugin;
 import ceramic.App;
 import ceramic.Entity;
 import ceramic.Assets;
+import ceramic.AssetOptions;
+import ceramic.AssetId;
+import ceramic.Asset;
 import ceramic.Either;
-import ceramic.Shortcuts.*;
+
+import plugin.spine.SpineAsset;
+import plugin.spine.SpineData;
+import plugin.spine.Spines;
+import plugin.spine.ConvertSpineData;
 
 import spine.Bone;
 
+import ceramic.Shortcuts.*;
+
 using StringTools;
-
-// Expose API
-typedef Spine = plugin.spine.Spine;
-typedef SpineData = plugin.spine.SpineData;
-typedef SpineAsset = plugin.spine.SpineAsset;
-typedef SpineTextureLoader = plugin.spine.SpineTextureLoader;
-typedef ConvertSpineData = plugin.spine.ConvertSpineData;
-
-#if !macro
-@:build(plugin.spine.macros.SpineMacros.buildNames())
-#end
-class Spines {}
 
 @:access(ceramic.App)
 class SpinePlugin {
@@ -31,10 +28,10 @@ class SpinePlugin {
 
         App.oncePreInit(function() {
 
-            app.logger.log('Init spine plugin');
+            log('Init spine plugin');
 
             // Generate spine asset ids
-            var clazz = Type.resolveClass('plugin.Spines');
+            var clazz = Type.resolveClass('plugin.spine.Spines');
             for (key in @:privateAccess Spines._ids.keys()) {
                 var id = @:privateAccess Spines._ids.get(key);
                 var info:Dynamic = Reflect.field(clazz, key);
@@ -42,12 +39,11 @@ class SpinePlugin {
             }
 
             // Extend assets with `spine` kind
-            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['plugin.SpineData', 'plugin.spine.SpineData']);
+            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['plugin.spine.SpineData']);
 
             // Extend converters
             var convertSpineData = new ConvertSpineData();
-            app.converters.set('plugin.SpineData', convertSpineData);
-            app.converters.set('plugin.spine.SpineData', convertSpineData);
+            ceramic.App.app.converters.set('plugin.spine.SpineData', convertSpineData);
 
         });
     }

@@ -2,7 +2,7 @@ package ceramic;
 
 import ceramic.App.app;
 
-abstract SoundPlayer(backend.Audio.AudioHandle) {
+abstract SoundPlayer(backend.AudioHandle) {
 
     /** Pause the sound (for later resume). */
     inline public function pause():Void {

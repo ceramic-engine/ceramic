@@ -6,6 +6,7 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 using StringTools;
 
+/** A texture is an image ready to be drawn. */
 class Texture extends Entity {
 
 /// Properties
@@ -23,13 +24,13 @@ class Texture extends Entity {
         return density;
     }
 
-    public var backendItem:backend.Textures.Texture;
+    public var backendItem:backend.Texture;
 
     public var asset:ImageAsset;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Textures.Texture, density:Float = 1) {
+    public function new(backendItem:backend.Texture, density:Float = 1) {
 
         this.backendItem = backendItem;
         this.density = density; // sets widht/height as well

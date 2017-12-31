@@ -10,13 +10,13 @@ using StringTools;
 
 class Shader extends Entity {
 
-    public var backendItem:backend.Shaders.Shader;
+    public var backendItem:backend.Shader;
 
     public var asset:ShaderAsset;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Shaders.Shader) {
+    public function new(backendItem:backend.Shader) {
 
         this.backendItem = backendItem;
 

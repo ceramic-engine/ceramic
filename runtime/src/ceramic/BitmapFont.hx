@@ -1,10 +1,6 @@
 package ceramic;
 
-import ceramic.Assets;
-
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/phoenix/BitmapFont.hx)
-
-import ceramic.internal.BitmapFontParser;
 
 using unifill.Unifill;
 using ceramic.Extensions;
@@ -112,28 +108,3 @@ class BitmapFont extends Entity {
     } //kerning
 
 } //BitmapFont
-
-@:structInit
-class BitmapFontCharacter {
-    public var id: Int;
-    public var x: Float;
-    public var y: Float;
-    public var width: Float;
-    public var height: Float;
-    public var xOffset: Float;
-    public var yOffset: Float;
-    public var xAdvance: Float;
-    public var page: Int;
-}
-
-@:structInit
-class BitmapFontData {
-    public var face: String;
-    public var pointSize: Float;
-    public var baseSize: Float;
-    public var chars: Map<Int, BitmapFontCharacter>;
-    public var charCount: Int;
-    public var pages: Array<{ id : Int, file : String }>;
-    public var lineHeight: Float;
-    public var kernings: Map< Int, Map<Int, Float> >;
-}

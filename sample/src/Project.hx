@@ -1,6 +1,6 @@
 package;
 
-import ceramic.Settings;
+import ceramic.InitSettings;
 import ceramic.Entity;
 import ceramic.Quad;
 import ceramic.RenderTexture;
@@ -10,6 +10,10 @@ import ceramic.AlphaColor;
 import ceramic.Assets;
 import ceramic.Blending;
 import ceramic.Text;
+import ceramic.Images;
+import ceramic.Fonts;
+import ceramic.Texts;
+import ceramic.Sounds;
 import ceramic.Shortcuts.*;
 
 class Project extends Entity {

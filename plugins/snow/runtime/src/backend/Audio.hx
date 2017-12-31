@@ -26,7 +26,7 @@ abstract AudioResource(AudioResourceImpl) from AudioResourceImpl to AudioResourc
 
 abstract AudioHandle(AudioHandleImpl) from AudioHandleImpl to AudioHandleImpl {}
 
-class Audio implements spec.Audio {
+class Audio #if !completion implements spec.Audio #end {
 
 /// Lifecycle
 

@@ -1,6 +1,6 @@
 package spec;
 
-import backend.Texts;
+import backend.LoadTextOptions;
 
 interface Texts {
 

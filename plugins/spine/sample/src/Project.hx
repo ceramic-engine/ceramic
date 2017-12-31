@@ -1,5 +1,10 @@
 package;
 
+import ceramic.InitSettings;
+
+import plugin.spine.Spine;
+import plugin.spine.Spines;
+
 class Project extends Entity {
 
     var assets = new Assets();

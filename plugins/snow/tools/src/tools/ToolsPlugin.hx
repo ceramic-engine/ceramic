@@ -87,7 +87,7 @@ class ToolsPlugin {
                         var tasksContent:Array<VscodeChooserItemTask> = [
                             {
                                 type: "shell",
-                                taskName: "build",
+                                label: "build",
                                 command: "ceramic",
                                 presentation: {
                                     echo: true,
@@ -105,7 +105,7 @@ class ToolsPlugin {
                         ];
 
                         items.push({
-                            displayName: '▶︎ ' + name + (debug && !editor ? ' (debug)' : '') + (editor ? ' (editor)' : ''),
+                            displayName: '▶︎ ' + backendName + ' / ' + name + (debug && !editor ? ' (debug)' : '') + (editor ? ' (editor)' : ''),
                             description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : '') + (editor ? ' --variant editor' : ''),
                             tasks: tasksContent,
                             onSelect: {

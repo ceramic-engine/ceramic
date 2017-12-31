@@ -1,13 +1,14 @@
 package plugin.spine;
 
 import spine.support.graphics.TextureAtlas;
-import spine.attachments.*;
-import spine.*;
 import haxe.io.Path;
+import ceramic.Asset;
+import ceramic.ImageAsset;
+import ceramic.TextAsset;
 import ceramic.Assets;
+import ceramic.AssetOptions;
 import ceramic.Quad;
 import ceramic.Mesh;
-import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -39,7 +40,7 @@ class SpineAsset extends Asset {
         if (this.options.scale != null) {
             scale = Std.parseFloat(options.scale);
             if (Math.isNaN(scale)) {
-                warning('Invalid scale option: ' + options.scale);
+                ceramic.App.app.logger.warning('Invalid scale option: ' + options.scale);
                 scale = 1.0;
             }
         }
@@ -52,7 +53,7 @@ class SpineAsset extends Asset {
 
         // Load spine data
         status = LOADING;
-        log('Load spine $path');
+        ceramic.App.app.logger.log('Load spine $path');
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
@@ -70,7 +71,7 @@ class SpineAsset extends Asset {
         
         if (jsonPath == null) {
             status = BROKEN;
-            error('Failed to retrieve json path for spine: $path');
+            ceramic.App.app.logger.error('Failed to retrieve json path for spine: $path');
             emitComplete(false);
             return;
         }
@@ -141,7 +142,7 @@ class SpineAsset extends Asset {
 
                         // Update prev spine data
                         if (prevSpineData != null) {
-                            for (visual in app.visuals) {
+                            for (visual in ceramic.App.app.visuals) {
                                 if (Std.is(visual, Spine)) {
                                     var spine:Spine = cast visual;
                                     if (spine.spineData == prevSpineData) {
@@ -155,7 +156,7 @@ class SpineAsset extends Asset {
                         if (prevPages != null) {
                             for (asset in prevPages) {
                                 var texture = asset.texture;
-                                for (visual in app.visuals) {
+                                for (visual in ceramic.App.app.visuals) {
                                     if (Std.is(visual, Quad)) {
                                         var quad:Quad = cast visual;
                                         if (quad.texture == texture) {
@@ -184,7 +185,7 @@ class SpineAsset extends Asset {
                     else {
 
                         status = BROKEN;
-                        error('Failed to load spine pages at path: $path');
+                        ceramic.App.app.logger.error('Failed to load spine pages at path: $path');
                         emitComplete(false);
                     }
 
@@ -196,7 +197,7 @@ class SpineAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                error('Failed to load spine data at path: $path');
+                ceramic.App.app.logger.error('Failed to load spine data at path: $path');
                 emitComplete(false);
             }
 
@@ -228,7 +229,7 @@ class SpineAsset extends Asset {
             asset.destroy();
 
         } else {
-            warning('Cannot unload spine page: ' + page);
+            ceramic.App.app.logger.warning('Cannot unload spine page: ' + page);
         }
 
     } //loadPage
@@ -253,7 +254,7 @@ class SpineAsset extends Asset {
         var path = atlasAsset.path;
 
         if (prevPath != path) {
-            log('Reload spine ($prevPath -> $path)');
+            ceramic.App.app.logger.log('Reload spine ($prevPath -> $path)');
             load();
         }
 

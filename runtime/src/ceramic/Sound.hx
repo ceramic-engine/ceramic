@@ -5,13 +5,13 @@ import ceramic.Shortcuts.*;
 
 class Sound extends Entity {
 
-    public var backendItem:backend.Audio.AudioResource;
+    public var backendItem:backend.AudioResource;
 
     public var asset:SoundAsset;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Audio.AudioResource) {
+    public function new(backendItem:backend.AudioResource) {
 
         this.backendItem = backendItem;
 

@@ -7,12 +7,6 @@ import haxe.io.Path;
 
 using StringTools;
 
-typedef LoadTextureOptions = {
-    ?premultiplyAlpha:Bool
-}
-
-abstract Texture(phoenix.Texture) from phoenix.Texture to phoenix.Texture {}
-
 class BatchedRenderTexture extends phoenix.RenderTexture {
 
     public var targetBatcher:phoenix.Batcher = null;
@@ -59,11 +53,11 @@ class BatchedRenderTexture extends phoenix.RenderTexture {
 
 } //BatchedRenderTexture
 
-class Textures implements spec.Textures {
+class Textures #if !completion implements spec.Textures #end {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
+    public function load(path:String, ?options:backend.LoadTextureOptions, done:Texture->Void):Void {
 
         // Create empty texture
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?

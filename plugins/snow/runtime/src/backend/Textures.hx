@@ -1,5 +1,7 @@
 package backend;
 
+import snow.types.Types;
+
 using StringTools;
 
 typedef LoadTextureOptions = {
@@ -17,13 +19,39 @@ class TextureImpl {
 abstract Texture(TextureImpl) from TextureImpl to TextureImpl {}
 
 
-class Textures implements spec.Textures {
+class Textures #if !completion implements spec.Textures #end {
 
     public function new() {}
 
     public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
 
-        done(new TextureImpl(0, 0));
+        var snowApp = ceramic.App.app.backend.snow;
+
+        path = ceramic.Utils.realPath(path);
+        
+        var list = [
+            snowApp.assets.image(path)
+        ];
+        
+        snow.api.Promise.all(list)
+        .then(function(assets:Array<AssetImage>) {
+
+            for (asset in assets) {
+                var image = asset.image;
+                
+                // TODO asset/image/texture API
+
+                return;
+            }
+
+            done(null);
+
+        }).error(function(error) {
+
+            done(null);
+        });
+
+        done(null);//new TextureImpl(0, 0));
 
     } //load
 
@@ -50,5 +78,13 @@ class Textures implements spec.Textures {
         return (texture:TextureImpl).height;
 
     } //getHeight
+
+/// Internal
+
+    var loadingTextureCallbacks:Map<String,Array<Texture->Void>> = new Map();
+
+    var loadedTextures:Map<String,TextureImpl> = new Map();
+
+    var loadedTexturesRetainCount:Map<String,Int> = new Map();
 
 } //Textures

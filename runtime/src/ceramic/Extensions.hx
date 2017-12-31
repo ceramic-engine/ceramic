@@ -1,7 +1,5 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
-
 /** A bunch of static extensions to make life easier. */
 class Extensions {
 

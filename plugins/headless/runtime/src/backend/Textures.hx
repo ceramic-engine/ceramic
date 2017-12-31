@@ -1,23 +1,6 @@
 package backend;
 
-using StringTools;
-
-typedef LoadTextureOptions = {
-}
-
-class TextureImpl {
-    public var width:Int = 0;
-    public var height:Int = 0;
-    public function new(width:Int = 0, height:Int = 0) {
-        this.width = width;
-        this.height = height;
-    }
-}
-
-abstract Texture(TextureImpl) from TextureImpl to TextureImpl {}
-
-
-class Textures implements spec.Textures {
+class Textures #if !completion implements spec.Textures #end {
 
     public function new() {}
 

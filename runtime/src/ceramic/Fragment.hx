@@ -8,69 +8,6 @@ import haxe.DynamicAccess;
 
 using ceramic.Extensions;
 
-typedef FragmentData = {
-
-    /** Identifier of the fragment. */
-    public var id:String;
-
-    /** Name of the fragment. */
-    public var name:String;
-
-    /** Arbitrary data hold by this fragment. */
-    public var data:Dynamic<Dynamic>;
-
-    /** Fragment width */
-    public var width:Float;
-
-    /** Fragment height */
-    public var height:Float;
-
-    /** Fragment items (visuals or other entities) */
-    public var items:Array<FragmentItem>;
-
-    /** Fragment-level components */
-    public var components:DynamicAccess<String>;
-
-} //FragmentData
-
-typedef FragmentItem = {
-
-    /** Entity class (ex: ceramic.Visual, ceramic.Quad, ...). */
-    public var entity:String;
-
-    /** Entity identifier. */
-    public var id:String;
-
-    /** Entity name. */
-    public var name:String;
-
-    /** Properties assigned after creating entity. */
-    public var props:Dynamic<Dynamic>;
-
-    /** Arbitrary data hold by this item. */
-    public var data:Dynamic<Dynamic>;
-
-} //FragmentEntities
-
-typedef FragmentFieldConverter = {
-
-    var toFragmentItem:Dynamic;
-
-    var fromFragmentItem:Dynamic;
-
-} //FragmentFieldConverter
-
-@:structInit
-class FragmentContext {
-
-    /** The assets registry used to load/unload assets in this fragment */
-    public var assets:Assets;
-
-    /** Whether the items are edited items or not */
-    public var editedItems:Bool;
-
-} //FragmentContext
-
 /** A fragment is a group of visuals rendered from data (.fragment file) */
 @editable({ implicitSize: true })
 class Fragment extends Visual {

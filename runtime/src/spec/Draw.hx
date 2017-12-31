@@ -1,6 +1,6 @@
 package spec;
 
-import backend.Draw;
+import backend.VisualItem;
 
 interface Draw {
 

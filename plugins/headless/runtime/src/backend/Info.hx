@@ -1,6 +1,6 @@
 package backend;
 
-class Info implements spec.Info {
+class Info #if !completion implements spec.Info #end {
 
     public function new() {}
 

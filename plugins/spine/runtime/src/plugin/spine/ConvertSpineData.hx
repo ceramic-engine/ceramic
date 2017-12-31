@@ -2,7 +2,6 @@ package plugin.spine;
 
 import ceramic.Assets;
 import ceramic.ConvertField;
-import ceramic.Shortcuts.*;
 
 import plugin.SpinePlugin;
 using plugin.SpinePlugin;

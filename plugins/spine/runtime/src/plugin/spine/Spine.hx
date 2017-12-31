@@ -14,7 +14,6 @@ import ceramic.Color;
 import ceramic.AlphaColor;
 import ceramic.Blending;
 import ceramic.Collections;
-import ceramic.Shortcuts.*;
 
 using plugin.SpinePlugin;
 using ceramic.Extensions;
@@ -238,9 +237,9 @@ class Spine extends Visual {
 
         this.paused = paused;
         if (paused) {
-            app.offUpdate(update);
+            ceramic.App.app.offUpdate(update);
         } else {
-            app.onUpdate(this, update);
+            ceramic.App.app.onUpdate(this, update);
         }
 
         return paused;
@@ -267,7 +266,7 @@ class Spine extends Visual {
 
         super();
 
-        if (!paused) app.onUpdate(this, update);
+        if (!paused) ceramic.App.app.onUpdate(this, update);
 
 #if editor
 
@@ -275,7 +274,7 @@ class Spine extends Visual {
             editor.render();
         }
 
-        app.onceUpdate(this, function(delta) {
+        ceramic.App.app.onceUpdate(this, function(delta) {
 
             // Do nothing if this is not the object being edited
             if (!edited) return;

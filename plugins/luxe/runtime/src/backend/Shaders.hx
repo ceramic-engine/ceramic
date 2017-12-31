@@ -5,15 +5,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-typedef LoadShaderOptions = {
-    var fragId: String;
-    var vertId: String;
-    @:optional var noDefaultUniforms: Bool;
-}
-
-abstract Shader(phoenix.Shader) from phoenix.Shader to phoenix.Shader {}
-
-class Shaders implements spec.Shaders {
+class Shaders #if !completion implements spec.Shaders #end {
 
     public function new() {}
 
@@ -116,7 +108,7 @@ class Shaders implements spec.Shaders {
 
     } //setVec4
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Textures.Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
         
         (shader:phoenix.Shader).set_texture(name, texture);
 

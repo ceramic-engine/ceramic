@@ -6,7 +6,7 @@ import ceramic.internal.Worker;
 
 @:allow(Main)
 @:allow(backend.Textures)
-class Backend implements spec.Backend implements ceramic.Events {
+class Backend implements ceramic.Events #if !completion implements spec.Backend #end {
 
 /// Internal
 

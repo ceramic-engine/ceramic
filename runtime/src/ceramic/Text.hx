@@ -6,12 +6,6 @@ import ceramic.Shortcuts.*;
 
 using unifill.Unifill;
 
-enum TextAlign {
-    LEFT;
-    RIGHT;
-    CENTER;
-}
-
 @editable({ implicitSize: true })
 class Text extends Visual {
 

@@ -4,16 +4,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-class ShaderImpl {
-    public function new() {}
-}
-
-typedef LoadShaderOptions = {
-}
-
-abstract Shader(ShaderImpl) from ShaderImpl to ShaderImpl {}
-
-class Shaders implements spec.Shaders {
+class Shaders #if !completion implements spec.Shaders #end {
 
     public function new() {}
 
@@ -67,7 +58,7 @@ class Shaders implements spec.Shaders {
 
     } //setVec4
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Textures.Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
         
         //
 

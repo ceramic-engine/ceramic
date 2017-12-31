@@ -108,7 +108,7 @@ class AssetsMacro {
             var field = {
                 pos: pos,
                 name: fieldName,
-                kind: FProp('default', 'null', macro :ceramic.Assets.AssetId<String>, expr),
+                kind: FProp('default', 'null', macro :ceramic.AssetId<String>, expr),
                 access: [AStatic, APublic],
                 doc: fieldDoc.join(', '),
                 meta: []

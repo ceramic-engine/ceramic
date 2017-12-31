@@ -1,10 +1,11 @@
 package ceramic;
 
-import ceramic.Visual._matrix;
-import ceramic.Visual._degToRad;
-
 @editable({ implicitSizeUnlessNull: 'texture' })
 class Quad extends Visual {
+
+    static var _matrix = Visual._matrix;
+
+    static var _degToRad = Visual._degToRad;
 
     @editable public var color:Color = Color.WHITE;
 

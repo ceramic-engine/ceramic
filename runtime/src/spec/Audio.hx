@@ -1,6 +1,8 @@
 package spec;
 
-import backend.Audio;
+import backend.AudioResource;
+import backend.AudioHandle;
+import backend.LoadAudioOptions;
 
 interface Audio {
 

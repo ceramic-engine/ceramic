@@ -1,3 +1,3 @@
 package ceramic;
 
-typedef Touch = ceramic.internal.ReadOnlyPoint;
+typedef Touch = ceramic.ImmutablePoint;

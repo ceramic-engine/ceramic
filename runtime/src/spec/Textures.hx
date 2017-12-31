@@ -1,6 +1,7 @@
 package spec;
 
-import backend.Textures;
+import backend.Texture;
+import backend.LoadTextureOptions;
 
 interface Textures {
 
