@@ -64,16 +64,18 @@ class Hxml extends tools.Task {
             if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
                 if (name.endsWith('.hx')) {
                     var className = name.substr(0, name.length - 3);
-                    //if (className != 'Assets') {
+                    if (className != 'Assets') {
                         pathFilters.push('ceramic.' + className);
-                    //}
+                    }
                 }
             }
         }
+        
         // We hardcoded nape and spinehaxe/spine classpaths because they are common dependencies that won't change.
         // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
-        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'plugin', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
-        rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckShadowing, NoCheckDependencies], false)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'plugin', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckFileTimeModification, NoCheckDependencies], false, NormalAndMacroContext)";
+        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['spine', 'nape', 'backend', 'spec'], [NoCheckFileTimeModification,NoCheckDependencies], true, NormalAndMacroContext)";
 
         // Let plugins extend completion HXML
         for (plugin in context.plugins) {
