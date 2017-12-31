@@ -16,7 +16,7 @@ typedef VscodeChooserItemTask = {
 
     var type:String;
 
-    var taskName:String;
+    var label:String;
 
     var presentation:VscodeChooserItemTaskPresentation;
 
