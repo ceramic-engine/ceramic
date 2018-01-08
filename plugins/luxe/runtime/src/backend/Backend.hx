@@ -26,7 +26,7 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
 
     public var texts(default,null) = new backend.Texts();
 
-    public var textures(default,null) = new backend.Textures();
+    public var images(default,null) = new backend.Images();
 
     public var shaders(default,null) = new backend.Shaders();
 

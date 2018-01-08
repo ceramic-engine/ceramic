@@ -4,12 +4,6 @@ import ceramic.RotateFrame;
 
 using ceramic.Extensions;
 
-enum VisualItem {
-    NONE;
-    QUAD;
-    MESH;
-}
-
 @:allow(backend.Backend)
 class Draw implements spec.Draw {
 

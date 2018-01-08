@@ -19,18 +19,18 @@ class Texture extends Entity {
     function set_density(density:Float):Float {
         if (this.density == density) return density;
         this.density = density;
-        width = app.backend.textures.getWidth(backendItem) / density;
-        height = app.backend.textures.getHeight(backendItem) / density;
+        width = app.backend.images.getImageWidth(backendItem) / density;
+        height = app.backend.images.getImageHeight(backendItem) / density;
         return density;
     }
 
-    public var backendItem:backend.Texture;
+    public var backendItem:backend.Image;
 
     public var asset:ImageAsset;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Texture, density:Float = 1) {
+    public function new(backendItem:backend.Image, density:Float = 1) {
 
         this.backendItem = backendItem;
         this.density = density; // sets widht/height as well
@@ -41,7 +41,7 @@ class Texture extends Entity {
 
         if (asset != null) asset.destroy();
 
-        app.backend.textures.destroy(backendItem);
+        app.backend.images.destroyImage(backendItem);
         backendItem = null;
 
     } //destroy

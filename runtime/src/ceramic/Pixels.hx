@@ -1,8 +1,10 @@
 package ceramic;
 
+using StringTools;
+
 /** Pixels class represents an image that can be edited at pixel level.
     It can then be turned into a texture to be drawn on screen. */
-class Pixels {
+class Pixels extends Entity {
 
 /// Properties
 
@@ -26,7 +28,7 @@ class Pixels {
 
     } //destroy
 
-/*/// Print
+/// Print
 
     function toString():String {
 
@@ -38,6 +40,6 @@ class Pixels {
             return 'Pixels($width $height)';
         }
 
-    } //toString*/
+    } //toString
 
 } //Image

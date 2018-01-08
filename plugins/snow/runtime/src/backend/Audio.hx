@@ -4,28 +4,6 @@ import haxe.io.Path;
 
 using StringTools;
 
-typedef LoadAudioOptions = {
-
-    @:optional var stream:Bool;
-
-}
-
-class AudioResourceImpl {
-    public function new() {}
-}
-
-class AudioHandleImpl {
-    public var volume:Float = 0.5;
-    public var pan:Float = 0;
-    public var pitch:Float = 1;
-    public var position:Float = 0;
-    public function new() {}
-}
-
-abstract AudioResource(AudioResourceImpl) from AudioResourceImpl to AudioResourceImpl {}
-
-abstract AudioHandle(AudioHandleImpl) from AudioHandleImpl to AudioHandleImpl {}
-
 class Audio #if !completion implements spec.Audio #end {
 
 /// Lifecycle

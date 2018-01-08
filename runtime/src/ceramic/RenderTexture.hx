@@ -11,10 +11,10 @@ class RenderTexture extends Texture {
 
     public function new(width:Int, height:Int, density:Float = 1) {
 
-        var backendItem = app.backend.textures.createRenderTexture(
+        var backendItem = null; /*app.backend.textures.createRenderTexture(
             Math.round(width * density),
             Math.round(height * density)
-        );
+        );*/
 
         super(backendItem, density);
 

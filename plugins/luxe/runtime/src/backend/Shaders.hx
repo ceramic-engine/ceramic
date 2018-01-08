@@ -108,7 +108,7 @@ class Shaders #if !completion implements spec.Shaders #end {
 
     } //setVec4
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:Image):Void {
         
         (shader:phoenix.Shader).set_texture(name, texture);
 

@@ -6,10 +6,6 @@ import haxe.io.Path;
 
 using StringTools;
 
-typedef LoadTextOptions = {
-    
-}
-
 class Texts #if !completion implements spec.Texts #end {
 
     public function new() {}

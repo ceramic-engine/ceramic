@@ -1,7 +1,7 @@
 package backend;
 
 import ceramic.RotateFrame;
-import backend.Textures.BatchedRenderTexture;
+import backend.Images.BatchedRenderTexture;
 
 using ceramic.Extensions;
 

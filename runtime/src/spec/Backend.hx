@@ -12,7 +12,7 @@ interface Backend {
 
     var texts(default,null):backend.Texts;
 
-    var textures(default,null):backend.Textures;
+    var images(default,null):backend.Images;
 
     var screen(default,null):backend.Screen;
     

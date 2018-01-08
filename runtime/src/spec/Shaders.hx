@@ -2,7 +2,7 @@ package spec;
 
 import backend.LoadShaderOptions;
 import backend.Shader;
-import backend.Texture;
+import backend.Image;
 
 interface Shaders {
 
@@ -24,6 +24,6 @@ interface Shaders {
 
     function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void;
 
-    function setTexture(shader:Shader, name:String, texture:Texture):Void;
+    function setTexture(shader:Shader, name:String, image:Image):Void;
 
 } //Shaders

@@ -31,14 +31,13 @@ class ImageAsset extends Asset {
         }
 
         log('Load image $path');
-        app.backend.textures.load(path, {
-            premultiplyAlpha: options.premultiplyAlpha ? true : false
-        }, function(texture) {
+        app.backend.images.load(path, {
+        }, function(image) {
 
-            if (texture != null) {
+            if (image != null) {
 
                 var prevTexture = this.texture;
-                this.texture = new Texture(texture, density);
+                this.texture = new Texture(image, density);
                 this.texture.id = 'texture:' + path;
                 
                 // Link the texture to this asset so that
