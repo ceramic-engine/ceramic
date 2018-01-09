@@ -1,6 +1,7 @@
 package backend;
 
 import snow.types.Types;
+import snow.modules.opengl.GL;
 
 using StringTools;
 
@@ -50,11 +51,10 @@ class Images implements spec.Images {
         .then(function(assets:Array<AssetImage>) {
 
             for (asset in assets) {
-                var image = asset.image;
+                var result = new ImageImpl(asset.image.width, asset.image.height);
+                result.asset = asset;
                 
-                // TODO asset/image/texture API
-                //var pixels = 
-
+                allDone(result);
                 return;
             }
 

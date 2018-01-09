@@ -137,6 +137,7 @@ class App extends Entity {
         assets.onceComplete(this, function(success) {
 
             if (success) {
+                logger.success('Default assets loaded.');
                 assetsLoaded();
             } else {
                 error('Failed to load default assets.');

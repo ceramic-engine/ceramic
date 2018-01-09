@@ -1,5 +1,7 @@
 package backend;
 
+import snow.types.Types;
+
 class ImageImpl {
 
     public var pixels:Null<UInt8Array> = null;
@@ -9,6 +11,8 @@ class ImageImpl {
     public var width:Int = 0;
 
     public var height:Int = 0;
+
+    public var asset:AssetImage = null;
 
     public function new(width:Int = 0, height:Int = 0) {
         this.width = width;
