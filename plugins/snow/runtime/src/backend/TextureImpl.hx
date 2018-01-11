@@ -7,8 +7,6 @@ import snow.modules.opengl.GL;
 
 class TextureImpl {
 
-    static var maxSize:Int = GL.getParameter(GL.MAX_TEXTURE_SIZE);
-
 /// Public properties
 
     public var image:Image = null;
@@ -58,6 +56,7 @@ class TextureImpl {
     /** Submit a pixels array to the GL texture. Must match the type and format accordingly. */
     public function submit(pixels:snow.api.buffers.Uint8Array):Void {
 
+        var maxSize:Int = GL.getParameter(GL.MAX_TEXTURE_SIZE);
         var buffer:snow.api.buffers.ArrayBufferView = pixels;
 
         GL.texImage2D(

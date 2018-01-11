@@ -58,11 +58,11 @@ class Images implements spec.Images {
                 result.asset = asset;
 
                 if (createTexture) {
-                    //result.loadTexture(clearPixels);
+                    result.loadTexture(clearPixels);
                 }
                 else if (clearPixels) {
-                    //result.pixels = null;
-                    //result.asset.image.pixels = null;
+                    result.pixels = null;
+                    result.asset.image.pixels = null;
                 }
                 
                 allDone(result);
