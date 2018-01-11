@@ -11,6 +11,9 @@ class Images implements spec.Images {
 
     public function load(path:String, ?options:LoadImageOptions, done:Image->Void):Void {
 
+        var clearPixels = options == null || options.pixels == null || options.pixels == false;
+        var createTexture = options == null || options.texture == null || options.texture == true;
+
         var snowApp = ceramic.App.app.backend.snow;
 
         path = ceramic.Utils.realPath(path);
@@ -53,6 +56,14 @@ class Images implements spec.Images {
             for (asset in assets) {
                 var result = new ImageImpl(asset.image.width, asset.image.height);
                 result.asset = asset;
+
+                if (createTexture) {
+                    //result.loadTexture(clearPixels);
+                }
+                else if (clearPixels) {
+                    //result.pixels = null;
+                    //result.asset.image.pixels = null;
+                }
                 
                 allDone(result);
                 return;
