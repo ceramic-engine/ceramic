@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.TextureFilter;
+import ceramic.Assert.assert;
 
 import snow.types.Types;
 import snow.modules.opengl.GL;
@@ -59,6 +60,11 @@ class TextureImpl {
         var maxSize:Int = GL.getParameter(GL.MAX_TEXTURE_SIZE);
         var buffer:snow.api.buffers.ArrayBufferView = pixels;
 
+        assert(widthActual <= maxSize, 'Image width is bigger than maximum hardware size (width=$widthActual max=$maxSize');
+        assert(heightActual <= maxSize, 'Image height is bigger than maximum hardware size (height=$heightActual max=$maxSize');
+
+        bind();
+
         GL.texImage2D(
             GL.TEXTURE_2D,
             0,
@@ -72,6 +78,14 @@ class TextureImpl {
         );
 
     } //submit
+
+    /** Bind this texture to the active texture slot, and its texture id to the texture type.
+        Calling this repeatedly is fine. **/
+    public function bind():Void {
+
+        // TODO
+
+    } //bind
 
     public function clear():Void {
 
