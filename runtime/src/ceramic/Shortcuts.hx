@@ -5,6 +5,9 @@ import ceramic.Screen;
 import ceramic.Settings;
 import haxe.PosInfos;
 
+import haxe.macro.Context;
+import haxe.macro.Expr;
+
 #if editor
 import editor.Editor;
 #end
@@ -62,5 +65,25 @@ class Shortcuts {
     inline public static function error(value:Dynamic, ?pos:PosInfos) {
         App.app.logger.error(value, pos);
     }
+
+    /** Assert */
+    macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
+
+#if debug
+        var str = haxe.macro.ExprTools.toString(expr);
+
+        reason = switch(reason) {
+            case macro null: macro '';
+            case _: macro ' ( ' + $reason + ' )';
+        }
+
+        return macro @:pos(Context.currentPos()) {
+            if (!$expr) throw '$str' + $reason;
+        }
+#else
+        return macro null;
+#end
+
+    } //assert
 
 } //Shortcuts
