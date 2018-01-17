@@ -517,6 +517,10 @@ body, html {
     display: none;
 }
 
+#body .sortable::-webkit-scrollbar  {
+    display: none;
+}
+
 #body .tag-map-entry {
     margin: 0;
 }
