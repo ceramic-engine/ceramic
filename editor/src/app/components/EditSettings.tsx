@@ -113,9 +113,20 @@ import FaQuestion from 'react-icons/lib/fa/question';
                             />
                         </Field>
                     </Form>
-                    <div className="title">Online settings</div>
+                    <div className="title">Online settings (experimental)</div>
                     <div className="description">Synchronize this project with a Github repository and realtime messaging. This allows to work on a ceramic project and save changes, settings, assets and more remotely. It also makes it possible to share the project between multiple users.</div>
                     <Form>
+                        <Field label="Online project">
+                            <SelectInput
+                                size="large"
+                                empty={0}
+                                selected={project.onlineEnabled ? 1 : 0}
+                                options={['Disabled', 'Enabled']}
+                                onChange={(selected) => {
+                                    project.onlineEnabled = selected === 1 ? true : false;
+                                }}
+                            />
+                        </Field>
                         <Field label="Github repository URL">
                             <TextInput
                                 size="large"
@@ -131,17 +142,6 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                 placeholder={'Enter personal access token\u2026'}
                                 value={user.githubToken}
                                 onChange={(val:string) => { user.githubToken = val.trim(); }}
-                            />
-                        </Field>
-                        <Field label="Online project">
-                            <SelectInput
-                                size="large"
-                                empty={0}
-                                selected={project.onlineEnabled ? 1 : 0}
-                                options={['Disabled', 'Enabled']}
-                                onChange={(selected) => {
-                                    project.onlineEnabled = selected === 1 ? true : false;
-                                }}
                             />
                         </Field>
                         <Field label="Realtime.co API key" disabled={!project.onlineEnabled}>
