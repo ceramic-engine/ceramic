@@ -86,6 +86,7 @@ package;
 import ceramic.Entity;
 import ceramic.Color;
 import ceramic.Quad;
+import ceramic.InitSettings;
 import ceramic.Settings;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
