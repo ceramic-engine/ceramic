@@ -35,9 +35,10 @@ class ToolsPlugin {
 
         var app = project.app;
         
-        app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
-
-        app.editable.push('plugin.spine.Spine');
+        if (app.spine) {
+            app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
+            app.editable.push('plugin.spine.Spine');
+        }
 
     } //extendProject
 
