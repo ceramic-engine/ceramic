@@ -24,7 +24,7 @@ class FieldInfo {
             var usedFields = new Map();
             var rtti = rttiMap.get(clazzStr);
             if (rtti == null) {
-                rtti = Rtti.getRtti(clazz);
+                rtti = Utils.getRtti(clazz);
                 rttiMap.set(clazzStr, rtti);
             }
 
@@ -45,7 +45,7 @@ class FieldInfo {
                     clazzStr = '' + clazz;
                     rtti = rttiMap.get(clazzStr);
                     if (rtti == null) {
-                        rtti = Rtti.getRtti(clazz);
+                        rtti = Utils.getRtti(clazz);
                         rttiMap.set(clazzStr, rtti);
                     }
                 }
@@ -104,7 +104,7 @@ class FieldInfo {
 
             var clazz = Type.resolveClass(targetClass);
             var usedFields = new Map();
-            var rtti = Rtti.getRtti(clazz);
+            var rtti = Utils.getRtti(clazz);
 
             while (clazz != null) {
 
@@ -123,7 +123,7 @@ class FieldInfo {
                 }
 
                 clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Rtti.getRtti(clazz);
+                if (clazz != null) rtti = Utils.getRtti(clazz);
 
             }
         }

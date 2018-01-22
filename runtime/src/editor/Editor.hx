@@ -155,7 +155,7 @@ class Editor extends Entity {
             var clazz = Type.resolveClass(classPath);
             var usedFields = new Map();
             var fields = [];
-            var rtti = Rtti.getRtti(clazz);
+            var rtti = Utils.getRtti(clazz);
 
             editableTypes.push({
                 meta: Meta.getType(clazz),
@@ -210,7 +210,7 @@ class Editor extends Entity {
                 }
 
                 clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Rtti.getRtti(clazz);
+                if (clazz != null) rtti = Utils.getRtti(clazz);
 
             }
         }
@@ -228,7 +228,7 @@ class Editor extends Entity {
             var usedFields = new Map();
             var fields = [];
             var collectionData = [];
-            var rtti = Rtti.getRtti(clazz);
+            var rtti = Utils.getRtti(clazz);
 
             collectionsInfo.push({
                 meta: Meta.getType(clazz),
@@ -292,7 +292,7 @@ class Editor extends Entity {
                 }
 
                 clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Rtti.getRtti(clazz);
+                if (clazz != null) rtti = Utils.getRtti(clazz);
 
             }
         }

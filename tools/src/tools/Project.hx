@@ -97,6 +97,7 @@ class Project {
 
         app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(app));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
+        app.hxml += "\n" + "--macro ceramic.macros.ExportRtti.init()";
 
     } //loadAppFile
 
