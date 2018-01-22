@@ -225,8 +225,11 @@ exports.hook = function(flow, done)
             File.saveContent(hookPrePath, hookPre);
         }
 
+        var availableTargets = context.backend.getBuildTargets();
+        var targetName = getTargetName(args, availableTargets);
+
         // Generate files with flow
-        haxelib(['run', 'flow', 'files'], { cwd: targetPath });
+        haxelib(['run', 'flow', 'files', targetName], { cwd: targetPath });
 
     } //run
 
