@@ -163,4 +163,30 @@ class Files {
 
     } //getRelativePath
 
+    public static function copyDirectory(srcDir:String, dstDir:String, removeExisting:Bool = false):Void {
+
+        if (FileSystem.exists(dstDir) && (removeExisting || !FileSystem.isDirectory(dstDir))) {
+            deleteRecursive(dstDir);
+        }
+        if (!FileSystem.exists(dstDir)) {
+            FileSystem.createDirectory(dstDir);
+        }
+
+        for (name in FileSystem.readDirectory(srcDir)) {
+
+            if (name == '.DS_Store') continue;
+            var srcPath = Path.join([srcDir, name]);
+            var dstPath = Path.join([dstDir, name]);
+
+            if (FileSystem.isDirectory(srcPath)) {
+                copyDirectory(srcPath, dstPath, removeExisting);
+            }
+            else {
+                sys.io.File.copy(srcPath, dstPath);
+            }
+            
+        }
+
+    } //copyDirectory
+
 } //Files
