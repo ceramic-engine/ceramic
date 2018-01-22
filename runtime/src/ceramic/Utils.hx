@@ -6,6 +6,7 @@ import haxe.rtti.Rtti;
 #if cpp
 import sys.io.File;
 import sys.FileSystem;
+import haxe.crypto.Md5;
 #end
 
 using StringTools;
@@ -35,7 +36,7 @@ class Utils {
 #if (ios || tvos)
         root = 'assets/';
 #end
-		var xmlPath = haxe.io.Path.join([root, 'assets', 'rtti', cStr + '.xml']);
+		var xmlPath = haxe.io.Path.join([root, 'assets', 'rtti', Md5.encode(cStr + '.xml')]);
 		if (FileSystem.exists(xmlPath)) {
 			rtti = File.getContent(xmlPath);
 		}

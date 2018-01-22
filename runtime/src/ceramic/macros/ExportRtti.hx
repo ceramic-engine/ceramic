@@ -9,6 +9,7 @@ import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.io.Path;
 import haxe.Json;
+import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -21,12 +22,12 @@ class ExportRtti {
         var isCompletion = Context.defined('completion') || Context.defined('display');
         if (isCompletion) return;
 
-        var assetsDir = getExportAssetsDir();
-        var rttiPath = Path.join([assetsDir, 'rtti']);
+        var rttiPath = getRttiPath();
 
-        if (!FileSystem.exists(rttiPath)) {
-            FileSystem.createDirectory(rttiPath);
+        if (FileSystem.exists(rttiPath)) {
+            deleteRecursive(rttiPath);
         }
+        FileSystem.createDirectory(rttiPath);
 
         var rttiTypes:Map<String,Bool> = new Map();
 
@@ -86,7 +87,7 @@ class ExportRtti {
                                         rtti = Json.parse(rtti.substr('[Const:String] '.length));
                                         
                                         // Save result
-                                        var xmlPath = Path.join([rttiPath, typeName + '.xml']);
+                                        var xmlPath = Path.join([rttiPath, Md5.encode(typeName + '.xml')]);
                                         File.saveContent(xmlPath, rtti);
                                     }
                                 }
@@ -102,17 +103,47 @@ class ExportRtti {
 
 /// Internal
 
-    static function getExportAssetsDir():String {
+    static function getRttiPath():String {
 
-        var targetPath = Context.definedValue('target_assets_path');
+        var targetPath = Context.definedValue('target_path');
 
         if (targetPath == null) {
             return null;
         }
 
-        return targetPath;
+        var cacheDir = Path.join([targetPath, '.cache']);
+        if (!FileSystem.exists(cacheDir)) {
+            FileSystem.createDirectory(cacheDir);
+        }
+        var name = 'rtti';
+        return Path.join([cacheDir, name]);
 
-    } //getExportAssetsDir
+    } //getRttiPath
+
+    public static function deleteRecursive(toDelete:String):Void {
+
+        if (FileSystem.isDirectory(toDelete)) {
+
+            for (name in FileSystem.readDirectory(toDelete)) {
+
+                var path = Path.join([toDelete, name]);
+                if (FileSystem.isDirectory(path)) {
+                    deleteRecursive(path);
+                } else {
+                    FileSystem.deleteFile(path);
+                }
+            }
+
+            FileSystem.deleteDirectory(toDelete);
+
+        }
+        else {
+
+            FileSystem.deleteFile(toDelete);
+
+        }
+
+    } //deleteRecursive
 
 } //ExportRtti
 

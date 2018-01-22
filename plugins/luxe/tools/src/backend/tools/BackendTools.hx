@@ -5,6 +5,8 @@ import tools.Images;
 import tools.Files;
 import haxe.io.Path;
 
+import sys.FileSystem;
+
 using StringTools;
 
 class BackendTools implements tools.spec.BackendTools {
@@ -248,6 +250,12 @@ class BackendTools implements tools.spec.BackendTools {
                 }
             }
             tools.Files.removeEmptyDirectories(dstAssetsPath);
+        }
+
+        // Copy rtti data (if any)
+        var rttiPath = Path.join([flowProjectPath, '.cache', 'rtti']);
+        if (FileSystem.exists(rttiPath)) {
+            tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
         }
 
         return newAssets;
