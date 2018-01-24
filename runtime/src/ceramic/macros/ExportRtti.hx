@@ -15,6 +15,7 @@ import sys.io.File;
 
 using StringTools;
 
+/** Export Runtime Type Information into external XML files. */
 class ExportRtti {
 
     public static function init():Void {

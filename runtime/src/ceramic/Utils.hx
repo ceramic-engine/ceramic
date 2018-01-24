@@ -26,6 +26,7 @@ class Utils {
     } //realPath
 
 	public static function getRtti<T>(c:Class<T>):Classdef {
+		
 #if (cpp && snow)
 		// For some unknown reason, app is crashing on some c++ platforms when trying to access `__rtti` field
 		// As a workaround, we export rtti data into external asset files at compile time and read them
@@ -37,12 +38,20 @@ class Utils {
         root = 'assets/';
 #end
 		var xmlPath = haxe.io.Path.join([root, 'assets', 'rtti', Md5.encode(cStr + '.xml')]);
-		if (FileSystem.exists(xmlPath)) {
+		//trace('CWD: ' + Sys.getCwd());
+		//trace('XML PATH: ' + xmlPath);
+		//trace('BASE PATH: ' + sdl.SDL.getBasePath());
+		
+		/*if (FileSystem.exists(xmlPath)) {
 			rtti = File.getContent(xmlPath);
-		}
+		}*/
+
+		rtti = @:privateAccess Luxe.snow.io.module._data_load(xmlPath).toBytes().toString();
+
 		if (rtti == null) {
 			throw 'Class ${Type.getClassName(c)} has no RTTI information, consider adding @:rtti';
 		}
+
 		var x = Xml.parse(rtti).firstElement();
 		var infos = new haxe.rtti.XmlParser().processElement(x);
 		switch (infos) {
