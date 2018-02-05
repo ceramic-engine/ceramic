@@ -98,6 +98,9 @@ class Build extends tools.Task {
                 cmdArgs,
                 { cwd: flowProjectPath }
             );
+            proc.on('close', function(code:Int) {
+                status = code;
+            });
 
             var out = StreamSplitter.splitter("\n");
             proc.stdout.pipe(untyped out);

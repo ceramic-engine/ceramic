@@ -101,6 +101,9 @@ class Build extends tools.Task {
 
             var out = StreamSplitter.splitter("\n");
             proc.stdout.pipe(untyped out);
+            proc.on('close', function(code:Int) {
+                status = code;
+            });
             out.encoding = 'utf8';
             out.on('token', function(token) {
                 token = formatLineOutput(flowProjectPath, token);
