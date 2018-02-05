@@ -45,13 +45,13 @@ class BuildPlugin extends tools.Task {
 
             // Use same HXML as completion
             var task = new PluginHxml();
-            task.run(pluginPath, args.concat(['--output', 'build.hxml']));
+            task.run(pluginPath, args.concat(['--output', 'plugin-build.hxml']));
 
             // Run haxe
-            var result = haxe(['build.hxml']);
+            var result = haxe(['plugin-build.hxml']);
 
-            // Remove build.hxml
-            FileSystem.deleteFile(Path.join([pluginPath, 'build.hxml']));
+            // Remove plugin-build.hxml
+            FileSystem.deleteFile(Path.join([pluginPath, 'plugin-build.hxml']));
 
             // Did it build fine?
             if (result.status != 0) {
