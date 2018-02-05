@@ -6,6 +6,7 @@ import sys.FileSystem;
 import sys.io.File;
 import js.node.ChildProcess;
 import tools.Project;
+import npm.Yaml;
 
 using StringTools;
 using tools.Colors;
@@ -66,29 +67,59 @@ class Helpers {
         context.plugins = new Map();
         context.unbuiltPlugins = new Map();
 
-        var pluginsRegistryPath = Path.join([context.dotCeramicPath, 'plugins.json']);
-        if (FileSystem.exists(pluginsRegistryPath)) {
-            try {
-                var pluginData:Dynamic = Json.parse(File.getContent(pluginsRegistryPath));
-                for (name in Reflect.fields(pluginData.plugins)) {
-                    var path:String = Reflect.field(pluginData.plugins, name);
-                    if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
-                    
-                    var pluginIndexPath = Path.join([path, 'index.js']);
-                    if (FileSystem.exists(pluginIndexPath)) {
-                        var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
-                        plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
-                        context.plugins.set(name, plugin);
+        var plugins:Map<String,{
+            name:String,
+            path:String
+        }> = new Map();
+
+        // Default plugins
+        var files = FileSystem.readDirectory(context.defaultPluginsPath);
+        for (file in files) {
+            var pluginProjectPath = Path.join([context.defaultPluginsPath, file, 'ceramic.yml']);
+            if (FileSystem.exists(pluginProjectPath)) {
+                // Extract info
+                try {
+                    var info = Yaml.parse(File.getContent(pluginProjectPath));
+                    if (info != null && info.plugin != null && info.plugin.name != null) {
+                        plugins.set((''+info.plugin.name).toLowerCase(), {
+                            name: info.plugin.name,
+                            path: Path.join([context.defaultPluginsPath, file])
+                        });
                     }
                     else {
-                        context.unbuiltPlugins.set(name, { path: path });
+                        warning('Invalid plugin: ' + pluginProjectPath);
                     }
+                }
+                catch (e:Dynamic) {
+                    error('Failed to parse plugin config: ' + pluginProjectPath);
+                }
+            }
+        }
 
+        // Plugins as haxe libraries
+        // TODO
+
+        for (key in plugins.keys()) {
+            var info = plugins.get(key);
+            var name:String = info.name;
+            var path:String = info.path;
+            try {
+                if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
+                
+                var pluginIndexPath = Path.join([path, 'index.js']);
+                if (FileSystem.exists(pluginIndexPath)) {
+                    var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
+                    plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
+                    plugin.name = name;
+                    context.plugins.set(name, plugin);
+                }
+                else {
+                    context.unbuiltPlugins.set(name, { path: path });
                 }
             }
             catch (e:Dynamic) {
                 untyped console.error(e);
-                error('Error when loading plugin.');
+                error('Error when loading plugin: ' + path);
             }
         }
 

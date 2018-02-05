@@ -8,6 +8,8 @@ typedef ToolsPlugin = {
 
     var backend:BackendTools;
 
+    var name:String;
+
     function init(context:Context):Void;
 
     @:optional function extendProject(project:Project):Void;

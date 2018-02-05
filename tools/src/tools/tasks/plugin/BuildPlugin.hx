@@ -20,22 +20,6 @@ class BuildPlugin extends tools.Task {
         // Compute plugin(s) to build
         var pluginPaths = [];
         var all = extractArgFlag(args, 'all', true);
-        var addDefaults = extractArgFlag(args, 'add-defaults', true);
-
-        // Automatically add default plugins
-        if (addDefaults) {
-            var files = FileSystem.readDirectory(context.defaultPluginsPath);
-            for (file in files) {
-                if (FileSystem.exists(Path.join([context.defaultPluginsPath, file, 'ceramic.yml']))) {
-                    // Map plugin if not mapped already
-                    var task = new AddPlugin();
-                    task.run(cwd, ['plugin', 'add', '--path', Path.join([context.defaultPluginsPath, file]), '--no-replace']);
-                }
-            }
-
-            // Recompute plugins
-            computePlugins();
-        }
 
         if (all) {
             for (plugin in context.plugins) {

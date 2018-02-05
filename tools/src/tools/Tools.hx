@@ -82,8 +82,6 @@ class Tools {
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
 
-        context.tasks.set('plugin add', new tools.tasks.plugin.AddPlugin());
-        context.tasks.set('plugin remove', new tools.tasks.plugin.RemovePlugin());
         context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
         context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());
@@ -173,7 +171,10 @@ class Tools {
         }
         else {
             var taskName = args[0];
-            if (args.length >= 2 && context.tasks.exists(taskName + ' ' + args[1])) {
+            if (args.length >= 3 && context.tasks.exists(taskName + ' ' + args[1] + ' ' + args[2])) {
+                taskName = taskName + ' ' + args[1] + ' ' + args[2];
+            }
+            else if (args.length >= 2 && context.tasks.exists(taskName + ' ' + args[1])) {
                 taskName = taskName + ' ' + args[1];
             }
 

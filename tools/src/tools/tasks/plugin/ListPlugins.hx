@@ -18,24 +18,12 @@ class ListPlugins extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        // Compute plugins registry path
-        var pluginsRegistryPath = Path.join([context.dotCeramicPath, 'plugins.json']);
-        var data = {
-            plugins: {}
-        };
-        if (FileSystem.exists(pluginsRegistryPath)) {
-            try {
-                data = Json.parse(File.getContent(pluginsRegistryPath));
-            }
-            catch (e:Dynamic) {
-                warning('Failed to open plugins.json: ' + e);
-            }
-        }
-
         // Print result
-        for (key in Reflect.fields(data.plugins)) {
-            var path:String = Reflect.field(data.plugins, key);
-            print(key + ' ' + (Path.isAbsolute(path) ? path : Path.join([context.dotCeramicPath, '..', path])).gray());
+        for (key in context.plugins.keys()) {
+            var info = context.plugins.get(key);
+            var path:String = info.path;
+            var name:String = info.name;
+            print(name + ' ' + path.gray());
         }
 
     } //run
