@@ -22,6 +22,9 @@ class IosProject {
         // Copy template project (only if not existing already)
         if (!FileSystem.exists(iosProjectFile)) {
 
+            // Plugin path
+            var pluginPath = context.plugins.get('iOS').path;
+
             // Create directory if needed
             if (!FileSystem.exists(iosProjectPath)) {
                 FileSystem.createDirectory(iosProjectPath);
@@ -32,7 +35,7 @@ class IosProject {
             Sync.run(function(done) {
 
                 Ncp.ncp(
-                    Path.join([context.ceramicToolsPath, 'tpl/project/ios']),
+                    Path.join([pluginPath, 'tpl/project/ios']),
                     iosProjectPath,
                     {},
                     function(err) {

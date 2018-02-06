@@ -79,9 +79,9 @@ class Build extends tools.Task {
             runHooks(cwd, args, project.app.hooks, 'begin build');
         }
 
-        // iOS case
+        // iOS/Android case
         var cmdAction = action;
-        if (cmdAction == 'run' && target.name == 'ios') {
+        if ((action == 'run' || action == 'build') && (target.name == 'ios' || target.name == 'android')) {
             if (archs == null || archs.trim() == '') {
                 cmdAction = 'compile';
             } else {
@@ -89,7 +89,7 @@ class Build extends tools.Task {
             }
         }
         
-        if (action == 'run' && target.name != 'ios') {
+        if (action == 'run' && (target.name == 'ios' || target.name == 'android')) {
             runHooks(cwd, args, project.app.hooks, 'begin run');
         }
         
@@ -172,6 +172,9 @@ class Build extends tools.Task {
             }
         
             runHooks(cwd, args, project.app.hooks, 'end run');
+        }
+        else if (action == 'run' && target.name == 'android') {
+            // Needs Android plugin
         }
 
     } //run
