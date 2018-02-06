@@ -7,6 +7,7 @@ import sys.io.File;
 import js.node.ChildProcess;
 import tools.Project;
 import npm.Yaml;
+import npm.StripAnsi;
 
 using StringTools;
 using tools.Colors;
@@ -415,6 +416,10 @@ class Helpers {
 
     public static function formatLineOutput(cwd:String, input:String):String {
 
+        if (!context.colors) {
+            input = StripAnsi.stripAnsi(input);
+        }
+
         // We don't want \r char to mess up everything (windows)
         input = input.replace("\r", '');
 
@@ -480,17 +485,22 @@ class Helpers {
 
     } //formatLineOutput
 
-    public static function ensureCeramicProject(cwd:String, args:Array<String>, kind:ProjectKind):Void {
+    public static function ensureCeramicProject(cwd:String, args:Array<String>, kind:ProjectKind):Project {
 
         switch (kind) {
             case App:
                 var project = new Project();
                 project.loadAppFile(Path.join([cwd, 'ceramic.yml']));
+                return project;
 
             case Plugin(pluginKinds):
                 var project = new Project();
                 project.loadPluginFile(Path.join([cwd, 'ceramic.yml']));
+                return project;
         }
+
+        fail('Failed to ensure this is a ceramic project.');
+        return null;
 
     } //ensureCeramicProject
 

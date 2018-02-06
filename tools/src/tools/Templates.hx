@@ -76,8 +76,10 @@ class Templates {
                 for (filePath in Glob.sync(Path.join([projectPath, '**']), {dot: true})) {
                     if (FileSystem.exists(filePath) && filePath.indexOf(key) != -1) {
                         var newFilePath = projectPath + filePath.substr(projectPath.length).replace(key, value);
-                        Fs.renameSync(filePath, newFilePath);
-                        didRenameAFile = true;
+                        if (newFilePath != filePath) {
+                            Fs.renameSync(filePath, newFilePath);
+                            didRenameAFile = true;
+                        }
                     }
                 }
 

@@ -165,13 +165,13 @@ exports.hook = function(flow, done)
 }
 ";
 
-        hooks += ",
+            /*hooks += ",
       pre: {
         priority: 1,
         name: 'ceramic-pre',
         desc: 'run ceramic pre build',
         script: './hooks/pre.js'
-      }";
+        }";*/
         }
     
         var content = ('

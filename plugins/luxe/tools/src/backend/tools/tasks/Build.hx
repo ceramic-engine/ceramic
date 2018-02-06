@@ -53,6 +53,8 @@ class Build extends tools.Task {
         var outPath = Path.join([cwd, 'out']);
         var action = null;
 
+        var archs = extractArgValue(args, 'archs');
+
         switch (config) {
             case Build(displayName):
                 action = 'build';
@@ -80,14 +82,25 @@ class Build extends tools.Task {
         // iOS case
         var cmdAction = action;
         if (cmdAction == 'run' && target.name == 'ios') {
-            cmdAction = 'build';
+            if (archs == null || archs.trim() == '') {
+                cmdAction = 'compile';
+            } else {
+                cmdAction = 'build';
+            }
         }
         
-        // Clean with flow command
-        //
+        if (action == 'run' && target.name != 'ios') {
+            runHooks(cwd, args, project.app.hooks, 'begin run');
+        }
+        
+        // Use flow command
         var cmdArgs = ['run', 'flow', cmdAction, target.name];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
+        if (archs != null && archs.trim() != '') {
+            cmdArgs.push('--archs');
+            cmdArgs.push(archs);
+        }
 
         var status = 0;
 
@@ -139,6 +152,26 @@ class Build extends tools.Task {
             else if (action == 'clean') {
                 runHooks(cwd, args, project.app.hooks, 'end clean');
             }
+        
+            if (action == 'run' && target.name != 'ios') {
+                runHooks(cwd, args, project.app.hooks, 'end run');
+            }
+        }
+
+        if (action == 'run' && target.name == 'ios') {
+            // Needs iOS plugin
+            var task = context.tasks.get('ios xcode');
+            if (task == null) {
+                warning('Cannot build iOS project because `ceramic ios xcode` command doesn\'t exist.');
+                warning('Did you enable ceramic\'s ios plugin?');
+            }
+            else {
+                var taskArgs = ['ios', 'xcode', '--run', '--variant', context.variant];
+                if (debug) taskArgs.push('--debug');
+                task.run(cwd, taskArgs);
+            }
+        
+            runHooks(cwd, args, project.app.hooks, 'end run');
         }
 
     } //run

@@ -60,7 +60,7 @@ class Audio #if !completion implements spec.Audio #end {
         var handle:AudioHandle = null;
         if (loop) {
 
-            /*if (isStream) {
+            /*if (true) {
 
                 // At the moment, looping a stream doesn't seem reliable in luxe/snow/openal.
                 // When looping a stream, let's manage ourselve the loop by

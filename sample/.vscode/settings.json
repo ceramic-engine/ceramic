@@ -1,7 +1,9 @@
 {
     "haxe.displayConfigurations": [
         [
-            "completion.hxml"
+            "completion.hxml",
+            "-D",
+            "seed=1514734711268"
         ]
     ],
     "search.exclude": {

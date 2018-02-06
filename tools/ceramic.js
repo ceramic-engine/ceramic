@@ -6,9 +6,12 @@ var path = require('path');
 // Expose global require
 global.rReqOrig = require;
 global.rReq = function(module) {
+    // Try first to require from ceramic core's node modules
     if (rReqOrig.resolve(module)) {
         return rReqOrig(module);
-    } else {
+    }
+    // If nothing was resolved, try to require from plugin's node modules (if it is a plugin)
+    else {
         return require.main.require(module);
     }
 };

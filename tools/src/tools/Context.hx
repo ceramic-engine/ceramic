@@ -5,6 +5,9 @@ typedef Context = {
 
     /** If `true`, the output will get formatted with ANSI colors. */
     var colors:Bool;
+
+    /** If `true`, debug is enabled. */
+    var debug:Bool;
     
     /** The defines computed by project and args. */
     var defines:Map<String,String>;

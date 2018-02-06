@@ -4,4 +4,4 @@
 -lib hscript
 -js index.js
 -debug
--cmd node ceramic plugin build --tools --all --add-defaults
+-cmd node ceramic plugin build --tools --all

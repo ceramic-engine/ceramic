@@ -39,6 +39,7 @@ class Tools {
         // Initialize context with default values
         Helpers.context = {
             colors: true,
+            debug: (args.indexOf('--debug') != -1),
             defines: new Map(),
             ceramicToolsPath: ceramicPath,
             ceramicRuntimePath: Path.normalize(Path.join([ceramicPath, '../runtime'])),
@@ -150,6 +151,7 @@ class Tools {
 
         // Debug
         if (args.indexOf('--debug') != -1) {
+            context.debug = true;
             if (!context.defines.exists('debug')) {
                 context.defines.set('debug', '');
             }
