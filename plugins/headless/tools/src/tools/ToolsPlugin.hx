@@ -110,7 +110,7 @@ class ToolsPlugin {
                             tasks: tasksContent,
                             onSelect: {
                                 command: "ceramic",
-                                args: [backendName, "hxml", target.name, "--output", "completion.hxml"].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : [])
+                                args: [backendName, "hxml", target.name, "--setup", "--output", "completion.hxml"].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : [])
                             }
                         });
 

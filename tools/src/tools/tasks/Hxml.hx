@@ -48,13 +48,17 @@ class Hxml extends tools.Task {
             context.defines.set(target.name, '');
         }
 
+        // Update setup, if needed
+        if (extractArgFlag(args, 'setup', true)) {
+            context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
+        }
+
         // Get and run backend's setup task
         var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
         var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
 
         // Add completion flag
         rawHxml += "\n" + '-D completion';
-        //rawHxml += "\n" + '-D display';
 
         // Add some completion cache optims
         //
@@ -70,12 +74,6 @@ class Hxml extends tools.Task {
                 }
             }
         }
-        
-        // We hardcoded nape and spinehaxe/spine classpaths because they are common dependencies that won't change.
-        // Might be a better option to compute these from loaded haxe libs directly, but for now it should be fine.
-        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['nape', 'spinehaxe', 'plugin', 'spine', 'ceramic.internal', 'ceramic.macros', 'backend', 'spec'], [NoCheckShadowing, NoCheckDependencies], true)";
-        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(" + Json.stringify(pathFilters) + ", [NoCheckFileTimeModification, NoCheckDependencies], false, NormalAndMacroContext)";
-        //rawHxml += "\n" + "--macro server.setModuleCheckPolicy(['spine', 'nape', 'backend', 'spec'], [NoCheckFileTimeModification,NoCheckDependencies], true, NormalAndMacroContext)";
 
         // Let plugins extend completion HXML
         for (plugin in context.plugins) {
@@ -89,12 +87,6 @@ class Hxml extends tools.Task {
                 context.backend = prevBackend;
             }
         }
-
-        /*// Required to ensure assets list gets updated
-        var toInvalidate = [
-            Path.join([ceramicSrcContentPath, 'Assets.hx'])
-        ];
-        rawHxml += "\n" + "--macro server.invalidateFiles(" + Json.stringify(toInvalidate) + ")";*/
         
         // Make every hxml paths absolute (to simplify IDE integration)
         //
