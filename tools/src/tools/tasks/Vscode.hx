@@ -18,7 +18,7 @@ class Vscode extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args, App);
+        var project = ensureCeramicProject(cwd, args, App);
 
         var force = extractArgFlag(args, 'force');
         var settingsOnly = extractArgFlag(args, 'settings-only');
@@ -96,6 +96,7 @@ class Vscode extends tools.Task {
         // Save settings.json
         //
         var vscodeSettings = {
+            "window.title": "${activeEditorShort} — " + project.app.name,
             "haxe.displayConfigurations": [
                 ["completion.hxml", "-D", "seed=" + Math.round(Date.now().getTime())]
             ],
