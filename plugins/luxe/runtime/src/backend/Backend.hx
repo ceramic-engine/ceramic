@@ -1,20 +1,8 @@
 package backend;
 
-#if cpp
-import ceramic.internal.Worker;
-#end
-
 @:allow(Main)
 @:allow(backend.Textures)
 class Backend implements ceramic.Events #if !completion implements spec.Backend #end {
-
-/// Internal
-
-#if cpp
-
-    var worker:Worker = null;
-
-#end
 
 /// Public API
 
@@ -35,15 +23,6 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
     public function new() {}
 
     public function init(app:ceramic.App) {
-
-#if cpp
-        // Init background worker
-        Worker.init();
-        worker = new Worker();
-        app.onUpdate(function(delta) {
-            Worker.flush();
-        });
-#end
 
     } //init
 
