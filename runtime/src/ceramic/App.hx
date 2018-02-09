@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.internal.PlatformSpecific;
+
 import ceramic.Settings;
 import ceramic.Assets;
 import ceramic.Fragment;
@@ -226,6 +228,9 @@ class App extends Entity {
     } //initCollections
 
     function assetsLoaded():Void {
+
+        // Platform specific code (which is not in backend code)
+        PlatformSpecific.postAppInit();
 
         emitReady();
 
