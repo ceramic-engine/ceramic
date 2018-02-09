@@ -3,6 +3,10 @@ package ceramic.internal;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
 
+#if (bind && android && snow)
+import bind.java.Support;
+#end
+
 #if cpp
 import sys.io.File;
 import sys.FileSystem;
@@ -19,7 +23,7 @@ class PlatformSpecific {
 
 #if (bind && android && snow)
         // A hook to flush java runnables that need to be run from Haxe thread
-        app.onUpdate(this, function(_) {
+        ceramic.App.app.onUpdate(function(_) {
             bind.java.Support.flushRunnables();
         });
 #end
