@@ -162,7 +162,7 @@ class Build extends tools.Task {
             // Needs iOS plugin
             var task = context.tasks.get('ios xcode');
             if (task == null) {
-                warning('Cannot build iOS project because `ceramic ios xcode` command doesn\'t exist.');
+                warning('Cannot run iOS project because `ceramic ios xcode` command doesn\'t exist.');
                 warning('Did you enable ceramic\'s ios plugin?');
             }
             else {
@@ -175,6 +175,18 @@ class Build extends tools.Task {
         }
         else if (action == 'run' && target.name == 'android') {
             // Needs Android plugin
+            var task = context.tasks.get('android studio');
+            if (task == null) {
+                warning('Cannot run Android project because `ceramic android studio` command doesn\'t exist.');
+                warning('Did you enable ceramic\'s android plugin?');
+            }
+            else {
+                var taskArgs = ['android', 'studio', '--run', '--variant', context.variant];
+                if (debug) taskArgs.push('--debug');
+                task.run(cwd, taskArgs);
+            }
+        
+            runHooks(cwd, args, project.app.hooks, 'end run');
         }
 
     } //run
