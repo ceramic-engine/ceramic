@@ -1,0 +1,17 @@
+<class path="ceramic.RenderTexture" params="">
+	<extends path="ceramic.Texture"/>
+	<new public="1" set="method" line="12"><f a="width:height:?density">
+	<x path="Int"/>
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+	</meta>
+</class>

@@ -1,0 +1,23 @@
+<class path="ceramic.CollectionEntry" params="">
+	<id public="1">
+		<c path="String"/>
+		<meta><m n="editable"/></meta>
+	</id>
+	<name public="1">
+		<c path="String"/>
+		<meta><m n="editable"/></meta>
+	</name>
+	<setRawData public="1" set="method" line="25"><f a="data">
+	<d/>
+	<x path="Void"/>
+</f></setRawData>
+	<new public="1" set="method" line="14"><f a="id:name">
+	<c path="String"/>
+	<c path="String"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":rtti"/>
+		<m n=":structInit"/>
+	</meta>
+</class>

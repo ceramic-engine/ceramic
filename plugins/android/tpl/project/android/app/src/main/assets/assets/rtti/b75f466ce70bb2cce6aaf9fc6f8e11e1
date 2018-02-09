@@ -1,0 +1,1018 @@
+<class path="ceramic.Screen" params="">
+	<extends path="ceramic.Entity"/>
+	<implements path="ceramic.Observable"/>
+	<density public="1" set="null" line="12"><x path="Float"/></density>
+	<width public="1" set="null" line="16"><x path="Float"/></width>
+	<height public="1" set="null" line="20"><x path="Float"/></height>
+	<nativeWidth public="1" get="accessor" set="null"><x path="Float"/></nativeWidth>
+	<get_nativeWidth get="inline" set="null" line="24"><f a=""><x path="Float"/></f></get_nativeWidth>
+	<nativeHeight public="1" get="accessor" set="null"><x path="Float"/></nativeHeight>
+	<get_nativeHeight get="inline" set="null" line="30"><f a=""><x path="Float"/></f></get_nativeHeight>
+	<nativeDensity public="1" get="accessor" set="null"><x path="Float"/></nativeDensity>
+	<get_nativeDensity get="inline" set="null" line="36"><f a=""><x path="Float"/></f></get_nativeDensity>
+	<pointerX public="1" set="null" line="44"><x path="Float"/></pointerX>
+	<pointerY public="1" set="null" line="50"><x path="Float"/></pointerY>
+	<mouseX public="1" set="null" line="53"><x path="Float"/></mouseX>
+	<mouseY public="1" set="null" line="56"><x path="Float"/></mouseY>
+	<touches public="1" set="null" line="59"><x path="ceramic.Touches"/></touches>
+	<texturesDensity public="1" get="accessor" set="accessor"><x path="Float"/></texturesDensity>
+	<get_texturesDensity set="method" line="63">
+		<f a=""><x path="Float"/></f>
+		<haxe_doc></haxe_doc>
+	</get_texturesDensity>
+	<set_texturesDensity get="inline" set="null" line="63">
+		<f a="texturesDensity">
+			<x path="Float"/>
+			<x path="Float"/>
+		</f>
+		<haxe_doc></haxe_doc>
+	</set_texturesDensity>
+	<unobservedTexturesDensity line="63">
+		<x path="Float"/>
+		<meta><m n="observable"/></meta>
+	</unobservedTexturesDensity>
+	<__cbOnTexturesDensityChange>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</__cbOnTexturesDensityChange>
+	<__cbOnceTexturesDensityChange>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</__cbOnceTexturesDensityChange>
+	<__cbOnOwnerUnbindTexturesDensityChange>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</__cbOnOwnerUnbindTexturesDensityChange>
+	<__cbOnceOwnerUnbindTexturesDensityChange>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</__cbOnceOwnerUnbindTexturesDensityChange>
+	<emitTexturesDensityChange set="method" line="63">
+		<f a="current:previous">
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</emitTexturesDensityChange>
+	<onTexturesDensityChange public="1" set="method" line="63">
+		<f a="?owner:handleCurrentPrevious">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</onTexturesDensityChange>
+	<onceTexturesDensityChange public="1" set="method" line="63">
+		<f a="?owner:handleCurrentPrevious">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</onceTexturesDensityChange>
+	<offTexturesDensityChange public="1" set="method" line="63">
+		<f a="?handleCurrentPrevious">
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</offTexturesDensityChange>
+	<listensTexturesDensityChange public="1" get="inline" set="null" line="63">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Event when texturesDensity field changes.</haxe_doc>
+	</listensTexturesDensityChange>
+	<matrix line="69">
+		<c path="ceramic.Transform"/>
+		<meta><m n=":allow"><e>ceramic.Visual</e></m></meta>
+	</matrix>
+	<reverseMatrix line="73">
+		<c path="ceramic.Transform"/>
+		<meta><m n=":allow"><e>ceramic.Visual</e></m></meta>
+	</reverseMatrix>
+	<resizing line="76"><x path="Bool"/></resizing>
+	<isDown public="1" get="accessor" set="null"><x path="Bool"/></isDown>
+	<_numDown line="80"><x path="Int"/></_numDown>
+	<get_isDown get="inline" set="null" line="81"><f a=""><x path="Bool"/></f></get_isDown>
+	<__cbOnResize>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>resize event</haxe_doc>
+	</__cbOnResize>
+	<__cbOnceResize>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>resize event</haxe_doc>
+	</__cbOnceResize>
+	<__cbOnOwnerUnbindResize>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>resize event</haxe_doc>
+	</__cbOnOwnerUnbindResize>
+	<__cbOnceOwnerUnbindResize>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>resize event</haxe_doc>
+	</__cbOnceOwnerUnbindResize>
+	<emitResize set="method" line="87">
+		<f a=""><x path="Void"/></f>
+		<haxe_doc>resize event</haxe_doc>
+	</emitResize>
+	<onResize public="1" set="method" line="87">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>resize event</haxe_doc>
+	</onResize>
+	<onceResize public="1" set="method" line="87">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>resize event</haxe_doc>
+	</onceResize>
+	<offResize public="1" set="method" line="87">
+		<f a="?handle">
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>resize event</haxe_doc>
+	</offResize>
+	<listensResize public="1" get="inline" set="null" line="87">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to resize event</haxe_doc>
+	</listensResize>
+	<__cbOnMouseDown>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</__cbOnMouseDown>
+	<__cbOnceMouseDown>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</__cbOnceMouseDown>
+	<__cbOnOwnerUnbindMouseDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</__cbOnOwnerUnbindMouseDown>
+	<__cbOnceOwnerUnbindMouseDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</__cbOnceOwnerUnbindMouseDown>
+	<emitMouseDown set="method" line="91">
+		<f a="buttonId:x:y">
+			<x path="Int"/>
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</emitMouseDown>
+	<onMouseDown public="1" set="method" line="91">
+		<f a="?owner:handleButtonIdXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</onMouseDown>
+	<onceMouseDown public="1" set="method" line="91">
+		<f a="?owner:handleButtonIdXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</onceMouseDown>
+	<offMouseDown public="1" set="method" line="91">
+		<f a="?handleButtonIdXY">
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseDown event</haxe_doc>
+	</offMouseDown>
+	<listensMouseDown public="1" get="inline" set="null" line="91">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to mouseDown event</haxe_doc>
+	</listensMouseDown>
+	<__cbOnMouseUp>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</__cbOnMouseUp>
+	<__cbOnceMouseUp>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</__cbOnceMouseUp>
+	<__cbOnOwnerUnbindMouseUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</__cbOnOwnerUnbindMouseUp>
+	<__cbOnceOwnerUnbindMouseUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</__cbOnceOwnerUnbindMouseUp>
+	<emitMouseUp set="method" line="92">
+		<f a="buttonId:x:y">
+			<x path="Int"/>
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</emitMouseUp>
+	<onMouseUp public="1" set="method" line="92">
+		<f a="?owner:handleButtonIdXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</onMouseUp>
+	<onceMouseUp public="1" set="method" line="92">
+		<f a="?owner:handleButtonIdXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</onceMouseUp>
+	<offMouseUp public="1" set="method" line="92">
+		<f a="?handleButtonIdXY">
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseUp event</haxe_doc>
+	</offMouseUp>
+	<listensMouseUp public="1" get="inline" set="null" line="92">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to mouseUp event</haxe_doc>
+	</listensMouseUp>
+	<__cbOnMouseWheel>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</__cbOnMouseWheel>
+	<__cbOnceMouseWheel>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</__cbOnceMouseWheel>
+	<__cbOnOwnerUnbindMouseWheel>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</__cbOnOwnerUnbindMouseWheel>
+	<__cbOnceOwnerUnbindMouseWheel>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</__cbOnceOwnerUnbindMouseWheel>
+	<emitMouseWheel set="method" line="93">
+		<f a="x:y">
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</emitMouseWheel>
+	<onMouseWheel public="1" set="method" line="93">
+		<f a="?owner:handleXY">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</onMouseWheel>
+	<onceMouseWheel public="1" set="method" line="93">
+		<f a="?owner:handleXY">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</onceMouseWheel>
+	<offMouseWheel public="1" set="method" line="93">
+		<f a="?handleXY">
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseWheel event</haxe_doc>
+	</offMouseWheel>
+	<listensMouseWheel public="1" get="inline" set="null" line="93">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to mouseWheel event</haxe_doc>
+	</listensMouseWheel>
+	<__cbOnMouseMove>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</__cbOnMouseMove>
+	<__cbOnceMouseMove>
+		<c path="Array"><f a=":">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</__cbOnceMouseMove>
+	<__cbOnOwnerUnbindMouseMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</__cbOnOwnerUnbindMouseMove>
+	<__cbOnceOwnerUnbindMouseMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</__cbOnceOwnerUnbindMouseMove>
+	<emitMouseMove set="method" line="94">
+		<f a="x:y">
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</emitMouseMove>
+	<onMouseMove public="1" set="method" line="94">
+		<f a="?owner:handleXY">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</onMouseMove>
+	<onceMouseMove public="1" set="method" line="94">
+		<f a="?owner:handleXY">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</onceMouseMove>
+	<offMouseMove public="1" set="method" line="94">
+		<f a="?handleXY">
+			<f a=":">
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>mouseMove event</haxe_doc>
+	</offMouseMove>
+	<listensMouseMove public="1" get="inline" set="null" line="94">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to mouseMove event</haxe_doc>
+	</listensMouseMove>
+	<__cbOnTouchDown>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchDown event</haxe_doc>
+	</__cbOnTouchDown>
+	<__cbOnceTouchDown>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchDown event</haxe_doc>
+	</__cbOnceTouchDown>
+	<__cbOnOwnerUnbindTouchDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchDown event</haxe_doc>
+	</__cbOnOwnerUnbindTouchDown>
+	<__cbOnceOwnerUnbindTouchDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchDown event</haxe_doc>
+	</__cbOnceOwnerUnbindTouchDown>
+	<emitTouchDown set="method" line="98">
+		<f a="touchIndex:x:y">
+			<x path="Int"/>
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchDown event</haxe_doc>
+	</emitTouchDown>
+	<onTouchDown public="1" set="method" line="98">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchDown event</haxe_doc>
+	</onTouchDown>
+	<onceTouchDown public="1" set="method" line="98">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchDown event</haxe_doc>
+	</onceTouchDown>
+	<offTouchDown public="1" set="method" line="98">
+		<f a="?handleTouchIndexXY">
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchDown event</haxe_doc>
+	</offTouchDown>
+	<listensTouchDown public="1" get="inline" set="null" line="98">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to touchDown event</haxe_doc>
+	</listensTouchDown>
+	<__cbOnTouchUp>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchUp event</haxe_doc>
+	</__cbOnTouchUp>
+	<__cbOnceTouchUp>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchUp event</haxe_doc>
+	</__cbOnceTouchUp>
+	<__cbOnOwnerUnbindTouchUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchUp event</haxe_doc>
+	</__cbOnOwnerUnbindTouchUp>
+	<__cbOnceOwnerUnbindTouchUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchUp event</haxe_doc>
+	</__cbOnceOwnerUnbindTouchUp>
+	<emitTouchUp set="method" line="99">
+		<f a="touchIndex:x:y">
+			<x path="Int"/>
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchUp event</haxe_doc>
+	</emitTouchUp>
+	<onTouchUp public="1" set="method" line="99">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchUp event</haxe_doc>
+	</onTouchUp>
+	<onceTouchUp public="1" set="method" line="99">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchUp event</haxe_doc>
+	</onceTouchUp>
+	<offTouchUp public="1" set="method" line="99">
+		<f a="?handleTouchIndexXY">
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchUp event</haxe_doc>
+	</offTouchUp>
+	<listensTouchUp public="1" get="inline" set="null" line="99">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to touchUp event</haxe_doc>
+	</listensTouchUp>
+	<__cbOnTouchMove>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchMove event</haxe_doc>
+	</__cbOnTouchMove>
+	<__cbOnceTouchMove>
+		<c path="Array"><f a="::">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchMove event</haxe_doc>
+	</__cbOnceTouchMove>
+	<__cbOnOwnerUnbindTouchMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchMove event</haxe_doc>
+	</__cbOnOwnerUnbindTouchMove>
+	<__cbOnceOwnerUnbindTouchMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>touchMove event</haxe_doc>
+	</__cbOnceOwnerUnbindTouchMove>
+	<emitTouchMove set="method" line="100">
+		<f a="touchIndex:x:y">
+			<x path="Int"/>
+			<x path="Float"/>
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchMove event</haxe_doc>
+	</emitTouchMove>
+	<onTouchMove public="1" set="method" line="100">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchMove event</haxe_doc>
+	</onTouchMove>
+	<onceTouchMove public="1" set="method" line="100">
+		<f a="?owner:handleTouchIndexXY">
+			<c path="ceramic.Entity"/>
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchMove event</haxe_doc>
+	</onceTouchMove>
+	<offTouchMove public="1" set="method" line="100">
+		<f a="?handleTouchIndexXY">
+			<f a="::">
+				<x path="Int"/>
+				<x path="Float"/>
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>touchMove event</haxe_doc>
+	</offTouchMove>
+	<listensTouchMove public="1" get="inline" set="null" line="100">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to touchMove event</haxe_doc>
+	</listensTouchMove>
+	<__cbOnDown>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>down event</haxe_doc>
+	</__cbOnDown>
+	<__cbOnceDown>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>down event</haxe_doc>
+	</__cbOnceDown>
+	<__cbOnOwnerUnbindDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>down event</haxe_doc>
+	</__cbOnOwnerUnbindDown>
+	<__cbOnceOwnerUnbindDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>down event</haxe_doc>
+	</__cbOnceOwnerUnbindDown>
+	<emitDown set="method" line="104">
+		<f a="info">
+			<c path="ceramic.TouchInfo"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>down event</haxe_doc>
+	</emitDown>
+	<onDown public="1" set="method" line="104">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>down event</haxe_doc>
+	</onDown>
+	<onceDown public="1" set="method" line="104">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>down event</haxe_doc>
+	</onceDown>
+	<offDown public="1" set="method" line="104">
+		<f a="?handleInfo">
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>down event</haxe_doc>
+	</offDown>
+	<listensDown public="1" get="inline" set="null" line="104">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to down event</haxe_doc>
+	</listensDown>
+	<__cbOnUp>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>up event</haxe_doc>
+	</__cbOnUp>
+	<__cbOnceUp>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>up event</haxe_doc>
+	</__cbOnceUp>
+	<__cbOnOwnerUnbindUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>up event</haxe_doc>
+	</__cbOnOwnerUnbindUp>
+	<__cbOnceOwnerUnbindUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>up event</haxe_doc>
+	</__cbOnceOwnerUnbindUp>
+	<emitUp set="method" line="105">
+		<f a="info">
+			<c path="ceramic.TouchInfo"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>up event</haxe_doc>
+	</emitUp>
+	<onUp public="1" set="method" line="105">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>up event</haxe_doc>
+	</onUp>
+	<onceUp public="1" set="method" line="105">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>up event</haxe_doc>
+	</onceUp>
+	<offUp public="1" set="method" line="105">
+		<f a="?handleInfo">
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>up event</haxe_doc>
+	</offUp>
+	<listensUp public="1" get="inline" set="null" line="105">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to up event</haxe_doc>
+	</listensUp>
+	<__cbOnMove>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>move event</haxe_doc>
+	</__cbOnMove>
+	<__cbOnceMove>
+		<c path="Array"><f a="">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>move event</haxe_doc>
+	</__cbOnceMove>
+	<__cbOnOwnerUnbindMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>move event</haxe_doc>
+	</__cbOnOwnerUnbindMove>
+	<__cbOnceOwnerUnbindMove>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>move event</haxe_doc>
+	</__cbOnceOwnerUnbindMove>
+	<emitMove set="method" line="106">
+		<f a="info">
+			<c path="ceramic.TouchInfo"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>move event</haxe_doc>
+	</emitMove>
+	<onMove public="1" set="method" line="106">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>move event</haxe_doc>
+	</onMove>
+	<onceMove public="1" set="method" line="106">
+		<f a="?owner:handleInfo">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>move event</haxe_doc>
+	</onceMove>
+	<offMove public="1" set="method" line="106">
+		<f a="?handleInfo">
+			<f a="">
+				<c path="ceramic.TouchInfo"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>move event</haxe_doc>
+	</offMove>
+	<listensMove public="1" get="inline" set="null" line="106">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to move event</haxe_doc>
+	</listensMove>
+	<backendReady set="method" line="114"><f a=""><x path="Void"/></f></backendReady>
+	<resize set="method" line="279"><f a=""><x path="Void"/></f></resize>
+	<updateTexturesDensity set="method" line="314"><f a=""><x path="Void"/></f></updateTexturesDensity>
+	<updateScaling set="method" line="325"><f a=""><x path="Void"/></f></updateScaling>
+	<updateTransform set="method" line="347"><f a=""><x path="Void"/></f></updateTransform>
+	<matchFirstDownListener set="method" line="371"><f a="x:y">
+	<x path="Float"/>
+	<x path="Float"/>
+	<c path="ceramic.Visual"/>
+</f></matchFirstDownListener>
+	<matchFirstOverListener set="method" line="391"><f a="x:y">
+	<x path="Float"/>
+	<x path="Float"/>
+	<c path="ceramic.Visual"/>
+</f></matchFirstOverListener>
+	<willEmitDown get="inline" set="null" line="413"><f a="info">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></willEmitDown>
+	<willEmitUp get="inline" set="null" line="437"><f a="info">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></willEmitUp>
+	<willEmitMove get="inline" set="null" line="466"><f a="info">
+	<c path="ceramic.TouchInfo"/>
+	<x path="Void"/>
+</f></willEmitMove>
+	<updatePointer get="inline" set="null" line="490"><f a=""><x path="Void"/></f></updatePointer>
+	<matchedDownListeners line="518"><x path="Map">
+	<x path="Int"/>
+	<c path="ceramic.Visual"/>
+</x></matchedDownListeners>
+	<matchedOverListeners line="520"><x path="Map">
+	<x path="Int"/>
+	<c path="ceramic.Visual"/>
+</x></matchedOverListeners>
+	<didEmitMouseDown get="inline" set="null" line="522"><f a="buttonId:x:y">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitMouseDown>
+	<didEmitMouseUp get="inline" set="null" line="542"><f a="buttonId:x:y">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitMouseUp>
+	<didEmitMouseMove get="inline" set="null" line="562"><f a="x:y">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitMouseMove>
+	<didEmitTouchDown get="inline" set="null" line="601"><f a="touchIndex:x:y">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitTouchDown>
+	<didEmitTouchUp get="inline" set="null" line="621"><f a="touchIndex:x:y">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitTouchUp>
+	<didEmitTouchMove get="inline" set="null" line="641"><f a="touchIndex:x:y">
+	<x path="Int"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></didEmitTouchMove>
+	<new set="method" line="110"><f a=""><x path="Void"/></f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":allow"><e>ceramic.App</e></m>
+	</meta>
+</class>

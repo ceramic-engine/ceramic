@@ -1,0 +1,23 @@
+<class path="ceramic.ShaderAsset" params="">
+	<extends path="ceramic.Asset"/>
+	<shader public="1" line="11"><c path="ceramic.Shader"/></shader>
+	<load public="1" set="method" line="19" override="1"><f a=""><x path="Void"/></f></load>
+	<destroy public="1" set="method" line="82" override="1"><f a=""><x path="Void"/></f></destroy>
+	<toString set="method" line="93" override="1"><f a=""><c path="String"/></f></toString>
+	<new public="1" set="method" line="13"><f a="name:?options">
+	<c path="String"/>
+	<t path="ceramic.AssetOptions"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.ObservableMacro.build()</e></m>
+	</meta>
+</class>

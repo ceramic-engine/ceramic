@@ -1,0 +1,363 @@
+<class path="ceramic.App" params="">
+	<extends path="ceramic.Entity"/>
+	<app public="1" get="accessor" set="null" static="1"><c path="ceramic.App"/></app>
+	<get_app get="inline" set="null" line="24" static="1"><f a=""><c path="ceramic.App"/></f></get_app>
+	<preInitCallbacks static="1"><c path="Array"><f a=""><x path="Void"/></f></c></preInitCallbacks>
+	<oncePreInit set="method" line="44" static="1"><f a="handle">
+	<f a=""><x path="Void"/></f>
+	<x path="Void"/>
+</f></oncePreInit>
+	<init public="1" set="method" line="94" static="1"><f a=""><c path="ceramic.InitSettings"/></f></init>
+	<__cbOnReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnReady>
+	<__cbOnceReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnceReady>
+	<__cbOnOwnerUnbindReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnOwnerUnbindReady>
+	<__cbOnceOwnerUnbindReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnceOwnerUnbindReady>
+	<emitReady set="method" line="30">
+		<f a=""><x path="Void"/></f>
+		<haxe_doc>ready event</haxe_doc>
+	</emitReady>
+	<onReady public="1" set="method" line="30">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</onReady>
+	<onceReady public="1" set="method" line="30">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</onceReady>
+	<offReady public="1" set="method" line="30">
+		<f a="?handle">
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</offReady>
+	<listensReady public="1" get="inline" set="null" line="30">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to ready event</haxe_doc>
+	</listensReady>
+	<__cbOnUpdate>
+		<c path="Array"><f a="">
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>update event</haxe_doc>
+	</__cbOnUpdate>
+	<__cbOnceUpdate>
+		<c path="Array"><f a="">
+	<x path="Float"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>update event</haxe_doc>
+	</__cbOnceUpdate>
+	<__cbOnOwnerUnbindUpdate>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>update event</haxe_doc>
+	</__cbOnOwnerUnbindUpdate>
+	<__cbOnceOwnerUnbindUpdate>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>update event</haxe_doc>
+	</__cbOnceOwnerUnbindUpdate>
+	<emitUpdate set="method" line="36">
+		<f a="delta">
+			<x path="Float"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>update event</haxe_doc>
+	</emitUpdate>
+	<onUpdate public="1" set="method" line="36">
+		<f a="?owner:handleDelta">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>update event</haxe_doc>
+	</onUpdate>
+	<onceUpdate public="1" set="method" line="36">
+		<f a="?owner:handleDelta">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>update event</haxe_doc>
+	</onceUpdate>
+	<offUpdate public="1" set="method" line="36">
+		<f a="?handleDelta">
+			<f a="">
+				<x path="Float"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>update event</haxe_doc>
+	</offUpdate>
+	<listensUpdate public="1" get="inline" set="null" line="36">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to update event</haxe_doc>
+	</listensUpdate>
+	<__cbOnKeyDown>
+		<c path="Array"><f a="">
+	<c path="ceramic.Key"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyDown event</haxe_doc>
+	</__cbOnKeyDown>
+	<__cbOnceKeyDown>
+		<c path="Array"><f a="">
+	<c path="ceramic.Key"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyDown event</haxe_doc>
+	</__cbOnceKeyDown>
+	<__cbOnOwnerUnbindKeyDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyDown event</haxe_doc>
+	</__cbOnOwnerUnbindKeyDown>
+	<__cbOnceOwnerUnbindKeyDown>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyDown event</haxe_doc>
+	</__cbOnceOwnerUnbindKeyDown>
+	<emitKeyDown set="method" line="38">
+		<f a="key">
+			<c path="ceramic.Key"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyDown event</haxe_doc>
+	</emitKeyDown>
+	<onKeyDown public="1" set="method" line="38">
+		<f a="?owner:handleKey">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyDown event</haxe_doc>
+	</onKeyDown>
+	<onceKeyDown public="1" set="method" line="38">
+		<f a="?owner:handleKey">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyDown event</haxe_doc>
+	</onceKeyDown>
+	<offKeyDown public="1" set="method" line="38">
+		<f a="?handleKey">
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyDown event</haxe_doc>
+	</offKeyDown>
+	<listensKeyDown public="1" get="inline" set="null" line="38">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to keyDown event</haxe_doc>
+	</listensKeyDown>
+	<__cbOnKeyUp>
+		<c path="Array"><f a="">
+	<c path="ceramic.Key"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyUp event</haxe_doc>
+	</__cbOnKeyUp>
+	<__cbOnceKeyUp>
+		<c path="Array"><f a="">
+	<c path="ceramic.Key"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyUp event</haxe_doc>
+	</__cbOnceKeyUp>
+	<__cbOnOwnerUnbindKeyUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyUp event</haxe_doc>
+	</__cbOnOwnerUnbindKeyUp>
+	<__cbOnceOwnerUnbindKeyUp>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>keyUp event</haxe_doc>
+	</__cbOnceOwnerUnbindKeyUp>
+	<emitKeyUp set="method" line="39">
+		<f a="key">
+			<c path="ceramic.Key"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyUp event</haxe_doc>
+	</emitKeyUp>
+	<onKeyUp public="1" set="method" line="39">
+		<f a="?owner:handleKey">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyUp event</haxe_doc>
+	</onKeyUp>
+	<onceKeyUp public="1" set="method" line="39">
+		<f a="?owner:handleKey">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyUp event</haxe_doc>
+	</onceKeyUp>
+	<offKeyUp public="1" set="method" line="39">
+		<f a="?handleKey">
+			<f a="">
+				<c path="ceramic.Key"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>keyUp event</haxe_doc>
+	</offKeyUp>
+	<listensKeyUp public="1" get="inline" set="null" line="39">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to keyUp event</haxe_doc>
+	</listensKeyUp>
+	<backend public="1" set="null"><c path="backend.Backend"/></backend>
+	<screen public="1" set="null"><c path="ceramic.Screen"/></screen>
+	<settings public="1" set="null"><c path="ceramic.Settings"/></settings>
+	<logger public="1" set="null" line="61"><c path="ceramic.Logger"/></logger>
+	<visuals public="1" set="null" line="64"><c path="Array"><c path="ceramic.Visual"/></c></visuals>
+	<assets public="1" set="null" line="67"><c path="ceramic.Assets"/></assets>
+	<collections public="1" set="null" line="70"><c path="ceramic.Collections"/></collections>
+	<defaultFont public="1" get="accessor" set="null"><c path="ceramic.BitmapFont"/></defaultFont>
+	<get_defaultFont get="inline" set="null" line="74"><f a=""><c path="ceramic.BitmapFont"/></f></get_defaultFont>
+	<converters public="1" line="80"><x path="Map">
+	<c path="String"/>
+	<c path="ceramic.ConvertField">
+		<d/>
+		<d/>
+	</c>
+</x></converters>
+	<componentInitializers public="1" line="82"><x path="Map">
+	<c path="String"/>
+	<f a="">
+		<c path="Array"><d/></c>
+		<c path="ceramic.Component"/>
+	</f>
+</x></componentInitializers>
+	<hierarchyDirty line="86"><x path="Bool"/></hierarchyDirty>
+	<beginUpdateCallbacks line="90"><c path="Array"><f a=""><x path="Void"/></f></c></beginUpdateCallbacks>
+	<backendReady set="method" line="114"><f a=""><x path="Void"/></f></backendReady>
+	<initFieldConverters set="method" line="152"><f a=""><x path="Void"/></f></initFieldConverters>
+	<initComponentInitializers set="method" line="165"><f a=""><x path="Void"/></f></initComponentInitializers>
+	<initCollections set="method" line="171"><f a=""><x path="Void"/></f></initCollections>
+	<assetsLoaded set="method" line="228"><f a=""><x path="Void"/></f></assetsLoaded>
+	<update set="method" line="249"><f a="delta">
+	<x path="Float"/>
+	<x path="Void"/>
+</f></update>
+	<computeHierarchy get="inline" set="null" line="327"><f a=""><x path="Void"/></f></computeHierarchy>
+	<sortVisuals get="inline" set="null" line="350"><f a=""><x path="Void"/></f></sortVisuals>
+	<info public="1" line="15">
+		<a>
+			<version><c path="String"/></version>
+			<screen><a>
+	<width><x path="Int"/></width>
+	<orientation><c path="String"/></orientation>
+	<height><x path="Int"/></height>
+</a></screen>
+			<paths><a/></paths>
+			<path><c path="String"/></path>
+			<packagePath><c path="String"/></packagePath>
+			<package><c path="String"/></package>
+			<name><c path="String"/></name>
+			<lowercaseName><c path="String"/></lowercaseName>
+			<libs><a>
+	<item1><a><unifill><c path="String"/></unifill></a></item1>
+	<item0><c path="String"/></item0>
+</a></libs>
+			<icon><c path="String"/></icon>
+			<hxml><c path="String"/></hxml>
+			<editable><a>
+	<item2><c path="String"/></item2>
+	<item1><c path="String"/></item1>
+	<item0><c path="String"/></item0>
+</a></editable>
+			<displayName><c path="String"/></displayName>
+			<defines><a>
+	<target_path><c path="String"/></target_path>
+	<target_assets_path><c path="String"/></target_assets_path>
+	<target><c path="String"/></target>
+	<luxe><x path="Bool"/></luxe>
+	<debug><x path="Bool"/></debug>
+	<ceramic_assets_path><c path="String"/></ceramic_assets_path>
+	<backend><c path="String"/></backend>
+	<assets_path><c path="String"/></assets_path>
+	<android><x path="Bool"/></android>
+	<absolute-path><x path="Bool"/></absolute-path>
+	<HXCPP_STACK_TRACE><x path="Bool"/></HXCPP_STACK_TRACE>
+	<HXCPP_STACK_LINE><x path="Bool"/></HXCPP_STACK_LINE>
+</a></defines>
+			<collections><a/></collections>
+			<author><c path="String"/></author>
+		</a>
+		<haxe_doc>App info extracted from `ceramic.yml`</haxe_doc>
+	</info>
+	<new set="method" line="103"><f a=""><x path="Void"/></f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.AppMacro.build()</e></m>
+		<m n=":allow"><e>ceramic.Visual</e></m>
+		<m n=":allow"><e>ceramic.Screen</e></m>
+	</meta>
+</class>

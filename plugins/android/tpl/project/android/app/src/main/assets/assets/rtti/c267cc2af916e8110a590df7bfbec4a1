@@ -1,0 +1,227 @@
+<class path="ceramic.Asset" params="">
+	<extends path="ceramic.Entity"/>
+	<implements path="ceramic.Observable"/>
+	<__cbOnComplete>
+		<c path="Array"><f a="">
+	<x path="Bool"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>complete event</haxe_doc>
+	</__cbOnComplete>
+	<__cbOnceComplete>
+		<c path="Array"><f a="">
+	<x path="Bool"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>complete event</haxe_doc>
+	</__cbOnceComplete>
+	<__cbOnOwnerUnbindComplete>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>complete event</haxe_doc>
+	</__cbOnOwnerUnbindComplete>
+	<__cbOnceOwnerUnbindComplete>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>complete event</haxe_doc>
+	</__cbOnceOwnerUnbindComplete>
+	<emitComplete set="method" line="12">
+		<f a="success">
+			<x path="Bool"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>complete event</haxe_doc>
+	</emitComplete>
+	<onComplete public="1" set="method" line="12">
+		<f a="?owner:handleSuccess">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<x path="Bool"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>complete event</haxe_doc>
+	</onComplete>
+	<onceComplete public="1" set="method" line="12">
+		<f a="?owner:handleSuccess">
+			<c path="ceramic.Entity"/>
+			<f a="">
+				<x path="Bool"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>complete event</haxe_doc>
+	</onceComplete>
+	<offComplete public="1" set="method" line="12">
+		<f a="?handleSuccess">
+			<f a="">
+				<x path="Bool"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>complete event</haxe_doc>
+	</offComplete>
+	<listensComplete public="1" get="inline" set="null" line="12">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to complete event</haxe_doc>
+	</listensComplete>
+	<kind public="1" set="null"><c path="String"/></kind>
+	<name public="1" set="accessor"><c path="String"/></name>
+	<path public="1" set="accessor"><c path="String"/></path>
+	<density public="1" set="null" line="27"><x path="Float"/></density>
+	<owner public="1" set="null"><c path="ceramic.Assets"/></owner>
+	<runtimeAssets public="1" set="accessor"><c path="ceramic.RuntimeAssets"/></runtimeAssets>
+	<options public="1" set="null"><t path="ceramic.AssetOptions"/></options>
+	<assets public="1" set="null" line="40"><c path="ceramic.Assets"/></assets>
+	<refCount public="1" set="null" line="45"><x path="Int"/></refCount>
+	<status public="1" get="accessor" set="accessor"><e path="ceramic.AssetStatus"/></status>
+	<get_status set="method" line="47">
+		<f a=""><e path="ceramic.AssetStatus"/></f>
+		<haxe_doc></haxe_doc>
+	</get_status>
+	<set_status get="inline" set="null" line="47">
+		<f a="status">
+			<e path="ceramic.AssetStatus"/>
+			<e path="ceramic.AssetStatus"/>
+		</f>
+		<haxe_doc></haxe_doc>
+	</set_status>
+	<unobservedStatus line="47">
+		<e path="ceramic.AssetStatus"/>
+		<meta><m n="observable"/></meta>
+	</unobservedStatus>
+	<__cbOnStatusChange>
+		<c path="Array"><f a=":">
+	<e path="ceramic.AssetStatus"/>
+	<e path="ceramic.AssetStatus"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</__cbOnStatusChange>
+	<__cbOnceStatusChange>
+		<c path="Array"><f a=":">
+	<e path="ceramic.AssetStatus"/>
+	<e path="ceramic.AssetStatus"/>
+	<x path="Void"/>
+</f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</__cbOnceStatusChange>
+	<__cbOnOwnerUnbindStatusChange>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</__cbOnOwnerUnbindStatusChange>
+	<__cbOnceOwnerUnbindStatusChange>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</__cbOnceOwnerUnbindStatusChange>
+	<emitStatusChange set="method" line="47">
+		<f a="current:previous">
+			<e path="ceramic.AssetStatus"/>
+			<e path="ceramic.AssetStatus"/>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</emitStatusChange>
+	<onStatusChange public="1" set="method" line="47">
+		<f a="?owner:handleCurrentPrevious">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<e path="ceramic.AssetStatus"/>
+				<e path="ceramic.AssetStatus"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</onStatusChange>
+	<onceStatusChange public="1" set="method" line="47">
+		<f a="?owner:handleCurrentPrevious">
+			<c path="ceramic.Entity"/>
+			<f a=":">
+				<e path="ceramic.AssetStatus"/>
+				<e path="ceramic.AssetStatus"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</onceStatusChange>
+	<offStatusChange public="1" set="method" line="47">
+		<f a="?handleCurrentPrevious">
+			<f a=":">
+				<e path="ceramic.AssetStatus"/>
+				<e path="ceramic.AssetStatus"/>
+				<x path="Void"/>
+			</f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</offStatusChange>
+	<listensStatusChange public="1" get="inline" set="null" line="47">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Event when status field changes.</haxe_doc>
+	</listensStatusChange>
+	<handleTexturesDensityChange set="accessor" line="49"><x path="Bool"/></handleTexturesDensityChange>
+	<load public="1" set="method" line="63"><f a=""><x path="Void"/></f></load>
+	<destroy public="1" set="method" line="71" override="1"><f a=""><x path="Void"/></f></destroy>
+	<computePath public="1" set="method" line="85"><f a="?extensions:?dir:?runtimeAssets">
+	<c path="Array"><c path="String"/></c>
+	<x path="Bool"/>
+	<c path="ceramic.RuntimeAssets"/>
+	<x path="Void"/>
+</f></computePath>
+	<set_path set="method" line="187"><f a="path">
+	<c path="String"/>
+	<c path="String"/>
+</f></set_path>
+	<set_name set="method" line="206"><f a="name">
+	<c path="String"/>
+	<c path="String"/>
+</f></set_name>
+	<set_runtimeAssets set="method" line="217"><f a="runtimeAssets">
+	<c path="ceramic.RuntimeAssets"/>
+	<c path="ceramic.RuntimeAssets"/>
+</f></set_runtimeAssets>
+	<set_handleTexturesDensityChange set="method" line="228"><f a="value">
+	<x path="Bool"/>
+	<x path="Bool"/>
+</f></set_handleTexturesDensityChange>
+	<texturesDensityDidChange set="method" line="244"><f a="newDensity:prevDensity">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></texturesDensityDidChange>
+	<toString set="method" line="252" override="1"><f a=""><c path="String"/></f></toString>
+	<willEmitComplete get="inline" set="null" line="266"><f a="success">
+	<x path="Bool"/>
+	<x path="Void"/>
+</f></willEmitComplete>
+	<retain public="1" set="method" line="276"><f a=""><x path="Void"/></f></retain>
+	<release public="1" set="method" line="282"><f a=""><x path="Void"/></f></release>
+	<new public="1" set="method" line="53"><f a="kind:name:?options">
+	<c path="String"/>
+	<c path="String"/>
+	<t path="ceramic.AssetOptions"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":build"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":allow"><e>ceramic.Assets</e></m>
+	</meta>
+</class>

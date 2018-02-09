@@ -1,0 +1,22 @@
+<class path="ceramic.DatabaseAsset" params="">
+	<extends path="ceramic.Asset"/>
+	<database public="1" line="9"><c path="Array"><x path="haxe.DynamicAccess"><c path="String"/></x></c></database>
+	<load public="1" set="method" line="17" override="1"><f a=""><x path="Void"/></f></load>
+	<destroy public="1" set="method" line="53" override="1"><f a=""><x path="Void"/></f></destroy>
+	<new public="1" set="method" line="11"><f a="name:?options">
+	<c path="String"/>
+	<t path="ceramic.AssetOptions"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.ObservableMacro.build()</e></m>
+	</meta>
+</class>

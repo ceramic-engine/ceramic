@@ -1,0 +1,67 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion '25.0.3'
+
+    defaultConfig {
+        applicationId "mycompany.myapp"
+        minSdkVersion 16
+        targetSdkVersion 16
+        ndk {
+            abiFilters "armeabi-v7a", "x86", "armeabi"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+        debug {
+            jniDebuggable true
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/bind/java'
+    }
+}
+
+task haxeBuildRelease(type: Exec) {
+    workingDir '..'
+
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        // TODO
+    }
+    else {
+        commandLine './build-haxe.sh', '--archs', 'armv5,armv7,x86'
+    }
+}
+
+task haxeBuildDebug(type: Exec) {
+    workingDir '..'
+
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        // TODO
+    }
+    else {
+        commandLine './build-haxe.sh', '--debug', '--archs', 'armv5,armv7,x86'
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'packageDebug' || task.name == 'generateDebugSources') {
+        task.dependsOn haxeBuildDebug
+    }
+    else if (task.name == 'packageRelease' || task.name == 'generateReleaseSources') {
+        task.dependsOn haxeBuildRelease
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:24.1.1'
+}

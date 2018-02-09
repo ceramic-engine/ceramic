@@ -1,0 +1,54 @@
+<class path="ceramic.Quad" params="">
+	<extends path="ceramic.Visual"/>
+	<_matrix line="6" static="1"><c path="ceramic.Transform"/></_matrix>
+	<_degToRad line="8" static="1"><x path="Float"/></_degToRad>
+	<color public="1" line="10">
+		<x path="ceramic.Color"/>
+		<meta><m n="editable"/></meta>
+	</color>
+	<texture public="1" set="accessor" line="13">
+		<c path="ceramic.Texture"/>
+		<meta><m n="editable"/></meta>
+	</texture>
+	<set_texture get="inline" set="null" line="14"><f a="texture">
+	<c path="ceramic.Texture"/>
+	<c path="ceramic.Texture"/>
+</f></set_texture>
+	<rotateFrame public="1" set="accessor" line="47"><x path="ceramic.RotateFrame"/></rotateFrame>
+	<set_rotateFrame get="inline" set="null" line="48"><f a="rotateFrame">
+	<x path="ceramic.RotateFrame"/>
+	<x path="ceramic.RotateFrame"/>
+</f></set_rotateFrame>
+	<frameX public="1" line="56"><x path="Float"/></frameX>
+	<frameY public="1" line="58"><x path="Float"/></frameY>
+	<frameWidth public="1" set="accessor" line="60"><x path="Float"/></frameWidth>
+	<set_frameWidth get="inline" set="null" line="61"><f a="frameWidth">
+	<x path="Float"/>
+	<x path="Float"/>
+</f></set_frameWidth>
+	<frameHeight public="1" set="accessor" line="71"><x path="Float"/></frameHeight>
+	<set_frameHeight get="inline" set="null" line="72"><f a="frameHeight">
+	<x path="Float"/>
+	<x path="Float"/>
+</f></set_frameHeight>
+	<frame public="1" get="inline" set="null" line="84"><f a="frameX:frameY:frameWidth:frameHeight">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></frame>
+	<computeMatrix set="method" line="95" override="1"><f a=""><x path="Void"/></f></computeMatrix>
+	<textureDestroyed set="method" line="116"><f a=""><x path="Void"/></f></textureDestroyed>
+	<new public="1" set="method" line="4"><f a=""><x path="Void"/></f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n="editable"><e>{ implicitSizeUnlessNull : "texture" }</e></m>
+	</meta>
+</class>

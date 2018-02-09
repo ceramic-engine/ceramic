@@ -1,0 +1,124 @@
+<class path="ceramic.Fragment" params="">
+	<extends path="ceramic.Visual"/>
+	<basicTypes line="38" static="1"><x path="Map">
+	<c path="String"/>
+	<x path="Bool"/>
+</x></basicTypes>
+	<entities public="1" set="null"><c path="Array"><c path="ceramic.Entity"/></c></entities>
+	<items public="1" set="null"><c path="Array"><t path="ceramic.FragmentItem"/></c></items>
+	<context public="1"><c path="ceramic.FragmentContext"/></context>
+	<fragmentData public="1" set="accessor" line="22">
+		<t path="ceramic.FragmentData"/>
+		<meta><m n="editable"/></meta>
+	</fragmentData>
+	<pendingLoads public="1" set="null" line="24"><x path="Int"/></pendingLoads>
+	<__cbOnReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnReady>
+	<__cbOnceReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnceReady>
+	<__cbOnOwnerUnbindReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnOwnerUnbindReady>
+	<__cbOnceOwnerUnbindReady>
+		<c path="Array"><f a=""><x path="Void"/></f></c>
+		<meta><m n=":noCompletion"/></meta>
+		<haxe_doc>ready event</haxe_doc>
+	</__cbOnceOwnerUnbindReady>
+	<emitReady set="method" line="26">
+		<f a=""><x path="Void"/></f>
+		<haxe_doc>ready event</haxe_doc>
+	</emitReady>
+	<onReady public="1" set="method" line="26">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</onReady>
+	<onceReady public="1" set="method" line="26">
+		<f a="?owner:handle">
+			<c path="ceramic.Entity"/>
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</onceReady>
+	<offReady public="1" set="method" line="26">
+		<f a="?handle">
+			<f a=""><x path="Void"/></f>
+			<x path="Void"/>
+		</f>
+		<haxe_doc>ready event</haxe_doc>
+	</offReady>
+	<listensReady public="1" get="inline" set="null" line="26">
+		<f a=""><x path="Bool"/></f>
+		<haxe_doc>Does it listen to ready event</haxe_doc>
+	</listensReady>
+	<set_fragmentData set="method" line="60"><f a="fragmentData">
+	<t path="ceramic.FragmentData"/>
+	<t path="ceramic.FragmentData"/>
+</f></set_fragmentData>
+	<putItem public="1" set="method" line="125"><f a="item">
+	<t path="ceramic.FragmentItem"/>
+	<c path="ceramic.Entity"/>
+</f></putItem>
+	<getItemInstance public="1" set="method" line="287"><f a="itemId">
+	<c path="String"/>
+	<c path="ceramic.Entity"/>
+</f></getItemInstance>
+	<getItemInstanceByName public="1" set="method" line="300"><f a="name">
+	<c path="String"/>
+	<c path="ceramic.Entity"/>
+</f></getItemInstanceByName>
+	<getItem public="1" set="method" line="313"><f a="itemId">
+	<c path="String"/>
+	<t path="ceramic.FragmentItem"/>
+</f></getItem>
+	<getItemByName public="1" set="method" line="326"><f a="name">
+	<c path="String"/>
+	<t path="ceramic.FragmentItem"/>
+</f></getItemByName>
+	<removeItem public="1" set="method" line="339"><f a="itemId">
+	<c path="String"/>
+	<x path="Void"/>
+</f></removeItem>
+	<removeAllItems public="1" set="method" line="362"><f a=""><x path="Void"/></f></removeAllItems>
+	<destroy public="1" set="method" line="379" override="1"><f a=""><x path="Void"/></f></destroy>
+	<fragmentComponents public="1" set="accessor" line="459"><x path="ceramic.ImmutableMap">
+	<c path="String"/>
+	<c path="ceramic.Component"/>
+</x></fragmentComponents>
+	<set_fragmentComponents set="method" line="460"><f a="fragmentComponents">
+	<x path="ceramic.ImmutableMap">
+		<c path="String"/>
+		<c path="ceramic.Component"/>
+	</x>
+	<x path="ceramic.ImmutableMap">
+		<c path="String"/>
+		<c path="ceramic.Component"/>
+	</x>
+</f></set_fragmentComponents>
+	<new public="1" set="method" line="48"><f a="context">
+	<c path="ceramic.FragmentContext"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n="editable"><e>{ implicitSize : true }</e></m>
+	</meta>
+</class>

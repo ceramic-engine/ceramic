@@ -1,0 +1,28 @@
+<class path="ceramic.Texture" params="">
+	<extends path="ceramic.Entity"/>
+	<width public="1" set="null"><x path="Float"/></width>
+	<height public="1" set="null"><x path="Float"/></height>
+	<density public="1" set="accessor"><x path="Float"/></density>
+	<set_density set="method" line="19"><f a="density">
+	<x path="Float"/>
+	<x path="Float"/>
+</f></set_density>
+	<backendItem public="1"><x path="backend.Image"/></backendItem>
+	<asset public="1"><c path="ceramic.ImageAsset"/></asset>
+	<destroy public="1" set="method" line="40" override="1"><f a=""><x path="Void"/></f></destroy>
+	<toString set="method" line="51" override="1"><f a=""><c path="String"/></f></toString>
+	<new public="1" set="method" line="33"><f a="backendItem:?density">
+	<x path="backend.Image"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+	</meta>
+</class>

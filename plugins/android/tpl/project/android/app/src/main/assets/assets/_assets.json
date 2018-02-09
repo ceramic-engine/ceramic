@@ -1,0 +1,22 @@
+{
+    "assets": [
+        {
+            "name": "Arial20.fnt"
+        },
+        {
+            "name": "Arial20.png"
+        },
+        {
+            "name": "Arial20@2x.fnt"
+        },
+        {
+            "name": "Arial20@2x.png"
+        },
+        {
+            "name": "fxaa.frag"
+        },
+        {
+            "name": "fxaa.vert"
+        }
+    ]
+}

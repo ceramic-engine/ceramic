@@ -1,0 +1,33 @@
+<class path="ceramic.FontAsset" params="">
+	<extends path="ceramic.Asset"/>
+	<fontData public="1" line="9"><c path="ceramic.BitmapFontData"/></fontData>
+	<pages public="1" line="11"><x path="Map">
+	<c path="String"/>
+	<c path="ceramic.Texture"/>
+</x></pages>
+	<font public="1" line="13"><c path="ceramic.BitmapFont"/></font>
+	<load public="1" set="method" line="26" override="1"><f a=""><x path="Void"/></f></load>
+	<texturesDensityDidChange set="method" line="162" override="1"><f a="newDensity:prevDensity">
+	<x path="Float"/>
+	<x path="Float"/>
+	<x path="Void"/>
+</f></texturesDensityDidChange>
+	<checkTexturesDensity set="method" line="173"><f a=""><x path="Void"/></f></checkTexturesDensity>
+	<destroy public="1" set="method" line="185" override="1"><f a=""><x path="Void"/></f></destroy>
+	<new public="1" set="method" line="17"><f a="name:?options">
+	<c path="String"/>
+	<t path="ceramic.AssetOptions"/>
+	<x path="Void"/>
+</f></new>
+	<meta>
+		<m n=":directlyUsed"/>
+		<m n=":build"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.LazyMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EventsMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.EntityMacro.build()</e></m>
+		<m n=":build"><e>ceramic.macros.ObservableMacro.build()</e></m>
+		<m n=":autoBuild"><e>ceramic.macros.ObservableMacro.build()</e></m>
+	</meta>
+</class>
