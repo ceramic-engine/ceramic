@@ -77,6 +77,10 @@ class Templates {
                     if (FileSystem.exists(filePath) && filePath.indexOf(key) != -1) {
                         var newFilePath = projectPath + filePath.substr(projectPath.length).replace(key, value);
                         if (newFilePath != filePath) {
+                            var newDir = Path.directory(newFilePath);
+                            if (!FileSystem.exists(newDir)) {
+                                FileSystem.createDirectory(newDir);
+                            }
                             Fs.renameSync(filePath, newFilePath);
                             didRenameAFile = true;
                         }
