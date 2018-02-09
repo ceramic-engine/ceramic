@@ -135,7 +135,17 @@ interface PendingChangeset {
 
 } //PendingChangeset
 
+// TODO split this (huge) file into smaller parts?
+
 class Project extends Model {
+
+/// State
+
+    /** Whether this project is ready to be used */
+    @observe ready:boolean = false;
+
+    /** Whether this project is loading some content or not */
+    @observe loading:boolean = false;
 
 /// Properties
 
@@ -610,6 +620,11 @@ class Project extends Model {
                         electronApp.assetsPath = processedAssetsPath;
                         electronApp.processingAssets = false;
                         console.log('assets path: ' + electronApp.assetsPath);
+
+                        setTimeout(() => {
+                            // Mark project as ready
+                            this.ready = true;
+                        }, 100);
                     }
                 });
             }
@@ -893,7 +908,7 @@ class Project extends Model {
                 if (this.ui.selectedItem == null) {
                     console.warn('Cannot update key ' + key.substr('ui.selectedItem.'.length) + ' of selected item because there is no selected item.');
                 } else {
-                    this.ui.selectedItem.props.set(key.substr('ui.selectedItem.'.length), message.value);
+                    this.ui.selectedItem.setPropFromEditor(key.substr('ui.selectedItem.'.length), message.value);
                 }
             }
             else if (key.startsWith('ui.')) {
@@ -919,7 +934,7 @@ class Project extends Model {
                             ) {
                                 // Don't replace if contents are identical
                                 if (!areEqualArrays(item.props.get(k), message.value[k]) && !areEqualObjs(item.props.get(k), message.value[k])) {
-                                    item.props.set(k, message.value[k]);
+                                    item.setPropFromEditor(k, message.value[k]);
                                 }
                             }
                         }

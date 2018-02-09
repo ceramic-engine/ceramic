@@ -1,6 +1,19 @@
 import { serialize, observe, compute, serializeModel, Model } from 'utils';
 import { project } from 'app/model';
 
+// TODO make this configurable per-entity
+let allowedKeys = {
+    'width': true,
+    'height': true,
+    'x': true,
+    'y': true,
+    'scaleX': true,
+    'scaleY': true,
+    'skewX': true,
+    'skewY': true,
+    'rotation': true
+};
+
 class FragmentItem extends Model {
 
 /// Sort
@@ -79,6 +92,14 @@ class FragmentItem extends Model {
         return false;
 
     } //implicitSize
+
+    setPropFromEditor(key:string, value:any) {
+
+        if (allowedKeys[key]) {
+            this.props.set(key, value);
+        }
+
+    } //setProp
 
 } //FragmentItem
 
