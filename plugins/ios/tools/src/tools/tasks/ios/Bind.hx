@@ -2,7 +2,6 @@ package tools.tasks.ios;
 
 import tools.Helpers.*;
 import tools.Project;
-import tools.Colors;
 import tools.IosProject;
 import haxe.io.Path;
 import haxe.Json;
@@ -44,7 +43,7 @@ class Bind extends tools.Task {
             for (header in toBind) {
                 for (aPath in searchPaths) {
                     var headerPath = Path.join([aPath, header]);
-                    if (FileSystem.exists(headerPath) && !FileSystem.isDirectory(headerPath)) {
+                    if (headerPath.endsWith('.h') && FileSystem.exists(headerPath) && !FileSystem.isDirectory(headerPath)) {
                         
                         // Run bind library
                         var result = haxelib([

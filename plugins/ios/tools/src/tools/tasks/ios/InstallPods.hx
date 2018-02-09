@@ -1,7 +1,6 @@
 package tools.tasks.ios;
 
 import tools.Helpers.*;
-import tools.Project;
 import haxe.io.Path;
 
 class InstallPods extends tools.Task {

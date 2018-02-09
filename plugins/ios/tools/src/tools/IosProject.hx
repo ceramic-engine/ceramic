@@ -73,19 +73,9 @@ class IosProject {
         //
         var headerSearchPaths = [];
 
-        // Bind headers
-        //
-        var haxelibBindPath = (haxelib(['path', 'bind'], { mute: true }).stdout + '').split("\n")[0];
-        headerSearchPaths.push(Path.normalize(Path.join([haxelibBindPath, '../support'])));
-
         // Project headers
         //
         var iosProjectPath = Path.join([cwd, 'project/ios']);
-        var iosPbxPath = Path.join([iosProjectPath, project.app.name + '.xcodeproj/project.pbxproj']);
-
-        if (!FileSystem.exists(iosPbxPath)) {
-            fail('Missing Xcode project at path: ' + Path.directory(iosPbxPath));
-        }
 
         // Classes included in project root's Classes dir
         headerSearchPaths.push(iosProjectPath + '/project/Classes');
