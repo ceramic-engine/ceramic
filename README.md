@@ -114,7 +114,7 @@ You can also install them by browsing the [Extension Marketplace](https://code.v
 Create a new project named `MyProject` by running:
 
 ```
-ceramic init --name MyProject --vscode --luxe
+ceramic init --name MyProject --vscode --backend luxe
 ```
 
 A new ceramic project is now created inside a `MyProject` directory, using the `luxe` backend and providing Visual Studio Code project files.

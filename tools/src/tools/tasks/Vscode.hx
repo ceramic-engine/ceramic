@@ -24,6 +24,13 @@ class Vscode extends tools.Task {
         var settingsOnly = extractArgFlag(args, 'settings-only');
         var vscodeDir = Path.join([cwd, '.vscode']);
 
+        var backends = [];
+        while (true) {
+            var aBackend = extractArgValue(args, 'backend', true);
+            if (aBackend == null || aBackend.trim() == '') break;
+            backends.push(aBackend);
+        }
+
         if (!force && !settingsOnly) {
             if (FileSystem.exists(Path.join([vscodeDir, 'tasks.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'tasks-chooser.json']))
@@ -47,12 +54,19 @@ class Vscode extends tools.Task {
             for (plugin in context.plugins) {
                 if (plugin.extendVscodeTasksChooser != null) {
 
-                    var prevBackend = context.backend;
-                    context.backend = plugin.backend;
+                    if (plugin.backend == null || backends.indexOf(plugin.backend.name) != -1) {
 
-                    plugin.extendVscodeTasksChooser(chooser.items);
+                        // Extend tasks chooser if its an enabled backend
+                        // of if its not a backend plugin
 
-                    context.backend = prevBackend;
+                        var prevBackend = context.backend;
+                        context.backend = plugin.backend;
+
+                        plugin.extendVscodeTasksChooser(chooser.items);
+
+                        context.backend = prevBackend;
+
+                    }
                 }
             }
 

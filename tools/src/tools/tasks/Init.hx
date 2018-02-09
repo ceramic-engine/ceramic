@@ -149,8 +149,15 @@ class Project extends Entity {
 
         success('Project created at path: ' + projectPath);
 
+        var backends = [];
+        while (true) {
+            var aBackend = extractArgValue(args, 'backend', true);
+            if (aBackend == null || aBackend.trim() == '') break;
+            backends.push(aBackend);
+        }
+
         // Init backend?
-        for (backendName in ['luxe', 'snow', 'headless']) { // TODO compute backends from --backend option (--backend option can be provided several times)
+        for (backendName in backends) {
 
             if (extractArgFlag(args, backendName)) {
 
@@ -165,7 +172,14 @@ class Project extends Entity {
         if (extractArgFlag(args, 'vscode')) {
 
             var task = new Vscode();
-            task.run(projectPath, [args[1]].concat(force ? ['--force'] : []));
+
+            var taskArgs = [args[1]].concat(force ? ['--force'] : []);
+            for (backendName in backends) {
+                taskArgs.push('--backend');
+                taskArgs.push(backendName);
+            }
+
+            task.run(projectPath, taskArgs);
 
         }
 
