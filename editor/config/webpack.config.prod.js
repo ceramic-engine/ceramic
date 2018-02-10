@@ -247,7 +247,7 @@ module.exports = {
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
-    // Minify the code.
+    /*// Minify the code.
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         warnings: false,
@@ -261,7 +261,7 @@ module.exports = {
         comments: false,
       },
       sourceMap: true,
-    }),
+    }),*/
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new ExtractTextPlugin({
       filename: cssFilename,

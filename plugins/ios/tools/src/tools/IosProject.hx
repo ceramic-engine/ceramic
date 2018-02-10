@@ -4,10 +4,10 @@ import tools.Helpers.*;
 import tools.Project;
 import tools.Templates;
 import tools.Sync;
+import tools.Files;
 import haxe.io.Path;
 import sys.io.File;
 import sys.FileSystem;
-import npm.Ncp;
 
 using StringTools;
 
@@ -32,19 +32,10 @@ class IosProject {
 
             // Copy from template project
             print('Copy from Xcode project template');
-            Sync.run(function(done) {
-
-                Ncp.ncp(
-                    Path.join([pluginPath, 'tpl/project/ios']),
-                    iosProjectPath,
-                    {},
-                    function(err) {
-                        if (err != null) throw err;
-                        done();
-                    }
-                );
-
-            });
+            Files.copyDirectory(
+                Path.join([pluginPath, 'tpl/project/ios']),
+                iosProjectPath
+            );
 
             // Replace in names
             print('Perform replaces in names');

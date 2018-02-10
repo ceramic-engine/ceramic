@@ -268,21 +268,14 @@ class Helpers {
         }
         // Like: cp -R {source} {dest}
         else if (name == 'ncp' && args[0] != null && args[1] != null) {
-            var ncp = js.Node.require('ncp');
             var source = args[0];
             var dest = args[1];
             if (!Path.isAbsolute(source)) source = Path.normalize(Path.join([options.cwd, source]));
             if (!Path.isAbsolute(dest)) dest = Path.normalize(Path.join([options.cwd, dest]));
             
-            Sync.run(function(done) {
-                ncp(source, dest, function(err:Dynamic) {
-                    if (err != null) {
-                        result.status = -1;
-                        result.stderr += err;
-                    }
-                    done();
-                });
-            });
+            // We don't use original ncp because it has an outstanding bug unsolved for a year!
+            // (see: https://github.com/AvianFlu/ncp/issues/111)
+            Files.copyDirectory(source, dest);
 
         }
         else {

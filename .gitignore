@@ -42,3 +42,5 @@ yarn-error.log*
 /sample/completion.hxml
 /runtime/.vscode/tasks.json
 /plugins/spine/.vscode/tasks.json
+/editor/vendor/ceramic-plugins
+/editor/vendor/ceramic-runtime

@@ -23,6 +23,9 @@ typedef Context = {
 
     /** Tells whether current `.ceramic` path is local (current project's cwd) or shared (in user's home directory). */
     var isLocalDotCeramic:Bool;
+
+    /** Tells whether this ceramic is the one executed from whithin and electron app (Ceramic Editor). */
+    var isEmbeddedInElectron:Bool;
     
     /** Absolute path to `.ceramic` directory. */
     var dotCeramicPath:String;
@@ -62,5 +65,8 @@ typedef Context = {
 
     /** Root triggered task */
     var rootTask:tools.Task;
+
+    /** Current ceramic version */
+    var ceramicVersion:String;
 
 } //Context

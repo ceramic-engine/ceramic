@@ -24,6 +24,7 @@ exports.app = app
 exports.Menu = Menu
 exports.MenuItem = MenuItem
 exports.electronDev = process.env.ELECTRON_DEV;
+exports.dirname = __dirname;
 
 // Handle dev args
 var argv = [].concat(process.argv)
@@ -86,7 +87,7 @@ function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1024,
-    height: 600,
+    height: 768,
     titleBarStyle: 'hidden',
     minWidth: 800,
     minHeight: 600,

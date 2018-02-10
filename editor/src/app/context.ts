@@ -6,6 +6,9 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { join } from 'path';
 const electronApp = electron.remote.require('./app.js');
+import shellPath from 'shell-path';
+
+let envPATH = (process.platform === 'darwin') ? shellPath.sync() : process.env.PATH;
 
 /** Track app info such as fullscreen, width, height, project path.. */
 export class Context {
@@ -37,6 +40,8 @@ export class Context {
     @observe haxeVersion?:string;
 
     @observe gitVersion?:string;
+
+    @observe ceramicToolsVersion?:string;
 
     electronDev:boolean = false;
 
@@ -110,6 +115,7 @@ export class Context {
         // Check external commands status
         this.checkHaxeVersion();
         this.checkGitVersion();
+        this.checkCeramicToolsVersion();
 
         // Connection status
         setInterval(() => {
@@ -127,6 +133,7 @@ export class Context {
         });
 
         // Get electronDev flag
+        console.error('ELECTRON_DEV=' + electronApp.electronDev);
         this.electronDev = electronApp.electronDev;
 
     } //constructor
@@ -136,7 +143,11 @@ export class Context {
     @action checkHaxeVersion() {
 
         // Check haxe
-        var proc = spawn('haxe', ['-version']);
+        var proc = spawn('haxe', ['-version'], {
+            env: {
+                PATH: envPATH
+            }
+        });
         proc.on('error', (error) => {
             console.error('Haxe command failed: ' + error);
         });
@@ -161,7 +172,11 @@ export class Context {
     @action checkGitVersion() {
 
         // Check git
-        var proc = spawn('git', ['--version']);
+        var proc = spawn('git', ['--version'], {
+            env: {
+                PATH: envPATH
+            }
+        });
         proc.on('error', (error) => {
             console.error('Git command failed: ' + error);
         });
@@ -182,6 +197,35 @@ export class Context {
         });
 
     } //checkGitVersion
+    
+    @action checkCeramicToolsVersion() {
+
+        // Check ceramic
+        var proc = spawn('ceramic', ['version'], {
+            env: {
+                PATH: envPATH
+            }
+        });
+        proc.on('error', (error) => {
+            console.error('Ceramic command failed: ' + error);
+        });
+        var out = '';
+        proc.stdout.on('data', (data) => {
+            out += data;
+        });
+        proc.stderr.on('data', (data) => {
+            out += data;
+        });
+        proc.on('close', (code) => {
+            if (code === 0) {
+                this.ceramicToolsVersion = out.trim();
+            }
+            else {
+                this.ceramicToolsVersion = null;
+            }
+        });
+
+    } //checkCeramicToolsVersion
 
 } //Context
 

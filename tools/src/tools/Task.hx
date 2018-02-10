@@ -14,6 +14,9 @@ class Task {
         in context when creating the task. */
     var plugin:ToolsPlugin = null;
 
+    /** Whether this task will be hidden from ceramic help or not. */
+    var hidden:Bool = false;
+
 /// Lifecycle
 
     public function new() {

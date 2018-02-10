@@ -57,8 +57,28 @@ class Tools {
             args: args,
             tasks: new Map(),
             plugin: null,
-            rootTask: null
+            rootTask: null,
+            isEmbeddedInElectron: false,
+            ceramicVersion: null
         };
+
+        // Check if we are embedded in electron
+        var electronPackageFile = Path.join([context.ceramicToolsPath, '../../package.json']);
+        if (FileSystem.exists(electronPackageFile)) {
+            if (Json.parse(File.getContent(electronPackageFile)).name == 'ceramic') {
+                context.isEmbeddedInElectron = true;
+                context.ceramicRuntimePath = Path.normalize(Path.join([context.ceramicToolsPath, '../../vendor/ceramic-runtime']));
+                context.defaultPluginsPath = Path.normalize(Path.join([context.ceramicToolsPath, '../../vendor/ceramic-plugins']));
+            }
+        }
+
+        // Compute ceramic version
+        var version = js.Node.require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
+        var versionPath = Path.join([js.Node.__dirname, 'version']);
+        if (FileSystem.exists(versionPath)) {
+            version = File.getContent(versionPath);
+        }
+        context.ceramicVersion = version;
         
         // Compute .ceramic path (global or local)
         var localDotCeramic = Path.join([context.cwd, '.ceramic']);
@@ -73,7 +93,9 @@ class Tools {
         // Compute plugins
         computePlugins();
 
+        context.tasks.set('version', new tools.tasks.Version());
         context.tasks.set('help', new tools.tasks.Help());
+
         context.tasks.set('init', new tools.tasks.Init());
         context.tasks.set('vscode', new tools.tasks.Vscode());
         context.tasks.set('setup', new tools.tasks.Setup());

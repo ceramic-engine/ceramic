@@ -4,7 +4,7 @@ import Fragment from './Fragment';
 import FragmentItem from './FragmentItem';
 import UiState from './UiState';
 import CollectionEntry from './CollectionEntry';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as electron from 'electron';
 import * as os from 'os';
 import shortcuts from 'app/shortcuts';
@@ -13,7 +13,6 @@ import { context } from 'app/context';
 import { user } from './index';
 import { spawn } from 'child_process';
 import { createHash } from 'crypto';
-import { ncp } from 'ncp';
 import rimraf from 'rimraf';
 import dateformat from 'dateformat';
 
@@ -1931,7 +1930,7 @@ class Project extends Model {
                     rimraf.sync(repoFilesDir);
                 }
                 fs.mkdirSync(repoFilesDir);
-                ncp(localPath, repoFilesDir, (err) => {
+                fs.copy(localPath, repoFilesDir, (err) => {
                     if (err) {
                         if (!autoSave) this.manualSyncingWithGithub = false;
                         if (autoSave) this.autoSyncingWithGithub = false;
@@ -2136,7 +2135,7 @@ class Project extends Model {
                     return;
                 }
                 if (fs.existsSync(repoFilesDir)) {
-                    ncp(repoFilesDir, localPath, (err) => {
+                    fs.copy(repoFilesDir, localPath, (err) => {
                         if (err) {
                             if (!autoLoad) this.manualSyncingWithGithub = false;
                             if (autoLoad) this.autoSyncingWithGithub = false;

@@ -67,6 +67,8 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             />
                         : context.draggingOver ?
                             <DragOver />
+                        /*: !project.ready ?
+                            <LoadingOverlay message={'Loading\u2026'} />*/
                         : project.ui.addVisual ?
                             <AddVisual />
                         : project.ui.editSettings ?

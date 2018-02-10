@@ -1,10 +1,9 @@
 
 var download = require('download');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var decompress = require('decompress');
 var rimraf = require('rimraf');
-var ncp = require('ncp').ncp;
 
 var vendorDir = __dirname + '/vendor';
 var nodeBin = path.join(vendorDir, 'node/node.exe');
@@ -18,7 +17,7 @@ function fixReactIconsTypings(next) {
 
         console.log('Create ' + libPath);
 
-        ncp(rootPath, libPath, {
+        fs.copy(rootPath, libPath, {
             filter: function(name) {
                 name = path.normalize(name);
                 return !name.startsWith(libPath);

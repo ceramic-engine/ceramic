@@ -64,6 +64,20 @@ import FaQuestion from 'react-icons/lib/fa/question';
                                 </span>
                             }
                         </Field>
+                        <Field label="Ceramic Tools" kind="custom">
+                            {context.ceramicToolsVersion ?
+                                <span style={{ color: '#00FF00' }}>
+                                    <FaCheck style={{ position: 'relative', top: -1 }} size={10} /> {context.ceramicToolsVersion}
+                                </span>
+                            :
+                                <span style={{ color: '#FF0000', position: 'relative' }}>
+                                    <FaClose style={{ position: 'relative', top: -1 }} size={10} /> Not found
+                                    <span className="install-link">
+                                        Install: <a href="#" onClick={(e) => { e.preventDefault(); ceramic.linkTools((code:number, out:string, err:string) => { context.checkCeramicToolsVersion(); }); }}>ceramic link</a>
+                                    </span>
+                                </span>
+                            }
+                        </Field>
                     </Form>
                     <div className="title">Editor preview</div>
                     <Form>

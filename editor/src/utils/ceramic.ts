@@ -2,7 +2,10 @@ import { spawn } from 'child_process';
 import { join, normalize } from 'path';
 import * as fs from 'fs';
 import * as electron from 'electron';
+import shellPath from 'shell-path';
 const electronApp = electron.remote.require('./app.js');
+
+let envPATH = (process.platform === 'darwin') ? shellPath.sync() : process.env.PATH;
 
 interface Message {
 
@@ -82,19 +85,16 @@ class CeramicProxy {
         let cmd = 'ceramic';
 
         if (process.platform === 'darwin') {
+            let macGlobalPath = '/usr/local/bin/ceramic';
             if (electronApp.electronDev) {
-                let electronPath = join(process.cwd(), 'node_modules/.bin/electron');
-                cmd = electronPath;
-                args.unshift('ceramic');
-                args.unshift('.');
+                cmd = macGlobalPath;
             } else {
-                let macElectronPath = join(__dirname, '../../MacOS/Ceramic');
+                let macElectronPath = join(electronApp.dirname, '../../MacOS/Ceramic');
                 if (fs.existsSync(macElectronPath)) {
                     cmd = macElectronPath;
                     args.unshift('ceramic');
                 }
                 else {
-                    let macGlobalPath = '/usr/local/bin/ceramic';
                     if (fs.existsSync(macGlobalPath)) {
                         cmd = macGlobalPath;
                     }
@@ -120,8 +120,13 @@ class CeramicProxy {
             }
         }
 
-        console.error('RUN CMD ' + cmd + ' ' + args.join(' '));
-        let proc = spawn(cmd, args, { cwd: cwd } );
+        console.log('Run: ceramic ' + cmd + ' / ' + args.join(' '));
+        let proc = spawn(cmd, args, {
+            cwd: cwd,
+            env: {
+                PATH: envPATH
+            }
+        });
         
         var out = '';
         var err = '';
@@ -153,6 +158,14 @@ class CeramicProxy {
         });
 
     } //run
+
+    linkTools(done:(code:number, out:string, err:string)=>void) {
+
+        if (electronApp.electronDev) done(-1, '', 'Cannot link ceramic in dev mode');
+
+        this.run(['link'], process.cwd(), done);
+
+    } //linkTools
 
 }
 
