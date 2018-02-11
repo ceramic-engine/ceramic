@@ -94,6 +94,7 @@ function createWindow () {
     resizable: true,
     movable: true,
     title: appName,
+    backgroundColor: '#282828',
     frame: process.platform != 'darwin',
     icon: process.env.ELECTRON_DEV ?
       path.join(__dirname, 'public/icons/256x256.png') : 
