@@ -5,7 +5,22 @@ class Mesh extends Visual {
 
 /// Settings
 
-    public var colorMapping:MeshColorMapping = MESH;
+    public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
+
+/// Color
+
+    /** Can be used instead of colors array when the mesh is only composed of a single color. */
+    public var color(get,set):Color;
+    inline function get_color():Color {
+        if (colors == null || colors.length == 0) return 0;
+        return colors[0].color;
+    }
+    inline function set_color(color:Color):Color {
+        if (colors == null) colors = [];
+        if (colors.length == 0) colors.push(new AlphaColor(color, 255));
+        else colors[0] = new AlphaColor(color, 255);
+        return color;
+    }
 
 /// Vertices
 
