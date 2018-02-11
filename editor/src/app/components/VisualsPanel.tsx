@@ -118,7 +118,7 @@ import FaLock from 'react-icons/lib/fa/lock';
                         <div>
                             <Title>Selected {this.simpleName(selectedVisual.entity, true)}</Title>
                             <Alt>
-                                <div style={{ height: this.props.height * 0.7 - 24 * 2 - 4, overflowY: 'auto' }}>
+                                <div className="form-scroller" style={{ height: this.props.height * 0.7 - 24 * 2 - 4, overflowY: 'auto' }}>
                                 <Form>
                                     <Field label="name">
                                         <TextInput value={selectedVisual.name} onChange={(val) => { selectedVisual.name = val; }} />

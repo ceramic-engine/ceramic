@@ -15,6 +15,8 @@ export class Context {
 
 /// Properties
 
+    @observe needsReload:boolean = false;
+
     @observe fullscreen:boolean = false;
 
     @observe width:number = 0;
@@ -133,7 +135,6 @@ export class Context {
         });
 
         // Get electronDev flag
-        console.error('ELECTRON_DEV=' + electronApp.electronDev);
         this.electronDev = electronApp.electronDev;
 
     } //constructor

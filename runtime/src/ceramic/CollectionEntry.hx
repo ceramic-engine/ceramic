@@ -1,5 +1,9 @@
 package ceramic;
 
+import haxe.DynamicAccess;
+
+using ceramic.Extensions;
+
 @:rtti
 @:structInit
 class CollectionEntry {

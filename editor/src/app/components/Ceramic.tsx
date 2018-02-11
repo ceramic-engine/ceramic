@@ -57,6 +57,15 @@ export interface Message {
                 document.body.appendChild(script);
 
                 setImmediate(() => unbind());
+
+                let usedPreviewPath = project.absolutePreviewPath;
+                autorun(() => {
+
+                    if (project.absolutePreviewPath !== usedPreviewPath && !project.ui.editSettings) {
+                        window.location.reload();
+                    }
+
+                });
             }
 
         });
@@ -110,7 +119,7 @@ export interface Message {
                     width: '100%',
                     height: '100%',
                     border: 'none',
-                    visibility: this.ready ? 'visible' : 'hidden'
+                    visibility: this.ready && !context.needsReload ? 'visible' : 'hidden'
                 }}
             />
         );
@@ -228,6 +237,12 @@ export interface Message {
 
             let fragment = project.ui.selectedFragment;
 
+            // Don't load any fragment if project is not ready
+            let projectReady = project.ready;
+            if (!projectReady) {
+                fragment = null;
+            }
+
             if (fragment != null) {
                 fragmentInCeramic = fragment.id;
                 this.send({
@@ -250,6 +265,12 @@ export interface Message {
         autorun(() => {
 
             let fragment = project.ui.selectedFragment;
+
+            // Don't load any fragment if project is not ready
+            let projectReady = project.ready;
+            if (!projectReady) {
+                fragment = null;
+            }
 
             if (fragment != null) {
                 if (!fragmentInCeramic) {

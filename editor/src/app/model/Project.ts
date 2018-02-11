@@ -353,7 +353,7 @@ class Project extends Model {
 
     @compute get initialized():boolean {
         
-        return !!this.name;
+        return !!this.name || !!this.assetsPath;
 
     } //initialized
 
@@ -667,7 +667,6 @@ class Project extends Model {
                 }
             }, (message) => {
 
-                console.error('ASSETS');
                 console.log(message);
                 
                 this.imageAssets = message.value.images;
@@ -987,6 +986,12 @@ class Project extends Model {
 
     @action createNew() {
 
+        if (user.projectPath != null) {
+            // A project is currently opened
+            user.projectPath = null;
+            context.needsReload = true;
+        }
+
         // Set name
         this.name = null;
 
@@ -1023,6 +1028,10 @@ class Project extends Model {
 
         // Set UI state
         this.ui = new UiState('ui');
+
+        if (context.needsReload) {
+            this.reloadEditorPreview();
+        }
 
     } //createNew
 
@@ -1099,15 +1108,19 @@ class Project extends Model {
 
             // Set project dir
             //
-            let projectDir = normalize(dirname(this.path));
+            let projectDir = this.path ? normalize(dirname(this.path)) : null;
             let editorDir = normalize(path);
             
             if (projectDir === editorDir) {
                 this.previewPath = '.';
-            } else {
+            }
+            else if (projectDir) {
                 let res = relative(projectDir, editorDir);
                 if (!res.startsWith('.')) res = './' + res;
                 this.previewPath = res;
+            }
+            else {
+                this.previewPath = path;
             }
             
         }
@@ -1196,6 +1209,9 @@ class Project extends Model {
 
         console.log('open project: ' + path);
 
+        // Force reload
+        context.needsReload = true;
+
         // Lock assets
         this.assetsLocked = true;
 
@@ -1232,11 +1248,15 @@ class Project extends Model {
             user.projectPath = path;
 
             // Unlock and force assets to reload
-            this.assetsUpdatedAt = new Date().getTime();
-            this.assetsLocked = false;
+            //this.assetsUpdatedAt = new Date().getTime();
+            //this.assetsLocked = false;
+
+            // Instead we will reload window and assets will get loaded again
 
             // Mark project as clean
-            user.markProjectAsClean();
+            //user.markProjectAsClean();
+
+            this.reloadEditorPreview();
 
         }
         catch (e) {
@@ -1354,7 +1374,7 @@ class Project extends Model {
                 this.setRawFilesPath(rawFilesPath);
             }
 
-            // Update preview path as well
+            // Update preview path (make it relative to new project path)
             if (previewPath) {
                 this.setPreviewPath(previewPath);
             }
@@ -1566,7 +1586,9 @@ class Project extends Model {
 
     reloadEditorPreview() {
 
-        window.location.reload(true);
+        setImmediate(() => {
+            window.location.reload(true);
+        });
 
     } //reloadEditorPreview
 
@@ -1833,7 +1855,6 @@ class Project extends Model {
                         callback(code, out, err);
                     }
                     else {
-                        console.error('NEED TO ERASE REPO');
                         rimraf(repoDir, (err) => {
                             this.cloneOrPullGitRepository(gitDir, repoDirName, authenticatedUrl, branch, targetCommit, callback, true);
                         });

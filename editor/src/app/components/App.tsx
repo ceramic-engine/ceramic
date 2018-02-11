@@ -23,7 +23,8 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                     left: 0,
                     top: 0,
                     width: context.width,
-                    height: context.height
+                    height: context.height,
+                    visibility: context.needsReload ? 'hidden' : 'visible'
                 }}
             >
                 <div
@@ -67,8 +68,8 @@ import MdGridOn from 'react-icons/lib/md/grid-on';
                             />
                         : context.draggingOver ?
                             <DragOver />
-                        /*: !project.ready ?
-                            <LoadingOverlay message={'Loading\u2026'} />*/
+                        : !project.ready && project.absoluteAssetsPath != null ?
+                            <LoadingOverlay message={'Loading\u2026'} />
                         : project.ui.addVisual ?
                             <AddVisual />
                         : project.ui.editSettings ?

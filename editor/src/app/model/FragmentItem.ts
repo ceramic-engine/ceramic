@@ -95,7 +95,7 @@ class FragmentItem extends Model {
 
     setPropFromEditor(key:string, value:any) {
 
-        if (allowedKeys[key]) {
+        if (allowedKeys[key] || !this.props.has(key)) {
             this.props.set(key, value);
         }
 

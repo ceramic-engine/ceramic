@@ -607,7 +607,6 @@ body, html {
 #body .input-tags-container:not(.focus) .tag-input {
     position: relative;
     left: -99999px;
-    top: -99999px;
 }
 
 #body .input-tags-container:not(.focus) .tag-input:not(.no-tags) {

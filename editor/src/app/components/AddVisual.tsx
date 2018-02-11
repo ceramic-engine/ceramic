@@ -77,6 +77,11 @@ import { EditableType } from 'app/model/Project';
         visual.props.set('depthRange', 1);
         visual.props.set('anchorX', 0.5);
         visual.props.set('anchorY', 0.5);
+        visual.props.set('scaleX', 1);
+        visual.props.set('scaleY', 1);
+        visual.props.set('alpha', 1);
+        visual.props.set('visible', true);
+        visual.props.set('touchable', true);
 
         // Specific cases
         if (info.entity === 'ceramic.Text') {

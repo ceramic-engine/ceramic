@@ -1,5 +1,6 @@
 package editor;
 
+import ceramic.InitSettings;
 import ceramic.Entity;
 import ceramic.Settings;
 import ceramic.Fragment;
@@ -7,14 +8,18 @@ import ceramic.FragmentItem;
 import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Text;
+import ceramic.Collection;
 import ceramic.Collections;
+import ceramic.CollectionEntry;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;
 import ceramic.Texture;
 import ceramic.Screen;
 import ceramic.FieldInfo;
 import ceramic.Key;
+import ceramic.KeyCode;
 import ceramic.Assets;
+import ceramic.Utils;
 import ceramic.Shortcuts.*;
 
 import editor.Message;
@@ -579,6 +584,8 @@ class Editor extends Entity {
                     runtimeAssets = new RuntimeAssets(rawList);
                     var lists = runtimeAssets.getEncodableLists();
 
+                    untyped console.error('RESET ASSETS');
+
                     // Reset assets
                     assets.destroy();
                     assets = new Assets();
@@ -698,8 +705,8 @@ class Editor extends Entity {
             case 'fragment-item':
                 if (action == 'put') {
                     fragmentItems.set(value.id, value);
-                    //untyped console.error('PUT');
-                    //untyped console.log(value);
+                    untyped console.error('PUT');
+                    untyped console.log(value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
                         var visual:Visual = cast entity;

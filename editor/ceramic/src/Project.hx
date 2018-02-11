@@ -1,6 +1,6 @@
 package;
 
-import ceramic.Settings;
+import ceramic.InitSettings;
 import ceramic.Shortcuts.*;
 
 /** Minimal project to bootstrap default ceramic editor canvas. */
