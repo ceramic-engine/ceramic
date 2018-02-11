@@ -133,6 +133,10 @@ class Project {
 /** Parsing/loading code to read ceramic project format. */
 class ProjectLoader {
 
+    static var RE_ALNUM_CHAR = ~/^[a-zA-Z0-9_]$/g;
+
+    static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*$/g;
+
     public static function loadAppConfig(input:String, defines:Map<String,String>):Dynamic<Dynamic> {
 
         var app:Dynamic<Dynamic> = null;
@@ -367,6 +371,9 @@ class ProjectLoader {
                 var parser = new hscript.Parser();
                 var condition = parser.parseString('(' + key.substring(3) + ');');
 
+                // Extract identifiers from condition
+                var identifiers = extractIdentifiers(key.substring(3));
+
                 // Setup context from defines
                 var interp = new hscript.Interp();
                 for (defKey in defines.keys()) {
@@ -374,11 +381,20 @@ class ProjectLoader {
                     interp.variables.set(defKey, val == null || val.trim() == '' ? true : val);
                 }
 
+                // Add missing identifiers used in expression, if any
+                for (identifier in identifiers) {
+                    if (!interp.variables.exists(identifier)) {
+                        interp.variables.set(identifier, false);
+                    }
+                }
+
                 // Evaluate condition
                 var result:Bool = false;
                 try {
                     result = interp.execute(condition);
-                } catch (e:Dynamic) {}
+                } catch (e:Dynamic) {
+                    warning('Error when evaluating expression \'' + key.substring(3) + '\': ' + e);
+                }
 
                 // Merge config if condition is true
                 if (result) {
@@ -498,5 +514,37 @@ class ProjectLoader {
         }
 
     } //mergeConfigs
+
+    static function extractIdentifiers(input:String):Array<String> {
+
+        var identifiers:Map<String,Bool> = new Map();
+        var i = 0;
+        var len = input.length;
+        var cleaned = '';
+
+        while (i < len) {
+            var c = input.charAt(i);
+            if (RE_ALNUM_CHAR.match(c)) {
+                cleaned += c;
+            }
+            else if (!cleaned.endsWith(' ')) {
+                cleaned += ' ';
+            }
+            i++;
+        }
+
+        for (part in cleaned.split(' ')) {
+            if (RE_IDENTIFIER.match(part)) {
+                identifiers.set(part, true);
+            }
+        }
+
+        var result = [];
+        for (key in identifiers.keys()) {
+            result.push(key);
+        }
+        return result;
+
+    } //extractIdentifiers
 
 } //Parser
