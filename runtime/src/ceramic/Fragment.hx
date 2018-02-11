@@ -151,7 +151,6 @@ class Fragment extends Visual {
                 };
                 newArgs.push(subContext);
             }
-            untyped console.error('CREATE INSTANCE ' + item.entity);
             instance = cast Type.createInstance(entityClass, newArgs);
         }
         instance.id = item.id;

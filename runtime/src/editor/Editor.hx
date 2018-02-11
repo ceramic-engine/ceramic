@@ -584,8 +584,6 @@ class Editor extends Entity {
                     runtimeAssets = new RuntimeAssets(rawList);
                     var lists = runtimeAssets.getEncodableLists();
 
-                    untyped console.error('RESET ASSETS');
-
                     // Reset assets
                     assets.destroy();
                     assets = new Assets();
@@ -705,8 +703,8 @@ class Editor extends Entity {
             case 'fragment-item':
                 if (action == 'put') {
                     fragmentItems.set(value.id, value);
-                    untyped console.error('PUT');
-                    untyped console.log(value);
+                    //untyped console.error('PUT');
+                    //untyped console.log(value);
                     var entity = fragment.putItem(value);
                     if (Std.is(entity, Visual)) {
                         var visual:Visual = cast entity;
