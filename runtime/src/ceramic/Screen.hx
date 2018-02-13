@@ -58,6 +58,27 @@ class Screen extends Entity implements Observable {
     /** Touches x and y coordinates by touch index. */
     public var touches(default,null):Touches = new Touches();
 
+    /** Focused visual */
+    public var focusedVisual(default,set):Visual = null;
+    function set_focusedVisual(focusedVisual:Visual):Visual {
+        if (this.focusedVisual == focusedVisual) return focusedVisual;
+
+        var prevFocused = this.focusedVisual;
+        this.focusedVisual = focusedVisual;
+
+        if (prevFocused != null) {
+            emitBlur(prevFocused);
+            prevFocused.emitBlur();
+        }
+
+        if (focusedVisual != null) {
+            emitFocus(focusedVisual);
+            focusedVisual.emitFocus();
+        }
+
+        return focusedVisual;
+    }
+
     /** Ideal textures density, computed from settings
         targetDensity and current screen state. */
     @observable public var texturesDensity:Float = 1.0;
@@ -104,6 +125,11 @@ class Screen extends Entity implements Observable {
     @event function down(info:TouchInfo);
     @event function up(info:TouchInfo);
     @event function move(info:TouchInfo);
+
+    // Focused visual event
+    //
+    @event function focus(visual:Visual);
+    @event function blur(visual:Visual);
 
 /// Lifecycle
 

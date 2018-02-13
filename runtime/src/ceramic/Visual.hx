@@ -14,6 +14,9 @@ class Visual extends Entity {
     @event function over(info:TouchInfo);
     @event function out(info:TouchInfo);
 
+    @event function focus();
+    @event function blur();
+
 /// Properties
 
     /** When enabled, this visual will receive as many up/down/click/over/out events as
@@ -406,6 +409,10 @@ class Visual extends Entity {
     } //new
 
     public function destroy() {
+
+        if (ceramic.App.app.screen.focusedVisual == this) {
+            ceramic.App.app.screen.focusedVisual = null;
+        }
         
         ceramic.App.app.visuals.remove(this);
 
@@ -687,6 +694,14 @@ class Visual extends Entity {
         touchableDirty = false;
 
     } //computedTouchable
+
+/// Focus
+
+    inline function willEmitDown(info:TouchInfo):Void {
+
+        ceramic.App.app.screen.focusedVisual = this;
+
+    } //willEmitDown
 
 /// RenderTarget (computed)
 
