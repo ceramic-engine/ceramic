@@ -96,10 +96,10 @@ class Screen extends Entity implements Observable {
     /** In order to prevent nested resizes. */
     private var resizing:Bool = false;
 
-    /** Whether the screen is between a `down` and an `up` event or not. */
-    public var isDown(get,null):Bool;
-    var _numDown:Int = 0;
-    inline function get_isDown():Bool { return _numDown > 0; }
+    /** Whether the screen is between a `pointer down` and an `pointer up` event or not. */
+    public var isPointerDown(get,null):Bool;
+    var _numPointerDown:Int = 0;
+    inline function get_isPointerDown():Bool { return _numPointerDown > 0; }
 
 /// Events
 
@@ -122,9 +122,9 @@ class Screen extends Entity implements Observable {
 
     // Generic (unified) events
     //
-    @event function down(info:TouchInfo);
-    @event function up(info:TouchInfo);
-    @event function move(info:TouchInfo);
+    @event function pointerDown(info:TouchInfo);
+    @event function pointerUp(info:TouchInfo);
+    @event function pointerMove(info:TouchInfo);
 
     // Focused visual event
     //
@@ -186,9 +186,9 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseDown(buttonId, x1, y1);
-                _numDown++;
-                if (_numDown == 1) {
-                    emitDown({
+                _numPointerDown++;
+                if (_numPointerDown == 1) {
+                    emitPointerDown({
                         touchIndex: -1,
                         buttonId: buttonId,
                         x: x1,
@@ -205,9 +205,9 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseUp(buttonId, x1, y1);
-                _numDown--;
-                if (_numDown == 0) {
-                    emitUp({
+                _numPointerDown--;
+                if (_numPointerDown == 0) {
+                    emitPointerUp({
                         touchIndex: -1,
                         buttonId: buttonId,
                         x: x1,
@@ -224,7 +224,7 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseMove(x1, y1);
-                emitMove({
+                emitPointerMove({
                     touchIndex: -1,
                     buttonId: MouseButton.NONE,
                     x: x1,
@@ -252,9 +252,9 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchDown(touchIndex, x1, y1);
-                _numDown++;
-                if (_numDown == 1) {
-                    emitDown({
+                _numPointerDown++;
+                if (_numPointerDown == 1) {
+                    emitPointerDown({
                         touchIndex: touchIndex,
                         buttonId: -1,
                         x: x1,
@@ -271,9 +271,9 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchUp(touchIndex, x1, y1);
-                _numDown--;
-                if (_numDown == 0) {
-                    emitUp({
+                _numPointerDown--;
+                if (_numPointerDown == 0) {
+                    emitPointerUp({
                         touchIndex: touchIndex,
                         buttonId: -1,
                         x: x1,
@@ -290,7 +290,7 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchMove(touchIndex, x1, y1);
-                emitMove({
+                emitPointerMove({
                     touchIndex: touchIndex,
                     buttonId: -1,
                     x: x1,
@@ -403,7 +403,7 @@ class Screen extends Entity implements Observable {
         while (i >= 0) {
 
             var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensDown() && visual.hits(x, y)) {
+            if (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y)) {
                 return visual;
             }
 
@@ -423,7 +423,7 @@ class Screen extends Entity implements Observable {
         while (i >= 0) {
 
             var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensOver() && visual.hits(x, y)) {
+            if (visual.computedTouchable && visual.listensPointerOver() && visual.hits(x, y)) {
                 return visual;
             }
 
@@ -436,7 +436,7 @@ class Screen extends Entity implements Observable {
 
 /// Touch/Mouse events
 
-    inline function willEmitDown(info:TouchInfo):Void {
+    inline function willEmitPointerDown(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -458,9 +458,9 @@ class Screen extends Entity implements Observable {
 
         updatePointer();
 
-    } //willEmitDown
+    } //willEmitPointerDown
 
-    inline function willEmitUp(info:TouchInfo):Void {
+    inline function willEmitPointerUp(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -487,9 +487,9 @@ class Screen extends Entity implements Observable {
             touches.remove(info.touchIndex);
         }
 
-    } //willEmitUp
+    } //willEmitPointerUp
 
-    inline function willEmitMove(info:TouchInfo):Void {
+    inline function willEmitPointerMove(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -549,9 +549,10 @@ class Screen extends Entity implements Observable {
 
         var matched = matchFirstDownListener(x, y);
         if (matched != null) {
-            matched._numDown++;
-            if (matched._numDown == 1 || matched.multiTouch) {
-                matched.emitDown({
+            matched._numPointerDown++;
+            if (matched._numPointerDown == 1 || matched.multiTouch) {
+                screen.focusedVisual = matched;
+                matched.emitPointerDown({
                     touchIndex: -1,
                     buttonId: buttonId,
                     x: x,
@@ -569,10 +570,10 @@ class Screen extends Entity implements Observable {
 
         var id = 10000 + buttonId;
         var matched = matchedDownListeners.get(id);
-        if (matched != null && !matched.destroyed && matched._numDown > 0) {
-            matched._numDown--;
-            if (matched._numDown == 0 || matched.multiTouch) {
-                matched.emitUp({
+        if (matched != null && !matched.destroyed && matched._numPointerDown > 0) {
+            matched._numPointerDown--;
+            if (matched._numPointerDown == 0 || matched.multiTouch) {
+                matched.emitPointerUp({
                     touchIndex: -1,
                     buttonId: buttonId,
                     x: x,
@@ -597,10 +598,10 @@ class Screen extends Entity implements Observable {
                 matchedOverListeners.remove(id);
             }
         }
-        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numOver > 0) {
-            prevMatched._numOver--;
-            if (prevMatched._numOver == 0 || prevMatched.multiTouch) {
-                prevMatched.emitOut({
+        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numPointerOver > 0) {
+            prevMatched._numPointerOver--;
+            if (prevMatched._numPointerOver == 0 || prevMatched.multiTouch) {
+                prevMatched.emitPointerOut({
                     touchIndex: -1,
                     buttonId: -1,
                     x: x,
@@ -610,9 +611,9 @@ class Screen extends Entity implements Observable {
             }
         }
         if (matched != null && prevMatched != matched) {
-            matched._numOver++;
-            if (matched._numOver == 1 || matched.multiTouch) {
-                matched.emitOver({
+            matched._numPointerOver++;
+            if (matched._numPointerOver == 1 || matched.multiTouch) {
+                matched.emitPointerOver({
                     touchIndex: -1,
                     buttonId: -1,
                     x: x,
@@ -628,9 +629,10 @@ class Screen extends Entity implements Observable {
 
         var matched = matchFirstDownListener(x, y);
         if (matched != null) {
-            matched._numDown++;
-            if (matched._numDown == 1 || matched.multiTouch) {
-                matched.emitDown({
+            matched._numPointerDown++;
+            if (matched._numPointerDown == 1 || matched.multiTouch) {
+                screen.focusedVisual = matched;
+                matched.emitPointerDown({
                     touchIndex: touchIndex,
                     buttonId: -1,
                     x: x,
@@ -648,10 +650,10 @@ class Screen extends Entity implements Observable {
 
         var id = 20000 + touchIndex;
         var matched = matchedDownListeners.get(id);
-        if (matched != null && !matched.destroyed && matched._numDown > 0) {
-            matched._numDown--;
-            if (matched._numDown == 0 || matched.multiTouch) {
-                matched.emitUp({
+        if (matched != null && !matched.destroyed && matched._numPointerDown > 0) {
+            matched._numPointerDown--;
+            if (matched._numPointerDown == 0 || matched.multiTouch) {
+                matched.emitPointerUp({
                     touchIndex: touchIndex,
                     buttonId: -1,
                     x: x,
@@ -676,10 +678,10 @@ class Screen extends Entity implements Observable {
                 matchedOverListeners.remove(id);
             }
         }
-        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numOver > 0) {
-            prevMatched._numOver--;
-            if (prevMatched._numOver == 0 || prevMatched.multiTouch) {
-                prevMatched.emitOut({
+        if (prevMatched != null && prevMatched != matched && !prevMatched.destroyed && prevMatched._numPointerOver > 0) {
+            prevMatched._numPointerOver--;
+            if (prevMatched._numPointerOver == 0 || prevMatched.multiTouch) {
+                prevMatched.emitPointerOut({
                     touchIndex: -1,
                     buttonId: -1,
                     x: x,
@@ -689,9 +691,9 @@ class Screen extends Entity implements Observable {
             }
         }
         if (matched != null && prevMatched != matched) {
-            matched._numOver++;
-            if (matched._numOver == 1 || matched.multiTouch) {
-                matched.emitOver({
+            matched._numPointerOver++;
+            if (matched._numPointerOver == 1 || matched.multiTouch) {
+                matched.emitPointerOver({
                     touchIndex: -1,
                     buttonId: -1,
                     x: x,

@@ -9,10 +9,10 @@ class Visual extends Entity {
 
 /// Events
 
-    @event function down(info:TouchInfo);
-    @event function up(info:TouchInfo);
-    @event function over(info:TouchInfo);
-    @event function out(info:TouchInfo);
+    @event function pointerDown(info:TouchInfo);
+    @event function pointerUp(info:TouchInfo);
+    @event function pointerOver(info:TouchInfo);
+    @event function pointerOut(info:TouchInfo);
 
     @event function focus();
     @event function blur();
@@ -22,20 +22,20 @@ class Visual extends Entity {
     /** When enabled, this visual will receive as many up/down/click/over/out events as
         there are fingers or mouse pointer interacting with it.
         Default is `false`, ensuring there is never multiple up/down/click/over/out that
-        overlap each other. In that case, it triggers `down` when the first finger/pointer hits
-        the visual and trigger `up` when the last finger/pointer stops touching it. Behavior is
-        similar for `over` and `out` events. */
+        overlap each other. In that case, it triggers `pointer down` when the first finger/pointer hits
+        the visual and trigger `pointer up` when the last finger/pointer stops touching it. Behavior is
+        similar for `pointer over` and `pointer out` events. */
     public var multiTouch:Bool = false;
 
-    /** Whether this visual is between a `down` and an `up` event or not. */
-    public var isDown(get,null):Bool;
-    var _numDown:Int = 0;
-    inline function get_isDown():Bool { return _numDown > 0; }
+    /** Whether this visual is between a `pointer down` and an `pointer up` event or not. */
+    public var isPointerDown(get,null):Bool;
+    var _numPointerDown:Int = 0;
+    inline function get_isPointerDown():Bool { return _numPointerDown > 0; }
 
-    /** Whether this visual is between a `over` and an `out` event or not. */
-    public var isOver(get,null):Bool;
-    var _numOver:Int = 0;
-    inline function get_isOver():Bool { return _numOver > 0; }
+    /** Whether this visual is between a `pointer over` and an `pointer out` event or not. */
+    public var isPointerOver(get,null):Bool;
+    var _numPointerOver:Int = 0;
+    inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
@@ -694,14 +694,6 @@ class Visual extends Entity {
         touchableDirty = false;
 
     } //computedTouchable
-
-/// Focus
-
-    inline function willEmitDown(info:TouchInfo):Void {
-
-        ceramic.App.app.screen.focusedVisual = this;
-
-    } //willEmitDown
 
 /// RenderTarget (computed)
 
