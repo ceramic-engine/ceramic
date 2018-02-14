@@ -3,12 +3,15 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+using StringTools;
+
 class EventsMacro {
 
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
 
-        //Sys.println('-- EXECUTE EVENTS MACRO [ ' + Context.getLocalClass() + ' ] --');
+        // Gather all emit{EventName}
+        var allEmits:Map<String,Bool> = new Map();
 
         // Check class fields
         var fieldsByName = new Map<String,Bool>();
@@ -23,6 +26,13 @@ class EventsMacro {
 
             for (field in parent.get().fields.get()) {
                 fieldsByName.set(field.name, true);
+
+                if (field.name.startsWith('emit')) {
+                    allEmits.set(field.name.substring(4), true);
+                }
+                else if (field.meta.has('event')) {
+                    allEmits.set(field.name.charAt(0).toUpperCase() + field.name.substring(1), true);
+                }
             }
 
             parentHold = parent.get().superClass;
@@ -38,6 +48,26 @@ class EventsMacro {
             else {
                 // Keep field
                 newFields.push(field);
+            }
+        }
+
+        for (field in newFields) {
+            if (field.name.startsWith('emit')) {
+                allEmits.set(field.name.substring(4), true);
+            }
+        }
+
+        // Check that {will|did}Emit{EventName} match an existing event
+        for (field in newFields) {
+            if (field.name.startsWith('willEmit')) {
+                if (!allEmits.exists(field.name.substring(8))) {
+                    throw new Error("No event with name `" + field.name.charAt(8).toLowerCase() + field.name.substring(9) + "` will ever be emitted by this class", field.pos);
+                }
+            }
+            else if (field.name.startsWith('didEmit')) {
+                if (!allEmits.exists(field.name.substring(7))) {
+                    throw new Error("No event with name `" + field.name.charAt(7).toLowerCase() + field.name.substring(8) + "` will ever be emitted by this class", field.pos);
+                }
             }
         }
 
