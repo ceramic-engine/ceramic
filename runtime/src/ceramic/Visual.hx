@@ -823,4 +823,24 @@ class Visual extends Entity {
 
     } //remove
 
+    /** Returns `true` if the current visual contains this child.
+        When `recursive` option is `true`, will return `true` if
+        the current visual contains this child or one of
+        its direct or indirect children does. */
+    public function contains(child:Visual, recursive:Bool = false):Bool {
+
+        var parent = child.parent;
+
+        while (parent != null) {
+
+            if (parent == this) return true;
+            parent = parent.parent;
+
+            if (!recursive) break;
+        }
+
+        return false;
+
+    } //contains
+
 } //Visual
