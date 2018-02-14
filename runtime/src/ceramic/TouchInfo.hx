@@ -22,4 +22,18 @@ class TouchInfo {
         initially received a down event. */
     public var hits(default, null):Bool;
 
+/// Print
+
+    function toString():String {
+
+        return '' + {
+            touchIndex: touchIndex,
+            buttonId: buttonId,
+            x: x,
+            y: y,
+            hits: hits
+        };
+
+    } //toString
+
 } //TouchInfo

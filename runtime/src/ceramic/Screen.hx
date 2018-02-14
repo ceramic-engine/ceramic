@@ -185,6 +185,7 @@ class Screen extends Entity implements Observable {
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
+
                 emitMouseDown(buttonId, x1, y1);
                 _numPointerDown++;
                 if (_numPointerDown == 1) {
@@ -530,14 +531,12 @@ class Screen extends Entity implements Observable {
             pointerX = pX / numTouchPointers;
             pointerY = pY / numTouchPointers;
         }
-
         // Or mouse
         //
-        pointerX = mouseX;
-        pointerY = mouseY;
-
-        // TODO REMOVE
-        //trace('pointer $pointerX, $pointerY');
+        else {
+            pointerX = mouseX;
+            pointerY = mouseY;
+        }
 
     } //updatePointer
 

@@ -100,6 +100,9 @@ class Main extends luxe.Game {
 
     } //onwindowresized
 
+// Only handle mouse on desktop, for now
+#if (mac || windows || linux)
+
     override function onmousedown(event:MouseEvent) {
 
         if (mouseDownButtons.exists(event.button)) {
@@ -157,6 +160,8 @@ class Main extends luxe.Game {
 
     } //onmousemove
 
+#end
+
     override function onkeydown(event:KeyEvent) {
 
         ceramic.App.app.backend.emitKeyDown({
@@ -189,8 +194,8 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.screen.emitTouchDown(
             index,
-            event.x,
-            event.y
+            event.x * lastWidth,
+            event.y * lastHeight
         );
 
     } //ontouchdown
@@ -204,8 +209,8 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.screen.emitTouchUp(
             index,
-            event.x,
-            event.y
+            event.x * lastWidth,
+            event.y * lastHeight
         );
 
         touches.remove(event.touch_id);
@@ -222,8 +227,8 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.screen.emitTouchMove(
             index,
-            event.x,
-            event.y
+            event.x * lastWidth,
+            event.y * lastHeight
         );
 
     } //ontouchmove

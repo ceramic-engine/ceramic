@@ -8,4 +8,15 @@ class ImmutablePoint {
 
     public var y(default,null):Float;
 
+/// Print
+
+    function toString():String {
+
+        return '' + {
+            x: x,
+            y: y
+        };
+
+    } //toString
+
 } //Point
