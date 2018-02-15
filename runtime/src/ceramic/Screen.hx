@@ -126,6 +126,12 @@ class Screen extends Entity implements Observable {
     @event function pointerUp(info:TouchInfo);
     @event function pointerMove(info:TouchInfo);
 
+    // Generic (unified & multitouch) events
+    //
+    @event function multiTouchPointerDown(info:TouchInfo);
+    @event function multiTouchPointerUp(info:TouchInfo);
+    @event function multiTouchPointerMove(info:TouchInfo);
+
     // Focused visual event
     //
     @event function focus(visual:Visual);
@@ -188,14 +194,16 @@ class Screen extends Entity implements Observable {
 
                 emitMouseDown(buttonId, x1, y1);
                 _numPointerDown++;
+                var info:TouchInfo = {
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
+                };
+                emitMultiTouchPointerDown(info);
                 if (_numPointerDown == 1) {
-                    emitPointerDown({
-                        touchIndex: -1,
-                        buttonId: buttonId,
-                        x: x1,
-                        y: y1,
-                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                    });
+                    emitPointerDown(info);
                 }
             });
         });
@@ -207,14 +215,16 @@ class Screen extends Entity implements Observable {
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseUp(buttonId, x1, y1);
                 _numPointerDown--;
+                var info:TouchInfo = {
+                    touchIndex: -1,
+                    buttonId: buttonId,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
+                };
+                emitMultiTouchPointerUp(info);
                 if (_numPointerDown == 0) {
-                    emitPointerUp({
-                        touchIndex: -1,
-                        buttonId: buttonId,
-                        x: x1,
-                        y: y1,
-                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                    });
+                    emitPointerUp(info);
                 }
             });
         });
@@ -225,13 +235,15 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitMouseMove(x1, y1);
-                emitPointerMove({
+                var info:TouchInfo = {
                     touchIndex: -1,
                     buttonId: MouseButton.NONE,
                     x: x1,
                     y: y1,
                     hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                });
+                };
+                emitMultiTouchPointerMove(info);
+                emitPointerMove(info);
             });
         });
         app.backend.screen.onMouseWheel(this, function(x, y) {
@@ -254,14 +266,16 @@ class Screen extends Entity implements Observable {
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchDown(touchIndex, x1, y1);
                 _numPointerDown++;
+                var info:TouchInfo = {
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
+                };
+                emitMultiTouchPointerDown(info);
                 if (_numPointerDown == 1) {
-                    emitPointerDown({
-                        touchIndex: touchIndex,
-                        buttonId: -1,
-                        x: x1,
-                        y: y1,
-                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                    });
+                    emitPointerDown(info);
                 }
             });
         });
@@ -273,14 +287,16 @@ class Screen extends Entity implements Observable {
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchUp(touchIndex, x1, y1);
                 _numPointerDown--;
+                var info:TouchInfo = {
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
+                }
+                emitMultiTouchPointerUp(info);
                 if (_numPointerDown == 0) {
-                    emitPointerUp({
-                        touchIndex: touchIndex,
-                        buttonId: -1,
-                        x: x1,
-                        y: y1,
-                        hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                    });
+                    emitPointerUp(info);
                 }
             });
         });
@@ -291,13 +307,17 @@ class Screen extends Entity implements Observable {
                 var x1 = reverseMatrix.transformX(x0, y0);
                 var y1 = reverseMatrix.transformY(x0, y0);
                 emitTouchMove(touchIndex, x1, y1);
-                emitPointerMove({
+                var info:TouchInfo = {
                     touchIndex: touchIndex,
                     buttonId: -1,
                     x: x1,
                     y: y1,
                     hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
-                });
+                };
+                emitMultiTouchPointerMove(info);
+                if (_numPointerDown > 0) {
+                    emitPointerMove(info);
+                }
             });
         });
 
@@ -437,7 +457,7 @@ class Screen extends Entity implements Observable {
 
 /// Touch/Mouse events
 
-    inline function willEmitPointerDown(info:TouchInfo):Void {
+    inline function willEmitMultiTouchPointerDown(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -459,9 +479,9 @@ class Screen extends Entity implements Observable {
 
         updatePointer();
 
-    } //willEmitPointerDown
+    } //willEmitMultiTouchPointerDown
 
-    inline function willEmitPointerUp(info:TouchInfo):Void {
+    inline function willEmitMultiTouchPointerUp(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -488,9 +508,9 @@ class Screen extends Entity implements Observable {
             touches.remove(info.touchIndex);
         }
 
-    } //willEmitPointerUp
+    } //willEmitMultiTouchPointerUp
 
-    inline function willEmitPointerMove(info:TouchInfo):Void {
+    inline function willEmitMultiTouchPointerMove(info:TouchInfo):Void {
 
         if (info.buttonId != -1) {
             // Mouse
@@ -512,7 +532,7 @@ class Screen extends Entity implements Observable {
 
         updatePointer();
 
-    } //willEmitMove
+    } //willEmitMultiTouchPointerMove
 
     inline function updatePointer():Void {
 
