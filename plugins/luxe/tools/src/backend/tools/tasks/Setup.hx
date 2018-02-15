@@ -132,6 +132,10 @@ class Setup extends tools.Task {
             }
         }
 
+        // Disable luxe debug console
+        haxeflags.push(Json.stringify('-D luxe_noprofile'));
+        haxeflags.push(Json.stringify('-D no_debug_console'));
+
         var classPaths = '';
         for (entry in (project.app.paths:Array<String>)) {
             if (Path.isAbsolute(entry)) {
@@ -144,35 +148,8 @@ class Setup extends tools.Task {
             }
         }
 
-        var customIndex = '';
-        /*if (target.name == 'web') {
-            customIndex = ",
-      index : { path:'custom_index.html => index.html', template:'project', not_listed:true }";
-        }*/
-
         var hooks = '';
         var hookPre = null;
-
-        if (target.name == 'ios') {
-            hookPre = "
-exports.hook = function(flow, done) 
-{
-    // Don't compile Haxe/C++ if no archs are specified explicitly
-    if (process.argv.indexOf('--archs') == -1) {
-        done(null, true);
-    }
-    done(null, false);
-}
-";
-
-            /*hooks += ",
-      pre: {
-        priority: 1,
-        name: 'ceramic-pre',
-        desc: 'run ceramic pre build',
-        script: './hooks/pre.js'
-        }";*/
-        }
     
         var content = ('
 {
@@ -203,7 +180,7 @@ exports.hook = function(flow, done)
     },
 
     files : {
-      assets : \'assets/\'$customIndex
+      assets : \'assets/\'
     }
 
   }
