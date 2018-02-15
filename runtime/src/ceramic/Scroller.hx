@@ -125,7 +125,7 @@ class Scroller extends Quad {
 
         app.onUpdate(this, update);
 
-        screen.onPointerDown(this, pointerDown);
+        screen.onMultiTouchPointerDown(this, pointerDown);
 
         screen.onFocus(this, screenFocus);
 
@@ -135,7 +135,7 @@ class Scroller extends Quad {
 
         app.offUpdate(update);
 
-        screen.offPointerDown(pointerDown);
+        screen.offMultiTouchPointerDown(pointerDown);
 
         screen.offFocus(screenFocus);
 
@@ -168,21 +168,17 @@ class Scroller extends Quad {
             velocity.add(0);
 
             // Catch `pointer up` event
-            screen.onPointerUp(this, pointerUp);
+            screen.onMultiTouchPointerUp(this, pointerUp);
         }
 
     } //pointerDown
 
     function pointerUp(info:TouchInfo):Void {
 
-        if (status != TOUCHING && status != DRAGGING) {
-            screen.offPointerUp(pointerUp);
-        }
-
         if (info.touchIndex == touchIndex) {
             // End of drag
             status = SCROLLING;
-            screen.offPointerUp(pointerUp);
+            screen.offMultiTouchPointerUp(pointerUp);
 
             // Get momentum from velocity
             // and stop computing velocity
@@ -221,7 +217,7 @@ class Scroller extends Quad {
                 // The focused visual is not inside the scroller,
                 // thus we should cancel any started scrolling.
                 status = IDLE;
-                screen.offPointerUp(pointerUp);
+                screen.offMultiTouchPointerUp(pointerUp);
             }
 
         }
@@ -318,13 +314,14 @@ class Scroller extends Quad {
 
                 if (direction == VERTICAL) {
                     if (scrollTransform.ty > 0 || scrollTransform.ty < height - content.height) {
+
                         // Overscroll
                         overScrolling = true;
 
                         if (momentum > 0) {
-                            momentum = Math.max(bounceMinMomentum, Math.min(momentum, bounceMaxMomentum));
-                        } else {
-                            momentum = Math.min(-bounceMinMomentum, Math.max(momentum, -bounceMaxMomentum));
+                            momentum = Math.max(bounce == 0 ? bounceMinMomentum : 0, Math.min(momentum, bounceMaxMomentum));
+                        } else if (momentum < 0) {
+                            momentum = Math.min(bounce == 0 ? -bounceMinMomentum : 0, Math.max(momentum, -bounceMaxMomentum));
                         }
                         if (bounce != 0) {
                             subtract = Math.round(overScrollDeceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
@@ -364,18 +361,24 @@ class Scroller extends Quad {
                         subtract = Math.round(deceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
                     }
 
-                    scrollTransform.ty += momentum * delta;
-                    scrollTransform.changed = true;
+                    if (!overScrolling || Math.abs(momentum * delta) > screen.nativeHeight * screen.nativeDensity * 0.25) {
+                        scrollTransform.ty += momentum * delta;
+                        scrollTransform.changed = true;
+                    }
+                    else {
+                        momentum = 0;
+                    }
                 }
                 else {
                     if (scrollTransform.tx > 0 || scrollTransform.tx < width - content.width) {
+
                         // Overscroll
                         overScrolling = true;
 
                         if (momentum > 0) {
-                            momentum = Math.max(bounceMinMomentum, Math.min(momentum, bounceMaxMomentum));
-                        } else {
-                            momentum = Math.min(-bounceMinMomentum, Math.max(momentum, -bounceMaxMomentum));
+                            momentum = Math.max(bounce == 0 ? bounceMinMomentum : 0, Math.min(momentum, bounceMaxMomentum));
+                        } else if (momentum < 0) {
+                            momentum = Math.min(bounce == 0 ? -bounceMinMomentum : 0, Math.max(momentum, -bounceMaxMomentum));
                         }
                         if (bounce != 0) {
                             subtract = Math.round(overScrollDeceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
@@ -415,8 +418,13 @@ class Scroller extends Quad {
                         subtract = Math.round(deceleration * screen.width / (screen.nativeHeight * screen.nativeDensity));
                     }
 
-                    scrollTransform.tx += momentum * delta;
-                    scrollTransform.changed = true;
+                    if (!overScrolling || Math.abs(momentum * delta) > screen.nativeWidth * screen.nativeDensity * 0.25) {
+                        scrollTransform.tx += momentum * delta;
+                        scrollTransform.changed = true;
+                    }
+                    else {
+                        momentum = 0;
+                    }
                 }
 
                 if (momentum > 0) {
