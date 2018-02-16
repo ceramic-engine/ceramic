@@ -129,6 +129,8 @@ class Scroller extends Quad {
 
         screen.onFocus(this, screenFocus);
 
+        screen.onMouseWheel(this, mouseWheel);
+
     } //startTracking
 
     function stopTracking():Void {
@@ -139,7 +141,38 @@ class Scroller extends Quad {
 
         screen.offFocus(screenFocus);
 
+        screen.offMouseWheel(mouseWheel);
+
     } //stopTracking
+
+    function mouseWheel(x:Float, y:Float):Void {
+
+        if (status == TOUCHING || status == DRAGGING) {
+            // Did already put a finger on this scroller
+            return;
+        }
+
+        status = SCROLLING;
+        bounce = 0;
+        if (direction == VERTICAL) {
+            scrollTransform.ty -= y;
+            if (scrollTransform.ty > 0) {
+                scrollTransform.ty = 0;
+            }
+            else if (scrollTransform.ty < height - content.height) {
+                scrollTransform.ty = height - content.height;
+            }
+        }
+        else {
+            if (x == 0) {
+                scrollTransform.tx -= y;
+            } else {
+                scrollTransform.tx -= x;
+            }
+        }
+        scrollTransform.changed = true;
+
+    } //mouseWheel
 
     function pointerDown(info:TouchInfo):Void {
 
