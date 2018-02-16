@@ -100,8 +100,8 @@ class Main extends luxe.Game {
 
     } //onwindowresized
 
-// Only handle mouse on desktop, for now
-#if (mac || windows || linux)
+// Only handle mouse on desktop & web, for now
+#if (mac || windows || linux || web)
 
     override function onmousedown(event:MouseEvent) {
 
