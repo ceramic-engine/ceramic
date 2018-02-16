@@ -169,6 +169,12 @@ class Scroller extends Quad {
             } else {
                 scrollTransform.tx -= x;
             }
+            if (scrollTransform.tx > 0) {
+                scrollTransform.tx = 0;
+            }
+            else if (scrollTransform.tx < width - content.width) {
+                scrollTransform.tx = width - content.width;
+            }
         }
         scrollTransform.changed = true;
 
