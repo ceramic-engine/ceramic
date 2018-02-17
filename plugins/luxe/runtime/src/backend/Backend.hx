@@ -29,7 +29,7 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
     public function init(app:ceramic.App) {
 
 #if mac
-        NativeMac.setAppleMomentumScrollSupported(true);
+        NativeMac.setAppleMomentumScrollSupported(false);
 #end
 
     } //init

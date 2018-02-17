@@ -25,6 +25,10 @@ class Scroller extends Quad {
 
     public var overScrollDeceleration = 100.0;
 
+    public var wheelDeceleration = 1600.0;
+
+    public var wheelMomentum = #if mac true #else false #end;
+
     public var overScrollResistance = 5.0;
 
     public var bounceMaxMomentum = 50.0;
@@ -121,6 +125,8 @@ class Scroller extends Quad {
 
     var overScrolling:Bool = false;
 
+    var fromWheel:Bool = false;
+
     function startTracking():Void {
 
         app.onUpdate(this, update);
@@ -153,8 +159,12 @@ class Scroller extends Quad {
         }
 
         status = SCROLLING;
+        fromWheel = true;
         bounce = 0;
         if (direction == VERTICAL) {
+            if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
+                momentum = 0;
+            }
             scrollTransform.ty -= y;
             if (scrollTransform.ty > 0) {
                 scrollTransform.ty = 0;
@@ -162,12 +172,21 @@ class Scroller extends Quad {
             else if (scrollTransform.ty < height - content.height) {
                 scrollTransform.ty = height - content.height;
             }
+            if (wheelMomentum && scrollTransform.ty < 0 && scrollTransform.ty > height - content.height) {
+                momentum -= y * 60;
+            }
         }
         else {
             if (x == 0) {
                 scrollTransform.tx -= y;
+                if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
+                    momentum -= y * 60;
+                }
             } else {
                 scrollTransform.tx -= x;
+                if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
+                    momentum -= x * 60;
+                }
             }
             if (scrollTransform.tx > 0) {
                 scrollTransform.tx = 0;
@@ -287,6 +306,7 @@ class Scroller extends Quad {
 
                     if (Math.abs(pointerY - pointerStart) >= threshold) {
                         status = DRAGGING;
+                        fromWheel = false;
                         pointerStart = pointerY;
                         scrollTransform.ty = contentStart + pointerY - pointerStart;
                         scrollTransform.changed = true;
@@ -352,6 +372,7 @@ class Scroller extends Quad {
                 var subtract = 0.0;
 
                 if (direction == VERTICAL) {
+
                     if (scrollTransform.ty > 0 || scrollTransform.ty < height - content.height) {
 
                         // Overscroll
@@ -397,7 +418,11 @@ class Scroller extends Quad {
                     else {
                         // Regular scroll
                         overScrolling = false;
-                        subtract = Math.round(deceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
+                        if (fromWheel) {
+                            subtract = Math.round(wheelDeceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
+                        } else {
+                            subtract = Math.round(deceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
+                        }
                     }
 
                     if (!overScrolling || Math.abs(momentum * delta) > screen.nativeHeight * screen.nativeDensity * 0.25) {
@@ -454,7 +479,11 @@ class Scroller extends Quad {
                     else {
                         // Regular scroll
                         overScrolling = false;
-                        subtract = Math.round(deceleration * screen.width / (screen.nativeHeight * screen.nativeDensity));
+                        if (fromWheel) {
+                            subtract = Math.round(wheelDeceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
+                        } else {
+                            subtract = Math.round(deceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
+                        }
                     }
 
                     if (!overScrolling || Math.abs(momentum * delta) > screen.nativeWidth * screen.nativeDensity * 0.25) {

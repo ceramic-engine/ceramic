@@ -1,5 +1,21 @@
 package;
 
+#if completion
+
+class Main {
+
+    public static var project:Project = null;
+
+    public static function main():Void {
+
+        project = @:privateAccess new Project(ceramic.App.init());
+
+    } //main
+
+} //Main
+
+#else
+
 import luxe.Input;
 
 class Main extends luxe.Game {
@@ -125,16 +141,23 @@ class Main extends luxe.Game {
 
     override function onmousewheel(event:MouseEvent) {
 
-#if linc_sdl
+#if (linc_sdl && cpp)
         var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
         var direction:Int = runtime.current_ev.wheel.direction;
+        var sdlWheelMul = 5; // Try to have consistent behavior between web and cpp platforms
         if (direction == 1) {
             ceramic.App.app.backend.screen.emitMouseWheel(
-                event.x * -1,
-                event.y * -1
+                event.x * -1 * sdlWheelMul,
+                event.y * -1 * sdlWheelMul
             );
-            return;
         }
+        else {
+            ceramic.App.app.backend.screen.emitMouseWheel(
+                event.x * -1 * sdlWheelMul,
+                event.y * -1 * sdlWheelMul
+            );
+        }
+        return;
 #end
 
         ceramic.App.app.backend.screen.emitMouseWheel(
@@ -254,3 +277,5 @@ class Main extends luxe.Game {
     }
 
 }
+
+#end
