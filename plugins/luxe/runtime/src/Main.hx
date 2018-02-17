@@ -1,21 +1,5 @@
 package;
 
-#if completion
-
-class Main {
-
-    public static var project:Project = null;
-
-    public static function main():Void {
-
-        project = @:privateAccess new Project(ceramic.App.init());
-
-    } //main
-
-} //Main
-
-#else
-
 import luxe.Input;
 
 class Main extends luxe.Game {
@@ -53,8 +37,8 @@ class Main extends luxe.Game {
         if (app.settings.backend.webParent != null) {
             config.runtime.window_parent = app.settings.backend.webParent;
         }
-        //config.runtime.browser_window_mousemove = true;
-        //config.runtime.browser_window_mouseup = true;
+        config.runtime.browser_window_mousemove = true;
+        config.runtime.browser_window_mouseup = true;
         if (app.settings.backend.allowDefaultKeys) {
             config.runtime.prevent_default_keys = [];
         }
@@ -140,6 +124,18 @@ class Main extends luxe.Game {
     } //onmouseup
 
     override function onmousewheel(event:MouseEvent) {
+
+#if linc_sdl
+        var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
+        var direction:Int = runtime.current_ev.wheel.direction;
+        if (direction == 1) {
+            ceramic.App.app.backend.screen.emitMouseWheel(
+                event.x * -1,
+                event.y * -1
+            );
+            return;
+        }
+#end
 
         ceramic.App.app.backend.screen.emitMouseWheel(
             event.x,
@@ -258,5 +254,3 @@ class Main extends luxe.Game {
     }
 
 }
-
-#end

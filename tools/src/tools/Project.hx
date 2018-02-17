@@ -211,14 +211,8 @@ class ProjectLoader {
             }
 
             // Add required libs
-            app.libs.push({
-                unifill: '0.4.1'
-            });
-
-            if (context.defines.exists('android') || context.defines.exists('ios')) {
-                // Add bind dependency
-                app.libs.push('bind');
-            }
+            app.libs.push({ unifill: '0.4.1' });
+            app.libs.push('bind');
 
             if (app.paths == null) {
                 app.paths = [];

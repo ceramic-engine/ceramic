@@ -1,5 +1,9 @@
 package backend;
 
+#if mac
+import backend.NativeMac;
+#end
+
 @:allow(Main)
 @:allow(backend.Textures)
 class Backend implements ceramic.Events #if !completion implements spec.Backend #end {
@@ -23,6 +27,10 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
     public function new() {}
 
     public function init(app:ceramic.App) {
+
+#if mac
+        NativeMac.setAppleMomentumScrollSupported(true);
+#end
 
     } //init
 
