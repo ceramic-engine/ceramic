@@ -33,6 +33,9 @@ class Main extends luxe.Game {
     static var mouseX:Float = 0;
     static var mouseY:Float = 0;
 
+    static var activeControllers:Map<Int,Bool> = new Map();
+    static var removedControllers:Map<Int,Bool> = new Map();
+
     static var instance:Main;
 
     override function config(config:luxe.GameConfig) {
@@ -253,6 +256,69 @@ class Main extends luxe.Game {
     } //ontouchmove
 
 #end
+
+    override public function ongamepadaxis(event:GamepadEvent) {
+
+        var id = event.gamepad;
+        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
+            activeControllers.set(id, true);
+            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            ceramic.App.app.backend.emitControllerEnable(id, name);
+        }
+
+        ceramic.App.app.backend.emitControllerAxis(id, event.axis, event.value);
+
+    } //ongamepadaxis
+
+    override public function ongamepaddown(event:GamepadEvent) {
+
+        var id = event.gamepad;
+        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
+            activeControllers.set(id, true);
+            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            ceramic.App.app.backend.emitControllerEnable(id, name);
+        }
+
+        ceramic.App.app.backend.emitControllerDown(id, event.button);
+
+    } //ongamepaddown
+
+    override public function ongamepadup(event:GamepadEvent) {
+
+        var id = event.gamepad;
+        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
+            activeControllers.set(id, true);
+            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            ceramic.App.app.backend.emitControllerEnable(id, name);
+        }
+
+        ceramic.App.app.backend.emitControllerUp(id, event.button);
+
+    } //ongamepadup
+
+    override public function ongamepaddevice(event:GamepadEvent) {
+
+        var id = event.gamepad;
+        if (event.type == GamepadEventType.device_removed) {
+            if (activeControllers.exists(id)) {
+                ceramic.App.app.backend.emitControllerDisable(id);
+                activeControllers.remove(id);
+                removedControllers.set(id, true);
+                ceramic.App.app.onceUpdate(null, function(_) {
+                    removedControllers.remove(id);
+                });
+            }
+        }
+        else if (event.type == GamepadEventType.device_added) {
+            if (!activeControllers.exists(id)) {
+                activeControllers.set(id, true);
+                removedControllers.remove(id);
+                var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+                ceramic.App.app.backend.emitControllerEnable(id, name);
+            }
+        }
+
+    } //ongamepaddevice
 
 /// Internal
 

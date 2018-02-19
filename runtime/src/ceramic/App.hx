@@ -40,6 +40,12 @@ class App extends Entity {
     @event function keyDown(key:Key);
     @event function keyUp(key:Key);
 
+    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
+    @event function controllerDown(controllerId:Int, buttonId:Int);
+    @event function controllerUp(controllerId:Int, buttonId:Int);
+    @event function controllerEnable(controllerId:Int, name:String);
+    @event function controllerDisable(controllerId:Int);
+
 /// Static pre-init code (used to add plugins)
 
     static var preInitCallbacks:Array<Void->Void>;
@@ -166,7 +172,7 @@ class App extends Entity {
 
     function initComponentInitializers():Void {
 
-        // TODO
+        // Nothing to do for now
 
     } //initComponentInitializers
 
@@ -236,7 +242,6 @@ class App extends Entity {
 
         screen.resize();
 
-#if !completion
         backend.onUpdate(this, update);
 
         // Forward key events
@@ -247,7 +252,23 @@ class App extends Entity {
         backend.onKeyUp(this, function(key) {
             beginUpdateCallbacks.push(function() emitKeyUp(key));
         });
-#end
+
+        // Forward controller events
+        backend.onControllerEnable(this, function(controllerId, name) {
+            beginUpdateCallbacks.push(function() emitControllerEnable(controllerId, name));
+        });
+        backend.onControllerDisable(this, function(controllerId) {
+            beginUpdateCallbacks.push(function() emitControllerDisable(controllerId));
+        });
+        backend.onControllerDown(this, function(controllerId, buttonId) {
+            beginUpdateCallbacks.push(function() emitControllerDown(controllerId, buttonId));
+        });
+        backend.onControllerUp(this, function(controllerId, buttonId) {
+            beginUpdateCallbacks.push(function() emitControllerUp(controllerId, buttonId));
+        });
+        backend.onControllerAxis(this, function(controllerId, axisId, value) {
+            beginUpdateCallbacks.push(function() emitControllerAxis(controllerId, axisId, value));
+        });
 
     } //assetsLoaded
 

@@ -43,6 +43,12 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
     @event function keyDown(key:ceramic.Key);
     @event function keyUp(key:ceramic.Key);
 
+    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
+    @event function controllerDown(controllerId:Int, buttonId:Int);
+    @event function controllerUp(controllerId:Int, buttonId:Int);
+    @event function controllerEnable(controllerId:Int, name:String);
+    @event function controllerDisable(controllerId:Int);
+
 /// Internal update logic
 
     inline function willEmitUpdate(delta:Float) {
