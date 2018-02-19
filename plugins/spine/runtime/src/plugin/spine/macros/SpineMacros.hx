@@ -105,10 +105,6 @@ class SpineMacros {
 
             switch(field.kind) {
                 case FProp(_, _, _, expr):
-                    /*entries.push({
-                        expr: { expr: ECast(expr, macro :ceramic.Assets.AssetId<String>), pos: pos },
-                        field: '_id'
-                    });*/
                     idsEntries.push({expr: EBinop(OpArrow, {expr: EConst(CString(field.name)), pos: pos}, expr), pos: pos});
                 default:
             }
