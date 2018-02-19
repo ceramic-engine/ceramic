@@ -127,6 +127,8 @@ class Scroller extends Quad {
 
     var fromWheel:Bool = false;
 
+/// Toggle tracking
+
     function startTracking():Void {
 
         app.onUpdate(this, update);
@@ -151,6 +153,8 @@ class Scroller extends Quad {
 
     } //stopTracking
 
+/// Event handling
+
     function mouseWheel(x:Float, y:Float):Void {
 
         if (status == TOUCHING || status == DRAGGING) {
@@ -166,10 +170,10 @@ class Scroller extends Quad {
                 momentum = 0;
             }
             scrollTransform.ty -= y;
-            if (scrollTransform.ty > 0) {
+            if (isOverScrollingTop()) {
                 scrollTransform.ty = 0;
             }
-            else if (scrollTransform.ty < height - content.height) {
+            else if (isOverScrollingBottom()) {
                 scrollTransform.ty = height - content.height;
             }
             if (wheelMomentum && scrollTransform.ty < 0 && scrollTransform.ty > height - content.height) {
@@ -188,10 +192,10 @@ class Scroller extends Quad {
                     momentum -= x * 60;
                 }
             }
-            if (scrollTransform.tx > 0) {
+            if (isOverScrollingLeft()) {
                 scrollTransform.tx = 0;
             }
-            else if (scrollTransform.tx < width - content.width) {
+            else if (isOverScrollingRight()) {
                 scrollTransform.tx = width - content.width;
             }
         }
@@ -247,7 +251,7 @@ class Scroller extends Quad {
             // Set bounce value
             bounce = 0;
             if (direction == VERTICAL) {
-                if (scrollTransform.ty > 0 || scrollTransform.ty < height - content.height) {
+                if (isOverScrollingTop() || isOverScrollingBottom()) {
                     overScrollRelease = true;
                 }
                 else {
@@ -255,7 +259,7 @@ class Scroller extends Quad {
                 }
             }
             else {
-                if (scrollTransform.tx > 0 || scrollTransform.tx < width - content.width) {
+                if (isOverScrollingLeft() || isOverScrollingRight()) {
                     overScrollRelease = true;
                 }
                 else {
@@ -281,6 +285,34 @@ class Scroller extends Quad {
         }
 
     } //screenFocus
+
+/// Helpers
+
+    inline function isOverScrollingTop() {
+
+        return scrollTransform.ty > 0;
+
+    } //isOverScrollingTop
+
+    inline function isOverScrollingBottom() {
+
+        return scrollTransform.ty < height - content.height;
+
+    } //isOverScrollingBottom
+
+    inline function isOverScrollingLeft() {
+
+        return scrollTransform.tx > 0;
+
+    } //isOverScrollingLeft
+
+    inline function isOverScrollingRight() {
+
+        return scrollTransform.tx < width - content.width;
+
+    } //isOverScrollingRight
+
+/// Update loop
 
     function update(delta:Float):Void {
 
@@ -338,7 +370,7 @@ class Scroller extends Quad {
                 if (direction == VERTICAL) {
                     scrollTransform.ty = contentStart + pointerY - pointerStart;
 
-                    if (scrollTransform.ty > 0) {
+                    if (isOverScrollingTop()) {
                         scrollTransform.ty = scrollTransform.ty / overScrollResistance;
                     }
                     else {
@@ -354,7 +386,7 @@ class Scroller extends Quad {
                 else {
                     scrollTransform.tx = contentStart + pointerX - pointerStart;
 
-                    if (scrollTransform.tx > 0) {
+                    if (isOverScrollingLeft()) {
                         scrollTransform.tx = scrollTransform.tx / overScrollResistance;
                     }
                     else {
@@ -373,7 +405,7 @@ class Scroller extends Quad {
 
                 if (direction == VERTICAL) {
 
-                    if (scrollTransform.ty > 0 || scrollTransform.ty < height - content.height) {
+                    if (isOverScrollingTop() || isOverScrollingBottom()) {
 
                         // Overscroll
                         overScrolling = true;
@@ -388,7 +420,7 @@ class Scroller extends Quad {
                         }
                         
                         var add = Math.round(bounceAcceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
-                        if (scrollTransform.ty > 0) {
+                        if (isOverScrollingTop()) {
                             // Overscroll bottom
                             if (bounce == 0) {
                                 if (overScrollRelease) {
@@ -401,7 +433,7 @@ class Scroller extends Quad {
                             scrollTransform.ty = Math.max(0, scrollTransform.ty + bounce * delta);
                             scrollTransform.changed = true;
                         }
-                        else if (scrollTransform.ty < height - content.height) {
+                        else if (isOverScrollingBottom()) {
                             // Overscroll top
                             if (bounce == 0) {
                                 if (overScrollRelease) {
@@ -434,7 +466,7 @@ class Scroller extends Quad {
                     }
                 }
                 else {
-                    if (scrollTransform.tx > 0 || scrollTransform.tx < width - content.width) {
+                    if (isOverScrollingLeft() || isOverScrollingRight()) {
 
                         // Overscroll
                         overScrolling = true;
@@ -449,7 +481,7 @@ class Scroller extends Quad {
                         }
                         
                         var add = Math.round(bounceAcceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
-                        if (scrollTransform.tx > 0) {
+                        if (isOverScrollingLeft()) {
                             // Overscroll bottom
                             if (bounce == 0) {
                                 if (overScrollRelease) {
@@ -462,7 +494,7 @@ class Scroller extends Quad {
                             scrollTransform.tx = Math.max(0, scrollTransform.tx + bounce * delta);
                             scrollTransform.changed = true;
                         }
-                        else if (scrollTransform.tx < width - content.width) {
+                        else if (isOverScrollingRight()) {
                             // Overscroll top
                             if (bounce == 0) {
                                 if (overScrollRelease) {
