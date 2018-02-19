@@ -1,7 +1,10 @@
 package ceramic;
 
 import haxe.DynamicAccess;
+
+#if (ceramic && !macro)
 import ceramic.Shortcuts.*;
+#end
 
 using unifill.Unifill;
 using StringTools;
@@ -163,5 +166,15 @@ class Csv {
         return result;
 
     } //parse
+
+#if (!ceramic || macro)
+
+    static function warning(str:String):Void {
+
+        Sys.println(str);
+
+    } //warning
+
+#end
 
 }
