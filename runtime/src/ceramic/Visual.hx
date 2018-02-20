@@ -843,4 +843,105 @@ class Visual extends Entity {
 
     } //contains
 
+/// Size helpers
+
+    /** Compute bounds from children this visual contains.
+        This overwrites width, height, anchorX and anchorY properties accordingly.
+        Warning: this may be an expensive operation. */
+    function computeBounds():Void {
+
+        if (children == null) {
+            _width = 0;
+            _height = 0;
+        }
+        else {
+            var minX = 999999999.0;
+            var minY = 999999999.0;
+            var maxX = -999999999.9;
+            var maxY = -999999999.9;
+            var point = new Point();
+            for (child in children) {
+
+                if (child.visible) {
+
+                    // TODO move Mesh-related code in Mesh class
+                    if (Std.is(child, Mesh)) {
+                        var mesh:Mesh = cast child;
+                        var vertices = mesh.vertices;
+                        var i = 0;
+                        var len = vertices.length;
+                        var x = 0.0;
+                        var y = 0.0;
+
+                        while (i < len) {
+                            x = vertices[i];
+                            y = vertices[i + 1];
+
+                            child.visualToScreen(x, y, point);
+                            if (point.x > maxX) maxX = point.x;
+                            if (point.y > maxY) maxY = point.y;
+                            if (point.x < minX) minX = point.x;
+                            if (point.y < minY) minY = point.y;
+
+                            i += 2;
+                        }
+
+                    }
+                    else {
+                        child.visualToScreen(0, 0, point);
+                        if (point.x > maxX) maxX = point.x;
+                        if (point.y > maxY) maxY = point.y;
+                        if (point.x < minX) minX = point.x;
+                        if (point.y < minY) minY = point.y;
+
+                        child.visualToScreen(child.width, 0, point);
+                        if (point.x > maxX) maxX = point.x;
+                        if (point.y > maxY) maxY = point.y;
+                        if (point.x < minX) minX = point.x;
+                        if (point.y < minY) minY = point.y;
+
+                        child.visualToScreen(0, child.height, point);
+                        if (point.x > maxX) maxX = point.x;
+                        if (point.y > maxY) maxY = point.y;
+                        if (point.x < minX) minX = point.x;
+                        if (point.y < minY) minY = point.y;
+
+                        child.visualToScreen(child.width, child.height, point);
+                        if (point.x > maxX) maxX = point.x;
+                        if (point.y > maxY) maxY = point.y;
+                        if (point.x < minX) minX = point.x;
+                        if (point.y < minY) minY = point.y;
+                    }
+                }
+            }
+
+            // Keep absolute position to restore it after we update anchor
+            visualToScreen(0, 0, point);
+            var origX = point.x;
+            var origY = point.y;
+
+            screenToVisual(minX, minY, point);
+            minX = point.x;
+            minY = point.y;
+
+            screenToVisual(maxX, maxY, point);
+            maxX = point.x;
+            maxY = point.y;
+
+            _width = maxX - minX;
+            _height = maxY - minY;
+
+            anchorX = _width != 0 ? -minX / _width : 0;
+            anchorY = _height != 0 ? -minY / _height : 0;
+
+            // Restore position
+            screenToVisual(origX, origY, point);
+            this.x = point.x - _width * anchorX;
+            this.y = point.y - _height * anchorY;
+
+            matrixDirty = true;
+        }
+
+    } //computeIntrinsicSize
+
 } //Visual
