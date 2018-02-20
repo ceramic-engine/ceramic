@@ -203,7 +203,7 @@ class Spine extends Visual {
 
         // Restore explicit animation name
         if (!destroyed && animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
-            animate(animation, true, 0);
+            animate(animation, loop, 0);
         }
 
         return spineData;
@@ -214,8 +214,17 @@ class Spine extends Visual {
     function set_animation(animation:String):String {
         if (this.animation == animation) return animation;
         this.animation = animation;
-        if (spineData != null) animate(animation, true, 0);
+        if (spineData != null) animate(animation, loop, 0);
         return animation;
+    }
+
+    @editable
+    public var loop(default,set):Bool = true;
+    function set_loop(loop:Bool):Bool {
+        if (this.loop == loop) return loop;
+        this.loop = loop;
+        if (spineData != null && animation != null) animate(animation, loop, 0);
+        return loop;
     }
 
     /** The current pose for a skeleton. */
@@ -402,10 +411,9 @@ class Spine extends Visual {
             track = state.setAnimationByName(trackIndex, animationName, loop);
         }
 
-        // If we are paused, ensure new anim gets rendered once
-        if (paused) {
-            forceRender();
-        }
+        // Ensure animation gets rendered once to prevent 1-frame glitches
+        // TODO find a less agressive solution?
+        forceRender();
 
     } //animate
 
