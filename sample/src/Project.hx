@@ -198,7 +198,7 @@ class Project extends Entity {
 
         trace('text width=${text.width} height=${text.height}');
 
-        screen.onDown(this, function(info) {
+        screen.onPointerDown(this, function(info) {
             //Luxe.audio.suspend();
             if (settings.targetDensity == 2) {
                 settings.targetDensity = 1;
@@ -255,7 +255,7 @@ class Project extends Entity {
                 trace('NOT DRAGGING');
             }
         }
-        quad1.onDown(this, function(info) {
+        quad1.onPointerDown(this, function(info) {
             trace('quad1 DOWN ' + info.x + ',' + info.y);
             itemStartX = quad1.x;
             itemStartY = quad1.y;
@@ -266,7 +266,7 @@ class Project extends Entity {
             screen.onMouseMove(onMove);
         });
 
-        quad1.onUp(this, function(info) {
+        quad1.onPointerUp(this, function(info) {
             dragging = false;
             screen.offMouseMove(onMove);
         });
@@ -323,7 +323,7 @@ class Project extends Entity {
             var laser = assets.sound(Sounds.LASER_4);
             var music = assets.sound(Sounds.MISCHIEF_STROLL);
 
-            quad2.onDown(this, function(info) {
+            quad2.onPointerDown(this, function(info) {
                 trace('PLAY laser');
                 laser.play();
             });
