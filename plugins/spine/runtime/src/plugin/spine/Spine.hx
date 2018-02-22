@@ -396,6 +396,12 @@ class Spine extends Visual {
         if (paused) render(0, 0, false);
         return height;
     }
+    
+    override function computeBounds():Void {
+        super.computeBounds();
+        skeletonOriginX = anchorX;
+        skeletonOriginY = anchorY;
+    }
 
 /// Public API
 
