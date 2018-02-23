@@ -373,6 +373,12 @@ class Screen extends Entity implements Observable {
 
         // Update screen scaling
 
+        if (app.settings.scaling == RESIZE) {
+            // Auto-update target width and target height in this mode
+            app.settings.targetWidth = Std.int(nativeWidth);
+            app.settings.targetHeight = Std.int(nativeHeight);
+        }
+
         var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth;
         var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
 
@@ -381,6 +387,8 @@ class Screen extends Entity implements Observable {
                 Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
             case FILL:
                 Math.min(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+            case RESIZE:
+                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
         }
 
         // Init default values

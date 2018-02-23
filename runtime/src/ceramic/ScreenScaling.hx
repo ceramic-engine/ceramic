@@ -6,4 +6,6 @@ enum ScreenScaling {
 
     FILL;
 
+    RESIZE;
+
 } //ScreenScaling
