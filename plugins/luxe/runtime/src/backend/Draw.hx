@@ -222,6 +222,11 @@ class Draw #if !completion implements spec.Draw #end {
                         }
                     }
 
+                    if (isClipping && (clipW == 0 || clipH == 0)) {
+                        // Skip drawing of out of bounds clipped quad
+                        continue;
+                    }
+
                     // Get or create quad geometry
                     //
                     if (quadPoolIndex < quadPoolLength) {
