@@ -44,6 +44,15 @@ class Visual extends Entity {
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
 
+    /** Computed flag that tells whether this visual is only translated,
+        thus not rotated, skewed nor scaled.
+        When this is `true`, matrix computation may be a bit faster as it
+        will skip some unneeded matrix computation. */
+    public var translatesOnly:Bool = true;
+
+    /** Whether we should re-check if this visual is only translating or having a more complex transform */
+    public var translatesOnlyDirty:Bool = false;
+
     /** Setting this to true will force the visual to recompute its displayed content */
     public var contentDirty:Bool = true;
 
@@ -203,6 +212,7 @@ class Visual extends Entity {
         if (this.rotation == rotation) return rotation;
         this.rotation = rotation;
         matrixDirty = true;
+        translatesOnlyDirty = true;
         return rotation;
     }
 
@@ -212,6 +222,7 @@ class Visual extends Entity {
         if (this.scaleX == scaleX) return scaleX;
         this.scaleX = scaleX;
         matrixDirty = true;
+        translatesOnlyDirty = true;
         return scaleX;
     }
 
@@ -221,6 +232,7 @@ class Visual extends Entity {
         if (this.scaleY == scaleY) return scaleY;
         this.scaleY = scaleY;
         matrixDirty = true;
+        translatesOnlyDirty = true;
         return scaleY;
     }
 
@@ -230,6 +242,7 @@ class Visual extends Entity {
         if (this.skewX == skewX) return skewX;
         this.skewX = skewX;
         matrixDirty = true;
+        translatesOnlyDirty = true;
         return skewX;
     }
 
@@ -239,6 +252,7 @@ class Visual extends Entity {
         if (this.skewY == skewY) return skewY;
         this.skewY = skewY;
         matrixDirty = true;
+        translatesOnlyDirty = true;
         return skewY;
     }
 
@@ -472,26 +486,43 @@ class Visual extends Entity {
 
     } //computeMatrix
 
+    inline function computeTranslatesOnly() {
+
+        translatesOnly = (rotation == 0 && scaleX == 1 && scaleY == 1 && skewX == 0 && skewY == 0);
+
+    } //computeTranslatesOnly
+
     inline function doComputeMatrix() {
+
+        if (translatesOnlyDirty) {
+            computeTranslatesOnly();
+        }
 
         var w = width;
         var h = height;
 
         // Apply local properties (pos, scale, rotation, skew)
         //
-        _matrix.translate(-anchorX * w, -anchorY * h);
 
-        if (skewX != 0 || skewY != 0) {
-            _matrix.skew(skewX * _degToRad, skewY * _degToRad);
+        if (translatesOnly) {
+            _matrix.tx += x - anchorX * w;
+            _matrix.ty += y - anchorY * h;
         }
+        else {
+            _matrix.translate(-anchorX * w, -anchorY * h);
 
-        if (rotation != 0) _matrix.rotate(rotation * _degToRad);
-        _matrix.translate(anchorX * w, anchorY * h);
-        if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
-        _matrix.translate(
-            x - (anchorX * w * scaleX),
-            y - (anchorY * h * scaleY)
-        );
+            if (skewX != 0 || skewY != 0) {
+                _matrix.skew(skewX * _degToRad, skewY * _degToRad);
+            }
+
+            if (rotation != 0) _matrix.rotate(rotation * _degToRad);
+            _matrix.translate(anchorX * w, anchorY * h);
+            if (scaleX != 1.0 || scaleY != 1.0) _matrix.scale(scaleX, scaleY);
+            _matrix.translate(
+                x - (anchorX * w * scaleX),
+                y - (anchorY * h * scaleY)
+            );
+        }
 
         if (transform != null) {
 
@@ -516,18 +547,33 @@ class Visual extends Entity {
 
             // Concat matrix with parent's computed matrix data
             //
-            var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
-            _matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
-            _matrix.a = a1;
+            if (translatesOnly && transform == null) {
 
-            var c1 = _matrix.c * parent.a + _matrix.d * parent.c;
-            _matrix.d = _matrix.c * parent.b + _matrix.d * parent.d;
+                _matrix.a = parent.a;
+                _matrix.b = parent.b;
+                _matrix.c = parent.c;
+                _matrix.d = parent.d;
 
-            _matrix.c = c1;
+                var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
+                _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
+                _matrix.tx = tx1;
 
-            var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
-            _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
-            _matrix.tx = tx1;
+            }
+            else {
+
+                var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
+                _matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
+                _matrix.a = a1;
+
+                var c1 = _matrix.c * parent.a + _matrix.d * parent.c;
+                _matrix.d = _matrix.c * parent.b + _matrix.d * parent.d;
+
+                _matrix.c = c1;
+
+                var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
+                _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
+                _matrix.tx = tx1;
+            }
 
         } else {
 
