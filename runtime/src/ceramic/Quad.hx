@@ -9,6 +9,12 @@ class Quad extends Visual {
 
     @editable public var color:Color = Color.WHITE;
 
+    /** If set to `true`, this quad will be considered
+        transparent thus won't be draw on screen. 
+        Children still behave and get drawn as before:
+        they don't inherit this property. */
+    @editable public var transparent:Bool = false;
+
     @editable
     public var texture(default,set):Texture = null;
     inline function set_texture(texture:Texture):Texture {

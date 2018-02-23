@@ -146,6 +146,11 @@ class Draw #if !completion implements spec.Draw #end {
                 case QUAD:
                     quad = cast visual;
 
+                    if (quad.transparent) {
+                        // Skip drawing
+                        continue;
+                    }
+
                     // Get or create quad geometry
                     //
                     if (quadPoolIndex < quadPoolLength) {
