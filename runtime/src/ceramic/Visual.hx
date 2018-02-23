@@ -37,6 +37,10 @@ class Visual extends Entity {
     var _numPointerOver:Int = 0;
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
+    /** Clip the display to this visual's bounds. Will be applied to children as well.
+        Warning: this only works with non-rotated/non-skewed visuals for now. */
+    public var clipToBounds:Bool = false;
+
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
 
@@ -97,6 +101,20 @@ class Visual extends Entity {
             }
         }
         return touchableDirty;
+    }
+
+    /** Setting this to true will force the visual to compute it's clipping state in hierarchy */
+    public var clipToBoundsDirty(default,set):Bool = true;
+    inline function set_clipToBoundsDirty(clipToBoundsDirty:Bool):Bool {
+        this.clipToBoundsDirty = clipToBoundsDirty;
+        if (clipToBoundsDirty) {
+            if (children != null) {
+                for (child in children) {
+                    child.clipToBoundsDirty = true;
+                }
+            }
+        }
+        return clipToBoundsDirty;
     }
 
     /** If set, children will be sort by depth and their computed depth
@@ -312,6 +330,8 @@ class Visual extends Entity {
     public var computedRenderTarget:RenderTexture = null;
 
     public var computedTouchable:Bool = true;
+
+    public var computedClipToBounds:Bool = false;
 
 /// Properties (Children)
 
@@ -668,6 +688,25 @@ class Visual extends Entity {
         visibilityDirty = false;
 
     } //computeVisibility
+
+/// Clipping
+
+    function computeClipToBounds() {
+
+        if (parent != null && parent.clipToBoundsDirty) {
+            parent.computeClipToBounds();
+        }
+
+        computedClipToBounds = false;
+        if (parent != null) {
+            if (parent.computedClipToBounds || parent.clipToBounds) {
+                computedClipToBounds = true;
+            }
+        }
+
+        clipToBoundsDirty = false;
+
+    } //computeClipToBounds
 
 /// Touchable
 

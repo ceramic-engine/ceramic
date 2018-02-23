@@ -104,6 +104,22 @@ class Draw #if !completion implements spec.Draw #end {
         var quad:ceramic.Quad;
         var quadGeom:phoenix.geometry.QuadGeometry;
         var rect = new luxe.Rectangle();
+        var clippingVisual:ceramic.Visual;
+        var clipRect:phoenix.Rectangle;
+        var divideNativeDensity = 1.0 / ceramic.App.app.screen.nativeDensity;
+        var isClipping:Bool = false;
+        var clipX:Float = 0;
+        var clipY:Float = 0;
+        var clipW:Float = 0;
+        var clipH:Float = 0;
+        var clipX2:Float = 0;
+        var clipY2:Float = 0;
+        var clipW2:Float = 0;
+        var clipH2:Float = 0;
+        var intersectLeft:Float = 0;
+        var intersectRight:Float = 0;
+        var intersectTop:Float = 0;
+        var intersectBottom:Float = 0;
 
         var mesh:ceramic.Mesh;
         var color:ceramic.AlphaColor = 0xFFFFFFFF;
@@ -149,6 +165,61 @@ class Draw #if !completion implements spec.Draw #end {
                     if (quad.transparent) {
                         // Skip drawing
                         continue;
+                    }
+
+                    // Update geometry values
+                    //
+                    if (quad.rotateFrame == RotateFrame.ROTATE_90) {
+                        w = quad.height;
+                        h = quad.width;
+                    } else {
+                        w = quad.width;
+                        h = quad.height;
+                    }
+
+                    // Update clipping and check if this should even be drawn
+                    //
+                    isClipping = false;
+                    if (quad.computedClipToBounds) {
+                        clippingVisual = quad.parent;
+                        while (true) {
+                            if (clippingVisual == null) break;
+                            if (clippingVisual.clipToBounds) {
+                                if (!isClipping) {
+                                    // Simple clipping
+                                    isClipping = true;
+                                    clipX = clippingVisual.tx;
+                                    clipY = clippingVisual.ty;
+                                    clipW = clippingVisual.width * clippingVisual.a;
+                                    clipH = clippingVisual.height * clippingVisual.d;
+                                }
+                                else {
+                                    // Nested clipping
+                                    clipX2 = clippingVisual.tx;
+                                    clipY2 = clippingVisual.ty;
+                                    clipW2 = clippingVisual.width * clippingVisual.a;
+                                    clipH2 = clippingVisual.height * clippingVisual.d;
+                                    intersectLeft = Math.max(clipX, clipX2);
+                                    intersectRight = Math.min(clipX + clipW, clipX2 + clipW2);
+                                    intersectTop = Math.max(clipY, clipY2);
+                                    intersectBottom = Math.min(clipY + clipH, clipY2 + clipH2);
+                                    if (intersectLeft <= intersectRight || intersectTop < intersectBottom) {
+                                        clipX = intersectLeft;
+                                        clipY = intersectTop;
+                                        clipW = intersectRight - intersectLeft;
+                                        clipH = intersectBottom - intersectTop;
+                                    } else {
+                                        clipX = 0;
+                                        clipY = 0;
+                                        clipW = 0;
+                                        clipH = 0;
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (!clippingVisual.computedClipToBounds) break;
+                            clippingVisual = clippingVisual.parent;
+                        }
                     }
 
                     // Get or create quad geometry
@@ -216,16 +287,6 @@ class Draw #if !completion implements spec.Draw #end {
 
                     }
                     quadPoolIndex++;
-
-                    // Update geometry values
-                    //
-                    if (quad.rotateFrame == RotateFrame.ROTATE_90) {
-                        w = quad.height;
-                        h = quad.width;
-                    } else {
-                        w = quad.width;
-                        h = quad.height;
-                    }
                     
                     v = quadGeom.vertices;
 
@@ -315,6 +376,31 @@ class Draw #if !completion implements spec.Draw #end {
                     m.M21 = quad.b;
                     m.M22 = quad.d;
                     m.M24 = quad.ty;
+
+                    // Update geometry clipping
+                    if (isClipping) {
+                        clipRect = quadGeom.clip_rect;
+                        if (clipRect == null) {
+                            clipRect = new phoenix.Rectangle(
+                                clipX * divideNativeDensity,
+                                clipY * divideNativeDensity,
+                                clipW * divideNativeDensity,
+                                clipH * divideNativeDensity
+                            );
+                        }
+                        else {
+                            clipRect.set(
+                                clipX * divideNativeDensity,
+                                clipY * divideNativeDensity,
+                                clipW * divideNativeDensity,
+                                clipH * divideNativeDensity
+                            );
+                        }
+                        quadGeom.clip_rect = clipRect;
+                    }
+                    else {
+                        quadGeom.clip = false;
+                    }
                 
                 case MESH:
                     mesh = cast visual;

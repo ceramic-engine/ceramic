@@ -310,6 +310,11 @@ class App extends Entity {
                 }
 
                 if (visual.computedVisible) {
+
+                    if (visual.clipToBoundsDirty) {
+                        visual.computeClipToBounds();
+                    }
+
                     visual.computeContent();
                 }
             }
