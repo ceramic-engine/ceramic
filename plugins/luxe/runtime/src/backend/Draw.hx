@@ -410,6 +410,56 @@ class Draw #if !completion implements spec.Draw #end {
                 case MESH:
                     mesh = cast visual;
 
+                    // Update clipping and check if this should even be drawn
+                    //
+                    isClipping = false;
+                    if (mesh.computedClipToBounds) {
+                        clippingVisual = mesh.parent;
+                        while (true) {
+                            if (clippingVisual == null) break;
+                            if (clippingVisual.clipToBounds) {
+                                if (!isClipping) {
+                                    // Simple clipping
+                                    isClipping = true;
+                                    clipX = clippingVisual.tx;
+                                    clipY = clippingVisual.ty;
+                                    clipW = clippingVisual.width * clippingVisual.a;
+                                    clipH = clippingVisual.height * clippingVisual.d;
+                                }
+                                else {
+                                    // Nested clipping
+                                    clipX2 = clippingVisual.tx;
+                                    clipY2 = clippingVisual.ty;
+                                    clipW2 = clippingVisual.width * clippingVisual.a;
+                                    clipH2 = clippingVisual.height * clippingVisual.d;
+                                    intersectLeft = Math.max(clipX, clipX2);
+                                    intersectRight = Math.min(clipX + clipW, clipX2 + clipW2);
+                                    intersectTop = Math.max(clipY, clipY2);
+                                    intersectBottom = Math.min(clipY + clipH, clipY2 + clipH2);
+                                    if (intersectLeft <= intersectRight || intersectTop < intersectBottom) {
+                                        clipX = intersectLeft;
+                                        clipY = intersectTop;
+                                        clipW = intersectRight - intersectLeft;
+                                        clipH = intersectBottom - intersectTop;
+                                    } else {
+                                        clipX = 0;
+                                        clipY = 0;
+                                        clipW = 0;
+                                        clipH = 0;
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (!clippingVisual.computedClipToBounds) break;
+                            clippingVisual = clippingVisual.parent;
+                        }
+                    }
+
+                    if (isClipping && (clipW == 0 || clipH == 0)) {
+                        // Skip drawing of out of bounds clipped mesh
+                        continue;
+                    }
+
                     // Get or create mesh geometry
                     //
                     if (meshPoolIndex < meshPoolLength) {
@@ -586,6 +636,31 @@ class Draw #if !completion implements spec.Draw #end {
                     m.M21 = mesh.b;
                     m.M22 = mesh.d;
                     m.M24 = mesh.ty;
+
+                    // Update geometry clipping
+                    if (isClipping) {
+                        clipRect = meshGeom.clip_rect;
+                        if (clipRect == null) {
+                            clipRect = new phoenix.Rectangle(
+                                clipX * divideNativeDensity,
+                                clipY * divideNativeDensity,
+                                clipW * divideNativeDensity,
+                                clipH * divideNativeDensity
+                            );
+                        }
+                        else {
+                            clipRect.set(
+                                clipX * divideNativeDensity,
+                                clipY * divideNativeDensity,
+                                clipW * divideNativeDensity,
+                                clipH * divideNativeDensity
+                            );
+                        }
+                        meshGeom.clip_rect = clipRect;
+                    }
+                    else {
+                        meshGeom.clip = false;
+                    }
 
                 default:
             }
