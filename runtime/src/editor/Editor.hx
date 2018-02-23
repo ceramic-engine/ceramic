@@ -327,7 +327,7 @@ class Editor extends Entity {
             // Render
             render();
         });
-        screen.onDown(this, function(info) {
+        screen.onPointerDown(this, function(info) {
 
             // Render
             render();
@@ -492,7 +492,7 @@ class Editor extends Entity {
             outsideLeftClick.depth = 0;
 
             for (area in [outsideTopClick, outsideRightClick, outsideBottomClick, outsideLeftClick]) {
-                area.onDown(area, function(info) {
+                area.onPointerDown(area, function(info) {
                     if (Editable.highlight != null) {
                         Editable.highlight.destroy();
                     }
@@ -673,7 +673,7 @@ class Editor extends Entity {
                         fragment.id = value.id;
                         fragment.depthRange = 10000;
                         fragment.anchor(0.5, 0.5);
-                        fragment.onDown(fragment, function(info) {
+                        fragment.onPointerDown(fragment, function(info) {
                             if (Editable.highlight != null) {
                                 Editable.highlight.destroy();
                             }

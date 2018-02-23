@@ -171,7 +171,13 @@ class Csv {
 
     static function warning(str:String):Void {
 
+#if sys
         Sys.println(str);
+#elseif web
+        untyped console.log(str);
+#else
+        trace(str);
+#end
 
     } //warning
 

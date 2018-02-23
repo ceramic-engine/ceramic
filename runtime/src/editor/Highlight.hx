@@ -135,42 +135,42 @@ class Highlight extends Visual {
         add(anchorCrossVBar);
         add(anchorCrossHBar);
 
-        cornerTopLeft.onDown(this, function(info) {
+        cornerTopLeft.onPointerDown(this, function(info) {
             emitCornerDown(TOP_LEFT, info);
         });
-        cornerTopRight.onDown(this, function(info) {
+        cornerTopRight.onPointerDown(this, function(info) {
             emitCornerDown(TOP_RIGHT, info);
         });
-        cornerBottomLeft.onDown(this, function(info) {
+        cornerBottomLeft.onPointerDown(this, function(info) {
             emitCornerDown(BOTTOM_LEFT, info);
         });
-        cornerBottomRight.onDown(this, function(info) {
+        cornerBottomRight.onPointerDown(this, function(info) {
             emitCornerDown(BOTTOM_RIGHT, info);
         });
 
-        cornerTopLeft.onOver(this, function(info) {
+        cornerTopLeft.onPointerOver(this, function(info) {
             emitCornerOver(TOP_LEFT, info);
         });
-        cornerTopRight.onOver(this, function(info) {
+        cornerTopRight.onPointerOver(this, function(info) {
             emitCornerOver(TOP_RIGHT, info);
         });
-        cornerBottomLeft.onOver(this, function(info) {
+        cornerBottomLeft.onPointerOver(this, function(info) {
             emitCornerOver(BOTTOM_LEFT, info);
         });
-        cornerBottomRight.onOver(this, function(info) {
+        cornerBottomRight.onPointerOver(this, function(info) {
             emitCornerOver(BOTTOM_RIGHT, info);
         });
 
-        cornerTopLeft.onOut(this, function(info) {
+        cornerTopLeft.onPointerOut(this, function(info) {
             emitCornerOut(TOP_LEFT, info);
         });
-        cornerTopRight.onOut(this, function(info) {
+        cornerTopRight.onPointerOut(this, function(info) {
             emitCornerOut(TOP_RIGHT, info);
         });
-        cornerBottomLeft.onOut(this, function(info) {
+        cornerBottomLeft.onPointerOut(this, function(info) {
             emitCornerOut(BOTTOM_LEFT, info);
         });
-        cornerBottomRight.onOut(this, function(info) {
+        cornerBottomRight.onPointerOut(this, function(info) {
             emitCornerOut(BOTTOM_RIGHT, info);
         });
 

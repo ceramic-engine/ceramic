@@ -13,7 +13,10 @@ import ceramic.Transform;
 import ceramic.Color;
 import ceramic.AlphaColor;
 import ceramic.Blending;
+import ceramic.Collection;
+import ceramic.CollectionEntry;
 import ceramic.Collections;
+import ceramic.Shortcuts.*;
 
 using plugin.SpinePlugin;
 using ceramic.Extensions;
@@ -288,12 +291,12 @@ class Spine extends Visual {
             // Do nothing if this is not the object being edited
             if (!edited) return;
 
-            onDown(this, function(info) {
+            onPointerDown(this, function(info) {
 
                 app.onUpdate(this, render);
                 paused = false;
 
-                screen.onceUp(this, function(info) {
+                screen.oncePointerUp(this, function(info) {
                     app.offUpdate(render);
                     paused = true;
                 });

@@ -36,7 +36,7 @@ class Editable extends Component {
 
     function init() {
 
-        entity.onDown(this, handleDown);
+        entity.onPointerDown(this, handleDown);
 
     } //init
 
@@ -129,7 +129,7 @@ class Editable extends Component {
         var dragStartX = point.x;
         var dragStartY = point.y;
 
-        function onMove(info:TouchInfo) {
+        function onPointerMove(info:TouchInfo) {
             editor.render();
 
             fragment.screenToVisual(screen.pointerX, screen.pointerY, point);
@@ -137,12 +137,12 @@ class Editable extends Component {
             entity.y = entityStartY + point.y - dragStartY;
 
         }
-        screen.onMove(this, onMove);
+        screen.onPointerMove(this, onPointerMove);
 
-        screen.onceUp(this, function(info) {
+        screen.oncePointerUp(this, function(info) {
             editor.render();
 
-            screen.offMove(onMove);
+            screen.offPointerMove(onPointerMove);
 
             entity.x = Math.round(entity.x);
             entity.y = Math.round(entity.y); 
@@ -235,7 +235,7 @@ class Editable extends Component {
             return Math.sqrt(a * a + b * b);
         }
 
-        function onMove(info:TouchInfo) {
+        function onPointerMove(info:TouchInfo) {
             editor.render();
             
             if (editor.xKeyPressed) {
@@ -593,12 +593,12 @@ class Editable extends Component {
             }
             
         }
-        screen.onMove(this, onMove);
+        screen.onPointerMove(this, onPointerMove);
 
-        screen.onceUp(this, function(info) {
+        screen.oncePointerUp(this, function(info) {
             editor.render();
 
-            screen.offMove(onMove);
+            screen.offPointerMove(onPointerMove);
 
             entity.anchorKeepPosition(anchorX, anchorY);
             entity.x = Math.round(entity.x);
