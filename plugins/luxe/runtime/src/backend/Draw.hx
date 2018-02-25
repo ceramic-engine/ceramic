@@ -6,7 +6,55 @@ import backend.Images.BatchedRenderTexture;
 using ceramic.Extensions;
 
 @:allow(backend.Backend)
-class Draw #if !completion implements spec.Draw #end {
+class Draw #if (!completion && !ceramic_batch_buffers) implements spec.Draw #end {
+
+#if ceramic_batch_buffers
+
+/// Internal
+
+    #if !debug inline #end function begin():Void {
+
+        //
+
+    } //begin
+
+    #if !debug inline #end function end():Void {
+
+        //
+
+    } //begin
+
+/// Public API
+
+    public function new() {}
+
+    inline public function getItem(visual:ceramic.Visual):VisualItem {
+
+        // The backend decides how each visual should be drawn.
+        // Instead of checking instance type at each draw iteration,
+        // The backend provides/computes a VisualItem object when
+        // a visual is instanciated that it can later re-use
+        // at each draw iteration to read/store per visual data.
+
+        if (Std.is(visual, ceramic.Quad)) {
+            return QUAD;
+        }
+        else if (Std.is(visual, ceramic.Mesh)) {
+            return MESH;
+        }
+        else {
+            return NONE;
+        }
+
+    } //getItem
+
+    public function draw(visuals:Array<ceramic.Visual>):Void {
+
+        // TODO
+
+    } //draw
+
+#else
 
 /// Internal
 
@@ -35,7 +83,6 @@ class Draw #if !completion implements spec.Draw #end {
         meshPoolIndex = 0;
 
         vertexPoolIndex = 0;
-
 
     } //begin
 
@@ -668,5 +715,7 @@ class Draw #if !completion implements spec.Draw #end {
         }
 
     }
+
+#end
 
 } //Draw
