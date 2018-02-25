@@ -1,5 +1,11 @@
 package backend;
 
+#if ceramic_batch_buffers
+
+import backend.impl.CeramicBatcher;
+
+#end
+
 import ceramic.RotateFrame;
 import backend.Images.BatchedRenderTexture;
 
@@ -422,12 +428,12 @@ class Draw #if (!completion && !ceramic_batch_buffers) implements spec.Draw #end
                     quadGeom.transform.manual_update = true;
                     m = quadGeom.transform.world.matrix;
 
-                    m.M11 = quad.a;
-                    m.M12 = quad.c;
-                    m.M14 = quad.tx;
-                    m.M21 = quad.b;
-                    m.M22 = quad.d;
-                    m.M24 = quad.ty;
+                    m.M11 = quad.a; //el[0]
+                    m.M12 = quad.c; //el[4]
+                    m.M14 = quad.tx; //el[12]
+                    m.M21 = quad.b; //el[1]
+                    m.M22 = quad.d; //el[5]
+                    m.M24 = quad.ty; //el[13]
 
                     // Update geometry clipping
                     if (isClipping) {
