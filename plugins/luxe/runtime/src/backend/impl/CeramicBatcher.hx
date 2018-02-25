@@ -224,7 +224,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     matC = quad.c;
                     matD = quad.d;
                     matTX = quad.tx;
-                    matTY = quat.ty;
+                    matTY = quad.ty;
 
                     //tl
                     pos_list[pos_floats] = matTX;
@@ -262,7 +262,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     if (lastTexture != null) {
                         // UV
                         //
-                        if (quad.rotateFrame == RotateFrame.ROTATE_90) {
+                        if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
                             uvX = (quad.frameX * quad.texture.density) / texWidthActual;
                             uvY = (quad.frameY * quad.texture.density) / texHeightActual;
                             uvW = (quad.frameHeight * quad.texture.density) / texWidthActual;
