@@ -30,7 +30,7 @@ if [ -d app/src/main/assets/assets ]; then rm -Rf app/src/main/assets/assets; fi
 if [ -d ../../out/luxe/android/android.project/app/src/main/assets/assets ]; then rm -Rf ../../out/luxe/android/android.project/app/src/main/assets/assets; fi
 
 # Build
-ceramic luxe build android "$CERAMIC_DEBUG_FLAG" --cwd ../.. --archs "${ARCHS// /,}" --no-colors
+ceramic luxe build android "$CERAMIC_DEBUG_FLAG" --cwd ../.. --archs "${ARCHS// /,}" --no-colors --setup
 
 # Copy binaries
 src_jni="../../out/luxe/android/android.project/app/src/main/jniLibs"
