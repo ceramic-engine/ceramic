@@ -1,5 +1,6 @@
 #!/bin/bash
 cd "${0%/*}"
+set -e
 
 echo "configuration="$CONFIGURATION" archs="${ARCHS// /,}
 
