@@ -85,6 +85,16 @@ class Quad extends Visual {
         return frameHeight;
     }
 
+/// Lifecycle
+
+    public function new() {
+
+        super();
+
+        quad = this;
+
+    } //new
+
 /// Helpers
 
     inline public function frame(frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float):Void {

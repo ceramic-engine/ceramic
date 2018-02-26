@@ -9,6 +9,13 @@ using StringTools;
 /** A texture is an image ready to be drawn. */
 class Texture extends Entity {
 
+/// Internal
+
+    static var _nextIndex:Int = 1;
+
+    @:noCompletion
+    public var index:Int = _nextIndex++;
+
 /// Properties
 
     public var width(default,null):Float;

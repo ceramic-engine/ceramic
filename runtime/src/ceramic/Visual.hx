@@ -17,6 +17,14 @@ class Visual extends Entity {
     @event function focus();
     @event function blur();
 
+/// Access as specific types
+
+    /** Get this visual typed as `Quad` or null if it isn't a `Quad` */
+    public var quad:Quad = null;
+
+    /** Get this visual typed as `Mesh` or null if it isn't a `Mesh` */
+    public var mesh:Mesh = null;
+
 /// Properties
 
     /** When enabled, this visual will receive as many up/down/click/over/out events as
@@ -947,9 +955,11 @@ class Visual extends Entity {
 
                 if (child.visible) {
 
-                    // TODO move Mesh-related code in Mesh class
-                    if (Std.is(child, Mesh)) {
-                        var mesh:Mesh = cast child;
+                    // Mesh is a specific case.
+                    // For now we handle it in Visual class directly.
+                    // We might move this into Mesh class later.
+                    if (child.mesh != null) {
+                        var mesh:Mesh = child.mesh;
                         var vertices = mesh.vertices;
                         var i = 0;
                         var len = vertices.length;

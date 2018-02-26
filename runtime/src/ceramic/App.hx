@@ -383,8 +383,21 @@ class App extends Entity {
         // Sort visuals by (computed) depth
         haxe.ds.ArraySort.sort(visuals, function(a:Visual, b:Visual):Int {
 
-            if (a.computedDepth < b.computedDepth) return -1;
             if (a.computedDepth > b.computedDepth) return 1;
+            if (a.computedDepth < b.computedDepth) return -1;
+            // TODO handle meshes
+            var aQuad:Quad = a.quad;
+            var bQuad:Quad = b.quad;
+            if (aQuad != null && bQuad == null) return 1;
+            if (aQuad == null && bQuad != null) return -1;
+            if (aQuad != null && bQuad != null) {
+                if (aQuad.texture != null && bQuad.texture == null) return 1;
+                if (aQuad.texture == null && bQuad.texture != null) return -1;
+                if (aQuad.texture != null && bQuad.texture != null) {
+                    if (aQuad.texture.index > bQuad.texture.index) return 1;
+                    if (aQuad.texture.index < bQuad.texture.index) return -1;
+                }
+            }
             return 0;
 
         });

@@ -8,9 +8,17 @@ import snow.api.buffers.Float32Array;
 /** A custom luxe/phoenix batcher for ceramic. */
 class CeramicBatcher extends phoenix.Batcher {
 
+    public static inline var vert_attribute   : Int = 0;
+    public static inline var tcoord_attribute : Int = 1;
+    public static inline var color_attribute  : Int = 2;
+
     public var ceramicVisuals:Array<ceramic.Visual> = null;
 
+    var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+
     override function batch(persist_immediate:Bool = false) {
+
+        //trace('CeramicBatcher.batch() ' + ceramic.Timer.now + ' visuals=' + (ceramicVisuals != null ? ceramicVisuals.length : 0));
 
         // Reset render stats before we start
         dynamic_batched_count = 0;
@@ -78,6 +86,7 @@ class CeramicBatcher extends phoenix.Batcher {
         // Initialize default state
         Luxe.renderer.state.bindTexture2D(null);
         renderer.state.enable(GL.BLEND);
+        apply_default_uniforms(defaultPlainShader);
         defaultPlainShader.activate();
         GL.blendFuncSeparate(
             //src_rgb
@@ -94,7 +103,7 @@ class CeramicBatcher extends phoenix.Batcher {
         if (ceramicVisuals != null) {
             for (visual in ceramicVisuals) {
 
-                quad = (visual.backendItem == QUAD) ? cast(visual, ceramic.Quad) : null;
+                quad = visual.quad;
 
                 // If it's valid to be drawn
                 if (visual.visible && quad != null) {
@@ -134,12 +143,22 @@ class CeramicBatcher extends phoenix.Batcher {
                                 }
                             } else {
                                 if (quad.texture != null) {
+                                    if (lastShader == null && quad.shader == null) {
+                                        // Default textured shader fallback
+                                        apply_default_uniforms(defaultTexturedShader);
+                                        defaultTexturedShader.activate();
+                                    }
                                     lastTexture = quad.texture;
                                     lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
                                     texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
                                     texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
                                     (lastTexture.backendItem : phoenix.Texture).bind();
                                 } else {
+                                    if (lastShader == null && quad.shader == null) {
+                                        // Default plain shader fallback
+                                        apply_default_uniforms(defaultPlainShader);
+                                        defaultPlainShader.activate();
+                                    }
                                     lastTexture = null;
                                     lastTextureId = null;
                                     Luxe.renderer.state.bindTexture2D(null);
@@ -152,15 +171,18 @@ class CeramicBatcher extends phoenix.Batcher {
                             lastShader = quad.shader;
 
                             if (lastShader != null) {
-                                // Default
+                                // Custom shader
+                                apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
                                 (lastShader.backendItem : phoenix.Shader).activate();
                             }
                             else if (lastTexture != null) {
                                 // Default textured shader fallback
+                                apply_default_uniforms(defaultTexturedShader);
                                 defaultTexturedShader.activate();
                             }
                             else {
                                 // Default plain shader fallback
+                                apply_default_uniforms(defaultPlainShader);
                                 defaultPlainShader.activate();
                             }
                         }
@@ -192,6 +214,8 @@ class CeramicBatcher extends phoenix.Batcher {
                                 );
                             }
                         }
+
+                        stateDirty = false;
                     }
 
                     visible_count++;
@@ -232,18 +256,18 @@ class CeramicBatcher extends phoenix.Batcher {
                     pos_list[pos_floats+2] = z;
                     pos_list[pos_floats+3] = 0;
                     //tr
-                    pos_list[pos_floats+4] = matA * w;
-                    pos_list[pos_floats+5] = matB * w;
+                    pos_list[pos_floats+4] = matTX + matA * w;
+                    pos_list[pos_floats+5] = matTY + matB * w;
                     pos_list[pos_floats+6] = z;
                     pos_list[pos_floats+7] = 0;
                     //br
-                    pos_list[pos_floats+8] = matA * w + matC * h;
-                    pos_list[pos_floats+9] = matB * w + matD * h;
+                    pos_list[pos_floats+8] = matTX + matA * w + matC * h;
+                    pos_list[pos_floats+9] = matTY + matB * w + matD * h;
                     pos_list[pos_floats+10] = z;
                     pos_list[pos_floats+11] = 0;
                     //bl
-                    pos_list[pos_floats+12] = matC * h;
-                    pos_list[pos_floats+13] = matD * h;
+                    pos_list[pos_floats+12] = matTX + matC * h;
+                    pos_list[pos_floats+13] = matTY + matD * h;
                     pos_list[pos_floats+14] = z;
                     pos_list[pos_floats+15] = 0;
                     //tl2
@@ -329,7 +353,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Increase counts
-                    z++;
+                    z += 0.001;
                     dynamic_batched_count++;
                     vert_count += visualNumVertices;
 
@@ -338,7 +362,7 @@ class CeramicBatcher extends phoenix.Batcher {
         } //visual list
 
         // If there is anything left in the vertex buffer, submit it.
-        if (pos_floats > 0) {
+        if (pos_floats != 0) {
             flush();
         }
 
@@ -363,9 +387,59 @@ class CeramicBatcher extends phoenix.Batcher {
 
     } //batch
 
-    inline function flush():Void {
+    inline function flush():Bool {
 
-        // TODO
+        if (pos_floats == 0) {
+            return false;
+        }
+
+        if (pos_floats > max_floats) {
+            throw "Too many floats are being submitted (max:$max_floats, attempt:$pos_floats).";
+        }
+
+        // fromBuffer takes byte length, so floats * 4
+        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats*4);
+        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats*4);
+        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats*4);
+
+        // -- Begin submit
+
+        var pb = GL.createBuffer();
+        var cb = GL.createBuffer();
+        var tb = GL.createBuffer();
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, pb);
+        GL.vertexAttribPointer(vert_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, tb);
+        GL.vertexAttribPointer( tcoord_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _tcoords, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, cb);
+        GL.vertexAttribPointer( color_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
+
+        // Draw
+        GL.drawArrays(primitiveType, 0, Std.int(_pos.length/4));
+
+        GL.deleteBuffer(pb);
+        GL.deleteBuffer(cb);
+        GL.deleteBuffer(tb);
+
+        draw_calls++;
+
+        // -- End submit
+
+        _pos = null;
+        _tcoords = null;
+        _colors = null;
+
+        pos_floats = 0;
+        tcoord_floats = 0;
+        color_floats = 0;
+
+        return true;
 
     } //flush
 

@@ -7,6 +7,16 @@ class Mesh extends Visual {
 
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
+/// Lifecycle
+
+    public function new() {
+
+        super();
+
+        mesh = this;
+
+    } //new
+
 /// Color
 
     /** Can be used instead of colors array when the mesh is only composed of a single color. */

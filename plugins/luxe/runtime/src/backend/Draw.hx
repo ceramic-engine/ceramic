@@ -16,11 +16,21 @@ class Draw #if (!completion && !ceramic_batch_buffers) implements spec.Draw #end
 
 #if ceramic_batch_buffers
 
+    var batcher:CeramicBatcher = null;
+
 /// Internal
 
     #if !debug inline #end function begin():Void {
 
-        //
+        // Init batcher if needed
+        if (batcher == null) {
+
+            batcher = new CeramicBatcher(Luxe.renderer, 'ceramic_batcher', 16384);
+            batcher.layer = 2;
+
+            Luxe.renderer.add_batch(batcher);
+
+        }
 
     } //begin
 
@@ -56,7 +66,7 @@ class Draw #if (!completion && !ceramic_batch_buffers) implements spec.Draw #end
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
-        // TODO
+        batcher.ceramicVisuals = visuals;
 
     } //draw
 
