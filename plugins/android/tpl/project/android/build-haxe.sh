@@ -1,5 +1,6 @@
 #!/bin/bash
 cd "${0%/*}"
+set -e
 
 CERAMIC_DEBUG_FLAG=""
 
