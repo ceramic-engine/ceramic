@@ -30,7 +30,14 @@ class Main extends luxe.Game {
 
     public static var project:Project = null;
 
+#if web
+
     static var electronRunner:Dynamic = null;
+    static var lastResizeTime:Float = -1;
+    static var lastNewWidth:Int = -1;
+    static var lastNewHeight:Int = -1;
+
+#end
 
     static var lastDevicePixelRatio:Float = -1;
     static var lastWidth:Float = -1;
@@ -80,6 +87,8 @@ class Main extends luxe.Game {
 
             var containerWidth:Int = 0;
             var containerHeight:Int = 0;
+            var prevAutoRenderFlag = true;
+            var resizing = 0;
             
             app.onUpdate(null, function(delta) {
                 var containerEl = document.getElementById(containerElId);
@@ -87,9 +96,21 @@ class Main extends luxe.Game {
                     var width:Int = containerEl.offsetWidth;
                     var height:Int = containerEl.offsetHeight;
 
+                    if (lastResizeTime != -1) {
+                        if (width != lastNewWidth || height != lastNewHeight) {
+                            lastResizeTime = ceramic.Timer.now;
+                            lastNewWidth = width;
+                            lastNewHeight = height;
+                            return;
+                        }
+                    }
+
+                    if (lastResizeTime != -1 && ceramic.Timer.now - lastResizeTime < 0.1) return;
+
                     if (width != containerWidth || height != containerHeight) {
                         containerWidth = width;
                         containerHeight = height;
+                        lastResizeTime = ceramic.Timer.now;
 
                         var appEl:js.html.CanvasElement = cast document.getElementById('app');
                         appEl.style.margin = '0 0 0 0';
@@ -97,6 +118,19 @@ class Main extends luxe.Game {
                         appEl.style.height = containerHeight + 'px';
                         appEl.width = Math.round(containerWidth * window.devicePixelRatio);
                         appEl.height = Math.round(containerHeight * window.devicePixelRatio);
+
+                        // Prevent some weird flash
+                        if (resizing > 0) {
+                            prevAutoRenderFlag = Luxe.core.auto_render;
+                        }
+                        Luxe.core.auto_render = false;
+                        resizing++;
+                        ceramic.App.app.onceUpdate(null, function(_) {
+                            resizing--;
+                            if (resizing == 0) {
+                                Luxe.core.auto_render = prevAutoRenderFlag;
+                            }
+                        });
                     }
                 }
             });
