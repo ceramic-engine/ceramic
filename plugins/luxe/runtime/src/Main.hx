@@ -8,7 +8,7 @@ import js.Browser.document;
 
 #end
 
-#if completionnnn
+#if completion
 
 class Main {
 
@@ -87,7 +87,6 @@ class Main extends luxe.Game {
 
             var containerWidth:Int = 0;
             var containerHeight:Int = 0;
-            var prevAutoRenderFlag = true;
             var resizing = 0;
             
             app.onUpdate(null, function(delta) {
@@ -95,9 +94,11 @@ class Main extends luxe.Game {
                 if (containerEl != null) {
                     var width:Int = containerEl.offsetWidth;
                     var height:Int = containerEl.offsetHeight;
+                    var appEl:js.html.CanvasElement = cast document.getElementById('app');
 
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
+                            appEl.style.visibility = 'hidden';
                             lastResizeTime = ceramic.Timer.now;
                             lastNewWidth = width;
                             lastNewHeight = height;
@@ -110,7 +111,6 @@ class Main extends luxe.Game {
                     if (width != containerWidth || height != containerHeight) {
                         containerWidth = width;
                         containerHeight = height;
-                        lastResizeTime = ceramic.Timer.now;
 
                         var appEl:js.html.CanvasElement = cast document.getElementById('app');
                         appEl.style.margin = '0 0 0 0';
@@ -119,18 +119,20 @@ class Main extends luxe.Game {
                         appEl.width = Math.round(containerWidth * window.devicePixelRatio);
                         appEl.height = Math.round(containerHeight * window.devicePixelRatio);
 
-                        // Prevent some weird flash
-                        if (resizing > 0) {
-                            prevAutoRenderFlag = Luxe.core.auto_render;
-                        }
-                        Luxe.core.auto_render = false;
+                        // Hide weird intermediate state behind a black overlay.
+                        // That's not the best option but let's get away with this for now.
                         resizing++;
-                        ceramic.App.app.onceUpdate(null, function(_) {
+                        if (lastResizeTime != -1) {
+                            appEl.style.visibility = 'hidden';
+                        }
+                        ceramic.Timer.delay(0.1, function() {
                             resizing--;
                             if (resizing == 0) {
-                                Luxe.core.auto_render = prevAutoRenderFlag;
+                                appEl.style.visibility = 'visible';
                             }
                         });
+
+                        lastResizeTime = ceramic.Timer.now;
                     }
                 }
             });
