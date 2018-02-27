@@ -1,0 +1,30 @@
+{
+    "displayName": "▶︎ Electron",
+    "description": "npm start",
+    "command": "npm",
+    "args": [
+        "start"
+    ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+    },
+    "problemMatcher": {
+        "base": "$tslint5",
+        "fileLocation": "relative"
+    },
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "start",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "version": "2.0.0",
+    "chooserIndex": 0
+}

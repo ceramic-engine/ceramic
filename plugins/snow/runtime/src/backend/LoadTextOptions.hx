@@ -1,4 +1,0 @@
-package backend;
-
-typedef LoadTextOptions = {
-}

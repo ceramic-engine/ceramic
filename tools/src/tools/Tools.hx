@@ -43,6 +43,7 @@ class Tools {
             defines: new Map(),
             ceramicToolsPath: ceramicPath,
             ceramicRuntimePath: Path.normalize(Path.join([ceramicPath, '../runtime'])),
+            ceramicRunnerPath: Path.normalize(Path.join([ceramicPath, '../runner'])),
             defaultPluginsPath: Path.normalize(Path.join([ceramicPath, '../plugins'])),
             homeDir: '' + js.Node.require('os').homedir(),
             isLocalDotCeramic: false,

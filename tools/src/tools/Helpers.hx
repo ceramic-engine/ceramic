@@ -404,8 +404,8 @@ class Helpers {
     } //getTargetName
 
     static var RE_STACK_FILE_LINE = ~/Called\s+from\s+([a-zA-Z0-9_:\.]+)\s+(.+?\.hx)\s+line\s+([0-9]+)$/;
-    static var RE_TRACE_FILE_LINE = ~/(.+?\.hx):([0-9]+):\s+/;
-    static var RE_HAXE_ERROR = ~/^(.+):(\d+): (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
+    static var RE_TRACE_FILE_LINE = ~/(.+?\.hx)::?([0-9]+):?\s+/;
+    static var RE_HAXE_ERROR = ~/^(.+)::?(\d+):? (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
 
     public static function formatLineOutput(cwd:String, input:String):String {
 

@@ -12,9 +12,10 @@ class Project extends Entity {
 
         settings.antialiasing = true;
         settings.background = Color.GRAY;
-        settings.targetWidth = 640;
-        settings.targetHeight = 480;
+        settings.targetWidth = 320;
+        settings.targetHeight = 568;
         settings.scaling = FILL;
+        settings.resizable = true;
 
         app.onceReady(ready);
 

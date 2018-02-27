@@ -1,0 +1,761 @@
+{
+    "selectDescription": "Select build config",
+    "items": [
+        {
+            "displayName": "▶︎ luxe / Run Mac",
+            "description": "ceramic luxe run mac --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "mac",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "mac",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run Mac (debug)",
+            "description": "ceramic luxe run mac --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "mac",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "mac",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Mac",
+            "description": "ceramic luxe build mac --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "mac",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "mac",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Mac (debug)",
+            "description": "ceramic luxe build mac --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "mac",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "mac",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run Web",
+            "description": "ceramic luxe run web --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run Web (debug)",
+            "description": "ceramic luxe run web --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Web",
+            "description": "ceramic luxe build web --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Web (debug)",
+            "description": "ceramic luxe build web --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Web (editor)",
+            "description": "ceramic luxe build web --setup --assets --debug --variant editor",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "web",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug",
+                        "--variant",
+                        "editor"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "web",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug",
+                    "--variant",
+                    "editor"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run iOS",
+            "description": "ceramic luxe run ios --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "ios",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "ios",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run iOS (debug)",
+            "description": "ceramic luxe run ios --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "ios",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "ios",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build iOS",
+            "description": "ceramic luxe build ios --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "ios",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "ios",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build iOS (debug)",
+            "description": "ceramic luxe build ios --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "ios",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "ios",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run Android",
+            "description": "ceramic luxe run android --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "android",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "android",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Run Android (debug)",
+            "description": "ceramic luxe run android --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "run",
+                        "android",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "android",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Android",
+            "description": "ceramic luxe build android --setup --assets",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "android",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "android",
+                    "--setup",
+                    "--output",
+                    "completion.hxml"
+                ]
+            }
+        },
+        {
+            "displayName": "▶︎ luxe / Build Android (debug)",
+            "description": "ceramic luxe build android --setup --assets --debug",
+            "tasks": [
+                {
+                    "type": "shell",
+                    "label": "build",
+                    "command": "ceramic",
+                    "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared"
+                    },
+                    "args": [
+                        "luxe",
+                        "build",
+                        "android",
+                        "--setup",
+                        "--assets",
+                        "--vscode-editor",
+                        "--hxml-output",
+                        "completion.hxml",
+                        "--debug"
+                    ],
+                    "group": {
+                        "kind": "build",
+                        "isDefault": true
+                    },
+                    "problemMatcher": "$haxe"
+                }
+            ],
+            "onSelect": {
+                "command": "ceramic",
+                "args": [
+                    "luxe",
+                    "hxml",
+                    "android",
+                    "--setup",
+                    "--output",
+                    "completion.hxml",
+                    "--debug"
+                ]
+            }
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0"
+    }
+}

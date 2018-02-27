@@ -81,7 +81,7 @@ class Build extends tools.Task {
 
         // iOS/Android case
         var cmdAction = action;
-        if ((action == 'run' || action == 'build') && (target.name == 'ios' || target.name == 'android')) {
+        if ((action == 'run' || action == 'build') && (target.name == 'ios' || target.name == 'android' || target.name == 'web')) {
             if (archs == null || archs.trim() == '') {
                 cmdAction = 'compile';
             } else {
@@ -89,7 +89,7 @@ class Build extends tools.Task {
             }
         }
         
-        if (action == 'run' && (target.name == 'ios' || target.name == 'android')) {
+        if (action == 'run' && (target.name == 'ios' || target.name == 'android' || target.name == 'web')) {
             runHooks(cwd, args, project.app.hooks, 'begin run');
         }
         
@@ -182,6 +182,21 @@ class Build extends tools.Task {
             }
             else {
                 var taskArgs = ['android', 'studio', '--run', '--variant', context.variant];
+                if (debug) taskArgs.push('--debug');
+                task.run(cwd, taskArgs);
+            }
+        
+            runHooks(cwd, args, project.app.hooks, 'end run');
+        }
+        else if (action == 'run' && target.name == 'web') {
+            // Needs Web plugin
+            var task = context.tasks.get('web project');
+            if (task == null) {
+                warning('Cannot run Web project because `ceramic web project` command doesn\'t exist.');
+                warning('Did you enable ceramic\'s web plugin?');
+            }
+            else {
+                var taskArgs = ['web', 'project', '--run', '--variant', context.variant];
                 if (debug) taskArgs.push('--debug');
                 task.run(cwd, taskArgs);
             }

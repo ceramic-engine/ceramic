@@ -44,3 +44,4 @@ yarn-error.log*
 /plugins/spine/.vscode/tasks.json
 /editor/vendor/ceramic-plugins
 /editor/vendor/ceramic-runtime
+/runner/node_modules

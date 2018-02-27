@@ -1,6 +1,14 @@
 package;
 
-#if completion
+#if web
+
+import js.Browser.navigator;
+import js.Browser.window;
+import js.Browser.document;
+
+#end
+
+#if completionnnn
 
 class Main {
 
@@ -21,6 +29,8 @@ import luxe.Input;
 class Main extends luxe.Game {
 
     public static var project:Project = null;
+
+    static var electronRunner:Dynamic = null;
 
     static var lastDevicePixelRatio:Float = -1;
     static var lastWidth:Float = -1;
@@ -55,11 +65,66 @@ class Main extends luxe.Game {
 #if web
         if (app.settings.backend.webParent != null) {
             config.runtime.window_parent = app.settings.backend.webParent;
+        } else {
+            config.runtime.window_parent = document.getElementById('ceramic-app');
         }
         config.runtime.browser_window_mousemove = true;
         config.runtime.browser_window_mouseup = true;
         if (app.settings.backend.allowDefaultKeys) {
             config.runtime.prevent_default_keys = [];
+        }
+
+#if !editor
+        var containerElId:String = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
+        if (app.settings.resizable) {
+
+            var containerWidth:Int = 0;
+            var containerHeight:Int = 0;
+            
+            app.onUpdate(null, function(delta) {
+                var containerEl = document.getElementById(containerElId);
+                if (containerEl != null) {
+                    var width:Int = containerEl.offsetWidth;
+                    var height:Int = containerEl.offsetHeight;
+
+                    if (width != containerWidth || height != containerHeight) {
+                        containerWidth = width;
+                        containerHeight = height;
+
+                        var appEl:js.html.CanvasElement = cast document.getElementById('app');
+                        appEl.style.margin = '0 0 0 0';
+                        appEl.style.width = containerWidth + 'px';
+                        appEl.style.height = containerHeight + 'px';
+                        appEl.width = Math.round(containerWidth * window.devicePixelRatio);
+                        appEl.height = Math.round(containerHeight * window.devicePixelRatio);
+                    }
+                }
+            });
+
+        }
+#end
+
+        var userAgent = navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf(' electron/') > -1) {
+            try {
+                var electronApp:Dynamic = untyped __js__("require('electron').remote.require('./app.js');");
+                if (electronApp.isCeramicRunner) {
+                    electronRunner = electronApp;
+                }
+            } catch (e:Dynamic) {}
+        }
+        if (electronRunner != null) {
+
+            // Configure electron window
+            electronRunner.ceramicSettings({
+                title: app.settings.title,
+                resizable: app.settings.resizable,
+                targetWidth: app.settings.targetWidth,
+                targetHeight: app.settings.targetHeight
+            });
+
+            // Override console.log
+            untyped console.log = electronRunner.consoleLog;
         }
 #end
 
@@ -83,6 +148,12 @@ class Main extends luxe.Game {
 
         // Emit ready event
         ceramic.App.app.backend.emitReady();
+
+#if web
+        if (electronRunner != null) {
+            electronRunner.ceramicReady();
+        }
+#end
 
     } //ready
 

@@ -18,6 +18,9 @@ typedef Context = {
     /** Ceramic runtime absolute path. */
     var ceramicRuntimePath:String;
 
+    /** Ceramic runner absolute path. */
+    var ceramicRunnerPath:String;
+
     /** Current user's home directory */
     var homeDir:String;
 

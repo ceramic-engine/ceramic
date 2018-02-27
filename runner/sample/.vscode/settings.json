@@ -1,9 +1,10 @@
 {
+    "window.title": "${activeEditorShort} — sample",
     "haxe.displayConfigurations": [
         [
             "completion.hxml",
             "-D",
-            "seed=1519136943774"
+            "seed=1519750861710"
         ]
     ],
     "search.exclude": {

@@ -5,11 +5,11 @@ import ceramic.ScrollerStatus;
 import ceramic.Shortcuts.*;
 
 @:keep
-class Scroller extends Quad {
+class Scroller extends Visual {
 
 /// Public properties
 
-    public var content(default,null):Quad = new Quad();
+    public var content(default,null):Visual = null;
 
     public var direction = VERTICAL;
 
@@ -45,10 +45,14 @@ class Scroller extends Quad {
 
 /// Lifecycle
 
-    public function new() {
+    public function new(?content:Visual) {
 
         super();
 
+        if (content == null) {
+            content = new Visual();
+        }
+        this.content = content;
         content.anchor(0, 0);
         content.pos(0, 0);
         content.transform = scrollTransform;

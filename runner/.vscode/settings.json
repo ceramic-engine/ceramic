@@ -1,0 +1,11 @@
+{
+    "window.title": "${activeEditorShort} — Ceramic Runner",
+    "git.ignoreLimitWarning": true,
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "/out": true,
+        "/build": true
+    }
+}
