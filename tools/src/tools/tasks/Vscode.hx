@@ -124,6 +124,27 @@ class Vscode extends tools.Task {
             File.saveContent(Path.join([vscodeDir, 'settings.json']), Json.stringify(vscodeSettings, null, '    '));
         }
 
+        // Save launch.json (for debugging)
+        var vscodeLaunch = {
+            "version": "0.2.0",
+            "configurations": [
+                {
+                    "name": "Debug Web",
+                    "type": "chrome",
+                    "request": "attach",
+                    "port": 9223,
+                    "webRoot": "${workspaceFolder}/project/web",
+                    "sourceMaps": true,
+                    "disableNetworkCache": true,
+                    "smartStep": true
+                }
+            ]
+        };
+        
+        if (!settingsOnly) {
+            File.saveContent(Path.join([vscodeDir, 'launch.json']), Json.stringify(vscodeLaunch, null, '    '));
+        }
+
     } //run
 
 } //Vscode

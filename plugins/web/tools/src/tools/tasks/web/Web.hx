@@ -60,9 +60,17 @@ class Web extends tools.Task {
 
         Sync.run(function(done) {
 
+            var cmdArgs = ['--app-files', webAppFilesPath];
+
+            if (context.debug) {
+                cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
+            }
+
+            cmdArgs = ['.'].concat(cmdArgs);
+
             var proc = ChildProcess.spawn(
                 'node_modules/.bin/electron',
-                ['.', '--app-files', webAppFilesPath],
+                cmdArgs,
                 { cwd: context.ceramicRunnerPath }
             );
 
