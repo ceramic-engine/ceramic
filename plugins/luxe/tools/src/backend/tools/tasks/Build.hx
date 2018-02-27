@@ -103,6 +103,7 @@ class Build extends tools.Task {
         }
 
         var status = 0;
+        var hasErrorLog = false;
 
         Sync.run(function(done) {
 
@@ -118,7 +119,10 @@ class Build extends tools.Task {
                 status = code;
             });
             out.encoding = 'utf8';
-            out.on('token', function(token) {
+            out.on('token', function(token:String) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
                 token = formatLineOutput(flowProjectPath, token);
                 stdoutWrite(token + "\n");
             });
@@ -132,7 +136,10 @@ class Build extends tools.Task {
             var err = StreamSplitter.splitter("\n");
             proc.stderr.pipe(untyped err);
             err.encoding = 'utf8';
-            err.on('token', function(token) {
+            err.on('token', function(token:String) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
                 token = formatLineOutput(flowProjectPath, token);
                 stderrWrite(token + "\n");
             });
@@ -141,9 +148,14 @@ class Build extends tools.Task {
             });
 
         });
+
+        if (status == 0 && hasErrorLog) {
+            status = 1;
+        }
         
         if (status != 0) {
-            fail('Error when running luxe $action.');
+            if (!hasErrorLog) fail('Error when running luxe $action.');
+            else js.Node.process.exit(status);
         }
         else {
             if (action == 'run' || action == 'build') {

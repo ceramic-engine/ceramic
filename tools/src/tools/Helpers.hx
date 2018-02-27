@@ -407,6 +407,17 @@ class Helpers {
     static var RE_TRACE_FILE_LINE = ~/(.+?\.hx)::?([0-9]+):?\s+/;
     static var RE_HAXE_ERROR = ~/^(.+)::?(\d+):? (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
 
+    public static function isErrorOutput(input:String):Bool {
+
+        // We don't want \r char to mess up everything (windows)
+        input = input.replace("\r", '');
+
+        var result = RE_HAXE_ERROR.match(input) || RE_STACK_FILE_LINE.match(input) || RE_TRACE_FILE_LINE.match(input);
+
+        return result;
+
+    } //isErrorOutput
+
     public static function formatLineOutput(cwd:String, input:String):String {
 
         if (!context.colors) {
