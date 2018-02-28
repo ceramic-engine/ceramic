@@ -97,7 +97,7 @@ class Build extends tools.Task {
         if (context.vscode) {
             // This will ensure haxe completion server is restarted after a build.
             var task = new Vscode();
-            task.run(cwd, ['vscode', target.name, '--variant', context.variant, '--settings-only']);
+            task.run(cwd, ['vscode', target.name, '--variant', context.variant, '--settings-only', '--haxe-server-seed']);
         }
 
     } //run
