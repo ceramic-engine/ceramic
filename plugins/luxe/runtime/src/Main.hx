@@ -98,7 +98,9 @@ class Main extends luxe.Game {
 
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
-                            appEl.style.visibility = 'hidden';
+                            if (lastNewWidth != -1 || lastNewHeight != -1) {
+                                appEl.style.visibility = 'hidden';
+                            }
                             lastResizeTime = ceramic.Timer.now;
                             lastNewWidth = width;
                             lastNewHeight = height;
