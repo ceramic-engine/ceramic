@@ -1,7 +1,7 @@
 package backend;
 
 @:allow(Main)
-class Screen implements ceramic.Events #if !completion implements spec.Screen #end {
+class Screen implements ceramic.Events implements spec.Screen {
 
     public function new() {}
 
@@ -34,11 +34,7 @@ class Screen implements ceramic.Events #if !completion implements spec.Screen #e
 
     inline public function getDensity():Float {
 
-#if completion
-        return 1;
-#else
         return @:privateAccess Main.lastDevicePixelRatio;
-#end
 
     } //getPixelHeight
 

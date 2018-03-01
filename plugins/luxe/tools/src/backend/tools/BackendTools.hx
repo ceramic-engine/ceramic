@@ -110,7 +110,9 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         var output = res.stdout;
-        if (output == null) return null;
+        return output;
+        
+        /*if (output == null) return null;
 
         var mainPart = '-main luxe.Game';
         var mainIndex = output.indexOf(mainPart);
@@ -118,7 +120,7 @@ class BackendTools implements tools.spec.BackendTools {
             output = output.substring(0, mainIndex) + '-main Main' + output.substr(mainIndex + mainPart.length);
         }
 
-        return output + " -D luxe_no_main --macro server.setModuleCheckPolicy(['luxe','snow','phoenix','glew','sdl','timestamp','opengl','ogg', 'openal','stb'], [NoCheckShadowing, NoCheckDependencies], true)";
+        return output + " -D luxe_no_main --macro server.setModuleCheckPolicy(['luxe','snow','phoenix','glew','sdl','timestamp','opengl','ogg', 'openal','stb'], [NoCheckShadowing, NoCheckDependencies], true)";*/
 
     } //getHxml
 

@@ -6,7 +6,7 @@ import backend.NativeMac;
 
 @:allow(Main)
 @:allow(backend.Textures)
-class Backend implements ceramic.Events #if !completion implements spec.Backend #end {
+class Backend implements ceramic.Events implements spec.Backend {
 
 /// Public API
 

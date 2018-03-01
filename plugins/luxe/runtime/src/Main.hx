@@ -8,22 +8,6 @@ import js.Browser.document;
 
 #end
 
-#if completion
-
-class Main {
-
-    public static var project:Project = null;
-
-    public static function main():Void {
-
-        project = @:privateAccess new Project(ceramic.App.init());
-
-    } //main
-
-} //Main
-
-#else
-
 import luxe.Input;
 
 class Main extends luxe.Game {
@@ -162,7 +146,11 @@ class Main extends luxe.Game {
             });
 
             // Override console.log
-            untyped console.log = electronRunner.consoleLog;
+            var origConsoleLog:Dynamic = untyped console.log;
+            untyped console.log = function(str) {
+                electronRunner.consoleLog(str);
+                origConsoleLog(str);
+            };
         }
 #end
 
@@ -452,5 +440,3 @@ class Main extends luxe.Game {
     }
 
 }
-
-#end

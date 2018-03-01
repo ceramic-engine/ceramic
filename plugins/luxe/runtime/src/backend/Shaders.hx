@@ -5,7 +5,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-class Shaders #if !completion implements spec.Shaders #end {
+class Shaders implements spec.Shaders {
 
     public function new() {}
 

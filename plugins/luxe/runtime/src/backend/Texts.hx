@@ -4,7 +4,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-class Texts #if !completion implements spec.Texts #end {
+class Texts implements spec.Texts {
 
     public function new() {}
 

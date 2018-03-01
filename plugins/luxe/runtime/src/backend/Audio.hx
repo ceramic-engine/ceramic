@@ -4,7 +4,7 @@ import haxe.io.Path;
 
 using StringTools;
 
-class Audio #if !completion implements spec.Audio #end {
+class Audio implements spec.Audio {
 
 /// Internal
 

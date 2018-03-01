@@ -53,7 +53,7 @@ class BatchedRenderTexture extends phoenix.RenderTexture {
 
 } //BatchedRenderTexture
 
-class Images #if !completion implements spec.Images #end {
+class Images implements spec.Images {
 
     public function new() {}
 
