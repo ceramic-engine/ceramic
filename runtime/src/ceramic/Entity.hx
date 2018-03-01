@@ -39,6 +39,27 @@ class Entity implements Events implements Lazy {
 
     } //destroy
 
+/// Autorun
+
+    /** Creates a new `Autorun` instance with the given callback associated with the current entity.
+        @param run The run callback
+        @return The autorun instance */
+    public function autorun(run:Void->Void):Autorun {
+
+        var _autorun = new Autorun(run);
+
+        var _selfDestroy = function() {
+            _autorun.destroy();
+        };
+        onceDestroy(this, _selfDestroy);
+        _autorun.onceDestroy(this, function() {
+            offDestroy(_selfDestroy);
+        });
+
+        return _autorun;
+
+    } //autorun
+
 /// Print
 
     public function className():String {
