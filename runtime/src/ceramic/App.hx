@@ -27,15 +27,25 @@ class App extends Entity {
 
 /// Events
 
-    /** Ready event is called when the app is ready and
+    /** Ready event is triggered when the app is ready and
         the game logic can be started. */
     @event function ready();
 
-    /** Update event is called as many times as there are frames per seconds.
+    /** Update event is triggered as many times as there are frames per seconds.
         It is in sync with screen FPS but used for everything that needs
         to get updated depending on time (ceramic.Timer relies on it).
         Use this event to update your contents before they get drawn again. */
     @event function update(delta:Float);
+
+    /** Pre-update event is triggered right before update event and
+        can be used when you want to run garantee your code
+        will be run before regular update event.*/
+    @event function preUpdate(delta:Float);
+
+    /** Post-update event is triggered right after update event and
+        can be used when you want to run garantee your code
+        will be run after regular update event.*/
+    @event function postUpdate(delta:Float);
 
     @event function keyDown(key:Key);
     @event function keyUp(key:Key);
@@ -45,6 +55,40 @@ class App extends Entity {
     @event function controllerUp(controllerId:Int, buttonId:Int);
     @event function controllerEnable(controllerId:Int, name:String);
     @event function controllerDisable(controllerId:Int);
+
+/// Immediate update event, custom implementation
+
+    var immediateCallbacks:Array<Void->Void> = null;
+
+    /** Schedule immediate callback that is garanteed to be executed before the next time frame
+        (before elements are draw onto screen) */
+    public function onceImmediate(handleImmediate):Void {
+
+        if (immediateCallbacks == null) {
+            immediateCallbacks = [handleImmediate];
+        }
+        else {
+            immediateCallbacks.push(handleImmediate);
+        }
+
+    } //onceImmediate
+
+    /** Execute and flush every awaiting immediate callback, including the ones that
+        could have been added with `onceImmediate()` after executing the existing callbacks. */
+    inline function flushImmediate():Void {
+
+        while (immediateCallbacks != null) {
+
+            var callbacks = immediateCallbacks;
+            immediateCallbacks = null;
+
+            for (cb in callbacks) {
+                cb();
+            }
+
+        }
+
+    } //flushImmediate
 
 /// Static pre-init code (used to add plugins)
 
@@ -285,8 +329,20 @@ class App extends Entity {
             }
         }
 
+        // Trigger pre-update event
+        emitPreUpdate(delta);
+
         // Then update
-        app.emitUpdate(delta);
+        emitUpdate(delta);
+
+        // Flush immediate callbacks
+        flushImmediate();
+
+        // Emit post-update event
+        emitPostUpdate(delta);
+
+        // Flush immediate callbacks
+        flushImmediate();
 
         // Notify if screen matrix has changed
         if (screen.matrix.changed) {
@@ -350,8 +406,20 @@ class App extends Entity {
 
         }
 
+        // Flush immediate callbacks
+        flushImmediate();
+
+        // Emit pre-draw event
+        screen.emitPreDraw(delta);
+
+        // Flush immediate callbacks
+        flushImmediate();
+
         // Draw
         backend.draw.draw(visuals);
+
+        // Emit post-draw event
+        screen.emitPostDraw(delta);
 
     } //update
 

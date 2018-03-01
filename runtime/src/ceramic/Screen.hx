@@ -132,10 +132,18 @@ class Screen extends Entity implements Observable {
     @event function multiTouchPointerUp(info:TouchInfo);
     @event function multiTouchPointerMove(info:TouchInfo);
 
-    // Focused visual event
+    // Focused visual events
     //
     @event function focus(visual:Visual);
     @event function blur(visual:Visual);
+
+    // Draw events
+    //
+    /** Pre-draw event is triggered right before drawing elements on screen. */
+    @event function preDraw(delta:Float);
+
+    /** Post-draw event is triggered right after drawing elements on screen. */
+    @event function postDraw(delta:Float);
 
 /// Lifecycle
 
