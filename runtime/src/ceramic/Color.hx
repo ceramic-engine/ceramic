@@ -68,6 +68,18 @@ abstract Color(Int) from Int from UInt to Int to UInt
     private static var RE_COLOR = ~/^(0x|#)(([A-F0-9]{2}){3})$/i;
 
     /**
+     * Generate a random color (away from white or black)
+     * @return The color as a Color
+     */
+    public static inline function random():Color
+    {
+        var hue = Math.random() * 360; // 0 to 360
+        var saturation = Math.random() * 0.5 + 0.5; // 0.5 to 1.0, away from white
+        var brightness = Math.random() * 0.5 + 0.5; // 0.5 to 1.0, away from black
+        return Color.fromHSB(hue, saturation, brightness);
+    }
+
+    /**
      * Create a color from the least significant four bytes of an Int
      *
      * @param    value And Int with bytes in the format 0xRRGGBB
