@@ -31,7 +31,7 @@ class ObservableMacro {
 
         for (field in fields) {
 
-            if (hasObservableMeta(field)) {
+            if (hasObserveMeta(field)) {
                 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -125,6 +125,23 @@ class ObservableMacro {
                         }
                         newFields.push(setField);
 
+                        var invalidateField = {
+                            pos: field.pos,
+                            name: 'invalidate' + capitalName,
+                            kind: FFun({
+                                args: [],
+                                ret: macro :Void,
+                                expr: macro {
+                                    var value = this.$unobservedFieldName;
+                                    this.$emitFieldNameChange(value, value);
+                                }
+                            }),
+                            access: [APublic, AInline],
+                            doc: '',
+                            meta: []
+                        }
+                        newFields.push(invalidateField);
+
                         // Rename original field from name to observedName
                         field.name = unobservedFieldName;
                         field.access = [].concat(field.access);
@@ -143,7 +160,7 @@ class ObservableMacro {
                                 ret: macro :Void,
                                 expr: null
                             }),
-                            access: [APublic],
+                            access: [],
                             doc: 'Event when $fieldName field changes.',
                             meta: []
                         };
@@ -165,12 +182,12 @@ class ObservableMacro {
 
     } //build
 
-    static function hasObservableMeta(field:Field):Bool {
+    static function hasObserveMeta(field:Field):Bool {
 
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'observable') {
+            if (meta.name == 'observe') {
                 return true;
             }
         }

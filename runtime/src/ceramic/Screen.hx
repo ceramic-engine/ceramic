@@ -81,7 +81,7 @@ class Screen extends Entity implements Observable {
 
     /** Ideal textures density, computed from settings
         targetDensity and current screen state. */
-    @observable public var texturesDensity:Float = 1.0;
+    @observe public var texturesDensity:Float = 1.0;
 
     /** Root matrix applied to every visual.
         This is recomputed on screen resize but

@@ -8,24 +8,24 @@ class Settings implements Observable {
     /** Target width. Affects window size at startup
         and affects screen scaling at any time.
         Ignored if set to 0 (default) */
-    @observable public var targetWidth:Int = 0;
+    @observe public var targetWidth:Int = 0;
 
     /** Target height. Affects window size at startup
         and affects screen scaling at any time.
         Ignored if set to 0 (default) */
-    @observable public var targetHeight:Int = 0;
+    @observe public var targetHeight:Int = 0;
 
     /** Target density. Affects the quality of textures
         being loaded. Changing it at runtime will update
         texture quality if needed.
         Ignored if set to 0 (default) */
-    @observable public var targetDensity:Int = 0;
+    @observe public var targetDensity:Int = 0;
 
     /** Background color. */
-    @observable public var background:Color = Color.BLACK;
+    @observe public var background:Color = Color.BLACK;
 
     /** Screen scaling (FIT, FILL or AUTO). */
-    @observable public var scaling:ScreenScaling = FIT;
+    @observe public var scaling:ScreenScaling = FIT;
 
     /** App window title.
         Can only be set at `app startup` from `Project constructor`. */

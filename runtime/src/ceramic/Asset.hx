@@ -44,7 +44,7 @@ class Asset extends Entity implements Observable {
         without knowing in advance when they will be needed. */
     public var refCount(default,null):Int = 0;
 
-    @observable public var status:AssetStatus = NONE;
+    @observe public var status:AssetStatus = NONE;
 
     var handleTexturesDensityChange(default,set):Bool = false;
 
