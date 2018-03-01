@@ -40,6 +40,8 @@ class ObservableMacro {
                         var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
                         var unobservedFieldName = 'unobserved' + capitalName;
                         var emitFieldNameChange = 'emit' + capitalName + 'Change';
+                        var onFieldNameChange = 'on' + capitalName + 'Change';
+                        var offFieldNameChange = 'off' + capitalName + 'Change';
                         var fieldNameChange = fieldName + 'Change';
 
                         if (expr != null) {
@@ -76,6 +78,20 @@ class ObservableMacro {
                                 args: [],
                                 ret: type,
                                 expr: macro {
+                                    // Bind invalidation if getting value
+                                    // inside an Autorun call
+                                    if (ceramic.Autorun.current != null) {
+                                        var autorun = ceramic.Autorun.current;
+                                        var cb:Dynamic = null;
+                                        cb = function(_, _) {
+                                            autorun.invalidate();
+                                            autorun.onReset(null, function() {
+                                                this.$offFieldNameChange(cb);
+                                            });
+                                        };
+                                        this.$onFieldNameChange(autorun, cb);
+                                    }
+
                                     return this.$unobservedFieldName;
                                 }
                             }),
