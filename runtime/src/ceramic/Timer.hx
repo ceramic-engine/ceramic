@@ -45,6 +45,27 @@ class Timer {
 
     } //delay
 
+    public static function interval(seconds:Float, callback:Void->Void):Void->Void {
+
+        var stop = false;
+
+        var clearInterval = function() {
+            stop = true;
+        };
+
+        var tick:Void->Void = null;
+        tick = function() {
+            if (stop) return;
+            callback();
+            if (!stop) delay(seconds, tick);
+        }
+        
+        delay(seconds, tick);
+
+        return clearInterval;
+
+    } //interval
+
 } //Timer
 
 class TimerCallback {
