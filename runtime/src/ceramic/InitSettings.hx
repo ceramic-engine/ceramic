@@ -58,7 +58,7 @@ class InitSettings {
         return settings.background = background;
     }
 
-    /** Screen scaling (FIT or FILL). */
+    /** Screen scaling (FIT, FILL or AUTO). */
     public var scaling(get,set):ScreenScaling;
     inline function get_scaling():ScreenScaling {
         return settings.scaling;

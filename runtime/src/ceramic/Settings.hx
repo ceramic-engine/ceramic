@@ -24,7 +24,7 @@ class Settings implements Observable {
     /** Background color. */
     @observable public var background:Color = Color.BLACK;
 
-    /** Screen scaling (FIT or FILL). */
+    /** Screen scaling (FIT, FILL or AUTO). */
     @observable public var scaling:ScreenScaling = FIT;
 
     /** App window title.
