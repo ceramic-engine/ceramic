@@ -37,6 +37,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         var visualNumVertices = 0;
         var quad:ceramic.Quad = null;
+        var mesh:ceramic.Mesh = null;
 
         var lastTexture:ceramic.Texture = null;
         var lastTextureId:phoenix.TextureID = null;
@@ -104,260 +105,404 @@ class CeramicBatcher extends phoenix.Batcher {
             for (visual in ceramicVisuals) {
 
                 quad = visual.quad;
+                mesh = visual.mesh;
 
                 // If it's valid to be drawn
-                if (visual.visible && quad != null) {
+                if (visual.visible) {
+                    if (quad != null && !quad.transparent) {
 
-                    // Check if state is dirty
-                    if (!stateDirty) {
-                        if (quad.texture != lastTexture) {
-                            if (quad.texture != null && lastTexture != null) {
-                                // Different ceramic textures could use the same GL texture
-                                if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+                        // Check if state is dirty
+                        if (!stateDirty) {
+                            if (quad.texture != lastTexture) {
+                                if (quad.texture != null && lastTexture != null) {
+                                    // Different ceramic textures could use the same GL texture
+                                    if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+                                        stateDirty = true;
+                                    }
+                                } else {
                                     stateDirty = true;
                                 }
-                            } else {
-                                stateDirty = true;
+                            }
+                            if (!stateDirty) {
+                                stateDirty =
+                                    quad.shader != lastShader ||
+                                    quad.blending != lastBlend;
+                                    // TODO clip
                             }
                         }
-                        if (!stateDirty) {
-                            stateDirty =
-                                quad.shader != lastShader ||
-                                quad.blending != lastBlend;
-                                // TODO clip
-                        }
-                    }
 
-                    if (stateDirty) {
-                        flush();
+                        if (stateDirty) {
+                            flush();
 
-                        // Update texture
-                        if (quad.texture != lastTexture) {
-                            if (quad.texture != null && lastTexture != null) {
-                                if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
-                                    lastTexture = quad.texture;
-                                    lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
-                                    texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
-                                    texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
-                                    (lastTexture.backendItem : phoenix.Texture).bind();
-                                }
-                            } else {
-                                if (quad.texture != null) {
-                                    if (lastShader == null && quad.shader == null) {
-                                        // Default textured shader fallback
-                                        apply_default_uniforms(defaultTexturedShader);
-                                        defaultTexturedShader.activate();
+                            // Update texture
+                            if (quad.texture != lastTexture) {
+                                if (quad.texture != null && lastTexture != null) {
+                                    if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+                                        lastTexture = quad.texture;
+                                        lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
+                                        texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
+                                        texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
+                                        (lastTexture.backendItem : phoenix.Texture).bind();
                                     }
-                                    lastTexture = quad.texture;
-                                    lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
-                                    texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
-                                    texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
-                                    (lastTexture.backendItem : phoenix.Texture).bind();
                                 } else {
-                                    if (lastShader == null && quad.shader == null) {
-                                        // Default plain shader fallback
-                                        apply_default_uniforms(defaultPlainShader);
-                                        defaultPlainShader.activate();
+                                    if (quad.texture != null) {
+                                        if (lastShader == null && quad.shader == null) {
+                                            // Default textured shader fallback
+                                            apply_default_uniforms(defaultTexturedShader);
+                                            defaultTexturedShader.activate();
+                                        }
+                                        lastTexture = quad.texture;
+                                        lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
+                                        texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
+                                        texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
+                                        (lastTexture.backendItem : phoenix.Texture).bind();
+                                    } else {
+                                        if (lastShader == null && quad.shader == null) {
+                                            // Default plain shader fallback
+                                            apply_default_uniforms(defaultPlainShader);
+                                            defaultPlainShader.activate();
+                                        }
+                                        lastTexture = null;
+                                        lastTextureId = null;
+                                        Luxe.renderer.state.bindTexture2D(null);
                                     }
-                                    lastTexture = null;
-                                    lastTextureId = null;
-                                    Luxe.renderer.state.bindTexture2D(null);
                                 }
                             }
+
+                            // Update shader
+                            if (quad.shader != lastShader) {
+                                lastShader = quad.shader;
+
+                                if (lastShader != null) {
+                                    // Custom shader
+                                    apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
+                                    (lastShader.backendItem : phoenix.Shader).activate();
+                                }
+                                else if (lastTexture != null) {
+                                    // Default textured shader fallback
+                                    apply_default_uniforms(defaultTexturedShader);
+                                    defaultTexturedShader.activate();
+                                }
+                                else {
+                                    // Default plain shader fallback
+                                    apply_default_uniforms(defaultPlainShader);
+                                    defaultPlainShader.activate();
+                                }
+                            }
+
+                            // Update blending
+                            if (quad.blending != lastBlend) {
+                                lastBlend = quad.blending;
+                                if (lastBlend == ceramic.Blending.ADD) {
+                                    GL.blendFuncSeparate(
+                                        //src_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //src_alpha
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_alpha
+                                        phoenix.Batcher.BlendMode.one
+                                    );
+                                } else {
+                                    GL.blendFuncSeparate(
+                                        //src_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_rgb
+                                        phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                                        //src_alpha
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_alpha
+                                        phoenix.Batcher.BlendMode.one_minus_src_alpha
+                                    );
+                                }
+                            }
+
+                            stateDirty = false;
                         }
 
-                        // Update shader
-                        if (quad.shader != lastShader) {
-                            lastShader = quad.shader;
+                        visible_count++;
 
-                            if (lastShader != null) {
-                                // Custom shader
-                                apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
-                                (lastShader.backendItem : phoenix.Shader).activate();
-                            }
-                            else if (lastTexture != null) {
-                                // Default textured shader fallback
-                                apply_default_uniforms(defaultTexturedShader);
-                                defaultTexturedShader.activate();
-                            }
-                            else {
-                                // Default plain shader fallback
-                                apply_default_uniforms(defaultPlainShader);
-                                defaultPlainShader.activate();
-                            }
-                        }
+                        // Update num vertices
+                        visualNumVertices = 6;
 
-                        // Update blending
-                        if (quad.blending != lastBlend) {
-                            lastBlend = quad.blending;
-                            if (lastBlend == ceramic.Blending.ADD) {
-                                GL.blendFuncSeparate(
-                                    //src_rgb
-                                    phoenix.Batcher.BlendMode.one,
-                                    //dest_rgb
-                                    phoenix.Batcher.BlendMode.one,
-                                    //src_alpha
-                                    phoenix.Batcher.BlendMode.one,
-                                    //dest_alpha
-                                    phoenix.Batcher.BlendMode.one
-                                );
-                            } else {
-                                GL.blendFuncSeparate(
-                                    //src_rgb
-                                    phoenix.Batcher.BlendMode.one,
-                                    //dest_rgb
-                                    phoenix.Batcher.BlendMode.one_minus_src_alpha,
-                                    //src_alpha
-                                    phoenix.Batcher.BlendMode.one,
-                                    //dest_alpha
-                                    phoenix.Batcher.BlendMode.one_minus_src_alpha
-                                );
-                            }
-                        }
-
-                        stateDirty = false;
-                    }
-
-                    visible_count++;
-
-                    // Update num vertices
-                    visualNumVertices = 6;
-
-                    // Batch visual
-                    //
-                    countAfter = pos_floats + visualNumVertices * 4;
-
-                    // Submit the current batch if we exceed the max buffer size
-                    if (countAfter > maxVertFloats) {
-                        flush();
-                    }
-
-                    // Batch visual
-                    //
-                    // Update size
-                    if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                        w = quad.height;
-                        h = quad.width;
-                    } else {
-                        w = quad.width;
-                        h = quad.height;
-                    }
-
-                    matA = quad.a;
-                    matB = quad.b;
-                    matC = quad.c;
-                    matD = quad.d;
-                    matTX = quad.tx;
-                    matTY = quad.ty;
-
-                    //tl
-                    pos_list[pos_floats] = matTX;
-                    pos_list[pos_floats+1] = matTY;
-                    pos_list[pos_floats+2] = z;
-                    pos_list[pos_floats+3] = 0;
-                    //tr
-                    pos_list[pos_floats+4] = matTX + matA * w;
-                    pos_list[pos_floats+5] = matTY + matB * w;
-                    pos_list[pos_floats+6] = z;
-                    pos_list[pos_floats+7] = 0;
-                    //br
-                    pos_list[pos_floats+8] = matTX + matA * w + matC * h;
-                    pos_list[pos_floats+9] = matTY + matB * w + matD * h;
-                    pos_list[pos_floats+10] = z;
-                    pos_list[pos_floats+11] = 0;
-                    //bl
-                    pos_list[pos_floats+12] = matTX + matC * h;
-                    pos_list[pos_floats+13] = matTY + matD * h;
-                    pos_list[pos_floats+14] = z;
-                    pos_list[pos_floats+15] = 0;
-                    //tl2
-                    pos_list[pos_floats+16] = pos_list[pos_floats];
-                    pos_list[pos_floats+17] = pos_list[pos_floats+1];
-                    pos_list[pos_floats+18] = pos_list[pos_floats+2];
-                    pos_list[pos_floats+19] = 0;
-                    //br2
-                    pos_list[pos_floats+20] = pos_list[pos_floats+8];
-                    pos_list[pos_floats+21] = pos_list[pos_floats+9];
-                    pos_list[pos_floats+22] = pos_list[pos_floats+10];
-                    pos_list[pos_floats+23] = 0;
-
-                    pos_floats += 24;
-
-                    if (lastTexture != null) {
-                        // UV
+                        // Batch visual
                         //
+                        countAfter = pos_floats + visualNumVertices * 4;
+
+                        // Submit the current batch if we exceed the max buffer size
+                        if (countAfter > maxVertFloats) {
+                            flush();
+                        }
+
+                        // Update size
                         if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                            uvX = (quad.frameX * quad.texture.density) / texWidthActual;
-                            uvY = (quad.frameY * quad.texture.density) / texHeightActual;
-                            uvW = (quad.frameHeight * quad.texture.density) / texWidthActual;
-                            uvH = (quad.frameWidth * quad.texture.density) / texHeightActual;
+                            w = quad.height;
+                            h = quad.width;
+                        } else {
+                            w = quad.width;
+                            h = quad.height;
                         }
-                        else {
-                            uvX = (quad.frameX * quad.texture.density) / texWidthActual;
-                            uvY = (quad.frameY * quad.texture.density) / texHeightActual;
-                            uvW = (quad.frameWidth * quad.texture.density) / texWidthActual;
-                            uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
-                        }
+
+                        // Batch visual
+                        //
+                        matA = quad.a;
+                        matB = quad.b;
+                        matC = quad.c;
+                        matD = quad.d;
+                        matTX = quad.tx;
+                        matTY = quad.ty;
 
                         //tl
-                        tcoord_list[tcoord_floats++] = uvX;
-                        tcoord_list[tcoord_floats++] = uvY;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats] = matTX;
+                        pos_list[pos_floats+1] = matTY;
+                        pos_list[pos_floats+2] = z;
+                        pos_list[pos_floats+3] = 0;
                         //tr
-                        tcoord_list[tcoord_floats++] = uvX + uvW;
-                        tcoord_list[tcoord_floats++] = uvY;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats+4] = matTX + matA * w;
+                        pos_list[pos_floats+5] = matTY + matB * w;
+                        pos_list[pos_floats+6] = z;
+                        pos_list[pos_floats+7] = 0;
                         //br
-                        tcoord_list[tcoord_floats++] = uvX + uvW;
-                        tcoord_list[tcoord_floats++] = uvY + uvH;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats+8] = matTX + matA * w + matC * h;
+                        pos_list[pos_floats+9] = matTY + matB * w + matD * h;
+                        pos_list[pos_floats+10] = z;
+                        pos_list[pos_floats+11] = 0;
                         //bl
-                        tcoord_list[tcoord_floats++] = uvX;
-                        tcoord_list[tcoord_floats++] = uvY + uvH;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats+12] = matTX + matC * h;
+                        pos_list[pos_floats+13] = matTY + matD * h;
+                        pos_list[pos_floats+14] = z;
+                        pos_list[pos_floats+15] = 0;
                         //tl2
-                        tcoord_list[tcoord_floats++] = uvX;
-                        tcoord_list[tcoord_floats++] = uvY;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats+16] = pos_list[pos_floats];
+                        pos_list[pos_floats+17] = pos_list[pos_floats+1];
+                        pos_list[pos_floats+18] = pos_list[pos_floats+2];
+                        pos_list[pos_floats+19] = 0;
                         //br2
-                        tcoord_list[tcoord_floats++] = uvX + uvW;
-                        tcoord_list[tcoord_floats++] = uvY + uvH;
-                        tcoord_list[tcoord_floats++] = 0;
-                        tcoord_list[tcoord_floats++] = 0;
+                        pos_list[pos_floats+20] = pos_list[pos_floats+8];
+                        pos_list[pos_floats+21] = pos_list[pos_floats+9];
+                        pos_list[pos_floats+22] = pos_list[pos_floats+10];
+                        pos_list[pos_floats+23] = 0;
 
-                    } else {
-                        i = 0;
-                        while (i++ < 24)
+                        pos_floats += 24;
+
+                        if (lastTexture != null) {
+                            // UV
+                            //
+                            if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
+                                uvX = (quad.frameX * quad.texture.density) / texWidthActual;
+                                uvY = (quad.frameY * quad.texture.density) / texHeightActual;
+                                uvW = (quad.frameHeight * quad.texture.density) / texWidthActual;
+                                uvH = (quad.frameWidth * quad.texture.density) / texHeightActual;
+                            }
+                            else {
+                                uvX = (quad.frameX * quad.texture.density) / texWidthActual;
+                                uvY = (quad.frameY * quad.texture.density) / texHeightActual;
+                                uvW = (quad.frameWidth * quad.texture.density) / texWidthActual;
+                                uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
+                            }
+
+                            //tl
+                            tcoord_list[tcoord_floats++] = uvX;
+                            tcoord_list[tcoord_floats++] = uvY;
                             tcoord_list[tcoord_floats++] = 0;
-                    }
+                            tcoord_list[tcoord_floats++] = 0;
+                            //tr
+                            tcoord_list[tcoord_floats++] = uvX + uvW;
+                            tcoord_list[tcoord_floats++] = uvY;
+                            tcoord_list[tcoord_floats++] = 0;
+                            tcoord_list[tcoord_floats++] = 0;
+                            //br
+                            tcoord_list[tcoord_floats++] = uvX + uvW;
+                            tcoord_list[tcoord_floats++] = uvY + uvH;
+                            tcoord_list[tcoord_floats++] = 0;
+                            tcoord_list[tcoord_floats++] = 0;
+                            //bl
+                            tcoord_list[tcoord_floats++] = uvX;
+                            tcoord_list[tcoord_floats++] = uvY + uvH;
+                            tcoord_list[tcoord_floats++] = 0;
+                            tcoord_list[tcoord_floats++] = 0;
+                            //tl2
+                            tcoord_list[tcoord_floats++] = uvX;
+                            tcoord_list[tcoord_floats++] = uvY;
+                            tcoord_list[tcoord_floats++] = 0;
+                            tcoord_list[tcoord_floats++] = 0;
+                            //br2
+                            tcoord_list[tcoord_floats++] = uvX + uvW;
+                            tcoord_list[tcoord_floats++] = uvY + uvH;
+                            tcoord_list[tcoord_floats++] = 0;
+                            tcoord_list[tcoord_floats++] = 0;
 
-                    // Colors
-                    //
-                    a = quad.computedAlpha;
-                    r = quad.color.redFloat * a;
-                    g = quad.color.greenFloat * a;
-                    b = quad.color.blueFloat * a;
+                        } else {
+                            i = 0;
+                            while (i++ < 24)
+                                tcoord_list[tcoord_floats++] = 0;
+                        }
 
-                    i = 0;
-                    while (i < 24) {
-                        color_list[color_floats++] = r;
-                        color_list[color_floats++] = g;
-                        color_list[color_floats++] = b;
-                        color_list[color_floats++] = a;
-                        i += 4;
-                    }
+                        // Colors
+                        //
+                        a = quad.computedAlpha;
+                        r = quad.color.redFloat * a;
+                        g = quad.color.greenFloat * a;
+                        b = quad.color.blueFloat * a;
 
-                    // Increase counts
-                    z += 0.001;
-                    dynamic_batched_count++;
-                    vert_count += visualNumVertices;
+                        i = 0;
+                        while (i < 24) {
+                            color_list[color_floats++] = r;
+                            color_list[color_floats++] = g;
+                            color_list[color_floats++] = b;
+                            color_list[color_floats++] = a;
+                            i += 4;
+                        }
 
-                } //quad
+                        // Increase counts
+                        z += 0.001;
+                        dynamic_batched_count++;
+                        vert_count += visualNumVertices;
+
+                    } //quad
+
+                    else if (mesh != null) {
+
+                        // The following code is doing pretty much the same thing as quads, but for meshes.
+                        // We could try to refactor to prevent redundancy but this is not required as our
+                        // main concern here is raw performance and anyway this code won't be updated often.
+
+                        // Check if state is dirty
+                        if (!stateDirty) {
+                            if (mesh.texture != lastTexture) {
+                                if (mesh.texture != null && lastTexture != null) {
+                                    // Different ceramic textures could use the same GL texture
+                                    if ((mesh.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+                                        stateDirty = true;
+                                    }
+                                } else {
+                                    stateDirty = true;
+                                }
+                            }
+                            if (!stateDirty) {
+                                stateDirty =
+                                    mesh.shader != lastShader ||
+                                    mesh.blending != lastBlend;
+                                    // TODO clip
+                            }
+                        }
+
+                        if (stateDirty) {
+                            flush();
+
+                            // Update texture
+                            if (mesh.texture != lastTexture) {
+                                if (mesh.texture != null && lastTexture != null) {
+                                    if ((mesh.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+                                        lastTexture = mesh.texture;
+                                        lastTextureId = (mesh.texture.backendItem : phoenix.Texture).texture;
+                                        texWidthActual = (mesh.texture.backendItem : phoenix.Texture).width_actual;
+                                        texHeightActual = (mesh.texture.backendItem : phoenix.Texture).height_actual;
+                                        (lastTexture.backendItem : phoenix.Texture).bind();
+                                    }
+                                } else {
+                                    if (mesh.texture != null) {
+                                        if (lastShader == null && mesh.shader == null) {
+                                            // Default textured shader fallback
+                                            apply_default_uniforms(defaultTexturedShader);
+                                            defaultTexturedShader.activate();
+                                        }
+                                        lastTexture = mesh.texture;
+                                        lastTextureId = (mesh.texture.backendItem : phoenix.Texture).texture;
+                                        texWidthActual = (mesh.texture.backendItem : phoenix.Texture).width_actual;
+                                        texHeightActual = (mesh.texture.backendItem : phoenix.Texture).height_actual;
+                                        (lastTexture.backendItem : phoenix.Texture).bind();
+                                    } else {
+                                        if (lastShader == null && mesh.shader == null) {
+                                            // Default plain shader fallback
+                                            apply_default_uniforms(defaultPlainShader);
+                                            defaultPlainShader.activate();
+                                        }
+                                        lastTexture = null;
+                                        lastTextureId = null;
+                                        Luxe.renderer.state.bindTexture2D(null);
+                                    }
+                                }
+                            }
+
+                            // Update shader
+                            if (mesh.shader != lastShader) {
+                                lastShader = mesh.shader;
+
+                                if (lastShader != null) {
+                                    // Custom shader
+                                    apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
+                                    (lastShader.backendItem : phoenix.Shader).activate();
+                                }
+                                else if (lastTexture != null) {
+                                    // Default textured shader fallback
+                                    apply_default_uniforms(defaultTexturedShader);
+                                    defaultTexturedShader.activate();
+                                }
+                                else {
+                                    // Default plain shader fallback
+                                    apply_default_uniforms(defaultPlainShader);
+                                    defaultPlainShader.activate();
+                                }
+                            }
+
+                            // Update blending
+                            if (mesh.blending != lastBlend) {
+                                lastBlend = quad.blending;
+                                if (lastBlend == ceramic.Blending.ADD) {
+                                    GL.blendFuncSeparate(
+                                        //src_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //src_alpha
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_alpha
+                                        phoenix.Batcher.BlendMode.one
+                                    );
+                                } else {
+                                    GL.blendFuncSeparate(
+                                        //src_rgb
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_rgb
+                                        phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                                        //src_alpha
+                                        phoenix.Batcher.BlendMode.one,
+                                        //dest_alpha
+                                        phoenix.Batcher.BlendMode.one_minus_src_alpha
+                                    );
+                                }
+                            }
+
+                            stateDirty = false;
+                        }
+
+                        visible_count++;
+
+                        // Update num vertices
+                        visualNumVertices = Std.int(mesh.vertices.length / 2);
+
+                        // Batch visual
+                        //
+                        countAfter = pos_floats + visualNumVertices * 4;
+
+                        // Submit the current batch if we exceed the max buffer size
+                        if (countAfter > maxVertFloats) {
+                            flush();
+                        }
+
+                        // Batch visual
+                        //
+                        matA = quad.a;
+                        matB = quad.b;
+                        matC = quad.c;
+                        matD = quad.d;
+                        matTX = quad.tx;
+                        matTY = quad.ty;
+
+                    } //mesh
+                }
             }
         } //visual list
 
