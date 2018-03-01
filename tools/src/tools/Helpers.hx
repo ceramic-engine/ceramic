@@ -412,7 +412,7 @@ class Helpers {
         // We don't want \r char to mess up everything (windows)
         input = input.replace("\r", '');
 
-        var result = RE_HAXE_ERROR.match(input) || RE_STACK_FILE_LINE.match(input) || RE_TRACE_FILE_LINE.match(input);
+        var result = RE_HAXE_ERROR.match(input);
 
         return result;
 
