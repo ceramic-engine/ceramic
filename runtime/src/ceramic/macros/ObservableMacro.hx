@@ -143,7 +143,7 @@ class ObservableMacro {
                                 ret: macro :Void,
                                 expr: null
                             }),
-                            access: [],
+                            access: [APublic],
                             doc: 'Event when $fieldName field changes.',
                             meta: []
                         };
