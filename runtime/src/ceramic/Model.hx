@@ -6,4 +6,16 @@ class Model implements Observable {
 
     } //new
 
+    public function deserialize(data:String):Void {
+
+        // TODO
+
+    } //deserialize
+
+    public function serialize():String {
+
+        return null; // TODO
+
+    } //serialize
+
 } //Model
