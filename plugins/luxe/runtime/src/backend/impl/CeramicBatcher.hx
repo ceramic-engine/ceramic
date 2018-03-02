@@ -499,7 +499,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         visible_count++;
 
                         // Update num vertices
-                        visualNumVertices = Std.int(mesh.vertices.length / 2);
+                        visualNumVertices = mesh.indices.length;
                         countAfter = pos_floats + visualNumVertices * 4;
 
                         // Submit the current batch if we exceed the max buffer size
@@ -509,12 +509,12 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         // Fetch matrix
                         //
-                        matA = quad.a;
-                        matB = quad.b;
-                        matC = quad.c;
-                        matD = quad.d;
-                        matTX = quad.tx;
-                        matTY = quad.ty;
+                        matA = mesh.a;
+                        matB = mesh.b;
+                        matC = mesh.c;
+                        matD = mesh.d;
+                        matTX = mesh.tx;
+                        matTY = mesh.ty;
 
                         // Color
                         meshColors = mesh.colors;
