@@ -10,6 +10,8 @@ import js.Browser.document;
 
 import luxe.Input;
 
+using StringTools;
+
 class Main extends luxe.Game {
 
     public static var project:Project = null;
@@ -135,6 +137,8 @@ class Main extends luxe.Game {
                 }
             } catch (e:Dynamic) {}
         }
+
+        // Are we running from ceramic/electron runner
         if (electronRunner != null) {
 
             // Configure electron window
@@ -151,6 +155,26 @@ class Main extends luxe.Game {
                 electronRunner.consoleLog(str);
                 origConsoleLog(str);
             };
+
+            // Catch errors
+            window.addEventListener('error', function(event:js.html.ErrorEvent) {
+                var error = event.error;
+                var stack = (''+error.stack).split("\n");
+                var len = stack.length;
+                var i = len - 1;
+                var file = '';
+                var line = 0;
+                while (i >= 0) {
+                    var str = stack[i];
+                    str = str.ltrim();
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:', '');
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', '');
+
+                    electronRunner.consoleLog('[error] ' + str);
+
+                    i--;
+                }
+            });
         }
 #end
 

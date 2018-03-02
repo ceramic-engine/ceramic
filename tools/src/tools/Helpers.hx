@@ -406,6 +406,7 @@ class Helpers {
     static var RE_STACK_FILE_LINE = ~/Called\s+from\s+([a-zA-Z0-9_:\.]+)\s+(.+?\.hx)\s+line\s+([0-9]+)$/;
     static var RE_TRACE_FILE_LINE = ~/(.+?\.hx)::?([0-9]+):?\s+/;
     static var RE_HAXE_ERROR = ~/^(.+)::?(\d+):? (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
+    static var RE_JS_FILE_LINE = ~/^(?:\[error\] )?at ([a-zA-Z0-9_\.-]+) \((.+)\)$/;
 
     public static function isErrorOutput(input:String):Bool {
 
@@ -425,7 +426,7 @@ class Helpers {
         }
 
         // We don't want \r char to mess up everything (windows)
-        input = input.replace("\r", '');
+        input = input.replace("\r", '').rtrim();
 
         if (RE_HAXE_ERROR.match(input)) {
             var relativePath = RE_HAXE_ERROR.matched(1);
@@ -478,8 +479,23 @@ class Helpers {
                 input += ' $absolutePath:$lineNumber';
             }
         }
+        else if (RE_JS_FILE_LINE.match(input)) {
+            var identifier = RE_JS_FILE_LINE.matched(1);
+            var absolutePathWithLine = RE_JS_FILE_LINE.matched(2);
+            if (context.colors) {
+                input = (identifier + ' ').red() + absolutePathWithLine.gray();
+            } else {
+                input = identifier + ' ' + absolutePathWithLine;
+            }
+        }
         else if (context.colors && input.startsWith('Error : ')) {
             input = input.red();
+        }
+        else if (input.startsWith('[error] ')) {
+            if (context.colors) {
+                input = input.substring('[error] '.length);
+                input = input.red();
+            }
         }
         else if (context.colors && input.startsWith('Called from hxcpp::')) {
             input = input.red();
