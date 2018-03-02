@@ -5,6 +5,8 @@ import phoenix.Texture;
 import snow.modules.opengl.GL;
 import snow.api.buffers.Float32Array;
 
+using ceramic.Extensions;
+
 /** A custom luxe/phoenix batcher for ceramic. */
 class CeramicBatcher extends phoenix.Batcher {
 
@@ -51,12 +53,14 @@ class CeramicBatcher extends phoenix.Batcher {
 
         var vertIndex = 0;
         var i:Int = 0;
+        var j:Int = 0;
+        var k:Int = 0;
         var z:Float = 0;
 
-        var r:Float;
-        var g:Float;
-        var b:Float;
-        var a:Float;
+        var r:Float = 1;
+        var g:Float = 1;
+        var b:Float = 1;
+        var a:Float = 1;
 
         var x:Float;
         var y:Float;
@@ -76,6 +80,18 @@ class CeramicBatcher extends phoenix.Batcher {
         var w:Float;
         var h:Float;
 
+        var meshAlphaColor:ceramic.AlphaColor = 0xFFFFFFFF;
+        var meshIndicesColor = false;
+        var meshSingleColor = false;
+        var meshColors:Array<ceramic.AlphaColor> = null;
+        var meshUvs:Array<Float> = null;
+        var meshVertices:Array<Float> = null;
+        var meshIndices:Array<Int> = null;
+        var uvFactorX:Float = 1;
+        var uvFactorY:Float = 1;
+
+        var texWidth:Float = 0;
+        var texHeight:Float = 0;
         var texWidthActual:Float = 0;
         var texHeightActual:Float = 0;
 
@@ -225,9 +241,6 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         // Update num vertices
                         visualNumVertices = 6;
-
-                        // Batch visual
-                        //
                         countAfter = pos_floats + visualNumVertices * 4;
 
                         // Submit the current batch if we exceed the max buffer size
@@ -244,7 +257,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             h = quad.height;
                         }
 
-                        // Batch visual
+                        // Fetch matrix
                         //
                         matA = quad.a;
                         matB = quad.b;
@@ -253,6 +266,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         matTX = quad.tx;
                         matTY = quad.ty;
 
+                        // Position
                         //tl
                         pos_list[pos_floats] = matTX;
                         pos_list[pos_floats+1] = matTY;
@@ -397,6 +411,8 @@ class CeramicBatcher extends phoenix.Batcher {
                                     if ((mesh.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
                                         lastTexture = mesh.texture;
                                         lastTextureId = (mesh.texture.backendItem : phoenix.Texture).texture;
+                                        texWidth = (mesh.texture.backendItem : phoenix.Texture).width;
+                                        texHeight = (mesh.texture.backendItem : phoenix.Texture).height;
                                         texWidthActual = (mesh.texture.backendItem : phoenix.Texture).width_actual;
                                         texHeightActual = (mesh.texture.backendItem : phoenix.Texture).height_actual;
                                         (lastTexture.backendItem : phoenix.Texture).bind();
@@ -410,6 +426,8 @@ class CeramicBatcher extends phoenix.Batcher {
                                         }
                                         lastTexture = mesh.texture;
                                         lastTextureId = (mesh.texture.backendItem : phoenix.Texture).texture;
+                                        texWidth = (mesh.texture.backendItem : phoenix.Texture).width;
+                                        texHeight = (mesh.texture.backendItem : phoenix.Texture).height;
                                         texWidthActual = (mesh.texture.backendItem : phoenix.Texture).width_actual;
                                         texHeightActual = (mesh.texture.backendItem : phoenix.Texture).height_actual;
                                         (lastTexture.backendItem : phoenix.Texture).bind();
@@ -482,9 +500,6 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         // Update num vertices
                         visualNumVertices = Std.int(mesh.vertices.length / 2);
-
-                        // Batch visual
-                        //
                         countAfter = pos_floats + visualNumVertices * 4;
 
                         // Submit the current batch if we exceed the max buffer size
@@ -492,7 +507,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             flush();
                         }
 
-                        // Batch visual
+                        // Fetch matrix
                         //
                         matA = quad.a;
                         matB = quad.b;
@@ -500,6 +515,106 @@ class CeramicBatcher extends phoenix.Batcher {
                         matD = quad.d;
                         matTX = quad.tx;
                         matTY = quad.ty;
+
+                        // Color
+                        meshColors = mesh.colors;
+                        meshSingleColor = mesh.colorMapping == MESH;
+                        meshIndicesColor = mesh.colorMapping == INDICES;
+                        if (meshSingleColor) {
+                            meshAlphaColor = meshColors.unsafeGet(0);
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat * a;
+                            g = meshAlphaColor.greenFloat * a;
+                            b = meshAlphaColor.blueFloat * a;
+                        }
+
+                        // Data
+                        meshUvs = mesh.uvs;
+                        meshVertices = mesh.vertices;
+                        meshIndices = mesh.indices;
+
+                        // UV factor
+                        if (lastTexture != null) {
+                            uvFactorX = texWidth / texWidthActual;
+                            uvFactorY = texHeight / texHeightActual;
+                        }
+
+                        i = 0;
+                        while (i < visualNumVertices) {
+
+                            j = meshIndices.unsafeGet(i);
+                            k = j * 2;
+
+                            // Position
+                            //
+                            x = meshVertices.unsafeGet(k);
+                            y = meshVertices.unsafeGet(k + 1);
+
+                            pos_list[pos_floats++] = matTX + matA * x + matC * y;
+                            pos_list[pos_floats++] = matTY + matB * x + matD * y;
+                            pos_list[pos_floats++] = z;
+                            pos_list[pos_floats++] = 0;
+
+                            // UV
+                            //
+                            if (lastTexture != null) {
+                                uvX = meshUvs.unsafeGet(k) * uvFactorX;
+                                uvY = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                                tcoord_list[tcoord_floats++] = uvX;
+                                tcoord_list[tcoord_floats++] = uvY;
+                                tcoord_list[tcoord_floats++] = 0;
+                                tcoord_list[tcoord_floats++] = 0;
+                            }
+
+                            // Color
+                            //
+                            if (!meshSingleColor) {
+                                meshAlphaColor = meshIndicesColor ? meshColors.unsafeGet(j) : meshColors.unsafeGet(i);
+
+                                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                                r = meshAlphaColor.redFloat * a;
+                                g = meshAlphaColor.greenFloat * a;
+                                b = meshAlphaColor.blueFloat * a;
+
+                                color_list[color_floats++] = r;
+                                color_list[color_floats++] = g;
+                                color_list[color_floats++] = b;
+                                color_list[color_floats++] = a;
+                            }
+
+                            i++;
+                        }
+
+                        // No texture, all uvs to zero
+                        //
+                        if (lastTexture == null) {
+                            i = 0;
+                            while (i < visualNumVertices) {
+                                tcoord_list[tcoord_floats++] = 0;
+                                tcoord_list[tcoord_floats++] = 0;
+                                tcoord_list[tcoord_floats++] = 0;
+                                tcoord_list[tcoord_floats++] = 0;
+                                i++;
+                            }
+                        }
+
+                        // Single color
+                        //
+                        if (meshSingleColor) {
+                            i = 0;
+                            while (i < visualNumVertices) {
+                                color_list[color_floats++] = r;
+                                color_list[color_floats++] = g;
+                                color_list[color_floats++] = b;
+                                color_list[color_floats++] = a;
+                                i++;
+                            }
+                        }
+
+                        // Increase counts
+                        z += 0.001;
+                        dynamic_batched_count++;
+                        vert_count += visualNumVertices;
 
                     } //mesh
                 }
