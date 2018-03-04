@@ -140,3 +140,13 @@ At the moment, the only available backend is `luxe` (based on [luxe engine](http
 It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL).
 
 More backends may be implemented in the future.
+
+## Credits
+
+Ceramic was created by [Jérémy Faivre](https://github.com/jeremyfa) but is also possible thanks to the following works:
+
+* **[Luxe Engine](https://luxeengine.com/) by Sven Bergström** which is the low-level-ish tech used by ceramic's default backend to display graphics, play sounds, manage input through [OpenGL](https://www.opengl.org/), [OpenAL](https://www.openal.org/) and [SDL](https://www.libsdl.org/). `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects.
+
+* **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was used as a reference to implement `ceramic.Color` class.
+
+* **[OpenFL](https://github.com/openfl/openfl/blob/0b84012052fc8f6ab2e211c93769c99ad331beb9/openfl/geom/Matrix.hx) by Joshua Granick** and **[PixiJS](https://github.com/pixijs/pixi.js/blob/85aaea595f77bf0511886c499fc2733d4f5ba524/src/core/math/Matrix.js) by Mathew Groves** to implement `ceramic.Transform` class.
