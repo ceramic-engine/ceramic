@@ -367,8 +367,12 @@ class App extends Entity {
 
                 if (visual.computedVisible) {
 
-                    if (visual.clipToBoundsDirty) {
-                        visual.computeClipToBounds();
+                    if (visual.clipDirty) {
+                        visual.computeClip();
+                    }
+
+                    if (visual.maskDirty) {
+                        visual.computeMask();
                     }
 
                     visual.computeContent();

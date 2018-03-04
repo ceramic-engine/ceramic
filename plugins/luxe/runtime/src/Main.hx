@@ -54,6 +54,8 @@ class Main extends luxe.Game {
         if (app.settings.targetHeight > 0) config.window.height = cast app.settings.targetHeight;
         config.window.resizable = app.settings.resizable;
         config.window.title = cast app.settings.title;
+        config.render.stencil = 8;
+        config.render.depth = 16;
 
 #if web
         if (app.settings.backend.webParent != null) {
