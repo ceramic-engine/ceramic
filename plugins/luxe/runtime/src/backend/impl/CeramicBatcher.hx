@@ -124,7 +124,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 mesh = visual.mesh;
 
                 // If it's valid to be drawn
-                if (visual.visible) {
+                if (visual.computedVisible) {
                     if (quad != null && !quad.transparent) {
 
                         // Check if state is dirty
@@ -467,7 +467,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
                             // Update blending
                             if (mesh.blending != lastBlend) {
-                                lastBlend = quad.blending;
+                                lastBlend = mesh.blending;
                                 if (lastBlend == ceramic.Blending.ADD) {
                                     GL.blendFuncSeparate(
                                         //src_rgb
