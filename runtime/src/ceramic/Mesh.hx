@@ -7,7 +7,7 @@ class Mesh extends Visual {
 
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
-    public var primitiveType:MeshPrimitiveType = MeshPrimitiveType.TRIANGLES;
+    public var primitiveType:MeshPrimitiveType = MeshPrimitiveType.TRIANGLE;
 
 /// Lifecycle
 
