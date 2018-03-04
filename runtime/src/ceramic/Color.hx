@@ -1,6 +1,6 @@
 package ceramic;
 
-// Substantial portion taken from: https://github.com/HaxeFlixel/flixel/blob/master/flixel/util/Color.hx
+// Substantial portion taken from: https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx
 
 /**
  * Class representing a color, based on Int. Provides a variety of methods for creating and converting colors.
