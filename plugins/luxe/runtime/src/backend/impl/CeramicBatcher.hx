@@ -48,7 +48,7 @@ class CeramicBatcher extends phoenix.Batcher {
         
         var lastClip:ceramic.Visual = null;
         var clip:ceramic.Visual = null;
-        var drawingStencilBuffer:Bool = false;
+        var stencilClip:Bool = false;
 
         var vertIndex = 0;
         var i:Int = 0;
@@ -122,7 +122,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         inline function drawQuad() {
 
-            if (drawingStencilBuffer) {
+            if (stencilClip) {
                 // Special case of drawing into stencil buffer
 
                 // No texture
@@ -379,7 +379,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
             // Colors
             //
-            if (drawingStencilBuffer) {
+            if (stencilClip) {
                 a = 1;
                 r = 1;
                 g = 0;
@@ -413,7 +413,7 @@ class CeramicBatcher extends phoenix.Batcher {
             // We could try to refactor to prevent redundancy but this is not required as our
             // main concern here is raw performance and anyway this code won't be updated often.
 
-            if (drawingStencilBuffer) {
+            if (stencilClip) {
                 // Special case of drawing into stencil buffer
 
                 // No texture
@@ -579,11 +579,11 @@ class CeramicBatcher extends phoenix.Batcher {
 
             // Color
             meshColors = mesh.colors;
-            meshSingleColor = drawingStencilBuffer || mesh.colorMapping == MESH;
-            meshIndicesColor = !drawingStencilBuffer && mesh.colorMapping == INDICES;
+            meshSingleColor = stencilClip || mesh.colorMapping == MESH;
+            meshIndicesColor = !stencilClip && mesh.colorMapping == INDICES;
 
             if (meshSingleColor) {
-                if (drawingStencilBuffer) {
+                if (stencilClip) {
                     a = 1;
                     r = 1;
                     g = 0;
@@ -729,16 +729,16 @@ class CeramicBatcher extends phoenix.Batcher {
 
                             if (lastClip.quad != null) {
                                 quad = lastClip.quad;
-                                drawingStencilBuffer = true;
+                                stencilClip = true;
                                 drawQuad();
-                                drawingStencilBuffer = false;
+                                stencilClip = false;
                                 quad = visual.quad;
                             }
                             else if (lastClip.mesh != null) {
                                 mesh = lastClip.mesh;
-                                drawingStencilBuffer = true;
+                                stencilClip = true;
                                 drawMesh();
-                                drawingStencilBuffer = false;
+                                stencilClip = false;
                                 mesh = visual.mesh;
                             }
 

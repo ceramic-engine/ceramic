@@ -371,10 +371,6 @@ class App extends Entity {
                         visual.computeClip();
                     }
 
-                    if (visual.maskDirty) {
-                        visual.computeMask();
-                    }
-
                     visual.computeContent();
                 }
             }

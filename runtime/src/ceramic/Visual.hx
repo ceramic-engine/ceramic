@@ -45,16 +45,6 @@ class Visual extends Entity {
     var _numPointerOver:Int = 0;
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
-    /** Clip the display to this visual's bounds. Will be applied to children as well. */
-    public var clipToBounds(get,set):Bool;
-    inline function get_clipToBounds():Bool {
-        return clip == this;
-    }
-    inline function set_clipToBounds(clipToBounds:Bool):Bool {
-        clip = clipToBounds ? this : null;
-        return clipToBounds;
-    }
-
     /** Use the given visual's bounds as clipping area. */
     public var clip(default,set):Visual = null;
     inline function set_clip(clip:Visual):Visual {
@@ -62,15 +52,6 @@ class Visual extends Entity {
         this.clip = clip;
         clipDirty = true;
         return clip;
-    }
-
-    /** Use the given visual as a mask. */
-    public var mask(default,set):Visual = null;
-    inline function set_mask(mask:Visual):Visual {
-        if (this.mask == mask) return mask;
-        this.mask = mask;
-        maskDirty = true;
-        return mask;
     }
 
     /** Allows the backend to keep data associated with this visual. */
@@ -156,20 +137,6 @@ class Visual extends Entity {
             }
         }
         return clipDirty;
-    }
-
-    /** Setting this to true will force the visual to compute it's masking state in hierarchy */
-    public var maskDirty(default,set):Bool = true;
-    inline function set_maskDirty(maskDirty:Bool):Bool {
-        this.maskDirty = maskDirty;
-        if (maskDirty) {
-            if (children != null) {
-                for (child in children) {
-                    child.maskDirty = true;
-                }
-            }
-        }
-        return maskDirty;
     }
 
     /** If set, children will be sort by depth and their computed depth
@@ -392,8 +359,6 @@ class Visual extends Entity {
     public var computedTouchable:Bool = true;
 
     public var computedClip:Bool = false;
-
-    public var computedMask:Bool = false;
 
 /// Properties (Children)
 
@@ -801,25 +766,6 @@ class Visual extends Entity {
         clipDirty = false;
 
     } //computeClip
-
-/// Masking
-
-    function computeMask() {
-
-        if (parent != null && parent.maskDirty) {
-            parent.computeMask();
-        }
-
-        computedMask = false;
-        if (parent != null) {
-            if (parent.computedMask || parent.mask != null) {
-                computedMask = true;
-            }
-        }
-
-        maskDirty = false;
-
-    } //computeMask
 
 /// Touchable
 
