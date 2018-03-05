@@ -37,12 +37,12 @@ class Autorun extends Entity {
         // We are not invalidated anymore as we are resetting state
         invalidated = false;
 
+        // Unbind everything
+        emitReset();
+
         // Set current autorun to self
         var prevCurrent = current;
         current = this;
-
-        // Unbind everything
-        emitReset();
 
         // Run (and bind) again
         onRun();

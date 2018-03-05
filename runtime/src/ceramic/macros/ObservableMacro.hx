@@ -82,13 +82,12 @@ class ObservableMacro {
                                     // inside an Autorun call
                                     if (ceramic.Autorun.current != null) {
                                         var autorun = ceramic.Autorun.current;
-                                        var cb:Dynamic = null;
-                                        cb = function(_, _) {
+                                        var cb = function(_, _) {
                                             autorun.invalidate();
-                                            autorun.onReset(null, function() {
-                                                this.$offFieldNameChange(cb);
-                                            });
                                         };
+                                        autorun.onceReset(null, function() {
+                                            this.$offFieldNameChange(cb);
+                                        });
                                         this.$onFieldNameChange(autorun, cb);
                                     }
 
