@@ -28,6 +28,8 @@ class Model implements Observable {
 
         for (key in Reflect.fields(this)) {
 
+            if (key.startsWith('__')) continue;
+
             var displayKey = key;
             if (displayKey.startsWith('unobserved')) {
                 displayKey = displayKey.charAt(10).toLowerCase() + displayKey.substring(11);
