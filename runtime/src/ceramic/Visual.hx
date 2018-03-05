@@ -1,6 +1,9 @@
 package ceramic;
 
+#if ceramic_luxe_legacy
 import backend.VisualItem;
+#end
+
 import ceramic.Point;
 
 @:allow(ceramic.App)
@@ -54,8 +57,12 @@ class Visual extends Entity {
         return clip;
     }
 
+#if ceramic_luxe_legacy
+
     /** Allows the backend to keep data associated with this visual. */
     public var backendItem:VisualItem;
+
+#end
 
     /** Computed flag that tells whether this visual is only translated,
         thus not rotated, skewed nor scaled.
@@ -449,7 +456,9 @@ class Visual extends Entity {
         ceramic.App.app.visuals.push(this);
         ceramic.App.app.hierarchyDirty = true;
 
+#if ceramic_luxe_legacy
         backendItem = ceramic.App.app.backend.draw.getItem(this);
+#end
 
     } //new
 
