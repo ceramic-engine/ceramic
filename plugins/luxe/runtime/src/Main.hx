@@ -43,6 +43,51 @@ class Main extends luxe.Game {
 
     override function config(config:luxe.GameConfig) {
 
+#if web
+
+        var userAgent = navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf(' electron/') > -1) {
+            try {
+                var electronApp:Dynamic = untyped __js__("require('electron').remote.require('./app.js');");
+                if (electronApp.isCeramicRunner) {
+                    electronRunner = electronApp;
+                }
+            } catch (e:Dynamic) {}
+        }
+
+        // Are we running from ceramic/electron runner
+        if (electronRunner != null) {
+
+            // Override console.log
+            var origConsoleLog:Dynamic = untyped console.log;
+            untyped console.log = function(str) {
+                electronRunner.consoleLog(str);
+                origConsoleLog(str);
+            };
+
+            // Catch errors
+            window.addEventListener('error', function(event:js.html.ErrorEvent) {
+                var error = event.error;
+                var stack = (''+error.stack).split("\n");
+                var len = stack.length;
+                var i = len - 1;
+                var file = '';
+                var line = 0;
+                while (i >= 0) {
+                    var str = stack[i];
+                    str = str.ltrim();
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:', '');
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', '');
+
+                    electronRunner.consoleLog('[error] ' + str);
+
+                    i--;
+                }
+            });
+        }
+
+#end
+
         instance = this;
         project = @:privateAccess new Project(ceramic.App.init());
         var app = @:privateAccess ceramic.App.app;
@@ -130,16 +175,6 @@ class Main extends luxe.Game {
         }
 #end
 
-        var userAgent = navigator.userAgent.toLowerCase();
-        if (userAgent.indexOf(' electron/') > -1) {
-            try {
-                var electronApp:Dynamic = untyped __js__("require('electron').remote.require('./app.js');");
-                if (electronApp.isCeramicRunner) {
-                    electronRunner = electronApp;
-                }
-            } catch (e:Dynamic) {}
-        }
-
         // Are we running from ceramic/electron runner
         if (electronRunner != null) {
 
@@ -149,33 +184,6 @@ class Main extends luxe.Game {
                 resizable: app.settings.resizable,
                 targetWidth: app.settings.targetWidth,
                 targetHeight: app.settings.targetHeight
-            });
-
-            // Override console.log
-            var origConsoleLog:Dynamic = untyped console.log;
-            untyped console.log = function(str) {
-                electronRunner.consoleLog(str);
-                origConsoleLog(str);
-            };
-
-            // Catch errors
-            window.addEventListener('error', function(event:js.html.ErrorEvent) {
-                var error = event.error;
-                var stack = (''+error.stack).split("\n");
-                var len = stack.length;
-                var i = len - 1;
-                var file = '';
-                var line = 0;
-                while (i >= 0) {
-                    var str = stack[i];
-                    str = str.ltrim();
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:', '');
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', '');
-
-                    electronRunner.consoleLog('[error] ' + str);
-
-                    i--;
-                }
             });
         }
 #end
