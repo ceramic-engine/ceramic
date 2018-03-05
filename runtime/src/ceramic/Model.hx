@@ -1,5 +1,7 @@
 package ceramic;
 
+using StringTools;
+
 class Model implements Observable {
 
     public function new() {
@@ -17,5 +19,26 @@ class Model implements Observable {
         return null; // TODO
 
     } //serialize
+
+/// Print
+
+    function toString():String {
+
+        var result:Dynamic = {};
+
+        for (key in Reflect.fields(this)) {
+
+            var displayKey = key;
+            if (displayKey.startsWith('unobserved')) {
+                displayKey = displayKey.charAt(10).toLowerCase() + displayKey.substring(11);
+            }
+
+            Reflect.setField(result, displayKey, Reflect.field(this, key));
+
+        }
+
+        return '' + result;
+
+    } //toString
 
 } //Model
