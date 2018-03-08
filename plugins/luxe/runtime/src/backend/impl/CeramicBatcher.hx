@@ -716,9 +716,10 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (lastClip != null) {
                             // Update stencil buffer
                             flush();
-                            GL.enable(GL.STENCIL_TEST);
+                            GL.stencilMask(0xFF);
                             GL.clearStencil(0xFF);
                             GL.clear(GL.STENCIL_BUFFER_BIT);
+                            GL.enable(GL.STENCIL_TEST);
 
                             GL.stencilOp(GL.KEEP, GL.KEEP, GL.REPLACE);
 
