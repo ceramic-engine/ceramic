@@ -325,8 +325,10 @@ class Scroller extends Visual {
 
         if (touchIndex != -1) {
             var pointer = screen.touches.get(touchIndex);
-            pointerX = pointer.x;
-            pointerY = pointer.y;
+            if (pointer != null) {
+                pointerX = pointer.x;
+                pointerY = pointer.y;
+            }
         }
 
         switch (status) {
