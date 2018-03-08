@@ -215,10 +215,18 @@ class Spine extends Visual {
     @editable({ localCollection: 'animationList', empty: 0 })
     public var animation(default,set):String = null;
     function set_animation(animation:String):String {
+        if (nextAnimations != null) nextAnimations = null;
         if (this.animation == animation) return animation;
         this.animation = animation;
         if (spineData != null) animate(animation, loop, 0);
         return animation;
+    }
+
+    public var nextAnimations(default,set):Array<String> = null;
+    function set_nextAnimations(nextAnimations:Array<String>) {
+        if (this.nextAnimations == nextAnimations) return nextAnimations;
+        this.nextAnimations = nextAnimations;
+        return nextAnimations;
     }
 
     @editable
@@ -383,6 +391,15 @@ class Spine extends Visual {
         }
 
     } //computeContent
+
+    inline function willEmitComplete() {
+
+        // Chain with the next animations, if any
+        if (nextAnimations != null && nextAnimations.length > 0) {
+            animation = nextAnimations.shift();
+        }
+
+    } //willEmitComplete
 
 /// Size
 
