@@ -16,7 +16,7 @@ class Autorun extends Entity {
 
     var onRun:Void->Void;
 
-    var invalidated = false;
+    var invalidated(default,null):Bool = false;
 
 /// Lifecycle
 
