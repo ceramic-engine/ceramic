@@ -856,7 +856,7 @@ class Visual extends Entity {
 
                 // Multiply depth
                 for (child in children) {
-                    child.multiplyDepths(computedDepth, depthRange - 0.0001);
+                    child.multiplyDepths(computedDepth + Math.min(0.00001, depthRange), Math.max(0, depthRange - 0.00001));
                 }
             }
         }
