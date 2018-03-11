@@ -229,6 +229,7 @@ class Draw implements spec.Draw {
                     // Update clipping and check if this should even be drawn
                     //
                     isClipping = false;
+                    /*
                     if (quad.computedClipToBounds) {
                         clippingVisual = quad.parent;
                         while (true) {
@@ -269,7 +270,7 @@ class Draw implements spec.Draw {
                             else if (!clippingVisual.computedClipToBounds) break;
                             clippingVisual = clippingVisual.parent;
                         }
-                    }
+                    }*/
 
                     if (isClipping && (clipW == 0 || clipH == 0)) {
                         // Skip drawing of out of bounds clipped quad
@@ -462,7 +463,7 @@ class Draw implements spec.Draw {
                     // Update clipping and check if this should even be drawn
                     //
                     isClipping = false;
-                    if (mesh.computedClipToBounds) {
+                    /*if (mesh.computedClipToBounds) {
                         clippingVisual = mesh.parent;
                         while (true) {
                             if (clippingVisual == null) break;
@@ -502,7 +503,7 @@ class Draw implements spec.Draw {
                             else if (!clippingVisual.computedClipToBounds) break;
                             clippingVisual = clippingVisual.parent;
                         }
-                    }
+                    }*/
 
                     if (isClipping && (clipW == 0 || clipH == 0)) {
                         // Skip drawing of out of bounds clipped mesh
