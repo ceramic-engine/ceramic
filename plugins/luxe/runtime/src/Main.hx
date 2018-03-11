@@ -76,8 +76,12 @@ class Main extends luxe.Game {
                 while (i >= 0) {
                     var str = stack[i];
                     str = str.ltrim();
+
+                    // File in haxe project
                     str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:', '');
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', '');
+
+                    // File in compiled project
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', electronRunner.appFiles + '/');
 
                     electronRunner.consoleLog('[error] ' + str);
 

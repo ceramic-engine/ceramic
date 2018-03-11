@@ -54,6 +54,7 @@ exports.MenuItem = MenuItem;
 exports.electronDev = process.env.ELECTRON_DEV;
 exports.dirname = __dirname;
 exports.isCeramicRunner = true;
+exports.appFiles = appFiles;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -181,7 +182,9 @@ detect(port, (err, _port) => {
 
     // Dispatch info
     server.listen(port);
-    exports.serverPort = port;
     appUrl = 'http://localhost:' + port;
+    
+    exports.serverPort = port;
+    exports.appUrl = appUrl;
 
 });
