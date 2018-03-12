@@ -623,7 +623,7 @@ class Spine extends Visual {
             bone = slot.bone;
             slotName = slot.data.name;
             boundSlot = null;
-            vertexSize = clipper != null && clipper.isClipping() ? 2 : 5;
+            vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
 
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
@@ -706,7 +706,7 @@ class Spine extends Visual {
                                     mesh.visible = true;
                                     if (meshAttachment != null) {
 
-                                        meshAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, 2);
+                                        meshAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, vertexSize);
                                         mesh.uvs = meshAttachment.getUVs();
                                         mesh.indices = meshAttachment.getTriangles();
 
@@ -721,7 +721,7 @@ class Spine extends Visual {
 
                                     } else {
 
-                                        regionAttachment.computeWorldVertices(slot.bone, mesh.vertices, 0, 2);
+                                        regionAttachment.computeWorldVertices(slot.bone, mesh.vertices, 0, vertexSize);
                                         mesh.uvs = regionAttachment.getUVs();
                                         mesh.indices = _quadTriangles;
 
@@ -750,11 +750,11 @@ class Spine extends Visual {
                                     }
 
                                     if (clipper.isClipping()) {
-                                        /*clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
+                                        clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
                                         var clippedVertices = clipper.getClippedVertices();
                                         var clippedTriangles = clipper.getClippedTriangles();
                                         mesh.vertices = clippedVertices.items;
-                                        mesh.indices = clippedTriangles.items;*/
+                                        mesh.indices = clippedTriangles.items;
                                     }
 
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
@@ -1034,6 +1034,16 @@ class Spine extends Visual {
         }
 
     } //computeBoundChildSlots
+
+/// Helpers
+
+    /** Encodes the ABGR int color as a float. The high bits are masked to avoid using floats in the NaN range, which unfortunately
+	 * means the full range of alpha cannot be used. */
+    inline static function intToFloatColor(value:Int):Float {
+
+        return 1.0 * (value & 0xFEFFFFFF);
+
+    } //intToFloatColor
 
 /// Editor stuff
 
