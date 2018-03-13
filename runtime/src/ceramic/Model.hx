@@ -2,7 +2,7 @@ package ceramic;
 
 using StringTools;
 
-class Model implements Observable {
+class Model extends Entity implements Observable {
 
     public function new() {
 
