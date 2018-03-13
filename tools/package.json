@@ -38,7 +38,7 @@
     "plist": "^2.0.1",
     "portscanner": "^2.1.0",
     "rimraf": "^2.6.1",
-    "sharp": "^0.16.2",
+    "sharp": "^0.20.0",
     "shell-quote": "^1.6.1",
     "source-map-support": "^0.4.3",
     "stream-splitter": "^0.3.2",
