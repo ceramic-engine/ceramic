@@ -71,11 +71,11 @@ abstract Color(Int) from Int from UInt to Int to UInt
      * Generate a random color (away from white or black)
      * @return The color as a Color
      */
-    public static inline function random():Color
+    public static inline function random(minSatutation:Float = 0.5, minBrightness:Float = 0.5):Color
     {
         var hue = Math.random() * 360; // 0 to 360
-        var saturation = Math.random() * 0.5 + 0.5; // 0.5 to 1.0, away from white
-        var brightness = Math.random() * 0.5 + 0.5; // 0.5 to 1.0, away from black
+        var saturation = Math.random() * (1.0 - minSatutation) + minSatutation; // default 0.5 to 1.0, away from white
+        var brightness = Math.random() * (1.0 - minBrightness) + minBrightness; // default 0.5 to 1.0, away from black
         return Color.fromHSB(hue, saturation, brightness);
     }
 
