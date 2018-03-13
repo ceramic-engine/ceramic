@@ -284,6 +284,7 @@ class Text extends Visual {
         }
         
         contentDirty = false;
+        matrixDirty = true;
 
     } //computeContent
 
