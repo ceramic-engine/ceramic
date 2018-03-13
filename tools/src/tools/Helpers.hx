@@ -44,6 +44,11 @@ class Helpers {
         context.defines.set('ceramic_assets_path', Path.join([context.ceramicToolsPath, 'assets']));
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
+
+        // Required for crash dumps
+        context.defines.set('HXCPP_CHECK_POINTER', '');
+        context.defines.set('safeMode', '');
+
         context.defines.set('backend', context.backend.name.toLowerCase().replace(' ', '_'));
         context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), '');
 
