@@ -247,7 +247,7 @@ class Text extends Visual {
         }
 
         if (x > 0) {
-            lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
+            lineWidths.push(x);
         }
 
         // Remove unused quads
