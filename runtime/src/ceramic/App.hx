@@ -145,6 +145,10 @@ class App extends Entity {
 
     public static function init():InitSettings {
 
+#if cpp
+        untyped __global__.__hxcpp_set_critical_error_handler(function(message:String) throw message);
+#end
+
         app = new App();
         return new InitSettings(app.settings);
         
@@ -471,5 +475,14 @@ class App extends Entity {
         });
 
     } //sortVisuals
+
+/// Uncaught errors
+
+    static function handleUncaughtError(e:Dynamic):Void {
+
+        throw e; // TODO don't rethrow and add logic to be able to save crash dump
+        Sys.exit(1);
+
+    } //handleUncaughtError
 
 }

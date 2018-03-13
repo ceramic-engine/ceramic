@@ -106,6 +106,12 @@ class Main extends luxe.Game {
         config.render.stencil = 8;
         config.render.depth = 16;
 
+#if cpp
+        // Uncaught error handler in native
+        // TODO use custom handler to dump stack traces and allow to save/send them
+        //config.runtime.uncaught_error_handler = @:privateAccess ceramic.App.handleUncaughtError;
+#end
+
 #if web
         if (app.settings.backend.webParent != null) {
             config.runtime.window_parent = app.settings.backend.webParent;
