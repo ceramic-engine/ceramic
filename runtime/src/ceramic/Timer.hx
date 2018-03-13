@@ -45,11 +45,13 @@ class Timer {
 
     } //delay
 
-    public static function interval(seconds:Float, callback:Void->Void):Void->Void {
+    public static function interval(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
 
         var stop = false;
 
-        var clearInterval = function() {
+        var clearInterval = null;
+        clearInterval = function() {
+            if (owner != null && !owner.destroyed) owner.offDestroy(clearInterval);
             stop = true;
         };
 
@@ -61,6 +63,10 @@ class Timer {
         }
         
         delay(seconds, tick);
+
+        if (owner != null) {
+            owner.onceDestroy(null, clearInterval);
+        }
 
         return clearInterval;
 
