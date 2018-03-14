@@ -195,6 +195,8 @@ class Screen extends Entity implements Observable {
         //
         app.backend.screen.onMouseDown(this, function(buttonId, x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -217,6 +219,8 @@ class Screen extends Entity implements Observable {
         });
         app.backend.screen.onMouseUp(this, function(buttonId, x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+                
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -238,6 +242,8 @@ class Screen extends Entity implements Observable {
         });
         app.backend.screen.onMouseMove(this, function(x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+                
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -268,6 +274,8 @@ class Screen extends Entity implements Observable {
         //
         app.backend.screen.onTouchDown(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+                
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -289,6 +297,8 @@ class Screen extends Entity implements Observable {
         });
         app.backend.screen.onTouchUp(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+                
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
