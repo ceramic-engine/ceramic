@@ -481,7 +481,10 @@ class App extends Entity {
     static function handleUncaughtError(e:Dynamic):Void {
 
         throw e; // TODO don't rethrow and add logic to be able to save crash dump
+
+#if sys
         Sys.exit(1);
+#end
 
     } //handleUncaughtError
 
