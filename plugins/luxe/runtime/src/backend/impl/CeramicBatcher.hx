@@ -638,7 +638,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 // Color
                 //
                 if (!meshSingleColor) {
-                    meshAlphaColor = meshIndicesColor ? meshColors.unsafeGet(j) : meshColors.unsafeGet(i);
+                    meshAlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
 
                     a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
                     r = meshAlphaColor.redFloat * a;
