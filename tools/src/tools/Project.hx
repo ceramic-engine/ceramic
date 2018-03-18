@@ -99,6 +99,10 @@ class Project {
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
         app.hxml += "\n" + "--macro ceramic.macros.ExportRtti.init()";
 
+        if (context.defines.exists('android')) {
+            app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=19 -D PLATFORM=android-19";
+        }
+
     } //loadAppFile
 
     public function loadPluginFile(path:String):Void {
