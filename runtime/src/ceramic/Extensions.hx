@@ -91,6 +91,14 @@ class Extensions {
 
 	} //shuffle
 
+    public static function swapElements<T>(arr:Array<T>, index0:Int, index1:Int):Void {
+
+        var a = arr[index0];
+        arr[index0] = arr[index1];
+        arr[index1] = a;
+
+    } //swapElements
+
 /// Generic extensions
 
     @:noCompletion
