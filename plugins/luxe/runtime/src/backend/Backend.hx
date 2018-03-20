@@ -10,6 +10,8 @@ class Backend implements ceramic.Events implements spec.Backend {
 
 /// Public API
 
+    public var io(default,null) = new backend.IO();
+
     public var info(default,null) = new backend.Info();
 
     public var audio(default,null) = new backend.Audio();

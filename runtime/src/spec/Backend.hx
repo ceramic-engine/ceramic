@@ -4,6 +4,8 @@ interface Backend {
 
     function init(app:ceramic.App):Void;
 
+    var io(default,null):backend.IO;
+
     var info(default,null):backend.Info;
 
     var audio(default,null):backend.Audio;
