@@ -29,7 +29,8 @@ function postInstall() {
     spawnSync('haxe', ['build.hxml'], { stdio: "inherit", cwd: __dirname });
         
     // Build tools plugins
-    spawnSync('./ceramic', ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
+    var ceramic = process.platform == 'win32' ? 'ceramic.bat' : './ceramic';
+    spawnSync(ceramic, ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
 
 } //installDeps
 
