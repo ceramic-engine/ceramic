@@ -36,6 +36,7 @@ xcuserdata
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+plugin-build.hxml
 /sample/out
 /sample/.vscode/tasks.json
 /sample/completion.hxml
@@ -44,4 +45,4 @@ yarn-error.log*
 /editor/vendor/ceramic-plugins
 /editor/vendor/ceramic-runtime
 /runner/node_modules
-plugin-build.hxml
+/tools-editor

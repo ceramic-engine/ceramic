@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.0.0",
-    "ceramic-tools": "file:../tools",
+    "ceramic-tools": "file:../tools-editor",
     "colors": "^1.1.2",
     "dateformat": "^2.0.0",
     "decompress": "^4.2.0",
@@ -115,6 +115,7 @@
     "whatwg-fetch": "2.0.3"
   },
   "scripts": {
+    "preinstall": "rimraf ../tools-editor && cp -r ../tools ../tools-editor",
     "postinstall": "electron-builder install-app-deps && node post-install.js",
     "build": "cross-env NODE_ENV=production NODE_PATH=src node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
@@ -126,7 +127,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "rebuild-native": "electron-rebuild -f",
-    "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install --save file:../tools && npm run rebuild-native && npm run copy-ceramic-plugins && npm run copy-ceramic-runtime",
+    "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install --save file:../tools-editor && npm run rebuild-native && npm run copy-ceramic-plugins && npm run copy-ceramic-runtime",
     "copy-ceramic-plugins": "node scripts/copy-ceramic-plugins.js",
     "copy-ceramic-runtime": "node scripts/copy-ceramic-runtime.js",
     "release": "build && update-ceramic && pack && dist"
