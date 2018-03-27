@@ -25,21 +25,22 @@ function fixReactIconsTypings(next) {
         }, function(err) {
             if (err) throw err;
 
-            downloadNode();
+            next();
         });
 
     } else {
-        downloadNode();
+        next();
     }
 
 } //fixReactIconsTypings
 
-function downloadNode() {
+function downloadNode(next) {
 
     // Download node
     var url;
     if (process.platform == 'darwin') {
         // No need to download node on mac
+        next();
         return;
     } else if (process.platform == 'win32') {
         url = 'https://nodejs.org/dist/v6.11.1/node-v6.11.1-win-x64.zip';
@@ -61,6 +62,8 @@ function downloadNode() {
                 fs.unlinkSync(archivePath);
                 fs.renameSync(path.join(vendorDir, archiveRootDirName), path.join(vendorDir, 'node'));
 
+                next();
+
             }, (err) => {
                 throw err;
             });
@@ -73,4 +76,8 @@ function downloadNode() {
 
 } //downloadNode
 
-fixReactIconsTypings();
+fixReactIconsTypings(function() {
+    downloadNode(function() {
+        //
+    });
+});

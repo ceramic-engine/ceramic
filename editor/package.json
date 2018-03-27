@@ -87,7 +87,7 @@
     "dotenv": "4.0.0",
     "electron": "^1.8.2",
     "electron-builder": "^19.56.0",
-    "electron-rebuild": "^1.6.0",
+    "electron-rebuild": "^1.7.3",
     "extract-text-webpack-plugin": "2.1.0",
     "file-loader": "0.11.1",
     "fs-extra": "^3.0.1",
@@ -116,7 +116,8 @@
   },
   "scripts": {
     "preinstall": "rimraf ../tools-editor && cp -r ../tools ../tools-editor",
-    "postinstall": "electron-builder install-app-deps && node post-install.js",
+    "postinstall": "electron-builder install-app-deps && node post-install.js && npm run compile-haxe",
+    "compile-haxe": "cd ceramic && ceramic luxe build web --setup --assets --debug --variant editor",
     "build": "cross-env NODE_ENV=production NODE_PATH=src node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "app-dev": "cross-env BROWSER=none NODE_ENV=development NODE_PATH=src node scripts/start.js",
@@ -130,7 +131,7 @@
     "update-ceramic": "rimraf ./node_modules/ceramic-tools && npm install --save file:../tools-editor && npm run rebuild-native && npm run copy-ceramic-plugins && npm run copy-ceramic-runtime",
     "copy-ceramic-plugins": "node scripts/copy-ceramic-plugins.js",
     "copy-ceramic-runtime": "node scripts/copy-ceramic-runtime.js",
-    "release": "build && update-ceramic && pack && dist"
+    "release": "npm run update-ceramic && npm run build && npm run pack && npm run dist"
   },
   "jest": {
     "mapCoverage": true,
