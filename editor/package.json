@@ -115,7 +115,7 @@
     "whatwg-fetch": "2.0.3"
   },
   "scripts": {
-    "preinstall": "npm install rimraf@^2.6.2 fs-extra@^3.0.1 && node scripts/copy-ceramic-tools.js",
+    "preinstall": "node scripts/copy-ceramic-tools.js",
     "postinstall": "electron-builder install-app-deps && node post-install.js && npm run compile-haxe",
     "compile-haxe": "cd ceramic && ceramic luxe build web --setup --assets --debug --variant editor",
     "build": "cross-env NODE_ENV=production NODE_PATH=src node scripts/build.js",
