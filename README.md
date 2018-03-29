@@ -1,8 +1,13 @@
 # Ceramic
 
-![Ceramic Logo](/editor/public/icons/256x256.png)
+| ![Ceramic Logo](/editor/public/icons/128x128.png) | Minimal and portable cross-platform game/multimedia engine. |
+| - | - |
 
-Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.
+## ⚠️  ACTIVE DEVELOPMENT / DON'T USE IT YET!
+
+**You've been warned**, everything in this repository is subject to change and **it is strongly advised not to use `ceramic` yet** on your own projects.
+
+`ceramic` should be considered usable when its [Alpha Milestone](https://github.com/jeremyfa/ceramic/milestone/1) gets completed. Until then, **no issue will be accepted**, and anyway **you should not use it at all for now** 🙂.
 
 ## Why ceramic?
 
@@ -13,8 +18,6 @@ Ceramic is made with very simple goals in mind:
 * Ensure adding new backends is as easy as possible by keeping the API clean and minimal.
 * Leverage as much as possible existing frameworks instead of reinventing the wheel.
 * Target iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux).
-
-See the short-term roadmap: https://github.com/jeremyfa/ceramic/issues/1
 
 ## How does it work?
 
@@ -135,7 +138,7 @@ ceramic luxe update
 
 ## Available backends
 
-At the moment, the only available backend is `luxe` (based on [luxe engine](https://luxeengine.com/)).
+At the moment, the only available backend is `luxe` (based on alpha version of [luxe engine](https://luxeengine.com/alpha/) written in `Haxe`).
 
 It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL).
 
@@ -143,10 +146,18 @@ More backends may be implemented in the future.
 
 ## Credits
 
-Ceramic was created by [Jérémy Faivre](https://github.com/jeremyfa) but is also possible thanks to the following works:
+Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)** but is also possible thanks to the following works:
 
-* **[Luxe Engine](https://luxeengine.com/) by Sven Bergström** which is the low-level-ish tech used by ceramic's default backend to display graphics, play sounds, manage input through [OpenGL](https://www.opengl.org/), [OpenAL](https://www.openal.org/) and [SDL](https://www.libsdl.org/). `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects.
+* **[Luxe Engine (alpha)](https://luxeengine.com/) by Sven Bergström** which is the low-level-ish tech used by ceramic's default backend to display graphics, play sounds, manage input through [OpenGL](https://www.opengl.org/), [OpenAL](https://www.openal.org/) and [SDL](https://www.libsdl.org/). `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects. Some snippets of `ceramic` directly come from `luxe`.
 
-* **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was used as a reference to implement `ceramic.Color` class.
+* **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was ported into `ceramic.Color` class.
 
 * **[OpenFL](https://github.com/openfl/openfl/blob/0b84012052fc8f6ab2e211c93769c99ad331beb9/openfl/geom/Matrix.hx) by Joshua Granick** and **[PixiJS](https://github.com/pixijs/pixi.js/blob/85aaea595f77bf0511886c499fc2733d4f5ba524/src/core/math/Matrix.js) by Mathew Groves** to implement `ceramic.Transform` class.
+
+* **[Haxe](https://haxe.org/) by Nicolas Cannasse**, maintained by the **Haxe Foundation**, which is a fantastic cross-platform toolkit and programming language making it much easier to create a portable engine.
+
+* **[Node.js](https://nodejs.org/) and its huge amount of community supported modules**, helping a lot to create feature-complete and cross-platform command line tools.
+
+## License
+
+Ceramic is [MIT licensed](LICENSE).
