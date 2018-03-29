@@ -7,7 +7,7 @@
 
 **You've been warned**, everything in this repository is subject to change and **it is strongly advised not to use `ceramic` yet** on your own projects.
 
-`ceramic` should be considered usable when its [Alpha Milestone](https://github.com/jeremyfa/ceramic/milestone/1) gets completed. Until then, **no issue will be accepted**, and anyway **you should not use it at all for now** 🙂.
+`ceramic` should be considered usable when its [Alpha Milestone](https://github.com/ceramic-engine/ceramic/milestone/1) gets completed. Until then, **no issue will be accepted**, and anyway **you should not use it at all for now** 🙂.
 
 ## Why ceramic?
 
@@ -70,7 +70,7 @@ Open a terminal (Powershell/CMD) **as administrator** and run ``npm install --gl
 While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is a Node.js tool installed from Git.
 
 ```
-git clone --recursive https://github.com/jeremyfa/ceramic.git
+git clone --recursive https://github.com/ceramic-engine/ceramic.git
 cd ceramic
 npm install
 npm link .

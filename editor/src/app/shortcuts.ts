@@ -260,7 +260,7 @@ class Shortcuts extends EventEmitter {
                 submenu: [
                     {
                         label: 'Learn More',
-                        click: () => { require('electron').shell.openExternal('https://github.com/jeremyfa/ceramic'); }
+                        click: () => { require('electron').shell.openExternal('https://github.com/ceramic-engine/ceramic'); }
                     }
                 ]
             }

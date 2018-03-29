@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremyfa/ceramic.git"
+    "url": "git+https://github.com/ceramic-engine/ceramic.git"
   },
   "bin": {
     "ceramic": "./ceramic"
@@ -18,9 +18,9 @@
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "private": true,
   "bugs": {
-    "url": "https://github.com/jeremyfa/ceramic/issues"
+    "url": "https://github.com/ceramic-engine/ceramic/issues"
   },
-  "homepage": "https://github.com/jeremyfa/ceramic#readme",
+  "homepage": "https://github.com/ceramic-engine/ceramic#readme",
   "dependencies": {
     "applescript": "^1.0.0",
     "colors": "^1.1.2",
