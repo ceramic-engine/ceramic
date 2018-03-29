@@ -3,7 +3,7 @@
 | ![Ceramic Logo](/editor/public/icons/128x128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
 | - | - |
 
-## ⚠️  ACTIVE DEVELOPMENT / DON'T USE IT YET!
+## ⚠️ ACTIVE DEVELOPMENT / DON'T USE IT YET! ⚠️
 
 **You've been warned**, everything in this repository is subject to change and **it is strongly advised not to use `ceramic` yet** on your own projects.
 
