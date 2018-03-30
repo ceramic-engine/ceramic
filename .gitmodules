@@ -1,0 +1,36 @@
+[submodule "git/linc_openal"]
+	path = git/linc_openal
+	url = https://github.com/snowkit/linc_openal.git
+	branch = master
+[submodule "git/linc_timestamp"]
+	path = git/linc_timestamp
+	url = https://github.com/snowkit/linc_timestamp.git
+	branch = master
+[submodule "git/linc_stb"]
+	path = git/linc_stb
+	url = https://github.com/snowkit/linc_stb.git
+	branch = master
+[submodule "git/linc_ogg"]
+	path = git/linc_ogg
+	url = https://github.com/snowkit/linc_ogg.git
+	branch = master
+[submodule "git/linc_sdl"]
+	path = git/linc_sdl
+	url = https://github.com/snowkit/linc_sdl.git
+	branch = master
+[submodule "git/linc_opengl"]
+	path = git/linc_opengl
+	url = https://github.com/snowkit/linc_opengl.git
+	branch = master
+[submodule "git/snow"]
+	path = git/snow
+	url = https://github.com/ceramic-engine/snow.git
+	branch = master
+[submodule "git/flow"]
+	path = git/flow
+	url = https://github.com/ceramic-engine/flow.git
+	branch = master
+[submodule "git/luxe"]
+	path = git/luxe
+	url = https://github.com/ceramic-engine/luxe.git
+	branch = master
