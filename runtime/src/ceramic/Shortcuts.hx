@@ -28,12 +28,6 @@ class Shortcuts {
     public static var settings(get,never):Settings;
     inline static function get_settings():Settings { return App.app.settings; }
 
-    /** Shared project instance */
-    /*
-    public static var project(get,never):Project;
-    inline static function get_project():Project { return App.app.project; }
-    */
-
     /** Shared collections instance */
     public static var collections(get,never):Collections;
     inline static function get_collections():Collections { return App.app.collections; }
@@ -65,25 +59,5 @@ class Shortcuts {
     inline public static function error(value:Dynamic, ?pos:PosInfos) {
         App.app.logger.error(value, pos);
     }
-
-    /** Assert */
-    macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
-
-#if debug
-        var str = haxe.macro.ExprTools.toString(expr);
-
-        reason = switch(reason) {
-            case macro null: macro '';
-            case _: macro ' ( ' + $reason + ' )';
-        }
-
-        return macro @:pos(Context.currentPos()) {
-            if (!$expr) throw '$str' + $reason;
-        }
-#else
-        return macro null;
-#end
-
-    } //assert
 
 } //Shortcuts
