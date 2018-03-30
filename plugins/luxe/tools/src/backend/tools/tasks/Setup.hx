@@ -47,7 +47,7 @@ class Setup extends tools.Task {
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var flowPath = Path.join([targetPath, 'project.flow']);
         var force = args.indexOf('--force') != -1;
-        var updateProject = args.indexOf('--update-project') != -1;
+        //var updateProject = args.indexOf('--update-project') != -1;
 
         // Compute relative ceramicPath
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
@@ -56,9 +56,13 @@ class Setup extends tools.Task {
         var backendRuntimePathRelative = getRelativePath(backendRuntimePath, targetPath);
 
         // If ceramic.yml has changed, force setup update
-        if (!force && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
+        //if (!force && updateProject && !Files.haveSameLastModified(projectPath, flowPath)) {
+
+            // For now, always update setup to prevent out of sync files
+            // This could be improved later but is not critical
             force = true;
-        }
+
+        //}
 
         if (FileSystem.exists(targetPath)) {
             if (!force) {
