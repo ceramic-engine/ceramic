@@ -502,6 +502,27 @@ class Helpers {
                 input = input.red();
             }
         }
+        else if (input.startsWith('[warning] ')) {
+            if (context.colors) {
+                input = input.substring('[warning] '.length);
+                input = input.yellow();
+            }
+        }
+        else if (input.startsWith('[success] ')) {
+            if (context.colors) {
+                input = input.substring('[success] '.length);
+                input = input.green();
+            }
+        }
+        else if (input.startsWith('[log] ')) {
+            if (context.colors) {
+                input = input.substring('[log] '.length);
+                input = input.cyan();
+            }
+        }
+        else if (input == '[log]' || input == '[success]' || input == '[warning]' || input == '[error]') {
+            input = '';
+        }
         else if (context.colors && input.startsWith('Called from hxcpp::')) {
             input = input.red();
         }

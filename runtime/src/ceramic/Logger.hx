@@ -11,34 +11,58 @@ class Logger {
 
     public function log(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
-        haxe.Log.trace('[log] ' + value, pos);
+        haxe.Log.trace(prefixLines('[log] ', value), pos);
 
     } //log
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
-        haxe.Log.trace('[success] ' + value, pos);
+        haxe.Log.trace(prefixLines('[success] ', value), pos);
 
     } //success
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
-#if web
+#if (web && luxe)
+        if (@:privateAccess Main.electronRunner != null) {
+            haxe.Log.trace(prefixLines('[warning] ', value), pos);
+        } else {
+            untyped console.warn(value);
+        }
+#elseif web
         untyped console.warn(value);
 #else
-        haxe.Log.trace('[warning] ' + value, pos);
+        haxe.Log.trace(prefixLines('[warning] ', value), pos);
 #end
 
     } //warning
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
-#if web
+#if (web && luxe)
+        if (@:privateAccess Main.electronRunner != null) {
+            haxe.Log.trace(prefixLines('[error] ', value), pos);
+        } else {
+            untyped console.error(value);
+        }
+#elseif web
         untyped console.error(value);
 #else
-        haxe.Log.trace('[error] ' + value, pos);
+        haxe.Log.trace(prefixLines('[error] ', value), pos);
 #end
 
     } //error
+
+/// Internal
+
+    function prefixLines(prefix:String, input:Dynamic):String {
+
+        var result = [];
+        for (line in Std.string(input).split("\n")) {
+            result.push(prefix + line);
+        }
+        return result.join("\n");
+
+    } //prefixLines
 
 } //Log
