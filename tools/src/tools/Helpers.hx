@@ -45,6 +45,16 @@ class Helpers {
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
 
+        // Add plugin assets paths
+        var pluginAssetPaths = [];
+        for (plugin in context.plugins) {
+            var assetPath = Path.join([plugin.path, 'assets']);
+            if (FileSystem.exists(assetPath) && FileSystem.isDirectory(assetPath)) {
+                pluginAssetPaths.push(assetPath);
+            }
+        }
+        context.defines.set('ceramic_plugins_assets_paths', Json.stringify(Json.stringify(pluginAssetPaths)));
+
         // Required for crash dumps
         context.defines.set('HXCPP_CHECK_POINTER', '');
         context.defines.set('safeMode', '');

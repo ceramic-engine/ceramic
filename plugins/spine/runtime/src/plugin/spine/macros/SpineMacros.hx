@@ -22,9 +22,14 @@ class SpineMacros {
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
         var assetsPath = Context.definedValue('assets_path');
+        var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_plugins_assets_paths');
+        var ceramicPluginsAssetsPaths:Array<String> = [];
+        if (ceramicPluginsAssetsPathsRaw != null) {
+            ceramicPluginsAssetsPaths = Json.parse(Json.parse(ceramicPluginsAssetsPathsRaw));
+        }
         var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
 
-        AssetsMacro.initData(assetsPath, ceramicAssetsPath);
+        AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);
         var nameFields = AssetsMacro.computeNames(fields, pos, 'spine', ['spine'], true);
 
         // Compute cached data
@@ -33,13 +38,27 @@ class SpineMacros {
             for (field in nameFields) {
             
                 var spineDir = field.doc;
+                var hasFile = false;
                 if (FileSystem.exists(Path.join([assetsPath, spineDir]))) {
                     spineDir = Path.join([assetsPath, spineDir]);
-                }
-                else if (FileSystem.exists(Path.join([ceramicAssetsPath, spineDir]))) {
-                    spineDir = Path.join([ceramicAssetsPath, spineDir]);
+                    hasFile = true;
                 }
                 else {
+                    for (pluginAssetsPath in ceramicPluginsAssetsPaths) {
+                        if (FileSystem.exists(Path.join([pluginAssetsPath, spineDir]))) {
+                            spineDir = Path.join([pluginAssetsPath, spineDir]);
+                            hasFile = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasFile && FileSystem.exists(Path.join([ceramicAssetsPath, spineDir]))) {
+                        spineDir = Path.join([ceramicAssetsPath, spineDir]);
+                        hasFile = true;
+                    }
+                }
+
+                if (!hasFile) {
                     continue;
                 }
 

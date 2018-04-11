@@ -3,6 +3,7 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.io.Path;
+import haxe.Json;
 import sys.FileSystem;
 
 using StringTools;
@@ -25,7 +26,7 @@ class AssetsMacro {
 
     macro static public function buildNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
         
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_plugins_assets_paths'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -123,7 +124,7 @@ class AssetsMacro {
 
     macro static public function buildLists():Array<Field> {
         
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_assets_path'));
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_plugins_assets_paths'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -230,14 +231,21 @@ class AssetsMacro {
 
     } //buildLists
 
-    public static function initData(assetsPath:String, ceramicAssetsPath:String):Void {
+    public static function initData(assetsPath:String, ceramicPluginsAssetsPathsRaw:String, ceramicAssetsPath:String):Void {
 
         if (backendInfo == null) backendInfo = new backend.Info();
+
+        var ceramicPluginsAssetsPaths:Array<String> = [];
+        if (ceramicPluginsAssetsPathsRaw != null) {
+            ceramicPluginsAssetsPaths = Json.parse(Json.parse(ceramicPluginsAssetsPathsRaw));
+        }
 
         if (allAssets == null) {
 
             var usedPaths:Map<String,Bool> = new Map();
 
+            // Project assets
+            //
             if (FileSystem.exists(assetsPath)) {
                 allAssets = getFlatDirectory(assetsPath);
             } else {
@@ -248,6 +256,21 @@ class AssetsMacro {
                 usedPaths.set(asset, true);
             }
 
+            // Plugins assets
+            //
+            for (pluginAssetsPath in ceramicPluginsAssetsPaths) {
+                if (FileSystem.exists(pluginAssetsPath)) {
+                    for (asset in getFlatDirectory(pluginAssetsPath)) {
+                        if (!usedPaths.exists(asset)) {
+                            allAssets.push(asset);
+                            usedPaths.set(asset, true);
+                        }
+                    }
+                }
+            }
+
+            // Default assets
+            //
             if (FileSystem.exists(ceramicAssetsPath)) {
                 for (asset in getFlatDirectory(ceramicAssetsPath)) {
                     if (!usedPaths.exists(asset)) {

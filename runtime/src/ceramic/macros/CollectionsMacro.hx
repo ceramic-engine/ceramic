@@ -21,6 +21,13 @@ class CollectionsMacro {
         var pos = Context.currentPos();
 
         var assetsPath = Context.definedValue('assets_path');
+        var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
+        var pluginsAssetsPaths:Array<String> = [];
+        var pluginsAssetsPathsRaw = Context.definedValue('ceramic_plugins_assets_paths');
+        if (pluginsAssetsPathsRaw != null) {
+            pluginsAssetsPaths = Json.parse(Json.parse(pluginsAssetsPathsRaw));
+        }
+        var allAssetsPaths = [assetsPath].concat(pluginsAssetsPaths).concat([ceramicAssetsPath]);
         
         for (key in Reflect.fields(data.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(data.collections, key))) {
@@ -60,35 +67,40 @@ class CollectionsMacro {
 
                     // Collection static ids
                     //
-                    var csvPath = Path.join([assetsPath, collectionData + '.csv']);
-                    if (collectionData != null && FileSystem.exists(csvPath)) {
+                    if (collectionData != null) {
+                        for (pathPrefix in allAssetsPaths) {
+                            var csvPath = Path.join([pathPrefix, collectionData + '.csv']);
+                            if (FileSystem.exists(csvPath)) {
 
-                        var csvData = Csv.parse(File.getContent(csvPath));
+                                var csvData = Csv.parse(File.getContent(csvPath));
 
-                        var entries = [];
+                                var entries = [];
 
-                        for (csvEntry in csvData) {
-                            var entryId = csvEntry.get('id');
-                            if (entryId != null && entryId.trim() != '' && entryId != 'null') {
-                                entries.push({
-                                    expr: {
-                                        expr: EConst(CString(entryId)),
-                                        pos: pos
-                                    },
-                                    field: toCollectionConstName(entryId)
+                                for (csvEntry in csvData) {
+                                    var entryId = csvEntry.get('id');
+                                    if (entryId != null && entryId.trim() != '' && entryId != 'null') {
+                                        entries.push({
+                                            expr: {
+                                                expr: EConst(CString(entryId)),
+                                                pos: pos
+                                            },
+                                            field: toCollectionConstName(entryId)
+                                        });
+                                    }
+                                }
+
+                                fields.push({
+                                    pos: pos,
+                                    name: collectionConstName,
+                                    kind: FProp('default', 'null', null, { expr: EObjectDecl(entries), pos: pos }),
+                                    access: [APublic, AStatic],
+                                    doc: 'Collection IDs',
+                                    meta: []
                                 });
+
+                                break;
                             }
                         }
-
-                        fields.push({
-                            pos: pos,
-                            name: collectionConstName,
-                            kind: FProp('default', 'null', null, { expr: EObjectDecl(entries), pos: pos }),
-                            access: [APublic, AStatic],
-                            doc: 'Collection IDs',
-                            meta: []
-                        });
-
                     }
 
                 }
