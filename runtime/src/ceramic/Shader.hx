@@ -14,6 +14,20 @@ class Shader extends Entity {
 
     public var asset:ShaderAsset;
 
+/// Static helpers
+
+    /** Instanciates a shader from source.
+        Although it would expect `GLSL` code in default ceramic backends (luxe backend),
+        Expected shading language could be different in some future backend implementations. */
+    public static function fromSource(vertSource:String, fragSource:String):Shader {
+
+        var backendItem = app.backend.shaders.fromSource(vertSource, fragSource);
+        if (backendItem == null) return null;
+
+        return new Shader(backendItem);
+
+    } //fromSource
+
 /// Lifecycle
 
     public function new(backendItem:backend.Shader) {

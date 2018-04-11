@@ -9,52 +9,21 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    public function load(path:String, options:LoadShaderOptions, done:Shader->Void):Void {
+    inline public function fromSource(vertSource:String, fragSource:String):Shader {
 
-        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
-            path
-        :
-            Path.join([ceramic.App.app.settings.assetsPath, path]);
-
-        var dir = path;
-
-        var fragId = options.fragId != null ? options.fragId : 'default';
-        var vertId = options.vertId != null ? options.vertId : 'default';
-
-        path += '/[' + fragId + ',' + vertId + ']';
-
-        if (fragId != 'default') {
-            fragId = Path.join([dir, fragId]);
-        }
-
-        if (vertId != 'default') {
-            vertId = Path.join([dir, vertId]);
-        }
-
-        if (loadedShaders.exists(path)) {
-            loadedShadersRetainCount.set(path, loadedShadersRetainCount.get(path) + 1);
-            var existing = Luxe.resources.shader(path);
-            if (existing.state == ResourceState.loaded) {
-                done(existing);
-            } else {
-                done(null);
-            }
-            return;
-        }
-
-        Luxe.resources.load_shader(path, {
-            frag_id: fragId,
-            vert_id: vertId,
-            no_default_uniforms: options.noDefaultUniforms
-        })
-        .then(function(res:phoenix.Shader) {
-            done(res);
-        },
-        function(_) {
-            done(null);
+        var shader = new backend.impl.CeramicShader({
+            id: ceramic.Utils.uniqueId(),
+            vert_id: null,
+            frag_id: null
         });
 
-    } //load
+        if (!shader.from_string(vertSource, fragSource)) {
+            return null;
+        }
+
+        return shader;
+
+    } //fromSource
 
     inline public function destroy(shader:Shader):Void {
 

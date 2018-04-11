@@ -47,9 +47,9 @@ class ShaderAsset extends Asset {
                 }
             }
 
-            if (options.fragId != null || options.vertId != null) {
+            /*if (options.fragId != null || options.vertId != null) {
                 path = Path.directory(path);
-            }
+            }*/
 
             log('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
         }
@@ -57,7 +57,54 @@ class ShaderAsset extends Asset {
             log('Load shader $path');
         }
 
-        app.backend.shaders.load(path, {
+        if (options.vertId == null) {
+            status = BROKEN;
+            error('Missing vertId option to load shader at path: $path');
+            emitComplete(false);
+            return;
+        }
+
+        if (options.fragId == null) {
+            status = BROKEN;
+            error('Missing fragId option to load shader at path: $path');
+            emitComplete(false);
+            return;
+        }
+
+        app.backend.texts.load(options.vertId, function(vertSource) {
+            app.backend.texts.load(options.fragId, function(fragSource) {
+
+                if (vertSource == null) {
+                    status = BROKEN;
+                    error('Failed to load ' + options.vertId + ' for shader at path: $path');
+                    emitComplete(false);
+                    return;
+                }
+
+                if (fragSource == null) {
+                    status = BROKEN;
+                    error('Failed to load ' + options.fragId + ' for shader at path: $path');
+                    emitComplete(false);
+                    return;
+                }
+
+                var backendItem = app.backend.shaders.fromSource(vertSource, fragSource);
+                if (backendItem == null) {
+                    status = BROKEN;
+                    error('Failed to create shader from data at path: $path');
+                    emitComplete(false);
+                    return;
+                }
+
+                this.shader = new Shader(backendItem);
+                this.shader.asset = this;
+                status = READY;
+                emitComplete(true);
+
+            });
+        });
+
+        /*app.backend.shaders.load(path, {
             fragId: options.fragId,
             vertId: options.vertId,
             noDefaultUniforms: options.noDefaultUniforms
@@ -75,7 +122,7 @@ class ShaderAsset extends Asset {
                 emitComplete(false);
             }
 
-        });
+        });*/
 
     } //load
 

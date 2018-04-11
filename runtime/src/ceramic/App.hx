@@ -56,6 +56,9 @@ class App extends Entity {
     @event function controllerEnable(controllerId:Int, name:String);
     @event function controllerDisable(controllerId:Int);
 
+    /** Assets events */
+    @event function defaultAssetsLoad(assets:Assets);
+
 /// Immediate update event, custom implementation
 
     var immediateCallbacks:Array<Void->Void> = null;
@@ -109,23 +112,26 @@ class App extends Entity {
     /** App settings */
     public var settings(default,null):Settings;
 
-    /** Logger. Used by log() shortcut. */
+    /** Logger. Used by log() shortcut */
     public var logger(default,null):Logger = new Logger();
 
-    /** Visuals (ordered). */
+    /** Visuals (ordered) */
     public var visuals(default,null):Array<Visual> = [];
 
-    /** App level assets. Used to load default bitmap font. */
+    /** App level assets. Used to load default bitmap font */
     public var assets(default,null):Assets = new Assets();
 
-    /** App level collections. */
+    /** App level collections */
     public var collections(default,null):Collections = new Collections();
 
+    /** Default color shader **/
+    public var defaultColorShader(default,null):Shader = null;
+
+    /** Default textured shader **/
+    public var defaultTexturedShader(default,null):Shader = null;
+
     /** Default font */
-    public var defaultFont(get,null):BitmapFont;
-    inline function get_defaultFont():BitmapFont {
-        return assets.font(Fonts.ARIAL_20);
-    }
+    public var defaultFont(default,null):BitmapFont = null;
 
 /// Field converters
 
@@ -188,11 +194,24 @@ class App extends Entity {
         // Init collections
         initCollections();
 
-        // Load default font
+        // Load default assets
+        //
+        // Default font
         assets.add(Fonts.ARIAL_20);
+
+        // Default shaders
+        assets.add(Shaders.COLOR);
+        assets.add(Shaders.TEXTURED);
+
         assets.onceComplete(this, function(success) {
 
             if (success) {
+
+                // Get default asset instances now that they are loaded
+                defaultFont = assets.font(Fonts.ARIAL_20);
+                defaultColorShader = assets.shader(Shaders.COLOR);
+                defaultTexturedShader = assets.shader(Shaders.TEXTURED);
+
                 logger.success('Default assets loaded.');
                 assetsLoaded();
             } else {
@@ -200,6 +219,9 @@ class App extends Entity {
             }
 
         });
+        
+        // Allow to load more default assets
+        emitDefaultAssetsLoad(assets);
 
         assets.load();
 

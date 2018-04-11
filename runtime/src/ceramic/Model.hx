@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Autorun;
+
 using StringTools;
 
 class Model extends Entity implements Observable {
@@ -24,6 +26,9 @@ class Model extends Entity implements Observable {
 
     function toString():String {
 
+        var prevAutorun = Autorun.current;
+        Autorun.current = null;
+
         var result:Dynamic = {};
 
         for (key in Reflect.fields(this)) {
@@ -39,6 +44,7 @@ class Model extends Entity implements Observable {
 
         }
 
+        Autorun.current = prevAutorun;
         return '' + result;
 
     } //toString

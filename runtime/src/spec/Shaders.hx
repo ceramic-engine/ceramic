@@ -5,10 +5,10 @@ import backend.Shader;
 import backend.Image;
 
 interface Shaders {
-
-    function load(path:String, options:LoadShaderOptions, done:Shader->Void):Void;
     
     function destroy(shader:Shader):Void;
+    
+    function fromSource(vertSource:String, fragSource:String):Shader;
 
 /// Public API
 

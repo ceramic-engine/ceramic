@@ -20,6 +20,8 @@ class CeramicBatcher extends phoenix.Batcher {
 
     override function batch(persist_immediate:Bool = false) {
 
+        if (ceramic.App.app.defaultColorShader == null) return;
+
         //trace('CeramicBatcher.batch() ' + ceramic.Timer.now + ' visuals=' + (ceramicVisuals != null ? ceramicVisuals.length : 0));
 
         // Reset render stats before we start
@@ -43,6 +45,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         var lastTexture:ceramic.Texture = null;
         var lastTextureId:phoenix.TextureID = null;
+        var lastTextureSlot:Int = 0;
         var lastShader:ceramic.Shader = null;
         var lastBlend:ceramic.Blending = ceramic.Blending.NORMAL;
         
@@ -95,14 +98,15 @@ class CeramicBatcher extends phoenix.Batcher {
         var texHeightActual:Float = 0;
 
         var stateDirty = true;
-        var luxeShader:phoenix.Shader = null;
-        var defaultPlainShader:phoenix.Shader = renderer.shaders.plain.shader;
-        var defaultTexturedShader:phoenix.Shader = renderer.shaders.textured.shader;
+
+        var defaultPlainShader:backend.impl.CeramicShader = ceramic.App.app.defaultColorShader.backendItem;
+        var defaultTexturedShader:backend.impl.CeramicShader = ceramic.App.app.defaultTexturedShader.backendItem;
         
         // Initialize default state
-        Luxe.renderer.state.bindTexture2D(null);
+        renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+        renderer.state.bindTexture2D(null);
         renderer.state.enable(GL.BLEND);
-        apply_default_uniforms(defaultPlainShader);
+        applyDefaultUniforms(defaultPlainShader);
         defaultPlainShader.activate();
 
         // Default blending
@@ -128,12 +132,13 @@ class CeramicBatcher extends phoenix.Batcher {
                 // No texture
                 if (lastShader == null && quad.shader == null) {
                     // Default plain shader fallback
-                    apply_default_uniforms(defaultPlainShader);
+                    applyDefaultUniforms(defaultPlainShader);
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
                 lastTextureId = null;
-                Luxe.renderer.state.bindTexture2D(null);
+                renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+                renderer.state.bindTexture2D(null);
 
                 // Default blending
                 GL.blendFuncSeparate(
@@ -179,6 +184,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
                                 lastTexture = quad.texture;
                                 lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
+                                lastTextureSlot = (quad.texture.backendItem : phoenix.Texture).slot;
                                 texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
                                 texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
                                 (lastTexture.backendItem : phoenix.Texture).bind();
@@ -187,23 +193,25 @@ class CeramicBatcher extends phoenix.Batcher {
                             if (quad.texture != null) {
                                 if (lastShader == null && quad.shader == null) {
                                     // Default textured shader fallback
-                                    apply_default_uniforms(defaultTexturedShader);
+                                    applyDefaultUniforms(defaultTexturedShader);
                                     defaultTexturedShader.activate();
                                 }
                                 lastTexture = quad.texture;
                                 lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
+                                lastTextureSlot = (quad.texture.backendItem : phoenix.Texture).slot;
                                 texWidthActual = (quad.texture.backendItem : phoenix.Texture).width_actual;
                                 texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
                                 (lastTexture.backendItem : phoenix.Texture).bind();
                             } else {
                                 if (lastShader == null && quad.shader == null) {
                                     // Default plain shader fallback
-                                    apply_default_uniforms(defaultPlainShader);
+                                    applyDefaultUniforms(defaultPlainShader);
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
                                 lastTextureId = null;
-                                Luxe.renderer.state.bindTexture2D(null);
+                                renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+                                renderer.state.bindTexture2D(null);
                             }
                         }
                     }
@@ -214,17 +222,17 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         if (lastShader != null) {
                             // Custom shader
-                            apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
+                            applyDefaultUniforms(lastShader.backendItem);
                             (lastShader.backendItem : phoenix.Shader).activate();
                         }
                         else if (lastTexture != null) {
                             // Default textured shader fallback
-                            apply_default_uniforms(defaultTexturedShader);
+                            applyDefaultUniforms(defaultTexturedShader);
                             defaultTexturedShader.activate();
                         }
                         else {
                             // Default plain shader fallback
-                            apply_default_uniforms(defaultPlainShader);
+                            applyDefaultUniforms(defaultPlainShader);
                             defaultPlainShader.activate();
                         }
                     }
@@ -419,12 +427,13 @@ class CeramicBatcher extends phoenix.Batcher {
                 // No texture
                 if (lastShader == null && quad.shader == null) {
                     // Default plain shader fallback
-                    apply_default_uniforms(defaultPlainShader);
+                    applyDefaultUniforms(defaultPlainShader);
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
                 lastTextureId = null;
-                Luxe.renderer.state.bindTexture2D(null);
+                renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+                renderer.state.bindTexture2D(null);
 
                 // Default blending
                 GL.blendFuncSeparate(
@@ -481,7 +490,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             if (mesh.texture != null) {
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default textured shader fallback
-                                    apply_default_uniforms(defaultTexturedShader);
+                                    applyDefaultUniforms(defaultTexturedShader);
                                     defaultTexturedShader.activate();
                                 }
                                 lastTexture = mesh.texture;
@@ -494,12 +503,13 @@ class CeramicBatcher extends phoenix.Batcher {
                             } else {
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default plain shader fallback
-                                    apply_default_uniforms(defaultPlainShader);
+                                    applyDefaultUniforms(defaultPlainShader);
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
                                 lastTextureId = null;
-                                Luxe.renderer.state.bindTexture2D(null);
+                                renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+                                renderer.state.bindTexture2D(null);
                             }
                         }
                     }
@@ -510,17 +520,17 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         if (lastShader != null) {
                             // Custom shader
-                            apply_default_uniforms((lastShader.backendItem : phoenix.Shader));
+                            applyDefaultUniforms(lastShader.backendItem);
                             (lastShader.backendItem : phoenix.Shader).activate();
                         }
                         else if (lastTexture != null) {
                             // Default textured shader fallback
-                            apply_default_uniforms(defaultTexturedShader);
+                            applyDefaultUniforms(defaultTexturedShader);
                             defaultTexturedShader.activate();
                         }
                         else {
                             // Default plain shader fallback
-                            apply_default_uniforms(defaultPlainShader);
+                            applyDefaultUniforms(defaultPlainShader);
                             defaultPlainShader.activate();
                         }
                     }
@@ -783,6 +793,7 @@ class CeramicBatcher extends phoenix.Batcher {
         //
         if (lastTextureId != null) {
             // Remove bound texture
+            renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
             renderer.state.bindTexture2D(null);
         }
         // Remove shader program
@@ -830,11 +841,11 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
 
         GL.bindBuffer(GL.ARRAY_BUFFER, tb);
-        GL.vertexAttribPointer( tcoord_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.vertexAttribPointer(tcoord_attribute, 4, GL.FLOAT, false, 0, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _tcoords, GL.STREAM_DRAW);
 
         GL.bindBuffer(GL.ARRAY_BUFFER, cb);
-        GL.vertexAttribPointer( color_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.vertexAttribPointer(color_attribute, 4, GL.FLOAT, false, 0, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
 
         // Draw
@@ -859,5 +870,14 @@ class CeramicBatcher extends phoenix.Batcher {
         return true;
 
     } //flush
+
+    inline public function applyDefaultUniforms(_shader:backend.impl.CeramicShader) {
+
+        if(!_shader.no_default_uniforms) {
+            _shader.set_matrix4_arr('projectionMatrix', view.proj_arr);
+            _shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
+        }
+
+    } //applyDefaultUniforms
 
 } //CeramicBatcher
