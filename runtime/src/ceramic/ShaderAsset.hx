@@ -46,11 +46,6 @@ class ShaderAsset extends Asset {
                     }
                 }
             }
-
-            /*if (options.fragId != null || options.vertId != null) {
-                path = Path.directory(path);
-            }*/
-
             log('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
         }
         else {
@@ -88,7 +83,19 @@ class ShaderAsset extends Asset {
                     return;
                 }
 
-                var backendItem = app.backend.shaders.fromSource(vertSource, fragSource);
+                var customAttributes:Array<ShaderAttribute> = null;
+                if (options.attributes != null) {
+                    customAttributes = [];
+                    var rawAttributes:Array<Dynamic> = options.attributes;
+                    for (rawAttr in rawAttributes) {
+                        customAttributes.push({
+                            size: rawAttr.size,
+                            name: rawAttr.name
+                        });
+                    }
+                }
+
+                var backendItem = app.backend.shaders.fromSource(vertSource, fragSource, customAttributes);
                 if (backendItem == null) {
                     status = BROKEN;
                     error('Failed to create shader from data at path: $path');
@@ -96,7 +103,7 @@ class ShaderAsset extends Asset {
                     return;
                 }
 
-                this.shader = new Shader(backendItem);
+                this.shader = new Shader(backendItem, customAttributes);
                 this.shader.asset = this;
                 status = READY;
                 emitComplete(true);

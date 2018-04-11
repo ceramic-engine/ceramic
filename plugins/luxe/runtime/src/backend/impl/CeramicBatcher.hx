@@ -17,6 +17,10 @@ class CeramicBatcher extends phoenix.Batcher {
     public var ceramicVisuals:Array<ceramic.Visual> = null;
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+    var activeShader:backend.impl.CeramicShader = null;
+
+    public var customBuffers:Array<Float32Array> = [];
+    public var customBuffersFloats:Array<Int> = [];
 
     override function batch(persist_immediate:Bool = false) {
 
@@ -106,7 +110,7 @@ class CeramicBatcher extends phoenix.Batcher {
         renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
         renderer.state.bindTexture2D(null);
         renderer.state.enable(GL.BLEND);
-        applyDefaultUniforms(defaultPlainShader);
+        useShader(defaultPlainShader);
         defaultPlainShader.activate();
 
         // Default blending
@@ -132,7 +136,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 // No texture
                 if (lastShader == null && quad.shader == null) {
                     // Default plain shader fallback
-                    applyDefaultUniforms(defaultPlainShader);
+                    useShader(defaultPlainShader);
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
@@ -193,7 +197,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             if (quad.texture != null) {
                                 if (lastShader == null && quad.shader == null) {
                                     // Default textured shader fallback
-                                    applyDefaultUniforms(defaultTexturedShader);
+                                    useShader(defaultTexturedShader);
                                     defaultTexturedShader.activate();
                                 }
                                 lastTexture = quad.texture;
@@ -205,7 +209,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             } else {
                                 if (lastShader == null && quad.shader == null) {
                                     // Default plain shader fallback
-                                    applyDefaultUniforms(defaultPlainShader);
+                                    useShader(defaultPlainShader);
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
@@ -222,17 +226,17 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         if (lastShader != null) {
                             // Custom shader
-                            applyDefaultUniforms(lastShader.backendItem);
+                            useShader(lastShader.backendItem);
                             (lastShader.backendItem : phoenix.Shader).activate();
                         }
                         else if (lastTexture != null) {
                             // Default textured shader fallback
-                            applyDefaultUniforms(defaultTexturedShader);
+                            useShader(defaultTexturedShader);
                             defaultTexturedShader.activate();
                         }
                         else {
                             // Default plain shader fallback
-                            applyDefaultUniforms(defaultPlainShader);
+                            useShader(defaultPlainShader);
                             defaultPlainShader.activate();
                         }
                     }
@@ -427,7 +431,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 // No texture
                 if (lastShader == null && quad.shader == null) {
                     // Default plain shader fallback
-                    applyDefaultUniforms(defaultPlainShader);
+                    useShader(defaultPlainShader);
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
@@ -490,7 +494,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             if (mesh.texture != null) {
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default textured shader fallback
-                                    applyDefaultUniforms(defaultTexturedShader);
+                                    useShader(defaultTexturedShader);
                                     defaultTexturedShader.activate();
                                 }
                                 lastTexture = mesh.texture;
@@ -503,7 +507,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             } else {
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default plain shader fallback
-                                    applyDefaultUniforms(defaultPlainShader);
+                                    useShader(defaultPlainShader);
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
@@ -520,17 +524,17 @@ class CeramicBatcher extends phoenix.Batcher {
 
                         if (lastShader != null) {
                             // Custom shader
-                            applyDefaultUniforms(lastShader.backendItem);
+                            useShader(lastShader.backendItem);
                             (lastShader.backendItem : phoenix.Shader).activate();
                         }
                         else if (lastTexture != null) {
                             // Default textured shader fallback
-                            applyDefaultUniforms(defaultTexturedShader);
+                            useShader(defaultTexturedShader);
                             defaultTexturedShader.activate();
                         }
                         else {
                             // Default plain shader fallback
-                            applyDefaultUniforms(defaultPlainShader);
+                            useShader(defaultPlainShader);
                             defaultPlainShader.activate();
                         }
                     }
@@ -848,12 +852,45 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.vertexAttribPointer(color_attribute, 4, GL.FLOAT, false, 0, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
 
+        var customGLBuffers = null;
+        if (activeShader != null && activeShader.customAttributes != null) {
+
+            var n = 0;
+            for (attr in activeShader.customAttributes) {
+
+                trace('draw custom buffer (' + attr.name + ')');
+
+                var b = GL.createBuffer();
+                var bufferData = Float32Array.fromBuffer(
+                    customBuffers.unsafeGet(n).buffer,
+                    0,
+                    customBuffersFloats.unsafeGet(n) * attr.size
+                );
+                if (customGLBuffers == null) customGLBuffers = [];
+                customGLBuffers.push(b);
+
+                GL.bindBuffer(GL.ARRAY_BUFFER, b);
+                GL.vertexAttribPointer(color_attribute + n + 1, attr.size, GL.FLOAT, false, 0, 0);
+                GL.bufferData(GL.ARRAY_BUFFER, bufferData, GL.STREAM_DRAW);
+
+                n++;
+
+            }
+        }
+
         // Draw
         GL.drawArrays(primitiveType, 0, Std.int(_pos.length/4));
 
         GL.deleteBuffer(pb);
         GL.deleteBuffer(cb);
         GL.deleteBuffer(tb);
+
+        if (customGLBuffers != null) {
+            for (b in customGLBuffers) {
+                GL.deleteBuffer(b);
+            }
+        }
+        customGLBuffers = null;
 
         draw_calls++;
 
@@ -867,15 +904,42 @@ class CeramicBatcher extends phoenix.Batcher {
         tcoord_floats = 0;
         color_floats = 0;
 
+        if (activeShader != null && activeShader.customAttributes != null) {
+            var n = 0;
+            for (attr in activeShader.customAttributes) {
+                customBuffersFloats.unsafeSet(n, 0);
+                n++;
+            }
+        }
+
         return true;
 
     } //flush
 
-    inline public function applyDefaultUniforms(_shader:backend.impl.CeramicShader) {
+    inline public function useShader(_shader:backend.impl.CeramicShader) {
 
-        if(!_shader.no_default_uniforms) {
+        activeShader = _shader;
+
+        if (!_shader.no_default_uniforms) {
             _shader.set_matrix4_arr('projectionMatrix', view.proj_arr);
             _shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
+        }
+
+        // Create custom buffers (if needed)
+        if (_shader.customAttributes != null) {
+            var n = 0;
+            
+            var numBuffers = customBuffers.length;
+            for (attr in _shader.customAttributes) {
+                if (n >= numBuffers) {
+                    customBuffers.push(new Float32Array(max_floats));
+                    customBuffersFloats.push(0);
+                    numBuffers++;
+                }
+                customBuffersFloats.unsafeSet(n, 0);
+
+                n++;
+            }
         }
 
     } //applyDefaultUniforms

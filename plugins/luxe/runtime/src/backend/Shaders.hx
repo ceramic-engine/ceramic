@@ -9,13 +9,15 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    inline public function fromSource(vertSource:String, fragSource:String):Shader {
+    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
 
         var shader = new backend.impl.CeramicShader({
             id: ceramic.Utils.uniqueId(),
             vert_id: null,
             frag_id: null
         });
+
+        shader.customAttributes = customAttributes;
 
         if (!shader.from_string(vertSource, fragSource)) {
             return null;

@@ -6,9 +6,7 @@ import snow.modules.opengl.GL;
 
 class CeramicShader extends phoenix.Shader {
 
-    public var attributeKeys:Array<String> = null;
-
-    public var uniformKeys:Array<String> = null;
+    public var customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute> = null;
 
     override public function link():Bool {
 
@@ -17,25 +15,19 @@ class CeramicShader extends phoenix.Shader {
         GL.attachShader(program, vert_shader);
         GL.attachShader(program, frag_shader);
 
-        /*GL.linkProgram(program);
+        // Now we want to ensure that our locations are static
+        GL.bindAttribLocation(program, Batcher.vert_attribute, 'vertexPosition');
+        GL.bindAttribLocation(program, Batcher.tcoord_attribute, 'vertexTCoord');
+        GL.bindAttribLocation(program, Batcher.color_attribute, 'vertexColor');
 
-        var na = GL.getProgramParameter(program, GL.ACTIVE_ATTRIBUTES);
-        trace(na + ' attributes');
-        for (i in 0...na) {
-            var a = GL.getActiveAttrib(program, i);
-            trace(i + ' ' + a.size + ' ' + glTypeToString(a.type) + ' ' + a.name);
+        // Custom attributes from ceramic
+        if (customAttributes != null) {
+            var n = Batcher.color_attribute + 1;
+            for (attr in customAttributes) {
+                GL.bindAttribLocation(program, n, attr.name);
+                n++;
+            }
         }
-        var nu = GL.getProgramParameter(program, GL.ACTIVE_UNIFORMS);
-        trace(nu + ' uniforms');
-        for (i in 0...nu) {
-            var u = GL.getActiveUniform(program, i);
-            trace(i + ' ' + u.size + ' ' + glTypeToString(u.type) + ' ' + u.name);
-        }*/
-
-            //Now we want to ensure that our locations are static
-        GL.bindAttribLocation( program, Batcher.vert_attribute,    'vertexPosition');
-        GL.bindAttribLocation( program, Batcher.tcoord_attribute,  'vertexTCoord');
-        GL.bindAttribLocation( program, Batcher.color_attribute,   'vertexColor');
 
         GL.linkProgram(program);
 

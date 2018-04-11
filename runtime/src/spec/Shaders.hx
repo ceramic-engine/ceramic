@@ -8,7 +8,7 @@ interface Shaders {
     
     function destroy(shader:Shader):Void;
     
-    function fromSource(vertSource:String, fragSource:String):Shader;
+    function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader;
 
 /// Public API
 

@@ -10,10 +10,6 @@ using StringTools;
 
 class Shader extends Entity {
 
-    public var backendItem:backend.Shader;
-
-    public var asset:ShaderAsset;
-
 /// Static helpers
 
     /** Instanciates a shader from source.
@@ -28,11 +24,36 @@ class Shader extends Entity {
 
     } //fromSource
 
+/// Properties
+
+    public var backendItem:backend.Shader;
+
+    public var asset:ShaderAsset;
+
+    public var attributes:ImmutableArray<ShaderAttribute>;
+
+    public var customAttributes:ImmutableArray<ShaderAttribute>;
+
 /// Lifecycle
 
-    public function new(backendItem:backend.Shader) {
+    public function new(backendItem:backend.Shader, ?customAttributes:ImmutableArray<ShaderAttribute>) {
 
         this.backendItem = backendItem;
+
+        var attributes:Array<ShaderAttribute> = [
+            { size: 4, name: 'vertexPosition' },
+            { size: 4, name: 'vertexTCoord' },
+            { size: 4, name: 'vertexColor' }
+        ];
+
+        if (customAttributes != null) {
+            for (attribute in customAttributes) {
+                attributes.push(attribute);
+            }
+        }
+
+        this.attributes = attributes;
+        this.customAttributes = customAttributes;
 
     } //new
 
@@ -42,6 +63,7 @@ class Shader extends Entity {
 
         app.backend.shaders.destroy(backendItem);
         backendItem = null;
+        attributes = null;
 
     } //destroy
 

@@ -201,7 +201,11 @@ class App extends Entity {
 
         // Default shaders
         assets.add(Shaders.COLOR);
-        assets.add(Shaders.TEXTURED);
+        assets.add(Shaders.TEXTURED/*, {
+            attributes: [
+                { size: 3, name: 'customAttribute' }
+            ]
+        }*/);
 
         assets.onceComplete(this, function(success) {
 
