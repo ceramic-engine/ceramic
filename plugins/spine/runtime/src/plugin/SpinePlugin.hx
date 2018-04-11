@@ -45,6 +45,11 @@ class SpinePlugin {
             var convertSpineData = new ConvertSpineData();
             ceramic.App.app.converters.set('plugin.spine.SpineData', convertSpineData);
 
+            // Load additional shaders required by spine
+            ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
+                assets.add(ceramic.Shaders.TWO_COLORS);
+            });
+
         });
     }
 
