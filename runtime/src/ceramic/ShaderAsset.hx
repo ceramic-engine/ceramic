@@ -104,26 +104,6 @@ class ShaderAsset extends Asset {
             });
         });
 
-        /*app.backend.shaders.load(path, {
-            fragId: options.fragId,
-            vertId: options.vertId,
-            noDefaultUniforms: options.noDefaultUniforms
-        }, function(shader) {
-
-            if (shader != null) {
-                this.shader = new Shader(shader);
-                this.shader.asset = this;
-                status = READY;
-                emitComplete(true);
-            }
-            else {
-                status = BROKEN;
-                error('Failed to load shader at path: $path');
-                emitComplete(false);
-            }
-
-        });*/
-
     } //load
 
     function destroy():Void {
