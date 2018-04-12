@@ -9,6 +9,6 @@ varying vec2 tcoord;
 varying vec4 color;
 
 void main() {
-    vec4 texcolor = texture2D(tex0, tcoord);
-    gl_FragColor = color * texcolor;
+    vec4 texColor = texture2D(tex0, tcoord);
+    gl_FragColor = color * texColor;
 }
