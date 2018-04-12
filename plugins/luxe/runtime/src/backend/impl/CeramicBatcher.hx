@@ -18,9 +18,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
     var activeShader:backend.impl.CeramicShader = null;
-
-    public var customBuffers:Array<Float32Array> = [];
-    public var customBuffersFloats:Array<Int> = [];
+    var customFloatAttributesSize:Int = 0;
 
     override function batch(persist_immediate:Bool = false) {
 
@@ -61,6 +59,8 @@ class CeramicBatcher extends phoenix.Batcher {
         var i:Int = 0;
         var j:Int = 0;
         var k:Int = 0;
+        var l:Int = 0;
+        var n:Int = 0;
         var z:Float = 0;
 
         var r:Float = 1;
@@ -128,7 +128,7 @@ class CeramicBatcher extends phoenix.Batcher {
         // Default stencil test
         GL.disable(GL.STENCIL_TEST);
 
-        inline function drawQuad() {
+        #if !debug inline #end function drawQuad() {
 
             if (stencilClip) {
                 // Special case of drawing into stencil buffer
@@ -303,38 +303,89 @@ class CeramicBatcher extends phoenix.Batcher {
             matTY = quad.ty;
 
             // Position
-            //tl
-            pos_list[pos_floats] = matTX;
-            pos_list[pos_floats+1] = matTY;
-            pos_list[pos_floats+2] = z;
-            pos_list[pos_floats+3] = 0;
-            //tr
-            pos_list[pos_floats+4] = matTX + matA * w;
-            pos_list[pos_floats+5] = matTY + matB * w;
-            pos_list[pos_floats+6] = z;
-            pos_list[pos_floats+7] = 0;
-            //br
-            pos_list[pos_floats+8] = matTX + matA * w + matC * h;
-            pos_list[pos_floats+9] = matTY + matB * w + matD * h;
-            pos_list[pos_floats+10] = z;
-            pos_list[pos_floats+11] = 0;
-            //bl
-            pos_list[pos_floats+12] = matTX + matC * h;
-            pos_list[pos_floats+13] = matTY + matD * h;
-            pos_list[pos_floats+14] = z;
-            pos_list[pos_floats+15] = 0;
-            //tl2
-            pos_list[pos_floats+16] = pos_list[pos_floats];
-            pos_list[pos_floats+17] = pos_list[pos_floats+1];
-            pos_list[pos_floats+18] = pos_list[pos_floats+2];
-            pos_list[pos_floats+19] = 0;
-            //br2
-            pos_list[pos_floats+20] = pos_list[pos_floats+8];
-            pos_list[pos_floats+21] = pos_list[pos_floats+9];
-            pos_list[pos_floats+22] = pos_list[pos_floats+10];
-            pos_list[pos_floats+23] = 0;
+            n = pos_floats;
+            if (customFloatAttributesSize == 0) {
+                //tl
+                pos_list[pos_floats++] = matTX;
+                pos_list[pos_floats++] = matTY;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                //tr
+                pos_list[pos_floats++] = matTX + matA * w;
+                pos_list[pos_floats++] = matTY + matB * w;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                //br
+                pos_list[pos_floats++] = matTX + matA * w + matC * h;
+                pos_list[pos_floats++] = matTY + matB * w + matD * h;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                //bl
+                pos_list[pos_floats++] = matTX + matC * h;
+                pos_list[pos_floats++] = matTY + matD * h;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                //tl2
+                pos_list[pos_floats++] = pos_list[n];
+                pos_list[pos_floats++] = pos_list[n+1];
+                pos_list[pos_floats++] = pos_list[n+2];
+                pos_list[pos_floats++] = 0;
+                //br2
+                pos_list[pos_floats++] = pos_list[n+8];
+                pos_list[pos_floats++] = pos_list[n+9];
+                pos_list[pos_floats++] = pos_list[n+10];
+                pos_list[pos_floats++] = 0;
 
-            pos_floats += 24;
+            } else {
+                //tl
+                pos_list[pos_floats++] = matTX;
+                pos_list[pos_floats++] = matTY;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+                //tr
+                pos_list[pos_floats++] = matTX + matA * w;
+                pos_list[pos_floats++] = matTY + matB * w;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+                //br
+                pos_list[pos_floats++] = matTX + matA * w + matC * h;
+                pos_list[pos_floats++] = matTY + matB * w + matD * h;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+                //bl
+                pos_list[pos_floats++] = matTX + matC * h;
+                pos_list[pos_floats++] = matTY + matD * h;
+                pos_list[pos_floats++] = z;
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+                //tl2
+                pos_list[pos_floats++] = pos_list[n];
+                pos_list[pos_floats++] = pos_list[n+1];
+                pos_list[pos_floats++] = pos_list[n+2];
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+                //br2
+                pos_list[pos_floats++] = pos_list[n+customFloatAttributesSize*2+8];
+                pos_list[pos_floats++] = pos_list[n+customFloatAttributesSize*2+9];
+                pos_list[pos_floats++] = pos_list[n+customFloatAttributesSize*2+10];
+                pos_list[pos_floats++] = 0;
+                for (l in 0...customFloatAttributesSize) {
+                    pos_list[pos_floats++] = 0.0;
+                }
+            }
 
             if (lastTexture != null) {
                 // UV
@@ -419,7 +470,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //drawQuad
 
-        inline function drawMesh() {
+        #if !debug inline #end function drawMesh() {
 
             // The following code is doing pretty much the same thing as quads, but for meshes.
             // We could try to refactor to prevent redundancy but this is not required as our
@@ -627,16 +678,25 @@ class CeramicBatcher extends phoenix.Batcher {
 
                 j = meshIndices.unsafeGet(i);
                 k = j * 2;
+                l = (j + customFloatAttributesSize) * 2;
 
                 // Position
                 //
-                x = meshVertices.unsafeGet(k);
-                y = meshVertices.unsafeGet(k + 1);
+                x = meshVertices.unsafeGet(l++);
+                y = meshVertices.unsafeGet(l++);
 
                 pos_list[pos_floats++] = matTX + matA * x + matC * y;
                 pos_list[pos_floats++] = matTY + matB * x + matD * y;
                 pos_list[pos_floats++] = z;
                 pos_list[pos_floats++] = 0;
+
+                // Custom (float) attributes
+                //
+                if (customFloatAttributesSize != 0) {
+                    for (n in 0...customFloatAttributesSize) {
+                        pos_list[pos_floats++] = meshVertices.unsafeGet(l++);
+                    }
+                }
 
                 // UV
                 //
@@ -829,10 +889,17 @@ class CeramicBatcher extends phoenix.Batcher {
             throw "Too many floats are being submitted (max:$max_floats, attempt:$pos_floats).";
         }
 
+        var vertexSize = 4;
+        if (activeShader != null && activeShader.customAttributes != null) {
+            for (attr in activeShader.customAttributes) {
+                vertexSize += attr.size;
+            }
+        }
+
         // fromBuffer takes byte length, so floats * 4
-        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats*4);
-        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats*4);
-        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats*4);
+        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats * 4);
+        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats * 4);
+        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats * 4);
 
         // -- Begin submit
 
@@ -841,7 +908,7 @@ class CeramicBatcher extends phoenix.Batcher {
         var tb = GL.createBuffer();
 
         GL.bindBuffer(GL.ARRAY_BUFFER, pb);
-        GL.vertexAttribPointer(vert_attribute, 4, GL.FLOAT, false, 0, 0);
+        GL.vertexAttribPointer(vert_attribute, 4, GL.FLOAT, false, vertexSize * 4, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
 
         GL.bindBuffer(GL.ARRAY_BUFFER, tb);
@@ -855,39 +922,38 @@ class CeramicBatcher extends phoenix.Batcher {
         var customGLBuffers = null;
         if (activeShader != null && activeShader.customAttributes != null) {
 
-            var n = 0;
+            var n = color_attribute + 1;
+            var offset = 4;
             for (attr in activeShader.customAttributes) {
 
-                trace('draw custom buffer (' + attr.name + ')');
-
                 var b = GL.createBuffer();
-                var bufferData = Float32Array.fromBuffer(
-                    customBuffers.unsafeGet(n).buffer,
-                    0,
-                    customBuffersFloats.unsafeGet(n) * attr.size
-                );
                 if (customGLBuffers == null) customGLBuffers = [];
                 customGLBuffers.push(b);
 
+                GL.enableVertexAttribArray(n);
                 GL.bindBuffer(GL.ARRAY_BUFFER, b);
-                GL.vertexAttribPointer(color_attribute + n + 1, attr.size, GL.FLOAT, false, 0, 0);
-                GL.bufferData(GL.ARRAY_BUFFER, bufferData, GL.STREAM_DRAW);
+                GL.vertexAttribPointer(n, attr.size, GL.FLOAT, false, vertexSize * 4, offset * 4);
+                GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
 
                 n++;
+                offset += attr.size;
 
             }
         }
 
         // Draw
-        GL.drawArrays(primitiveType, 0, Std.int(_pos.length/4));
+        GL.drawArrays(primitiveType, 0, Std.int(_colors.length/4));
 
         GL.deleteBuffer(pb);
         GL.deleteBuffer(cb);
         GL.deleteBuffer(tb);
 
         if (customGLBuffers != null) {
+            var n = color_attribute + 1;
             for (b in customGLBuffers) {
                 GL.deleteBuffer(b);
+                GL.disableVertexAttribArray(n);
+                n++;
             }
         }
         customGLBuffers = null;
@@ -904,14 +970,6 @@ class CeramicBatcher extends phoenix.Batcher {
         tcoord_floats = 0;
         color_floats = 0;
 
-        if (activeShader != null && activeShader.customAttributes != null) {
-            var n = 0;
-            for (attr in activeShader.customAttributes) {
-                customBuffersFloats.unsafeSet(n, 0);
-                n++;
-            }
-        }
-
         return true;
 
     } //flush
@@ -925,20 +983,11 @@ class CeramicBatcher extends phoenix.Batcher {
             _shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
         }
 
-        // Create custom buffers (if needed)
-        if (_shader.customAttributes != null) {
-            var n = 0;
-            
-            var numBuffers = customBuffers.length;
-            for (attr in _shader.customAttributes) {
-                if (n >= numBuffers) {
-                    customBuffers.push(new Float32Array(max_floats));
-                    customBuffersFloats.push(0);
-                    numBuffers++;
-                }
-                customBuffersFloats.unsafeSet(n, 0);
-
-                n++;
+        // Custom attributes?
+        customFloatAttributesSize = 0;
+        if (activeShader != null && activeShader.customAttributes != null) {
+            for (attr in activeShader.customAttributes) {
+                customFloatAttributesSize += attr.size;
             }
         }
 
