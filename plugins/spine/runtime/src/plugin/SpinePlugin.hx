@@ -47,8 +47,11 @@ class SpinePlugin {
 
             // Load additional shaders required by spine
             ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
-                assets.add(ceramic.Shaders.TWO_COLORS);
-            });
+                assets.add(ceramic.Shaders.TINT_BLACK, {
+                    customAttributes: [
+                        { size: 4, name: 'vertexTintBlack' }
+                    ]
+                });
 
         });
     }
