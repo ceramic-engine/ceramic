@@ -8,6 +8,7 @@ import spine.*;
 
 import ceramic.Visual;
 import ceramic.Mesh;
+import ceramic.MeshColorMapping;
 import ceramic.Texture;
 import ceramic.Transform;
 import ceramic.Color;
@@ -16,10 +17,14 @@ import ceramic.Blending;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
 import ceramic.Collections;
+import ceramic.Shader;
+import ceramic.Shaders;
 import ceramic.Shortcuts.*;
 
 using plugin.SpinePlugin;
 using ceramic.Extensions;
+
+using StringTools;
 
 @editable
 class Spine extends Visual {
@@ -35,6 +40,8 @@ class Spine extends Visual {
     static var _trackTimes:Array<Float> = [];
 
     static var _globalBindDepthRange:Float = 100;
+
+    static var _tintBlackShader:Shader = null;
 
 /// Spine Animation State listener
 
@@ -285,6 +292,8 @@ class Spine extends Visual {
     public function new() {
 
         super();
+
+        if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(Shaders.TINT_BLACK);
 
         if (!paused) ceramic.App.app.onUpdate(this, update);
 
@@ -564,12 +573,14 @@ class Spine extends Visual {
         }
 
         var drawOrder:Array<Slot> = skeleton.drawOrder;
-        var len:Int = drawOrder.length;
+        var numElements:Int = drawOrder.length;
 
         var r:Float;
         var g:Float;
         var b:Float;
         var a:Float;
+        var n:Int;
+        var len:Int;
         var tx:Float;
         var ty:Float;
         var flip:Float;
@@ -600,6 +611,7 @@ class Spine extends Visual {
         var didFlipX:Bool = false;
         var vertexSize:Int = 0;
         var count:Int = 0;
+        var tintBlack:Bool = false;
 
         var diffX:Float = width * skeletonOriginX;
         var diffY:Float = height * skeletonOriginY;
@@ -617,13 +629,16 @@ class Spine extends Visual {
         flipY = skeleton.flipY ? -1 : 1;
         flip = flipX * flipY;
 
-        for (i in 0...len)
+        for (i in 0...numElements)
         {
             slot = drawOrder[i];
             bone = slot.bone;
             slotName = slot.data.name;
             boundSlot = null;
+            tintBlack = slot.data.darkColor != null;
+            // ⚠️ TODO clipping
             vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
+            if (tintBlack) vertexSize += 4;
 
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
@@ -700,15 +715,32 @@ class Spine extends Visual {
                                 mesh.visible = false;
                             }
                             else {
-                                mesh.visible = true;
-
                                 if (slotInfo.drawDefault) {
                                     mesh.visible = true;
+                                    mesh.shader = tintBlack ? _tintBlackShader : null;
+                                    mesh.colorMapping = MeshColorMapping.MESH;
                                     if (meshAttachment != null) {
 
                                         meshAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, vertexSize);
                                         mesh.uvs = meshAttachment.getUVs();
                                         mesh.indices = meshAttachment.getTriangles();
+
+                                        if (tintBlack) {
+                                            r = skeleton.color.r * slot.darkColor.r * meshAttachment.getColor().r;
+                                            g = skeleton.color.g * slot.darkColor.g * meshAttachment.getColor().g;
+                                            b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b;
+                                            a = slot.darkColor.a;
+
+                                            n = 0;
+                                            len = mesh.vertices.length;
+                                            while (n < len) {
+                                                mesh.vertices[n + vertexSize - 1] = a;
+                                                mesh.vertices.unsafeSet(n + vertexSize - 4, r);
+                                                mesh.vertices.unsafeSet(n + vertexSize - 3, g);
+                                                mesh.vertices.unsafeSet(n + vertexSize - 2, b);
+                                                n += vertexSize;
+                                            }
+                                        }
 
                                         r = skeleton.color.r * slot.color.r * meshAttachment.getColor().r;
                                         g = skeleton.color.g * slot.color.g * meshAttachment.getColor().g;
@@ -720,10 +752,27 @@ class Spine extends Visual {
                                         }
 
                                     } else {
-
+                                        var tmpVertices = [];
                                         regionAttachment.computeWorldVertices(slot.bone, mesh.vertices, 0, vertexSize);
                                         mesh.uvs = regionAttachment.getUVs();
                                         mesh.indices = _quadTriangles;
+
+                                        if (tintBlack) {
+                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r;
+                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g;
+                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b;
+                                            a = slot.darkColor.a;
+
+                                            n = 0;
+                                            len = mesh.vertices.length;
+                                            while (n < len) {
+                                                mesh.vertices[n + vertexSize - 1] = a;
+                                                mesh.vertices.unsafeSet(n + vertexSize - 4, r);
+                                                mesh.vertices.unsafeSet(n + vertexSize - 3, g);
+                                                mesh.vertices.unsafeSet(n + vertexSize - 2, b);
+                                                n += vertexSize;
+                                            }
+                                        }
 
                                         r = skeleton.color.r * slot.color.r * regionAttachment.getColor().r;
                                         g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
@@ -735,19 +784,8 @@ class Spine extends Visual {
                                     isAdditive = slot.data.blendMode == BlendMode.additive;
 
                                     alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
-                                    colors = mesh.colors;
-                                    if (colors.length < count) {
-                                        for (j in 0...count) {
-                                            colors[j] = alphaColor;
-                                        }
-                                    } else {
-                                        for (j in 0...count) {
-                                            colors.unsafeSet(j, alphaColor);
-                                        }
-                                        if (colors.length > count) {
-                                            colors.splice(count, colors.length - count);
-                                        }
-                                    }
+                                    if (mesh.colors == null) mesh.colors = [alphaColor];
+                                    else mesh.colors[0] = alphaColor;
 
                                     if (clipper.isClipping()) {
                                         clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
