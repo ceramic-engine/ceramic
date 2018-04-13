@@ -23,6 +23,7 @@
   "homepage": "https://github.com/ceramic-engine/ceramic#readme",
   "dependencies": {
     "applescript": "^1.0.0",
+    "chokidar": "^2.0.3",
     "colors": "^1.1.2",
     "decompress": "^4.2.0",
     "decompress-targz": "^4.1.0",

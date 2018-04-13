@@ -31,6 +31,7 @@ class Web extends tools.Task {
         var webProjectFilePath = Path.join([webProjectPath, 'index.html']);
 
         var doRun = extractArgFlag(args, 'run');
+        var doWatch = extractArgFlag(args, 'watch');
 
         // Create web project if needed
         WebProject.createWebProjectIfNeeded(cwd, project);
@@ -64,6 +65,11 @@ class Web extends tools.Task {
 
             if (context.debug) {
                 cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
+            }
+
+            if (doWatch) {
+                cmdArgs.push('--watch');
+                cmdArgs.push(jsName + '.js');
             }
 
             cmdArgs = ['.'].concat(cmdArgs);

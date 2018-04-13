@@ -7,9 +7,13 @@ import sys.io.File;
 import tools.Helpers.*;
 import tools.Sync;
 import js.node.ChildProcess;
+
 import npm.StreamSplitter;
+import npm.Chokidar;
+import npm.Fiber;
 
 using StringTools;
+using tools.Colors;
 
 class Build extends tools.Task {
 
@@ -165,7 +169,7 @@ class Build extends tools.Task {
                 runHooks(cwd, args, project.app.hooks, 'end clean');
             }
         
-            if (action == 'run' && target.name != 'ios') {
+            if (action == 'run' && (target.name != 'ios' && target.name != 'web')) {
                 runHooks(cwd, args, project.app.hooks, 'end run');
             }
         }
@@ -200,7 +204,7 @@ class Build extends tools.Task {
         
             runHooks(cwd, args, project.app.hooks, 'end run');
         }
-        else if (action == 'run' && target.name == 'web') {
+        else if ((action == 'run' || action == 'build') && target.name == 'web') {
             // Needs Web plugin
             var task = context.tasks.get('web project');
             if (task == null) {
@@ -208,12 +212,58 @@ class Build extends tools.Task {
                 warning('Did you enable ceramic\'s web plugin?');
             }
             else {
-                var taskArgs = ['web', 'project', '--run', '--variant', context.variant];
+                // Watch?
+                var watch = extractArgFlag(args, 'watch') && action == 'run';
+                if (watch) {
+                    Fiber.fiber(function() {
+
+                        var watcher = Chokidar.watch('**/*.hx', { cwd: Path.join([cwd, 'src']) });
+                        var lastFileUpdate:Float = -1;
+                        var dirty = false;
+                        var building = false;
+
+                        function rebuild() {
+                            building = true;
+                            Fiber.fiber(function() {
+                                // Rebuild
+                                var task = context.tasks.get('luxe build');
+                                var taskArgs = ['luxe', 'build', 'web', '--variant', context.variant];
+                                if (debug) taskArgs.push('--debug');
+                                task.run(cwd, taskArgs);
+                                building = false;
+                            }).run();
+                        }
+
+                        js.Node.setInterval(function() {
+                            if (dirty && !building) {
+                                var time:Float = untyped __js__('new Date().getTime()');
+                                if (time - lastFileUpdate > 250) {
+                                    dirty = false;
+                                    rebuild();
+                                }
+                            }
+                        }, 100);
+
+                        function handleFileChange(path:String) {
+                            lastFileUpdate = untyped __js__('new Date().getTime()');
+                            dirty = true;
+                            print(('Changed: ' + path).magenta());
+                        }
+
+                        watcher.on('change', handleFileChange);
+
+                    }).run();
+                }
+
+                // Run with electron runner
+                var taskArgs = ['web', 'project', '--variant', context.variant];
+                if (action == 'run') taskArgs.push('--run');
                 if (debug) taskArgs.push('--debug');
+                if (watch) taskArgs.push('--watch');
                 task.run(cwd, taskArgs);
             }
         
-            runHooks(cwd, args, project.app.hooks, 'end run');
+            if (action == 'run') runHooks(cwd, args, project.app.hooks, 'end run');
         }
 
     } //run

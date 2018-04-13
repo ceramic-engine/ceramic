@@ -20,6 +20,7 @@ const appName = 'Ceramic Runner';
 
 let appUrl = null;
 let appFiles = null;
+let watchFile = null;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -28,6 +29,10 @@ while (i < argv.length) {
     if (arg == '--app-files') {
         i++;
         appFiles = argv[i];
+    }
+    if (arg == '--watch') {
+        i++;
+        watchFile = argv[i];
     }
     i++;
 }
@@ -188,3 +193,12 @@ detect(port, (err, _port) => {
     exports.appUrl = appUrl;
 
 });
+
+// Check for file changes
+if (watchFile != null) {
+    fs.watchFile(path.join(appFiles, watchFile), function(curr, prev) {
+        if (mainWindow != null) {
+            mainWindow.reload();
+        }
+    });
+}

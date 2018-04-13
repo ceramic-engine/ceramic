@@ -77,43 +77,47 @@ class ToolsPlugin {
                 if (kind == null) continue;
 
                 for (editor in [false, true]) {
+                    for (watch in [false, true]) {
 
-                    if (editor && (target.name != 'web' || kind != 'build')) continue;
+                        if (editor && (target.name != 'web' || kind != 'build')) continue;
+                        if (watch && (target.name != 'web' || kind != 'run')) continue;
 
-                    for (debug in [false, true]) {
+                        for (debug in [false, true]) {
 
-                        if (editor && !debug) continue;
+                            if (editor && !debug) continue;
+                            if (watch && !debug) continue;
 
-                        var tasksContent:Array<VscodeChooserItemTask> = [
-                            {
-                                type: "shell",
-                                label: "build",
-                                command: "ceramic",
-                                presentation: {
-                                    echo: true,
-                                    reveal: "always",
-                                    focus: false,
-                                    panel: "shared"
-                                },
-                                args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : []),
-                                group: {
-                                    kind: "build",
-                                    isDefault: true
-                                },
-                                problemMatcher: "$haxe"
-                            }
-                        ];
+                            var tasksContent:Array<VscodeChooserItemTask> = [
+                                {
+                                    type: "shell",
+                                    label: "build",
+                                    command: "ceramic",
+                                    presentation: {
+                                        echo: true,
+                                        reveal: "always",
+                                        focus: false,
+                                        panel: "shared"
+                                    },
+                                    args: [backendName, kind, target.name, '--setup', '--assets', '--vscode-editor', '--hxml-output', 'completion.hxml'].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : []).concat(watch ? ['--watch'] : []),
+                                    group: {
+                                        kind: "build",
+                                        isDefault: true
+                                    },
+                                    problemMatcher: "$haxe"
+                                }
+                            ];
 
-                        items.push({
-                            displayName: '▶︎ ' + backendName + ' / ' + name + (debug && !editor ? ' (debug)' : '') + (editor ? ' (editor)' : ''),
-                            description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : '') + (editor ? ' --variant editor' : ''),
-                            tasks: tasksContent,
-                            onSelect: {
-                                command: "ceramic",
-                                args: [backendName, "hxml", target.name, "--setup", "--output", "completion.hxml"].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : [])
-                            }
-                        });
+                            items.push({
+                                displayName: '▶︎ ' + backendName + ' / ' + name + (debug && !editor && !watch ? ' (debug)' : '') + (editor ? ' (editor)' : '') + (watch ? ' (watch)' : ''),
+                                description: 'ceramic ' + backendName + ' ' + kind + ' ' + target.name + ' --setup --assets' + (debug ? ' --debug' : '') + (editor ? ' --variant editor' : '') + (watch ? ' --watch' : ''),
+                                tasks: tasksContent,
+                                onSelect: {
+                                    command: "ceramic",
+                                    args: [backendName, "hxml", target.name, "--setup", "--output", "completion.hxml"].concat(debug ? ['--debug'] : []).concat(editor ? ['--variant', 'editor'] : []).concat(watch ? ['--watch'] : [])
+                                }
+                            });
 
+                        }
                     }
                 }
 
