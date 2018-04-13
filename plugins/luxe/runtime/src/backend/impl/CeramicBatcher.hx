@@ -678,7 +678,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
                 j = meshIndices.unsafeGet(i);
                 k = j * 2;
-                l = (j + customFloatAttributesSize) * 2;
+                l = j * (2 + customFloatAttributesSize);
 
                 // Position
                 //
