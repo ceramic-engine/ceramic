@@ -61,4 +61,21 @@ class Autorun extends Entity {
 
     } //invalidate
 
+/// Static helpers
+
+    /** Executes the given function synchronously and ensures the
+        current `autorun` scope won't be affected */
+    public static function unobserved(func:Void->Void):Void {
+
+        // Set current autorun to null
+        var prevCurrent = current;
+        current = null;
+
+        func();
+
+        // Restore previous current autorun
+        current = prevCurrent;
+
+    } //unobserved
+
 } //Autorun
