@@ -778,7 +778,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         while (clippingVisual != null && clippingVisual.clip == null) {
                             clippingVisual = clippingVisual.parent;
                         }
-                        clip = clippingVisual.clip;
+                        clip = clippingVisual != null ? clippingVisual.clip : null;
 
                     } else {
                         clip = null;
