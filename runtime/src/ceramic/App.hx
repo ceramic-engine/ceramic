@@ -358,6 +358,9 @@ class App extends Entity {
         // Trigger pre-update event
         emitPreUpdate(delta);
 
+        // Flush immediate callbacks
+        flushImmediate();
+
         // Then update
         emitUpdate(delta);
 
