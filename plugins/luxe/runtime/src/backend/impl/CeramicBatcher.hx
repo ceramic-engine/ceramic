@@ -108,7 +108,7 @@ class CeramicBatcher extends phoenix.Batcher {
         
         // Initialize default state
         renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-        renderer.state.bindTexture2D(null);
+        //renderer.state.bindTexture2D(null);
         renderer.state.enable(GL.BLEND);
         useShader(defaultPlainShader);
         defaultPlainShader.activate();
@@ -142,7 +142,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 lastTexture = null;
                 lastTextureId = null;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-                renderer.state.bindTexture2D(null);
+                //renderer.state.bindTexture2D(null);
 
                 // Default blending
                 GL.blendFuncSeparate(
@@ -488,7 +488,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 lastTexture = null;
                 lastTextureId = null;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-                renderer.state.bindTexture2D(null);
+                //renderer.state.bindTexture2D(null);
 
                 // Default blending
                 GL.blendFuncSeparate(
@@ -564,7 +564,7 @@ class CeramicBatcher extends phoenix.Batcher {
                                 lastTexture = null;
                                 lastTextureId = null;
                                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-                                renderer.state.bindTexture2D(null);
+                                //renderer.state.bindTexture2D(null);
                             }
                         }
                     }
@@ -858,7 +858,7 @@ class CeramicBatcher extends phoenix.Batcher {
         if (lastTextureId != null) {
             // Remove bound texture
             renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-            renderer.state.bindTexture2D(null);
+            //renderer.state.bindTexture2D(null);
         }
         // Remove shader program
         renderer.state.useProgram(null);
