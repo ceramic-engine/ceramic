@@ -395,11 +395,6 @@ class App extends Entity {
                 }
 
                 if (visual.computedVisible) {
-
-                    if (visual.clipDirty) {
-                        visual.computeClip();
-                    }
-
                     visual.computeContent();
                 }
             }
@@ -431,6 +426,12 @@ class App extends Entity {
 
             if (visual.visibilityDirty) {
                 visual.computeVisibility();
+            }
+
+            if (visual.computedVisible) {
+                if (visual.clipDirty) {
+                    visual.computeClip();
+                }
             }
 
         }
