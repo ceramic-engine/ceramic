@@ -101,6 +101,18 @@ class Fragment extends Model {
 
         let serialized = serializeModel(this, { exclude: ['_model', 'bundle'], recursive: true });
 
+        // Remove implicit sizes
+        let numItems:number = serialized.items.length;
+        for (let i = 0; i < numItems; i++) {
+            let rawItem = serialized.items[i];
+            let itemId = rawItem.id;
+            let realItem = this.itemsById.get(itemId);
+            if (realItem.implicitSize && rawItem.props != null) {
+                delete rawItem.props.width;
+                delete rawItem.props.height;
+            }
+        }
+
         if (overridesData && this.overrides) {
             overridesData.forEach((value, key) => {
                 let info = this.overrides.get(key);

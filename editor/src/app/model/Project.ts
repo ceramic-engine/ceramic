@@ -811,7 +811,7 @@ class Project extends Model {
         setImmediate(() => {
             autorun(() => {
                 
-                if (this.fragments == null || this.ui == null) return;
+                if (this.fragments == null || this.ui == null || this.editableTypes == null) return;
 
                 // Do it everytime the selected fragment changes
                 if (this.ui.selectedFragment != null) {

@@ -47,8 +47,6 @@ class FragmentItem extends Model {
         let serialized = serializeModel(this, { exclude: ['_model'] });
         let data:any = { props: {}, data: {} };
 
-        let skipSize = false;
-
         for (let key in serialized) {
             if (serialized.hasOwnProperty(key)) {
                 if (key === 'locked' || key === 'name') {
@@ -79,6 +77,7 @@ class FragmentItem extends Model {
     @compute get implicitSize():boolean {
         
         let info = project.editableTypesByKey.get(this.entity);
+
         if (info != null && info.meta != null && info.meta.editable != null) {
             let opts = info.meta.editable[0];
             if (opts.implicitSize) {
