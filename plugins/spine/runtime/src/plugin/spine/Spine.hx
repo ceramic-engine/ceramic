@@ -100,7 +100,7 @@ class Spine extends Visual {
     function set_skeletonOriginX(skeletonOriginX:Float):Float {
         if (this.skeletonOriginX == skeletonOriginX) return skeletonOriginX;
         this.skeletonOriginX = skeletonOriginX;
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return skeletonOriginX;
     }
 
@@ -110,7 +110,7 @@ class Spine extends Visual {
     function set_skeletonOriginY(skeletonOriginY:Float):Float {
         if (this.skeletonOriginY == skeletonOriginY) return skeletonOriginY;
         this.skeletonOriginY = skeletonOriginY;
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return skeletonOriginY;
     }
 
@@ -120,7 +120,7 @@ class Spine extends Visual {
     function set_skeletonScale(skeletonScale:Float):Float {
         if (this.skeletonScale == skeletonScale) return skeletonScale;
         this.skeletonScale = skeletonScale;
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return skeletonScale;
     }
 
@@ -130,7 +130,7 @@ class Spine extends Visual {
     function set_hiddenSlots(hiddenSlots:Map<String,Bool>):Map<String,Bool> {
         if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
         this.hiddenSlots = hiddenSlots;
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return hiddenSlots;
     }
 
@@ -140,7 +140,7 @@ class Spine extends Visual {
     function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
         if (this.animationTriggers == animationTriggers) return animationTriggers;
         this.animationTriggers = animationTriggers;
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return animationTriggers;
     }
 
@@ -257,19 +257,42 @@ class Spine extends Visual {
     /** Stores mix (crossfade) durations to be applied when animations are changed. */
     public var stateData(default, null):AnimationStateData;
 
+    public var pausedOrFrozen(default, set):Bool = false;
+    function set_pausedOrFrozen(pausedOrFrozen:Bool):Bool {
+        if (this.pausedOrFrozen == pausedOrFrozen) return pausedOrFrozen;
+
+        this.pausedOrFrozen = pausedOrFrozen;
+        if (pausedOrFrozen) {
+            ceramic.App.app.offUpdate(update);
+        } else {
+            ceramic.App.app.onUpdate(this, update);
+        }
+
+        return pausedOrFrozen;
+    }
+
+    public var autoFreeze:Bool = true;
+
     /** Is this animation paused? */
     public var paused(default,set):Bool = #if editor true #else false #end;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
 
         this.paused = paused;
-        if (paused) {
-            ceramic.App.app.offUpdate(update);
-        } else {
-            ceramic.App.app.onUpdate(this, update);
-        }
+        pausedOrFrozen = paused || frozen;
 
         return paused;
+    }
+
+    /** Is this animation frozen? **/
+    public var frozen(default,set):Bool = false;
+    function set_frozen(frozen:Bool):Bool {
+        if (this.frozen == frozen) return frozen;
+
+        this.frozen = frozen;
+        pausedOrFrozen = paused || frozen;
+
+        return frozen;
     }
 
     /** Reset at change */
@@ -295,7 +318,7 @@ class Spine extends Visual {
 
         if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(Shaders.TINT_BLACK);
 
-        if (!paused) ceramic.App.app.onUpdate(this, update);
+        if (!pausedOrFrozen) ceramic.App.app.onUpdate(this, update);
 
 #if editor
 
@@ -395,7 +418,7 @@ class Spine extends Visual {
         render(0, 0, true);
 
         // If we are paused, ensure setup pos gets rendered once
-        if (paused) {
+        if (pausedOrFrozen) {
             render(0, 0, false);
         }
 
@@ -407,6 +430,11 @@ class Spine extends Visual {
         if (nextAnimations != null && nextAnimations.length > 0) {
             animation = nextAnimations.shift();
         }
+        else {
+            if (canFreeze()) {
+                frozen = true;
+            }
+        }
 
     } //willEmitComplete
 
@@ -415,14 +443,14 @@ class Spine extends Visual {
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         super.set_width(width);
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return width;
     }
 
     override function set_height(height:Float):Float {
         if (_height == height) return height;
         super.set_height(height);
-        if (paused) render(0, 0, false);
+        if (pausedOrFrozen) render(0, 0, false);
         return height;
     }
     
@@ -446,6 +474,19 @@ class Spine extends Visual {
             track = state.setAnimationByName(trackIndex, animationName, loop);
         }
 
+        if (autoFreeze) {
+            if (canFreeze()) {
+                frozen = true;
+                app.onceImmediate(function() {
+                    emitComplete();
+                });
+            } else {
+                frozen = false;
+            }
+        } else {
+            frozen = false;
+        }
+
         // Ensure animation gets rendered once to prevent 1-frame glitches
         // TODO find a less agressive solution?
         forceRender();
@@ -455,6 +496,11 @@ class Spine extends Visual {
     public function forceRender():Void {
 
         if (state == null) return;
+
+        var prevPaused = paused;
+        var prevFrozen = frozen;
+        paused = false;
+        frozen = false;
 
         var i = 0;
         for (aTrack in state.tracks) {
@@ -468,6 +514,9 @@ class Spine extends Visual {
         }
         updateSkeleton(0);
         render(0, 0, false);
+
+        paused = prevPaused;
+        frozen = prevFrozen;
 
     } //forceRender
 
@@ -522,6 +571,30 @@ class Spine extends Visual {
         }
 
     } //update
+
+    /** Returns `true` if the current instance doesn't move
+        and doesn't need to get updated at every frame. */
+    inline public function canFreeze():Bool {
+
+        var result = true;
+
+        if (state != null) {
+            for (track in state.tracks) {
+                if (track.animation != null && track.animation.duration > 0) {
+                    if (track.loop || track.trackTime < track.animation.duration) {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            result = false;
+        }
+
+        return result;
+
+    } //canFreeze
 
 /// Internal
 
