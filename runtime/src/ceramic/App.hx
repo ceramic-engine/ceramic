@@ -484,39 +484,6 @@ class App extends Entity {
 
     } //sortVisuals
 
-    function _compareVisuals(a:Visual, b:Visual):Int {
-
-        //if (!a.computedVisible || !b.computedVisible) return 0;
-        if (a.computedDepth > b.computedDepth) return 1;
-        if (a.computedDepth < b.computedDepth) return -1;
-        // TODO handle meshes
-        var aQuad:Quad = a.quad;
-        var bQuad:Quad = b.quad;
-        if (aQuad != null && bQuad == null) return 1;
-        if (aQuad == null && bQuad != null) return -1;
-        if (aQuad != null && bQuad != null) {
-            if (aQuad.texture != null && bQuad.texture == null) return 1;
-            if (aQuad.texture == null && bQuad.texture != null) return -1;
-            if (aQuad.texture != null && bQuad.texture != null) {
-                if (aQuad.texture.index > bQuad.texture.index) return 1;
-                if (aQuad.texture.index < bQuad.texture.index) return -1;
-            }
-        }
-        var aMesh:Mesh = a.mesh;
-        var bMesh:Mesh = b.mesh;
-        if (aMesh != null && bMesh != null) {
-            if (aMesh.texture != null && bMesh.texture == null) return 1;
-            if (aMesh.texture == null && bMesh.texture != null) return -1;
-            if (aMesh.texture != null && bMesh.texture != null) {
-                if (aMesh.texture.index > bMesh.texture.index) return 1;
-                if (aMesh.texture.index < bMesh.texture.index) return -1;
-            }
-        }
-
-        return 0;
-
-    } //_compareVisuals
-
 /// Uncaught errors
 
     static function handleUncaughtError(e:Dynamic):Void {
