@@ -166,6 +166,11 @@ class Scroller extends Visual {
             return;
         }
 
+        if (!hits(screen.pointerX, screen.pointerY)) {
+            // Ignore wheel event if mouse is not above the visual
+            return;
+        }
+
         status = SCROLLING;
         fromWheel = true;
         bounce = 0;
