@@ -23,9 +23,12 @@
 package ceramic;
 
 /**
-    ArraySort provides a stable implementation of merge sort through its `sort`
+    SortVisuals provides a stable implementation of merge sort through its `sort`
     method. It should be used instead of `Array.sort` in cases where the order
     of equal elements has to be retained on all targets.
+    
+    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
+    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
 **/
 class SortVisuals {
 
