@@ -26,6 +26,9 @@ class MacroCache {
     public static function init():Void {
 
         var cacheFilePath = getCacheFilePath();
+        if (cacheFilePath == null) {
+            return;
+        }
         
         loadEntries();
 

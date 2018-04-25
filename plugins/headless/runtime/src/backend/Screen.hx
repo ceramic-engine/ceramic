@@ -21,13 +21,13 @@ class Screen implements ceramic.Events #if !completion implements spec.Screen #e
 
     inline public function getWidth():Int {
 
-        return 800;
+        return ceramic.App.app.settings.targetWidth;
 
     } //getPixelWidth
 
     inline public function getHeight():Int {
 
-        return 600;
+        return ceramic.App.app.settings.targetHeight;
 
     } //getPixelHeight
 

@@ -45,6 +45,7 @@ class ToolsPlugin {
         tasks.set('headless update', new tools.tasks.Update());
         tasks.set('headless info', new tools.tasks.Info());
         tasks.set('headless libs', new tools.tasks.Libs());
+        tasks.set('script', new tools.tasks.Script());
 
         // Restore default backend
         context.backend = prevBackend;

@@ -43,7 +43,7 @@ class Setup extends tools.Task {
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var hxmlPath = Path.join([targetPath, 'build.hxml']);
         var force = args.indexOf('--force') != -1;
-        var updateProject = args.indexOf('--update-project') != -1;
+        //var updateProject = args.indexOf('--update-project') != -1;
 
         // Compute relative ceramicPath
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
@@ -52,9 +52,9 @@ class Setup extends tools.Task {
         var backendRuntimePathRelative = getRelativePath(backendRuntimePath, targetPath);
 
         // If ceramic.yml has changed, force setup update
-        if (!force && updateProject && !Files.haveSameLastModified(projectPath, hxmlPath)) {
+        //if (!force && updateProject && !Files.haveSameLastModified(projectPath, hxmlPath)) {
             force = true;
-        }
+        //}
 
         if (FileSystem.exists(targetPath)) {
             if (!force) {
@@ -75,6 +75,10 @@ class Setup extends tools.Task {
         }
 
         var libs = [];
+
+        if (target.name == 'node') {
+            libs.push('-lib hxnodejs');
+        }
 
         var appLibs:Array<Dynamic> = project.app.libs;
         for (lib in appLibs) {
@@ -154,8 +158,15 @@ class Setup extends tools.Task {
         finalHxml = finalHxml.concat(libs);
         finalHxml = finalHxml.concat(haxeflags);
 
-        // TODO don't hardcode
-        finalHxml.push('-cpp bin');
+        if (target.name == 'node') {
+            finalHxml.push('-js app.js');
+            finalHxml.push('--macro allowPackage("sys")');
+            if (variant == 'scripts') {
+                finalHxml.push('--macro include("scripts", true)');
+            }
+        } else {
+            finalHxml.push('-cpp bin');
+        }
 
         // Save hxml file
         File.saveContent(hxmlPath, finalHxml.join("\n"));

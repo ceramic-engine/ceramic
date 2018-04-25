@@ -2,9 +2,11 @@ package backend;
 
 @:allow(Main)
 @:allow(backend.Textures)
-class Backend implements ceramic.Events #if !completion implements spec.Backend #end {
+class Backend implements ceramic.Events implements spec.Backend {
 
 /// Public API
+
+    public var io(default,null) = new backend.IO();
 
     public var info(default,null) = new backend.Info();
 
@@ -14,7 +16,7 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
 
     public var texts(default,null) = new backend.Texts();
 
-    public var textures(default,null) = new backend.Textures();
+    public var images(default,null) = new backend.Images();
 
     public var shaders(default,null) = new backend.Shaders();
 
@@ -34,6 +36,12 @@ class Backend implements ceramic.Events #if !completion implements spec.Backend 
 
     @event function keyDown(key:ceramic.Key);
     @event function keyUp(key:ceramic.Key);
+
+    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
+    @event function controllerDown(controllerId:Int, buttonId:Int);
+    @event function controllerUp(controllerId:Int, buttonId:Int);
+    @event function controllerEnable(controllerId:Int, name:String);
+    @event function controllerDisable(controllerId:Int);
 
 /// Internal update logic
 

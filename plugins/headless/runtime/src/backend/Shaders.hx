@@ -4,15 +4,15 @@ import haxe.io.Path;
 
 using StringTools;
 
-class Shaders #if !completion implements spec.Shaders #end {
+class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    public function load(path:String, options:LoadShaderOptions, done:Shader->Void):Void {
+    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
 
-        done(new ShaderImpl());
+        return new ShaderImpl();
 
-    } //load
+    } //fromSource
 
     inline public function destroy(shader:Shader):Void {
 
@@ -58,7 +58,7 @@ class Shaders #if !completion implements spec.Shaders #end {
 
     } //setVec4
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:backend.Image):Void {
         
         //
 

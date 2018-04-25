@@ -7,6 +7,8 @@ import tools.Sync;
 import js.node.ChildProcess;
 import npm.StreamSplitter;
 
+using StringTools;
+
 class Build extends tools.Task {
 
 /// Properties
@@ -76,6 +78,7 @@ class Build extends tools.Task {
         if (debug) cmdArgs.push('-debug');
 
         var status = 0;
+        var hasErrorLog = false;
 
         Sync.run(function(done) {
 
@@ -92,6 +95,9 @@ class Build extends tools.Task {
             proc.stdout.pipe(untyped out);
             out.encoding = 'utf8';
             out.on('token', function(token) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
                 token = formatLineOutput(hxmlProjectPath, token);
                 stdoutWrite(token + "\n");
             });
@@ -106,6 +112,9 @@ class Build extends tools.Task {
             proc.stderr.pipe(untyped err);
             err.encoding = 'utf8';
             err.on('token', function(token) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
                 token = formatLineOutput(hxmlProjectPath, token);
                 stderrWrite(token + "\n");
             });
@@ -114,6 +123,10 @@ class Build extends tools.Task {
             });
 
         });
+
+        if (status == 0 && hasErrorLog) {
+            status = 1;
+        }
         
         if (status != 0) {
             fail('Error when running headless $action.');
@@ -124,6 +137,81 @@ class Build extends tools.Task {
             }
             else if (action == 'clean') {
                 runHooks(cwd, args, project.app.hooks, 'end clean');
+            }
+        }
+
+        if (action == 'run') {
+            runHooks(cwd, args, project.app.hooks, 'begin run');
+
+            // Use node command
+            var cmdArgs = ['app.js'];
+            var script = extractArgValue(args, 'script');
+            var debug = extractArgFlag(args, 'debug');
+            if (!debug) cmdArgs.push('NODE_ENV=production');
+            if (script != null && script.trim() != '') {
+                cmdArgs.push('--script');
+                cmdArgs.push(script);
+            }
+
+            var status = 0;
+            var hasErrorLog = false;
+
+            Sync.run(function(done) {
+
+                var proc = ChildProcess.spawn(
+                    'node',
+                    cmdArgs,
+                    { cwd: hxmlProjectPath }
+                );
+
+                var out = StreamSplitter.splitter("\n");
+                proc.stdout.pipe(untyped out);
+                proc.on('close', function(code:Int) {
+                    status = code;
+                });
+                out.encoding = 'utf8';
+                out.on('token', function(token:String) {
+                    if (isErrorOutput(token)) {
+                        hasErrorLog = true;
+                    }
+                    token = formatLineOutput(hxmlProjectPath, token);
+                    stdoutWrite(token + "\n");
+                });
+                out.on('done', function() {
+                    done();
+                });
+                out.on('error', function(err) {
+                    warning(''+err);
+                });
+
+                var err = StreamSplitter.splitter("\n");
+                proc.stderr.pipe(untyped err);
+                err.encoding = 'utf8';
+                err.on('token', function(token:String) {
+                    if (isErrorOutput(token)) {
+                        hasErrorLog = true;
+                    }
+                    token = formatLineOutput(hxmlProjectPath, token);
+                    stderrWrite(token + "\n");
+                });
+                err.on('error', function(err) {
+                    warning(''+err);
+                });
+
+            });
+
+            if (status == 0 && hasErrorLog) {
+                status = 1;
+            }
+            
+            if (status != 0) {
+                if (!hasErrorLog) fail('Error when running node $action.');
+                else js.Node.process.exit(status);
+            }
+            else {
+                if (action == 'run') {
+                    runHooks(cwd, args, project.app.hooks, 'end run');
+                }
             }
         }
 

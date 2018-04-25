@@ -24,6 +24,9 @@ class ExportRtti {
         if (isCompletion) return;
 
         var rttiPath = getRttiPath();
+        if (rttiPath == null) {
+            return;
+        }
 
         if (FileSystem.exists(rttiPath)) {
             deleteRecursive(rttiPath);

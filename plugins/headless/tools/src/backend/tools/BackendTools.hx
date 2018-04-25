@@ -25,6 +25,19 @@ class BackendTools implements tools.spec.BackendTools {
     public function getBuildTargets():Array<tools.BuildTarget> {
 
         var targets:Array<tools.BuildTarget> = [];
+        
+        targets.push({
+            name: 'node',
+            displayName: 'Node',
+            configs: [
+                Run('Run Node'),
+                Build('Build Node'),
+                Clean('Clean Node')
+            ]
+        });
+
+        // For now, let's focus on Node.js implementation
+        /*
 
         var os = Sys.systemName();
 
@@ -61,6 +74,7 @@ class BackendTools implements tools.spec.BackendTools {
                 ]
             });
         }
+        */
 
         return targets;
 
@@ -178,6 +192,12 @@ class BackendTools implements tools.spec.BackendTools {
                 }
             }
             tools.Files.removeEmptyDirectories(dstAssetsPath);
+        }
+
+        // Copy rtti data (if any)
+        var rttiPath = Path.join([hxmlProjectPath, '.cache', 'rtti']);
+        if (FileSystem.exists(rttiPath)) {
+            tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
         }
 
         return newAssets;
