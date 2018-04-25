@@ -18,13 +18,27 @@ class CeramicBatcher extends phoenix.Batcher {
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
     var activeShader:backend.impl.CeramicShader = null;
-    var customFloatAttributesSize:Int = 0;
+    var customFloatAttributesSize:Int = 0; 
+
+#if ceramic_debug_draw
+    var lastDebugTime:Float = 0;
+    var debugDraw:Bool = false;
+#end
 
     override function batch(persist_immediate:Bool = false) {
 
         if (ceramic.App.app.defaultColorShader == null) return;
 
-        //trace('CeramicBatcher.batch() ' + ceramic.Timer.now + ' visuals=' + (ceramicVisuals != null ? ceramicVisuals.length : 0));
+#if ceramic_debug_draw
+        if (ceramic.Timer.now - lastDebugTime > 10) {
+            debugDraw = true;
+            lastDebugTime = ceramic.Timer.now;
+        } else {
+            debugDraw = false;
+        }
+
+        if (debugDraw) trace('CeramicBatcher.batch() ' + ceramic.Timer.now + ' visuals=' + (ceramicVisuals != null ? ceramicVisuals.length : 0));
+#end
 
         // Reset render stats before we start
         dynamic_batched_count = 0;
@@ -876,6 +890,10 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.colorMask(true, true, true, true);
 
         prune();
+
+#if ceramic_debug_draw
+        if (debugDraw) trace('draw calls: ' + draw_calls);
+#end
 
     } //batch
 
