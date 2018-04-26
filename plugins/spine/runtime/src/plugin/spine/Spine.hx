@@ -682,6 +682,7 @@ class Spine extends Visual {
         var boneSetupTransform:Transform = null;
         var regularRender:Bool = !setup;
         var didFlipX:Bool = false;
+        var didFlipY:Bool = false;
         var vertexSize:Int = 0;
         var count:Int = 0;
         var tintBlack:Bool = false;
@@ -916,15 +917,25 @@ class Spine extends Visual {
                                 mesh.transform.rotate(Math.round(setupRotation / 90.0) * 90.0 * _degRad);
 
                                 didFlipX = false;
+                                didFlipY = false;
                                 if (boundSlot.flipXOnConcat) {
                                     didFlipX = true;
                                     mesh.transform.scale(-1, 1);
                                     boundSlot.parentTransform.scale(-1, 1);
                                 }
+                                if (boundSlot.flipYOnConcat) {
+                                    didFlipY = true;
+                                    mesh.transform.scale(1, -1);
+                                    boundSlot.parentTransform.scale(1, -1);
+                                }
                                 mesh.transform.concat(boundSlot.parentTransform);
                                 if (didFlipX) {
                                     mesh.transform.scale(-1, 1);
                                     boundSlot.parentTransform.scale(-1, 1);
+                                }
+                                if (didFlipY) {
+                                    mesh.transform.scale(1, -1);
+                                    boundSlot.parentTransform.scale(1, -1);
                                 }
 
                                 if (slotInfo.customTransform != null) {
@@ -1108,6 +1119,7 @@ class Spine extends Visual {
             }
 
             if (options.flipXOnConcat != null) info.flipXOnConcat = options.flipXOnConcat;
+            if (options.flipYOnConcat != null) info.flipYOnConcat = options.flipYOnConcat;
 
             if (boundParentSlots == null) boundParentSlots = new Map();
             var bindList = boundParentSlots.get(parentSlot);
@@ -1257,6 +1269,8 @@ typedef BindSlotOptions = {
 
     @:optional var flipXOnConcat:Bool;
 
+    @:optional var flipYOnConcat:Bool;
+
 } //BindSlotOptions
 
 @:allow(plugin.spine.Spine)
@@ -1276,6 +1290,8 @@ private class BindSlot {
 
     public var flipXOnConcat:Bool = false;
 
+    public var flipYOnConcat:Bool = false;
+
     public function new() {}
 
     function toString() {
@@ -1286,6 +1302,7 @@ private class BindSlot {
         if (parentTransform != null) props.parentTransform = parentTransform;
         if (parentVisible) props.parentVisible = parentVisible;
         if (flipXOnConcat) props.flipXOnConcat = flipXOnConcat;
+        if (flipYOnConcat) props.flipYOnConcat = flipYOnConcat;
         return '' + props;
     }
 
