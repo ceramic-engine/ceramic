@@ -23,6 +23,8 @@ class CeramicBatcher extends phoenix.Batcher {
 #if ceramic_debug_draw
     var lastDebugTime:Float = 0;
     var debugDraw:Bool = false;
+    var drawnQuads:Int = 0;
+    var drawnMeshes:Int = 0;
 #end
 
     override function batch(persist_immediate:Bool = false) {
@@ -36,8 +38,8 @@ class CeramicBatcher extends phoenix.Batcher {
         } else {
             debugDraw = false;
         }
-
-        if (debugDraw) trace('CeramicBatcher.batch() ' + ceramic.Timer.now + ' visuals=' + (ceramicVisuals != null ? ceramicVisuals.length : 0));
+        drawnQuads = 0;
+        drawnMeshes = 0;
 #end
 
         // Reset render stats before we start
@@ -143,6 +145,9 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.disable(GL.STENCIL_TEST);
 
         #if !debug inline #end function drawQuad() {
+#if ceramic_debug_draw
+            drawnQuads++;
+#end
 
             if (stencilClip) {
                 // Special case of drawing into stencil buffer
@@ -194,12 +199,18 @@ class CeramicBatcher extends phoenix.Batcher {
                 }
 
                 if (stateDirty) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('-- flush --');
+#end
                     flush();
 
                     // Update texture
                     if (quad.texture != lastTexture) {
                         if (quad.texture != null && lastTexture != null) {
                             if ((quad.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
                                 lastTexture = quad.texture;
                                 lastTextureId = (quad.texture.backendItem : phoenix.Texture).texture;
                                 lastTextureSlot = (quad.texture.backendItem : phoenix.Texture).slot;
@@ -209,6 +220,9 @@ class CeramicBatcher extends phoenix.Batcher {
                             }
                         } else {
                             if (quad.texture != null) {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
                                 if (lastShader == null && quad.shader == null) {
                                     // Default textured shader fallback
                                     useShader(defaultTexturedShader);
@@ -221,6 +235,9 @@ class CeramicBatcher extends phoenix.Batcher {
                                 texHeightActual = (quad.texture.backendItem : phoenix.Texture).height_actual;
                                 (lastTexture.backendItem : phoenix.Texture).bind();
                             } else {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
                                 if (lastShader == null && quad.shader == null) {
                                     // Default plain shader fallback
                                     useShader(defaultPlainShader);
@@ -236,6 +253,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
                     // Update shader
                     if (quad.shader != lastShader) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- shader ' + lastShader + ' -> ' + quad.shader);
+#end
                         lastShader = quad.shader;
 
                         if (lastShader != null) {
@@ -257,6 +277,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
                     // Update blending
                     if (quad.blending != lastBlend) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- blending ' + lastBlend + ' -> ' + quad.blending);
+#end
                         lastBlend = quad.blending;
                         if (lastBlend == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
@@ -486,6 +509,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
         #if !debug inline #end function drawMesh() {
 
+#if ceramic_debug_draw
+            drawnMeshes++;
+#end
             // The following code is doing pretty much the same thing as quads, but for meshes.
             // We could try to refactor to prevent redundancy but this is not required as our
             // main concern here is raw performance and anyway this code won't be updated often.
@@ -541,12 +567,18 @@ class CeramicBatcher extends phoenix.Batcher {
                 }
 
                 if (stateDirty) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('-- flush --');
+#end
                     flush();
 
                     // Update texture
                     if (mesh.texture != lastTexture) {
                         if (mesh.texture != null && lastTexture != null) {
                             if ((mesh.texture.backendItem : phoenix.Texture).texture != lastTextureId) {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
                                 lastTexture = mesh.texture;
                                 lastTextureId = (mesh.texture.backendItem : phoenix.Texture).texture;
                                 texWidth = (mesh.texture.backendItem : phoenix.Texture).width;
@@ -557,6 +589,9 @@ class CeramicBatcher extends phoenix.Batcher {
                             }
                         } else {
                             if (mesh.texture != null) {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default textured shader fallback
                                     useShader(defaultTexturedShader);
@@ -570,6 +605,9 @@ class CeramicBatcher extends phoenix.Batcher {
                                 texHeightActual = (mesh.texture.backendItem : phoenix.Texture).height_actual;
                                 (lastTexture.backendItem : phoenix.Texture).bind();
                             } else {
+#if ceramic_debug_draw
+                                if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
                                 if (lastShader == null && mesh.shader == null) {
                                     // Default plain shader fallback
                                     useShader(defaultPlainShader);
@@ -585,6 +623,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
                     // Update shader
                     if (mesh.shader != lastShader) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- shader ' + lastShader + ' -> ' + mesh.shader);
+#end
                         lastShader = mesh.shader;
 
                         if (lastShader != null) {
@@ -606,6 +647,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
                     // Update blending
                     if (mesh.blending != lastBlend) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- blending ' + lastBlend + ' -> ' + mesh.blending);
+#end
                         lastBlend = mesh.blending;
                         if (lastBlend == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
@@ -892,7 +936,7 @@ class CeramicBatcher extends phoenix.Batcher {
         prune();
 
 #if ceramic_debug_draw
-        if (debugDraw) trace('draw calls: ' + draw_calls);
+        if (debugDraw) trace('CeramicBatched.batch() drawCalls=' + draw_calls + ' visuals=' + ceramicVisuals.length + ' drawnQuads=' + drawnQuads + ' drawnMeshes=' + drawnMeshes);
 #end
 
     } //batch
