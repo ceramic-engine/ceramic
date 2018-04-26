@@ -1,17 +1,17 @@
 package;
 
+import haxe.io.Path;
+
 class Main {
 
     public static var project:Project = null;
-
-    static var _cwd:String = null;
 
     static var _lastUpdateTime:Float = -1;
 
     public static function main():Void {
 
-        _cwd = Sys.getCwd();
         project = @:privateAccess new Project(ceramic.App.init());
+        ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..']));
 
         _lastUpdateTime = untyped __js__('new Date().getTime()');
         js.Node.setInterval(update, 100);

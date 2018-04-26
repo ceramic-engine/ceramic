@@ -133,6 +133,9 @@ class App extends Entity {
     /** Default font */
     public var defaultFont(default,null):BitmapFont = null;
 
+    /** Project directory. May be null depending on the platform. */
+    public var projectDir:String = null;
+
 /// Field converters
 
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
