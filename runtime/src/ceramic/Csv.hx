@@ -167,6 +167,61 @@ class Csv {
 
     } //parse
 
+    public static function stringify(items:Array<Dynamic>, ?fields:Array<String>):String {
+
+        inline function addEscaped(output:StringBuf, input:String) {
+            
+            var i = 0;
+            var len = input.uLength();
+            if (len == 0) return;
+            output.add('"');
+            for (i in 0...len) {
+                var c = input.uCharAt(i);
+                if (c == '"') {
+                    output.add('""');
+                } else {
+                    output.add(c);
+                }
+            }
+            output.add('"');
+
+        } //addEscaped
+
+        if (fields == null) {
+            fields = [];
+            var usedFields:Map<String,Bool> = new Map();
+            for (item in items) {
+                for (field in Reflect.fields(item)) {
+                    if (!usedFields.exists(field)) {
+                        fields.push(field);
+                        usedFields.set(field, true);
+                    }
+                }
+            }
+        }
+
+        var output = new StringBuf();
+
+        var n = 0;
+        for (field in fields) {
+            if (n++ > 0) output.add(',');
+            addEscaped(output, field);
+        }
+
+        for (item in items) {
+            output.add("\n");
+            n = 0;
+            for (field in fields) {
+                if (n++ > 0) output.add(',');
+                var value = Reflect.field(item, field);
+                addEscaped(output, value != null ? Std.string(value) : '');
+            }
+        }
+
+        return output.toString();
+
+    } //stringify
+
 #if (!ceramic || macro)
 
     static function warning(str:String):Void {
