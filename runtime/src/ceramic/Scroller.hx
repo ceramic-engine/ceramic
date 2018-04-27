@@ -21,7 +21,7 @@ class Scroller extends Visual {
 
 /// Fine tuning
 
-    public var deceleration = 100.0;
+    public var deceleration = 300.0;
 
     public var overScrollDeceleration = 100.0;
 
