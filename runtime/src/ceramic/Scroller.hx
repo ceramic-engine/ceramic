@@ -109,6 +109,51 @@ class Scroller extends Visual {
 
     } //set_height
 
+/// Public API
+
+    public function scrollToBounds():Void {
+
+       if (direction == VERTICAL) {
+           if (content.height - height < scrollY) {
+               scrollY = content.height - height;
+           }
+           else if (scrollY < 0) {
+               scrollY = 0;
+           }
+       }
+       else {
+           if (content.width - width < scrollX) {
+               scrollX = content.width - width;
+           }
+           else if (scrollX < 0) {
+               scrollX = 0;
+           }
+       }
+
+    } //scrollToBounds
+
+    public var scrollX(get,set):Float;
+    inline function get_scrollX():Float {
+        return -scrollTransform.tx;
+    }
+    inline function set_scrollX(scrollX:Float):Float {
+        if (scrollTransform.tx == -scrollX) return scrollX;
+        scrollTransform.tx = -scrollX;
+        scrollTransform.changed = true;
+        return scrollX;
+    }
+
+    public var scrollY(get,set):Float;
+    inline function get_scrollY():Float {
+        return -scrollTransform.ty;
+    }
+    inline function set_scrollY(scrollY:Float):Float {
+        if (scrollTransform.ty == -scrollY) return scrollY;
+        scrollTransform.ty = -scrollY;
+        scrollTransform.changed = true;
+        return scrollY;
+    }
+
 /// Internal
 
     var position:Float = 0;
