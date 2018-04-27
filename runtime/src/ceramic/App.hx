@@ -442,20 +442,8 @@ class App extends Entity {
         // Sort visuals depending on their settings
         sortVisuals();
 
-        // Flush immediate callbacks
-        flushImmediate();
-
-        // Emit pre-draw event
-        screen.emitPreDraw(delta);
-
-        // Flush immediate callbacks
-        flushImmediate();
-
         // Draw
         backend.draw.draw(visuals);
-
-        // Emit post-draw event
-        screen.emitPostDraw(delta);
 
     } //update
 
