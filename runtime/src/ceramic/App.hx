@@ -78,9 +78,13 @@ class App extends Entity {
 
     /** Execute and flush every awaiting immediate callback, including the ones that
         could have been added with `onceImmediate()` after executing the existing callbacks. */
-    inline function flushImmediate():Void {
+    inline function flushImmediate():Bool {
+
+        var didFlush = false;
 
         while (immediateCallbacks != null) {
+
+            didFlush = true;
 
             var callbacks = immediateCallbacks;
             immediateCallbacks = null;
@@ -90,6 +94,8 @@ class App extends Entity {
             }
 
         }
+
+        return didFlush;
 
     } //flushImmediate
 
@@ -376,42 +382,46 @@ class App extends Entity {
         // Flush immediate callbacks
         flushImmediate();
 
-        // Notify if screen matrix has changed
-        if (screen.matrix.changed) {
-            screen.matrix.emitChange();
-        }
-
-        for (visual in visuals) {
-
-            // Compute touchable state
-            if (visual.touchableDirty) {
-                visual.computeTouchable();
+        do {
+            // Notify if screen matrix has changed
+            if (screen.matrix.changed) {
+                screen.matrix.emitChange();
             }
 
-            // Compute displayed content
-            if (visual.contentDirty) {
+            for (visual in visuals) {
 
-                // Compute content only if visual is currently visible
-                //
-                if (visual.visibilityDirty) {
-                    visual.computeVisibility();
+                // Compute touchable state
+                if (visual.touchableDirty) {
+                    visual.computeTouchable();
                 }
 
-                if (visual.computedVisible) {
-                    visual.computeContent();
+                // Compute displayed content
+                if (visual.contentDirty) {
+
+                    // Compute content only if visual is currently visible
+                    //
+                    if (visual.visibilityDirty) {
+                        visual.computeVisibility();
+                    }
+
+                    if (visual.computedVisible) {
+                        visual.computeContent();
+                    }
                 }
+
             }
 
-        }
+            // Dispatch visual transforms changes
+            for (visual in visuals) {
 
-        // Dispatch visual transforms changes
-        for (visual in visuals) {
+                if (visual.transform != null && visual.transform.changed) {
+                    visual.transform.emitChange();
+                }
 
-            if (visual.transform != null && visual.transform.changed) {
-                visual.transform.emitChange();
             }
-
         }
+        while (flushImmediate());
+        
 
         // Update visuals render target, matrix and visibility
         for (visual in visuals) {
