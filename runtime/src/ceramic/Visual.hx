@@ -339,6 +339,35 @@ class Visual extends Entity {
     /** Assign a shader to this visual. */
     public var shader:Shader = null;
 
+/// Flags
+
+    /** Just a way to store some flags. **/
+    var flags:Flags = new Flags();
+
+    /** Whether this visual is `active`. Default is **true**. When setting it to **false**,
+        the visual won't be `visible` nor `touchable` anymore (these get set to **false**).
+        When restoring `active` to **true**, `visible` and `touchable` will also get back
+        their previous state. **/
+    public var active(get,set):Bool;
+    inline function get_active():Bool {
+        return !flags.bool(0);
+    }
+    inline function set_active(active:Bool):Bool {
+        if (active == !flags.bool(0)) return active;
+        flags.setBool(0, !active);
+        if (active) {
+            visible = flags.bool(1);
+            touchable = flags.bool(2);
+        }
+        else {
+            flags.setBool(1, visible);
+            flags.setBool(2, touchable);
+            visible = false;
+            touchable = false;
+        }
+        return active;
+    }
+
 /// Properties (Matrix)
 
     public var a:Float = 1;
@@ -469,6 +498,7 @@ class Visual extends Entity {
         }
         
         ceramic.App.app.visuals.remove(this);
+        ceramic.App.app.hierarchyDirty = true;
 
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
