@@ -56,7 +56,7 @@ class Csv {
             }
             else if (sep == '') {
                 if (c == ',' || c == ';') {
-                    sep = ',';
+                    sep = c;
                     keys.push(val);
                     val = '';
                 }
