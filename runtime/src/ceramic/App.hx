@@ -13,6 +13,8 @@ import ceramic.Shortcuts.*;
 
 import backend.Backend;
 
+import motion.actuators.SimpleActuator;
+
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
 #end
@@ -366,6 +368,12 @@ class App extends Entity {
 
         // Trigger pre-update event
         emitPreUpdate(delta);
+
+        // Flush immediate callbacks
+        flushImmediate();
+
+        // Update actuate stuff at the correct time
+        @:privateAccess SimpleActuator.stage_onEnterFrame();
 
         // Flush immediate callbacks
         flushImmediate();

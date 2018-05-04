@@ -4,8 +4,16 @@ import ceramic.ScrollDirection;
 import ceramic.ScrollerStatus;
 import ceramic.Shortcuts.*;
 
+import motion.Actuate;
+
 @:keep
 class Scroller extends Visual {
+
+/// Events
+
+    @event function dragStart();
+
+    @event function dragEnd();
 
 /// Public properties
 
@@ -17,7 +25,20 @@ class Scroller extends Visual {
 
     public var scrollEnabled(default,set):Bool = true;
 
-    public var status:ScrollerStatus = IDLE;
+    public var status(default,set):ScrollerStatus = IDLE;
+
+    function set_status(status:ScrollerStatus):ScrollerStatus {
+        if (status == this.status) return status;
+        var prevStatus = this.status;
+        this.status = status;
+        if (status == DRAGGING) {
+            emitDragStart();
+        }
+        else if (prevStatus == DRAGGING) {
+            emitDragEnd();
+        }
+        return status;
+    }
 
 /// Fine tuning
 
@@ -598,5 +619,25 @@ class Scroller extends Visual {
         }
 
     } //update
+
+/// Smooth scroll
+
+    public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.25, ?easing:TweenEasing):Void {
+
+        if (easing == null) easing = QUAD_EASE_IN_OUT;
+
+        if (scrollX != this.scrollX) {
+            tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
+                this.scrollX = scrollX;
+            });
+        }
+
+        if (scrollY != this.scrollY) {
+            tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
+                this.scrollY = scrollY;
+            });
+        }
+
+    } //smoothScrollTo
 
 } //Scroller

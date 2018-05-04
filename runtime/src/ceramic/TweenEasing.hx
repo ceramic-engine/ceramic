@@ -1,0 +1,43 @@
+package ceramic;
+
+enum TweenEasing {
+
+    LINEAR;
+
+    BACK_EASE_IN;
+    BACK_EASE_IN_OUT;
+    BACK_EASE_OUT;
+
+    QUAD_EASE_IN;
+    QUAD_EASE_IN_OUT;
+    QUAD_EASE_OUT;
+
+    BOUNCE_EASE_IN;
+    BOUNCE_EASE_IN_OUT;
+    BOUNCE_EASE_OUT;
+
+    CUBIC_EASE_IN;
+    CUBIC_EASE_IN_OUT;
+    CUBIC_EASE_OUT;
+
+    ELASTIC_EASE_IN;
+    ELASTIC_EASE_IN_OUT;
+    ELASTIC_EASE_OUT;
+
+    EXPO_EASE_IN;
+    EXPO_EASE_IN_OUT;
+    EXPO_EASE_OUT;
+
+    QUART_EASE_IN;
+    QUART_EASE_IN_OUT;
+    QUART_EASE_OUT;
+
+    QUINT_EASE_IN;
+    QUINT_EASE_IN_OUT;
+    QUINT_EASE_OUT;
+
+    SINE_EASE_IN;
+    SINE_EASE_IN_OUT;
+    SINE_EASE_OUT;
+
+} //TweenEasing

@@ -60,6 +60,14 @@ class Entity implements Events implements Lazy {
 
     } //autorun
 
+/// Tween
+
+    public function tween(?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void):Tween {
+
+        return Tween.start(this, id, easing, duration, fromValue, toValue, update);
+
+    } //tween
+
 /// Print
 
     public function className():String {
