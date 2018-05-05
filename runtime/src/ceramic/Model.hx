@@ -4,23 +4,11 @@ import ceramic.Autorun;
 
 using StringTools;
 
-class Model extends Entity implements Observable {
+class Model extends Entity implements Observable implements Serializable {
 
     public function new() {
 
     } //new
-
-    public function deserialize(data:String):Void {
-
-        // TODO
-
-    } //deserialize
-
-    public function serialize():String {
-
-        return null; // TODO
-
-    } //serialize
 
 /// Print
 

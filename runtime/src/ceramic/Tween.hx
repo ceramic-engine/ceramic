@@ -76,10 +76,18 @@ class Tween extends Entity {
             case SINE_EASE_OUT: motion.easing.Sine.easeOut;
 
         }
+
+#if js
+        // Somehow, Actuate doesn't handle durations the same way
+        // depending on the platform??
+        var actuateDuration = duration;
+#else
+        var actuateDuration = duration * 1000;
+#end
         
         startTime = Timer.now;
         target = new UpdateFloat(fromValue);
-        actuator = Actuate.tween(target, duration, { value: toValue }, false);
+        actuator = Actuate.tween(target, actuateDuration, { value: toValue }, false);
 
         actuator.onComplete(function() {
             if (destroyed) return;
