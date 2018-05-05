@@ -15,6 +15,10 @@ class Scroller extends Visual {
 
     @event function dragEnd();
 
+    @event function wheelStart();
+
+    @event function wheelEnd();
+
 /// Public properties
 
     public var content(default,null):Visual = null;
@@ -49,6 +53,8 @@ class Scroller extends Visual {
     public var wheelDeceleration = 1600.0;
 
     public var wheelMomentum = #if mac true #else false #end;
+
+    public var wheelEndDelay = 0.25;
 
     public var overScrollResistance = 5.0;
 
@@ -197,6 +203,8 @@ class Scroller extends Visual {
 
     var fromWheel:Bool = false;
 
+    var lastWheelEventTime:Float = -1;
+
 /// Toggle tracking
 
     function startTracking():Void {
@@ -239,6 +247,12 @@ class Scroller extends Visual {
 
         status = SCROLLING;
         fromWheel = true;
+        if (lastWheelEventTime == -1) {
+            lastWheelEventTime = Timer.now;
+            emitWheelStart();
+        } else {
+            lastWheelEventTime = Timer.now;
+        }
         bounce = 0;
         if (direction == VERTICAL) {
             if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
@@ -618,11 +632,37 @@ class Scroller extends Visual {
 
         }
 
+        if (lastWheelEventTime != -1) {
+            if (Timer.now - lastWheelEventTime > wheelEndDelay) {
+                lastWheelEventTime = -1;
+                emitWheelEnd();
+            }
+        }
+
     } //update
+
+/// Helpers
+
+    public function stop():Void {
+
+        status = IDLE;
+
+    } //stop
 
 /// Smooth scroll
 
+    public function scrollTo(scrollX:Float, scrollY:Float):Void {
+
+        stop();
+
+        this.scrollX = scrollX;
+        this.scrollY = scrollY;
+
+    } //smoothScrollTo
+
     public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.25, ?easing:TweenEasing):Void {
+
+        stop();
 
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 

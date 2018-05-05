@@ -9,6 +9,18 @@ class Velocity {
     public function new() {
 
     } //new
+    
+    public function reset():Void {
+
+        // Remove all values
+        var len = times.length;
+        while (len > 0) {
+            times.shift();
+            positions.shift();
+            len--;
+        }
+
+    } //reset
 
     public function add(position:Float):Void {
 
