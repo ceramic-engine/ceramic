@@ -65,7 +65,11 @@ class SortVisuals {
                     else if (aMesh.texture != null && bMesh.texture != null) {
                         if (aMesh.texture.index > bMesh.texture.index) result = 1;
                         else if (aMesh.texture.index < bMesh.texture.index) result = -1;
+                        else if ((aMesh.blending:Int) > (bMesh.blending:Int)) result = 1;
+                        else if ((aMesh.blending:Int) < (bMesh.blending:Int)) result = -1;
                     }
+                    else if ((aMesh.blending:Int) > (bMesh.blending:Int)) result = 1;
+                    else if ((aMesh.blending:Int) < (bMesh.blending:Int)) result = -1;
                 }
             }
         }
