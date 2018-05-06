@@ -104,7 +104,7 @@ class Main extends luxe.Game {
         config.window.resizable = app.settings.resizable;
         config.window.title = cast app.settings.title;
         config.render.stencil = 8;
-        config.render.depth = 16;
+        //config.render.depth = 16;
 
 #if cpp
         // Uncaught error handler in native

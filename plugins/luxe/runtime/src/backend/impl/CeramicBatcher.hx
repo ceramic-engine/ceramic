@@ -857,7 +857,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
                             GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
                             GL.stencilMask(0xFF);
-                            GL.depthMask(false);
+                            //GL.depthMask(false);
                             GL.colorMask(false, false, false, false);
 
                             if (lastClip.quad != null) {
@@ -879,7 +879,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             flush();
                             GL.stencilFunc(GL.EQUAL, 1, 0xFF);
                             GL.stencilMask(0x00);
-                            GL.depthMask(true);
+                            //GL.depthMask(true);
                             GL.colorMask(true, true, true, true);
                         }
                         else {
@@ -930,7 +930,7 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.disable(GL.STENCIL_TEST);
         GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
         GL.stencilMask(0x00);
-        GL.depthMask(true);
+        //GL.depthMask(true);
         GL.colorMask(true, true, true, true);
 
         prune();
@@ -941,7 +941,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
     } //batch
 
-    inline function flush():Bool {
+    #if !ceramic_debug_draw inline #end function flush():Bool {
 
         if (pos_floats == 0) {
             return false;
