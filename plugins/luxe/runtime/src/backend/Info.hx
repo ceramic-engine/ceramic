@@ -4,6 +4,16 @@ class Info implements spec.Info {
 
     public function new() {}
 
+/// System
+
+    inline public function storageDirectory():String {
+#if (cpp && !macro)
+        return Luxe.io.app_path_prefs;
+#else
+        return null;
+#end
+    }
+
 /// Assets
 
     inline public function imageExtensions():Array<String> {

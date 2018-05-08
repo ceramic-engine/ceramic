@@ -4,6 +4,10 @@ package spec;
     Important: implementstions can be instanciated both at runtime and at compile time. */
 interface Info {
 
+/// System
+
+    function storageDirectory():String;
+
 /// Assets
 
     function imageExtensions():Array<String>;
