@@ -3,7 +3,7 @@
     "items": [
         {
             "displayName": "▷ Tools + NPM",
-            "description": "npm install",
+            "description": "./npm install",
             "tasks": [{
                 "type": "shell",
                 "taskName": "build",
@@ -13,7 +13,7 @@
                     "focus": false,
                     "panel": "shared"
                 },
-                "command": "npm",
+                "command": "./npm",
                 "args": ["install"],
                 "group": {
                     "kind": "build",
@@ -34,7 +34,7 @@
                     "focus": false,
                     "panel": "shared"
                 },
-                "command": "haxe",
+                "command": "./haxe",
                 "args": ["build.hxml"],
                 "group": {
                     "kind": "build",
@@ -55,7 +55,7 @@
                     "focus": false,
                     "panel": "shared"
                 },
-                "command": "haxe",
+                "command": "./haxe",
                 "args": ["build-all.hxml"],
                 "group": {
                     "kind": "build",

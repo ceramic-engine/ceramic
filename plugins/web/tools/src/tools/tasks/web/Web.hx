@@ -75,8 +75,8 @@ class Web extends tools.Task {
             cmdArgs = ['.'].concat(cmdArgs);
 
             var proc = ChildProcess.spawn(
-                'node_modules/.bin/electron',
-                cmdArgs,
+                Path.join([context.ceramicToolsPath, 'node']),
+                ['node_modules/.bin/electron'].concat(cmdArgs),
                 { cwd: context.ceramicRunnerPath }
             );
 

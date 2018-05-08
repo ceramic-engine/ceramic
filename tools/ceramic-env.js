@@ -1,7 +1,20 @@
 
 var path = require('path');
 var fs = require('fs');
+var rimraf = require('rimraf');
 var spawnSync = require('child_process').spawnSync;
+
+// Let's not use newrepo
+if (fs.existsSync(path.join(__dirname, '.haxelib'))) {
+    rimraf.sync(path.join(__dirname, '.haxelib'));
+}
+
+// Setup haxelib repository (if needed)
+var haxelibRepo = (''+spawnSync('./haxelib', ['config'], { cwd: __dirname }).stdout).trim();
+if (!fs.existsSync(haxelibRepo)) {
+    haxelibRepo = path.join(os.homedir(), '.ceramic/haxelib');
+    spawnSync('./haxelib', ['setup', haxelibRepo], { stdio: "inherit", cwd: __dirname });
+}
 
 // This will ensure we can run haxe/haxelib/neko on this machine and that
 // tools ceramic uses can also find them. If the current machine already has haxe/haxelib/neko

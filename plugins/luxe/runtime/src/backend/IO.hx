@@ -4,16 +4,27 @@ class IO implements spec.IO {
 
     public function new() {}
 
-    public function stringSave(key:String, str:String):Bool {
+    public function saveString(key:String, str:String):Bool {
 
         return Luxe.io.string_save(key, str, 0);
 
-    } //stringSave
+    } //saveString
 
-    public function stringRead(key:String):String {
+    public function appendString(key:String, str:String):Bool {
+
+        var str0 = Luxe.io.string_load(key, 0);
+        if (str0 == null) {
+            str0 = '';
+        }
+        
+        return Luxe.io.string_save(key, str0 + str, 0);
+
+    } //appendString
+
+    public function readString(key:String):String {
 
         return Luxe.io.string_load(key, 0);
 
-    } //stringRead
+    } //readString
 
 } //IO

@@ -230,7 +230,7 @@ class Setup extends tools.Task {
             return;
         }
 
-        // Install luxe (and dependencies)
+        /*// Install luxe (and dependencies)
         //
         print('Install luxe\u2026');
 
@@ -240,7 +240,11 @@ class Setup extends tools.Task {
             }
         }
 
-        haxelib(['run', 'snowfall', 'update', 'luxe']);
+        haxelib(['run', 'snowfall', 'update', 'luxe']);*/
+
+        for (lib in ['flow', 'snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
+            haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+        }
 
         // Check that luxe is now available
         //

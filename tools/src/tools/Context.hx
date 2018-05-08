@@ -12,6 +12,9 @@ typedef Context = {
     /** The defines computed by project and args. */
     var defines:Map<String,String>;
 
+    /** Ceramic git deps absolute path. */
+    var ceramicGitDepsPath:String;
+
     /** Ceramic tools absolute path. */
     var ceramicToolsPath:String;
 

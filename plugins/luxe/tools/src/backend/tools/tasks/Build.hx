@@ -37,6 +37,13 @@ class Build extends tools.Task {
 
     } //new
 
+#if no_flow
+    override function run(cwd:String, args:Array<String>):Void {
+
+        //
+
+    } //run
+#else
     override function run(cwd:String, args:Array<String>):Void {
 
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
@@ -112,7 +119,7 @@ class Build extends tools.Task {
         Sync.run(function(done) {
 
             var proc = ChildProcess.spawn(
-                'haxelib',
+                Path.join([context.ceramicToolsPath, 'haxelib']),
                 cmdArgs,
                 { cwd: flowProjectPath }
             );
@@ -267,5 +274,6 @@ class Build extends tools.Task {
         }
 
     } //run
+#end
 
 } //Setup

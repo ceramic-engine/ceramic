@@ -1,3 +1,3 @@
 
 @echo off
-node %~dp0/ceramic %*
+node_modules/.bin/node %~dp0/ceramic %*

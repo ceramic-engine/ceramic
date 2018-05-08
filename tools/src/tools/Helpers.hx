@@ -237,13 +237,13 @@ class Helpers {
 
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
-        return command('haxe', args, options);
+        return command(Path.join([context.ceramicToolsPath, 'haxe']), args, options);
 
     } //haxe
 
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
-        return command('haxelib', args, options);
+        return command(Path.join([context.ceramicToolsPath, 'haxelib']), args, options);
 
     } //haxelib
 

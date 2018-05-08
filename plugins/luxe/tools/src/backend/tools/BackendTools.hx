@@ -172,13 +172,17 @@ class BackendTools implements tools.spec.BackendTools {
             libs.set(libName, true);
         }
 
-        if (!libs.exists('snowfall')) {
+        /*if (!libs.exists('snowfall')) {
             if (haxelib(['install', 'snowfall']).status != 0) {
                 fail('Error when trying to install snowfall.');
             }
         }
 
-        haxelib(['run', 'snowfall', 'update', 'luxe']);
+        haxelib(['run', 'snowfall', 'update', 'luxe']);*/
+
+        for (lib in ['flow', 'snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
+            haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+        }
 
         // Check that luxe is available
         //

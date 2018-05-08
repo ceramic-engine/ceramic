@@ -1,0 +1,3 @@
+#!/bin/bash
+export PATH=${0%/*}':'$PATH
+"${0%/*}"/node "${0%/*}"/node_modules/.bin/haxe "$@"
