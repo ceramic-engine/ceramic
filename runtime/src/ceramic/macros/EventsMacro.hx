@@ -76,6 +76,7 @@ class EventsMacro {
     } //build
 
     @:allow(ceramic.macros.ObservableMacro)
+    @:allow(ceramic.macros.SerializableMacro)
     static function createEventFields(field:Field, newFields:Array<Field>, fieldsByName:Map<String,Bool>):Void {
 
         switch (field.kind) {

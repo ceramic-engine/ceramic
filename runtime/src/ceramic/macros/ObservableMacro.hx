@@ -7,6 +7,7 @@ class ObservableMacro {
 
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
+        var pos = Context.currentPos();
 
         // Check class fields
         var fieldsByName = new Map<String,Bool>();
@@ -29,9 +30,39 @@ class ObservableMacro {
 
         var newFields:Array<Field> = [];
 
+        if (!fieldsByName.exists('observedDirty')) {
+
+            var eventField = {
+                pos: pos,
+                name: 'observedDirty',
+                kind: FFun({
+                    args: [],
+                    ret: macro :Void,
+                    expr: null
+                }),
+                access: [],
+                doc: 'Event when any observable value as changed on this instance.',
+                meta: []
+            };
+
+            // Add event
+            EventsMacro.createEventFields(eventField, newFields, fieldsByName);
+
+            // Create observedDirty var
+            newFields.push({
+                pos: pos,
+                name: 'observedDirty',
+                kind: FVar(macro :Bool, macro false),
+                access: [APublic],
+                doc: 'Default is `false`, automatically set to `true` when any of this instance\'s observable variables has changed.',
+                meta: []
+            });
+
+        }
+
         for (field in fields) {
 
-            if (hasObserveMeta(field)) {
+            if (hasObserveOrSerializeMeta(field)) {
                 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -114,6 +145,10 @@ class ObservableMacro {
                                         return prevValue;
                                     }
                                     this.$unobservedFieldName = $i{fieldName};
+                                    if (!observedDirty) {
+                                        observedDirty = true;
+                                        emitObservedDirty();
+                                    }
                                     this.$emitFieldNameChange($i{fieldName}, prevValue);
                                     return $i{fieldName}
                                 }
@@ -181,12 +216,16 @@ class ObservableMacro {
 
     } //build
 
-    static function hasObserveMeta(field:Field):Bool {
+    static function hasObserveOrSerializeMeta(field:Field):Bool {
+
+        // We also make @serialize properties observable because this
+        // is useful for continuous serialization. This obviously only affect
+        // @serialize properties on classes that implement Observable macro
 
         if (field.meta == null || field.meta.length == 0) return false;
 
         for (meta in field.meta) {
-            if (meta.name == 'observe') {
+            if (meta.name == 'observe' || meta.name == 'serialize') {
                 return true;
             }
         }

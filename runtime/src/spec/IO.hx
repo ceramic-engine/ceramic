@@ -2,8 +2,10 @@ package spec;
 
 interface IO {
 
-    function stringSave(key:String, str:String):Bool;
+    function saveString(key:String, str:String):Bool;
 
-    function stringRead(key:String):String;
+    function appendString(key:String, str:String):Bool;
+
+    function readString(key:String):String;
 
 } //IO

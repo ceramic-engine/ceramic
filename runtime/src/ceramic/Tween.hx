@@ -1,8 +1,5 @@
 package ceramic;
 
-import motion.Actuate;
-import motion.actuators.GenericActuator;
-
 class Tween extends Entity {
 
 /// Static helpers
@@ -25,7 +22,7 @@ class Tween extends Entity {
 
 /// Properties
 
-    var actuator:GenericActuator<UpdateFloat>;
+    var actuator:motion.actuators.GenericActuator<UpdateFloat>;
 
     var target:UpdateFloat;
 
@@ -87,7 +84,7 @@ class Tween extends Entity {
         
         startTime = Timer.now;
         target = new UpdateFloat(fromValue);
-        actuator = Actuate.tween(target, actuateDuration, { value: toValue }, false);
+        actuator = motion.Actuate.tween(target, actuateDuration, { value: toValue }, false);
 
         actuator.onComplete(function() {
             if (destroyed) return;
@@ -109,7 +106,7 @@ class Tween extends Entity {
     function destroy() {
 
         if (target != null) {
-            Actuate.stop(target);
+            motion.Actuate.stop(target);
             actuator = null;
             target = null;
         }

@@ -26,9 +26,27 @@ class Utils {
 
 	} //getRtti
 
-    inline public static function uniqueId():String {
+    static var _nextUniqueIntCursor:Int = 0;
+    static var _nextUniqueInt0:Int = Std.random(0x7fffffff);
+    static var _nextUniqueInt1:Int = Std.int(Date.now().getTime() * 0.0001);
+    static var _nextUniqueInt2:Int = Std.random(0x7fffffff);
+    static var _nextUniqueInt3:Int = Std.random(0x7fffffff);
 
-        return base62Id() + base62Id() + base62Id() + base62Id() + base62Id() + base62Id() + base62Id() + base62Id();
+    public static function uniqueId():String {
+
+        switch (_nextUniqueIntCursor) {
+            case 0:
+                _nextUniqueInt0 = (_nextUniqueInt0 + 1) % 0x7fffffff;
+            case 1:
+                _nextUniqueInt1 = (_nextUniqueInt1 + 1) % 0x7fffffff;
+            case 2:
+                _nextUniqueInt2 = (_nextUniqueInt2 + 1) % 0x7fffffff;
+            case 3:
+                _nextUniqueInt3 = (_nextUniqueInt3 + 1) % 0x7fffffff;
+        }
+        _nextUniqueIntCursor = (_nextUniqueIntCursor + 1) % 4;
+
+        return base62Id(_nextUniqueInt0) + base62Id() + base62Id(_nextUniqueInt1) + base62Id() + base62Id(_nextUniqueInt2) + base62Id() + base62Id(_nextUniqueInt3);
 
     } //uniqueId
 

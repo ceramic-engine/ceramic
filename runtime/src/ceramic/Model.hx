@@ -37,4 +37,16 @@ class Model extends Entity implements Observable implements Serializable {
 
     } //toString
 
+/// Haxe built in serializer extension
+
+    @:keep
+    function hxSerialize(s:haxe.Serializer) {
+        s.serialize(@:privateAccess Serialize.serializeValue(this));
+    }
+
+    @:keep
+    function hxUnserialize(u:haxe.Unserializer) {
+        @:privateAccess Serialize.deserializeValue(u.unserialize(), this);
+    }
+
 } //Model
