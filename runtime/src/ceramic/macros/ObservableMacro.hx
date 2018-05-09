@@ -10,13 +10,14 @@ class ObservableMacro {
         var pos = Context.currentPos();
 
         // Check class fields
+        var localClass = Context.getLocalClass().get();
         var fieldsByName = new Map<String,Bool>();
         for (field in fields) {
             fieldsByName.set(field.name, true);
         }
 
         // Also check parent fields
-        var parentHold = Context.getLocalClass().get().superClass;
+        var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
         while (parent != null) {
 
@@ -36,7 +37,16 @@ class ObservableMacro {
                 pos: pos,
                 name: 'observedDirty',
                 kind: FFun({
-                    args: [],
+                    args: [
+                        {
+                            name: 'instance',
+                            type: TPath({
+                                name: localClass.name,
+                                pack: localClass.pack,
+                                params: cast localClass.params
+                            })
+                        }
+                    ],
                     ret: macro :Void,
                     expr: null
                 }),
@@ -147,7 +157,7 @@ class ObservableMacro {
                                     this.$unobservedFieldName = $i{fieldName};
                                     if (!observedDirty) {
                                         observedDirty = true;
-                                        emitObservedDirty();
+                                        emitObservedDirty(this);
                                     }
                                     this.$emitFieldNameChange($i{fieldName}, prevValue);
                                     return $i{fieldName}

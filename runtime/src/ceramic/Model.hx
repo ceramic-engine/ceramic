@@ -6,6 +6,12 @@ using StringTools;
 
 class Model extends Entity implements Observable implements Serializable {
 
+/// Components
+
+    @component var serializer:ModelSerializer;
+
+/// Lifecycle
+
     public function new() {
 
     } //new

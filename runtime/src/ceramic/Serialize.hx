@@ -6,6 +6,7 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+@:allow(ceramic.ModelSerializer)
 class Serialize {
 
     public static function serialize(serializable:Serializable):String {
@@ -43,9 +44,13 @@ class Serialize {
 
 /// Internal
 
-    static var _serializedMap:Map<String,{ type:String, props:Dynamic }> = null;
+    static var _serializedMap:Map<String,{ id:String, type:String, props:Dynamic }> = null;
 
     static var _deserializedMap:Map<String,Serializable> = null;
+
+    static var _onAddSerializable:Serializable->Void = null;
+
+    static var _appendSerialize:Bool = false;
 
     static function serializeValue(value:Dynamic):Dynamic {
 
@@ -62,7 +67,8 @@ class Serialize {
                 return { id: id };
             }
 
-            var result:Dynamic = {
+            var result = {
+                id: id,
                 type: Type.getClassName(clazz),
                 props: {}
             };
@@ -83,6 +89,10 @@ class Serialize {
                     var val = serializeValue(Extensions.getProperty(value, fieldRealName));
                     Reflect.setField(result.props, fieldName, val);
                 }
+            }
+
+            if (_onAddSerializable != null) {
+                _onAddSerializable(value);
             }
 
             return { id: id };

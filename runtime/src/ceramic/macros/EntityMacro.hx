@@ -102,9 +102,11 @@ class EntityMacro {
                                     }
                                     this.$fieldName = $i{fieldName};
                                     if (this.$fieldName != null) {
-                                        return component($v{fieldName}, this.$fieldName);
+                                        component($v{fieldName}, this.$fieldName);
+                                        return this.$fieldName;
                                     }
                                     removeComponent($v{fieldName});
+                                    return null;
                                 }
                             }),
                             access: [APrivate],

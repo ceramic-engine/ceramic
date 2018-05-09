@@ -36,12 +36,27 @@ class Timer {
 
 // Public API
 
-    public static function delay(seconds:Float, callback:Void->Void):Void {
+    public static function delay(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
 
         var time = now + seconds;
         next = Math.min(time, next);
 
-        callbacks.push(new TimerCallback(callback, time));
+        var stop = false;
+
+        var clearDelay = null;
+        clearDelay = function() {
+            stop = true;
+        };
+
+        var delayed:Void->Void = null;
+        delayed = function() {
+            if (stop || (owner != null && owner.destroyed)) return;
+            callback();
+        }
+
+        callbacks.push(new TimerCallback(delayed, time));
+
+        return clearDelay;
 
     } //delay
 
@@ -51,22 +66,17 @@ class Timer {
 
         var clearInterval = null;
         clearInterval = function() {
-            if (owner != null && !owner.destroyed) owner.offDestroy(clearInterval);
             stop = true;
         };
 
         var tick:Void->Void = null;
         tick = function() {
-            if (stop) return;
+            if (stop || (owner != null && owner.destroyed)) return;
             callback();
             if (!stop) delay(seconds, tick);
         }
         
         delay(seconds, tick);
-
-        if (owner != null) {
-            owner.onceDestroy(null, clearInterval);
-        }
 
         return clearInterval;
 
