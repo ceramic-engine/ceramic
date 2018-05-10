@@ -57,7 +57,16 @@ class IO implements spec.IO {
 
     public function readString(key:String):String {
 
-        return Luxe.io.string_load(key, 0);
+        var _key = Md5.encode('data ~ ' + key);
+        var storageDir = ceramic.App.app.backend.info.storageDirectory();
+        var filePath = Path.join([storageDir, 'data_' + _key]);
+
+        var str = null;
+        if (FileSystem.exists(filePath)) {
+            str = File.getContent(filePath);
+        }
+
+        return str;
 
     } //readString
 
