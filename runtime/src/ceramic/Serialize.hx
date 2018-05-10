@@ -6,7 +6,8 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
-@:allow(ceramic.ModelSerializer)
+@:allow(ceramic.SerializeModel)
+@:allow(ceramic.SaveModel)
 class Serialize {
 
     public static function serialize(serializable:Serializable):String {
@@ -62,6 +63,12 @@ class Serialize {
             var clazz = Type.getClass(value);
             var props:Dynamic = {};
             var id = value._serializeId;
+
+            assert(id != null, 'Serializable id must not be null');
+
+            if (_deserializedMap != null) {
+                _deserializedMap.set(id, value);
+            }
 
             if (_serializedMap.exists(id)) {
                 return { id: id };
@@ -176,6 +183,7 @@ class Serialize {
                 assert(instance != null, 'Created empty instance should not be null');
 
                 // Add instance in mapping
+                instance._serializeId = value.id;
                 _deserializedMap.set(value.id, instance);
 
                 // Iterate over each serializable field and either put a default value

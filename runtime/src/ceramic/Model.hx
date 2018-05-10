@@ -8,7 +8,7 @@ class Model extends Entity implements Observable implements Serializable {
 
 /// Components
 
-    @component var serializer:ModelSerializer;
+    @component var serializer:SerializeModel;
 
 /// Lifecycle
 

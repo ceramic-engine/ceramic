@@ -4,7 +4,7 @@ import ceramic.Assert.*;
 import ceramic.Shortcuts.*;
 
 /** Utility to serialize a model object (and its children) continuously and efficiently */
-class ModelSerializer extends Component {
+class SerializeModel extends Component {
 
 /// Events
 
@@ -153,7 +153,15 @@ class ModelSerializer extends Component {
 
     } //cleanTrackingFromPrevSerializedMap
 
-    function modelDirty(model:Model) {
+    function modelDirty(model:Model, fromSerializedField:Bool) {
+
+        if (!fromSerializedField) {
+            // If the observed object got dirty from a non-serialized field,
+            // there is nothing to do. Just mark the model as `clean` and wait
+            // for the next change.
+            model.observedDirty = false;
+            return;
+        }
 
         dirtyModels.set(model._serializeId, model);
         dirty = true;
@@ -164,6 +172,7 @@ class ModelSerializer extends Component {
     public function synchronize() {
 
         if (!dirty) return;
+        dirty = false;
 
         var toAppend = [];
         for (id in dirtyModels.keys()) {
@@ -174,12 +183,15 @@ class ModelSerializer extends Component {
         }
         dirtyModels = new Map();
 
+        trace('toAppend.length = ' + toAppend.length);
+
         if (toAppend.length > 0) {
             var s = new haxe.Serializer();
             s.serialize(toAppend);
             var data = s.toString();
 
             // Emit changeset
+            trace('emitChangeset');
             emitChangeset({ data: data, append: true });
         }
 
@@ -211,4 +223,4 @@ class ModelSerializer extends Component {
 
     } //serializeModel
 
-} //ModelSerializer
+} //SerializeModel

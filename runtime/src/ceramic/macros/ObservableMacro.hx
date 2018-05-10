@@ -45,6 +45,10 @@ class ObservableMacro {
                                 pack: localClass.pack,
                                 params: cast localClass.params
                             })
+                        },
+                        {
+                            name: 'fromSerializedField',
+                            type: macro :Bool
                         }
                     ],
                     ret: macro :Void,
@@ -72,7 +76,12 @@ class ObservableMacro {
 
         for (field in fields) {
 
-            if (hasObserveOrSerializeMeta(field)) {
+            var metasCase = hasObserveOrSerializeMeta(field);
+
+            if (metasCase != 0) {
+
+                var hasObserveMeta = metasCase == 1 || metasCase == 3;
+                var hasSerializeMeta = metasCase == 2 || metasCase == 3;
                 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -157,7 +166,7 @@ class ObservableMacro {
                                     this.$unobservedFieldName = $i{fieldName};
                                     if (!observedDirty) {
                                         observedDirty = true;
-                                        emitObservedDirty(this);
+                                        emitObservedDirty(this, $v{hasSerializeMeta});
                                     }
                                     this.$emitFieldNameChange($i{fieldName}, prevValue);
                                     return $i{fieldName}
@@ -226,21 +235,36 @@ class ObservableMacro {
 
     } //build
 
-    static function hasObserveOrSerializeMeta(field:Field):Bool {
+    static function hasObserveOrSerializeMeta(field:Field):Int {
 
         // We also make @serialize properties observable because this
         // is useful for continuous serialization. This obviously only affect
         // @serialize properties on classes that implement Observable macro
 
-        if (field.meta == null || field.meta.length == 0) return false;
+        if (field.meta == null || field.meta.length == 0) return 0;
+
+        var hasObserveMeta = false;
+        var hasSerializeMeta = false;
 
         for (meta in field.meta) {
-            if (meta.name == 'observe' || meta.name == 'serialize') {
-                return true;
+            if (meta.name == 'observe') {
+                hasObserveMeta = true;
+            }
+            else if (meta.name == 'serialize') {
+                hasSerializeMeta = true;
             }
         }
 
-        return false;
+        if (hasObserveMeta && hasSerializeMeta) {
+            return 3;
+        }
+        else if (hasSerializeMeta) {
+            return 2;
+        }
+        else if (hasObserveMeta) {
+            return 1;
+        }
+        return 0;
 
     } //hasComponentMeta
 
