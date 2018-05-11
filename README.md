@@ -1,6 +1,6 @@
 # Ceramic
 
-| ![Ceramic Logo](/editor/public/icons/128x128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
+| ![Ceramic Logo](editor/public/icons/128x128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
 | - | - |
 
 ## ⚠️ ACTIVE DEVELOPMENT / DON'T USE IT YET! ⚠️
