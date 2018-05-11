@@ -183,8 +183,6 @@ class SerializeModel extends Component {
         }
         dirtyModels = new Map();
 
-        trace('toAppend.length = ' + toAppend.length);
-
         if (toAppend.length > 0) {
             var s = new haxe.Serializer();
             s.serialize(toAppend);
