@@ -70,6 +70,8 @@ class Scroller extends Visual {
 
     public var bounceOverScrollAcceleration = 2000.0;
 
+    public var maxClickMomentum = 100.0;
+
 /// Lifecycle
 
     public function new(?content:Visual) {
@@ -294,6 +296,11 @@ class Scroller extends Visual {
 
     function pointerDown(info:TouchInfo):Void {
 
+        if (!computedTouchable) {
+            // Not touchable, do nothing
+            return;
+        }
+
         if (status == TOUCHING || status == DRAGGING) {
             // Did already put a finger on this scroller
             return;
@@ -303,6 +310,12 @@ class Scroller extends Visual {
         var hits = this.hits(info.x, info.y);
 
         if (hits) {
+            // Are we stopping some previous scroll?
+            if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
+                // Get focus
+                screen.focusedVisual = this;
+            }
+
             // Yes, then let's start touching
             status = TOUCHING;
             touchIndex = info.touchIndex;
