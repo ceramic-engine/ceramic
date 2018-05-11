@@ -71,6 +71,11 @@ class SaveModel {
 
     public static function autoSave(model:Model, key:String, interval:Float = #if debug 1.0 #else 60.0 #end) {
 
+        if (model.serializer != null) {
+            model.serializer.destroy();
+            model.serializer = null;
+        }
+
         var serializer = new SerializeModel();
         serializer.checkInterval = interval;
 
