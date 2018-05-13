@@ -6,16 +6,22 @@ class IO implements spec.IO {
 
     public function new() {}
 
-    public function stringSave(key:String, str:String):Bool {
+    public function saveString(key:String, str:String):Bool {
 
         return false;
 
-    } //stringSave
+    } //saveString
 
-    public function stringRead(key:String):String {
+    public function appendString(key:String, str:String):Bool {
+
+        return false;
+
+    } //appendString
+
+    public function readString(key:String):String {
 
         return null;
 
-    } //stringRead
+    } //readString
 
 } //IO

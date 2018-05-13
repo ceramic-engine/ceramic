@@ -4,6 +4,12 @@ class Info #if !completion implements spec.Info #end {
 
     public function new() {}
 
+/// System
+
+    inline public function storageDirectory():String {
+        return null;
+    }
+
 /// Assets
 
     inline public function imageExtensions():Array<String> {
