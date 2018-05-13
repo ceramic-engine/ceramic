@@ -471,7 +471,13 @@ class Spine extends Visual {
         if (animationName == null) {
             track = state.setEmptyAnimation(trackIndex, 0);
         } else {
-            track = state.setAnimationByName(trackIndex, animationName, loop);
+            var _animation = skeletonData.findAnimation(animationName);
+            if (_animation != null) {
+                track = state.setAnimation(trackIndex, _animation, loop);
+            } else {
+                warning('Animation not found: ' + animationName);
+                track = state.setEmptyAnimation(trackIndex, 0);
+            }
         }
 
         if (autoFreeze) {
@@ -580,7 +586,7 @@ class Spine extends Visual {
 
         if (state != null) {
             for (track in state.tracks) {
-                if (track.animation != null && track.animation.duration > 0) {
+                if (track != null && track.animation != null && track.animation.duration > 0) {
                     if (track.loop || track.trackTime < track.animation.duration) {
                         result = false;
                         break;
