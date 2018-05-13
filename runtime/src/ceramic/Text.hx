@@ -153,6 +153,9 @@ class Text extends Visual {
         // Default font
         font = app.defaultFont;
 
+        // Inherit alpha
+        inheritAlpha = true;
+
     } //new
 
     function destroy() {

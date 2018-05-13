@@ -57,6 +57,15 @@ class Visual extends Entity {
         return clip;
     }
 
+    /** Whether this visual should inherit its parent alpha state or not. **/
+    public var inheritAlpha(default,set):Bool = false;
+    inline function set_inheritAlpha(inheritAlpha:Bool):Bool {
+        if (this.inheritAlpha == inheritAlpha) return inheritAlpha;
+        this.inheritAlpha = inheritAlpha;
+        visibilityDirty = true;
+        return inheritAlpha;
+    }
+
 #if ceramic_luxe_legacy
 
     /** Allows the backend to keep data associated with this visual. */
@@ -774,7 +783,7 @@ class Visual extends Entity {
                 if (!parent.computedVisible) {
                     computedVisible = false;
                 }
-                computedAlpha *= parent.computedAlpha;
+                if (inheritAlpha) computedAlpha *= parent.computedAlpha;
             }
 
             if (computedAlpha == 0) {
