@@ -838,9 +838,9 @@ class Spine extends Visual {
                                         mesh.indices = _quadTriangles;
 
                                         if (tintBlack) {
-                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r;
-                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g;
-                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b;
+                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * alpha;
+                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * alpha;
+                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * alpha;
                                             a = slot.darkColor.a;
 
                                             n = 0;
