@@ -101,6 +101,7 @@ class Project {
 
         if (context.defines.exists('android')) {
             app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=19 -D PLATFORM=android-19";
+            app.hxml += "\n" + "-D NO_PRECOMPILED_HEADERS";
         }
 
     } //loadAppFile
