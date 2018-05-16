@@ -31,8 +31,8 @@ class Settings implements Observable {
         Can only be set at `app startup` from `Project constructor`. */
     public var title(default,null):String = 'App';
 
-    /** Whether antialiasing is enabled or not. */
-    public var antialiasing(default,null):Bool = true;
+    /** Antialiasing value (0 means disabled). */
+    public var antialiasing(default,null):Int = 0;
 
     /** Whether the window can be resized or not. */
     public var resizable(default,null):Bool = false;

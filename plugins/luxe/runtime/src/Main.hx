@@ -97,13 +97,13 @@ class Main extends luxe.Game {
         var app = @:privateAccess ceramic.App.app;
 
         // Configure luxe
-        config.render.antialiasing = app.settings.antialiasing ? 4 : 0;
+        config.render.antialiasing = app.settings.antialiasing;
         config.window.borderless = false;
         if (app.settings.targetWidth > 0) config.window.width = cast app.settings.targetWidth;
         if (app.settings.targetHeight > 0) config.window.height = cast app.settings.targetHeight;
         config.window.resizable = app.settings.resizable;
         config.window.title = cast app.settings.title;
-        config.render.stencil = 8;
+        config.render.stencil = 2;
         //config.render.depth = 16;
 
 #if cpp

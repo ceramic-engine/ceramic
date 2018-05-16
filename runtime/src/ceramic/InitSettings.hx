@@ -77,12 +77,12 @@ class InitSettings {
         return @:privateAccess settings.title = title;
     }
 
-    /** Whether antialiasing is enabled or not. */
-    public var antialiasing(get,set):Bool;
-    inline function get_antialiasing():Bool {
+    /** Antialiasing value (0 means disabled). */
+    public var antialiasing(get,set):Int;
+    inline function get_antialiasing():Int {
         return settings.antialiasing;
     }
-    inline function set_antialiasing(antialiasing:Bool):Bool {
+    inline function set_antialiasing(antialiasing:Int):Int {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
