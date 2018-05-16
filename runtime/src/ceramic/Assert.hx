@@ -18,7 +18,10 @@ class Assert {
         }
 
         return macro @:pos(Context.currentPos()) {
-            if (!$expr) throw '$str' + $reason;
+            if (!$expr) {
+                ceramic.App.app.logger.error('$str' + $reason);
+                throw '$str' + $reason;
+            }
         }
 #else
         return macro null;
