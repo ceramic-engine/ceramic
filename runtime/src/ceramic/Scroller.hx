@@ -44,6 +44,10 @@ class Scroller extends Visual {
         return status;
     }
 
+/// Global tuning
+
+    public static var threshold = 4.0;
+
 /// Fine tuning
 
     public var deceleration = 300.0;
@@ -438,8 +442,6 @@ class Scroller extends Visual {
 
                 if (direction == VERTICAL) {
 
-                    var threshold = Math.round(5 * screen.height / (screen.nativeHeight * screen.nativeDensity));
-
                     if (Math.abs(pointerY - pointerStart) >= threshold) {
                         status = DRAGGING;
                         fromWheel = false;
@@ -454,8 +456,6 @@ class Scroller extends Visual {
                     velocity.add(pointerY - pointerStart);
                 }
                 else {
-
-                    var threshold = Math.round(4 * screen.width / (screen.nativeWidth * screen.nativeDensity));
 
                     if (Math.abs(pointerX - pointerStart) >= threshold) {
                         status = DRAGGING;
