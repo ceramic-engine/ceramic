@@ -37,6 +37,12 @@ class SortVisuals {
         var result = 0;
         if (!a.computedVisible) result = -1;
         else if (!b.computedVisible) result = 1;
+        else if (a.computedRenderTarget != b.computedRenderTarget) {
+            if (a.computedRenderTarget == null) result = 1;
+            else if (b.computedRenderTarget == null) result = -1;
+            else if (a.computedRenderTarget.index > b.computedRenderTarget.index) result = 1;
+            else result = -1;
+        }
         else if (a.computedDepth > b.computedDepth) {
             result = 1;
         }

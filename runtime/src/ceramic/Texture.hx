@@ -16,6 +16,8 @@ class Texture extends Entity {
     @:noCompletion
     public var index:Int = _nextIndex++;
 
+    public var isRenderTexture(default,null):Bool = false;
+
 /// Properties
 
     public var width(default,null):Float;
@@ -29,6 +31,14 @@ class Texture extends Entity {
         width = app.backend.images.getImageWidth(backendItem) / density;
         height = app.backend.images.getImageHeight(backendItem) / density;
         return density;
+    }
+
+    public var filter(default,set):TextureFilter = LINEAR;
+    function set_filter(filter:TextureFilter):TextureFilter {
+        if (this.filter == filter) return filter;
+        this.filter = filter;
+        app.backend.images.setTextureFilter(backendItem, filter);
+        return filter;
     }
 
     public var backendItem:backend.Image;

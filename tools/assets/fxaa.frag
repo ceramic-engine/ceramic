@@ -1,13 +1,13 @@
-uniform sampler2D tex0;
-uniform vec2 u_resolution;
-varying vec2 tcoord;
-varying vec4 color;
-
 #ifdef GL_ES
 precision mediump float;
 #else
 #define mediump
 #endif
+
+uniform sampler2D tex0;
+uniform vec2 u_resolution;
+varying vec2 tcoord;
+varying vec4 color;
 
 #ifndef FXAA_REDUCE_MIN
     #define FXAA_REDUCE_MIN   (1.0/ 128.0)

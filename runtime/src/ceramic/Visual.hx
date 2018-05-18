@@ -173,6 +173,7 @@ class Visual extends Entity {
         if (this.renderTarget == renderTarget) return renderTarget;
         this.renderTarget = renderTarget;
         matrixDirty = true;
+        renderTargetDirty = true;
         return renderTarget;
     }
 
@@ -658,6 +659,18 @@ class Visual extends Entity {
                 var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
                 _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
                 _matrix.tx = tx1;
+            }
+            else {
+
+                // Apply scale to match render texture with native screen density
+                // TODO move this into backend code?
+                //
+                var sX = ceramic.App.app.screen.nativeWidth / computedRenderTarget.width;
+                var sY = ceramic.App.app.screen.nativeHeight / computedRenderTarget.height;
+                sX *= ceramic.App.app.screen.nativeDensity;
+                sY *= ceramic.App.app.screen.nativeDensity;
+                _matrix.scale(sX, sY);
+
             }
 
         }

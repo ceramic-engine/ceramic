@@ -124,6 +124,9 @@ class App extends Entity {
     /** Visuals (ordered) */
     public var visuals(default,null):Array<Visual> = [];
 
+    /** Render Textures */
+    public var renderTextures(default,null):Array<RenderTexture> = [];
+
     /** App level assets. Used to load default bitmap font */
     public var assets(default,null):Assets = new Assets();
 
@@ -211,6 +214,7 @@ class App extends Entity {
         // Default shaders
         assets.add(Shaders.COLOR);
         assets.add(Shaders.TEXTURED);
+        assets.add(Shaders.FXAA);
 
         assets.onceComplete(this, function(success) {
 

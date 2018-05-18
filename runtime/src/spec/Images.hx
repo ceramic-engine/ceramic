@@ -20,6 +20,8 @@ interface Images {
 
     function getImagePixels(image:Image):UInt8Array;
 
+    function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void;
+
     function createRenderTarget(width:Int, height:Int):Image;
 
 } //Image

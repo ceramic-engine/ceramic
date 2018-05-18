@@ -18,7 +18,8 @@ class CeramicBatcher extends phoenix.Batcher {
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
     var activeShader:backend.impl.CeramicShader = null;
-    var customFloatAttributesSize:Int = 0; 
+    var customFloatAttributesSize:Int = 0;
+    var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
 
 #if ceramic_debug_draw
     var lastDebugTime:Float = 0;
@@ -52,6 +53,11 @@ class CeramicBatcher extends phoenix.Batcher {
         var bufferVertices = 0;
         var maxVertFloats = max_verts * 4;
 
+        var defaultTransformScaleX = view.transform.scale.x;
+        var defaultTransformScaleY = view.transform.scale.y;
+
+        var defaultViewport = view.viewport;
+
         pos_floats = 0;
         tcoord_floats = 0;
         color_floats = 0;
@@ -65,7 +71,8 @@ class CeramicBatcher extends phoenix.Batcher {
         var lastTextureId:phoenix.TextureID = null;
         var lastTextureSlot:Int = 0;
         var lastShader:ceramic.Shader = null;
-        var lastBlend:ceramic.Blending = ceramic.Blending.NORMAL;
+        var lastRenderTarget:ceramic.RenderTexture = null;
+        var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
         
         var lastClip:ceramic.Visual = null;
         var clip:ceramic.Visual = null;
@@ -121,10 +128,19 @@ class CeramicBatcher extends phoenix.Batcher {
 
         var defaultPlainShader:backend.impl.CeramicShader = ceramic.App.app.defaultColorShader.backendItem;
         var defaultTexturedShader:backend.impl.CeramicShader = ceramic.App.app.defaultTexturedShader.backendItem;
+
+        // Mark auto-rendering render textures as dirty
+        for (renderTexture in ceramic.App.app.renderTextures) {
+            if (renderTexture.autoRender) {
+                renderTexture.renderDirty = true;
+            }
+        }
         
         // Initialize default state
         renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
+        
         //renderer.state.bindTexture2D(null);
+        renderer.target = null;
         renderer.state.enable(GL.BLEND);
         useShader(defaultPlainShader);
         defaultPlainShader.activate();
@@ -174,7 +190,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     //dest_alpha
                     phoenix.Batcher.BlendMode.one_minus_src_alpha
                 );
-                lastBlend = ceramic.Blending.NORMAL;
+                lastBlending = ceramic.Blending.NORMAL;
 
                 stateDirty = false;
             }
@@ -194,7 +210,8 @@ class CeramicBatcher extends phoenix.Batcher {
                     if (!stateDirty) {
                         stateDirty =
                             quad.shader != lastShader ||
-                            quad.blending != lastBlend;
+                            quad.blending != lastBlending ||
+                            quad.computedRenderTarget != lastRenderTarget;
                     }
                 }
 
@@ -276,12 +293,12 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    if (quad.blending != lastBlend) {
+                    if (quad.blending != lastBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlend + ' -> ' + quad.blending);
+                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + quad.blending);
 #end
-                        lastBlend = quad.blending;
-                        if (lastBlend == ceramic.Blending.ADD) {
+                        lastBlending = quad.blending;
+                        if (lastBlending == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
                                 //src_rgb
                                 phoenix.Batcher.BlendMode.one,
@@ -303,6 +320,29 @@ class CeramicBatcher extends phoenix.Batcher {
                                 //dest_alpha
                                 phoenix.Batcher.BlendMode.one_minus_src_alpha
                             );
+                        }
+                    }
+
+                    // Update render target
+                    if (quad.computedRenderTarget != lastRenderTarget) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
+#end
+                        lastRenderTarget = quad.computedRenderTarget;
+                        if (lastRenderTarget != null) {
+                            var renderTexture = cast(lastRenderTarget.backendItem, backend.impl.CeramicRenderTexture);
+                            renderer.target = renderTexture;
+                            view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
+                            view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
+                            view.process();
+                            GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+                            Luxe.renderer.clear(transparentColor);
+                        } else {
+                            renderer.target = null;
+                            view.transform.scale.x = defaultTransformScaleX;
+                            view.transform.scale.y = defaultTransformScaleY;
+                            view.viewport = defaultViewport;
+                            update_view();
                         }
                     }
 
@@ -440,6 +480,12 @@ class CeramicBatcher extends phoenix.Batcher {
                     uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
                 }
 
+                // Render textures need to be flipped vertically
+                if (lastTexture.isRenderTexture) {
+                    uvY = 1 - uvY;
+                    uvH = -uvH;
+                }
+
                 //tl
                 tcoord_list[tcoord_floats++] = uvX;
                 tcoord_list[tcoord_floats++] = uvY;
@@ -541,7 +587,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     //dest_alpha
                     phoenix.Batcher.BlendMode.one_minus_src_alpha
                 );
-                lastBlend = ceramic.Blending.NORMAL;
+                lastBlending = ceramic.Blending.NORMAL;
 
                 stateDirty = false;
             }
@@ -561,8 +607,8 @@ class CeramicBatcher extends phoenix.Batcher {
                     if (!stateDirty) {
                         stateDirty =
                             mesh.shader != lastShader ||
-                            mesh.blending != lastBlend;
-                            // TODO clip
+                            mesh.blending != lastBlending ||
+                            mesh.computedRenderTarget != lastRenderTarget;
                     }
                 }
 
@@ -646,12 +692,12 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    if (mesh.blending != lastBlend) {
+                    if (mesh.blending != lastBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlend + ' -> ' + mesh.blending);
+                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + mesh.blending);
 #end
-                        lastBlend = mesh.blending;
-                        if (lastBlend == ceramic.Blending.ADD) {
+                        lastBlending = mesh.blending;
+                        if (lastBlending == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
                                 //src_rgb
                                 phoenix.Batcher.BlendMode.one,
@@ -673,6 +719,29 @@ class CeramicBatcher extends phoenix.Batcher {
                                 //dest_alpha
                                 phoenix.Batcher.BlendMode.one_minus_src_alpha
                             );
+                        }
+                    }
+
+                    // Update render target
+                    if (mesh.computedRenderTarget != lastRenderTarget) {
+#if ceramic_debug_draw
+                        if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + mesh.computedRenderTarget);
+#end
+                        lastRenderTarget = mesh.computedRenderTarget;
+                        if (lastRenderTarget != null) {
+                            var renderTexture = cast(lastRenderTarget.backendItem, backend.impl.CeramicRenderTexture);
+                            renderer.target = renderTexture;
+                            view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
+                            view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
+                            view.process();
+                            GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+                            Luxe.renderer.clear(transparentColor);
+                        } else {
+                            renderer.target = null;
+                            view.transform.scale.x = defaultTransformScaleX;
+                            view.transform.scale.y = defaultTransformScaleY;
+                            view.viewport = defaultViewport;
+                            update_view();
                         }
                     }
 
@@ -830,78 +899,81 @@ class CeramicBatcher extends phoenix.Batcher {
                 // If it's valid to be drawn
                 if (visual.computedVisible) {
 
-                    if (visual.computedClip) {
-                        // Get new clip and compare with last
-                        var clippingVisual = visual;
-                        while (clippingVisual != null && clippingVisual.clip == null) {
-                            clippingVisual = clippingVisual.parent;
-                        }
-                        clip = clippingVisual != null ? clippingVisual.clip : null;
+                    // If it should be redrawn anyway
+                    if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
 
-                    } else {
-                        clip = null;
-                    }
-
-                    if (clip != lastClip) {
-                        lastClip = clip;
-
-                        if (lastClip != null) {
-                            // Update stencil buffer
-                            flush();
-                            GL.stencilMask(0xFF);
-                            GL.clearStencil(0xFF);
-                            GL.clear(GL.STENCIL_BUFFER_BIT);
-                            GL.enable(GL.STENCIL_TEST);
-
-                            GL.stencilOp(GL.KEEP, GL.KEEP, GL.REPLACE);
-
-                            GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
-                            GL.stencilMask(0xFF);
-                            //GL.depthMask(false);
-                            GL.colorMask(false, false, false, false);
-
-                            if (lastClip.quad != null) {
-                                quad = lastClip.quad;
-                                stencilClip = true;
-                                drawQuad();
-                                stencilClip = false;
-                                quad = visual.quad;
+                        if (visual.computedClip) {
+                            // Get new clip and compare with last
+                            var clippingVisual = visual;
+                            while (clippingVisual != null && clippingVisual.clip == null) {
+                                clippingVisual = clippingVisual.parent;
                             }
-                            else if (lastClip.mesh != null) {
-                                mesh = lastClip.mesh;
-                                stencilClip = true;
-                                drawMesh();
-                                stencilClip = false;
-                                mesh = visual.mesh;
+                            clip = clippingVisual != null ? clippingVisual.clip : null;
+
+                        } else {
+                            clip = null;
+                        }
+
+                        if (clip != lastClip) {
+                            lastClip = clip;
+
+                            if (lastClip != null) {
+                                // Update stencil buffer
+                                flush();
+                                GL.stencilMask(0xFF);
+                                GL.clearStencil(0xFF);
+                                GL.clear(GL.STENCIL_BUFFER_BIT);
+                                GL.enable(GL.STENCIL_TEST);
+
+                                GL.stencilOp(GL.KEEP, GL.KEEP, GL.REPLACE);
+
+                                GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
+                                GL.stencilMask(0xFF);
+                                //GL.depthMask(false);
+                                GL.colorMask(false, false, false, false);
+
+                                if (lastClip.quad != null) {
+                                    quad = lastClip.quad;
+                                    stencilClip = true;
+                                    drawQuad();
+                                    stencilClip = false;
+                                    quad = visual.quad;
+                                }
+                                else if (lastClip.mesh != null) {
+                                    mesh = lastClip.mesh;
+                                    stencilClip = true;
+                                    drawMesh();
+                                    stencilClip = false;
+                                    mesh = visual.mesh;
+                                }
+
+                                // Next things to be drawn will be clipped
+                                flush();
+                                GL.stencilFunc(GL.EQUAL, 1, 0xFF);
+                                GL.stencilMask(0x00);
+                                //GL.depthMask(true);
+                                GL.colorMask(true, true, true, true);
                             }
+                            else {
 
-                            // Next things to be drawn will be clipped
-                            flush();
-                            GL.stencilFunc(GL.EQUAL, 1, 0xFF);
-                            GL.stencilMask(0x00);
-                            //GL.depthMask(true);
-                            GL.colorMask(true, true, true, true);
+                                // Clipping gets disabled
+                                flush();
+                                GL.disable(GL.STENCIL_TEST);
+                            }
                         }
-                        else {
 
-                            // Clipping gets disabled
-                            flush();
-                            GL.disable(GL.STENCIL_TEST);
-                        }
-                        
+                        if (quad != null && !quad.transparent) {
+
+                            drawQuad();
+
+                        } //quad
+
+                        else if (mesh != null) {
+
+                            drawMesh();
+
+                        } //mesh
                     }
-
-                    if (quad != null && !quad.transparent) {
-
-                        drawQuad();
-
-                    } //quad
-
-                    else if (mesh != null) {
-
-                        drawMesh();
-
-                    } //mesh
                 }
             }
         } //visual list
@@ -918,6 +990,20 @@ class CeramicBatcher extends phoenix.Batcher {
             renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
             //renderer.state.bindTexture2D(null);
         }
+
+        // Remove any render target
+        if (lastRenderTarget != null) {
+            renderer.target = null;
+            view.transform.scale.x = defaultTransformScaleX;
+            view.transform.scale.y = defaultTransformScaleY;
+            view.viewport = defaultViewport;
+        }
+
+        // Mark all render textures as non-dirty now that rendering has finished
+        for (renderTexture in ceramic.App.app.renderTextures) {
+            renderTexture.renderDirty = false;
+        }
+
         // Remove shader program
         renderer.state.useProgram(null);
     

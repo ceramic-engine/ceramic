@@ -7,52 +7,6 @@ import haxe.io.Path;
 
 using StringTools;
 
-class BatchedRenderTexture extends phoenix.RenderTexture {
-
-    public var targetBatcher:phoenix.Batcher = null;
-
-    public var batcherClearColor = new phoenix.Color(1.0, 1.0, 1.0, 1.0);
-
-    public function new(_options:RenderTextureOptions) {
-
-        super(_options);
-
-        targetBatcher = Luxe.renderer.create_batcher({
-            name: 'batcher:' + _options.id
-        });
-        targetBatcher.on(prerender, targetBatcherBefore);
-        targetBatcher.on(postrender, targetBatcherAfter);
-        targetBatcher.view.transform.scale.y = -1;
-        targetBatcher.view.viewport = new luxe.Rectangle(0, 0, _options.width, _options.height);
-
-    } //new
-
-    override function destroy(?_force:Bool=false) {
-
-        targetBatcher.destroy();
-        targetBatcher = null;
-
-        super.destroy(_force);
-
-    } //destroy
-
-/// Batcher stuff
-
-    function targetBatcherBefore(_) {
-
-        Luxe.renderer.target = this;
-        Luxe.renderer.clear(new phoenix.Color().rgb(0xff4b03));
-
-    } //targetBatcherBefore
-
-    function targetBatcherAfter(_) {
-
-        Luxe.renderer.target = null;
-
-    } //targetBatcherAfter
-
-} //BatchedRenderTexture
-
 class Images implements spec.Images {
 
     public function new() {}
@@ -178,7 +132,7 @@ class Images implements spec.Images {
 
         var id = 'render:' + (nextRenderIndex++);
 
-        var renderTexture = new BatchedRenderTexture({
+        var renderTexture = new backend.impl.CeramicRenderTexture({
             id: id,
             width: width,
             height: height
@@ -221,6 +175,19 @@ class Images implements spec.Images {
         return null;
 
     } //getImagePixels
+
+    inline public function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void {
+
+        switch (filter) {
+            case LINEAR:
+                (texture:phoenix.Texture).filter_min = linear;
+                (texture:phoenix.Texture).filter_mag = linear;
+            case NEAREST:
+                (texture:phoenix.Texture).filter_min = nearest;
+                (texture:phoenix.Texture).filter_mag = nearest;
+        }
+
+    } //setTextureFilter
 
 /// Internal
 
