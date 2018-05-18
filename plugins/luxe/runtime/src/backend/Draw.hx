@@ -7,7 +7,6 @@ import backend.impl.CeramicBatcher;
 #end
 
 import ceramic.RotateFrame;
-import backend.Images.BatchedRenderTexture;
 
 using ceramic.Extensions;
 
@@ -53,6 +52,7 @@ class Draw implements spec.Draw {
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
         batcher.ceramicVisuals = visuals;
+        Luxe.core.render();
 
     } //draw
 

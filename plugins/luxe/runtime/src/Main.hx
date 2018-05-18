@@ -43,6 +43,8 @@ class Main extends luxe.Game {
 
     override function config(config:luxe.GameConfig) {
 
+        Luxe.core.auto_render = false;
+
 #if web
 
         var userAgent = navigator.userAgent.toLowerCase();
