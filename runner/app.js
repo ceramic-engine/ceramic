@@ -140,8 +140,8 @@ exports.ceramicSettings = function(settings) {
     mainWindow.setResizable(settings.resizable);
 
     var prevPos = mainWindow.getPosition();
-    var prevSize = mainWindow.getSize();
-    mainWindow.setSize(settings.targetWidth, settings.targetHeight, false);
+    var prevSize = mainWindow.getContentSize();
+    mainWindow.setContentSize(settings.targetWidth, settings.targetHeight, false);
     mainWindow.setPosition(
         Math.round(prevPos[0] + (prevSize[0] - settings.targetWidth) / 2),
         Math.round(prevPos[1] + (prevSize[1] - settings.targetHeight) / 2),
