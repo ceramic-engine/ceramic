@@ -6,6 +6,7 @@ import backend.NativeMac;
 
 @:allow(Main)
 @:allow(backend.Textures)
+@:allow(backend.Draw)
 class Backend implements ceramic.Events implements spec.Backend {
 
 /// Public API
@@ -44,6 +45,9 @@ class Backend implements ceramic.Events implements spec.Backend {
 
     @event function keyDown(key:ceramic.Key);
     @event function keyUp(key:ceramic.Key);
+
+    @event function beginDraw();
+    @event function endDraw();
 
     @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
     @event function controllerDown(controllerId:Int, buttonId:Int);

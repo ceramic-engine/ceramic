@@ -51,8 +51,12 @@ class Draw implements spec.Draw {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
+        ceramic.App.app.backend.emitBeginDraw();
+
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
+
+        ceramic.App.app.backend.emitEndDraw();
 
     } //draw
 
