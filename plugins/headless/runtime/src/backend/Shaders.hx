@@ -20,6 +20,12 @@ class Shaders implements spec.Shaders {
 
     } //destroy
 
+    inline public function clone(shader:Shader):Shader {
+
+        return new ShaderImpl();
+
+    } //clone
+
 /// Public API
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {

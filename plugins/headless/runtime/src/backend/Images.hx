@@ -50,4 +50,10 @@ class Images implements spec.Images {
 
     } //getImagePixels
 
+    inline public function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void {
+
+        //
+
+    } //setTextureFilter
+
 } //Images
