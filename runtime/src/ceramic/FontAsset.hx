@@ -95,6 +95,12 @@ class FontAsset extends Asset {
                             this.font.asset = this;
 
                             if (prevFont != null) {
+                                // Is this app's default font?
+                                if (prevFont == app.defaultFont) {
+                                    // Yes, then replace it with new one
+                                    @:privateAccess app.defaultFont = this.font;
+                                }
+
                                 // Font was reloaded. Update related visuals
                                 for (visual in app.visuals) {
                                     if (Std.is(visual, Text)) {
