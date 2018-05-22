@@ -25,7 +25,7 @@ class ExportSpine extends tools.Task {
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         var assetsPath = Path.join([cwd, 'assets']);
         var tmpPath = Path.join([cwd, '.tmp']);
-        var spineConfigPath = Path.join([cwd, 'resources/spine-config.json']);
+        var spineDefaultConfigPath = Path.join([cwd, 'resources/spine-config.json']);
         var project = new tools.Project();
         project.loadAppFile(projectPath);
 
@@ -37,18 +37,6 @@ class ExportSpine extends tools.Task {
             - path/to/Project.spine
 
 ');
-        }
-
-        if (!FileSystem.exists(spineConfigPath)) {
-            fail('Missing Spine export config file at resources/spine-config.json');
-        }
-
-        var spineConfig:Dynamic = null;
-        try {
-            spineConfig = Json.parse(File.getContent(spineConfigPath));
-        }
-        catch (e:Dynamic) {
-            fail('Failed to parse spine export config file: ' + e);
         }
 
         if (!FileSystem.exists(tmpPath)) {
@@ -64,10 +52,46 @@ class ExportSpine extends tools.Task {
             fail('Spine export is not yet supported on ' + Sys.systemName() + ' system.');
         }
 
-        var exportList:Array<String> = project.app.spine.export;
-        for (item in exportList) {
+        var exportList:Array<Dynamic> = project.app.spine.export;
+        for (rawItem in exportList) {
 
-            var path = item;
+            var spineConfigPath:String = null;
+
+            var path:String = null;
+            if (Std.is(rawItem, String)) {
+                path = rawItem;
+            } else {
+                path = rawItem.path;
+                if (rawItem.config != null) {
+                    print('Use custom config: ' + rawItem.config);
+                    spineConfigPath = Path.join([cwd, 'resources/' + rawItem.config]);
+                }
+            }
+
+            if (path == null) {
+                fail('Missing spine project path');
+            }
+
+            if (spineConfigPath == null) {
+                if (!FileSystem.exists(spineDefaultConfigPath)) {
+                    fail('Missing Spine export config file at resources/spine-config.json');
+                }
+                spineConfigPath = spineDefaultConfigPath;
+            }
+            else {
+                if (!FileSystem.exists(spineConfigPath)) {
+                    fail('Missing Spine export config file at ' + rawItem.config);
+                }
+            }
+
+            var spineConfig:Dynamic = null;
+            try {
+                spineConfig = Json.parse(File.getContent(spineConfigPath));
+            }
+            catch (e:Dynamic) {
+                fail('Failed to parse spine export config file: ' + e);
+            }
+
             if (!Path.isAbsolute(path)) path = Path.join([cwd, path]);
 
             // Create export config
