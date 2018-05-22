@@ -9,6 +9,8 @@ class RenderTexture extends Texture {
 
     public var autoRender:Bool = true;
 
+    public var clearOnRender:Bool = true;
+
     public var renderDirty:Bool = false;
 
 /// Lifecycle

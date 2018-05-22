@@ -336,7 +336,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                             view.process();
                             GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            Luxe.renderer.clear(transparentColor);
+                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
                         } else {
                             renderer.target = null;
                             view.transform.scale.x = defaultTransformScaleX;
@@ -735,7 +735,7 @@ class CeramicBatcher extends phoenix.Batcher {
                             view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                             view.process();
                             GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            Luxe.renderer.clear(transparentColor);
+                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
                         } else {
                             renderer.target = null;
                             view.transform.scale.x = defaultTransformScaleX;
