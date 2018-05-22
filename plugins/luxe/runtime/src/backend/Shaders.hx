@@ -41,6 +41,23 @@ class Shaders implements spec.Shaders {
 
     } //destroy
 
+    inline public function clone(shader:Shader):Shader {
+
+        var cloned = new backend.impl.CeramicShader({
+            id: ceramic.Utils.uniqueId(),
+            frag_id: null,
+            vert_id: null
+        });
+
+        cloned.from_string(
+            (shader:backend.impl.CeramicShader).vert_source,
+            (shader:backend.impl.CeramicShader).frag_source
+        );
+
+        return cloned;
+
+    } //clone
+
 /// Public API
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {

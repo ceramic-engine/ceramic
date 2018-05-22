@@ -67,6 +67,15 @@ class Shader extends Entity {
 
     } //destroy
 
+    public function clone():Shader {
+
+        var clonedBackendItem = app.backend.shaders.clone(backendItem);
+        var cloned = new Shader(clonedBackendItem, customAttributes);
+
+        return cloned;
+
+    } //clone
+
 /// Public API
 
     inline public function setInt(name:String, value:Int):Void {

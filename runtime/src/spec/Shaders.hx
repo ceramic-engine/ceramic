@@ -9,6 +9,8 @@ interface Shaders {
     function destroy(shader:Shader):Void;
     
     function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader;
+    
+    function clone(shader:Shader):Shader;
 
 /// Public API
 
