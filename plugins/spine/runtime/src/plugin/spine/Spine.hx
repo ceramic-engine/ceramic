@@ -164,7 +164,7 @@ class Spine extends Visual {
 
             for (track in tracks) {
 
-                if (track.animation != null) {
+                if (track != null && track.animation != null) {
 
                     toResume.push([
                         track.animation.name,
