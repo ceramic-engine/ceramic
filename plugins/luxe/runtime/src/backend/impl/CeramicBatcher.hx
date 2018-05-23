@@ -293,11 +293,15 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    if (quad.blending != lastBlending) {
+                    var newBlending = quad.blending;
+                    if (newBlending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+                        newBlending = ceramic.Blending.ALPHA;
+                    }
+                    if (newBlending != lastBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + quad.blending);
+                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
 #end
-                        lastBlending = quad.blending;
+                        lastBlending = newBlending;
                         if (lastBlending == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
                                 //src_rgb
@@ -309,10 +313,21 @@ class CeramicBatcher extends phoenix.Batcher {
                                 //dest_alpha
                                 phoenix.Batcher.BlendMode.one
                             );
-                        } else {
+                        } else if (lastBlending == ceramic.Blending.NORMAL) {
                             GL.blendFuncSeparate(
                                 //src_rgb
                                 phoenix.Batcher.BlendMode.one,
+                                //dest_rgb
+                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                                //src_alpha
+                                phoenix.Batcher.BlendMode.one,
+                                //dest_alpha
+                                phoenix.Batcher.BlendMode.one_minus_src_alpha
+                            );
+                        } else /*if (lastBlending == ceramic.Blending.ALPHA)*/ {
+                            GL.blendFuncSeparate(
+                                //src_rgb
+                                phoenix.Batcher.BlendMode.src_alpha,
                                 //dest_rgb
                                 phoenix.Batcher.BlendMode.one_minus_src_alpha,
                                 //src_alpha
@@ -692,11 +707,15 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    if (mesh.blending != lastBlending) {
+                    var newBlending = mesh.blending;
+                    if (newBlending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+                        newBlending = ceramic.Blending.ALPHA;
+                    }
+                    if (newBlending != lastBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + mesh.blending);
+                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
 #end
-                        lastBlending = mesh.blending;
+                        lastBlending = newBlending;
                         if (lastBlending == ceramic.Blending.ADD) {
                             GL.blendFuncSeparate(
                                 //src_rgb
@@ -708,10 +727,21 @@ class CeramicBatcher extends phoenix.Batcher {
                                 //dest_alpha
                                 phoenix.Batcher.BlendMode.one
                             );
-                        } else {
+                        } else if (lastBlending == ceramic.Blending.NORMAL) {
                             GL.blendFuncSeparate(
                                 //src_rgb
                                 phoenix.Batcher.BlendMode.one,
+                                //dest_rgb
+                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                                //src_alpha
+                                phoenix.Batcher.BlendMode.one,
+                                //dest_alpha
+                                phoenix.Batcher.BlendMode.one_minus_src_alpha
+                            );
+                        } else {
+                            GL.blendFuncSeparate(
+                                //src_rgb
+                                phoenix.Batcher.BlendMode.src_alpha,
                                 //dest_rgb
                                 phoenix.Batcher.BlendMode.one_minus_src_alpha,
                                 //src_alpha
@@ -794,7 +824,8 @@ class CeramicBatcher extends phoenix.Batcher {
             meshVertices = mesh.vertices;
             meshIndices = mesh.indices;
 
-            // UV factor
+            // Actual texture size may differ from its logical one.
+            // Keep factor values to generate UV mapping that matches the real texture.
             if (lastTexture != null) {
                 uvFactorX = texWidth / texWidthActual;
                 uvFactorY = texHeight / texHeightActual;
