@@ -15,7 +15,9 @@ class RenderTexture extends Texture {
 
 /// Lifecycle
 
-    public function new(width:Int, height:Int, density:Float = 1) {
+    public function new(width:Int, height:Int, density:Float = -1) {
+
+        if (density == -1) density = screen.texturesDensity;
 
         var backendItem = app.backend.images.createRenderTarget(
             Math.round(width * density),

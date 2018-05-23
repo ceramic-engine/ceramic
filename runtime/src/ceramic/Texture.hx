@@ -47,7 +47,9 @@ class Texture extends Entity {
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Image, density:Float = 1) {
+    public function new(backendItem:backend.Image, density:Float = -1) {
+
+        if (density == -1) density = screen.texturesDensity;
 
         this.backendItem = backendItem;
         this.density = density; // sets widht/height as well
