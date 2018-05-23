@@ -9,6 +9,7 @@ import ceramic.Assets;
 import ceramic.AssetOptions;
 import ceramic.Quad;
 import ceramic.Mesh;
+import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -140,37 +141,37 @@ class SpineAsset extends Asset {
                         );
                         spineData.asset = this;
 
-                        // Update prev spine data
-                        if (prevSpineData != null) {
-                            for (visual in ceramic.App.app.visuals) {
-                                if (Std.is(visual, Spine)) {
-                                    var spine:Spine = cast visual;
-                                    if (spine.spineData == prevSpineData) {
-                                        spine.spineData = spineData;
-                                    }
-                                }
-                            }
-                        }
-
                         // Destroy previous pages
                         if (prevPages != null) {
                             for (asset in prevPages) {
                                 var texture = asset.texture;
-                                for (visual in ceramic.App.app.visuals) {
-                                    if (Std.is(visual, Quad)) {
-                                        var quad:Quad = cast visual;
+                                for (visual in [].concat(ceramic.App.app.visuals)) {
+                                    if (visual.quad != null) {
+                                        var quad = visual.quad;
                                         if (quad.texture == texture) {
                                             quad.texture = null;
                                         }
                                     }
-                                    else if (Std.is(visual, Mesh)) {
-                                        var mesh:Mesh = cast visual;
+                                    else if (visual.mesh != null) {
+                                        var mesh = visual.mesh;
                                         if (mesh.texture == texture) {
                                             mesh.texture = null;
                                         }
                                     }
                                 }
                                 asset.destroy();
+                            }
+                        }
+
+                        // Update prev spine data
+                        if (prevSpineData != null) {
+                            for (visual in [].concat(ceramic.App.app.visuals)) {
+                                if (Std.is(visual, Spine)) {
+                                    var spine:Spine = cast visual;
+                                    if (spine.spineData == prevSpineData) {
+                                        spine.spineData = spineData;
+                                    }
+                                }
                             }
                         }
 
@@ -214,6 +215,11 @@ class SpineAsset extends Asset {
         var asset = new ImageAsset(pathInfo.name);
         asset.handleTexturesDensityChange = false;
         asset.path = pathInfo.path;
+        asset.onDestroy(this, function() {
+            if (pages.get(page) == asset) {
+                pages.remove(page);
+            }
+        });
 
         assets.addAsset(asset);
         pages.set(page, asset);
