@@ -46,9 +46,9 @@ class ImageAsset extends Asset {
 
                 if (prevTexture != null) {
                     // Texture was reloaded. Update related visuals
-                    for (visual in app.visuals) {
-                        if (Std.is(visual, Quad)) {
-                            var quad:Quad = cast visual;
+                    for (visual in [].concat(app.visuals)) {
+                        if (visual.quad != null) {
+                            var quad = visual.quad;
                             if (quad.texture == prevTexture) {
 
                                 // Update texture but keep same frame
@@ -68,8 +68,8 @@ class ImageAsset extends Asset {
                                 quad.frameHeight = frameHeight;
                             }
                         }
-                        else if (Std.is(visual, Mesh)) {
-                            var mesh:Mesh = cast visual;
+                        else if (visual.mesh != null) {
+                            var mesh = visual.mesh;
                             if (mesh.texture == prevTexture) {
                                 mesh.texture = this.texture;
                             }
