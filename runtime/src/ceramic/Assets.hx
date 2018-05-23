@@ -39,6 +39,7 @@ class Assets extends Entity {
     public function destroy() {
 
         for (asset in [].concat(addedAssets)) {
+            asset.offDestroy(assetDestroyed);
             asset.destroy();
         }
         addedAssets = null;
@@ -145,6 +146,8 @@ class Assets extends Entity {
             }
         }
 
+        asset.onDestroy(this, assetDestroyed);
+
         byName.set(asset.name, asset);
         if (asset.owner != null && asset.owner != this) {
             asset.owner.removeAsset(asset);
@@ -156,6 +159,23 @@ class Assets extends Entity {
         return previousAsset;
 
     } //addAsset
+
+    function assetDestroyed() {
+
+        var toDestroy:Array<Asset> = null;
+        for (asset in addedAssets) {
+            if (asset.destroyed) {
+                if (toDestroy == null) toDestroy = [];
+                toDestroy.push(asset);
+            }
+        }
+        if (toDestroy != null) {
+            for (asset in toDestroy) {
+                removeAsset(asset);
+            }
+        }
+
+    } //assetDestroyed
     
     public function asset(idOrName:Either<AssetId<Dynamic>, String>, ?kind:String):Asset {
 
@@ -177,6 +197,8 @@ class Assets extends Entity {
     } //asset
 
     public function removeAsset(asset:Asset):Void {
+
+        asset.offDestroy(assetDestroyed);
 
         var byName = assetsByKindAndName.get(asset.kind);
         var toRemove = byName.get(asset.name);
