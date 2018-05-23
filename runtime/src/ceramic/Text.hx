@@ -153,9 +153,6 @@ class Text extends Visual {
         // Default font
         font = app.defaultFont;
 
-        // Inherit alpha
-        inheritAlpha = true;
-
     } //new
 
     function destroy() {
@@ -223,6 +220,7 @@ class Text extends Visual {
             var quad:Quad = usedQuads < glyphQuads.length ? glyphQuads[usedQuads] : null;
             if (quad == null) {
                 quad = new Quad();
+                quad.inheritAlpha = true;
                 glyphQuads.push(quad);
                 add(quad);
             }
