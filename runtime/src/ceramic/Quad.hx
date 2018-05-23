@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Assert.*;
+
 @editable({ implicitSizeUnlessNull: 'texture' })
 class Quad extends Visual {
 
@@ -20,6 +22,8 @@ class Quad extends Visual {
     inline function set_texture(texture:Texture):Texture {
 
         if (this.texture == texture) return texture;
+
+        assert(texture == null || !texture.destroyed, 'Cannot assign destroyed texture: ' + texture);
 
         // Unbind previous texture destroy event
         if (this.texture != null) {

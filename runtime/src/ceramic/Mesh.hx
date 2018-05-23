@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Assert.*;
+
 /** Draw anything composed of triangles/vertices. */
 class Mesh extends Visual {
 
@@ -49,8 +51,10 @@ class Mesh extends Visual {
 
     /** The texture used on the mesh (optional) */
     public var texture(default,set):Texture = null;
-    inline function set_texture(texture:Texture):Texture {
+    #if !debug inline #end function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
+
+        assert(texture == null || !texture.destroyed, 'Cannot assign destroyed texture: ' + texture);
 
         // Unbind previous texture destroy event
         if (this.texture != null) {
@@ -61,10 +65,10 @@ class Mesh extends Visual {
         this.texture = texture;
 
         // Update frame
-        if (texture != null) {
+        if (this.texture != null) {
             // Ensure we remove the texture if it gets destroyed
-            texture.onDestroy(this, textureDestroyed);
-            if (texture.asset != null) texture.asset.retain();
+            this.texture.onDestroy(this, textureDestroyed);
+            if (this.texture.asset != null) this.texture.asset.retain();
         }
 
         return texture;
