@@ -169,7 +169,7 @@ class Screen extends Entity implements Observable {
             log('Setting targetHeight=$targetHeight');
             resize();
         });
-        settings.onTargetDensityChange(this, function(targetDensity, prevtargetDensity) {
+        settings.onTargetDensityChange(this, function(targetDensity, prevTargetDensity) {
             log('Setting targetDensity=$targetDensity');
             updateTexturesDensity();
         });
