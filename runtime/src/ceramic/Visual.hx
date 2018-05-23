@@ -416,6 +416,8 @@ class Visual extends Entity {
 
     static var _matrix:Transform = new Transform();
 
+    static var _inHitTest:Bool = false;
+
     static var _degToRad:Float = Math.PI / 180.0;
 
     static var _point:Point = new Point();
@@ -605,7 +607,7 @@ class Visual extends Entity {
 
         }
 
-        if (parent != null) {
+        if (parent != null && renderTarget == null) {
 
             // Concat matrix with parent's computed matrix data
             //
@@ -694,6 +696,8 @@ class Visual extends Entity {
     /** Returns true if (testX,testY) screen coordinates hit/intersect this visual visible bounds */
     public function hits(x:Float, y:Float):Bool {
 
+        _inHitTest = true;
+
         if (matrixDirty) {
             computeMatrix();
         }
@@ -709,6 +713,8 @@ class Visual extends Entity {
         var testY0 = _matrix.transformY(x, y);
         var testX1 = _matrix.transformX(x - 1, y - 1);
         var testY1 = _matrix.transformY(x - 1, y - 1);
+
+        _inHitTest = false;
 
         return testX0 >= 0
             && testX1 <= width
