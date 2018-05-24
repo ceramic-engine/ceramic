@@ -23,16 +23,16 @@ class Files {
 
     } //haveSameLastModified
 
-    public static function setToSameLastModified(filePath1:String, filePath2:String):Void {
+    public static function setToSameLastModified(srcFilePath:String, dstFilePath:String):Void {
 
-        var file1Exists = FileSystem.exists(filePath1);
-        var file2Exists = FileSystem.exists(filePath2);
+        var file1Exists = FileSystem.exists(srcFilePath);
+        var file2Exists = FileSystem.exists(dstFilePath);
 
         if (!file1Exists || !file2Exists) return;
 
-        var utime = Math.round(Fs.statSync(filePath1).mtime.getTime() / 1000.0);
+        var utime = Math.round(Fs.statSync(srcFilePath).mtime.getTime() / 1000.0);
 
-        Fs.utimesSync(filePath2, cast utime, cast utime);
+        Fs.utimesSync(dstFilePath, cast utime, cast utime);
 
     } //haveSameLastModified
 
