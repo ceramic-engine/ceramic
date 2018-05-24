@@ -4,6 +4,7 @@ import tools.Helpers.*;
 import tools.Project;
 import haxe.io.Path;
 import haxe.Json;
+import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -24,9 +25,11 @@ class ExportSpine extends tools.Task {
         // Get project info
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         var assetsPath = Path.join([cwd, 'assets']);
+        var projectCachePath = Path.join([cwd, '.cache']);
         var tmpPath = Path.join([cwd, '.tmp']);
         var spineDefaultConfigPath = Path.join([cwd, 'resources/spine-config.json']);
         var project = new tools.Project();
+        var force = extractArgFlag(args, 'force');
         project.loadAppFile(projectPath);
 
         if (project.app.spine == null || !Std.is(project.app.spine.export, Array)) {
@@ -99,6 +102,24 @@ class ExportSpine extends tools.Task {
             spineConfig.project = path;
             spineConfig.output = exportPath;
 
+            // Compute absolute spine project path
+            var spineProjectPath = path;
+            if (!Path.isAbsolute(spineProjectPath)) {
+                spineProjectPath = Path.join([context.cwd, spineProjectPath]);
+            }
+
+            var projectKey = Md5.encode('spine:'+path);
+            var projectKeyPath = Path.join([projectCachePath, projectKey]);
+            if (!force) {
+                // Check last modified date to see if this entry needs to be converted again or not
+                if (FileSystem.exists(projectKeyPath)) {
+                    if (Files.haveSameLastModified(spineProjectPath, projectKeyPath)) {
+                        print('Skip ' + path);
+                        continue;
+                    }
+                }
+            }
+
             // Save export config for use right after
             var tmpConfigPath = Path.join([tmpPath, 'spine-config.json']);
             File.saveContent(tmpConfigPath, Json.stringify(spineConfig, null, '  '));
@@ -159,6 +180,13 @@ class ExportSpine extends tools.Task {
                     }
                 }
             }
+
+            // Keep a local cache file to track which asset will need to be updated next time
+            if (!FileSystem.exists(projectCachePath)) {
+                FileSystem.createDirectory(projectCachePath);
+            }
+            File.saveContent(projectKeyPath, path);
+            Files.setToSameLastModified(spineProjectPath, projectKeyPath);
 
         }
 
