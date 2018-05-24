@@ -707,8 +707,12 @@ class Visual extends Entity {
 
 /// Hit test
 
-    /** Returns true if (testX,testY) screen coordinates hit/intersect this visual visible bounds */
+    /** Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds */
     public function hits(x:Float, y:Float):Bool {
+
+        // Disable touch on visuals that render to texture
+        if (renderTargetDirty) computeRenderTarget();
+        if (computedRenderTarget != null) return false;
 
         _inHitTest = true;
 
