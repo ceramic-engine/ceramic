@@ -669,8 +669,22 @@ class Visual extends Entity {
                 //
                 var sX = ceramic.App.app.screen.nativeWidth / computedRenderTarget.width;
                 var sY = ceramic.App.app.screen.nativeHeight / computedRenderTarget.height;
-                sX *= ceramic.App.app.screen.nativeDensity;
-                sY *= ceramic.App.app.screen.nativeDensity;
+                var nativeDensity = ceramic.App.app.screen.nativeDensity;
+                sX *= nativeDensity;
+                sY *= nativeDensity;
+
+                // Flip vertically because we are rendering to texture
+                // (same, we may want to move this into backend code)
+                _matrix.translate(
+                    -computedRenderTarget.width * 0.5,
+                    -computedRenderTarget.height * 0.5
+                );
+                _matrix.scale(1, -1);
+                _matrix.translate(
+                    computedRenderTarget.width * 0.5,
+                    computedRenderTarget.height * 0.5
+                );
+
                 _matrix.scale(sX, sY);
 
             }

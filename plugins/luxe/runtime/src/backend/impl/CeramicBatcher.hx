@@ -495,12 +495,6 @@ class CeramicBatcher extends phoenix.Batcher {
                     uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
                 }
 
-                // Render textures need to be flipped vertically
-                if (lastTexture.isRenderTexture) {
-                    uvY = 1 - uvY;
-                    uvH = -uvH;
-                }
-
                 //tl
                 tcoord_list[tcoord_floats++] = uvX;
                 tcoord_list[tcoord_floats++] = uvY;
