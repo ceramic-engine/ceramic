@@ -806,9 +806,10 @@ class Spine extends Visual {
                                         mesh.indices = meshAttachment.getTriangles();
 
                                         if (tintBlack) {
-                                            r = skeleton.color.r * slot.darkColor.r * meshAttachment.getColor().r * alpha;
-                                            g = skeleton.color.g * slot.darkColor.g * meshAttachment.getColor().g * alpha;
-                                            b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b * alpha;
+                                            a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
+                                            r = skeleton.color.r * slot.darkColor.r * meshAttachment.getColor().r * a;
+                                            g = skeleton.color.g * slot.darkColor.g * meshAttachment.getColor().g * a;
+                                            b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b * a;
                                             a = slot.darkColor.a;
 
                                             n = 0;
@@ -838,9 +839,9 @@ class Spine extends Visual {
                                         mesh.indices = _quadTriangles;
 
                                         if (tintBlack) {
-                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * alpha;
-                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * alpha;
-                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * alpha;
+                                            a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
+                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * a;
+                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * a;
                                             a = slot.darkColor.a;
 
                                             n = 0;
