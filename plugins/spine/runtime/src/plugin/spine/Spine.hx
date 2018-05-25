@@ -842,6 +842,7 @@ class Spine extends Visual {
                                             a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
                                             r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * a;
                                             g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * a;
+                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * a;
                                             a = slot.darkColor.a;
 
                                             n = 0;
