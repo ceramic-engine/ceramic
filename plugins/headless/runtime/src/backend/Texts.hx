@@ -20,6 +20,7 @@ class Texts implements spec.Texts {
         if (path.startsWith('http://') || path.startsWith('https://')) {
             // Not implemented (yet?)
             done(null);
+            return;
         }
 
         if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
