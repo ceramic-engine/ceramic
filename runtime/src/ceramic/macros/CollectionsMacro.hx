@@ -16,6 +16,12 @@ class CollectionsMacro {
     macro static public function build():Array<Field> {
 
         var fields = Context.getBuildFields();
+
+        #if (completion || display)
+        var useDynamic = false;
+        #else
+        var useDynamic = Context.defined('cpp');
+        #end
         
         var data = ceramic.macros.AppMacro.getComputedInfo(Context.definedValue('app_info'));
         var pos = Context.currentPos();
@@ -75,24 +81,86 @@ class CollectionsMacro {
                                 var csvData = Csv.parse(File.getContent(csvPath));
 
                                 var entries = [];
+                                var entriesInInit = [];
 
                                 for (csvEntry in csvData) {
                                     var entryId = csvEntry.get('id');
                                     if (entryId != null && entryId.trim() != '' && entryId != 'null') {
-                                        entries.push({
-                                            expr: {
-                                                expr: EConst(CString(entryId)),
+                                        if (useDynamic) {
+                                            entriesInInit.push({
+                                                expr: ECall({
+                                                    expr: EField({
+                                                            expr: EConst(CIdent('Reflect')),
+                                                            pos: pos
+                                                        },
+                                                        'setField'
+                                                    ),
+                                                    pos: pos
+                                                }, [
+                                                    {
+                                                        expr: EConst(CIdent('result')),
+                                                        pos: pos
+                                                    },
+                                                    {
+                                                        expr: EConst(CString(toCollectionConstName(entryId))),
+                                                        pos: pos
+                                                    },
+                                                    {
+                                                        expr: EConst(CString(entryId)),
+                                                        pos: pos
+                                                    }
+                                                ]),
                                                 pos: pos
-                                            },
-                                            field: toCollectionConstName(entryId)
-                                        });
+                                            });
+                                        }
+                                        else {
+                                            entries.push({
+                                                expr: {
+                                                    expr: EConst(CString(entryId)),
+                                                    pos: pos
+                                                },
+                                                field: toCollectionConstName(entryId)
+                                            });
+                                        }
                                     }
+                                }
+
+                                var kind;
+                                
+                                if (useDynamic) {
+                                    // On some targets, we need to compile the mapping as Dynamic
+                                    // because they don't play well with static ones.
+                                    // This doesn't affect code completion which is always static
+                                    kind = FProp('default', 'null', macro :Dynamic, { expr: ECall({ expr: EConst(CIdent('_' + collectionConstName + '_init')), pos: pos }, []), pos: pos });
+
+                                    fields.push({
+                                        pos: pos,
+                                        name: '_' + collectionConstName + '_init',
+                                        kind: FFun({
+                                            args: [],
+                                            ret: macro :Dynamic,
+                                            expr: macro {
+                                                var result:Dynamic = {};
+                                                $b{entriesInInit}
+                                                return result;
+                                            }
+                                        }),
+                                        access: [APrivate, AStatic],
+                                        doc: '',
+                                        meta: [{
+                                            name: ':noCompletion',
+                                            params: [],
+                                            pos: pos
+                                        }]
+                                    });
+                                } else {
+                                    kind = FProp('default', 'null', null, { expr: EObjectDecl(entries), pos: pos });
                                 }
 
                                 fields.push({
                                     pos: pos,
                                     name: collectionConstName,
-                                    kind: FProp('default', 'null', null, { expr: EObjectDecl(entries), pos: pos }),
+                                    kind: kind,
                                     access: [APublic, AStatic],
                                     doc: 'Collection IDs',
                                     meta: []
