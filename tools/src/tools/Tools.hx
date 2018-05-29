@@ -217,12 +217,8 @@ class Tools {
                 // Set correct plugin
                 context.plugin = @:privateAccess task.plugin;
 
-                // Add additional defines
-                if (context.backend != null) {
-
-                    // Extract backend target defines (if any)
-                    extractBackendTargetDefines(cwd, args);
-                }
+                // Extract defines (if any)
+                extractDefines(cwd, args);
 
                 // Set correct task
                 context.rootTask = task;

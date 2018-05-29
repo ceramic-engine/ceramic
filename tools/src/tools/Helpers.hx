@@ -16,27 +16,30 @@ class Helpers {
 
     public static var context:Context;
 
-    public static function extractBackendTargetDefines(cwd:String, args:Array<String>):Void {
+    public static function extractDefines(cwd:String, args:Array<String>):Void {
 
-        if (context.backend == null) return;
-
-        var availableTargets = context.backend.getBuildTargets();
-        var targetName = getTargetName(args, availableTargets);
-
-        if (targetName == null) {
-            return;
-        }
-
-        // Find target from name
-        //
+        // Add backend-specific defines
         var target = null;
-        for (aTarget in availableTargets) {
+        if (context.backend != null) {
 
-            if (aTarget.name == targetName) {
-                target = aTarget;
-                break;
+            var availableTargets = context.backend.getBuildTargets();
+            var targetName = getTargetName(args, availableTargets);
+
+            if (targetName != null) {
+                // Find target from name
+                //
+                for (aTarget in availableTargets) {
+
+                    if (aTarget.name == targetName) {
+                        target = aTarget;
+                        break;
+                    }
+
+                }
             }
 
+            context.defines.set('backend', context.backend.name.toLowerCase().replace(' ', '_'));
+            context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), '');
         }
 
         // Add generic defines
@@ -45,6 +48,10 @@ class Helpers {
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
         context.defines.set('actuate_manual_update', '');
+
+        if (context.variant != null) {
+            context.defines.set('variant', context.variant);
+        }
 
         // Add plugin assets paths
         var pluginsAssetPaths = [];
@@ -60,15 +67,12 @@ class Helpers {
         context.defines.set('HXCPP_CHECK_POINTER', '');
         context.defines.set('safeMode', '');
 
-        context.defines.set('backend', context.backend.name.toLowerCase().replace(' ', '_'));
-        context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), '');
-
         // To get absolute path in haxe log output
         // Then, we process it to make it more readable, with colors etc...
         context.defines.set('absolute-path', '');
 
         // Add target defines
-        if (target != null) {
+        if (target != null && context.backend != null) {
             var extraDefines = context.backend.getTargetDefines(cwd, args, target, context.variant);
             for (key in extraDefines.keys()) {
                 if (!context.defines.exists(key)) {
@@ -77,7 +81,7 @@ class Helpers {
             }
         }
 
-    } //extractBackendTargetDefines
+    } //extractDefines
 
     public static function computePlugins() {
 

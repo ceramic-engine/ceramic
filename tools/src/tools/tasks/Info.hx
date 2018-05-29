@@ -14,11 +14,7 @@ class Info extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args, App);
-
-        var project = new Project();
-        var projectPath = Path.join([cwd, 'ceramic.yml']);
-        project.loadAppFile(projectPath);
+        var project = ensureCeramicProject(cwd, args, App);
 
         print(Json.stringify(project.app, null, '    '));
 
