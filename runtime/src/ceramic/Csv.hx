@@ -15,7 +15,16 @@ class Csv {
     public static function parse(csv:String):Array<DynamicAccess<String>> {
 
         // Cleanup
-        csv = csv.replace("\r", '').trim();
+        csv = csv.trim();
+
+        // Extract chars
+        var csvChars = [];
+        for (codePoint in csv.uIterator()) {
+            var c = codePoint.toString();
+            if (c != "\r") {
+                csvChars.push(c);
+            }
+        }
 
         // Find separator and keys
         //
@@ -23,17 +32,17 @@ class Csv {
         var i = 0;
         var c = '';
         var cc = '';
-        var len = csv.uLength();
+        var len = csvChars.length;
         var inString = false;
         var val = '';
         var keys = [];
 
         while (i < len) {
-            c = csv.uCharAt(i);
+            c = csvChars[i];
 
             if (inString) {
                 if (c == '"') {
-                    cc = csv.uSubstr(i, 2);
+                    cc = c + csvChars[i+1];
                     if (cc == '""') {
                         val += '"';
                         i += 2;
@@ -90,11 +99,11 @@ class Csv {
         var tooManyColumnsAt = -1;
 
         while (i < len) {
-            c = csv.uCharAt(i);
+            c = csvChars[i];
 
             if (inString) {
                 if (c == '"') {
-                    cc = csv.uSubstr(i, 2);
+                    cc = c + csvChars[i+1];
                     if (cc == '""') {
                         val += '"';
                         i += 2;
@@ -171,12 +180,10 @@ class Csv {
 
         inline function addEscaped(output:StringBuf, input:String) {
             
-            var i = 0;
-            var len = input.uLength();
-            if (len == 0) return;
+            if (input.length == 0) return;
             output.add('"');
-            for (i in 0...len) {
-                var c = input.uCharAt(i);
+            for (codePoint in input.uIterator()) {
+                var c = codePoint.toString();
                 if (c == '"') {
                     output.add('""');
                 } else {
