@@ -604,7 +604,8 @@ class Editor extends Entity {
                                     visual.component('editable', new Editable(fragment));
                                 }
                                 if (selectedItemId == item.id) {
-                                    cast(visual.component('editable'), Editable).select();
+                                    var edit:Editable = cast visual.component('editable');
+                                    edit.select();
                                 }
                             }
                         }
@@ -717,7 +718,8 @@ class Editor extends Entity {
                 else if (action == 'select') {
                     var entity = value != null && value.id != null ? fragment.getItemInstance(value.id) : null;
                     if (entity != null && entity.hasComponent('editable')) {
-                        cast(entity.component('editable'), Editable).select();
+                        var edit:Editable = cast entity.component('editable');
+                        edit.select();
                         selectedItemId = value.id;
                     }
                     else {

@@ -772,7 +772,7 @@ class Spine extends Visual {
 
                             emptySlotMesh = false;
                             
-                            atlasRegion = cast(meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion(), AtlasRegion);
+                            atlasRegion = cast (meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion());
                             texture = cast atlasRegion.page.rendererObject;
 
                             if (mesh == null)
@@ -1092,7 +1092,7 @@ class Spine extends Visual {
         // Spine case
         if (Std.is(visual, Spine)) {
             if (subSpines == null) subSpines = [];
-            var item = cast(visual, Spine);
+            var item:Spine = cast visual;
             item.hasParentSpine = true;
             subSpines.push(item);
         }
@@ -1106,7 +1106,7 @@ class Spine extends Visual {
 
         // Spine case
         if (Std.is(visual, Spine)) {
-            var item = cast(visual, Spine);
+            var item:Spine = cast visual;
             item.hasParentSpine = false;
             subSpines.remove(item);
         }

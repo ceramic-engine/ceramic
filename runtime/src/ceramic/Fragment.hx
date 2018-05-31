@@ -156,7 +156,8 @@ class Fragment extends Visual {
         instance.id = item.id;
 
         if (isFragment) {
-            cast(instance, ceramic.Fragment).depthRange = 1;
+            var frag:ceramic.Fragment = cast instance;
+            frag.depthRange = 1;
         }
 
 #if editor
