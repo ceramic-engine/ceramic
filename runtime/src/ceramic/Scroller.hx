@@ -172,7 +172,7 @@ class Scroller extends Visual {
     inline function set_scrollX(scrollX:Float):Float {
         if (scrollTransform.tx == -scrollX) return scrollX;
         scrollTransform.tx = -scrollX;
-        scrollTransform.changed = true;
+        scrollTransform.changedDirty = true;
         return scrollX;
     }
 
@@ -183,7 +183,7 @@ class Scroller extends Visual {
     inline function set_scrollY(scrollY:Float):Float {
         if (scrollTransform.ty == -scrollY) return scrollY;
         scrollTransform.ty = -scrollY;
-        scrollTransform.changed = true;
+        scrollTransform.changedDirty = true;
         return scrollY;
     }
 
@@ -294,7 +294,7 @@ class Scroller extends Visual {
                 scrollTransform.tx = width - content.width;
             }
         }
-        scrollTransform.changed = true;
+        scrollTransform.changedDirty = true;
 
     } //mouseWheel
 
@@ -447,7 +447,7 @@ class Scroller extends Visual {
                         fromWheel = false;
                         pointerStart = pointerY;
                         scrollTransform.ty = contentStart + pointerY - pointerStart;
-                        scrollTransform.changed = true;
+                        scrollTransform.changedDirty = true;
 
                         // Get focus
                         screen.focusedVisual = this;
@@ -461,7 +461,7 @@ class Scroller extends Visual {
                         status = DRAGGING;
                         pointerStart = pointerX;
                         scrollTransform.tx = contentStart + pointerX - pointerStart;
-                        scrollTransform.changed = true;
+                        scrollTransform.changedDirty = true;
 
                         // Get focus
                         screen.focusedVisual = this;
@@ -484,7 +484,7 @@ class Scroller extends Visual {
                         }
                     }
 
-                    scrollTransform.changed = true;
+                    scrollTransform.changedDirty = true;
                     velocity.add(pointerY - pointerStart);
                 }
                 else {
@@ -500,7 +500,7 @@ class Scroller extends Visual {
                         }
                     }
 
-                    scrollTransform.changed = true;
+                    scrollTransform.changedDirty = true;
                     velocity.add(pointerX - pointerStart);
                 }
             
@@ -535,7 +535,7 @@ class Scroller extends Visual {
                             }
                             bounce -= add * delta;
                             scrollTransform.ty = Math.max(0, scrollTransform.ty + bounce * delta);
-                            scrollTransform.changed = true;
+                            scrollTransform.changedDirty = true;
                         }
                         else if (isOverScrollingBottom()) {
                             // Overscroll top
@@ -548,7 +548,7 @@ class Scroller extends Visual {
                             }
                             bounce += add * delta;
                             scrollTransform.ty = Math.min(height - content.height, scrollTransform.ty + bounce * delta);
-                            scrollTransform.changed = true;
+                            scrollTransform.changedDirty = true;
                         }
                     }
                     else {
@@ -563,7 +563,7 @@ class Scroller extends Visual {
 
                     if (!overScrolling || Math.abs(momentum * delta) > screen.nativeHeight * screen.nativeDensity * 0.25) {
                         scrollTransform.ty += momentum * delta;
-                        scrollTransform.changed = true;
+                        scrollTransform.changedDirty = true;
                     }
                     else {
                         momentum = 0;
@@ -596,7 +596,7 @@ class Scroller extends Visual {
                             }
                             bounce -= add * delta;
                             scrollTransform.tx = Math.max(0, scrollTransform.tx + bounce * delta);
-                            scrollTransform.changed = true;
+                            scrollTransform.changedDirty = true;
                         }
                         else if (isOverScrollingRight()) {
                             // Overscroll top
@@ -609,7 +609,7 @@ class Scroller extends Visual {
                             }
                             bounce += add * delta;
                             scrollTransform.tx = Math.min(width - content.width, scrollTransform.tx + bounce * delta);
-                            scrollTransform.changed = true;
+                            scrollTransform.changedDirty = true;
                         }
                     }
                     else {
@@ -624,7 +624,7 @@ class Scroller extends Visual {
 
                     if (!overScrolling || Math.abs(momentum * delta) > screen.nativeWidth * screen.nativeDensity * 0.25) {
                         scrollTransform.tx += momentum * delta;
-                        scrollTransform.changed = true;
+                        scrollTransform.changedDirty = true;
                     }
                     else {
                         momentum = 0;

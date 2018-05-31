@@ -16,6 +16,20 @@ class Transform implements Events {
 
 /// Properties
 
+    var _aPrev:Float;
+
+    var _bPrev:Float;
+
+    var _cPrev:Float;
+
+    var _dPrev:Float;
+
+    var _txPrev:Float;
+
+    var _tyPrev:Float;
+
+    public var changedDirty:Bool;
+
     public var a:Float;
 
     public var b:Float;
@@ -28,7 +42,7 @@ class Transform implements Events {
 
     public var ty:Float;
 
-    public var changed:Bool;
+    public var changed(default,null):Bool;
 
 /// Internal
 
@@ -44,12 +58,43 @@ class Transform implements Events {
         this.d = d;
         this.tx = tx;
         this.ty = ty;
+        _aPrev = a;
+        _bPrev = b;
+        _cPrev = c;
+        _dPrev = d;
+        _txPrev = tx;
+        _tyPrev = ty;
 
         changed = false;
+        changedDirty = false;
 
     } //new
 
+    inline public function computeChanged() {
+
+        if (changedDirty) {
+            changed =
+                tx != _txPrev ||
+                ty != _txPrev ||
+                a != _aPrev ||
+                b != _bPrev ||
+                c != _cPrev ||
+                d != _dPrev
+            ;
+
+            changedDirty = false;
+        }
+
+    } //computeChanged
+
     inline function didEmitChange():Void {
+
+        _aPrev = a;
+        _bPrev = b;
+        _cPrev = c;
+        _dPrev = d;
+        _txPrev = tx;
+        _tyPrev = ty;
 
         changed = false;
 
@@ -76,7 +121,7 @@ class Transform implements Events {
         ty = tx * m.b + ty * m.d + m.ty;
         tx = tx1;
 
-        changed = true;
+        changedDirty = true;
 
     } //concat
 
@@ -164,7 +209,7 @@ class Transform implements Events {
         tx = 0;
         ty = 0;
 
-        changed = true;
+        changedDirty = true;
 
     } //identity
 
@@ -193,7 +238,7 @@ class Transform implements Events {
 
         }
 
-        changed = true;
+        changedDirty = true;
 
     } //invert
 
@@ -215,7 +260,7 @@ class Transform implements Events {
         ty = tx * sin + ty * cos;
         tx = tx1;
 
-        changed = true;
+        changedDirty = true;
 
     } //rotate
 
@@ -230,7 +275,7 @@ class Transform implements Events {
         tx *= x;
         ty *= y;
 
-        changed = true;
+        changedDirty = true;
 
     } //scale
 
@@ -239,7 +284,7 @@ class Transform implements Events {
         tx += x;
         ty += y;
 
-        changed = true;
+        changedDirty = true;
 
     } //translate
 
@@ -275,7 +320,7 @@ class Transform implements Events {
         b = -c;
         d = a;
 
-        changed = true;
+        changedDirty = true;
 
     } //setRotation
 
@@ -288,7 +333,7 @@ class Transform implements Events {
         this.tx = tx;
         this.ty = ty;
 
-        changed = true;
+        changedDirty = true;
 
     } //setTo
 
@@ -301,7 +346,7 @@ class Transform implements Events {
         this.tx = transform.tx;
         this.ty = transform.ty;
 
-        changed = true;
+        changedDirty = true;
 
     } //setTo
 

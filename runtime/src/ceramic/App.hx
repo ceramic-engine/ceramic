@@ -424,8 +424,11 @@ class App extends Entity {
             // Dispatch visual transforms changes
             for (visual in visuals) {
 
-                if (visual.transform != null && visual.transform.changed) {
-                    visual.transform.emitChange();
+                if (visual.transform != null) {
+                    visual.transform.computeChanged();
+                    if (visual.transform.changed) {
+                        visual.transform.emitChange();
+                    }
                 }
 
             }
