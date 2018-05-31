@@ -20,7 +20,9 @@ class Script extends tools.Task {
 
         var scriptName = args[1];
         var debug = context.debug;
-        context.variant = 'scripts';
+
+        var prevVariant = context.variant;
+        setVariant('scripts');
 
         if (scriptName == null) {
             fail('Script name argument is required');
@@ -41,6 +43,8 @@ class Script extends tools.Task {
 
         if (debug) taskArgs.push('--debug');
         task.run(cwd, taskArgs);
+
+        setVariant(prevVariant);
 
     } //run
 

@@ -39,7 +39,7 @@ class Helpers {
             }
 
             context.defines.set('backend', context.backend.name.toLowerCase().replace(' ', '_'));
-            context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), '');
+            context.defines.set(context.backend.name.toLowerCase().replace(' ', '_'), 'backend');
         }
 
         // Add generic defines
@@ -51,6 +51,9 @@ class Helpers {
 
         if (context.variant != null) {
             context.defines.set('variant', context.variant);
+            if (!context.defines.exists(context.variant)) {
+                context.defines.set(context.variant, 'variant');
+            }
         }
 
         // Add plugin assets paths
@@ -82,6 +85,24 @@ class Helpers {
         }
 
     } //extractDefines
+
+    public static function setVariant(variant:String) {
+
+        var prevVariant = context.variant;
+
+        if (prevVariant != variant) {
+            if (context.defines.get(prevVariant) == 'variant') {
+                context.defines.remove(prevVariant);
+            }
+        }
+
+        context.variant = variant;
+        context.defines.set('variant', context.variant);
+        if (!context.defines.exists(context.variant)) {
+            context.defines.set(context.variant, 'variant');
+        }
+
+    } //setVariant
 
     public static function computePlugins() {
 
@@ -393,14 +414,21 @@ class Helpers {
             }
         }
         var targetArg = args[targetArgIndex];
+        var targetName = null;
         if (targetArg != null && !targetArg.startsWith('--')) {
-            return targetArg;
+            targetName = targetArg;
         }
+        // Return it only if available in targets
+        for (target in availableTargets) {
+            if (targetName == target.name) {
+                return targetName;
+            }
+        }
+        targetName = null;
 
         // Compute target name from current OS
         //
         var os = Sys.systemName();
-        var targetName = null;
         if (os == 'Mac') {
             targetName = 'mac';
         }
