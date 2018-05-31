@@ -1,0 +1,12 @@
+{
+    "window.title": "${activeEditorShort} — Http Plugin",
+    "haxe.displayConfigurations": [
+        ["completion.hxml"]
+    ],
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "**/out": true
+    }
+}

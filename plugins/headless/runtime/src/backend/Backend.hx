@@ -22,6 +22,8 @@ class Backend implements ceramic.Events implements spec.Backend {
 
     public var screen(default,null) = new backend.Screen();
 
+    public var http(default,null) = new backend.Http();
+
     public function new() {}
 
     public function init(app:ceramic.App) {

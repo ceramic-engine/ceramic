@@ -17,5 +17,7 @@ interface Backend {
     var images(default,null):backend.Images;
 
     var screen(default,null):backend.Screen;
+
+    var http(default,null):backend.Http;
     
 } //Backend
