@@ -582,6 +582,8 @@ class Spine extends Visual {
         and doesn't need to get updated at every frame. */
     inline public function canFreeze():Bool {
 
+        if (!autoFreeze) return false;
+
         var result = true;
 
         if (state != null) {
