@@ -394,6 +394,7 @@ class App extends Entity {
 
         do {
             // Notify if screen matrix has changed
+            screen.matrix.computeChanged();
             if (screen.matrix.changed) {
                 screen.matrix.emitChange();
             }
