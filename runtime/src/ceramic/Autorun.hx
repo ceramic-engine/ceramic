@@ -67,7 +67,7 @@ class Autorun extends Entity {
 
     /** Ensures current `autorun` won't be affected by the code after this call.
         `reobserve()` should be called to restore previous state. */
-    inline public static function unobserve():Void {
+    #if !debug inline #end public static function unobserve():Void {
 
         // Set current autorun to null
         prevCurrent.push(current);
@@ -77,7 +77,7 @@ class Autorun extends Entity {
 
     /** Resume observing values and resume affecting current `autorun` scope.
         This should be called after an `unobserve()` call. */
-    inline public static function reobserve():Void {
+    #if !debug inline #end public static function reobserve():Void {
 
         Assert.assert(prevCurrent.length > 0, 'Cannot call reobserve() without calling observe() before.');
 
