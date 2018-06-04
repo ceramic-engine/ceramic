@@ -29,15 +29,7 @@ class Shaders implements spec.Shaders {
 
     inline public function destroy(shader:Shader):Void {
 
-        var id = (shader:phoenix.Shader).id;
-        if (loadedShadersRetainCount.get(id) > 1) {
-            loadedShadersRetainCount.set(id, loadedShadersRetainCount.get(id) - 1);
-        }
-        else {
-            loadedShaders.remove(id);
-            loadedShadersRetainCount.remove(id);
-            (shader:phoenix.Shader).destroy(true);
-        }
+        (shader:phoenix.Shader).destroy(true);
 
     } //destroy
 
@@ -110,11 +102,5 @@ class Shaders implements spec.Shaders {
 
     } //setMatrix4
     */
-
-/// Internal
-
-    var loadedShaders:Map<String,phoenix.Shader> = new Map();
-
-    var loadedShadersRetainCount:Map<String,Int> = new Map();
 
 } //Textures
