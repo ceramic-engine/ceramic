@@ -26,6 +26,8 @@ interface Shaders {
 
     function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void;
 
+    function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void;
+
     function setTexture(shader:Shader, name:String, image:Image):Void;
 
 } //Shaders

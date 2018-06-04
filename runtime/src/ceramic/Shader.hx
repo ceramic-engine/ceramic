@@ -120,6 +120,12 @@ class Shader extends Entity {
 
     } //setVec4
 
+    inline public function setFloatArray(name:String, array:Array<Float>):Void {
+
+        app.backend.shaders.setFloatArray(backendItem, name, array);
+
+    } //setFloatArray
+
     inline public function setTexture(name:String, texture:Texture):Void {
 
         app.backend.shaders.setTexture(backendItem, name, texture.backendItem);

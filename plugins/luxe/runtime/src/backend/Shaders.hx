@@ -88,6 +88,12 @@ class Shaders implements spec.Shaders {
 
     } //setVec4
 
+    inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
+        
+        (shader:phoenix.Shader).set_float_arr(name, ceramic.Float32Array.fromArray(array));
+
+    } //setFloatArray
+
     inline public function setTexture(shader:Shader, name:String, texture:Image):Void {
         
         (shader:phoenix.Shader).set_texture(name, texture);
