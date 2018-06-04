@@ -73,6 +73,10 @@ class CeramicBatcher extends phoenix.Batcher {
         var lastShader:ceramic.Shader = null;
         var lastRenderTarget:ceramic.RenderTexture = null;
         var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
+
+#if debug
+        var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
+#end
         
         var lastClip:ceramic.Visual = null;
         var clip:ceramic.Visual = null;
@@ -211,6 +215,9 @@ class CeramicBatcher extends phoenix.Batcher {
                         stateDirty =
                             quad.shader != lastShader ||
                             quad.blending != lastBlending ||
+#if debug
+                            quad.debugRendering != lastDebugRendering ||
+#end
                             quad.computedRenderTarget != lastRenderTarget;
                     }
                 }
@@ -337,6 +344,11 @@ class CeramicBatcher extends phoenix.Batcher {
                             );
                         }
                     }
+
+#if debug
+                    lastDebugRendering = quad.debugRendering;
+                    primitiveType = lastDebugRendering == ceramic.DebugRendering.WIREFRAME ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
+#end
 
                     // Update render target
                     if (quad.computedRenderTarget != lastRenderTarget) {
@@ -617,6 +629,9 @@ class CeramicBatcher extends phoenix.Batcher {
                         stateDirty =
                             mesh.shader != lastShader ||
                             mesh.blending != lastBlending ||
+#if debug
+                            mesh.debugRendering != lastDebugRendering ||
+#end
                             mesh.computedRenderTarget != lastRenderTarget;
                     }
                 }
@@ -746,6 +761,11 @@ class CeramicBatcher extends phoenix.Batcher {
                         }
                     }
 
+#if debug
+                    lastDebugRendering = mesh.debugRendering;
+                    primitiveType = lastDebugRendering == ceramic.DebugRendering.WIREFRAME ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
+#end
+
                     // Update render target
                     if (mesh.computedRenderTarget != lastRenderTarget) {
 #if ceramic_debug_draw
@@ -774,15 +794,6 @@ class CeramicBatcher extends phoenix.Batcher {
             }
 
             visible_count++;
-
-            // Update num vertices
-            visualNumVertices = mesh.indices.length;
-            countAfter = pos_floats + visualNumVertices * 4;
-
-            // Submit the current batch if we exceed the max buffer size
-            if (countAfter > maxVertFloats) {
-                flush();
-            }
 
             // Fetch matrix
             //
@@ -817,6 +828,33 @@ class CeramicBatcher extends phoenix.Batcher {
             meshUvs = mesh.uvs;
             meshVertices = mesh.vertices;
             meshIndices = mesh.indices;
+
+#if debug
+            // TODO avoid allocating an array
+            if (lastDebugRendering == ceramic.DebugRendering.WIREFRAME) {
+                meshIndices = [];
+                i = 0;
+                while (i < mesh.indices.length) {
+                    meshIndices.push(mesh.indices[i]);
+                    meshIndices.push(mesh.indices[i+1]);
+                    meshIndices.push(mesh.indices[i+1]);
+                    meshIndices.push(mesh.indices[i+2]);
+                    meshIndices.push(mesh.indices[i+2]);
+                    meshIndices.push(mesh.indices[i]);
+                    i += 3;
+                }
+                meshSingleColor = true;
+            }
+#end
+
+            // Update num vertices
+            visualNumVertices = meshIndices.length;
+            countAfter = pos_floats + visualNumVertices * 4;
+
+            // Submit the current batch if we exceed the max buffer size
+            if (countAfter > maxVertFloats) {
+                flush();
+            }
 
             // Actual texture size may differ from its logical one.
             // Keep factor values to generate UV mapping that matches the real texture.

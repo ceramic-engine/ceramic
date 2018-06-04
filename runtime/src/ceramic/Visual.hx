@@ -66,6 +66,12 @@ class Visual extends Entity {
         return inheritAlpha;
     }
 
+#if debug
+
+    public var debugRendering:DebugRendering = DebugRendering.DEFAULT;
+
+#end
+
 #if ceramic_luxe_legacy
 
     /** Allows the backend to keep data associated with this visual. */
