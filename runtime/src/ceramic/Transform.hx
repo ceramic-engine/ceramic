@@ -75,7 +75,7 @@ class Transform implements Events {
         if (changedDirty) {
             changed =
                 tx != _txPrev ||
-                ty != _txPrev ||
+                ty != _tyPrev ||
                 a != _aPrev ||
                 b != _bPrev ||
                 c != _cPrev ||
