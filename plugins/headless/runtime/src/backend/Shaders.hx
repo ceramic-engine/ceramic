@@ -64,6 +64,12 @@ class Shaders implements spec.Shaders {
 
     } //setVec4
 
+    inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
+        
+        //
+
+    } //setFloatArray
+
     inline public function setTexture(shader:Shader, name:String, texture:backend.Image):Void {
         
         //
