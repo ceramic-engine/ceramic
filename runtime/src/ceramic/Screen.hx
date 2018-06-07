@@ -154,23 +154,23 @@ class Screen extends Entity implements Observable {
         // Observe visual settings
         //
         settings.onBackgroundChange(this, function(background, prevBackground) {
-            log('Setting background=$background');
+            #if debug log('Setting background=$background'); #end
             app.backend.screen.setBackground(background);
         });
         settings.onScalingChange(this, function(scaling, prevScaling) {
-            log('Setting scaling=$scaling');
+            #if debug log('Setting scaling=$scaling'); #end
             resize();
         });
         settings.onTargetWidthChange(this, function(targetWidth, prevTargetWidth) {
-            log('Setting targetWidth=$targetWidth');
+            #if debug log('Setting targetWidth=$targetWidth'); #end
             resize();
         });
         settings.onTargetHeightChange(this, function(targetHeight, prevTargetWidth) {
-            log('Setting targetHeight=$targetHeight');
+            #if debug log('Setting targetHeight=$targetHeight'); #end
             resize();
         });
         settings.onTargetDensityChange(this, function(targetDensity, prevTargetDensity) {
-            log('Setting targetDensity=$targetDensity');
+            #if debug log('Setting targetDensity=$targetDensity'); #end
             updateTexturesDensity();
         });
 
