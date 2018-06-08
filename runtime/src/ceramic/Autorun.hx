@@ -43,14 +43,16 @@ class Autorun extends Entity {
         emitReset();
 
         // Set current autorun to self
-        var prevCurrent = current;
+        var _prevCurrent = current;
         current = this;
+        var numPrevCurrent = prevCurrent.length;
 
         // Run (and bind) again
         onRun();
 
         // Restore previous current autorun
-        current = prevCurrent;
+        while (numPrevCurrent < prevCurrent.length) prevCurrent.pop();
+        current = _prevCurrent;
 
     } //run
 
