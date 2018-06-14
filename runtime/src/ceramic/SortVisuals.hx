@@ -99,7 +99,7 @@ class SortVisuals {
         rec(a, 0, a.length);
     }
 
-    static inline function rec(a:Array<Visual>, from:Int, to:Int) {
+    static function rec(a:Array<Visual>, from:Int, to:Int) {
         var middle = (from + to) >> 1;
         if (to - from < 12) {
             if (to <= from) return;
@@ -120,7 +120,7 @@ class SortVisuals {
         doMerge(a, from, middle, to, middle - from, to - middle);
     }
 
-    static inline function doMerge(a:Array<Visual>, from, pivot, to, len1, len2) {
+    static function doMerge(a:Array<Visual>, from, pivot, to, len1, len2) {
         var first_cut, second_cut, len11, len22, new_mid;
         if (len1 == 0 || len2 == 0)
             return;

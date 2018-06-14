@@ -70,7 +70,7 @@ class Transform implements Events {
 
     } //new
 
-    inline public function computeChanged() {
+    #if !debug inline #end public function computeChanged() {
 
         if (changedDirty) {
             changed =

@@ -100,7 +100,10 @@ class EventsMacro {
                 var handlerName = 'handle' + [for (arg in fn.args) arg.name.substr(0,1).toUpperCase() + arg.name.substr(1)].join('');
                 var handlerType = TFunction([for (arg in fn.args) arg.type], macro :Void);
                 var handlerCallArgs = [for (arg in fn.args) macro $i{arg.name}];
-                var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
+                var sanitizedName = field.name;
+                while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
+                while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
+                var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
                 var onName = 'on' + capitalName;
                 var onceName = 'once' + capitalName;
                 var offName = 'off' + capitalName;
@@ -115,7 +118,7 @@ class EventsMacro {
                 var doc = field.doc;
                 var origDoc = field.doc;
                 if (doc == null || doc == '') {
-                    doc = field.name + ' event';
+                    doc = sanitizedName + ' event';
                 }
 
                 // Create __cbOn{Name}

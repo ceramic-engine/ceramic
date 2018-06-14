@@ -78,7 +78,7 @@ class App extends Entity {
 
     /** Execute and flush every awaiting immediate callback, including the ones that
         could have been added with `onceImmediate()` after executing the existing callbacks. */
-    inline function flushImmediate():Bool {
+    #if !debug inline #end function flushImmediate():Bool {
 
         var didFlush = false;
 
@@ -471,7 +471,7 @@ class App extends Entity {
 
     } //update
 
-    inline function computeHierarchy() {
+    #if !debug inline #end function computeHierarchy() {
 
         if (hierarchyDirty) {
 
@@ -492,7 +492,7 @@ class App extends Entity {
 
     } //computeHierarchy
 
-    inline function sortVisuals() {
+    #if !debug inline #end function sortVisuals() {
 
         // Sort visuals by (computed) depth
         SortVisuals.sort(visuals);
