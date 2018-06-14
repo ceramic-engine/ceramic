@@ -32,7 +32,7 @@
     "fs-extra": "^5.0.0",
     "glob": "^7.1.1",
     "handlebars": "^4.0.6",
-    "haxe": "^5.0.6",
+    "haxe": "^5.0.10",
     "ip": "^1.1.4",
     "istextorbinary": "^2.1.0",
     "lockfile": "^1.0.2",
