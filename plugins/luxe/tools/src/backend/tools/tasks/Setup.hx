@@ -138,6 +138,7 @@ class Setup extends tools.Task {
 
         // Disable luxe debug console
         haxeflags.push(Json.stringify('-D luxe_noprofile'));
+        haxeflags.push(Json.stringify('-D luxe_no_main'));
         haxeflags.push(Json.stringify('-D no_debug_console'));
 
         var classPaths = '';

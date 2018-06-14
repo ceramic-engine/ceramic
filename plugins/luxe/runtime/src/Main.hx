@@ -14,6 +14,12 @@ using StringTools;
 
 class Main extends luxe.Game {
 
+    public static function main() {
+        
+        new Main();
+
+    } //main
+
     public static var project:Project = null;
 
 #if web
