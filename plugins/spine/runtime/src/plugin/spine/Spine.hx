@@ -219,6 +219,21 @@ class Spine extends Visual {
         return spineData;
     }
 
+    public var skin(default,set):String = null;
+    function set_skin(skin:String):String {
+        if (this.skin == skin) return skin;
+        this.skin = skin;
+        if (skeleton != null) {
+            var spineSkin:Skin = skeletonData.findSkin(skin == null ? 'default' : skin);
+            if (spineSkin == null) {
+                warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
+            } else {
+                skeleton.setSkin(spineSkin);
+            }
+        }
+        return skin;
+    }
+
     @editable({ localCollection: 'animationList', empty: 0 })
     public var animation(default,set):String = null;
     function set_animation(animation:String):String {
@@ -475,7 +490,7 @@ class Spine extends Visual {
             if (_animation != null) {
                 track = state.setAnimation(trackIndex, _animation, loop);
             } else {
-                warning('Animation not found: ' + animationName);
+                warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')');
                 track = state.setEmptyAnimation(trackIndex, 0);
             }
         }
@@ -516,7 +531,10 @@ class Spine extends Visual {
         
         update(0.1);
         while (i-- > 0) {
-            state.tracks[i].trackTime = _trackTimes[i];
+            var track = state.tracks[i];
+            if (track != null) {
+                track.trackTime = _trackTimes[i];
+            }
         }
         updateSkeleton(0);
         render(0, 0, false);
