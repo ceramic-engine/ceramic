@@ -1,6 +1,6 @@
 [submodule "git/linc_openal"]
 	path = git/linc_openal
-	url = https://github.com/snowkit/linc_openal.git
+	url = https://github.com/ceramic-engine/linc_openal.git
 	branch = master
 [submodule "git/linc_timestamp"]
 	path = git/linc_timestamp
