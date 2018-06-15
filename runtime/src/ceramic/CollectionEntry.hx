@@ -3,6 +3,7 @@ package ceramic;
 import haxe.DynamicAccess;
 
 using ceramic.Extensions;
+using StringTools;
 
 @:rtti
 @:structInit
@@ -46,7 +47,7 @@ class CollectionEntry {
                             value = rawValue;
                         }
                         else {
-                            rawValue = ''+rawValue.toLowerCase().trim();
+                            rawValue = (''+rawValue).toLowerCase().trim();
                             if (rawValue != '' && rawValue != '0' && rawValue != 'false' && rawValue != 'no') {
                                 value = true;
                             } else {
@@ -76,7 +77,7 @@ class CollectionEntry {
                         value = rawValue == null || rawValue == 'null' ? null : ''+rawValue;
 
                     default:
-                        var rawValue = ''+rawValue.toLowerCase().trim();
+                        var rawValue = (''+rawValue).toLowerCase().trim();
                         var resolvedEnum = Type.resolveEnum(type);
                         if (resolvedEnum != null) {
                             for (name in Type.getEnumConstructs(resolvedEnum)) {
