@@ -30,6 +30,35 @@ class AndroidStudio extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
+        // Copy OpenAL binaries
+        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi']))) {
+            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi']));
+        }
+        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal.so']))) {
+            File.copy(
+                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal.so']),
+                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi/libopenal.so'])
+            );
+        }
+        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']))) {
+            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']));
+        }
+        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']))) {
+            File.copy(
+                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']),
+                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so'])
+            );
+        }
+        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86']))) {
+            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86']));
+        }
+        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']))) {
+            File.copy(
+                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']),
+                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so'])
+            );
+        }
+
         var os = Sys.systemName();
 
         if (os == 'Mac' && FileSystem.exists(androidProjectFile)) {

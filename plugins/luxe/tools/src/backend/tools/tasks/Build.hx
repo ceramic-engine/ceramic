@@ -98,8 +98,39 @@ class Build extends tools.Task {
             } else {
                 cmdAction = 'build';
             }
+
+            // Android OpenAL built separately (because of LGPL license, we want to build
+            // it separately and link it dynamically at runtime)
+            // TODO move this into android plugin?
+            if (target.name == 'android') {
+                haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid'], { cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']) });
+                haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'], { cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']) });
+                haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'], { cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']) });
+                for (arch in ['armeabi', 'armeabi-v7a', 'arm64-v8a', 'x86']) {
+                    if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
+                        FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
+                    }
+                }
+                File.copy(
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal.so']),
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/armeabi/libopenal.so'])
+                );
+                File.copy(
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']),
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'])
+                );
+                File.copy(
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']),
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'])
+                );
+                File.copy(
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']),
+                    Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/arm64-v8a/libopenal.so'])
+                );
+            }
         }
         
+        // Hook
         if (action == 'run' && (target.name == 'ios' || target.name == 'android' || target.name == 'web')) {
             runHooks(cwd, args, project.app.hooks, 'begin run');
         }

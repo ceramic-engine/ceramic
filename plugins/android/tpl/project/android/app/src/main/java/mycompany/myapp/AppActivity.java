@@ -21,6 +21,7 @@ public class AppActivity extends org.snowkit.snow.SnowActivity {
     protected String[] getLibraries() {
 
         return new String[] {
+            "openal",
             "MyApp"
         };
 
