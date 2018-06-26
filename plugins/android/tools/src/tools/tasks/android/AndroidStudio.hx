@@ -31,15 +31,6 @@ class AndroidStudio extends tools.Task {
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
         // Copy OpenAL binaries
-        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi']))) {
-            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi']));
-        }
-        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal.so']))) {
-            File.copy(
-                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal.so']),
-                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi/libopenal.so'])
-            );
-        }
         if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']))) {
             FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']));
         }

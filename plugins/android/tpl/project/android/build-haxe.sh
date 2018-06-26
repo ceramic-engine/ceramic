@@ -37,8 +37,6 @@ ceramic luxe build android "$CERAMIC_DEBUG_FLAG" --cwd ../.. --archs "${ARCHS// 
 src_jni="../../out/luxe/android/android.project/app/src/main/jniLibs"
 dst_jni="app/src/main/jniLibs"
 jni_lib_name="libMyApp.so"
-if [ ! -d "$dst_jni/armeabi" ]; then mkdir -p "$dst_jni/armeabi"; fi
-cp -f "$src_jni/armeabi/$jni_lib_name" "$dst_jni/armeabi/$jni_lib_name"
 if [ ! -d "$dst_jni/armeabi-v7a" ]; then mkdir -p "$dst_jni/armeabi-v7a"; fi
 cp -f "$src_jni/armeabi-v7a/$jni_lib_name" "$dst_jni/armeabi-v7a/$jni_lib_name"
 if [ ! -d "$dst_jni/x86" ]; then mkdir -p "$dst_jni/x86"; fi

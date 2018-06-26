@@ -11,7 +11,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 16
         ndk {
-            abiFilters "armeabi-v7a", "x86", "armeabi"
+            abiFilters "armeabi-v7a", "x86"
         }
     }
 
@@ -37,7 +37,7 @@ task haxeBuildRelease(type: Exec) {
         // TODO
     }
     else {
-        commandLine './build-haxe.sh', '--archs', 'armv5,armv7,x86'
+        commandLine './build-haxe.sh', '--archs', 'armv7,x86'
     }
 }
 

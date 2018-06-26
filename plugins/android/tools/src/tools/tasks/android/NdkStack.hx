@@ -65,7 +65,6 @@ class NdkStack extends tools.Task {
 
         var abi = 'armeabi-v7a'; // Most common ABI
         var acceptedAbis = [
-            'armeabi' => true,
             'armeabi-v7a' => true,
             'x86' => true
         ];
