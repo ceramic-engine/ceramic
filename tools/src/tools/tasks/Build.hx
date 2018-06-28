@@ -93,12 +93,12 @@ class Build extends tools.Task {
             task.run(cwd, ['hxml', target.name, '--variant', context.variant, '--output', hxmlOutput]);
         }
 
-        // Update vscode settings?
+        /*// Update vscode settings?
         if (context.vscode) {
             // This will ensure haxe completion server is restarted after a build.
             var task = new Vscode();
-            task.run(cwd, ['vscode', target.name, '--variant', context.variant, '--settings-only', '--haxe-server-seed']);
-        }
+            task.run(cwd, ['vscode', target.name, '--variant', context.variant, '--settings-only']);
+        }*/
 
     } //run
 

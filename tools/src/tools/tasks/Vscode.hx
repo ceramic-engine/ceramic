@@ -22,7 +22,6 @@ class Vscode extends tools.Task {
 
         var force = extractArgFlag(args, 'force');
         var settingsOnly = extractArgFlag(args, 'settings-only');
-        var haxeServerSeed = extractArgFlag(args, 'haxe-server-seed');
         var vscodeDir = Path.join([cwd, '.vscode']);
 
         var backends = [];
@@ -99,10 +98,7 @@ class Vscode extends tools.Task {
         var vscodeSettings = {
             "window.title": "${activeEditorShort} — " + project.app.name,
             "haxe.displayConfigurations": [
-                haxeServerSeed ?
-                    ["completion.hxml", "-D", "seed=" + Math.round(Date.now().getTime())]
-                    :
-                    ["completion.hxml"]
+                ["completion.hxml"]
             ],
             "search.exclude": {
                 "**/.git": true,
@@ -149,7 +145,7 @@ class Vscode extends tools.Task {
             File.saveContent(Path.join([vscodeDir, 'launch.json']), Json.stringify(vscodeLaunch, null, '    '));
         }
 
-        if (haxeServerSeed) {
+        /*if (haxeServerSeed) {
             // Just forcing haxe server to restart and clean compile cache.
             Sync.run(function(done) {
                 js.Node.setTimeout(function() {
@@ -158,7 +154,7 @@ class Vscode extends tools.Task {
                     done();
                 }, 250);
             });
-        }
+        }*/
 
     } //run
 
