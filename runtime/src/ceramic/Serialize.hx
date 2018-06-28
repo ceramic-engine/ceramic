@@ -229,7 +229,13 @@ class Serialize {
         else if (value.hx != null) {
 
             var u = new haxe.Unserializer(value.hx);
-            return u.unserialize();
+            try {
+                return u.unserialize();
+            }
+            catch (e:Dynamic) {
+                warning('Failed to deserialize: ' + value.hx);
+                return null;
+            }
 
         }
         else {
