@@ -57,8 +57,8 @@ class Hxml extends tools.Task {
         var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
         var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
 
-        // Add completion flag
-        rawHxml += "\n" + '-D completion';
+        // Add completion flags
+        rawHxml += "\n" + '-D completion -D display';
 
         // Add some completion cache optims
         //
