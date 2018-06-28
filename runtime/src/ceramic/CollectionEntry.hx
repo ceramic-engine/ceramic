@@ -40,6 +40,8 @@ class CollectionEntry {
                 var rawValue:Dynamic = Reflect.field(data, key);
                 var value:Dynamic = null;
 
+                if (setRawField(key, rawValue)) continue;
+
                 switch (type) {
 
                     case 'Bool':
@@ -95,6 +97,14 @@ class CollectionEntry {
         }
 
     } //setRawData
+
+    /** Override this method to perform custom deserialisation on a specific field. If the overrided method
+        returns `true`, default behavior will be skipped for the related field.*/
+    public function setRawField(name:String, rawValue:Dynamic):Bool {
+
+        return false;
+
+    } //setRawField
 
 #if editor
 

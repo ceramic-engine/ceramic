@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Assert.*;
+
 @:forward
 abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
@@ -11,12 +13,15 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
 	@:arrayAccess public inline function arrayAccess(index:Int) {
         
-        return this.entries[index];
+        return this.getByIndex(index);
     
     } //arrayAccess
 
     /** Return a random element contained in the collection */
-    inline public function randomElement():T {
+    public function randomElement():T {
+
+        this.checkCombined();
+        if (this.entriesDirty) this.computeEntries();
 
         return Extensions.randomElement(this.entries);
 
@@ -26,7 +31,10 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
         @param except The element we don't want
         @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
         @return The random element or `null` if nothing was found */
-    inline public function randomElementExcept(except:T, unsafe:Bool = false):T {
+    public function randomElementExcept(except:T, unsafe:Bool = false):T {
+
+        this.checkCombined();
+        if (this.entriesDirty) this.computeEntries();
 
         return Extensions.randomElementExcept(this.entries, except, unsafe);
 
@@ -35,45 +43,88 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 } //Collection
 
 @:allow(ceramic.Collection)
-class CollectionImpl<T:CollectionEntry> {
+@:allow(ceramic.Collections)
+class CollectionImpl<T:CollectionEntry> implements Events {
+
+    static var _lastCheckedCombined:Dynamic = null;
+
+    static var _nextInternalId:Int = 0;
+
+    var internalId:Int = _nextInternalId++;
+
+    var lastChange:Int = 0;
 
     var entries:Array<T> = [];
 
     var indexDirty:Bool = true;
 
+    var entriesDirty:Bool = false;
+
     var byId:Map<String,T> = null;
+
+    var combinedCollections:Array<CollectionImpl<T>> = null;
+    var combinedCollectionLastChanges:Array<Int> = null;
     
 	public var length(get,never):Int;
-    inline function get_length():Int return entries.length;
+    function get_length():Int {
+        this.checkCombined();
+        if (this.entriesDirty) this.computeEntries();
+        return entries.length;
+    }
 
     public function new() {}
 
 	public function pushAll(entries:Array<T>) {
+
+        assert(combinedCollections == null, 'Cannot add entries to combined collections');
 
         for (entry in entries) {
             this.entries.push(entry);
         }
 
         indexDirty = true;
+        lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
+        _lastCheckedCombined = null;
 
     } //pushAll
 
 	public function push(entry:T) {
 
+        assert(combinedCollections == null, 'Cannot add entries to combined collections');
+
         this.entries.push(entry);
         indexDirty = true;
+        lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
+        _lastCheckedCombined = null;
 
     } //push
 
     public function get(id:String):T {
 
+        checkCombined();
+
+        if (entriesDirty) computeEntries();
         if (indexDirty) computeIndex();
 
         return byId.get(id);
 
     } //get
 
+    public function getByIndex(index:Int):T {
+
+        checkCombined();
+
+        if (entriesDirty) computeEntries();
+
+        return entries[index];
+
+    } //getByIndex
+
 	inline public function iterator():Iterator<T> {
+
+        checkCombined();
+
+        if (entriesDirty) computeEntries();
 
 		return entries.iterator();
 
@@ -81,16 +132,58 @@ class CollectionImpl<T:CollectionEntry> {
 
 /// Internal
 
+    inline function checkCombined() {
+
+        // Always check that the combined collection we depend on hasn't changed
+        if (combinedCollections != null) {
+            if (_lastCheckedCombined != this) {
+                for (i in 0...combinedCollections.length) {
+                    var collection = combinedCollections[i];
+                    var collectionLastChange = combinedCollectionLastChanges[i];
+                    if (collectionLastChange != collection.lastChange) {
+                        entriesDirty = true;
+                        break;
+                    }
+                }
+                _lastCheckedCombined = this;
+            }
+        }
+
+    } //checkCombined
+
     function computeIndex() {
+
+        if (entriesDirty) computeEntries();
 
         byId = new Map();
         
         for (entry in entries) {
-            byId.set(entry.id, entry);
+            if (!byId.exists(entry.id)) {
+                byId.set(entry.id, entry);
+            }
         }
 
         indexDirty = false;
 
     } //computeIndex
+
+    function computeEntries() {
+
+        assert(combinedCollections != null, 'Entries only need to be computed on combined collections');
+
+        entries = [];
+        for (i in 0...combinedCollections.length) {
+            var collection = combinedCollections[i];
+            for (entry in collection) {
+                entries.push(entry);
+            }
+            combinedCollectionLastChanges[i] = collection.lastChange;
+        }
+
+        entriesDirty = false;
+        indexDirty = true;
+        if (_lastCheckedCombined != this) _lastCheckedCombined = null;
+
+    } //computeEntries
 
 } //CollectionImpl
