@@ -27,6 +27,7 @@
     "colors": "^1.1.2",
     "decompress": "^4.2.0",
     "decompress-targz": "^4.1.0",
+    "detect-port": "^1.2.3",
     "download": "^6.2.5",
     "fibers": "^1.0.15",
     "fs-extra": "^5.0.0",
@@ -40,7 +41,6 @@
     "node": "^8.11.1",
     "npm": "^6.0.0",
     "plist": "^2.0.1",
-    "portscanner": "^2.1.0",
     "rimraf": "^2.6.1",
     "sharp": "^0.20.0",
     "shell-quote": "^1.6.1",
@@ -49,6 +49,7 @@
     "strip-ansi": "^4.0.0",
     "to-ico": "^1.1.4",
     "tree-kill": "^1.1.0",
+    "ws": "^5.2.1",
     "xcode": "^1.0.0",
     "yamljs": "^0.2.9"
   },

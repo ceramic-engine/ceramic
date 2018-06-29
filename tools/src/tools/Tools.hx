@@ -97,6 +97,8 @@ class Tools {
 
         context.tasks.set('version', new tools.tasks.Version());
         context.tasks.set('help', new tools.tasks.Help());
+        context.tasks.set('server', new tools.tasks.Server());
+        context.tasks.set('query', new tools.tasks.Query());
 
         context.tasks.set('init', new tools.tasks.Init());
         context.tasks.set('vscode', new tools.tasks.Vscode());
