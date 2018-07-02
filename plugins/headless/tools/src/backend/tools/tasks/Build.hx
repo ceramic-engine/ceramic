@@ -77,6 +77,9 @@ class Build extends tools.Task {
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('-debug');
 
+        //cmdArgs.push('--connect');
+        //cmdArgs.push('4061');
+
         var status = 0;
         var hasErrorLog = false;
 

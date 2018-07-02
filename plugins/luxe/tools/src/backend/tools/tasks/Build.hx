@@ -93,9 +93,13 @@ class Build extends tools.Task {
         // iOS/Android case
         var cmdAction = action;
         if ((action == 'run' || action == 'build') && (target.name == 'ios' || target.name == 'android' || target.name == 'web')) {
-            if (archs == null || archs.trim() == '') {
+            if (target.name == 'web') {
+                cmdAction = 'files';
+            }
+            else if (archs == null || archs.trim() == '') {
                 cmdAction = 'compile';
-            } else {
+            }
+            else {
                 cmdAction = 'build';
             }
 
@@ -185,12 +189,30 @@ class Build extends tools.Task {
         if (status == 0 && hasErrorLog) {
             status = 1;
         }
+
+        function buildWeb() {
+            var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
+            var hxmlData = tools.Hxml.parse(rawHxml);
+            var hxmlTargetCwd = cwd;
+            var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
+            var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
+
+            File.saveContent(Path.join([cwd, 'build.hxml']), finalHxml.rtrim() + "\n");
+
+            haxe([/*'--connect', '127.0.0.1:4061'*/'build.hxml'], { cwd: cwd });
+        }
         
         if (status != 0) {
             if (!hasErrorLog) fail('Error when running luxe $action.');
             else js.Node.process.exit(status);
         }
         else {
+
+            // Take shortcut when building for web
+            if ((action == 'run' || action == 'build') && target.name == 'web') {
+                buildWeb();
+            }
+
             if (action == 'run' || action == 'build') {
                 runHooks(cwd, args, project.app.hooks, 'end build');
             }
@@ -255,8 +277,13 @@ class Build extends tools.Task {
                             building = true;
                             Fiber.fiber(function() {
                                 // Rebuild
-                                var task = context.tasks.get('luxe build');
+                                /*var task = context.tasks.get('luxe build');
                                 var taskArgs = ['luxe', 'build', 'web', '--variant', context.variant];
+                                if (debug) taskArgs.push('--debug');
+                                task.run(cwd, taskArgs);*/
+                                buildWeb();
+                                // Refresh electron runner
+                                var taskArgs = ['web', 'project', '--variant', context.variant];
                                 if (debug) taskArgs.push('--debug');
                                 task.run(cwd, taskArgs);
                                 building = false;
