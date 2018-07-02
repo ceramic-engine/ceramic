@@ -128,10 +128,6 @@ class EntityMacro {
         for (field in newFields) {
             if (field.name == 'destroy') {
 
-                if (field.access.indexOf(AOverride) == -1) {
-                    field.access.push(AOverride);
-                }
-
                 var isProcessed = processed.exists(classPath+'.destroy');
                 if (!isProcessed) {
                     processed.set(classPath+'.destroy', true);
@@ -162,13 +158,6 @@ class EntityMacro {
                         default:
                     }
                 }
-            }
-            else if (field.name == 'toString') {
-                
-                if (field.access.indexOf(AOverride) == -1) {
-                    field.access.push(AOverride);
-                }
-
             }
         }
 

@@ -32,7 +32,7 @@ class RenderTexture extends Texture {
 
     } //new
 
-    function destroy() {
+    override function destroy() {
 
         app.renderTextures.remove(this);
 

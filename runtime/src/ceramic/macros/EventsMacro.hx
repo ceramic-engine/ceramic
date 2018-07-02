@@ -109,17 +109,17 @@ class EventsMacro {
                 var offName = 'off' + capitalName;
                 var emitName = 'emit' + capitalName;
                 var listensName = 'listens' + capitalName;
-                var cbOnArray = '__cbOn' + capitalName;
-                var cbOnceArray = '__cbOnce' + capitalName;
-                var cbOnOwnerUnbindArray = '__cbOnOwnerUnbind' + capitalName;
-                var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
-                var fnWillEmit = 'willEmit' + capitalName;
-                var fnDidEmit = 'didEmit' + capitalName;
                 var doc = field.doc;
                 var origDoc = field.doc;
                 if (doc == null || doc == '') {
                     doc = sanitizedName + ' event';
                 }
+
+#if (!display && !completion)
+                var cbOnArray = '__cbOn' + capitalName;
+                var cbOnceArray = '__cbOnce' + capitalName;
+                var cbOnOwnerUnbindArray = '__cbOnOwnerUnbind' + capitalName;
+                var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
 
                 // Create __cbOn{Name}
                 var cbOnField = {
@@ -215,6 +215,9 @@ class EventsMacro {
 
                 // Create emit{Name}()
                 //
+                var fnWillEmit = 'willEmit' + capitalName;
+                var fnDidEmit = 'didEmit' + capitalName;
+
                 var willEmit = macro null;
                 if (fieldsByName.exists(fnWillEmit)) {
                     willEmit = macro this.$fnWillEmit($a{handlerCallArgs});
@@ -224,6 +227,7 @@ class EventsMacro {
                 if (fieldsByName.exists(fnDidEmit)) {
                     didEmit = macro this.$fnDidEmit($a{handlerCallArgs});
                 }
+#end
 
                 var emitField = {
                     pos: field.pos,
@@ -231,6 +235,7 @@ class EventsMacro {
                     kind: FFun({
                         args: fn.args,
                         ret: macro :Void,
+#if (!display && !completion)
                         expr: macro {
                             $willEmit;
                             var len = 0;
@@ -261,6 +266,9 @@ class EventsMacro {
                             }
                             $didEmit;
                         }
+#else
+                        expr: macro {}
+#end
                     }),
                     access: [hasPublicModifier ? APublic : APrivate],
                     doc: doc,
@@ -289,6 +297,7 @@ class EventsMacro {
                             }
                         ],
                         ret: macro :Void,
+#if (!display && !completion)
                         expr: macro {
                             // Map owner to handler
                             if (owner != null) {
@@ -318,6 +327,9 @@ class EventsMacro {
                             }
                             this.$cbOnArray.push($i{handlerName});
                         }
+#else
+                        expr: macro {}
+#end
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
                     doc: doc,
@@ -342,6 +354,7 @@ class EventsMacro {
                             }
                         ],
                         ret: macro :Void,
+#if (!display && !completion)
                         expr: macro {
                             // Map owner to handler
                             if (owner != null) {
@@ -371,6 +384,9 @@ class EventsMacro {
                             }
                             this.$cbOnceArray.push($i{handlerName});
                         }
+#else
+                        expr: macro {}
+#end
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
                     doc: doc,
@@ -391,6 +407,7 @@ class EventsMacro {
                             }
                         ],
                         ret: macro :Void,
+#if (!display && !completion)
                         expr: macro {
                             if ($i{handlerName} != null) {
                                 var index:Int;
@@ -426,6 +443,9 @@ class EventsMacro {
                                 this.$cbOnceArray = null;
                             }
                         }
+#else
+                        expr: macro {}
+#end
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic],
                     doc: doc,
@@ -440,10 +460,16 @@ class EventsMacro {
                     kind: FFun({
                         args: [],
                         ret: macro :Bool,
+#if (!display && !completion)
                         expr: macro {
                             return (this.$cbOnArray != null && this.$cbOnArray.length > 0)
                                 || (this.$cbOnceArray != null && this.$cbOnceArray.length > 0);
                         }
+#else
+                        expr: macro {
+                            return false;
+                        }
+#end
                     }),
                     access: [hasPrivateModifier ? APrivate : APublic, AInline],
                     doc: origDoc != doc ? 'Does it listen to ' + doc : doc,

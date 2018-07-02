@@ -113,7 +113,7 @@ class ShaderAsset extends Asset {
 
     } //load
 
-    function destroy():Void {
+    override function destroy():Void {
 
         if (shader != null) {
             shader.destroy();
@@ -124,7 +124,7 @@ class ShaderAsset extends Asset {
 
 /// Print
 
-    function toString():String {
+    override function toString():String {
 
         var className = 'ShaderAsset';
 

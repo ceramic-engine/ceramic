@@ -38,7 +38,7 @@ class SpineData extends Entity {
 
     } //new
 
-    public function destroy():Void {
+    override public function destroy():Void {
 
         if (asset != null) asset.destroy();
 

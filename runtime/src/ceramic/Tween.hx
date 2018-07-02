@@ -103,7 +103,7 @@ class Tween extends Entity {
 
     } //new
 
-    function destroy() {
+    override function destroy() {
 
         if (target != null) {
             motion.Actuate.stop(target);

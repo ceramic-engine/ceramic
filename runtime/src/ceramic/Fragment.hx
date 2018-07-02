@@ -377,7 +377,7 @@ class Fragment extends Visual {
 
     } //removeAllItems
 
-    function destroy() {
+    override function destroy() {
 
         removeAllItems();
 

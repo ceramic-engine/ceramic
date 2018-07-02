@@ -155,7 +155,7 @@ class Text extends Visual {
 
     } //new
 
-    function destroy() {
+    override function destroy() {
 
         glyphQuads = null;
 
@@ -300,7 +300,7 @@ class Text extends Visual {
 
 /// Print
 
-    function toString():String {
+    override function toString():String {
 
         if (id != null) {
             return 'Text($id $content)';

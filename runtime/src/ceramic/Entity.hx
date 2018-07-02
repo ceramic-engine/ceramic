@@ -3,7 +3,7 @@ package ceramic;
 using ceramic.Extensions;
 
 @editable
-#if !macro
+#if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
 @:rtti

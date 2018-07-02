@@ -68,7 +68,7 @@ class Asset extends Entity implements Observable {
 
     } //load
 
-    public function destroy():Void {
+    override function destroy():Void {
 
         if (owner != null) {
             owner.removeAsset(this);
@@ -249,7 +249,7 @@ class Asset extends Entity implements Observable {
 
 /// Print
 
-    function toString():String {
+    override function toString():String {
 
         var className = className();
 

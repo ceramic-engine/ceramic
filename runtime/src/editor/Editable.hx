@@ -40,7 +40,7 @@ class Editable extends Component {
 
     } //init
 
-    function destroy() {
+    override function destroy() {
 
         if (active == this && highlight != null) {
             highlight.destroy();

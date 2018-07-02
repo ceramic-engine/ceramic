@@ -266,7 +266,7 @@ class SpineAsset extends Asset {
 
     } //checkTexturesDensity
 
-    function destroy():Void {
+    override function destroy():Void {
 
         if (spineData != null) {
             spineData.destroy();

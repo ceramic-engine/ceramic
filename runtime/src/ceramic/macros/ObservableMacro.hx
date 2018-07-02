@@ -110,6 +110,7 @@ class ObservableMacro {
                             throw new Error("Observable field must define a type", field.pos);
                         }
 
+#if (!display && !completion)
                         // Create prop from var
                         var propField = {
                             pos: field.pos,
@@ -201,6 +202,35 @@ class ObservableMacro {
                         field.access.remove(APublic);
                         field.access.remove(APrivate);
                         newFields.push(field);
+#else
+
+                        var invalidateField = {
+                            pos: field.pos,
+                            name: 'invalidate' + capitalName,
+                            kind: FFun({
+                                args: [],
+                                ret: macro :Void,
+                                expr: macro {}
+                            }),
+                            access: [APublic, AInline],
+                            doc: '',
+                            meta: []
+                        }
+                        newFields.push(invalidateField);
+
+                        newFields.push(field);
+                        var unobservedField = {
+                            pos: field.pos,
+                            name: unobservedFieldName,
+                            kind: field.kind,
+                            access: [].concat(field.access),
+                            doc: '',
+                            meta: []
+                        };
+                        unobservedField.access.remove(APublic);
+                        unobservedField.access.remove(APrivate);
+                        newFields.push(unobservedField);
+#end
 
                         var eventField = {
                             pos: field.pos,

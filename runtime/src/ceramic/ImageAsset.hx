@@ -122,7 +122,7 @@ class ImageAsset extends Asset {
 
     } //checkTexturesDensity
 
-    function destroy():Void {
+    override function destroy():Void {
 
         if (texture != null) {
             texture.destroy();

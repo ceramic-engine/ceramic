@@ -36,7 +36,7 @@ class Assets extends Entity {
 
     } //new
 
-    public function destroy() {
+    override function destroy() {
 
         for (asset in [].concat(addedAssets)) {
             asset.offDestroy(assetDestroyed);

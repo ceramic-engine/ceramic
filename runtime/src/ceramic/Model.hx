@@ -8,7 +8,7 @@ class Model extends Entity implements Observable implements Serializable {
 
 /// Components
 
-    @component var serializer:SerializeModel;
+    @component public var serializer:SerializeModel;
 
 /// Lifecycle
 
@@ -18,7 +18,7 @@ class Model extends Entity implements Observable implements Serializable {
 
 /// Print
 
-    function toString():String {
+    override function toString():String {
 
         var prevAutorun = Autorun.current;
         Autorun.current = null;

@@ -17,7 +17,7 @@ class Sound extends Entity {
 
     } //new
 
-    public function destroy() {
+    override function destroy() {
 
         if (asset != null) asset.destroy();
 

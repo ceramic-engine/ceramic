@@ -56,7 +56,7 @@ class Texture extends Entity {
 
     } //new
 
-    public function destroy() {
+    override function destroy() {
 
         if (asset != null) asset.destroy();
 
@@ -67,7 +67,7 @@ class Texture extends Entity {
 
 /// Print
 
-    function toString():String {
+    override function toString():String {
 
         if (id != null) {
             var name = id;

@@ -554,7 +554,7 @@ class Spine extends Visual {
 
 /// Cleanup
 
-    function destroy() {
+    override function destroy() {
 
         spineData = null;
 

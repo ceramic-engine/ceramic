@@ -188,7 +188,7 @@ class FontAsset extends Asset {
 
     } //checkTexturesDensity
 
-    function destroy():Void {
+    override function destroy():Void {
 
         if (font != null) {
             font.destroy();

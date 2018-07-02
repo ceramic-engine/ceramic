@@ -41,7 +41,7 @@ class TextAsset extends Asset {
 
     } //load
 
-    function destroy():Void {
+    override function destroy():Void {
 
         text = null;
 
