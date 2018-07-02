@@ -5,9 +5,6 @@ import ceramic.Screen;
 import ceramic.Settings;
 import haxe.PosInfos;
 
-import haxe.macro.Context;
-import haxe.macro.Expr;
-
 #if editor
 import editor.Editor;
 #end

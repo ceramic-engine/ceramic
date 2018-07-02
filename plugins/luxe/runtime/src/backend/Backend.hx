@@ -4,7 +4,6 @@ package backend;
 import backend.NativeMac;
 #end
 
-@:allow(Main)
 @:allow(backend.Textures)
 @:allow(backend.Draw)
 class Backend implements ceramic.Events implements spec.Backend {

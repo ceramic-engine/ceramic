@@ -12,6 +12,8 @@ import luxe.Input;
 
 using StringTools;
 
+@:access(backend.Backend)
+@:access(backend.Screen)
 class Main extends luxe.Game {
 
     public static function main() {
@@ -65,6 +67,9 @@ class Main extends luxe.Game {
 
         // Are we running from ceramic/electron runner
         if (electronRunner != null) {
+
+            // Patch ceramic logger
+            @:privateAccess ceramic.Logger._hasElectronRunner = true;
 
             // Override console.log
             var origConsoleLog:Dynamic = untyped console.log;
@@ -217,6 +222,7 @@ class Main extends luxe.Game {
         lastDevicePixelRatio = Luxe.screen.device_pixel_ratio;
         lastWidth = Luxe.screen.width;
         lastHeight = Luxe.screen.height;
+        ceramic.App.app.backend.screen.density = lastDevicePixelRatio;
 
         // Background color
         Luxe.renderer.clear_color.rgb(ceramic.App.app.settings.background);
@@ -482,6 +488,7 @@ class Main extends luxe.Game {
         lastDevicePixelRatio = Luxe.screen.device_pixel_ratio;
         lastWidth = Luxe.screen.width;
         lastHeight = Luxe.screen.height;
+        ceramic.App.app.backend.screen.density = lastDevicePixelRatio;
 
         // Emit resize
         ceramic.App.app.backend.screen.emitResize();

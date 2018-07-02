@@ -29,12 +29,16 @@ class AppMacro {
         for (key in Reflect.fields(data.editable)) {
             var val = Reflect.field(data.editable, key);
             if (Std.is(val, String)) {
+                #if editor
                 Context.getType(val);
+                #end
             }
             else {
                 for (k in Reflect.fields(val)) {
                     var v = Reflect.field(val, k);
+                    #if editor
                     Context.getType(v);
+                    #end
                 }
             }
         }

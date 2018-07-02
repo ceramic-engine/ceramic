@@ -1,6 +1,5 @@
 package backend;
 
-@:allow(Main)
 class Screen implements ceramic.Events implements spec.Screen {
 
     public function new() {}
@@ -32,9 +31,11 @@ class Screen implements ceramic.Events implements spec.Screen {
 
     } //getPixelHeight
 
+    private var density:Float = -1;
+
     inline public function getDensity():Float {
 
-        return @:privateAccess Main.lastDevicePixelRatio;
+        return density;
 
     } //getPixelHeight
 

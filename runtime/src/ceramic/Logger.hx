@@ -5,6 +5,10 @@ class Logger {
 
 /// Internal
 
+#if (web && luxe)
+    private static var _hasElectronRunner:Bool = false;
+#end
+
     function new() {}
 
 /// Public API
@@ -24,7 +28,7 @@ class Logger {
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
 #if (web && luxe)
-        if (@:privateAccess Main.electronRunner != null) {
+        if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[warning] ', value), pos);
         } else {
             untyped console.warn(value);
@@ -40,7 +44,7 @@ class Logger {
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
 #if (web && luxe)
-        if (@:privateAccess Main.electronRunner != null) {
+        if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[error] ', value), pos);
         } else {
             untyped console.error(value);
