@@ -26,6 +26,14 @@ class SpinePlugin {
 
     static function __init__():Void {
 
+        // Calling a static method inside __init__ makes this snippet
+        // compatible with haxe-modular or similar bundling tools
+        SpinePlugin.pluginInit();
+
+    } //__init__
+    
+    static function pluginInit() {
+
         App.oncePreInit(function() {
 
             log('Init spine plugin');
@@ -55,7 +63,8 @@ class SpinePlugin {
             });
             
         });
-    }
+
+    } //pluginInit
 
 /// Asset extensions
 
