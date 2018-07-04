@@ -56,6 +56,8 @@ class Scroller extends Visual {
 
     public var wheelDeceleration = 1600.0;
 
+    public var wheelFactor = 1.0;
+
     public var wheelMomentum = #if mac true #else false #end;
 
     public var wheelEndDelay = 0.25;
@@ -105,6 +107,7 @@ class Scroller extends Visual {
         if (this.scrollEnabled == scrollEnabled) return scrollEnabled;
 
         this.scrollEnabled = scrollEnabled;
+        status = IDLE;
 
         if (scrollEnabled) {
             startTracking();
@@ -251,6 +254,9 @@ class Scroller extends Visual {
             return;
         }
 
+        x *= wheelFactor #if mac * -1.0 #end;
+        y *= wheelFactor;
+
         status = SCROLLING;
         fromWheel = true;
         if (lastWheelEventTime == -1) {
@@ -277,21 +283,33 @@ class Scroller extends Visual {
         }
         else {
             if (x == 0) {
+                if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
+                    momentum = 0;
+                }
                 scrollTransform.tx -= y;
+                if (isOverScrollingLeft()) {
+                    scrollTransform.tx = 0;
+                }
+                else if (isOverScrollingRight()) {
+                    scrollTransform.tx = width - content.width;
+                }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
                     momentum -= y * 60;
                 }
             } else {
+                if ((momentum < 0 && x > 0) || (momentum > 0 && x < 0)) {
+                    momentum = 0;
+                }
                 scrollTransform.tx -= x;
+                if (isOverScrollingLeft()) {
+                    scrollTransform.tx = 0;
+                }
+                else if (isOverScrollingRight()) {
+                    scrollTransform.tx = width - content.width;
+                }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
                     momentum -= x * 60;
                 }
-            }
-            if (isOverScrollingLeft()) {
-                scrollTransform.tx = 0;
-            }
-            else if (isOverScrollingRight()) {
-                scrollTransform.tx = width - content.width;
             }
         }
         scrollTransform.changedDirty = true;
