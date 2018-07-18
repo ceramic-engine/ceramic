@@ -24,7 +24,7 @@ class Main {
     static function update() {
 
         var time:Float = untyped __js__('new Date().getTime()');
-        var delta = time - _lastUpdateTime;
+        var delta = (time - _lastUpdateTime) * 0.001;
         _lastUpdateTime = time;
 
         // Update
