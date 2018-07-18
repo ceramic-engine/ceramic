@@ -796,6 +796,7 @@ class Spine extends Visual {
                             if (mesh == null)
                             {
                                 mesh = new Mesh();
+                                mesh.touchable = false;
                                 mesh.transform = new Transform();
                                 add(mesh);
                                 slotMeshes.set(slot.data.index, mesh);

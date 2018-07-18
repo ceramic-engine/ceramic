@@ -35,8 +35,8 @@ class SortVisuals {
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
-        if (!a.computedVisible) result = -1;
-        else if (!b.computedVisible) result = 1;
+        if (!a.computedVisible && !a.computedTouchable) result = -1;
+        else if (!b.computedVisible && !b.computedTouchable) result = 1;
         else if (a.computedRenderTarget != b.computedRenderTarget) {
             if (a.computedRenderTarget == null) result = 1;
             else if (b.computedRenderTarget == null) result = -1;
