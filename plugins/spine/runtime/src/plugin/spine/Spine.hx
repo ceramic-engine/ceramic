@@ -147,6 +147,16 @@ class Spine extends Visual {
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
 
+    /** Tint color */
+    @editable
+    public var color(default,set):Color = Color.WHITE;
+    function set_color(color:Color):Color {
+        if (this.color == color) return color;
+        this.color = color;
+        if (pausedOrFrozen) render(0, 0, false);
+        return color;
+    }
+
     /** The Spine data used to animate this animation. */
     @editable
     public var spineData(default,set):SpineData = null;
@@ -833,6 +843,12 @@ class Spine extends Visual {
                                             b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b * a;
                                             a = slot.darkColor.a;
 
+                                            if (color != Color.WHITE) {
+                                                r *= color.redFloat;
+                                                g *= color.greenFloat;
+                                                b *= color.blueFloat;
+                                            }
+
                                             n = 0;
                                             len = mesh.vertices.length;
                                             while (n < len) {
@@ -848,6 +864,12 @@ class Spine extends Visual {
                                         g = skeleton.color.g * slot.color.g * meshAttachment.getColor().g;
                                         b = skeleton.color.b * slot.color.b * meshAttachment.getColor().b;
                                         a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
+
+                                        if (color != Color.WHITE) {
+                                            r *= color.redFloat;
+                                            g *= color.greenFloat;
+                                            b *= color.blueFloat;
+                                        }
 
                                         if (mesh.vertices.length > verticesLength) {
                                             mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
@@ -866,6 +888,12 @@ class Spine extends Visual {
                                             b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * a;
                                             a = slot.darkColor.a;
 
+                                            if (color != Color.WHITE) {
+                                                r *= color.redFloat;
+                                                g *= color.greenFloat;
+                                                b *= color.blueFloat;
+                                            }
+
                                             n = 0;
                                             len = mesh.vertices.length;
                                             while (n < len) {
@@ -881,6 +909,12 @@ class Spine extends Visual {
                                         g = skeleton.color.g * slot.color.g * regionAttachment.getColor().g;
                                         b = skeleton.color.b * slot.color.b * regionAttachment.getColor().b;
                                         a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
+
+                                        if (color != Color.WHITE) {
+                                            r *= color.redFloat;
+                                            g *= color.greenFloat;
+                                            b *= color.blueFloat;
+                                        }
 
                                     }
 
