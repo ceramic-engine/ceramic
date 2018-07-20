@@ -19,6 +19,8 @@ class Scroller extends Visual {
 
     @event function wheelEnd();
 
+    @event function click(info:TouchInfo);
+
 /// Public properties
 
     public var content(default,null):Visual = null;
@@ -214,6 +216,8 @@ class Scroller extends Visual {
 
     var lastWheelEventTime:Float = -1;
 
+    var canClick:Bool = false;
+
 /// Toggle tracking
 
     function startTracking():Void {
@@ -336,6 +340,10 @@ class Scroller extends Visual {
             if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
                 // Get focus
                 screen.focusedVisual = this;
+                canClick = false;
+            }
+            else {
+                canClick = true;
             }
 
             // Yes, then let's start touching
@@ -362,6 +370,11 @@ class Scroller extends Visual {
     function pointerUp(info:TouchInfo):Void {
 
         if (info.touchIndex == touchIndex) {
+            // Can click?
+            if (status != TOUCHING || screen.focusedVisual != this) {
+                canClick = false;
+            }
+
             // End of drag
             status = SCROLLING;
             screen.offMultiTouchPointerUp(pointerUp);
@@ -389,6 +402,11 @@ class Scroller extends Visual {
                 else {
                     overScrollRelease = false;
                 }
+            }
+
+            if (canClick) {
+                canClick = false;
+                emitClick(info);
             }
         }
 
