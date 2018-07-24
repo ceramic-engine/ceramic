@@ -66,19 +66,15 @@ class Scroller extends Visual {
 
     public var overScrollResistance = 5.0;
 
-    public var bounceMaxMomentum = 50.0;
-
-    public var bounceMinMomentum = 20.0;
-
-    public var bounceMin = 100.0;
-
-    public var bounceOverScrollMin = 1000.0;
-
-    public var bounceAcceleration = 1000.0;
-
-    public var bounceOverScrollAcceleration = 2000.0;
-
     public var maxClickMomentum = 100.0;
+
+    public var bounceMomentumFactor = 0.00075;
+
+    public var bounceMinDuration = 0.8;
+
+    public var bounceDurationFactor = 0.00004;
+
+    public var bounceNoMomentumDuration = 0.1;
 
 /// Lifecycle
 
@@ -204,9 +200,7 @@ class Scroller extends Visual {
 
     var velocity:Velocity = null;
     
-    var momentum:Float = 0;
-
-    var bounce:Float = 0;
+    var momentumValue:Float = 0;
 
     var overScrollRelease:Bool = false;
 
@@ -217,6 +211,12 @@ class Scroller extends Visual {
     var lastWheelEventTime:Float = -1;
 
     var canClick:Bool = false;
+
+    var tweenX:Tween = null;
+
+    var tweenY:Tween = null;
+
+    var bouncing:Bool = false;
 
 /// Toggle tracking
 
@@ -269,10 +269,9 @@ class Scroller extends Visual {
         } else {
             lastWheelEventTime = Timer.now;
         }
-        bounce = 0;
         if (direction == VERTICAL) {
-            if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
-                momentum = 0;
+            if ((momentumValue < 0 && y > 0) || (momentumValue > 0 && y < 0)) {
+                momentumValue = 0;
             }
             scrollTransform.ty -= y;
             if (isOverScrollingTop()) {
@@ -282,13 +281,13 @@ class Scroller extends Visual {
                 scrollTransform.ty = height - content.height;
             }
             if (wheelMomentum && scrollTransform.ty < 0 && scrollTransform.ty > height - content.height) {
-                momentum -= y * 60;
+                momentumValue -= y * 60;
             }
         }
         else {
             if (x == 0) {
-                if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
-                    momentum = 0;
+                if ((momentumValue < 0 && y > 0) || (momentumValue > 0 && y < 0)) {
+                    momentumValue = 0;
                 }
                 scrollTransform.tx -= y;
                 if (isOverScrollingLeft()) {
@@ -298,11 +297,11 @@ class Scroller extends Visual {
                     scrollTransform.tx = width - content.width;
                 }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
-                    momentum -= y * 60;
+                    momentumValue -= y * 60;
                 }
             } else {
-                if ((momentum < 0 && x > 0) || (momentum > 0 && x < 0)) {
-                    momentum = 0;
+                if ((momentumValue < 0 && x > 0) || (momentumValue > 0 && x < 0)) {
+                    momentumValue = 0;
                 }
                 scrollTransform.tx -= x;
                 if (isOverScrollingLeft()) {
@@ -312,7 +311,7 @@ class Scroller extends Visual {
                     scrollTransform.tx = width - content.width;
                 }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
-                    momentum -= x * 60;
+                    momentumValue -= x * 60;
                 }
             }
         }
@@ -336,8 +335,11 @@ class Scroller extends Visual {
         var hits = this.hits(info.x, info.y);
 
         if (hits) {
+            // If it was bouncing, it is not anymore
+            bouncing = false;
+
             // Are we stopping some previous scroll?
-            if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
+            if (status == SCROLLING && Math.abs(momentumValue) > maxClickMomentum) {
                 // Get focus
                 screen.focusedVisual = this;
                 canClick = false;
@@ -379,14 +381,12 @@ class Scroller extends Visual {
             status = SCROLLING;
             screen.offMultiTouchPointerUp(pointerUp);
 
-            // Get momentum from velocity
+            // Get momentumValue from velocity
             // and stop computing velocity
-            momentum = velocity.get();
+            momentumValue = velocity.get();
             velocity = null;
             touchIndex = -1;
 
-            // Set bounce value
-            bounce = 0;
             if (direction == VERTICAL) {
                 if (isOverScrollingTop() || isOverScrollingBottom()) {
                     overScrollRelease = true;
@@ -545,136 +545,54 @@ class Scroller extends Visual {
 
                 if (direction == VERTICAL) {
 
-                    if (isOverScrollingTop() || isOverScrollingBottom()) {
-
-                        // Overscroll
-                        overScrolling = true;
-
-                        if (momentum > 0) {
-                            momentum = Math.max(bounce == 0 ? bounceMinMomentum : 0, Math.min(momentum, bounceMaxMomentum));
-                        } else if (momentum < 0) {
-                            momentum = Math.min(bounce == 0 ? -bounceMinMomentum : 0, Math.max(momentum, -bounceMaxMomentum));
-                        }
-                        if (bounce != 0) {
-                            subtract = Math.round(overScrollDeceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
-                        }
-                        
-                        var add = Math.round(bounceAcceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
-                        if (isOverScrollingTop()) {
-                            // Overscroll bottom
-                            if (bounce == 0) {
-                                if (overScrollRelease) {
-                                    bounce = -scrollTransform.ty * 7.5;
-                                } else {
-                                    bounce = -bounceMin;
-                                }
-                            }
-                            bounce -= add * delta;
-                            scrollTransform.ty = Math.max(0, scrollTransform.ty + bounce * delta);
-                            scrollTransform.changedDirty = true;
-                        }
-                        else if (isOverScrollingBottom()) {
-                            // Overscroll top
-                            if (bounce == 0) {
-                                if (overScrollRelease) {
-                                    bounce = (height - content.height - scrollTransform.ty) * 7.5;
-                                } else {
-                                    bounce = bounceMin;
-                                }
-                            }
-                            bounce += add * delta;
-                            scrollTransform.ty = Math.min(height - content.height, scrollTransform.ty + bounce * delta);
-                            scrollTransform.changedDirty = true;
-                        }
+                    if (bouncing) {
+                        // Nothing to do
+                    }
+                    else if (isOverScrollingTop() || isOverScrollingBottom()) {
+                        // bounce
+                        bounce();
                     }
                     else {
                         // Regular scroll
-                        overScrolling = false;
                         if (fromWheel) {
                             subtract = Math.round(wheelDeceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
                         } else {
                             subtract = Math.round(deceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
                         }
-                    }
 
-                    if (!overScrolling || Math.abs(momentum * delta) > screen.nativeHeight * screen.nativeDensity * 0.25) {
-                        scrollTransform.ty += momentum * delta;
+                        scrollTransform.ty += momentumValue * delta;
                         scrollTransform.changedDirty = true;
-                    }
-                    else {
-                        momentum = 0;
                     }
                 }
                 else {
-                    if (isOverScrollingLeft() || isOverScrollingRight()) {
-
-                        // Overscroll
-                        overScrolling = true;
-
-                        if (momentum > 0) {
-                            momentum = Math.max(bounce == 0 ? bounceMinMomentum : 0, Math.min(momentum, bounceMaxMomentum));
-                        } else if (momentum < 0) {
-                            momentum = Math.min(bounce == 0 ? -bounceMinMomentum : 0, Math.max(momentum, -bounceMaxMomentum));
-                        }
-                        if (bounce != 0) {
-                            subtract = Math.round(overScrollDeceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
-                        }
-                        
-                        var add = Math.round(bounceAcceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
-                        if (isOverScrollingLeft()) {
-                            // Overscroll bottom
-                            if (bounce == 0) {
-                                if (overScrollRelease) {
-                                    bounce = -scrollTransform.tx * 7.5;
-                                } else {
-                                    bounce = -bounceMin;
-                                }
-                            }
-                            bounce -= add * delta;
-                            scrollTransform.tx = Math.max(0, scrollTransform.tx + bounce * delta);
-                            scrollTransform.changedDirty = true;
-                        }
-                        else if (isOverScrollingRight()) {
-                            // Overscroll top
-                            if (bounce == 0) {
-                                if (overScrollRelease) {
-                                    bounce = (width - content.width - scrollTransform.tx) * 7.5;
-                                } else {
-                                    bounce = bounceMin;
-                                }
-                            }
-                            bounce += add * delta;
-                            scrollTransform.tx = Math.min(width - content.width, scrollTransform.tx + bounce * delta);
-                            scrollTransform.changedDirty = true;
-                        }
+                    if (bouncing) {
+                        // Nothing to do
+                    }
+                    else if (isOverScrollingLeft() || isOverScrollingRight()) {
+                        // bounce
+                        bounce();
                     }
                     else {
                         // Regular scroll
-                        overScrolling = false;
                         if (fromWheel) {
                             subtract = Math.round(wheelDeceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
                         } else {
                             subtract = Math.round(deceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
                         }
-                    }
 
-                    if (!overScrolling || Math.abs(momentum * delta) > screen.nativeWidth * screen.nativeDensity * 0.25) {
-                        scrollTransform.tx += momentum * delta;
+                        scrollTransform.tx += momentumValue * delta;
                         scrollTransform.changedDirty = true;
                     }
-                    else {
-                        momentum = 0;
-                    }
                 }
 
-                if (momentum > 0) {
-                    momentum = Math.max(0, momentum - subtract * delta);
+                if (momentumValue > 0) {
+                    momentumValue = Math.max(0, momentumValue - subtract * delta);
                 }
-                else if (momentum < 0) {
-                    momentum = Math.min(0, momentum + subtract * delta);
+                else if (momentumValue < 0) {
+                    momentumValue = Math.min(0, momentumValue + subtract * delta);
                 }
-                else if (momentum == 0) {
-                    if (!overScrolling) {
+                else if (momentumValue == 0) {
+                    if (!bouncing) {
                         status = IDLE;
                     }
                 }
@@ -696,6 +614,9 @@ class Scroller extends Visual {
 
         status = IDLE;
 
+        if (tweenX != null) tweenX.destroy();
+        if (tweenY != null) tweenY.destroy();
+
     } //stop
 
 /// Smooth scroll
@@ -716,17 +637,176 @@ class Scroller extends Visual {
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
-            tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
+            var tweenX = tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
                 this.scrollX = scrollX;
+            });
+            this.tweenX = tweenX;
+            tweenX.onDestroy(this, function() {
+                if (this.tweenX == tweenX) {
+                    this.tweenX = null;
+                }
             });
         }
 
         if (scrollY != this.scrollY) {
-            tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
+            var tweenY = tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
                 this.scrollY = scrollY;
+            });
+            this.tweenY = tweenY;
+            tweenX.onDestroy(this, function() {
+                if (this.tweenY == tweenY) {
+                    this.tweenY = null;
+                }
             });
         }
 
     } //smoothScrollTo
+
+    public function bounce():Void {
+
+        var momentumValue = this.momentumValue;
+        this.momentumValue = 0;
+
+        if (bouncing) return;
+        bouncing = true;
+
+        if (direction == VERTICAL) {
+            if (tweenY != null) tweenY.destroy();
+            if (!overScrollRelease && (momentumValue > 0 || momentumValue < 0)) {
+                var easing:TweenEasing = LINEAR;
+                var toY:Float;
+                if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
+                    toY = content.height - height;
+                }
+                else {
+                    toY = 0;
+                }
+                var fromY = scrollY - toY;
+                var byY = scrollY + momentumValue * bounceMomentumFactor - toY;
+                var duration = bounceMinDuration + Math.abs(momentumValue) * bounceDurationFactor;
+
+                var tweenY = tween(0, easing, duration, 0, 1, function(t, _) {
+
+                    var value:Float;
+
+                    if (t <= 0.5) {
+                        value = (fromY * 2 * (1 - t * 2) + byY * (t * 2)) / 2;
+                    } else {
+                        value = (byY * (1 - (t - 0.5) * 2)) / 2;
+                    }
+
+                    scrollY = toY + value;
+
+                });
+
+                this.tweenY = tweenY;
+                tweenY.onceComplete(this, function() {
+                    bouncing = false;
+                    status = IDLE;
+                });
+                tweenY.onDestroy(this, function() {
+                    if (this.tweenY == tweenY) {
+                        this.tweenY = null;
+                    }
+                });
+
+            }
+            else {
+                // No momentum
+                var duration = bounceNoMomentumDuration;
+                var easing:TweenEasing = QUAD_EASE_OUT;
+                var fromY = scrollY;
+                var toY:Float;
+                if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
+                    toY = content.height - height;
+                }
+                else {
+                    toY = 0;
+                }
+                var tweenY = tween(0, easing, duration * 2, fromY, toY, function(ty, _) {
+                    scrollY = ty;
+                });
+                this.tweenY = tweenY;
+                tweenY.onceComplete(this, function() {
+                    bouncing = false;
+                    status = IDLE;
+                });
+                tweenY.onDestroy(this, function() {
+                    if (this.tweenY == tweenY) {
+                        this.tweenY = null;
+                    }
+                });
+            }
+        }
+        else {
+            if (tweenX != null) tweenX.destroy();
+            if (!overScrollRelease && (momentumValue > 0 || momentumValue < 0)) {
+                var easing:TweenEasing = LINEAR;
+                var toX:Float;
+                if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
+                    toX = content.width - width;
+                }
+                else {
+                    toX = 0;
+                }
+                var fromX = scrollX - toX;
+                var byX = scrollX + momentumValue * bounceMomentumFactor - toX;
+                var duration = bounceMinDuration + Math.abs(momentumValue) * bounceDurationFactor;
+
+                var tweenX = tween(0, easing, duration, 0, 1, function(t, _) {
+
+                    var value:Float;
+
+                    if (t <= 0.5) {
+                        value = (fromX * 2 * (1 - t * 2) + byX * (t * 2)) / 2;
+                    } else {
+                        value = (byX * (1 - (t - 0.5) * 2)) / 2;
+                    }
+
+                    scrollX = toX + value;
+
+                });
+
+                this.tweenX = tweenX;
+                tweenX.onceComplete(this, function() {
+                    bouncing = false;
+                    status = IDLE;
+                });
+                tweenX.onDestroy(this, function() {
+                    if (this.tweenX == tweenX) {
+                        this.tweenX = null;
+                    }
+                });
+
+            }
+            else {
+                // No momentum
+                var duration = bounceNoMomentumDuration;
+                var easing:TweenEasing = QUAD_EASE_OUT;
+                var fromX = scrollX;
+                var toX:Float;
+                if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
+                    toX = content.width - width;
+                }
+                else {
+                    toX = 0;
+                }
+                var tweenX = tween(0, easing, duration * 2, fromX, toX, function(tx, _) {
+                    scrollX = tx;
+                });
+                this.tweenX = tweenX;
+                tweenX.onceComplete(this, function() {
+                    bouncing = false;
+                    status = IDLE;
+                });
+                tweenX.onDestroy(this, function() {
+                    if (this.tweenX == tweenX) {
+                        this.tweenX = null;
+                    }
+                });
+            }
+        }
+
+    } //bounce
 
 } //Scroller
