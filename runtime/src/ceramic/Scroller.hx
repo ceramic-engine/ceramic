@@ -21,6 +21,8 @@ class Scroller extends Visual {
 
     @event function click(info:TouchInfo);
 
+    @event function scrollerPointerUp(info:TouchInfo);
+
 /// Public properties
 
     public var content(default,null):Visual = null;
@@ -53,8 +55,6 @@ class Scroller extends Visual {
 /// Fine tuning
 
     public var deceleration = 300.0;
-
-    public var overScrollDeceleration = 100.0;
 
     public var wheelDeceleration = 1600.0;
 
@@ -188,7 +188,7 @@ class Scroller extends Visual {
         return scrollY;
     }
 
-/// Internal
+/// State
 
     var position:Float = 0;
 
@@ -198,13 +198,11 @@ class Scroller extends Visual {
 
     var touchIndex:Int = -1;
 
-    var velocity:Velocity = null;
+    public var velocity(default,null):Velocity = null;
     
-    var momentumValue:Float = 0;
+    public var momentum(default,null):Float = 0;
 
     var overScrollRelease:Bool = false;
-
-    var overScrolling:Bool = false;
 
     var fromWheel:Bool = false;
 
@@ -216,7 +214,9 @@ class Scroller extends Visual {
 
     var tweenY:Tween = null;
 
-    var bouncing:Bool = false;
+    var animating:Bool = false;
+
+    var snapping:Bool = false;
 
 /// Toggle tracking
 
@@ -270,8 +270,8 @@ class Scroller extends Visual {
             lastWheelEventTime = Timer.now;
         }
         if (direction == VERTICAL) {
-            if ((momentumValue < 0 && y > 0) || (momentumValue > 0 && y < 0)) {
-                momentumValue = 0;
+            if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
+                momentum = 0;
             }
             scrollTransform.ty -= y;
             if (isOverScrollingTop()) {
@@ -281,13 +281,13 @@ class Scroller extends Visual {
                 scrollTransform.ty = height - content.height;
             }
             if (wheelMomentum && scrollTransform.ty < 0 && scrollTransform.ty > height - content.height) {
-                momentumValue -= y * 60;
+                momentum -= y * 60;
             }
         }
         else {
             if (x == 0) {
-                if ((momentumValue < 0 && y > 0) || (momentumValue > 0 && y < 0)) {
-                    momentumValue = 0;
+                if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
+                    momentum = 0;
                 }
                 scrollTransform.tx -= y;
                 if (isOverScrollingLeft()) {
@@ -297,11 +297,11 @@ class Scroller extends Visual {
                     scrollTransform.tx = width - content.width;
                 }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
-                    momentumValue -= y * 60;
+                    momentum -= y * 60;
                 }
             } else {
-                if ((momentumValue < 0 && x > 0) || (momentumValue > 0 && x < 0)) {
-                    momentumValue = 0;
+                if ((momentum < 0 && x > 0) || (momentum > 0 && x < 0)) {
+                    momentum = 0;
                 }
                 scrollTransform.tx -= x;
                 if (isOverScrollingLeft()) {
@@ -311,7 +311,7 @@ class Scroller extends Visual {
                     scrollTransform.tx = width - content.width;
                 }
                 if (wheelMomentum && scrollTransform.tx <= 0 && scrollTransform.tx >= width - content.width) {
-                    momentumValue -= x * 60;
+                    momentum -= x * 60;
                 }
             }
         }
@@ -335,11 +335,16 @@ class Scroller extends Visual {
         var hits = this.hits(info.x, info.y);
 
         if (hits) {
-            // If it was bouncing, it is not anymore
-            bouncing = false;
+            // If it was bouncing, snapping..., it is not anymore
+            animating = false;
+            snapping = false;
+
+            // Stop any tween
+            if (tweenX != null) tweenX.destroy();
+            if (tweenY != null) tweenY.destroy();
 
             // Are we stopping some previous scroll?
-            if (status == SCROLLING && Math.abs(momentumValue) > maxClickMomentum) {
+            if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
                 // Get focus
                 screen.focusedVisual = this;
                 canClick = false;
@@ -377,15 +382,15 @@ class Scroller extends Visual {
                 canClick = false;
             }
 
+            // Get momentum from velocity
+            // and stop computing velocity
+            momentum = velocity.get();
+            velocity = null;
+            touchIndex = -1;
+
             // End of drag
             status = SCROLLING;
             screen.offMultiTouchPointerUp(pointerUp);
-
-            // Get momentumValue from velocity
-            // and stop computing velocity
-            momentumValue = velocity.get();
-            velocity = null;
-            touchIndex = -1;
 
             if (direction == VERTICAL) {
                 if (isOverScrollingTop() || isOverScrollingBottom()) {
@@ -408,6 +413,8 @@ class Scroller extends Visual {
                 canClick = false;
                 emitClick(info);
             }
+
+            emitScrollerPointerUp(info);
         }
 
     } //pointerUp
@@ -430,25 +437,25 @@ class Scroller extends Visual {
 
 /// Helpers
 
-    inline function isOverScrollingTop() {
+    inline public function isOverScrollingTop() {
 
         return scrollTransform.ty > 0;
 
     } //isOverScrollingTop
 
-    inline function isOverScrollingBottom() {
+    inline public function isOverScrollingBottom() {
 
         return scrollTransform.ty < height - content.height;
 
     } //isOverScrollingBottom
 
-    inline function isOverScrollingLeft() {
+    inline public function isOverScrollingLeft() {
 
         return scrollTransform.tx > 0;
 
     } //isOverScrollingLeft
 
-    inline function isOverScrollingRight() {
+    inline public function isOverScrollingRight() {
 
         return scrollTransform.tx < width - content.width;
 
@@ -483,6 +490,20 @@ class Scroller extends Visual {
                         fromWheel = false;
                         pointerStart = pointerY;
                         scrollTransform.ty = contentStart + pointerY - pointerStart;
+
+                        if (isOverScrollingLeft()) {
+                            velocity.reset();
+                            var maxY = Math.max(contentStart, 0);
+                            pointerStart = contentStart + pointerY - (maxY + (scrollTransform.ty - maxY) * overScrollResistance);
+                            scrollTransform.ty = maxY + ((contentStart + pointerY - pointerStart) - maxY) / overScrollResistance;
+                        }
+                        else if (isOverScrollingRight()) {
+                            velocity.reset();
+                            var minY = Math.min(contentStart, height - content.height);
+                            pointerStart = contentStart + pointerY - (minY + (scrollTransform.ty - minY) * overScrollResistance);
+                            scrollTransform.ty = minY + ((contentStart + pointerY - pointerStart) - minY) / overScrollResistance;
+                        }
+
                         scrollTransform.changedDirty = true;
 
                         // Get focus
@@ -495,8 +516,23 @@ class Scroller extends Visual {
 
                     if (Math.abs(pointerX - pointerStart) >= threshold) {
                         status = DRAGGING;
+                        fromWheel = false;
                         pointerStart = pointerX;
                         scrollTransform.tx = contentStart + pointerX - pointerStart;
+
+                        if (isOverScrollingLeft()) {
+                            velocity.reset();
+                            var maxX = Math.max(contentStart, 0);
+                            pointerStart = contentStart + pointerX - (maxX + (scrollTransform.tx - maxX) * overScrollResistance);
+                            scrollTransform.tx = maxX + ((contentStart + pointerX - pointerStart) - maxX) / overScrollResistance;
+                        }
+                        else if (isOverScrollingRight()) {
+                            velocity.reset();
+                            var minX = Math.min(contentStart, width - content.width);
+                            pointerStart = contentStart + pointerX - (minX + (scrollTransform.tx - minX) * overScrollResistance);
+                            scrollTransform.tx = minX + ((contentStart + pointerX - pointerStart) - minX) / overScrollResistance;
+                        }
+
                         scrollTransform.changedDirty = true;
 
                         // Get focus
@@ -510,11 +546,12 @@ class Scroller extends Visual {
                 if (direction == VERTICAL) {
                     scrollTransform.ty = contentStart + pointerY - pointerStart;
 
-                    if (isOverScrollingTop()) {
-                        scrollTransform.ty = scrollTransform.ty / overScrollResistance;
+                    var maxY = Math.max(contentStart, 0);
+                    if (scrollTransform.ty > maxY) {
+                        scrollTransform.ty = maxY + (scrollTransform.ty - maxY) / overScrollResistance;
                     }
                     else {
-                        var minY = height - content.height;
+                        var minY = Math.min(contentStart, height - content.height);
                         if (scrollTransform.ty < minY) {
                             scrollTransform.ty = minY + (scrollTransform.ty - minY) / overScrollResistance;
                         }
@@ -526,11 +563,12 @@ class Scroller extends Visual {
                 else {
                     scrollTransform.tx = contentStart + pointerX - pointerStart;
 
-                    if (isOverScrollingLeft()) {
-                        scrollTransform.tx = scrollTransform.tx / overScrollResistance;
+                    var maxX = Math.max(contentStart, 0);
+                    if (scrollTransform.tx > maxX) {
+                        scrollTransform.tx = maxX + (scrollTransform.tx - maxX) / overScrollResistance;
                     }
                     else {
-                        var minX = width - content.width;
+                        var minX = Math.min(contentStart, width - content.width);
                         if (scrollTransform.tx < minX) {
                             scrollTransform.tx = minX + (scrollTransform.tx - minX) / overScrollResistance;
                         }
@@ -545,7 +583,7 @@ class Scroller extends Visual {
 
                 if (direction == VERTICAL) {
 
-                    if (bouncing) {
+                    if (animating || snapping) {
                         // Nothing to do
                     }
                     else if (isOverScrollingTop() || isOverScrollingBottom()) {
@@ -560,12 +598,12 @@ class Scroller extends Visual {
                             subtract = Math.round(deceleration * screen.height / (screen.nativeHeight * screen.nativeDensity));
                         }
 
-                        scrollTransform.ty += momentumValue * delta;
+                        scrollTransform.ty += momentum * delta;
                         scrollTransform.changedDirty = true;
                     }
                 }
                 else {
-                    if (bouncing) {
+                    if (animating || snapping) {
                         // Nothing to do
                     }
                     else if (isOverScrollingLeft() || isOverScrollingRight()) {
@@ -580,19 +618,19 @@ class Scroller extends Visual {
                             subtract = Math.round(deceleration * screen.width / (screen.nativeWidth * screen.nativeDensity));
                         }
 
-                        scrollTransform.tx += momentumValue * delta;
+                        scrollTransform.tx += momentum * delta;
                         scrollTransform.changedDirty = true;
                     }
                 }
 
-                if (momentumValue > 0) {
-                    momentumValue = Math.max(0, momentumValue - subtract * delta);
+                if (momentum > 0) {
+                    momentum = Math.max(0, momentum - subtract * delta);
                 }
-                else if (momentumValue < 0) {
-                    momentumValue = Math.min(0, momentumValue + subtract * delta);
+                else if (momentum < 0) {
+                    momentum = Math.min(0, momentum + subtract * delta);
                 }
-                else if (momentumValue == 0) {
-                    if (!bouncing) {
+                else if (momentum == 0) {
+                    if (!animating) {
                         status = IDLE;
                     }
                 }
@@ -614,6 +652,12 @@ class Scroller extends Visual {
 
         status = IDLE;
 
+        stopTweens();
+
+    } //stop
+
+    inline public function stopTweens():Void {
+
         if (tweenX != null) tweenX.destroy();
         if (tweenY != null) tweenY.destroy();
 
@@ -630,9 +674,12 @@ class Scroller extends Visual {
 
     } //smoothScrollTo
 
-    public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.25, ?easing:TweenEasing):Void {
+    public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:TweenEasing):Void {
 
-        stop();
+        momentum = 0;
+        animating = true;
+        status = SCROLLING;
+        stopTweens();
 
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
@@ -641,6 +688,10 @@ class Scroller extends Visual {
                 this.scrollX = scrollX;
             });
             this.tweenX = tweenX;
+            tweenX.onceComplete(this, function() {
+                animating = false;
+                status = IDLE;
+            });
             tweenX.onDestroy(this, function() {
                 if (this.tweenX == tweenX) {
                     this.tweenX = null;
@@ -653,7 +704,11 @@ class Scroller extends Visual {
                 this.scrollY = scrollY;
             });
             this.tweenY = tweenY;
-            tweenX.onDestroy(this, function() {
+            tweenY.onceComplete(this, function() {
+                animating = false;
+                status = IDLE;
+            });
+            tweenY.onDestroy(this, function() {
                 if (this.tweenY == tweenY) {
                     this.tweenY = null;
                 }
@@ -662,17 +717,33 @@ class Scroller extends Visual {
 
     } //smoothScrollTo
 
+    public function snapTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:TweenEasing):Void {
+
+        momentum = 0;
+        snapping = true;
+        status = SCROLLING;
+        stopTweens();
+
+        if (duration > 0) {
+            smoothScrollTo(scrollX, scrollY, duration, easing);
+        } else {
+            scrollTo(scrollY, scrollY);
+        }
+
+    } //snapTo
+
     public function bounce():Void {
 
-        var momentumValue = this.momentumValue;
-        this.momentumValue = 0;
+        var momentum = this.momentum;
+        this.momentum = 0;
 
-        if (bouncing) return;
-        bouncing = true;
+        animating = true;
+        status = SCROLLING;
+        stopTweens();
 
         if (direction == VERTICAL) {
             if (tweenY != null) tweenY.destroy();
-            if (!overScrollRelease && (momentumValue > 0 || momentumValue < 0)) {
+            if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
                 var easing:TweenEasing = LINEAR;
                 var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
@@ -682,8 +753,8 @@ class Scroller extends Visual {
                     toY = 0;
                 }
                 var fromY = scrollY - toY;
-                var byY = scrollY + momentumValue * bounceMomentumFactor - toY;
-                var duration = bounceMinDuration + Math.abs(momentumValue) * bounceDurationFactor;
+                var byY = scrollY + momentum * bounceMomentumFactor - toY;
+                var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
                 var tweenY = tween(0, easing, duration, 0, 1, function(t, _) {
 
@@ -701,7 +772,7 @@ class Scroller extends Visual {
 
                 this.tweenY = tweenY;
                 tweenY.onceComplete(this, function() {
-                    bouncing = false;
+                    animating = false;
                     status = IDLE;
                 });
                 tweenY.onDestroy(this, function() {
@@ -728,7 +799,7 @@ class Scroller extends Visual {
                 });
                 this.tweenY = tweenY;
                 tweenY.onceComplete(this, function() {
-                    bouncing = false;
+                    animating = false;
                     status = IDLE;
                 });
                 tweenY.onDestroy(this, function() {
@@ -740,7 +811,7 @@ class Scroller extends Visual {
         }
         else {
             if (tweenX != null) tweenX.destroy();
-            if (!overScrollRelease && (momentumValue > 0 || momentumValue < 0)) {
+            if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
                 var easing:TweenEasing = LINEAR;
                 var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
@@ -750,8 +821,8 @@ class Scroller extends Visual {
                     toX = 0;
                 }
                 var fromX = scrollX - toX;
-                var byX = scrollX + momentumValue * bounceMomentumFactor - toX;
-                var duration = bounceMinDuration + Math.abs(momentumValue) * bounceDurationFactor;
+                var byX = scrollX + momentum * bounceMomentumFactor - toX;
+                var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
                 var tweenX = tween(0, easing, duration, 0, 1, function(t, _) {
 
@@ -769,7 +840,7 @@ class Scroller extends Visual {
 
                 this.tweenX = tweenX;
                 tweenX.onceComplete(this, function() {
-                    bouncing = false;
+                    animating = false;
                     status = IDLE;
                 });
                 tweenX.onDestroy(this, function() {
@@ -796,7 +867,7 @@ class Scroller extends Visual {
                 });
                 this.tweenX = tweenX;
                 tweenX.onceComplete(this, function() {
-                    bouncing = false;
+                    animating = false;
                     status = IDLE;
                 });
                 tweenX.onDestroy(this, function() {
