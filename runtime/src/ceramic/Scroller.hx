@@ -70,7 +70,7 @@ class Scroller extends Visual {
 
     public var bounceMomentumFactor = 0.00075;
 
-    public var bounceMinDuration = 0.8;
+    public var bounceMinDuration = 0.08;
 
     public var bounceDurationFactor = 0.00004;
 
