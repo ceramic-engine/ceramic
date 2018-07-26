@@ -258,6 +258,12 @@ class Scroller extends Visual {
             return;
         }
 
+        if (direction == VERTICAL) {
+            if (isOverScrollingTop() || isOverScrollingBottom()) return;
+        } else {
+            if (isOverScrollingLeft() || isOverScrollingRight()) return;
+        }
+
         x *= wheelFactor #if mac * -1.0 #end;
         y *= wheelFactor;
 
