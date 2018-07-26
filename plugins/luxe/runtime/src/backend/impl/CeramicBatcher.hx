@@ -164,7 +164,7 @@ class CeramicBatcher extends phoenix.Batcher {
         // Default stencil test
         GL.disable(GL.STENCIL_TEST);
 
-        #if !debug inline #end function drawQuad() {
+        #if !ceramic_debug_draw inline #end function drawQuad() {
 #if ceramic_debug_draw
             drawnQuads++;
 #end
@@ -574,7 +574,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //drawQuad
 
-        #if !debug inline #end function drawMesh() {
+        #if !ceramic_debug_draw inline #end function drawMesh() {
 
 #if ceramic_debug_draw
             drawnMeshes++;
