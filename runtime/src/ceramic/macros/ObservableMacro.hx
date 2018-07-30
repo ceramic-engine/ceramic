@@ -3,6 +3,8 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+using StringTools;
+
 class ObservableMacro {
 
     macro static public function build():Array<Field> {
@@ -87,7 +89,10 @@ class ObservableMacro {
                     case FieldType.FVar(type, expr):
 
                         var fieldName = field.name;
-                        var capitalName = field.name.substr(0,1).toUpperCase() + field.name.substr(1);
+                        var sanitizedName = field.name;
+                        while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
+                        while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
+                        var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
                         var unobservedFieldName = 'unobserved' + capitalName;
                         var emitFieldNameChange = 'emit' + capitalName + 'Change';
                         var onFieldNameChange = 'on' + capitalName + 'Change';
