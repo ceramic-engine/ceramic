@@ -18,7 +18,7 @@ class Autorun extends Entity {
 
     var onRun:Void->Void;
 
-    var invalidated(default,null):Bool = false;
+    public var invalidated(default,null):Bool = false;
 
 /// Lifecycle
 
@@ -30,6 +30,16 @@ class Autorun extends Entity {
         run();
 
     } //new
+
+    override function destroy() {
+
+        // Ensure everything gets unbound
+        emitReset();
+
+        // Remove any callback as we won't use it anymore
+        onRun = null;
+
+    } //destroy
 
     public function run():Void {
 
