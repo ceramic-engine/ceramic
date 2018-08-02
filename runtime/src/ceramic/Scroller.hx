@@ -76,6 +76,8 @@ class Scroller extends Visual {
 
     public var bounceNoMomentumDuration = 0.1;
 
+    public var dragFactor = 1.0;
+
 /// Lifecycle
 
     public function new(?content:Visual) {
@@ -471,16 +473,19 @@ class Scroller extends Visual {
 
     function update(delta:Float):Void {
 
-        var pointerX:Float = screen.pointerX;
-        var pointerY:Float = screen.pointerY;
+        var realPointerX:Float = screen.pointerX;
+        var realPointerY:Float = screen.pointerY;
 
         if (touchIndex != -1) {
             var pointer = screen.touches.get(touchIndex);
             if (pointer != null) {
-                pointerX = pointer.x;
-                pointerY = pointer.y;
+                realPointerX = pointer.x;
+                realPointerY = pointer.y;
             }
         }
+
+        var pointerX = realPointerX;
+        var pointerY = realPointerY;
 
         switch (status) {
 
@@ -550,6 +555,7 @@ class Scroller extends Visual {
             
             case DRAGGING:
                 if (direction == VERTICAL) {
+                    pointerX = pointerStart + (realPointerY - pointerStart) * dragFactor;
                     scrollTransform.ty = contentStart + pointerY - pointerStart;
 
                     var maxY = Math.max(contentStart, 0);
@@ -567,6 +573,7 @@ class Scroller extends Visual {
                     velocity.add(pointerY - pointerStart);
                 }
                 else {
+                    pointerX = pointerStart + (realPointerX - pointerStart) * dragFactor;
                     scrollTransform.tx = contentStart + pointerX - pointerStart;
 
                     var maxX = Math.max(contentStart, 0);
