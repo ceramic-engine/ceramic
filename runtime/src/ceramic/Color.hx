@@ -65,7 +65,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
      */
     public var lightness(get, set):Float;
 
-    private static var RE_COLOR = ~/^(0x|#)(([A-F0-9]{2}){3})$/i;
+    private static var RE_COLOR = ~/^(0x|#)(([A-F0-9]{2}){3})([A-F0-9]{2})?$/i;
 
     /**
      * Generate a random color (away from white or black)
