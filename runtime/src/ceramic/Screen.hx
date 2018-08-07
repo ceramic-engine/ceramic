@@ -19,6 +19,14 @@ class Screen extends Entity implements Observable {
         Updated when the screen is resized. */
     public var height(default,null):Float = 0;
 
+    /** Logical x offset.
+        Updated when the screen is resized. */
+    public var offsetX(default,null):Float = 0;
+
+    /** Logical y offset.
+        Updated when the screen is resized. */
+    public var offsetY(default,null):Float = 0;
+
     /** Native width */
     public var nativeWidth(get,null):Float;
     inline function get_nativeWidth():Float {
@@ -416,12 +424,24 @@ class Screen extends Entity implements Observable {
                 Math.min(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
             case RESIZE:
                 Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+            case FIT_RESIZE:
+                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
         }
 
         // Init default values
         width = nativeWidth * nativeDensity * scale;
         height = nativeHeight * nativeDensity * scale;
         density = 1.0 / scale;
+
+        // Offset
+        if (app.settings.scaling == FIT_RESIZE) {
+            offsetX = (targetWidth - width) * 0.5;
+            offsetY = (targetHeight - height) * 0.5;
+        }
+        else {
+            offsetX = 0;
+            offsetY = 0;
+        }
 
     } //updateScaling
 
@@ -436,8 +456,8 @@ class Screen extends Entity implements Observable {
 
         matrix.scale(density, density);
 
-        var tx = (nativeWidth * nativeDensity - targetWidth * density) * 0.5;
-        var ty = (nativeHeight * nativeDensity - targetHeight * density) * 0.5;
+        var tx = (nativeWidth * nativeDensity - targetWidth * density) * 0.5 + offsetX * density;
+        var ty = (nativeHeight * nativeDensity - targetHeight * density) * 0.5 + offsetY * density;
         matrix.translate(tx, ty);
 
         // Force visuals to recompute their matrix and take

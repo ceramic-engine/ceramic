@@ -8,4 +8,6 @@ enum ScreenScaling {
 
     RESIZE;
 
+    FIT_RESIZE;
+
 } //ScreenScaling

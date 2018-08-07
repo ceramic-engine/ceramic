@@ -58,7 +58,7 @@ class InitSettings {
         return settings.background = background;
     }
 
-    /** Screen scaling (FIT, FILL or RESIZE). */
+    /** Screen scaling (FIT, FILL, RESIZE, FIT_RESIZE). */
     public var scaling(get,set):ScreenScaling;
     inline function get_scaling():ScreenScaling {
         return settings.scaling;
