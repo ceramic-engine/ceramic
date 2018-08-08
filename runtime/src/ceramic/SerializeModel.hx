@@ -189,7 +189,6 @@ class SerializeModel extends Component {
             var data = s.toString();
 
             // Emit changeset
-            trace('emitChangeset');
             emitChangeset({ data: data, append: true });
         }
 

@@ -82,8 +82,6 @@ class SaveModel {
         // Start listening for changes to save them
         serializer.onChangeset(model, function(changeset) {
 
-            warning('SAVE');
-
             if (changeset.append) {
                 app.backend.io.appendString('save_' + key, changeset.data.length + ':' + changeset.data);
             } else {
