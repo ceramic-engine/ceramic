@@ -46,6 +46,8 @@ class Entity implements Events implements Lazy {
         @return The autorun instance */
     public function autorun(run:Void->Void):Autorun {
 
+        if (destroyed) return null;
+
         var _autorun = new Autorun(run);
 
         var _selfDestroy = function() {
