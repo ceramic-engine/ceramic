@@ -226,6 +226,16 @@ class Spine extends Visual {
             animate(animation, loop, 0);
         }
 
+        // Restore explicit skin name
+        if (!destroyed && skin != null && skeleton != null) {
+            var spineSkin:Skin = skeletonData.findSkin(skin == null ? 'default' : skin);
+            if (spineSkin == null) {
+                warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
+            } else {
+                skeleton.setSkin(spineSkin);
+            }
+        }
+
         return spineData;
     }
 
