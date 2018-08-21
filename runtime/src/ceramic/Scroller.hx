@@ -21,6 +21,8 @@ class Scroller extends Visual {
 
     @event function click(info:TouchInfo);
 
+    @event function scrollerPointerDown(info:TouchInfo);
+
     @event function scrollerPointerUp(info:TouchInfo);
 
 /// Public properties
@@ -378,6 +380,8 @@ class Scroller extends Visual {
 
             // Catch `pointer up` event
             screen.onMultiTouchPointerUp(this, pointerUp);
+            
+            emitScrollerPointerDown(info);
         }
 
     } //pointerDown
