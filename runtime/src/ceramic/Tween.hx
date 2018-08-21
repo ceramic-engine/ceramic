@@ -4,11 +4,11 @@ class Tween extends Entity {
 
 /// Static helpers
 
-    public static function start(?owner:Entity, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void):Tween {
+    public static function start(?owner:Entity, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void):Tween {
 
-        var instance = new Tween(owner, id, easing, duration, fromValue, toValue);
+        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue);
         
-        instance.onUpdate(update);
+        instance.onUpdate(handleValueTime);
 
         return instance;
 
