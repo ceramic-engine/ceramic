@@ -65,4 +65,22 @@ abstract SoundPlayer(backend.AudioHandle) {
         return position;
     }
 
+/// Helpers
+
+    public function fadeOut(duration:Float):Void {
+
+        if (volume == 0) {
+            stop();
+            return;
+        }
+
+        var tween = Tween.start(null, 0, TweenEasing.LINEAR, duration, volume, 0, function(value, time) {
+            volume = value;
+        });
+        tween.onceComplete(null, function() {
+            stop();
+        });
+
+    } //fadeOut
+
 } //SoundPlayer
