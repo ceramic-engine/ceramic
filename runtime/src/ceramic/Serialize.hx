@@ -186,6 +186,8 @@ class Serialize {
                 instance._serializeId = value.id;
                 _deserializedMap.set(value.id, instance);
 
+                
+
                 // Iterate over each serializable field and either put a default value
                 // or the one provided by serialized data.
                 //
@@ -196,25 +198,25 @@ class Serialize {
                     methods.set(method, true);
                 }
 
-                for (fieldRealName in Reflect.fields(fieldsMeta)) {
+                for (fieldRealName in Type.getInstanceFields(clazz)) {
+
                     var fieldInfo = Reflect.field(fieldsMeta, fieldRealName);
+                    var hasSerialize = fieldInfo != null && Reflect.hasField(fieldInfo, 'serialize');
 
-                    if (Reflect.hasField(fieldInfo, 'serialize')) {
-                        var fieldName = fieldRealName;
-                        if (fieldName.startsWith('unobserved')) {
-                            fieldName = fieldName.charAt(prefixLen).toLowerCase() + fieldName.substr(prefixLen + 1);
-                        }
+                    var fieldName = fieldRealName;
+                    if (fieldName.startsWith('unobserved')) {
+                        fieldName = fieldName.charAt(prefixLen).toLowerCase() + fieldName.substr(prefixLen + 1);
+                    }
 
-                        if (Reflect.hasField(info.props, fieldName)) {
-                            // Value provided by data, use it
-                            var val = deserializeValue(Reflect.field(info.props, fieldName));
-                            Extensions.setProperty(instance, fieldRealName, val);
-                        }
-                        else if (methods.exists('_default_' + fieldName)) {
-                            // No value in data, but a default one for this class, use it
-                            var val = Reflect.callMethod(instance, Reflect.field(instance, '_default_' + fieldName), []);
-                            Extensions.setProperty(instance, fieldRealName, val);
-                        }
+                    if (hasSerialize && Reflect.hasField(info.props, fieldName)) {
+                        // Value provided by data, use it
+                        var val = deserializeValue(Reflect.field(info.props, fieldName));
+                        Extensions.setProperty(instance, fieldRealName, val);
+                    }
+                    else if (methods.exists('_default_' + fieldName)) {
+                        // No value in data, but a default one for this class, use it
+                        var val = Reflect.callMethod(instance, Reflect.field(instance, '_default_' + fieldName), []);
+                        Extensions.setProperty(instance, fieldRealName, val);
                     }
                 }
 

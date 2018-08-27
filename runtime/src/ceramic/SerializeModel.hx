@@ -111,7 +111,7 @@ class SerializeModel extends Component {
             }
         }
 
-    } //track
+    } //untrack
 
     function trackedModelDestroyed() {
 
