@@ -52,6 +52,7 @@ class Main extends luxe.Game {
     override function config(config:luxe.GameConfig) {
 
         Luxe.core.auto_render = false;
+        Luxe.core.game_config.window.background_sleep = 1.0/45;
 
 #if web
 
