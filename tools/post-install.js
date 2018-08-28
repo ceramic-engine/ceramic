@@ -17,6 +17,7 @@ function postInstall() {
     spawnSync('./haxelib', ['install', 'hxcpp', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync('./haxelib', ['install', 'bind', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync('./haxelib', ['install', 'unifill', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync('./haxelib', ['dev', 'spine-hx', '../git/spine-hx'], { stdio: "inherit", cwd: __dirname });
     spawnSync('./haxelib', ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
     
     // Build tools

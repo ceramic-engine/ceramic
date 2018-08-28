@@ -34,3 +34,6 @@
 	path = git/luxe
 	url = https://github.com/ceramic-engine/luxe.git
 	branch = master
+[submodule "git/spine-hx"]
+	path = git/spine-hx
+	url = https://github.com/jeremyfa/spine-hx.git
