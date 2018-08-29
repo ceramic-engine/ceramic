@@ -127,6 +127,7 @@ class ExportIPA extends tools.Task {
                 print(profilesPath);
                 print('COPY PROFILE $provisioningProfilePath -> ' + provisioningUUID+'.mobileprovision');
                 command('cp', ['-f', provisioningProfilePath, Path.join([profilesPath, provisioningUUID+'.mobileprovision'])]);
+                command('ls', [profilesPath]);
             }
         }
 
