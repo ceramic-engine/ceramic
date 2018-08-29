@@ -140,7 +140,6 @@ class ExportIPA extends tools.Task {
             '-derivedDataPath', derivedDataPath,
             //'-sdk', 'iphoneos',
             '-destination', 'generic/platform=iOS',
-            '-allowProvisioningUpdates',
             //'CODE_SIGN_STYLE="Manual"',
             //'CODE_SIGN_IDENTITY=' + signingIdentity,
             //'PROVISIONING_PROFILE=' + provisioningUUID,
