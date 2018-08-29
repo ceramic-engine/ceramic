@@ -44,7 +44,7 @@ class ExportIPA extends tools.Task {
             command('security', ['create-keychain', '-p', createKeychain, keychainFile]);
             command('security', ['default-keychain', '-s', keychainFile]);
             command('security', ['unlock-keychain', '-p', createKeychain]);
-            command('security', ['set-keychain-settings', '-t', '3600', '-u', createKeychain]);
+            command('security', ['set-keychain-settings', '-t', '3600', '-u', keychainFile]);
         }
 
         // Create ios project if needed
