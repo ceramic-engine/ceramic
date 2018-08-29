@@ -27,6 +27,8 @@ class ExportIPA extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
+        var keychainFile = 'login.keychain';
+
         var iosProjectName = project.app.name;
         var iosProjectPath = Path.join([cwd, 'project/ios']);
         var iosProjectFile = Path.join([iosProjectPath, iosProjectName + '.xcodeproj']);
@@ -34,6 +36,16 @@ class ExportIPA extends tools.Task {
 
         // Get user dir
         var userDir = ('/Users/'+ChildProcess.execSync('whoami')).trim();
+
+        // Create custom keychain?
+        var createKeychain = extractArgValue(args, 'create-keychain', true);
+        if (createKeychain != null) {
+            keychainFile = createKeychain + '.keychain';
+            command('security', ['create-keychain', '-p', createKeychain, keychainFile]);
+            command('security', ['default-keychain', '-s', keychainFile]);
+            command('security', ['unlock-keychain', '-p', createKeychain]);
+            command('security', ['set-keychain-settings', '-t', '3600', '-u', createKeychain]);
+        }
 
         // Create ios project if needed
         IosProject.createIosProjectIfNeeded(cwd, project);
@@ -85,7 +97,12 @@ class ExportIPA extends tools.Task {
             command('rm', ['-rf', Path.join([context.cwd, 'tmp/xcodebuild'])]);
 
             // Install signing certificate
-            command('security', ['import', p12Path, '-t', 'agg', '-k', 'login.keychain', '-P', p12Password, '-A']);
+            command('security', ['import', p12Path, '-t', 'agg', '-k', keychainFile, '-P', p12Password, '-A']);
+        }
+
+        if (createKeychain != null) {
+            // Unlock keychain to prevent signing issues (https://docs.travis-ci.com/user/common-build-problems/#mac-macos-sierra-1012-code-signing-errors)
+            command('security', ['set-key-partition-list', '-S', 'apple-tool:,apple:', '-s', '-k', createKeychain, keychainFile]);
         }
 
         // Get provisioning profiles
