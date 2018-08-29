@@ -124,6 +124,8 @@ class ExportIPA extends tools.Task {
             }
             // Add our provisioning profile if needed
             if (!FileSystem.exists(Path.join([profilesPath, provisioningUUID+'.mobileprovision']))) {
+                print(profilesPath);
+                print('COPY PROFILE $provisioningProfilePath -> ' + provisioningUUID+'.mobileprovision');
                 command('cp', ['-f', provisioningProfilePath, Path.join([profilesPath, provisioningUUID+'.mobileprovision'])]);
             }
         }
