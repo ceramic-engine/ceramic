@@ -28,6 +28,7 @@ class ToolsPlugin {
         var tasks = context.tasks;
         tasks.set('ios bind', new tools.tasks.ios.Bind());
         tasks.set('ios xcode', new tools.tasks.ios.Xcode());
+        tasks.set('ios export ipa', new tools.tasks.ios.ExportIPA());
         tasks.set('ios pod install', new tools.tasks.ios.InstallPods());
 
     } //init
