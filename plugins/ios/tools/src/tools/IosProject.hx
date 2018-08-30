@@ -71,7 +71,7 @@ class IosProject {
         }
         else {
             // Compute target build number from current time
-            var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M'));
+            var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M').substr(2));
             // Extract current build number
             var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + iosProjectInfoPlistFile.quoteUnixArg())).trim());
             // Increment if needed
