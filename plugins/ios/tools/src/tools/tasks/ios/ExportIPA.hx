@@ -14,7 +14,7 @@ class ExportIPA extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Install Xcode project pod dependencies.";
+        return "Export a packaged iOS app (IPA).";
 
     } //info
 
@@ -31,8 +31,6 @@ class ExportIPA extends tools.Task {
 
         var iosProjectName = project.app.name;
         var iosProjectPath = Path.join([cwd, 'project/ios']);
-        var iosProjectFile = Path.join([iosProjectPath, iosProjectName + '.xcodeproj']);
-        var iosWorkspaceFile = Path.join([iosProjectPath, iosProjectName + '.xcworkspace']);
 
         // Get user dir
         var userDir = ('/Users/'+ChildProcess.execSync('whoami')).trim();
@@ -50,10 +48,16 @@ class ExportIPA extends tools.Task {
         // Create ios project if needed
         IosProject.createIosProjectIfNeeded(cwd, project);
 
-        var derivedDataPath = Path.join([iosProjectPath, 'build']);
-        if (!FileSystem.exists(derivedDataPath)) {
-            FileSystem.createDirectory(derivedDataPath);
+        // Update build number
+        IosProject.updateBuildNumber(cwd, project);
+
+        // Reset build path
+        var buildPath = Path.join([iosProjectPath, 'build']);
+        if (FileSystem.exists(buildPath)) {
+            Files.deleteRecursive(buildPath);
         }
+        FileSystem.createDirectory(buildPath);
+        var iosIPAPath = Path.join([buildPath, iosProjectName + '.ipa']);
 
         // Get signing identities
         //
@@ -124,30 +128,56 @@ class ExportIPA extends tools.Task {
             }
             // Add our provisioning profile if needed
             if (!FileSystem.exists(Path.join([profilesPath, provisioningUUID+'.mobileprovision']))) {
-                print(profilesPath);
-                print('COPY PROFILE $provisioningProfilePath -> ' + provisioningUUID+'.mobileprovision');
                 command('cp', ['-f', provisioningProfilePath, Path.join([profilesPath, provisioningUUID+'.mobileprovision'])]);
-                command('ls', [profilesPath]);
             }
         }
 
-        // TODO
+        // Delete previous ipa if any
+        if (FileSystem.exists(iosIPAPath)) {
+            FileSystem.deleteFile(iosIPAPath);
+        }
 
-        // Run xcodebuild
+        // Build
         command('xcodebuild', [
             '-workspace', iosProjectName + '.xcworkspace',
             '-scheme', iosProjectName,
             '-configuration', 'Release',
-            '-derivedDataPath', derivedDataPath,
-            //'-sdk', 'iphoneos',
+            '-derivedDataPath', buildPath,
             '-destination', 'generic/platform=iOS',
-            //'CODE_SIGN_STYLE="Manual"',
-            //'CODE_SIGN_IDENTITY=' + signingIdentity,
-            //'PROVISIONING_PROFILE=' + provisioningUUID,
-            //'DEPLOYMENT_POSTPROCESSING=YES',
             'build'
         ], { cwd: Path.join([cwd, 'project/ios']) });
 
+        // Archive
+        var result = command('xcodebuild', [
+            '-workspace', iosProjectName + '.xcworkspace',
+            '-scheme', iosProjectName,
+            '-configuration', 'Release',
+            '-derivedDataPath', buildPath,
+            '-destination', 'generic/platform=iOS',
+            'archive',
+            '-archivePath', buildPath + '/' + iosProjectName + '.xcarchive'
+        ], { cwd: Path.join([cwd, 'project/ios']) });
+        if (result.status != 0) {
+            fail('Xcode build failed with status ' + result.status);
+        }
+
+        // Export IPA
+        result = command('xcodebuild', [
+            '-exportArchive',
+            '-archivePath', buildPath + '/' + iosProjectName + '.xcarchive',
+            '-exportOptionsPlist', 'exportOptions.plist',
+            '-exportPath', buildPath
+        ], { cwd: Path.join([cwd, 'project/ios']) });
+        if (result.status != 0) {
+            fail('Xcode archive failed with status ' + result.status);
+        }
+
+        // Check that IPA has been generated
+        if (!FileSystem.exists(iosIPAPath)) {
+            fail('Expected IPA file not found: $iosIPAPath');
+        }
+
+        success('Generated IPA file at path: $iosIPAPath');
 
     } //run
 

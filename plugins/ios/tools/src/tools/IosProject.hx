@@ -9,6 +9,8 @@ import haxe.io.Path;
 import sys.io.File;
 import sys.FileSystem;
 
+import js.node.ChildProcess;
+
 using StringTools;
 
 class IosProject {
@@ -57,6 +59,31 @@ class IosProject {
         }
 
     } //createIosProjectIfNeeded
+
+    public static function updateBuildNumber(cwd:String, project:Project) {
+
+        var iosProjectName = project.app.name;
+        var iosProjectPath = Path.join([cwd, 'project/ios']);
+        var iosProjectInfoPlistFile = Path.join([iosProjectPath, 'project/project-Info.plist']);
+
+        if (!FileSystem.exists(iosProjectInfoPlistFile)) {
+            warning('Cannot update build number because info plist file doesn\'t exist at path: $iosProjectInfoPlistFile');
+        }
+        else {
+            // Compute target build number from current time
+            var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M'));
+            // Extract current build number
+            var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + iosProjectInfoPlistFile.quoteUnixArg())).trim());
+            // Increment if needed
+            if (currentBuildNumber == targetBuildNumber) {
+                targetBuildNumber++;
+            }
+            print('Update build number to $targetBuildNumber');
+            // Saved updated build number
+            ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion " + targetBuildNumber + "' " + iosProjectInfoPlistFile.quoteUnixArg());
+        }
+
+    } //updateBuildNumber
 
     public static function headerSearchPaths(cwd:String, project:Project, debug:Bool):Array<String> {
 
