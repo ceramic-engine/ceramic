@@ -3,6 +3,7 @@ package tools;
 import sys.FileSystem;
 import haxe.io.Path;
 import js.node.Fs;
+import js.node.ChildProcess;
 
 using StringTools;
 
@@ -105,6 +106,14 @@ class Files {
     } //isEmptyDirectory
 
     public static function deleteRecursive(toDelete:String):Void {
+        
+        if (!FileSystem.exists(toDelete)) return;
+
+        // Use shell if available
+        if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
+            ChildProcess.execSync('rm -rf ' + toDelete.quoteUnixArg());
+            return;
+        }
 
         if (FileSystem.isDirectory(toDelete)) {
 
