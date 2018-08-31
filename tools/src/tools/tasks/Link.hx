@@ -21,7 +21,6 @@ class Link extends tools.Task {
                 command('ln', ['-s', Path.join([context.ceramicToolsPath, 'ceramic-electron']), 'ceramic'], { cwd: '/usr/local/bin' });
             }
             else {
-                //command('ln', ['-s', Path.join([context.ceramicToolsPath, 'ceramic']), 'ceramic'], { cwd: '/usr/local/bin' });
                 var script = '#!/bin/bash
 ${Path.join([context.ceramicToolsPath, 'node_modules/.bin/node'])} ${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
                 File.saveContent('/usr/local/bin/ceramic', script);
