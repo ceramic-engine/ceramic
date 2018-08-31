@@ -29,6 +29,7 @@ class ToolsPlugin {
         tasks.set('android bind', new tools.tasks.android.Bind());
         tasks.set('android studio', new tools.tasks.android.AndroidStudio());
         tasks.set('android ndk stack', new tools.tasks.android.NdkStack());
+        tasks.set('android export apk', new tools.tasks.android.ExportAPK());
 
     } //init
 
