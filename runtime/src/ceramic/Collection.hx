@@ -62,6 +62,8 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     var byId:Map<String,T> = null;
 
+    var filter:Array<T>->Array<T> = null;
+
     var combinedCollections:Array<CollectionImpl<T>> = null;
     var combinedCollectionLastChanges:Array<Int> = null;
     
@@ -178,6 +180,10 @@ class CollectionImpl<T:CollectionEntry> implements Events {
                 entries.push(entry);
             }
             combinedCollectionLastChanges[i] = collection.lastChange;
+        }
+
+        if (filter != null) {
+            entries = filter(entries);
         }
 
         entriesDirty = false;

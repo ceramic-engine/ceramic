@@ -11,10 +11,42 @@ class Collections {
 
     static var combinedCollections:Map<String,Dynamic> = new Map();
 
+    static var filteredCollections:Map<String,Dynamic> = new Map();
+
     public function new() {}
 
+    /** Returns a filtered collection from the provided collection and filter. */
+    public static function filtered<T:CollectionEntry>(collection:Collection<T>, filter:Array<T>->Array<T>, ?cacheKey:String):Collection<T> {
+
+        if (cacheKey != null) {
+            var cached:CollectionImpl<T> = filteredCollections.get(cacheKey);
+            if (cached != null) {
+                return cast cached;
+            }
+        }
+
+        var collectionImpl:CollectionImpl<T> = cast collection;
+        var combinedCollection:Collection<T>;
+        if (collectionImpl.combinedCollections != null) {
+            combinedCollection = cast collectionImpl;
+        } else {
+            combinedCollection = combined([collection]);
+        }
+        var collection = combined([combinedCollection], false);
+        var impl:CollectionImpl<T> = cast collection;
+
+        impl.filter = filter;
+
+        if (cacheKey != null) {
+            filteredCollections.set(cacheKey, impl);
+        }
+
+        return collection;
+
+    } //filtered
+
     /** Returns a combined collection from the provided ones. */
-    public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>):Collection<T> {
+    public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
 
         // Create key to check if the combined collection already exists
         var keyBuf = new StringBuf();
@@ -44,7 +76,7 @@ class Collections {
         collection.entriesDirty = true;
 
         // Cache combined collection
-        combinedCollections.set(key, collection);
+        if (cache) combinedCollections.set(key, collection);
 
         return cast collection;
 
