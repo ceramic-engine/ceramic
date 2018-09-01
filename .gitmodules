@@ -37,3 +37,6 @@
 [submodule "git/spine-hx"]
 	path = git/spine-hx
 	url = https://github.com/jeremyfa/spine-hx.git
+[submodule "git/polyline"]
+	path = git/polyline
+	url = https://github.com/jeremyfa/polyline.git

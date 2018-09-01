@@ -218,6 +218,7 @@ class ProjectLoader {
             // Add required libs
             app.libs.push({ unifill: '0.4.1' });
             app.libs.push({ actuate: '1.8.7' });
+            app.libs.push('polyline');
             app.libs.push('bind');
 
             if (app.paths == null) {
