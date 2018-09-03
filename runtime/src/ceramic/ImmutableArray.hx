@@ -33,4 +33,7 @@ abstract ImmutableArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
     @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
 
+    @:noCompletion public var mutable(get,never):Array<T>;
+    inline private function get_mutable():Array<T> return this;
+
 } //ImmutableArray

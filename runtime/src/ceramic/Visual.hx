@@ -165,7 +165,7 @@ class Visual extends Entity {
         will be within range [parent.depth, parent.depth + depthRange] */
     @editable
     public var depthRange(default,set):Float = -1;
-    inline function set_depthRange(depthRange:Float):Float {
+    function set_depthRange(depthRange:Float):Float {
         if (this.depthRange == depthRange) return depthRange;
         this.depthRange = depthRange;
         ceramic.App.app.hierarchyDirty = true;
@@ -414,7 +414,7 @@ class Visual extends Entity {
 
 /// Properties (Children)
 
-    public var children(default,null):Array<Visual> = null;
+    public var children(default,null):ImmutableArray<Visual> = null;
 
     public var parent(default,null):Visual = null;
 
@@ -528,7 +528,7 @@ class Visual extends Entity {
     public function clear() {
 
         if (children != null) {
-            for (child in [].concat(children)) {
+            for (child in [].concat(@:privateAccess children.mutable)) {
                 child.destroy();
             }
             children = null;
@@ -992,7 +992,7 @@ class Visual extends Entity {
         if (children == null) {
             children = [];
         }
-        children.push(visual);
+        @:privateAccess children.mutable.push(visual);
 
     } //add
 
@@ -1002,7 +1002,7 @@ class Visual extends Entity {
 
         if (children == null) return;
 
-        children.splice(children.indexOf(visual), 1);
+        @:privateAccess children.mutable.splice(children.indexOf(visual), 1);
         visual.parent = null;
         visual.visibilityDirty = true;
         visual.matrixDirty = true;

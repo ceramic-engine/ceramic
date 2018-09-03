@@ -1,25 +1,67 @@
 package ceramic.ui;
 
-@:enum abstract ViewLayoutMask(Int) from Int to Int {
+abstract ViewLayoutMask(Int) from Int to Int {
 
-    public var INCREASE_WIDTH = 1 << 0;
+    inline public function new(value:Int) {
+        this = value;
+    }
 
-    public var DECREASE_WIDTH = 1 << 1;
+    inline public static var INCREASE_WIDTH = new ViewLayoutMask(1 << 0);
 
-    public var INCREASE_HEIGHT = 1 << 2;
+    inline public static var DECREASE_WIDTH = new ViewLayoutMask(1 << 1);
 
-    public var DECREASE_HEIGHT = 1 << 3;
+    inline public static var INCREASE_HEIGHT = new ViewLayoutMask(1 << 2);
 
-    public var FIXED = 0;
+    inline public static var DECREASE_HEIGHT = new ViewLayoutMask(1 << 3);
 
-    public var FLEXIBLE_WIDTH = INCREASE_WIDTH | DECREASE_WIDTH;
+    inline public static var FIXED = new ViewLayoutMask(0);
 
-    public var FLEXIBLE_HEIGHT = INCREASE_HEIGHT | DECREASE_HEIGHT;
+    inline public static var FLEXIBLE_WIDTH = new ViewLayoutMask(INCREASE_WIDTH | DECREASE_WIDTH);
 
-    public var FLEXIBLE = FLEXIBLE_WIDTH | FLEXIBLE_HEIGHT;
+    inline public static var FLEXIBLE_HEIGHT = new ViewLayoutMask(INCREASE_HEIGHT | DECREASE_HEIGHT);
 
-    public var INCREASE = INCREASE_WIDTH | INCREASE_HEIGHT;
+    inline public static var FLEXIBLE = new ViewLayoutMask(FLEXIBLE_WIDTH | FLEXIBLE_HEIGHT);
 
-    public var DECREASE = DECREASE_WIDTH | DECREASE_HEIGHT;
+    inline public static var INCREASE = new ViewLayoutMask(INCREASE_WIDTH | INCREASE_HEIGHT);
+
+    inline public static var DECREASE = new ViewLayoutMask(DECREASE_WIDTH | DECREASE_HEIGHT);
+
+/// Layout helpers
+
+    inline public function canIncreaseWidth(?value:Bool) {
+        if (value == null) {
+            return (this & INCREASE_WIDTH) == INCREASE_WIDTH;
+        } else {
+            this = value ? this | INCREASE_WIDTH : this & ~(INCREASE_WIDTH);
+            return value;
+        }
+    }
+
+    inline public function canDecreaseWidth(?value:Bool) {
+        if (value == null) {
+            return (this & DECREASE_WIDTH) == DECREASE_WIDTH;
+        } else {
+            this = value ? this | DECREASE_WIDTH : this & ~(DECREASE_WIDTH);
+            return value;
+        }
+    }
+
+    inline public function canIncreaseHeight(?value:Bool) {
+        if (value == null) {
+            return (this & INCREASE_HEIGHT) == INCREASE_HEIGHT;
+        } else {
+            this = value ? this | INCREASE_HEIGHT : this & ~(INCREASE_HEIGHT);
+            return value;
+        }
+    }
+
+    inline public function canDecreaseHeight(?value:Bool) {
+        if (value == null) {
+            return (this & DECREASE_HEIGHT) == DECREASE_HEIGHT;
+        } else {
+            this = value ? this | DECREASE_HEIGHT : this & ~(DECREASE_HEIGHT);
+            return value;
+        }
+    }
 
 } //ViewLayoutMask
