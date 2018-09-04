@@ -137,6 +137,32 @@ class ExportIPA extends tools.Task {
             FileSystem.deleteFile(iosIPAPath);
         }
 
+        // Extract more signing options
+        var teamId = extractArgValue(args, 'team-id', true);
+        var profileId = extractArgValue(args, 'profile-id', true);
+        var profileName = extractArgValue(args, 'profile-name', true);
+        
+        var pbxPath = Path.join([iosProjectPath, iosProjectName + '.xcodeproj', 'project.pbxproj']);
+
+        var originalPbxContent:String = null;
+        var restorePbx:Void->Void = function() {};
+        if (teamId != null && profileId != null && profileName != null) {
+            var pbxContent = File.getContent(pbxPath);
+            originalPbxContent = pbxContent;
+
+            pbxContent = pbxContent.replace('CODE_SIGN_STYLE = Automatic', 'CODE_SIGN_STYLE = Manual');
+            pbxContent = pbxContent.replace('ProvisioningStyle = Automatic', 'ProvisioningStyle = Manual');
+            pbxContent = pbxContent.replace('DEVELOPMENT_TEAM = ""', 'DEVELOPMENT_TEAM = $teamId');
+            pbxContent = pbxContent.replace('PROVISIONING_PROFILE = ""', 'PROVISIONING_PROFILE = "$profileId"');
+            pbxContent = pbxContent.replace('PROVISIONING_PROFILE_SPECIFIER = ""', 'PROVISIONING_PROFILE_SPECIFIER = "$profileName"');
+
+            File.saveContent(pbxPath, pbxContent);
+
+            restorePbx = function() {
+                File.saveContent(pbxPath, originalPbxContent);
+            };
+        }
+
         // Build
         command('xcodebuild', [
             '-workspace', iosProjectName + '.xcworkspace',
@@ -158,6 +184,7 @@ class ExportIPA extends tools.Task {
             '-archivePath', buildPath + '/' + iosProjectName + '.xcarchive'
         ], { cwd: Path.join([cwd, 'project/ios']) });
         if (result.status != 0) {
+            restorePbx();
             fail('Xcode build failed with status ' + result.status);
         }
 
@@ -169,8 +196,10 @@ class ExportIPA extends tools.Task {
             '-exportPath', buildPath
         ], { cwd: Path.join([cwd, 'project/ios']) });
         if (result.status != 0) {
+            restorePbx();
             fail('Xcode archive failed with status ' + result.status);
         }
+        restorePbx();
 
         // Check that IPA has been generated
         if (!FileSystem.exists(iosIPAPath)) {
