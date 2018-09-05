@@ -343,8 +343,9 @@ class Scroller extends Visual {
 
         // Does this touch intersect with our scroller?
         var hits = this.hits(info.x, info.y);
+        var firstDownListener = hits ? matchFirstDownListener(info.x, info.y) : null;
 
-        if (hits) {
+        if (hits && (firstDownListener == this || this.contains(firstDownListener, true))) {
             // If it was bouncing, snapping..., it is not anymore
             animating = false;
             snapping = false;
@@ -385,6 +386,26 @@ class Scroller extends Visual {
         }
 
     } //pointerDown
+
+    function matchFirstDownListener(x:Float, y:Float):Visual {
+
+        app.computeHierarchy();
+
+        var visuals = app.visuals;
+        var i = visuals.length - 1;
+        while (i >= 0) {
+
+            var visual = visuals[i];
+            if (visual == this || (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y))) {
+                return visual;
+            }
+
+            i--;
+        }
+
+        return null;
+
+    } //matchFirstDownListener
 
     function pointerUp(info:TouchInfo):Void {
 
