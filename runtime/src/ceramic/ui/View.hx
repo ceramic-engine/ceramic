@@ -399,4 +399,30 @@ class View extends Quad {
 
     } //layoutParentThenSelf
 
+/// View size helpers
+
+    inline public function percent(value:Float):Float {
+
+        return ViewSize.percent(value);
+
+    } //percent
+
+    inline public function percentToFloat(encoded:Float):Float {
+
+        return ViewSize.percentToFloat(encoded);
+
+    } //percentToFloat
+
+    inline public function auto():Float {
+
+        return ViewSize.auto();
+
+    } //auto
+
+    inline public function none():Float {
+
+        return ViewSize.none();
+
+    } //none
+
 } //View
