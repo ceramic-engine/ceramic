@@ -306,7 +306,15 @@ class Spine extends Visual {
         return pausedOrFrozen;
     }
 
-    public var autoFreeze:Bool = true;
+    public var autoFreeze(default,set):Bool = true;
+    function set_autoFreeze(autoFreeze:Bool):Bool {
+        if (this.autoFreeze == autoFreeze) return autoFreeze;
+        this.autoFreeze = autoFreeze;
+        if (frozen && !canFreeze()) {
+            frozen = false;
+        }
+        return autoFreeze;
+    }
 
     /** Is this animation paused? */
     public var paused(default,set):Bool = #if editor true #else false #end;
