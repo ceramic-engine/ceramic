@@ -368,7 +368,7 @@ class Visual extends Entity {
     inline function get_active():Bool {
         return !flags.bool(0);
     }
-    inline function set_active(active:Bool):Bool {
+    function set_active(active:Bool):Bool {
         if (active == !flags.bool(0)) return active;
         flags.setBool(0, !active);
         if (active) {

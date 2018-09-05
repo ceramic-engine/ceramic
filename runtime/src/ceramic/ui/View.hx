@@ -156,6 +156,13 @@ class View extends Quad {
 
 /// Overrides
 
+    override function set_active(active:Bool):Bool {
+        if (this.active == active) return active;
+        super.set_active(active);
+        layoutDirty = true;
+        return active;
+    }
+
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         _width = width;
