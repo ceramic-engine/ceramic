@@ -80,6 +80,8 @@ class Scroller extends Visual {
 
     public var dragFactor = 1.0;
 
+    public var touchableStrictHierarchy = true;
+
 /// Lifecycle
 
     public function new(?content:Visual) {
@@ -343,9 +345,9 @@ class Scroller extends Visual {
 
         // Does this touch intersect with our scroller?
         var hits = this.hits(info.x, info.y);
-        var firstDownListener = hits ? matchFirstDownListener(info.x, info.y) : null;
+        var firstDownListener = hits && touchableStrictHierarchy ? matchFirstDownListener(info.x, info.y) : null;
 
-        if (hits && (firstDownListener == this || this.contains(firstDownListener, true))) {
+        if (hits && (!touchableStrictHierarchy || firstDownListener == this || this.contains(firstDownListener, true))) {
             // If it was bouncing, snapping..., it is not anymore
             animating = false;
             snapping = false;
