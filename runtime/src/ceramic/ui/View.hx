@@ -17,8 +17,8 @@ class View extends Quad {
 
     public var computedHeight:Float = -1;
 
-    /** Width processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.auto()`) or undefined (with `ViewSize.none()`). */
-    public var viewWidth(default,set):Float = -1;
+    /** Width processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    public var viewWidth(default,set):Float = ViewSize.auto();
     function set_viewWidth(viewWidth:Float):Float {
         if (this.viewWidth == viewWidth) return viewWidth;
         this.viewWidth = viewWidth;
@@ -26,8 +26,8 @@ class View extends Quad {
         return viewWidth;
     }
 
-    /** Height processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.auto()`) or undefined (with `ViewSize.none()`). */
-    public var viewHeight(default,set):Float = -1;
+    /** Height processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    public var viewHeight(default,set):Float = ViewSize.auto();
     function set_viewHeight(viewHeight:Float):Float {
         if (this.viewHeight == viewHeight) return viewHeight;
         this.viewHeight = viewHeight;
@@ -277,14 +277,14 @@ class View extends Quad {
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
         // Compute width
-        if (ViewSize.isNone(viewWidth) || ViewSize.isAuto(viewWidth)) {
+        if (ViewSize.isAuto(viewWidth) || ViewSize.isFill(viewWidth)) {
             if (layoutMask.canDecreaseWidth()) {
                 computedWidth = 0;
             } else {
                 computedWidth = parentWidth;
             }
         }
-        else if (ViewSize.isAuto(viewWidth)) {
+        else if (ViewSize.isFill(viewWidth)) {
             computedWidth = viewWidth;
         }
         else if (ViewSize.isPercent(viewWidth)) {
@@ -295,14 +295,14 @@ class View extends Quad {
         }
 
         // Compute height
-        if (ViewSize.isNone(viewHeight)) {
+        if (ViewSize.isAuto(viewHeight)) {
             if (layoutMask.canDecreaseHeight()) {
                 computedHeight = 0;
             } else {
                 computedHeight = parentHeight;
             }
         }
-        else if (ViewSize.isAuto(viewHeight)) {
+        else if (ViewSize.isFill(viewHeight)) {
             computedHeight = parentHeight;
         }
         else if (ViewSize.isPercent(viewHeight)) {
@@ -358,11 +358,11 @@ class View extends Quad {
 /// Helpers
 
     inline public function hasViewWidth() {
-        return !ViewSize.isNone(viewWidth);
+        return !ViewSize.isAuto(viewWidth);
     }
 
     inline public function hasViewHeight() {
-        return !ViewSize.isNone(viewHeight);
+        return !ViewSize.isAuto(viewHeight);
     }
 
 /// Internal
@@ -426,16 +426,16 @@ class View extends Quad {
 
     } //percentToFloat
 
+    inline public function fill():Float {
+
+        return ViewSize.fill();
+
+    } //auto
+
     inline public function auto():Float {
 
         return ViewSize.auto();
 
     } //auto
-
-    inline public function none():Float {
-
-        return ViewSize.none();
-
-    } //none
 
 } //View

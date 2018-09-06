@@ -3,6 +3,12 @@ package ceramic.ui;
 /** View size helpers */
 class ViewSize {
 
+    inline public static function isStandard(encoded:Float):Bool {
+
+        return encoded >= 0;
+
+    } //isStandard
+
 /// Percent
 
     inline public static function percent(value:Float):Float {
@@ -25,31 +31,31 @@ class ViewSize {
 
 /// Auto
 
-    inline public static function auto():Float {
+    inline public static function fill():Float {
 
         return -2;
 
     } //auto
 
-    inline public static function isAuto(encodedSize:Float):Bool {
+    inline public static function isFill(encodedSize:Float):Bool {
 
         return encodedSize == -2;
 
-    } //isAuto
+    } //isFill
 
 /// None
 
-    inline public static function none():Float {
+    inline public static function auto():Float {
 
         return -1;
 
-    } //none
+    } //auto
 
-    inline public static function isNone(encodedSize:Float):Bool {
+    inline public static function isAuto(encodedSize:Float):Bool {
 
         return encodedSize == -1;
 
-    } //isNone
+    } //isAuto
 
 /// Compute
 
@@ -59,7 +65,7 @@ class ViewSize {
                 ? 0
                 : (isPercent(encoded)
                     ? percentToFloat(encoded) * parent
-                    : (isAuto(encoded)
+                    : (isFill(encoded)
                         ? parent
                         : encoded
                     )
