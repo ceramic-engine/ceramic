@@ -277,12 +277,15 @@ class View extends Quad {
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
         // Compute width
-        if (ViewSize.isNone(viewWidth)) {
+        if (ViewSize.isNone(viewWidth) || ViewSize.isAuto(viewWidth)) {
             if (layoutMask.canDecreaseWidth()) {
                 computedWidth = 0;
             } else {
                 computedWidth = parentWidth;
             }
+        }
+        else if (ViewSize.isAuto(viewWidth)) {
+            computedWidth = viewWidth;
         }
         else if (ViewSize.isPercent(viewWidth)) {
             computedWidth = ViewSize.percentToFloat(viewWidth) * parentWidth;
@@ -298,6 +301,9 @@ class View extends Quad {
             } else {
                 computedHeight = parentHeight;
             }
+        }
+        else if (ViewSize.isAuto(viewHeight)) {
+            computedHeight = parentHeight;
         }
         else if (ViewSize.isPercent(viewHeight)) {
             computedHeight = ViewSize.percentToFloat(viewHeight) * parentHeight;

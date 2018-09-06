@@ -7,7 +7,7 @@ class ViewSize {
 
     inline public static function percent(value:Float):Float {
 
-        return -100.0 - (value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value * 0.01));
+        return -100.0 - (value < 0.0 ? 0.0 : (value > 100.0 ? 1.0 : value * 0.01));
 
     } //percent
 
@@ -50,5 +50,21 @@ class ViewSize {
         return encodedSize == -1;
 
     } //isNone
+
+/// Compute
+
+    inline public static function computeWithParentSize(encoded:Float, parent:Float):Float {
+
+        return encoded == 0
+                ? 0
+                : (isPercent(encoded)
+                    ? percentToFloat(encoded) * parent
+                    : (isAuto(encoded)
+                        ? parent
+                        : encoded
+                    )
+                );
+
+    } //computeWithParentSize
 
 } //ViewSize
