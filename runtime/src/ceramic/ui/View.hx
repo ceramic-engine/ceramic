@@ -22,7 +22,7 @@ class View extends Quad {
     function set_viewWidth(viewWidth:Float):Float {
         if (this.viewWidth == viewWidth) return viewWidth;
         this.viewWidth = viewWidth;
-        layoutDirty = true;
+        parentsLayoutDirty();
         return viewWidth;
     }
 
@@ -31,7 +31,7 @@ class View extends Quad {
     function set_viewHeight(viewHeight:Float):Float {
         if (this.viewHeight == viewHeight) return viewHeight;
         this.viewHeight = viewHeight;
-        layoutDirty = true;
+        parentsLayoutDirty();
         return viewHeight;
     }
 
@@ -159,7 +159,7 @@ class View extends Quad {
     override function set_active(active:Bool):Bool {
         if (this.active == active) return active;
         super.set_active(active);
-        layoutDirty = true;
+        parentsLayoutDirty(); // TODO avoid this when not needed
         return active;
     }
 
@@ -167,6 +167,7 @@ class View extends Quad {
         if (_width == width) return width;
         _width = width;
         layoutDirty = true;
+        if (anchorX != 0) matrixDirty = true;
         if (borderSize > 0) updateBorder();
         return width;
     }
@@ -175,6 +176,7 @@ class View extends Quad {
         if (_height == height) return height;
         _height = height;
         layoutDirty = true;
+        if (anchorY != 0) matrixDirty = true;
         if (borderSize > 0) updateBorder();
         return height;
     }
@@ -197,23 +199,22 @@ class View extends Quad {
         super.add(visual);
         if (Std.is(visual,View)) {
             var view:View = cast visual;
-            view.layoutDirty = true;
             if (subviews == null) {
                 subviews = [];
             }
             @:privateAccess subviews.mutable.push(view);
         }
-        layoutDirty = true;
+        parentsLayoutDirty();
     }
 
     override function remove(visual:Visual):Void {
         super.remove(visual);
         if (Std.is(visual,View)) {
             var view:View = cast visual;
-            view.layoutDirty = true;
             @:privateAccess subviews.mutable.splice(subviews.indexOf(view), 1);
+            view.layoutDirty = true;
         }
-        layoutDirty = true;
+        parentsLayoutDirty();
     }
 
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
@@ -266,6 +267,16 @@ class View extends Quad {
         _allViews.splice(_allViews.indexOf(this), 1);
 
     } //destroy
+
+    public function removeAllViews():Void {
+
+        if (subviews == null) return;
+        for (view in [].concat(@:privateAccess subviews.mutable)) {
+            remove(view);
+        }
+        subviews = null;
+
+    } //removeAllViews
 
     public function autoSize():Void {
 
@@ -340,6 +351,18 @@ class View extends Quad {
         // Override in subclasses
 
     } //layout
+
+/// Parents layout
+
+    inline function parentsLayoutDirty():Void {
+
+        var root = this;
+        while (root.parent != null && Std.is(root.parent, View)) {
+            root = cast root.parent;
+        }
+        root.layoutDirty = true;
+
+    } //parentsLayoutDirty
 
 /// On-demand explicit layout
 

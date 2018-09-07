@@ -319,6 +319,7 @@ class Visual extends Entity {
     function set_width(width:Float):Float {
         if (_width == width) return width;
         _width = width;
+        if (anchorX != 0) matrixDirty = true;
         return width;
     }
 
@@ -331,6 +332,7 @@ class Visual extends Entity {
     function set_height(height:Float):Float {
         if (_height == height) return height;
         _height = height;
+        if (anchorY != 0) matrixDirty = true;
         return height;
     }
 
