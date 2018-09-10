@@ -78,6 +78,8 @@ class Timer {
         
         delay(seconds, tick);
 
+        // TODO handle owned long intervals without needing to keep destroyed objects in memory
+
         return clearInterval;
 
     } //interval
