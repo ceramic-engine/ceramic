@@ -71,6 +71,8 @@ class Spine extends Visual {
 
     var clipper:SkeletonClipping = new SkeletonClipping();
 
+    var muteEvents:Bool = false;
+
 /// Events
 
     /** When a spine animation has completed/finished. */
@@ -439,7 +441,7 @@ class Spine extends Visual {
 
         listener.onComplete = function(track) {
             
-            emitComplete();
+            if (!muteEvents) emitComplete();
 
         };
 
@@ -527,7 +529,7 @@ class Spine extends Visual {
             if (canFreeze()) {
                 frozen = true;
                 app.onceImmediate(function() {
-                    emitComplete();
+                    if (!muteEvents) emitComplete();
                 });
             } else {
                 frozen = false;
@@ -548,8 +550,10 @@ class Spine extends Visual {
 
         var prevPaused = paused;
         var prevFrozen = frozen;
+        var prevMuteEvents = muteEvents;
         paused = false;
         frozen = false;
+        muteEvents = true;
 
         var i = 0;
         for (aTrack in state.tracks) {
@@ -569,6 +573,7 @@ class Spine extends Visual {
 
         paused = prevPaused;
         frozen = prevFrozen;
+        muteEvents = prevMuteEvents;
 
     } //forceRender
 
