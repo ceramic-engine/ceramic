@@ -1,5 +1,6 @@
 package ceramic.macros;
 
+import haxe.macro.TypeTools;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
@@ -33,6 +34,14 @@ class ObservableMacro {
 
         var newFields:Array<Field> = [];
 
+        var localClassParams:Array<TypeParam> = null;
+        if (localClass.params != null) {
+            localClassParams = [];
+            for (param in localClass.params) {
+                localClassParams.push(TPType(TypeTools.toComplexType(param.t)));
+            }
+        }
+
         if (!fieldsByName.exists('observedDirty')) {
 
             var eventField = {
@@ -45,7 +54,7 @@ class ObservableMacro {
                             type: TPath({
                                 name: localClass.name,
                                 pack: localClass.pack,
-                                params: cast localClass.params
+                                params: localClassParams
                             })
                         },
                         {
