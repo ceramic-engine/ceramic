@@ -825,7 +825,7 @@ class Visual extends Entity {
         if (computedVisible) {
 
             if (parent != null) {
-                if (!parent.computedVisible) {
+                if (!parent.computedVisible && (parent.inheritAlpha || !parent.visible || (parent.parent != null && !parent.parent.computedVisible))) {
                     computedVisible = false;
                 }
                 if (inheritAlpha) computedAlpha *= parent.computedAlpha;
