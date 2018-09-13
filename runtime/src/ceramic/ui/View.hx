@@ -22,7 +22,7 @@ class View extends Quad {
     function set_viewWidth(viewWidth:Float):Float {
         if (this.viewWidth == viewWidth) return viewWidth;
         this.viewWidth = viewWidth;
-        parentsLayoutDirty();
+        layoutDirty = true;
         return viewWidth;
     }
 
@@ -31,7 +31,7 @@ class View extends Quad {
     function set_viewHeight(viewHeight:Float):Float {
         if (this.viewHeight == viewHeight) return viewHeight;
         this.viewHeight = viewHeight;
-        parentsLayoutDirty();
+        layoutDirty = true;
         return viewHeight;
     }
 
@@ -90,18 +90,7 @@ class View extends Quad {
         Default is `true` */
     public var canLayout:Bool;
 
-    public var layoutDirty(default,set):Bool = true;
-    function set_layoutDirty(layoutDirty:Bool):Bool {
-        this.layoutDirty = layoutDirty;
-        if (layoutDirty) {
-            if (subviews != null) {
-                for (view in subviews) {
-                    view.layoutDirty = true;
-                }
-            }
-        }
-        return layoutDirty;
-    }
+    public var layoutDirty:Bool = true;
 
 /// Border
 
@@ -159,7 +148,7 @@ class View extends Quad {
     override function set_active(active:Bool):Bool {
         if (this.active == active) return active;
         super.set_active(active);
-        parentsLayoutDirty(); // TODO avoid this when not needed
+        layoutDirty = true;
         return active;
     }
 
@@ -204,7 +193,7 @@ class View extends Quad {
             }
             @:privateAccess subviews.mutable.push(view);
         }
-        parentsLayoutDirty();
+        layoutDirty = true;
     }
 
     override function remove(visual:Visual):Void {
@@ -214,7 +203,7 @@ class View extends Quad {
             @:privateAccess subviews.mutable.splice(subviews.indexOf(view), 1);
             view.layoutDirty = true;
         }
-        parentsLayoutDirty();
+        layoutDirty = true;
     }
 
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
@@ -352,18 +341,6 @@ class View extends Quad {
 
     } //layout
 
-/// Parents layout
-
-    inline function parentsLayoutDirty():Void {
-
-        var root = this;
-        while (root.parent != null && Std.is(root.parent, View)) {
-            root = cast root.parent;
-        }
-        root.layoutDirty = true;
-
-    } //parentsLayoutDirty
-
 /// On-demand explicit layout
 
     public static function requestLayout():Void {
@@ -390,19 +367,28 @@ class View extends Quad {
 
         _layouting = true;
 
-        var toUpdate:Array<View> = null;
+        var hasAnyDirty = false;
 
         // Gather views to update first
         for (view in _allViews) {
             if (view.layoutDirty) {
-                // TODO avoid allocation of array?
-                if (toUpdate == null) toUpdate = [];
-                toUpdate.push(view);
+                hasAnyDirty = true;
+                break;
             }
         }
 
-        // Then emit layout event by starting from the top-level views
-        if (toUpdate != null) {
+        // TODO prevent allocation?
+        var toUpdate = [].concat(_allViews);
+
+        if (hasAnyDirty) {
+            // Mark all parent-of-dirty views as dirty as well
+            for (view in toUpdate) {
+                _markParentsAsLayoutDirty(view);
+            }
+            // Then emit layout event by starting from the top-level views
+            for (view in toUpdate) {
+                _layoutParentThenSelf(view);
+            }
             for (view in toUpdate) {
                 _layoutParentThenSelf(view);
             }
@@ -411,6 +397,18 @@ class View extends Quad {
         _layouting = false;
 
     } //updateViewLayouts
+
+    inline static function _markParentsAsLayoutDirty(view:View):Void {
+
+        if (view.layoutDirty) {
+            var root = view;
+            while (root.parent != null && Std.is(root.parent, View)) {
+                root = cast root.parent;
+                root.layoutDirty = true;
+            }
+        }
+
+    } //_markParentsAsLayoutDirty
 
     static function _layoutParentThenSelf(view:View):Void {
 

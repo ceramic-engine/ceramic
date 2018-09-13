@@ -30,21 +30,6 @@ class ScrollView extends View {
 
 /// Overrides
 
-    override function set_layoutDirty(layoutDirty:Bool):Bool {
-        this.layoutDirty = layoutDirty;
-        if (layoutDirty) {
-            if (contentView.children != null) {
-                for (child in contentView.children) {
-                    if (Std.is(child, View)) {
-                        var view:View = cast child;
-                        view.layoutDirty = true;
-                    }
-                }
-            }
-        }
-        return layoutDirty;
-    }
-
     override function add(visual:Visual) {
 
         contentView.add(visual);
