@@ -378,16 +378,6 @@ class View extends Quad {
 
     } //requestLayout
 
-/// Helpers
-
-    inline public function hasViewWidth() {
-        return !ViewSize.isAuto(viewWidth);
-    }
-
-    inline public function hasViewHeight() {
-        return !ViewSize.isAuto(viewHeight);
-    }
-
 /// Internal
 
     static var _layoutRequested:Bool = false;
