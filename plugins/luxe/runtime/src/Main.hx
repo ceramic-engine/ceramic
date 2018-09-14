@@ -122,8 +122,7 @@ class Main extends luxe.Game {
 
 #if cpp
         // Uncaught error handler in native
-        // TODO use custom handler to dump stack traces and allow to save/send them
-        //config.runtime.uncaught_error_handler = @:privateAccess ceramic.App.handleUncaughtError;
+        config.runtime.uncaught_error_handler = @:privateAccess ceramic.Errors.handleUncaughtError;
 #end
 
 #if web

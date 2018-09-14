@@ -11,6 +11,8 @@ import ceramic.ConvertField;
 import ceramic.Collections;
 import ceramic.Shortcuts.*;
 
+import haxe.CallStack;
+
 import backend.Backend;
 
 #if !macro
@@ -58,6 +60,10 @@ class App extends Entity {
 
     /** Assets events */
     @event function defaultAssetsLoad(assets:Assets);
+
+    /** Fired when the app hits an critical (uncaught) error. Can be used to perform custom crash reporting.
+        If this even is handled, app exit should be performed by the event handler. */
+    @event function criticalError(error:Dynamic, stack:Array<StackItem>);
 
 /// Immediate update event, custom implementation
 
@@ -498,17 +504,5 @@ class App extends Entity {
         SortVisuals.sort(visuals);
 
     } //sortVisuals
-
-/// Uncaught errors
-
-    static function handleUncaughtError(e:Dynamic):Void {
-
-        throw e; // TODO don't rethrow and add logic to be able to save crash dump
-
-#if sys
-        Sys.exit(1);
-#end
-
-    } //handleUncaughtError
 
 }
