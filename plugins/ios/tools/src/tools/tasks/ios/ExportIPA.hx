@@ -153,8 +153,10 @@ class ExportIPA extends tools.Task {
             pbxContent = pbxContent.replace('CODE_SIGN_STYLE = Automatic', 'CODE_SIGN_STYLE = Manual');
             pbxContent = pbxContent.replace('ProvisioningStyle = Automatic', 'ProvisioningStyle = Manual');
             pbxContent = pbxContent.replace('DEVELOPMENT_TEAM = ""', 'DEVELOPMENT_TEAM = $teamId');
-            pbxContent = pbxContent.replace('PROVISIONING_PROFILE = ""', 'PROVISIONING_PROFILE = "$profileId"');
-            pbxContent = pbxContent.replace('PROVISIONING_PROFILE_SPECIFIER = ""', 'PROVISIONING_PROFILE_SPECIFIER = "$profileName"');
+
+            // This should be improved as for now it will only work with ceramic-generated Xcode projects. Should be smarter
+            pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE = ""', 'PROVISIONING_PROFILE = "$profileId"', 2);
+            pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE_SPECIFIER = ""', 'PROVISIONING_PROFILE_SPECIFIER = "$profileName"', 2);
 
             File.saveContent(pbxPath, pbxContent);
 
@@ -209,5 +211,20 @@ class ExportIPA extends tools.Task {
         success('Generated IPA file at path: $iosIPAPath');
 
     } //run
+
+    function replaceWithLimit(text:String, sub:String, by:String, limit:Int):String {
+
+        while (limit-- > 0) {
+            var index = text.indexOf(sub);
+            if (index != -1) {
+                text = text.substring(0, index) + by + text.substr(index + sub.length);
+            } else {
+                break;
+            }
+        }
+
+        return text;
+
+    } //replaceWithLimit
 
 } //ExportIPA
