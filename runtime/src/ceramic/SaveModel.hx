@@ -5,6 +5,10 @@ import ceramic.Assert.*;
 
 class SaveModel {
 
+    inline static var SAVE_ROTATIONS = 5;
+
+    static var saveStepByKey:Map<String,Int> = new Map();
+
 /// Public API
 
     public static function getSavedOrCreate<T:Model>(modelClass:Class<T>, key:String, ?args:Array<Dynamic>):T {
