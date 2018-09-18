@@ -480,18 +480,18 @@ class Helpers {
             var relativePath = RE_HAXE_ERROR.matched(1);
             var lineNumber = RE_HAXE_ERROR.matched(2);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
-            var newPath = Files.getRelativePath(absolutePath, context.cwd);
             if (context.vscode) {
                 // We need to add 1 to character indexes for vscode to interpret them correctly
+                // TODO remove this when using Haxe 4
                 var charsBefore = 'characters ' + RE_HAXE_ERROR.matched(4) + '-' + RE_HAXE_ERROR.matched(5);
                 var charsAfter = 'characters ' + (Std.parseInt(RE_HAXE_ERROR.matched(4)) + 1) + '-' + (Std.parseInt(RE_HAXE_ERROR.matched(5)) + 1);
                 input = input.replace(charsBefore, charsAfter);
             }
-            input = input.replace(relativePath, newPath);
+            input = input.replace(relativePath, absolutePath);
             if (context.colors) {
-                input = '$newPath:$lineNumber: '.gray() + input.substr('$newPath:$lineNumber:'.length + 1).red();
+                input = '$absolutePath:$lineNumber: '.gray() + input.substr('$absolutePath:$lineNumber:'.length + 1).red();
             } else {
-                input = '$newPath:$lineNumber: ' + input.substr('$newPath:$lineNumber:'.length + 1);
+                input = '$absolutePath:$lineNumber: ' + input.substr('$absolutePath:$lineNumber:'.length + 1);
             }
         }
         else if (RE_STACK_FILE_LINE.match(input)) {
