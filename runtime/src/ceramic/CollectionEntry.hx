@@ -9,6 +9,8 @@ using StringTools;
 @:structInit
 class CollectionEntry {
 
+    static var _nextId:Int = 1;
+
     @editable
     public var id:String;
 
@@ -16,9 +18,9 @@ class CollectionEntry {
     public var name:String;
 
     /** Constructor */
-    public function new(id:String, name:String) {
+    public function new(?id:String, ?name:String) {
 
-        this.id = id;
+        this.id = id != null ? id : 'id' + (_nextId++);
         this.name = name;
 
     } //new
