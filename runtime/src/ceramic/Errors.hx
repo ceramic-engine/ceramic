@@ -37,7 +37,7 @@ class Errors {
         for (item in reverseStack) {
             print(stackItemToString(item));
         }
-        print(e);
+        print('[error] ' + e);
 
 #if sys
         if (!hasCustomHandler) Sys.exit(1);

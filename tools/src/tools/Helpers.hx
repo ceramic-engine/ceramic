@@ -452,6 +452,7 @@ class Helpers {
     } //getTargetName
 
     static var RE_STACK_FILE_LINE = ~/Called\s+from\s+([a-zA-Z0-9_:\.]+)\s+(.+?\.hx)\s+line\s+([0-9]+)$/;
+    static var RE_STACK_FILE_LINE_BIS = ~/([a-zA-Z0-9_:\.]+)\s+\((.+?\.hx)\s+line\s+([0-9]+)\)$/;
     static var RE_TRACE_FILE_LINE = ~/(.+?\.hx)::?([0-9]+):?\s+/;
     static var RE_HAXE_ERROR = ~/^(.+)::?(\d+):? (?:lines \d+-(\d+)|character(?:s (\d+)-| )(\d+)) : (?:(Warning) : )?(.*)$/;
     static var RE_JS_FILE_LINE = ~/^(?:\[error\] )?at ([a-zA-Z0-9_\.-]+) \((.+)\)$/;
@@ -503,6 +504,17 @@ class Helpers {
                 input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol '.red() + '$absolutePath:$lineNumber'.gray());
             } else {
                 input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol $absolutePath:$lineNumber');
+            }
+        }
+        else if (RE_STACK_FILE_LINE_BIS.match(input)) {
+            var symbol = RE_STACK_FILE_LINE_BIS.matched(1);
+            var relativePath = RE_STACK_FILE_LINE_BIS.matched(2);
+            var lineNumber = RE_STACK_FILE_LINE_BIS.matched(3);
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            if (context.colors) {
+                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol '.red() + '$absolutePath:$lineNumber'.gray());
+            } else {
+                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol $absolutePath:$lineNumber');
             }
         }
         else if (RE_TRACE_FILE_LINE.match(input)) {
