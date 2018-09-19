@@ -177,7 +177,7 @@ class Assets extends Entity {
 
     } //assetDestroyed
     
-    public function asset(idOrName:Either<AssetId<Dynamic>, String>, ?kind:String):Asset {
+    public function asset(idOrName:Dynamic, ?kind:String):Asset {
 
         var value:String = Std.is(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
         var colonIndex = value.indexOf(':');
