@@ -70,7 +70,7 @@ class App extends Entity {
     var immediateCallbacks:Array<Void->Void> = null;
 
     /** Schedule immediate callback that is garanteed to be executed before the next time frame
-        (before elements are draw onto screen) */
+        (before elements are drawn onto screen) */
     public function onceImmediate(handleImmediate):Void {
 
         if (immediateCallbacks == null) {
