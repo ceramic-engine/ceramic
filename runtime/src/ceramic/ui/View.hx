@@ -209,13 +209,13 @@ class View extends Quad {
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
         @param run The run callback
         @return The autorun instance */
-    override function autorun(run:Void->Void):Autorun {
+    override function autorun(run:Void->Void #if ceramic_debug_autorun , ?pos:haxe.PosInfos #end):Autorun {
 
         return super.autorun(function() {
             run();
             layoutDirty = true;
             requestLayout();
-        });
+        } #if ceramic_debug_autorun , pos #end);
 
     } //autorun
 
