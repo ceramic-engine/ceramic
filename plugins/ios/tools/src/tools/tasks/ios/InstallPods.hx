@@ -23,8 +23,14 @@ class InstallPods extends tools.Task {
         // Create ios project if needed
         IosProject.createIosProjectIfNeeded(cwd, project);
 
+        // Args
+        var cmdArgs = ['install'];
+        if (extractArgFlag(args, 'repo-update')) {
+            cmdArgs.push('--repo-update');
+        }
+
         // Run command
-        command('pod', ['install'], { cwd: Path.join([cwd, 'project/ios/project']) });
+        command('pod', cmdArgs, { cwd: Path.join([cwd, 'project/ios/project']) });
 
     } //run
 
