@@ -136,6 +136,16 @@ class Spine extends Visual {
         return hiddenSlots;
     }
 
+    /** Disabled slots */
+    @editable
+    public var disabledSlots(default,set):Map<String,Bool> = null;
+    function set_disabledSlots(disabledSlots:Map<String,Bool>):Map<String,Bool> {
+        if (this.disabledSlots == disabledSlots) return disabledSlots;
+        this.disabledSlots = disabledSlots;
+        if (pausedOrFrozen) render(0, 0, false);
+        return disabledSlots;
+    }
+
     /** Animation triggers */
     @editable
     public var animationTriggers(default,set):Map<String,String> = null;
@@ -767,6 +777,11 @@ class Spine extends Visual {
             slot = drawOrder[i];
             bone = slot.bone;
             slotName = slot.data.name;
+
+            if (disabledSlots != null && disabledSlots.exists(slotName)) {
+                continue;
+            }
+
             boundSlot = null;
             tintBlack = slot.data.darkColor != null;
             // ⚠️ TODO clipping
