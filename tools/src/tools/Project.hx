@@ -51,6 +51,53 @@ class Project {
 
     } //new
 
+    public function getKind(path:String):ProjectKind {
+
+        if (app != null) return App;
+        if (plugin != null) return Plugin([]);
+
+        if (!FileSystem.exists(path)) {
+            fail('There is no app project file at path: $path');
+        }
+
+        if (FileSystem.isDirectory(path)) {
+            fail('A directory is not a valid ceramic project path at: $path');
+        }
+
+        var data:String = null;
+        try {
+            data = File.getContent(path).replace('{cwd}', context.cwd);
+        }
+        catch (e:Dynamic) {
+            fail('Unable to read project at path $path: $e');
+        }
+
+        // Parse YAML
+        //
+        try {
+            var parsed = Yaml.parse(data);
+
+            if (parsed.app == null) {
+                if (parsed.plugin != null) {
+                    return Plugin([]);
+                } else {
+                    fail('This project is not a ceramic app project.');
+                }
+            } else {
+                return App;
+            }
+
+            app = parsed.app;
+        }
+        catch (e:Dynamic) {
+            fail("Error when parsing project YAML: " + e);
+        }
+        
+        fail('Unable to retrieve project kind.');
+        return null;
+
+    } //getKind
+
     public function loadAppFile(path:String):Void {
 
         if (!FileSystem.exists(path)) {
@@ -63,18 +110,18 @@ class Project {
 
         var data:String = null;
         try {
-            data = File.getContent(path);
+            data = File.getContent(path).replace('{cwd}', context.cwd);
         }
         catch (e:Dynamic) {
             fail('Unable to read project at path $path: $e');
         }
 
-        app = ProjectLoader.loadAppConfig(data, context.defines);
+        app = ProjectLoader.loadAppConfig(data, context.defines, context.plugins);
 
         // Add path
         app.path = Path.isAbsolute(path) ? path : Path.normalize(Path.join([context.cwd, path]));
 
-        // Let tools plugins extend app config
+        // Extend app config from tools plugin code
         if (context.plugins != null) {
             for (plugin in context.plugins) {
                 if (plugin.extendProject != null) {
@@ -118,7 +165,10 @@ class Project {
 
         var data:String = null;
         try {
-            data = File.getContent(path);
+            data = File.getContent(path)
+                .replace('{plugin:cwd}', Path.directory(path))
+                .replace('{cwd}', context.cwd)
+            ;
         }
         catch (e:Dynamic) {
             fail('Unable to read project at path $path: $e');
@@ -142,7 +192,7 @@ class ProjectLoader {
 
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*$/g;
 
-    public static function loadAppConfig(input:String, defines:Map<String,String>):Dynamic<Dynamic> {
+    public static function loadAppConfig(input:String, defines:Map<String,String>, plugins:Map<String, tools.spec.ToolsPlugin>):Dynamic<Dynamic> {
 
         var app:Dynamic<Dynamic> = null;
 
@@ -201,8 +251,22 @@ class ProjectLoader {
                 app.defines = {};
             }
 
+            // Add plugin runtime extra config
+            if (plugins != null) {
+                var pluginI = 0;
+                for (plugin in plugins) {
+                    if (plugin.runtime != null) {
+                        Reflect.setField(
+                            app,
+                            'if true || plugin_runtime_' + (pluginI++),
+                            plugin.runtime
+                        );
+                    }
+                }
+            }
+
             // Evaluate conditionals
-            evaluateConditionals(app, defines);
+            evaluateConditionals(app, defines, true);
 
             // Add additional/default config
             if (app.libs == null) {
@@ -291,6 +355,11 @@ class ProjectLoader {
             fail("Error when parsing project YAML: " + e);
         }
 
+        // Remove runtime key if any
+        if (plugin.runtime != null) {
+            Reflect.deleteField(plugin, 'runtime');
+        }
+
         try {
             
             // Update defines from app
@@ -324,7 +393,7 @@ class ProjectLoader {
             }
 
             // Evaluate conditionals
-            evaluateConditionals(plugin, defines);
+            evaluateConditionals(plugin, defines, true);
 
             // Add additional/default config
             if (plugin.libs == null) {
@@ -362,7 +431,7 @@ class ProjectLoader {
 
 /// Internal
 
-    static function evaluateConditionals(app:Dynamic, defines:Map<String,String>):Void {
+    static function evaluateConditionals(app:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
         // Parse conditionals
         for (key in Reflect.fields(app)) {
@@ -399,7 +468,7 @@ class ProjectLoader {
 
                 // Merge config if condition is true
                 if (result) {
-                    mergeConfigs(app, Reflect.field(app, key), defines);
+                    mergeConfigs(app, Reflect.field(app, key), defines, isRoot);
                 }
 
                 // Remove condition from keys
@@ -409,10 +478,10 @@ class ProjectLoader {
 
     } //evaluateConditionals
 
-    static function mergeConfigs(app:Dynamic, extra:Dynamic, defines:Map<String,String>):Void {
+    static function mergeConfigs(app:Dynamic, extra:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
         // Evaluate conditionals of extra (if any)
-        evaluateConditionals(extra, defines);
+        evaluateConditionals(extra, defines, false);
 
         // Merge keys
         for (key in Reflect.fields(extra)) {
@@ -425,7 +494,8 @@ class ProjectLoader {
                 modifier = '-';
                 key = key.substring(1);
             }
-            var orig:Dynamic = Reflect.field(app, key);
+            var origKey = isRoot || modifier == null ? key : modifier + key;
+            var orig:Dynamic = Reflect.field(app, origKey);
             var value:Dynamic = Reflect.field(extra, (modifier != null ? modifier : '') + key);
 
             // Ensure defines is a map and not an array
@@ -460,7 +530,7 @@ class ProjectLoader {
                     var origStr:String = cast orig;
                     origStr = origStr.rtrim() + "\n" + str.ltrim();
                     orig = origStr;
-                    Reflect.setField(app, key, orig);
+                    Reflect.setField(app, origKey, orig);
                 }
                 // Add in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
@@ -488,7 +558,7 @@ class ProjectLoader {
                     var origStr:String = cast orig;
                     origStr = origStr.replace(str, '');
                     orig = origStr;
-                    Reflect.setField(app, key, orig);
+                    Reflect.setField(app, origKey, orig);
                 }
                 // Remove in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
@@ -509,7 +579,7 @@ class ProjectLoader {
             }
             else {
                 // Replace
-                Reflect.setField(app, key, value);
+                Reflect.setField(app, origKey, value);
             }
 
         }

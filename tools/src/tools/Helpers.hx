@@ -110,8 +110,9 @@ class Helpers {
         context.unbuiltPlugins = new Map();
 
         var plugins:Map<String,{
-            name:String,
-            path:String
+            name:String, // plugin name
+            path:String, // plugin path on disk
+            runtime:Dynamic // runtime additional config
         }> = new Map();
 
         // Default plugins
@@ -121,11 +122,16 @@ class Helpers {
             if (FileSystem.exists(pluginProjectPath)) {
                 // Extract info
                 try {
-                    var info = Yaml.parse(File.getContent(pluginProjectPath));
+                    var str = File.getContent(pluginProjectPath)
+                        .replace('{plugin:cwd}', Path.join([context.defaultPluginsPath, file]))
+                        .replace('{cwd}', context.cwd)
+                    ;
+                    var info = Yaml.parse(str);
                     if (info != null && info.plugin != null && info.plugin.name != null) {
                         plugins.set((''+info.plugin.name).toLowerCase(), {
                             name: info.plugin.name,
-                            path: Path.join([context.defaultPluginsPath, file])
+                            path: Path.join([context.defaultPluginsPath, file]),
+                            runtime: info.plugin.runtime
                         });
                     }
                     else {
@@ -145,6 +151,7 @@ class Helpers {
             var info = plugins.get(key);
             var name:String = info.name;
             var path:String = info.path;
+            var runtime:Dynamic = info.runtime;
             try {
                 if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
                 
@@ -153,6 +160,7 @@ class Helpers {
                     var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
                     plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
                     plugin.name = name;
+                    plugin.runtime = runtime;
                     context.plugins.set(name, plugin);
                 }
                 else {
@@ -586,6 +594,12 @@ class Helpers {
 
     } //formatLineOutput
 
+    public static function getProjectKind(cwd:String, args:Array<String>):ProjectKind {
+
+        return new Project().getKind(Path.join([cwd, 'ceramic.yml']));
+
+    } //getProjectKind
+
     public static function ensureCeramicProject(cwd:String, args:Array<String>, kind:ProjectKind):Project {
 
         switch (kind) {
@@ -594,7 +608,7 @@ class Helpers {
                 project.loadAppFile(Path.join([cwd, 'ceramic.yml']));
                 return project;
 
-            case Plugin(pluginKinds):
+            case Plugin(_):
                 var project = new Project();
                 project.loadPluginFile(Path.join([cwd, 'ceramic.yml']));
                 return project;

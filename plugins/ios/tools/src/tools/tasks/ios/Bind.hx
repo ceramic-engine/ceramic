@@ -25,24 +25,34 @@ class Bind extends tools.Task {
             context.defines.set('ios', '');
         }
 
-        ensureCeramicProject(cwd, args, App);
+        var projectKind = getProjectKind(cwd, args);
+        var isAppProject = (projectKind == App);
+        ensureCeramicProject(cwd, args, projectKind);
 
         // Get project info
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         var project = new tools.Project();
-        project.loadAppFile(projectPath);
+        if (isAppProject) {
+            project.loadAppFile(projectPath);
+        } else {
+            project.loadPluginFile(projectPath);
+        }
 
         // Create ios project if needed
-        IosProject.createIosProjectIfNeeded(cwd, project);
+        if (isAppProject) {
+            IosProject.createIosProjectIfNeeded(cwd, project);
+        }
 
         // Get search paths
         var searchPaths = IosProject.headerSearchPaths(cwd, project, context.defines.exists('debug'));
 
-        if (project.app.bind != null) {
-            var toBind:Array<String> = project.app.bind;
+        if ((isAppProject && project.app.bind != null) || (!isAppProject && project.plugin.bind != null)) {
+            var toBind:Array<String> = isAppProject ? project.app.bind : project.plugin.bind;
             for (header in toBind) {
+                var headerFound = false;
                 for (aPath in searchPaths) {
-                    var headerPath = Path.join([aPath, header]);
+                    var isAbsolute = Path.isAbsolute(header);
+                    var headerPath = isAbsolute ? header : Path.join([aPath, header]);
                     if (headerPath.endsWith('.h') && FileSystem.exists(headerPath) && !FileSystem.isDirectory(headerPath)) {
                         
                         // Run bind library
@@ -63,7 +73,7 @@ class Bind extends tools.Task {
 
                         // Yes! Save files.
                         //
-                        var projectSrcPath = Path.join([cwd, 'src']);
+                        var projectSrcPath = isAppProject ? Path.join([cwd, 'src']) : Path.join([cwd, 'runtime/src']);
                         var allInfo:Array<{path:String,content:String}> = [];
 
                         try {
@@ -86,8 +96,15 @@ class Bind extends tools.Task {
 
                         }
 
+                        headerFound = true;
                         break;
                     }
+
+                    if (isAbsolute) break;
+                }
+
+                if (!headerFound) {
+                    warning('Failed to resolve header: ' + header);
                 }
             }
         }

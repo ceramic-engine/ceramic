@@ -3,4 +3,7 @@ use_frameworks!
 
 target 'MyApp' do
   #pod 'SomePodDependencyName', '~> 1.0'
+
+  # BEGIN CERAMIC PODS
+  # END CERAMIC PODS
 end

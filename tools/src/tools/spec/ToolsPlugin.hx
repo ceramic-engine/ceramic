@@ -10,6 +10,8 @@ typedef ToolsPlugin = {
 
     var name:String;
 
+    var runtime:Dynamic;
+
     function init(context:Context):Void;
 
     @:optional function extendProject(project:Project):Void;

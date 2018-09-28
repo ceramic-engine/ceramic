@@ -25,6 +25,8 @@ class InstallPods extends tools.Task {
 
         // Args
         var cmdArgs = ['install'];
+
+        // Repo update?
         if (extractArgFlag(args, 'repo-update')) {
             cmdArgs.push('--repo-update');
         }

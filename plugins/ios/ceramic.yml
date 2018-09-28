@@ -1,2 +1,13 @@
 plugin:
     name: iOS
+
+    runtime:
+        if ios:
+            +podspecs:
+                - '{plugin:cwd}/support/CeramicIosSupport/CeramicIosSupport.podspec'
+            +bind:
+                - '{plugin:cwd}/support/CeramicIosSupport/CeramicIosSupport/Support/Http.h'
+            +hooks:
+                - when: begin build
+                  command: ceramic
+                  args: ['ios', 'bind']

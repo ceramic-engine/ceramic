@@ -99,6 +99,8 @@ class IosProject {
         headerSearchPaths.push(iosProjectPath + '/project/Classes');
         // Headers included in project root dir
         headerSearchPaths.push(iosProjectPath);
+        // Headers included in ceramic project root dir as well
+        headerSearchPaths.push(cwd);
 
         return headerSearchPaths;
 
