@@ -26,7 +26,7 @@ class Http implements spec.Http {
 
         if (options.headers != null) {
             requestOptions.headers = {};
-            for (key in options.headers) {
+            for (key in options.headers.keys()) {
                 Reflect.setField(requestOptions.headers, key, options.headers.get(key));
             }
         }
@@ -82,12 +82,12 @@ class Http implements spec.Http {
         requestOptions.method = options.method != null ? options.method : 'GET';
         if (options.headers != null) {
             requestOptions.headers = {};
-            for (key in options.headers) {
+            for (key in options.headers.keys()) {
                 Reflect.setField(requestOptions.headers, key, options.headers.get(key));
             }
         }
         if (options.content != null) {
-            requestOptions = options.content;
+            requestOptions.content = options.content;
         }
 
         IosHttp.sendHTTPRequest(requestOptions, function(rawResponse) {
@@ -108,20 +108,32 @@ class Http implements spec.Http {
 
 #elseif akifox_asynchttp
 
+        var contentType = "application/x-www-form-urlencoded";
         var httpHeaders;
         if (options.headers != null) {
             httpHeaders = new com.akifox.asynchttp.HttpHeaders();
-            for (key in options.headers) {
-                httpHeaders.add(key, options.headers.get(key));
+            for (key in options.headers.keys()) {
+                if (key.toLowerCase() == 'content-type') {
+                    contentType = options.headers.get(key);
+                } else {
+                    httpHeaders.add(key, options.headers.get(key));
+                }
             }
         } else {
             httpHeaders = null;
         }
 
-        var request = new com.akifox.asynchttp.HttpRequest({
+        trace(options.headers);
+
+        var content:String = null;
+        if (options.content != null) {
+            content = options.content + "\n";
+        }
+
+        var requestOptions:com.akifox.asynchttp.HttpRequest.HttpRequestOptions = {
             url: options.url,
             method: options.method != null ? options.method : 'GET',
-            content: options.content,
+            contentType: contentType,
             headers: httpHeaders,
             callback: function(res:com.akifox.asynchttp.HttpResponse) {
 
@@ -140,7 +152,15 @@ class Http implements spec.Http {
                 done(response);
 
             }
-        });
+        };
+
+        // Add content
+        if (options.content != null) {
+            requestOptions.content = options.content;
+            requestOptions.contentIsBinary = false;
+        }
+
+        var request = new com.akifox.asynchttp.HttpRequest(requestOptions);
 
         request.send();
 

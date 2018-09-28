@@ -1,4 +1,4 @@
-package backend;
+package ceramic;
 
 @:enum abstract HttpMethod(String) from String to String {
 

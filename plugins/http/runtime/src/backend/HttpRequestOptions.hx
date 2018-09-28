@@ -4,7 +4,7 @@ typedef HttpRequestOptions = {
 
     var url:String;
 
-    @:optional var method:HttpMethod;
+    @:optional var method:ceramic.HttpMethod;
 
     @:optional var headers:Map<String,String>;
 
