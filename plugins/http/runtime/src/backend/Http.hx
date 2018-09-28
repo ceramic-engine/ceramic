@@ -2,6 +2,10 @@ package backend;
 
 using StringTools;
 
+#if ios
+import ios.Http as IosHttp;
+#end
+
 class Http implements spec.Http {
 
     public function new() {}
@@ -70,6 +74,37 @@ class Http implements spec.Http {
         }
         
         req.end();
+
+#elseif ios
+
+        var requestOptions:Dynamic = {};
+        requestOptions.url = options.url;
+        requestOptions.method = options.method != null ? options.method : 'GET';
+        if (options.headers != null) {
+            requestOptions.headers = {};
+            for (key in options.headers) {
+                Reflect.setField(requestOptions.headers, key, options.headers.get(key));
+            }
+        }
+        if (options.content != null) {
+            requestOptions = options.content;
+        }
+
+        IosHttp.sendHTTPRequest(requestOptions, function(rawResponse) {
+            var useContent = rawResponse.status >= 200 && rawResponse.status < 300;
+            var headers = new Map<String,String>();
+            if (rawResponse.headers != null) {
+                for (key in Reflect.fields(rawResponse.headers)) {
+                    headers.set(key, Reflect.field(rawResponse.headers, key));
+                }
+            }
+            done({
+                status: rawResponse.status,
+                content: useContent ? rawResponse.content : null,
+                headers: headers,
+                error: rawResponse.error
+            });
+        });
 
 #elseif akifox_asynchttp
 
