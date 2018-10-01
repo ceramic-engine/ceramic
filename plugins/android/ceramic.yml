@@ -1,2 +1,14 @@
 plugin:
     name: Android
+
+    runtime:
+        if android:
+            +java:
+                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
+                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/http/HttpRequest.java'
+            +bind:
+                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
+            +hooks:
+                - when: begin build
+                  command: ceramic
+                  args: ['android', 'bind']
