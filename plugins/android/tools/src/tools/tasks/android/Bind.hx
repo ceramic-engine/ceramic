@@ -40,9 +40,10 @@ class Bind extends tools.Task {
 
         if (project.app.bind != null) {
             var toBind:Array<String> = project.app.bind;
-            for (header in toBind) {
+            for (java in toBind) {
                 for (aPath in searchPaths) {
-                    var javaPath = Path.join([aPath, header]);
+                    var isAbsolute = Path.isAbsolute(java);
+                    var javaPath = isAbsolute ? java : Path.join([aPath, java]);
                     if (javaPath.endsWith('.java') && FileSystem.exists(javaPath) && !FileSystem.isDirectory(javaPath)) {
                         
                         // Run bind library
@@ -91,6 +92,8 @@ class Bind extends tools.Task {
 
                         break;
                     }
+
+                    if (isAbsolute) break;
                 }
             }
         }
