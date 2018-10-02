@@ -115,6 +115,54 @@ class AndroidProject {
 
     } //copyOpenALBinariesIfNeeded
 
+    public static function copyJavaFilesIfNeeded(cwd:String, project:Project):Void {
+
+        var androidProjectPath = Path.join([cwd, 'project/android']);
+
+        if (project.app.java != null) {
+            var javaFiles:Array<String> = project.app.java;
+            for (javaFile in javaFiles) {
+                var java = File.getContent(javaFile);
+                var pack = findJavaPackage(java);
+                if (pack == null) {
+                    warning('Failed to retrieve package of java file: ' + javaFile);
+                }
+                else {
+                    var targetDir = Path.join([androidProjectPath, 'app/src/bind/java', pack.replace('.', '/')]);
+                    var targetFile = Path.join([targetDir, Path.withoutDirectory(javaFile)]);
+                    if (!FileSystem.exists(targetDir)) {
+                        FileSystem.createDirectory(targetDir);
+                    }
+                    print('Copy ' + Path.join([pack.replace('.', '/'), Path.withoutDirectory(javaFile)]));
+                    File.saveContent(targetFile, java);
+                }
+            }
+        }
+
+    } //copyJavaFilesIfNeeded
+
+    public static function findJavaPackage(java:String):String {
+
+        var i = 0;
+        while (i < java.length) {
+            var sub = java.substring(i);
+            if (sub.startsWith('package')) {
+                sub = sub.substring('package'.length);
+                var pack = '';
+                var j = 0;
+                while (sub.charAt(j) != ';') {
+                    pack += sub.charAt(j);
+                    j++;
+                }
+                return pack.replace(' ', '').trim();
+            }
+            i++;
+        }
+
+        return null;
+
+    } //findJavaPackage
+
     public static function javaSearchPaths(cwd:String, project:Project, debug:Bool):Array<String> {
 
         // Get header search paths

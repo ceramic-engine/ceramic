@@ -248,7 +248,7 @@ class Build extends tools.Task {
                 warning('Did you enable ceramic\'s android plugin?');
             }
             else {
-                var taskArgs = ['android', 'studio', '--run', '--variant', context.variant];
+                var taskArgs = ['android', 'studio', '--open', '--variant', context.variant];
                 if (debug) taskArgs.push('--debug');
                 task.run(cwd, taskArgs);
             }

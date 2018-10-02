@@ -2,7 +2,9 @@ package backend;
 
 using StringTools;
 
-#if ios
+#if android
+import android.Http as AndroidHttp;
+#elseif ios
 import ios.Http as IosHttp;
 #end
 
@@ -74,6 +76,37 @@ class Http implements spec.Http {
         }
         
         req.end();
+
+#elseif android
+
+        var requestOptions:Dynamic = {};
+        requestOptions.url = options.url;
+        requestOptions.method = options.method != null ? options.method : 'GET';
+        if (options.headers != null) {
+            requestOptions.headers = {};
+            for (key in options.headers.keys()) {
+                Reflect.setField(requestOptions.headers, key, options.headers.get(key));
+            }
+        }
+        if (options.content != null) {
+            requestOptions.content = options.content;
+        }
+
+        AndroidHttp.sendHttpRequest(requestOptions, function(rawResponse) {
+            var useContent = rawResponse.status >= 200 && rawResponse.status < 300;
+            var headers = new Map<String,String>();
+            if (rawResponse.headers != null) {
+                for (key in Reflect.fields(rawResponse.headers)) {
+                    headers.set(key, Reflect.field(rawResponse.headers, key));
+                }
+            }
+            done({
+                status: rawResponse.status,
+                content: useContent ? rawResponse.content : null,
+                headers: headers,
+                error: rawResponse.error
+            });
+        });
 
 #elseif ios
 

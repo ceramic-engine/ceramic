@@ -22,6 +22,11 @@ class NdkStack extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        // Add android flag
+        if (!context.defines.exists('android')) {
+            context.defines.set('android', '');
+        }
+
         var os = Sys.systemName();
         if (os == 'Windows') {
             fail('This command is not supported on Windows systems.');

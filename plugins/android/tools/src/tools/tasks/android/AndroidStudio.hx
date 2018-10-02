@@ -22,6 +22,11 @@ class AndroidStudio extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        // Add android flag
+        if (!context.defines.exists('android')) {
+            context.defines.set('android', '');
+        }
+
         var project = ensureCeramicProject(cwd, args, App);
 
         var androidProjectPath = Path.join([cwd, 'project/android']);
@@ -29,6 +34,9 @@ class AndroidStudio extends tools.Task {
 
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
+
+        // Copy java files if needed
+        AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
         // Copy OpenAL binaries if needed
         AndroidProject.copyOpenALBinariesIfNeeded(cwd, project);
@@ -38,14 +46,18 @@ class AndroidStudio extends tools.Task {
         if (os == 'Mac' && FileSystem.exists(androidProjectFile)) {
 
             // Build or Run?
-            var doBuild = extractArgFlag(args, 'build');
+            var doOpen = extractArgFlag(args, 'build') || extractArgFlag(args, 'open');
             var doRun = extractArgFlag(args, 'run');
 
             // Open project
             if (doRun) {
                 print('Open and run Android Studio project');
-            } else {
+            }
+            else if (doOpen) {
                 print('Open Android Studio project');
+            }
+            else {
+                return;
             }
 
             Sync.run(function(done) {

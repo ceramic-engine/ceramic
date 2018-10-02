@@ -80,7 +80,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 // Body
                 if (params.get("content") != null) {
                     DataOutputStream os = new DataOutputStream(connection.getOutputStream());
-                    os.writeBytes((String) params.get("body"));
+                    os.writeBytes((String) params.get("content"));
                     os.flush();
                     os.close();
                 }
@@ -101,7 +101,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 mContent = responseOutput.toString();
 
                 for (String name : connection.getHeaderFields().keySet()) {
-                    mHeaders.put(name, connection.getHeaderField(name));
+                    if (name != null) mHeaders.put(name, connection.getHeaderField(name));
                 }
 
             } catch (Throwable e) {
