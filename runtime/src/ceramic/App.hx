@@ -151,6 +151,9 @@ class App extends Entity {
     /** Project directory. May be null depending on the platform. */
     public var projectDir:String = null;
 
+    /** App level persistent data */
+    public var persistent(default,null):PersistentData = null;
+
 /// Field converters
 
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
@@ -193,6 +196,10 @@ class App extends Entity {
 
     function backendReady():Void {
 
+        // Init persistent data (that relies on backend)
+        persistent = new PersistentData('app');
+
+        // Notify screen
         screen.backendReady();
 
         // Run pre-init callbacks
