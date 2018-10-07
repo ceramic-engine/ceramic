@@ -1,10 +1,11 @@
 package ceramic;
 
 import ceramic.internal.PlatformSpecific;
-
 import haxe.rtti.CType;
+import ceramic.Shortcuts.*;
 
 using StringTools;
+using ceramic.Extensions;
 
 /** Various utilities. Some of them are used by ceramic itself or its backends. */
 class Utils {
@@ -32,6 +33,8 @@ class Utils {
     static var _nextUniqueInt2:Int = Std.random(0x7fffffff);
     static var _nextUniqueInt3:Int = Std.random(0x7fffffff);
 
+    /** Provides an identifier which is garanteed to be unique on this local device.
+        It however doesn't garantee that this identifier is not predictable. */
     public static function uniqueId():String {
 
         switch (_nextUniqueIntCursor) {
@@ -49,6 +52,65 @@ class Utils {
         return base62Id(_nextUniqueInt0) + base62Id() + base62Id(_nextUniqueInt1) + base62Id() + base62Id(_nextUniqueInt2) + base62Id() + base62Id(_nextUniqueInt3);
 
     } //uniqueId
+
+    /** Provides a random identifier which should be fairly unpredictable and
+        should have an extremely low chance to provide the same identifier twice. */
+    public static function randomId(?size:Int = 32):String {
+
+        var chars = [];
+        while (chars.length < size) {
+            var chunk = base62Id();
+            for (i in 0...chunk.length) {
+                chars.push(chunk.charAt(i));
+            }
+        }
+        chars.shuffle();
+        return chars.join('').substr(0, size);
+
+    } //randomId
+
+    static var _persistentIds:Map<Int,String> = null;
+
+    /** Return a persistent identifier for this device. The identifier is expected
+        to stay the same as long as the user keeps the app installed.
+        Multiple identifiers can be generated/retrieved by using different slots (default 0).
+        Size of the persistent identifier can be provided, but will only have effect when
+        generating a new identifier. */
+    public static function persistentId(?slot:Int = 0, ?size:Int = 32):String {
+
+        // Create map if needed
+        if (_persistentIds == null) _persistentIds = new Map();
+
+        // Already loaded?
+        var id = _persistentIds.get(slot);
+        if (id != null) return id;
+
+        // No, check disk
+        id = app.backend.io.readString('persistentId_$slot');
+        if (id != null) {
+            _persistentIds.set(slot, id);
+            return id;
+        }
+
+        // No id, create a new one
+        id = randomId(size);
+        if (!app.backend.io.saveString('persistentId_$slot', id)) {
+            warning('Failed to save persistent id at slot $slot');
+        }
+        // Keep id in memory
+        _persistentIds.set(slot, id);
+
+        // Return result
+        return id;
+
+    } //persistentId
+
+    public static function resetPersistentId(?slot:Int = 0) {
+
+        if (_persistentIds != null) _persistentIds.remove(slot);
+        app.backend.io.saveString('persistentId_$slot', null);
+
+    } //resetPersistentId
 
     inline public static function base62Id(?val:Null<Int>):String {
 
