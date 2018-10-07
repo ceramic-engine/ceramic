@@ -143,6 +143,8 @@ class AndroidProject {
 
     public static function findJavaPackage(java:String):String {
 
+        java = getCodeWithEmptyCommentsAndStrings(java);
+
         var i = 0;
         while (i < java.length) {
             var sub = java.substring(i);
@@ -179,5 +181,76 @@ class AndroidProject {
         return javaSearchPaths;
 
     } //javaSearchPaths
+
+    static function getCodeWithEmptyCommentsAndStrings(input:String):String {
+
+        var i = 0;
+        var output = '';
+        var len = input.length;
+        var inSingleLineComment = false;
+        var inMultilineComment = false;
+        var c, cc;
+
+        while (i < len) {
+
+            c = input.charAt(i);
+            cc = input.substr(i, 2);
+
+            if (inSingleLineComment) {
+                if (c == "\n") {
+                    inSingleLineComment = false;
+                    output += "\n";
+                }
+                else {
+                    output += ' ';
+                }
+                i++;
+            }
+            else if (inMultilineComment) {
+                if (cc == '*/') {
+                    inMultilineComment = false;
+                    output += '  ';
+                    i += 2;
+                }
+                else {
+                    if (c == "\n") {
+                        output += "\n";
+                    }
+                    else {
+                        output += ' ';
+                    }
+                    i++;
+                }
+            }
+            else if (cc == '//') {
+                inSingleLineComment = true;
+                output += '  ';
+                i += 2;
+            }
+            else if (cc == '/*') {
+                inMultilineComment = true;
+                output += '  ';
+                i += 2;
+            }
+            else if ((c == '"' || c == '\'') && RE_STRING.match(input.substring(i))) {
+                var len = RE_STRING.matched(0).length - 2;
+                output += c;
+                while (len-- > 0) {
+                    output += ' ';
+                }
+                output += c;
+                i += RE_STRING.matched(0).length;
+            }
+            else {
+                output += c;
+                i++;
+            }
+        }
+
+        return output;
+
+    } //getCodeWithEmptyComments
+
+    static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
 
 } //AndroidProject
