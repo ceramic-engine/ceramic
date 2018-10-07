@@ -41,6 +41,7 @@ class Bind extends tools.Task {
         if (project.app.bind != null) {
             var toBind:Array<String> = project.app.bind;
             for (java in toBind) {
+                var javaFound = false;
                 for (aPath in searchPaths) {
                     var isAbsolute = Path.isAbsolute(java);
                     var javaPath = isAbsolute ? java : Path.join([aPath, java]);
@@ -90,10 +91,15 @@ class Bind extends tools.Task {
 
                         }
 
+                        javaFound = true;
                         break;
                     }
 
                     if (isAbsolute) break;
+                }
+
+                if (!javaFound) {
+                    warning('Failed to resolve java file: ' + java);
                 }
             }
         }
