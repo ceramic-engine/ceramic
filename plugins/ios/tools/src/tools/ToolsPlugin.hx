@@ -30,6 +30,7 @@ class ToolsPlugin {
         tasks.set('ios xcode', new tools.tasks.ios.Xcode());
         tasks.set('ios export ipa', new tools.tasks.ios.ExportIPA());
         tasks.set('ios pod install', new tools.tasks.ios.InstallPods());
+        tasks.set('ios profile uuid', new tools.tasks.ios.ProfileUUID());
 
     } //init
 
