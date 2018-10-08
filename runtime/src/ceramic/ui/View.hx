@@ -192,6 +192,7 @@ class View extends Quad {
                 subviews = [];
             }
             @:privateAccess subviews.mutable.push(view);
+            view.layoutDirty = true;
         }
         layoutDirty = true;
     }
@@ -213,11 +214,17 @@ class View extends Quad {
 
         return super.autorun(function() {
             run();
-            layoutDirty = true;
-            requestLayout();
+            app.onceImmediate(_autorunLayout);
         } #if ceramic_debug_autorun , pos #end);
 
     } //autorun
+
+    function _autorunLayout() {
+
+        layoutDirty = true;
+        requestLayout();
+
+    } //_autorunLayout
 
 /// Lifecycle
 

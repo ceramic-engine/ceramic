@@ -19,5 +19,7 @@ interface Backend {
     var screen(default,null):backend.Screen;
 
     var http(default,null):backend.Http;
+
+    var textInput(default,null):backend.TextInput;
     
 } //Backend

@@ -154,6 +154,9 @@ class App extends Entity {
     /** App level persistent data */
     public var persistent(default,null):PersistentData = null;
 
+    /** Text input manager */
+    public var textInput(default,null):TextInput = null;
+
 /// Field converters
 
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
@@ -198,6 +201,9 @@ class App extends Entity {
 
         // Init persistent data (that relies on backend)
         persistent = new PersistentData('app');
+
+        // Init text input manager
+        textInput = new TextInput();
 
         // Notify screen
         screen.backendReady();
