@@ -11,6 +11,8 @@ class PersistentData {
 
     public function new(id:String) {
 
+        this.id = id;
+
         var rawData = app.backend.io.readString('persistent_' + id);
         if (rawData != null) {
             try {
