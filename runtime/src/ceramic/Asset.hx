@@ -171,6 +171,10 @@ class Asset extends Entity implements Observable {
             }
         }
 
+        if (path == null) {
+            path = name;
+        }
+
         this.path = path; // sets density
 
         // Set additional options
