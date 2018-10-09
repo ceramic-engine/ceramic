@@ -46,11 +46,16 @@ class ExportAPK extends tools.Task {
         }
         FileSystem.createDirectory(buildPath);
 
+        // Depending on the build tools, apk may not be at the same place. Yea...
         var androidAPKPath = Path.join([buildPath, 'outputs/apk/app-release.apk']);
+        var androidAPKPath2 = Path.join([buildPath, 'outputs/apk/release/app-release.apk']);
 
         // Delete previous apk if any
         if (FileSystem.exists(androidAPKPath)) {
             FileSystem.deleteFile(androidAPKPath);
+        }
+        if (FileSystem.exists(androidAPKPath2)) {
+            FileSystem.deleteFile(androidAPKPath2);
         }
 
         // Export APK
@@ -63,7 +68,12 @@ class ExportAPK extends tools.Task {
 
         // Check that APK has been generated
         if (!FileSystem.exists(androidAPKPath)) {
-            fail('Expected APK file not found: $androidAPKPath');
+            if (!FileSystem.exists(androidAPKPath2)) {
+                fail('Expected APK file not found at $androidAPKPath or $androidAPKPath2');
+            } else {
+                // Always export to the same path for consistency sake
+                FileSystem.rename(androidAPKPath2, androidAPKPath);
+            }
         }
 
         success('Generated APK file at path: $androidAPKPath');
