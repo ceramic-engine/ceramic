@@ -84,7 +84,7 @@ class Http {
             headers: headers,
             content: content
         };
-        warning('REQUEST OPTIONS: ' + backendOptions);
+
         app.backend.http.request(backendOptions, function(backendResponse) {
             var resHeaders = new Map<String,String>();
             if (backendResponse.headers != null) {
@@ -92,6 +92,15 @@ class Http {
                     resHeaders.set(formatHeaderKey(key), backendResponse.headers.get(key));
                 }
             }
+
+            // Remove any trailing line break (which may be inconsistent between implementations)
+            if (backendResponse.content != null && backendResponse.content.endsWith("\n")) {
+                backendResponse.content = backendResponse.content.substring(0, backendResponse.content.length - 1);
+                if (backendResponse.content != null && backendResponse.content.endsWith("\r")) {
+                    backendResponse.content = backendResponse.content.substring(0, backendResponse.content.length - 1);
+                }
+            }
+
             done({
                 status: backendResponse.status,
                 content: backendResponse.content,
