@@ -200,6 +200,19 @@ class SerializeModel extends Component {
         serializedMap.remove(model._serializeId);
         
         Serialize._serializedMap = serializedMap;
+        Serialize._onCheckSerializable = function(serializable:Serializable) {
+
+            var id = serializable._serializeId;
+            var model = trackedModels.get(id);
+
+            if (model != null) {
+                if (model != serializable) {
+                    // Replacing object with same id
+                    serializedMap.remove(id);
+                }
+            }
+
+        };
         Serialize._onAddSerializable = function(serializable:Serializable) {
 
             if (Std.is(serializable, Model)) {
@@ -215,6 +228,7 @@ class SerializeModel extends Component {
 
         Serialize.serializeValue(model);
 
+        Serialize._onCheckSerializable = null;
         Serialize._onAddSerializable = null;
         Serialize._serializedMap = null;
 

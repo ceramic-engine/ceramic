@@ -51,6 +51,8 @@ class Serialize {
 
     static var _onAddSerializable:Serializable->Void = null;
 
+    static var _onCheckSerializable:Serializable->Void = null;
+
     static var _appendSerialize:Bool = false;
 
     static function serializeValue(value:Dynamic):Dynamic {
@@ -68,6 +70,10 @@ class Serialize {
 
             if (_deserializedMap != null) {
                 _deserializedMap.set(id, value);
+            }
+
+            if (_onCheckSerializable != null) {
+                _onCheckSerializable(value);
             }
 
             if (_serializedMap.exists(id)) {
