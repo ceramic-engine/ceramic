@@ -141,6 +141,12 @@ class Http implements spec.Http {
 
 #elseif akifox_asynchttp
 
+#if ceramic_debug_http
+        com.akifox.asynchttp.AsyncHttp.logEnabled = true;
+#else
+        com.akifox.asynchttp.AsyncHttp.logEnabled = false;
+#end
+
         var contentType = "application/x-www-form-urlencoded";
         var httpHeaders;
         if (options.headers != null) {
@@ -155,8 +161,6 @@ class Http implements spec.Http {
         } else {
             httpHeaders = null;
         }
-
-        trace(options.headers);
 
         var content:String = null;
         if (options.content != null) {
