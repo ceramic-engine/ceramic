@@ -90,6 +90,21 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     } //pushAll
 
+    public function clear() {
+
+        assert(combinedCollections == null, 'Cannot clear combined collections');
+
+        var len = this.entries.length;
+        if (len > 0) {
+            this.entries.splice(0, len);
+        }
+        
+        indexDirty = true;
+        lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
+        _lastCheckedCombined = null;
+
+    } //clear
+
 	public function push(entry:T) {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
