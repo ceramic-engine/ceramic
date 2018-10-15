@@ -160,11 +160,24 @@ class CollectionView extends ScrollView {
                     } else {
                         view.depth = 0.5;
                     }
+                    var prevWidth = view.width;
+                    var prevHeight = view.height;
                     view.size(frame.width, frame.height);
-                    view.pos(frame.x + frame.width * view.anchorX, frame.y + frame.height * view.anchorY);
+                    var newX = frame.x + frame.width * view.anchorX;
+                    var newY = frame.y + frame.height * view.anchorY;
+                    view.pos(newX, newY);
                     view.visible = true;
                     if (view.parent != contentView) {
                         contentView.add(view);
+                    }
+                    if (prevWidth != frame.width || prevHeight != frame.height) {
+                        // Size change may produce anchor change on layout,
+                        // this we reassign again x and y in that case
+                        view.onceLayout(this, function() {
+                            var newX = frame.x + frame.width * view.anchorX;
+                            var newY = frame.y + frame.height * view.anchorY;
+                            view.pos(newX, newY);
+                        });
                     }
                 }
             }
