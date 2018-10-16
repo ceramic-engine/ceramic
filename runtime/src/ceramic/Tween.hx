@@ -32,6 +32,8 @@ class Tween extends Entity {
 
     private function new(?owner:Entity, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
 
+        var _owner = owner;
+
         var actuateEasing = switch (easing) {
 
             case LINEAR: motion.easing.Linear.easeNone;
@@ -88,12 +90,20 @@ class Tween extends Entity {
 
         actuator.onComplete(function() {
             if (destroyed) return;
+            if (_owner != null && _owner.destroyed) {
+                destroy();
+                return;
+            }
             emitComplete();
             destroy();
         });
 
         actuator.onUpdate(function() {
             if (destroyed) return;
+            if (_owner != null && _owner.destroyed) {
+                destroy();
+                return;
+            }
             var time = Timer.now - startTime;
             var value = target.value;
             emitUpdate(value, time);
