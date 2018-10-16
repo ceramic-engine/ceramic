@@ -32,8 +32,15 @@ class Entity implements Events implements Lazy {
 
         // Destroy each linked component
         if (components != null) {
+            var toRemove:Array<String> = null;
             for (name in components.keys()) {
-                removeComponent(name);
+                if (toRemove == null) toRemove = [name];
+                else toRemove.push(name);
+            }
+            if (toRemove != null) {
+                for (name in toRemove) {
+                    removeComponent(name);
+                }
             }
         }
 
@@ -108,13 +115,16 @@ class Entity implements Events implements Lazy {
     /** Public components mapping. Does not contain components
         created separatelywith `component()` or macro-based components. */
     @editable
-    public var components(default,set):ImmutableMap<String,Component> = null;
+    public var components(get,set):ImmutableMap<String,Component>;
+    inline function get_components():ImmutableMap<String,Component> {
+        return _components;
+    }
     function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
-        if (this.components == components) return components;
+        if (_components == components) return components;
 
         // Remove older components
-        if (this.components != null) {
-            for (name in this.components.keys()) {
+        if (_components != null) {
+            for (name in _components.keys()) {
                 if (components == null || !components.exists(name)) {
                     removeComponent(name);
                 }
@@ -125,8 +135,8 @@ class Entity implements Events implements Lazy {
         if (components != null) {
             for (name in components.keys()) {
                 var newComponent = components.get(name);
-                if (this.components != null) {
-                    var existing = this.components.get(name);
+                if (_components != null) {
+                    var existing = _components.get(name);
                     if (existing != null) {
                         if (existing != newComponent) {
                             removeComponent(name);
@@ -142,7 +152,7 @@ class Entity implements Events implements Lazy {
         }
 
         // Update mapping
-        this.components = components;
+        _components = components;
 
         return components;
     }
