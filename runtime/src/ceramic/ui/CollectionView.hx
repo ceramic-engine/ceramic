@@ -271,4 +271,36 @@ class CollectionView extends ScrollView {
 
     } //scrollToItem
 
+    public function smoothScrollToItem(itemIndex:Int) {
+
+        var targetScrollX = scroller.scrollX;
+        var targetScrollY = scroller.scrollY;
+
+        if (frames.length == 0) return;
+
+        if (itemIndex < 0) {
+            itemIndex = 0;
+        }
+        else if (itemIndex >= frames.length) {
+            itemIndex = frames.length - 1;
+        }
+
+        var frame = frames[itemIndex];
+
+        if (direction == VERTICAL) {
+            targetScrollY = frame.y;
+        }
+        else {
+            if (targetScrollX > frame.x) {
+                targetScrollX = frame.x;
+            }
+            else if (targetScrollX < frame.x + frame.width - width) {
+                targetScrollX = frame.x + frame.width - width;
+            }
+        }
+
+        scroller.smoothScrollTo(targetScrollX, targetScrollY);
+
+    } //smoothScrollTo
+
 } //CollectionView
