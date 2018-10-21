@@ -1,5 +1,7 @@
 package ceramic.ui;
 
+import ceramic.Shortcuts.*;
+
 class CollectionView extends ScrollView {
 
     public var collectionViewLayout:CollectionViewLayout = new CollectionViewFlowLayout();
@@ -11,6 +13,8 @@ class CollectionView extends ScrollView {
     public var depthPerItem:Bool = false;
 
     public var frames:ImmutableArray<CollectionViewItemFrame> = [];
+
+    public var freezeVisibleItems:Bool = false;
 
     var reusableViews:Array<View> = [];
 
@@ -133,7 +137,9 @@ class CollectionView extends ScrollView {
 
     } //findClosestItem
 
-    function computeVisibleItems():Void {
+    public function computeVisibleItems():Void {
+
+        if (freezeVisibleItems) return;
 
         if (dataSource == null) return;
 
