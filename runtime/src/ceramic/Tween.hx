@@ -32,6 +32,15 @@ class Tween extends Entity {
 
     private function new(?owner:Entity, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
 
+        if (duration == 0.0) {
+            App.app.onceImmediate(function() {
+                emitUpdate(toValue, 0);
+                emitComplete();
+                destroy();
+            });
+            return;
+        }
+        
         var _owner = owner;
 
         var actuateEasing = switch (easing) {
