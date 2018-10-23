@@ -78,6 +78,9 @@ class CollectionsMacro {
                             var csvPath = Path.join([pathPrefix, collectionData + '.csv']);
                             if (FileSystem.exists(csvPath)) {
 
+#if ceramic_debug_collections_macro
+                                trace('Read: $csvPath');
+#end
                                 var csvData = Csv.parse(File.getContent(csvPath));
 
                                 var entries = [];
