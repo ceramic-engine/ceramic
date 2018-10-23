@@ -68,7 +68,29 @@ class Extensions {
 
         return null;
 
-    } //randomElement
+    } //randomElementExcept
+
+    /** Return a random element contained in the given array that is validated by the provided validator.
+        If no item is valid, returns null.
+        @param array  The array in which we extract the element from
+        @param validator A function that returns true if the item is valid, false if not
+        @return The random element or `null` if nothing was found */
+    public static function randomElementMatchingValidator<T>(array:Array<T>, validator:T->Bool):T {
+
+        // Work on a copy
+        var array = array.copy();
+
+        // Shuffle array
+        shuffle(array);
+
+        // Get first item different than `except`
+        for (item in array) {
+            if (validator(item)) return item;
+        }
+
+        return null;
+
+    } //randomElementMatchingValidator
 
     /** Shuffle an Array. This operation affects the array in place.
         The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle) */

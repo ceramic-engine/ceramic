@@ -40,6 +40,20 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
     } //randomElementExcept
 
+    /** Return a random element contained in the given array that is validated by the provided validator.
+        If no item is valid, returns null.
+        @param array  The array in which we extract the element from
+        @param validator A function that returns true if the item is valid, false if not
+        @return The random element or `null` if nothing was found */
+    public function randomElementMatchingValidator(validator:T->Bool):T {
+
+        this.checkCombined();
+        if (this.entriesDirty) this.computeEntries();
+
+        return Extensions.randomElementMatchingValidator(this.entries, validator);
+
+    } //randomElementMatchingValidator
+
 } //Collection
 
 @:allow(ceramic.Collection)
