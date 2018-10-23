@@ -82,10 +82,12 @@ class CollectionsMacro {
 
                                 var entries = [];
                                 var entriesInInit = [];
+                                var used = new Map<String,Bool>();
 
                                 for (csvEntry in csvData) {
                                     var entryId = csvEntry.get('id');
-                                    if (entryId != null && entryId.trim() != '' && entryId != 'null') {
+                                    if (entryId != null && entryId.trim() != '' && entryId != 'null' && !used.exists(entryId)) {
+                                        used.set(entryId, true);
                                         if (useDynamic) {
                                             entriesInInit.push({
                                                 expr: ECall({
