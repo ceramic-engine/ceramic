@@ -54,8 +54,6 @@ class Draw implements spec.Draw {
         ceramic.App.app.backend.emitBeginDraw();
 
         batcher.isMainRender = true;
-        batcher.ceramicRenderTexture = null;
-        batcher.ceramicClear = false;
         batcher.ceramicClipX = -1;
         batcher.ceramicClipY = -1;
         batcher.ceramicClipWidth = -1;
@@ -67,11 +65,9 @@ class Draw implements spec.Draw {
 
     } //draw
 
-    public function stamp(visuals:Array<ceramic.Visual>, renderTexture:ceramic.RenderTexture, clear:Bool, clipX:Float, clipY:Float, clipWidth:Float, clipHeight:Float):Void {
+    public function stamp(visuals:Array<ceramic.Visual>, clipX:Float, clipY:Float, clipWidth:Float, clipHeight:Float):Void {
 
         batcher.isMainRender = false;
-        batcher.ceramicRenderTexture = renderTexture;
-        batcher.ceramicClear = clear;
         batcher.ceramicClipX = clipX;
         batcher.ceramicClipY = clipY;
         batcher.ceramicClipWidth = clipWidth;

@@ -17,8 +17,6 @@ class CeramicBatcher extends phoenix.Batcher {
 
     public var isMainRender:Bool = false;
     public var ceramicVisuals:Array<ceramic.Visual> = null;
-    public var ceramicRenderTexture:ceramic.RenderTexture = null;
-    public var ceramicClear:Bool = false;
     public var ceramicClipX:Float = -1;
     public var ceramicClipY:Float = -1;
     public var ceramicClipWidth:Float = -1;
@@ -118,7 +116,6 @@ class CeramicBatcher extends phoenix.Batcher {
         var lastTextureSlot:Int = 0;
         var lastShader:ceramic.Shader = null;
         var lastRenderTarget:ceramic.RenderTexture = null;
-        var actualRenderTarget:ceramic.RenderTexture = null;
         var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
 
 #if debug
@@ -411,16 +408,14 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
 #end
                         lastRenderTarget = quad.computedRenderTarget;
-                        actualRenderTarget = lastRenderTarget != null ? lastRenderTarget : ceramicRenderTexture;
-                        if (actualRenderTarget != null) {
-                            // TODO transform viewport properly without needing objects transform change
-                            var renderTexture = cast(actualRenderTarget.backendItem, backend.impl.CeramicRenderTexture);
+                        if (lastRenderTarget != null) {
+                            var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
                             renderer.target = renderTexture;
                             view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
                             view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                             view.process();
                             GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            if (actualRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
                         } else {
                             renderer.target = null;
                             view.transform.scale.x = defaultTransformScaleX;
@@ -829,15 +824,14 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + mesh.computedRenderTarget);
 #end
                         lastRenderTarget = mesh.computedRenderTarget;
-                        actualRenderTarget = lastRenderTarget != null ? lastRenderTarget : ceramicRenderTexture;
-                        if (actualRenderTarget != null) {
-                            var renderTexture = cast(actualRenderTarget.backendItem, backend.impl.CeramicRenderTexture);
+                        if (lastRenderTarget != null) {
+                            var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
                             renderer.target = renderTexture;
                             view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
                             view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                             view.process();
                             GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            if (actualRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
                         } else {
                             renderer.target = null;
                             view.transform.scale.x = defaultTransformScaleX;
