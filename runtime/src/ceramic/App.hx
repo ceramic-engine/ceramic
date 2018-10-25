@@ -411,6 +411,23 @@ class App extends Entity {
         // Flush immediate callbacks
         flushImmediate();
 
+        // Update visuals
+        updateVisuals(visuals);
+
+        // Update hierarchy from depth
+        computeHierarchy();
+
+        // Sort visuals depending on their settings
+        sortVisuals();
+
+        // Draw
+        backend.draw.draw(visuals);
+
+    } //update
+
+    @:noCompletion
+    #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
+
         do {
             // Notify if screen matrix has changed
             screen.matrix.computeChanged();
@@ -454,7 +471,6 @@ class App extends Entity {
             }
         }
         while (flushImmediate());
-        
 
         // Update visuals render target, matrix and visibility
         for (visual in visuals) {
@@ -479,16 +495,7 @@ class App extends Entity {
 
         }
 
-        // Update hierarchy from depth
-        computeHierarchy();
-
-        // Sort visuals depending on their settings
-        sortVisuals();
-
-        // Draw
-        backend.draw.draw(visuals);
-
-    } //update
+    } //updateVisuals
 
     #if !debug inline #end function computeHierarchy() {
 

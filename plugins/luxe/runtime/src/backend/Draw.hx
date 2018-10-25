@@ -53,10 +53,34 @@ class Draw implements spec.Draw {
 
         ceramic.App.app.backend.emitBeginDraw();
 
+        batcher.isMainRender = true;
+        batcher.ceramicRenderTexture = null;
+        batcher.ceramicClear = false;
+        batcher.ceramicClipX = -1;
+        batcher.ceramicClipY = -1;
+        batcher.ceramicClipWidth = -1;
+        batcher.ceramicClipHeight = -1;
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
 
         ceramic.App.app.backend.emitEndDraw();
+
+    } //draw
+
+    public function stamp(visuals:Array<ceramic.Visual>, renderTexture:ceramic.RenderTexture, clear:Bool, clipX:Float, clipY:Float, clipWidth:Float, clipHeight:Float):Void {
+
+        batcher.isMainRender = false;
+        batcher.ceramicRenderTexture = renderTexture;
+        batcher.ceramicClear = clear;
+        batcher.ceramicClipX = clipX;
+        batcher.ceramicClipY = clipY;
+        batcher.ceramicClipWidth = clipWidth;
+        batcher.ceramicClipHeight = clipHeight;
+        batcher.ceramicVisuals = visuals;
+        var shouldClear = Luxe.core.renderer.should_clear;
+        Luxe.core.renderer.should_clear = false;
+        Luxe.core.render();
+        Luxe.core.renderer.should_clear = shouldClear;
 
     } //draw
 
