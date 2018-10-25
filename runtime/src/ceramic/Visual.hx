@@ -671,7 +671,7 @@ class Visual extends Entity {
                 _matrix.tx = tx1;
             }
             else {
-
+/*
                 // Apply scale to match render texture with native screen density
                 // TODO move this into backend code?
                 //
@@ -694,7 +694,7 @@ class Visual extends Entity {
                 );
 
                 _matrix.scale(sX, sY);
-
+*/
             }
 
         }
