@@ -672,28 +672,9 @@ class Visual extends Entity {
             }
             else {
 
-                // Apply scale to match render texture with native screen density
-                // TODO move this into backend code?
-                //
-                var sX = ceramic.App.app.screen.nativeWidth / computedRenderTarget.width;
-                var sY = ceramic.App.app.screen.nativeHeight / computedRenderTarget.height;
-                var nativeDensity = ceramic.App.app.screen.nativeDensity;
-                sX *= nativeDensity;
-                sY *= nativeDensity;
-
-                // Flip vertically because we are rendering to texture
-                // (same, we may want to move this into backend code)
-                _matrix.translate(
-                    -computedRenderTarget.width * 0.5,
-                    -computedRenderTarget.height * 0.5
-                );
-                _matrix.scale(1, -1);
-                _matrix.translate(
-                    computedRenderTarget.width * 0.5,
-                    computedRenderTarget.height * 0.5
-                );
-
-                _matrix.scale(sX, sY);
+                // Setup matrix to make it match backend render target dimensions
+                // (result may be different depending on the backend)
+                ceramic.App.app.backend.draw.transformForRenderTarget(_matrix, computedRenderTarget);
 
             }
 

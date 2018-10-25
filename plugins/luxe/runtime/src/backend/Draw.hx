@@ -84,6 +84,30 @@ class Draw implements spec.Draw {
 
     } //draw
 
+    inline public function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void {
+
+        // Apply scale to match render texture with native screen density
+        var sX = ceramic.App.app.screen.nativeWidth / renderTarget.width;
+        var sY = ceramic.App.app.screen.nativeHeight / renderTarget.height;
+        var nativeDensity = ceramic.App.app.screen.nativeDensity;
+        sX *= nativeDensity;
+        sY *= nativeDensity;
+
+        // Flip vertically because we are rendering to texture
+        matrix.translate(
+            -renderTarget.width * 0.5,
+            -renderTarget.height * 0.5
+        );
+        matrix.scale(1, -1);
+        matrix.translate(
+            renderTarget.width * 0.5,
+            renderTarget.height * 0.5
+        );
+
+        matrix.scale(sX, sY);
+
+    } //transformForRenderTarget
+
 #else
 
 /// Internal

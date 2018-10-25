@@ -10,4 +10,6 @@ interface Draw {
 
     function getItem(visual:ceramic.Visual):VisualItem;
 
+    function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void;
+
 } //Draw
