@@ -1,6 +1,7 @@
 package backend.impl;
 
 import phoenix.Texture;
+import phoenix.Renderer;
 
 import snow.modules.opengl.GL;
 import snow.api.buffers.Float32Array;
@@ -27,6 +28,34 @@ class CeramicBatcher extends phoenix.Batcher {
     var drawnQuads:Int = 0;
     var drawnMeshes:Int = 0;
 #end
+
+#if ceramic_batch_multiple_buffers
+    public static var NUM_BUFFERS = 32;
+
+    public var pos_list_array    : Array<Float32Array>;
+    public var tcoord_list_array : Array<Float32Array>;
+    public var color_list_array  : Array<Float32Array>;
+
+    public var buffers_index = 0;
+#end
+
+    public function new( _r : Renderer, ?_name:String = '', ?_max_verts:Int=16384 ) {
+
+        super(_r, _name, _max_verts);
+
+#if ceramic_batch_multiple_buffers
+        pos_list_array = [pos_list];
+        tcoord_list_array = [tcoord_list];
+        color_list_array = [color_list];
+
+        for (i in 1...NUM_BUFFERS) {
+            pos_list_array.push(new Float32Array( max_floats ));
+            tcoord_list_array.push(new Float32Array( max_floats ));
+            color_list_array.push(new Float32Array( max_floats ));
+        }
+#end
+
+    } //new
 
     override function batch(persist_immediate:Bool = false) {
 
@@ -62,6 +91,12 @@ class CeramicBatcher extends phoenix.Batcher {
         tcoord_floats = 0;
         color_floats = 0;
         normal_floats = 0;
+
+#if ceramic_batch_multiple_buffers
+        pos_list = pos_list_array[buffers_index];
+        tcoord_list = tcoord_list_array[buffers_index];
+        color_list = color_list_array[buffers_index];
+#end
 
         var visualNumVertices = 0;
         var quad:ceramic.Quad = null;
@@ -1180,6 +1215,13 @@ class CeramicBatcher extends phoenix.Batcher {
         pos_floats = 0;
         tcoord_floats = 0;
         color_floats = 0;
+
+#if ceramic_batch_multiple_buffers
+        buffers_index = (buffers_index + 1) % NUM_BUFFERS;
+        pos_list = pos_list_array[buffers_index];
+        tcoord_list = tcoord_list_array[buffers_index];
+        color_list = color_list_array[buffers_index];
+#end
 
         return true;
 
