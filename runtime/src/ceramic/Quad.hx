@@ -17,6 +17,29 @@ class Quad extends Visual {
         they don't inherit this property. */
     @editable public var transparent:Bool = false;
 
+    public var tile(default,set):TextureTile = null;
+    function set_tile(tile:TextureTile):TextureTile {
+        if (this.tile == tile) return tile;
+
+        this.tile = tile;
+
+        if (tile == null) {
+            texture = null;
+        }
+        else {
+            if (texture != tile.texture) {
+                texture = tile.texture;
+            } else {
+                frameX = tile.frameX;
+                frameY = tile.frameY;
+                frameWidth = tile.frameWidth;
+                frameHeight = tile.frameHeight;
+            }
+        }
+
+        return tile;
+    }
+
     @editable
     public var texture(default,set):Texture = null;
     inline function set_texture(texture:Texture):Texture {
@@ -39,6 +62,12 @@ class Quad extends Visual {
             frameY = -1;
             frameWidth = -1;
             frameHeight = -1;
+        }
+        else if (tile != null) {
+            frameX = tile.frameX;
+            frameY = tile.frameY;
+            frameWidth = tile.frameWidth;
+            frameHeight = tile.frameHeight;
         }
         else {
             frameX = 0;
@@ -135,8 +164,9 @@ class Quad extends Visual {
 
     function textureDestroyed() {
 
-        // Remove texture because it has been destroyed
+        // Remove texture (and/or tile) because it has been destroyed
         this.texture = null;
+        this.tile = null;
 
     } //textureDestroyed
 
