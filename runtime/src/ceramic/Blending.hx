@@ -8,6 +8,9 @@ package ceramic;
     
     /** Additive blending */
     var ADD = 1;
+
+    /** Set blending */
+    var SET = 3;
     
     /** Traditional alpha blending. This should only be used on very specific cases. Used instead of `NORMAL` blending
         when the visual is drawing a RenderTexture. */

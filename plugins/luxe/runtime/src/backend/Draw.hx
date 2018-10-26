@@ -21,7 +21,18 @@ class Draw implements spec.Draw {
 
     #if !debug inline #end function begin():Void {
 
-        // Init batcher if needed
+        initBatcherIfNeeded();
+
+    } //begin
+
+    #if !debug inline #end function end():Void {
+
+        //
+
+    } //begin
+
+    inline function initBatcherIfNeeded():Void {
+
         if (batcher == null) {
 
             batcher = new CeramicBatcher(Luxe.renderer, 'ceramic_batcher', 16384);
@@ -31,13 +42,7 @@ class Draw implements spec.Draw {
 
         }
 
-    } //begin
-
-    #if !debug inline #end function end():Void {
-
-        //
-
-    } //begin
+    } //initBatcherIfNeeded
 
 /// Public API
 
@@ -54,10 +59,6 @@ class Draw implements spec.Draw {
         ceramic.App.app.backend.emitBeginDraw();
 
         batcher.isMainRender = true;
-        batcher.ceramicClipX = -1;
-        batcher.ceramicClipY = -1;
-        batcher.ceramicClipWidth = -1;
-        batcher.ceramicClipHeight = -1;
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
 
@@ -65,13 +66,11 @@ class Draw implements spec.Draw {
 
     } //draw
 
-    public function stamp(visuals:Array<ceramic.Visual>, clipX:Float, clipY:Float, clipWidth:Float, clipHeight:Float):Void {
+    public function stamp(visuals:Array<ceramic.Visual>):Void {
+
+        initBatcherIfNeeded();
 
         batcher.isMainRender = false;
-        batcher.ceramicClipX = clipX;
-        batcher.ceramicClipY = clipY;
-        batcher.ceramicClipWidth = clipWidth;
-        batcher.ceramicClipHeight = clipHeight;
         batcher.ceramicVisuals = visuals;
         var shouldClear = Luxe.core.renderer.should_clear;
         Luxe.core.renderer.should_clear = false;

@@ -17,10 +17,6 @@ class CeramicBatcher extends phoenix.Batcher {
 
     public var isMainRender:Bool = false;
     public var ceramicVisuals:Array<ceramic.Visual> = null;
-    public var ceramicClipX:Float = -1;
-    public var ceramicClipY:Float = -1;
-    public var ceramicClipWidth:Float = -1;
-    public var ceramicClipHeight:Float = -1;
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
     var activeShader:backend.impl.CeramicShader = null;
@@ -208,13 +204,75 @@ class CeramicBatcher extends phoenix.Batcher {
         // Default stencil test
         GL.disable(GL.STENCIL_TEST);
 
-        // Global clipping
-        if (ceramicClipX != -1 && ceramicClipY != -1 && ceramicClipWidth != -1 && ceramicClipHeight != -1) {
-            GL.enable(GL.SCISSOR_TEST);
-            renderer.state.scissor(ceramicClipX, ceramicClipY, ceramicClipWidth, ceramicClipHeight);
-        } else {
-            GL.disable(GL.SCISSOR_TEST);
-        }
+        inline function applyBlending(blending:ceramic.Blending) {
+
+            if (blending == ceramic.Blending.ADD) {
+                GL.blendFuncSeparate(
+                    //src_rgb
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_rgb
+                    phoenix.Batcher.BlendMode.one,
+                    //src_alpha
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_alpha
+                    phoenix.Batcher.BlendMode.one
+                );
+            } else if (blending == ceramic.Blending.SET) {
+                GL.blendFuncSeparate(
+                    //src_rgb
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_rgb
+                    phoenix.Batcher.BlendMode.src_alpha,
+                    //src_alpha
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_alpha
+                    phoenix.Batcher.BlendMode.src_alpha
+                );
+            } else if (blending == ceramic.Blending.NORMAL) {
+                GL.blendFuncSeparate(
+                    //src_rgb
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_rgb
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                    //src_alpha
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_alpha
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha
+                );
+            } else /*if (lastBlending == ceramic.Blending.ALPHA)*/ {
+                GL.blendFuncSeparate(
+                    //src_rgb
+                    phoenix.Batcher.BlendMode.src_alpha,
+                    //dest_rgb
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha,
+                    //src_alpha
+                    phoenix.Batcher.BlendMode.one,
+                    //dest_alpha
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha
+                );
+            }
+
+        } //applyBlending
+
+        inline function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
+
+            if (lastRenderTarget != null) {
+                var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
+                renderer.target = renderTexture;
+                view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
+                view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
+                view.process();
+                GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+                if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+            } else {
+                renderer.target = null;
+                view.transform.scale.x = defaultTransformScaleX;
+                view.transform.scale.y = defaultTransformScaleY;
+                view.viewport = defaultViewport;
+                update_view();
+            }
+
+        } //computeRenderTarget
 
         #if !ceramic_debug_draw inline #end function drawQuad() {
 #if ceramic_debug_draw
@@ -249,6 +307,9 @@ class CeramicBatcher extends phoenix.Batcher {
                 lastBlending = ceramic.Blending.NORMAL;
 
                 stateDirty = false;
+
+                // No render target when writing to stencil buffer
+                computeRenderTarget(lastRenderTarget);
             }
             else {
                 // Check if state is dirty
@@ -361,40 +422,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
 #end
                         lastBlending = newBlending;
-                        if (lastBlending == ceramic.Blending.ADD) {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one
-                            );
-                        } else if (lastBlending == ceramic.Blending.NORMAL) {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha
-                            );
-                        } else /*if (lastBlending == ceramic.Blending.ALPHA)*/ {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.src_alpha,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha
-                            );
-                        }
+                        applyBlending(lastBlending);
                     }
 
 #if debug
@@ -408,21 +436,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
 #end
                         lastRenderTarget = quad.computedRenderTarget;
-                        if (lastRenderTarget != null) {
-                            var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
-                            renderer.target = renderTexture;
-                            view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
-                            view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
-                            view.process();
-                            GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
-                        } else {
-                            renderer.target = null;
-                            view.transform.scale.x = defaultTransformScaleX;
-                            view.transform.scale.y = defaultTransformScaleY;
-                            view.viewport = defaultViewport;
-                            update_view();
-                        }
+                        computeRenderTarget(lastRenderTarget);
                     }
 
                     stateDirty = false;
@@ -777,40 +791,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
 #end
                         lastBlending = newBlending;
-                        if (lastBlending == ceramic.Blending.ADD) {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one
-                            );
-                        } else if (lastBlending == ceramic.Blending.NORMAL) {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha
-                            );
-                        } else {
-                            GL.blendFuncSeparate(
-                                //src_rgb
-                                phoenix.Batcher.BlendMode.src_alpha,
-                                //dest_rgb
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha,
-                                //src_alpha
-                                phoenix.Batcher.BlendMode.one,
-                                //dest_alpha
-                                phoenix.Batcher.BlendMode.one_minus_src_alpha
-                            );
-                        }
+                        applyBlending(lastBlending);
                     }
 
 #if debug
@@ -824,21 +805,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + mesh.computedRenderTarget);
 #end
                         lastRenderTarget = mesh.computedRenderTarget;
-                        if (lastRenderTarget != null) {
-                            var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
-                            renderer.target = renderTexture;
-                            view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
-                            view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
-                            view.process();
-                            GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                            if (lastRenderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
-                        } else {
-                            renderer.target = null;
-                            view.transform.scale.x = defaultTransformScaleX;
-                            view.transform.scale.y = defaultTransformScaleY;
-                            view.viewport = defaultViewport;
-                            update_view();
-                        }
+                        computeRenderTarget(lastRenderTarget);
                     }
 
                     stateDirty = false;
@@ -1017,7 +984,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     // If it should be redrawn anyway
                     if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
 
-                        if (visual.computedClip) {
+                        if (visual.computedClip && visual.computedRenderTarget == null) {
                             // Get new clip and compare with last
                             var clippingVisual = visual;
                             while (clippingVisual != null && clippingVisual.clip == null) {

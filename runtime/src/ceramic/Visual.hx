@@ -812,7 +812,7 @@ class Visual extends Entity {
                 if (inheritAlpha) computedAlpha *= parent.computedAlpha;
             }
 
-            if (computedAlpha == 0) {
+            if (computedAlpha == 0 && blending != Blending.SET) {
                 computedVisible = false;
             }
             
@@ -976,6 +976,7 @@ class Visual extends Entity {
             children = [];
         }
         @:privateAccess children.mutable.push(visual);
+        clipDirty = true;
 
     } //add
 
@@ -990,6 +991,7 @@ class Visual extends Entity {
         visual.visibilityDirty = true;
         visual.matrixDirty = true;
         visual.renderTargetDirty = true;
+        visual.clipDirty = true;
 
     } //remove
 

@@ -8,6 +8,8 @@ using StringTools;
 /** A texture generated at runtime by stamping visuals on it. */
 class DynamicTexture extends RenderTexture {
 
+    static var _clearQuad:Quad = null;
+
 /// Lifecycle
 
     public function new(width:Int, height:Int, density:Float = -1) {
@@ -15,14 +17,39 @@ class DynamicTexture extends RenderTexture {
         super(width, height, density);
 
         autoRender = false;
-        clearOnRender = true;
+        clearOnRender = false;
 
     } //new
 
 /// Public API
 
+    public function clear(color:Color = 0xFFFFFF, alpha:Float = 0, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1) {
+
+        if (_clearQuad == null) {
+            _clearQuad = new Quad();
+            _clearQuad.active = false;
+            _clearQuad.blending = SET;
+            _clearQuad.anchor(0, 0);
+        }
+
+        _clearQuad.color = color;
+        _clearQuad.alpha = alpha;
+
+        if (clipX != -1 && clipY != -1 && clipWidth != -1 && clipHeight != -1) {
+            _clearQuad.size(clipWidth, clipHeight);
+            _clearQuad.pos(clipX, clipY);
+        }
+        else {
+            _clearQuad.size(width, height);
+            _clearQuad.pos(0, 0);
+        }
+
+        stamp(_clearQuad);
+
+    } //clear
+
     /** Draws the given visual onto the render texture */
-    public function stamp(visual:Visual, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1) {
+    public function stamp(visual:Visual) {
 
         // Keep original values as needed
         var visualParent = visual.parent;
@@ -46,11 +73,16 @@ class DynamicTexture extends RenderTexture {
         }
         addChildren(visual, flatVisuals);
 
-        // Update visuals
+        // Update & sort visuals
+        app.computeHierarchy();
         app.updateVisuals(flatVisuals);
+        app.sortVisuals(flatVisuals);
+
+        // Mark render texture as dirty
+        renderDirty = true;
 
         // Call backend and do actual draw
-        app.backend.draw.stamp(flatVisuals, clipX, clipY, clipWidth, clipHeight);
+        app.backend.draw.stamp(flatVisuals);
 
         // Restore visual state
         visual.visible = visualVisible;

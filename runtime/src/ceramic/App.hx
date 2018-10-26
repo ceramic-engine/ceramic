@@ -418,7 +418,7 @@ class App extends Entity {
         computeHierarchy();
 
         // Sort visuals depending on their settings
-        sortVisuals();
+        sortVisuals(visuals);
 
         // Draw
         backend.draw.draw(visuals);
@@ -497,7 +497,8 @@ class App extends Entity {
 
     } //updateVisuals
 
-    #if !debug inline #end function computeHierarchy() {
+    @:noCompletion
+    #if !debug inline #end public function computeHierarchy() {
 
         if (hierarchyDirty) {
 
@@ -518,7 +519,8 @@ class App extends Entity {
 
     } //computeHierarchy
 
-    #if !debug inline #end function sortVisuals() {
+    @:noCompletion
+    #if !debug inline #end public function sortVisuals(visuals:Array<Visual>) {
 
         // Sort visuals by (computed) depth
         SortVisuals.sort(visuals);
