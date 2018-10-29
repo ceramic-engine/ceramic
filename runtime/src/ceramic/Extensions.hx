@@ -1,7 +1,7 @@
 package ceramic;
 
 /** A bunch of static extensions to make life easier. */
-class Extensions {
+class Extensions<T> {
 
 /// Array extensions
 
