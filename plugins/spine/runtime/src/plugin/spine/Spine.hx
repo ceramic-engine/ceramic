@@ -722,6 +722,7 @@ class Spine extends Visual {
         var b:Float;
         var a:Float;
         var n:Int;
+        var k:Int;
         var len:Int;
         var tx:Float;
         var ty:Float;
@@ -755,6 +756,7 @@ class Spine extends Visual {
         var vertexSize:Int = 0;
         var count:Int = 0;
         var tintBlack:Bool = false;
+        var vertices:Array<Float>;
 
         var diffX:Float = width * skeletonOriginX;
         var diffY:Float = height * skeletonOriginY;
@@ -888,12 +890,17 @@ class Spine extends Visual {
                                             }
 
                                             n = 0;
-                                            len = mesh.vertices.length;
+                                            vertices = mesh.vertices;
+                                            len = vertices.length;
                                             while (n < len) {
-                                                mesh.vertices[n + vertexSize - 1] = a;
-                                                mesh.vertices.unsafeSet(n + vertexSize - 4, r);
-                                                mesh.vertices.unsafeSet(n + vertexSize - 3, g);
-                                                mesh.vertices.unsafeSet(n + vertexSize - 2, b);
+                                                k = n + vertexSize - 1;
+                                                vertices[k] = a;
+                                                k -= 3;
+                                                mesh.vertices.unsafeSet(k, r);
+                                                k++;
+                                                mesh.vertices.unsafeSet(k, g);
+                                                k++;
+                                                mesh.vertices.unsafeSet(k, b);
                                                 n += vertexSize;
                                             }
                                         }
@@ -933,12 +940,17 @@ class Spine extends Visual {
                                             }
 
                                             n = 0;
-                                            len = mesh.vertices.length;
+                                            vertices = mesh.vertices;
+                                            len = vertices.length;
                                             while (n < len) {
-                                                mesh.vertices[n + vertexSize - 1] = a;
-                                                mesh.vertices.unsafeSet(n + vertexSize - 4, r);
-                                                mesh.vertices.unsafeSet(n + vertexSize - 3, g);
-                                                mesh.vertices.unsafeSet(n + vertexSize - 2, b);
+                                                k = n + vertexSize - 1;
+                                                vertices[k] = a;
+                                                k -= 3;
+                                                mesh.vertices.unsafeSet(k, r);
+                                                k++;
+                                                mesh.vertices.unsafeSet(k, g);
+                                                k++;
+                                                mesh.vertices.unsafeSet(k, b);
                                                 n += vertexSize;
                                             }
                                         }
