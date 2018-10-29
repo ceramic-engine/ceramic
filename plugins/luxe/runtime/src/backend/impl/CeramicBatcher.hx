@@ -108,7 +108,7 @@ class CeramicBatcher extends phoenix.Batcher {
         var mesh:ceramic.Mesh = null;
 
         var lastTexture:ceramic.Texture = null;
-        var lastTextureId:phoenix.TextureID = null;
+        var lastTextureId:phoenix.TextureID = 0;
         var lastTextureSlot:Int = 0;
         var lastShader:ceramic.Shader = null;
         var lastRenderTarget:ceramic.RenderTexture = null;
@@ -174,7 +174,9 @@ class CeramicBatcher extends phoenix.Batcher {
         var defaultTexturedShader:backend.impl.CeramicShader = ceramic.App.app.defaultTexturedShader.backendItem;
 
         // Mark auto-rendering render textures as dirty
-        for (renderTexture in ceramic.App.app.renderTextures) {
+        var allRenderTextures = ceramic.App.app.renderTextures;
+        for (ii in 0...allRenderTextures.length) {
+            var renderTexture = allRenderTextures.unsafeGet(ii);
             if (renderTexture.autoRender) {
                 renderTexture.renderDirty = true;
             }
@@ -289,7 +291,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
-                lastTextureId = null;
+                lastTextureId = 0;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                 //renderer.state.bindTexture2D(null);
 
@@ -381,9 +383,9 @@ class CeramicBatcher extends phoenix.Batcher {
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
-                                lastTextureId = null;
+                                lastTextureId = 0;
                                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-                                renderer.state.bindTexture2D(null);
+                                renderer.state.bindTexture2D(0);
                             }
                         }
                     }
@@ -659,7 +661,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
-                lastTextureId = null;
+                lastTextureId = 0;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                 //renderer.state.bindTexture2D(null);
 
@@ -750,7 +752,7 @@ class CeramicBatcher extends phoenix.Batcher {
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
-                                lastTextureId = null;
+                                lastTextureId = 0;
                                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                                 //renderer.state.bindTexture2D(null);
                             }
@@ -973,7 +975,8 @@ class CeramicBatcher extends phoenix.Batcher {
         // For each ceramic visual in the list
         //
         if (ceramicVisuals != null) {
-            for (visual in ceramicVisuals) {
+            for (ii in 0...ceramicVisuals.length) {
+                var visual = ceramicVisuals.unsafeGet(ii);
 
                 quad = visual.quad;
                 mesh = visual.mesh;
@@ -1067,7 +1070,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         // Disable any states set by the batches
         //
-        if (lastTextureId != null) {
+        if (lastTextureId != 0) {
             // Remove bound texture
             renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
             //renderer.state.bindTexture2D(null);
@@ -1082,12 +1085,13 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         // Mark all render textures as non-dirty now that rendering has finished
-        for (renderTexture in ceramic.App.app.renderTextures) {
+        for (ii in 0...allRenderTextures.length) {
+            var renderTexture = allRenderTextures.unsafeGet(ii);
             renderTexture.renderDirty = false;
         }
 
         // Remove shader program
-        renderer.state.useProgram(null);
+        renderer.state.useProgram(0);
     
         // Restore default blend mode
         renderer.state.enable(GL.BLEND);
@@ -1120,9 +1124,13 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         var vertexSize = 4;
-        if (activeShader != null && activeShader.customAttributes != null) {
-            for (attr in activeShader.customAttributes) {
-                vertexSize += attr.size;
+        if (activeShader != null) {
+            var allAttrs = activeShader.customAttributes;
+            if (allAttrs != null) {
+                for (ii in 0...allAttrs.length) {
+                    var attr = allAttrs.unsafeGet(ii);
+                    vertexSize += attr.size;
+                }
             }
         }
 
@@ -1154,7 +1162,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
             var n = color_attribute + 1;
             var offset = 4;
-            for (attr in activeShader.customAttributes) {
+            var allAttrs = activeShader.customAttributes;
+            for (ii in 0...allAttrs.length) {
+                var attr = allAttrs.unsafeGet(ii);
 
                 var b = GL.createBuffer();
                 if (customGLBuffers == null) customGLBuffers = [];
@@ -1180,7 +1190,8 @@ class CeramicBatcher extends phoenix.Batcher {
 
         if (customGLBuffers != null) {
             var n = color_attribute + 1;
-            for (b in customGLBuffers) {
+            for (ii in 0...customGLBuffers.length) {
+                var b = customGLBuffers.unsafeGet(ii);
                 GL.deleteBuffer(b);
                 GL.disableVertexAttribArray(n);
                 n++;
@@ -1222,9 +1233,13 @@ class CeramicBatcher extends phoenix.Batcher {
 
         // Custom attributes?
         customFloatAttributesSize = 0;
-        if (activeShader != null && activeShader.customAttributes != null) {
-            for (attr in activeShader.customAttributes) {
-                customFloatAttributesSize += attr.size;
+        if (activeShader != null) {
+            var allAttrs = activeShader.customAttributes;
+            if (allAttrs != null) {
+                for (ii in 0...allAttrs.length) {
+                    var attr = allAttrs.unsafeGet(ii);
+                    customFloatAttributesSize += attr.size;
+                }
             }
         }
 

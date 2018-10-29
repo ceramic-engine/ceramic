@@ -37,4 +37,12 @@ abstract ImmutableArray<T>(Array<T>) from Array<T> to Iterable<T> {
     public var mutable(get,never):Array<T>;
     inline private function get_mutable():Array<T> return this;
 
+/// Array extensions
+
+    inline public function unsafeGet(index:Int):T {
+
+        return Extensions.unsafeGet(this, index);
+
+    } //unsafeGet
+
 } //ImmutableArray

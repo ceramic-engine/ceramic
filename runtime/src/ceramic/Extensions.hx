@@ -55,13 +55,16 @@ class Extensions<T> {
             // Safe
 
             // Work on a copy
-            var array = array.copy();
+            var array_:Array<T> = [];
+            for (item in array) {
+                array_.push(item);
+            }
 
             // Shuffle array
-            shuffle(array);
+            shuffle(array_);
 
             // Get first item different than `except`
-            for (item in array) {
+            for (item in array_) {
                 if (item != except) return item;
             }
         }
@@ -78,13 +81,16 @@ class Extensions<T> {
     public static function randomElementMatchingValidator<T>(array:Array<T>, validator:T->Bool):T {
 
         // Work on a copy
-        var array = array.copy();
+        var array_:Array<T> = [];
+        for (item in array) {
+            array_.push(item);
+        }
 
         // Shuffle array
-        shuffle(array);
+        shuffle(array_);
 
         // Get first item different than `except`
-        for (item in array) {
+        for (item in array_) {
             if (validator(item)) return item;
         }
 

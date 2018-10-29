@@ -20,7 +20,7 @@
 	branch = master
 [submodule "git/linc_opengl"]
 	path = git/linc_opengl
-	url = https://github.com/snowkit/linc_opengl.git
+	url = https://github.com/ceramic-engine/linc_opengl.git
 	branch = master
 [submodule "git/snow"]
 	path = git/snow
