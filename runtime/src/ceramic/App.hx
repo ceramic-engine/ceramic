@@ -1,5 +1,9 @@
 package ceramic;
 
+#if hxtelemetry
+import hxtelemetry.HxTelemetry;
+#end
+
 import ceramic.internal.PlatformSpecific;
 
 import ceramic.Settings;
@@ -68,6 +72,10 @@ class App extends Entity {
 /// Immediate update event, custom implementation
 
     var immediateCallbacks:Array<Void->Void> = null;
+
+#if hxtelemetry
+    var hxt:HxTelemetry;
+#end
 
     /** Schedule immediate callback that is garanteed to be executed before the next time frame
         (before elements are drawn onto screen) */
@@ -187,6 +195,12 @@ class App extends Entity {
 /// Lifecycle
 
     function new() {
+        
+#if hxtelemetry
+        var cfg = new hxtelemetry.HxTelemetry.Config();
+        cfg.allocations = true;
+        hxt = new HxTelemetry(cfg);
+#end
 
         settings = new Settings();
         screen = new Screen();
@@ -375,6 +389,10 @@ class App extends Entity {
     } //assetsLoaded
 
     function update(delta:Float):Void {
+
+#if hxtelemetry
+        hxt.advance_frame();
+#end
 
         Timer.update(delta);
 
