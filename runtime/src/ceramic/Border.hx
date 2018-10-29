@@ -100,12 +100,14 @@ class Border extends Mesh {
 
         var w = width;
         var h = height;
+        var tmp:Float;
 
         // 0
         vertices.unsafeSet(0, -outer);
         vertices.unsafeSet(1, -outer);
         // 1
-        vertices.unsafeSet(2, w + outer);
+        tmp = w + outer;
+        vertices.unsafeSet(2, tmp);
         vertices.unsafeSet(3, -outer);
         // 2
         vertices.unsafeSet(4, -outer);
@@ -114,30 +116,41 @@ class Border extends Mesh {
         vertices.unsafeSet(6, inner);
         vertices.unsafeSet(7, inner);
         // 4
-        vertices.unsafeSet(8, w - inner);
+        tmp = w - inner;
+        vertices.unsafeSet(8, tmp);
         vertices.unsafeSet(9, inner);
         // 5
-        vertices.unsafeSet(10, w + outer);
+        tmp = w + outer;
+        vertices.unsafeSet(10, tmp);
         vertices.unsafeSet(11, inner);
 
         // 6
         vertices.unsafeSet(12, -outer);
-        vertices.unsafeSet(13, h - inner);
+        tmp = h - inner;
+        vertices.unsafeSet(13, tmp);
         // 7
         vertices.unsafeSet(14, inner);
-        vertices.unsafeSet(15, h - inner);
+        tmp = h - inner;
+        vertices.unsafeSet(15, tmp);
         // 8
-        vertices.unsafeSet(16, w - inner);
-        vertices.unsafeSet(17, h - inner);
+        tmp = w - inner;
+        vertices.unsafeSet(16, tmp);
+        tmp = h - inner;
+        vertices.unsafeSet(17, tmp);
         // 9
-        vertices.unsafeSet(18, w + outer);
-        vertices.unsafeSet(19, h - inner);
+        tmp = w + outer;
+        vertices.unsafeSet(18, tmp);
+        tmp = h - inner;
+        vertices.unsafeSet(19, tmp);
         // 10
         vertices.unsafeSet(20, -outer);
-        vertices.unsafeSet(21, h + outer);
+        tmp = h + outer;
+        vertices.unsafeSet(21, tmp);
         // 11
-        vertices.unsafeSet(22, w + outer);
-        vertices.unsafeSet(23, h + outer);
+        tmp = w + outer;
+        vertices.unsafeSet(22, tmp);
+        tmp = h + outer;
+        vertices.unsafeSet(23, tmp);
 
     } //computeVertices
 
