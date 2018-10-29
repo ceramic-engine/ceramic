@@ -247,14 +247,14 @@ class EventsMacro {
                                 var callbacks = new haxe.ds.Vector<$handlerType>(len);
                                 var i = 0;
                                 if (this.$cbOnArray != null) {
-                                    for (item in this.$cbOnArray) {
-                                        callbacks.set(i, item);
+                                    for (ii in 0...this.$cbOnArray.length) {
+                                        callbacks.set(i, this.$cbOnArray[ii]);
                                         i++;
                                     }
                                 }
                                 if (this.$cbOnceArray != null) {
-                                    for (item in this.$cbOnceArray) {
-                                        callbacks.set(i, item);
+                                    for (ii in 0...this.$cbOnceArray.length) {
+                                        callbacks.set(i, this.$cbOnceArray[ii]);
                                         i++;
                                     }
                                     this.$cbOnceArray = null;

@@ -648,7 +648,9 @@ class Spine extends Visual {
         var result = true;
 
         if (state != null) {
-            for (track in state.tracks) {
+            var tracks = state.tracks;
+            for (i in 0...tracks.length) {
+                var track = tracks[i];
                 if (track != null && track.animation != null && track.animation.duration > 0) {
                     if (track.loop || track.trackTime < track.animation.duration) {
                         result = false;
