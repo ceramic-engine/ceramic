@@ -23,4 +23,16 @@ class TextureTile {
 
     } //new
 
+    function toString() {
+
+        return '' + {
+            texture: texture,
+            frameX: frameX,
+            frameY: frameY,
+            frameWidth: frameWidth,
+            frameHeight: frameHeight
+        };
+
+    } //toString
+
 } //TextureTile
