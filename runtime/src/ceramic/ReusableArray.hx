@@ -22,7 +22,7 @@ class ReusableArray<T> {
     function set_length(length:Int):Int {
         if (vector == null) {
             vector = new Vector(length);
-            this.length == length;
+            this.length = length;
             return length;
         }
         if (length == this.length) return length;
