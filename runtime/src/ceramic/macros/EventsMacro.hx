@@ -244,7 +244,9 @@ class EventsMacro {
                             if (len > 0) {
                                 // TODO avoid allocation here while still keeping this safe?
                                 // Some recycling of Vector objects could probably be done here
-                                var callbacks = new haxe.ds.Vector<$handlerType>(len);
+                                //var callbacks = new haxe.ds.Vector<$handlerType>(len);
+                                var pool = ceramic.ArrayPool.pool(len);
+                                var callbacks = pool.get();
                                 var i = 0;
                                 if (this.$cbOnArray != null) {
                                     for (ii in 0...this.$cbOnArray.length) {
@@ -262,6 +264,7 @@ class EventsMacro {
                                 for (i in 0...len) {
                                     callbacks.get(i)($a{handlerCallArgs});
                                 }
+                                pool.release(callbacks);
                                 callbacks = null;
                             }
                             $didEmit;
