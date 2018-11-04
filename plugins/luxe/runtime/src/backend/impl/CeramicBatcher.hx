@@ -23,6 +23,10 @@ class CeramicBatcher extends phoenix.Batcher {
     var customFloatAttributesSize:Int = 0;
     var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
 
+    var view_pos = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+    var view_tcoords = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+    var view_colors = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+
 #if ceramic_debug_draw
     var lastDebugTime:Float = 0;
     var debugDraw:Bool = false;
@@ -1135,9 +1139,9 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         // fromBuffer takes byte length, so floats * 4
-        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats * 4);
-        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats * 4);
-        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats * 4);
+        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats * 4, view_pos);
+        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats * 4, view_tcoords);
+        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats * 4, view_colors);
 
         // -- Begin submit
 
