@@ -10,7 +10,7 @@ class IntIntMap {
 
     static inline var FREE_KEY = 0;
 
-    public static inline var NO_VALUE = 0;
+    static inline var NO_VALUE = 0;
 
     /** Keys and values */
     var data:Vector<Int>;
@@ -25,14 +25,17 @@ class IntIntMap {
     /** We will resize a map once it reaches this size */
     var threshold:Int;
     /** Current map size */
-    var size:Int;
+    public var size(default,null):Int;
+
+    /** When this map is marked as iterable, this array will contain every key. */
+    public var iterableKeys(default,null):Array<Int> = null;
 
     /** Mask to calculate the original position */
     var mask:Int;
     /** Mask to calculate the original position */
     var mask2:Int;
 
-    public function new(size:Int, fillFactor:Float) {
+    public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 
         assert(fillFactor > 0 || fillFactor < 1, "fillFactor must be in 0 (excluded) and 1 (excluded)");
         assert(size > 0, "size must be positive");
@@ -44,10 +47,47 @@ class IntIntMap {
 
         data = new Vector(capacity * 2);
         threshold = Std.int(capacity * fillFactor);
+        
+        if (iterable) {
+            iterableKeys = [];
+        }
 
     } //new
 
-    public function get(key:Int) {
+    public function exists(key:Int):Bool {
+
+        var ptr = (phiMix(key) & mask) << 1;
+
+        if (key == FREE_KEY)
+            return hasFreeKey ? true : false;
+
+        var k = data.get(ptr);
+
+        if (k == FREE_KEY) {
+            // End of chain already
+            return false;
+        }
+        if (k == key) {
+            // We check FREE prior to this call
+            return true;
+        }
+
+        while (true)
+        {
+            // That's next index
+            ptr = (ptr + 2) & mask2;
+            k = data.get(ptr);
+            if (k == FREE_KEY) {
+                return false;
+            }
+            if (k == key) {
+                return true;
+            }
+        }
+
+    } //exists
+
+    public function get(key:Int):Int {
 
         var ptr = (phiMix(key) & mask) << 1;
 
@@ -80,6 +120,174 @@ class IntIntMap {
 
     } //get
 
+    public function set(key:Int, value:Int):Int {
+
+        if (key == FREE_KEY)
+        {
+            var ret = freeValue;
+            if (!hasFreeKey) {
+                if (iterableKeys != null) {
+                    iterableKeys.push(key);
+                }
+                size++;
+            }
+            hasFreeKey = true;
+            freeValue = value;
+            return ret;
+        }
+
+        var ptr = (phiMix(key) & mask) << 1;
+        var k = data.get(ptr);
+        if (k == FREE_KEY) // End of chain already
+        {
+            data.set(ptr, key);
+            data.set(ptr + 1, value);
+            if (size >= threshold) {
+                rehash(data.length * 2); // Size is set inside
+            } else {
+                size++;
+            }
+            if (iterableKeys != null) {
+                iterableKeys.push(key);
+            }
+            return NO_VALUE;
+        }
+        else if (k == key) // We check FREE prior to this call
+        {
+            var ret = data.get(ptr + 1);
+            data.set(ptr + 1, value);
+            return ret;
+        }
+
+        while (true)
+        {
+            ptr = (ptr + 2) & mask2; // That's next index calculation
+            k = data.get(ptr);
+            if (k == FREE_KEY)
+            {
+                data.set(ptr, key);
+                data.set(ptr + 1, value);
+                if (size >= threshold) {
+                    rehash(data.length * 2); // Size is set inside
+                }
+                else {
+                    size++;
+                }
+                if (iterableKeys != null) {
+                    iterableKeys.push(key);
+                }
+                return NO_VALUE;
+            }
+            else if (k == key)
+            {
+                var ret = data.get(ptr + 1);
+                data.set(ptr + 1, value);
+                return ret;
+            }
+        }
+
+    } //set
+
+    public function remove(key:Int):Int {
+
+        if (key == FREE_KEY)
+        {
+            if (!hasFreeKey) {
+                return NO_VALUE;
+            }
+            hasFreeKey = false;
+            size--;
+            if (iterableKeys != null) {
+                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+            }
+            return freeValue; // Value is not cleaned
+        }
+
+        var ptr = (phiMix(key) & mask) << 1;
+        var k = data.get(ptr);
+        if (k == key) // We check FREE prior to this call
+        {
+            var res = data.get(ptr + 1);
+            shiftKeys(ptr);
+            size--;
+            if (iterableKeys != null) {
+                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+            }
+            return res;
+        }
+        else if (k == FREE_KEY) {
+            return NO_VALUE;  // End of chain already
+        }
+        while (true)
+        {
+            ptr = (ptr + 2) & mask2; // That's next index calculation
+            k = data.get(ptr);
+            if (k == key)
+            {
+                var res = data.get(ptr + 1);
+                shiftKeys(ptr);
+                size--;
+                if (iterableKeys != null) {
+                    iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                }
+                return res;
+            }
+            else if (k == FREE_KEY) {
+                return NO_VALUE;
+            }
+        }
+
+    } //remove
+
+    private function shiftKeys(pos:Int):Int {
+
+        // Shift entries with the same hash.
+        var last:Int = 0;
+        var slot:Int = 0;
+        var k:Int = 0;
+        var data = this.data;
+        while (true)
+        {
+            pos = ((last = pos) + 2) & mask2;
+            while (true)
+            {
+                if ((k = data.get(pos)) == FREE_KEY)
+                {
+                    data.set(last, FREE_KEY);
+                    return last;
+                }
+                slot = (phiMix(k) & mask) << 1; // Calculate the starting slot for the current key
+                if (last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos) break;
+                pos = (pos + 2) & mask2; // Go to the next entry
+            }
+            data.set(last, k);
+            data.set(last + 1, data.get(pos + 1));
+        }
+
+    } //shiftKeys
+
+    function rehash(newCapacity:Int):Void {
+
+        threshold = Std.int(newCapacity/2 * fillFactor);
+        mask = Std.int(newCapacity/2) - 1;
+        mask2 = newCapacity - 1;
+
+        var oldCapacity = data.length;
+        var oldData = data;
+
+        data = new Vector(newCapacity);
+        size = hasFreeKey ? 1 : 0;
+
+        var i = 0;
+        while (i < oldCapacity) {
+            var oldKey = oldData.get(i);
+            if (oldKey != FREE_KEY)
+                set(oldKey, oldData.get(i + 1));
+            i += 2;
+        }
+
+    } //rehash
+
 /// Tools
 
     /** Return the least power of two greater than or equal to the specified value. */
@@ -93,7 +301,7 @@ class IntIntMap {
             x |= x >> 4;
             x |= x >> 8;
             x |= x >> 16;
-            result = x;
+            result = (x | x >> 32) + 1;
         }
         return result;
 
