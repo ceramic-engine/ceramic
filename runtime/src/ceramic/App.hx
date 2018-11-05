@@ -19,6 +19,8 @@ import haxe.CallStack;
 
 import backend.Backend;
 
+using ceramic.Extensions;
+
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
 #end
@@ -71,7 +73,9 @@ class App extends Entity {
 
 /// Immediate update event, custom implementation
 
-    var immediateCallbacks:Array<Void->Void> = null;
+    var immediateCallbacks:Array<Void->Void> = [];
+
+    var immediateCallbacksLen = 0;
 
 #if hxtelemetry
     var hxt:HxTelemetry;
@@ -81,12 +85,7 @@ class App extends Entity {
         (before elements are drawn onto screen) */
     public function onceImmediate(handleImmediate):Void {
 
-        if (immediateCallbacks == null) {
-            immediateCallbacks = [handleImmediate];
-        }
-        else {
-            immediateCallbacks.push(handleImmediate);
-        }
+        immediateCallbacks[immediateCallbacksLen++] = handleImmediate;
 
     } //onceImmediate
 
@@ -96,16 +95,26 @@ class App extends Entity {
 
         var didFlush = false;
 
-        while (immediateCallbacks != null) {
+        while (immediateCallbacksLen > 0) {
 
             didFlush = true;
 
-            var callbacks = immediateCallbacks;
-            immediateCallbacks = null;
+            var pool = ArrayPool.pool(immediateCallbacksLen);
+            var callbacks = pool.get();
+            var len = immediateCallbacksLen;
+            immediateCallbacksLen = 0;
 
-            for (cb in callbacks) {
+            for (i in 0...len) {
+                callbacks.set(i, immediateCallbacks.unsafeGet(i));
+                immediateCallbacks[i] = null;
+            }
+
+            for (i in 0...len) {
+                var cb = callbacks.get(i);
                 cb();
             }
+
+            pool.release(callbacks);
 
         }
 

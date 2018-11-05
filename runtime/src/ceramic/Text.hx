@@ -5,6 +5,7 @@ import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
 using unifill.Unifill;
+using ceramic.Extensions;
 
 @editable({ implicitSize: true })
 class Text extends Visual {
@@ -16,8 +17,11 @@ class Text extends Visual {
         this.color = color;
 
         // Ensure text glyphs have the requested color
-        for (quad in glyphQuads) {
-            quad.color = color;
+        if (glyphQuads != null) {
+            for (i in 0...glyphQuads.length) {
+                var quad = glyphQuads.unsafeGet(i);
+                quad.color = color;
+            }
         }
 
         return color;
@@ -102,8 +106,11 @@ class Text extends Visual {
         if (this.depth == depth) return depth;
 
         // Ensure text glyphs have the requested depth
-        for (quad in glyphQuads) {
-            quad.depth = depth;
+        if (glyphQuads != null) {
+            for (i in 0...glyphQuads.length) {
+                var quad = glyphQuads.unsafeGet(i);
+                quad.depth = depth;
+            }
         }
 
         return super.set_depth(depth);
@@ -137,7 +144,8 @@ class Text extends Visual {
         if (this.blending == blending) return blending;
         this.blending = blending;
         if (glyphQuads != null) {
-            for (quad in glyphQuads) {
+            for (i in 0...glyphQuads.length) {
+                var quad = glyphQuads.unsafeGet(i);
                 quad.blending = blending;
             }
         }
@@ -259,7 +267,8 @@ class Text extends Visual {
 
         // Compute width/height from content
         var maxLineWidth = 0.0;
-        for (lineWidth in lineWidths) {
+        for (i in 0...lineWidths.length) {
+            var lineWidth = lineWidths.unsafeGet(i);
             maxLineWidth = Math.max(lineWidth, maxLineWidth);
         }
         this.width = maxLineWidth;
@@ -269,15 +278,19 @@ class Text extends Visual {
         switch (align) {
             case CENTER:
                 for (i in 0...lineWidths.length) {
-                    var diffX = (maxLineWidth - lineWidths[i]) * 0.5;
-                    for (quad in lineQuads[i]) {
+                    var diffX = (maxLineWidth - lineWidths.unsafeGet(i)) * 0.5;
+                    var quads = lineQuads.unsafeGet(i);
+                    for (j in 0...quads.length) {
+                        var quad = quads.unsafeGet(j);
                         quad.x += diffX;
                     }
                 }
             case RIGHT:
                 for (i in 0...lineWidths.length) {
-                    var diffX = maxLineWidth - lineWidths[i];
-                    for (quad in lineQuads[i]) {
+                    var diffX = maxLineWidth - lineWidths.unsafeGet(i);
+                    var quads = lineQuads.unsafeGet(i);
+                    for (j in 0...quads.length) {
+                        var quad = quads.unsafeGet(j);
                         quad.x += diffX;
                     }
                 }

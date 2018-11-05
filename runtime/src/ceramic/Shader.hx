@@ -47,7 +47,8 @@ class Shader extends Entity {
         ];
 
         if (customAttributes != null) {
-            for (attribute in customAttributes) {
+            for (i in 0...customAttributes.length) {
+                var attribute = customAttributes.unsafeGet(i);
                 attributes.push(attribute);
             }
         }

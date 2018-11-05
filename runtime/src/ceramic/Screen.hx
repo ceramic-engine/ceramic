@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
+
 @:allow(ceramic.App)
 class Screen extends Entity implements Observable {
 
@@ -64,7 +66,7 @@ class Screen extends Entity implements Observable {
     public var mouseY(default,null):Float = 0;
 
     /** Touches x and y coordinates by touch index. */
-    public var touches(default,null):Touches = new Touches();
+    public var touches(default,null):Touches = new Touches(8, 0.5, false);
 
     /** Focused visual */
     public var focusedVisual(default,set):Visual = null;
@@ -462,7 +464,9 @@ class Screen extends Entity implements Observable {
 
         // Force visuals to recompute their matrix and take
         // screen matrix in account
-        for (visual in app.visuals) {
+        var visuals = app.visuals;
+        for (i in 0...visuals.length) {
+            var visual = visuals.unsafeGet(i);
             visual.matrixDirty = true;
         }
 
@@ -560,7 +564,7 @@ class Screen extends Entity implements Observable {
 
         if (info.touchIndex != -1) {
             // Touch
-            touches.remove(info.touchIndex);
+            touches.set(info.touchIndex, null);
         }
 
     } //prepareMultiTouchPointerUp
@@ -596,8 +600,9 @@ class Screen extends Entity implements Observable {
         var numTouchPointers = 0;
         var pX = 0.0;
         var pY = 0.0;
-        for (pointer in touches) {
-            if (pointer == null) continue; // Why does this happen?
+        for (i in 0...touches.values.length) {
+            var pointer = touches.values.get(i);
+            if (pointer == null) continue;
             numTouchPointers++;
             pX += pointer.x;
             pY += pointer.y;

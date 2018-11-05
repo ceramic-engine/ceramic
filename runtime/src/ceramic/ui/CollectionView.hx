@@ -2,6 +2,8 @@ package ceramic.ui;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
+
 class CollectionView extends ScrollView {
 
     public var collectionViewLayout:CollectionViewLayout = new CollectionViewFlowLayout();
@@ -29,7 +31,8 @@ class CollectionView extends ScrollView {
     override function destroy() {
 
         dataSource = null;
-        for (view in reusableViews) {
+        for (i in 0...reusableViews.length) {
+            var view = reusableViews.unsafeGet(i);
             view.destroy();
         }
         reusableViews = null;
@@ -49,7 +52,9 @@ class CollectionView extends ScrollView {
     public function reloadData():Void {
 
         if (this.frames.length > 0) {
-            for (frame in this.frames) {
+            for (i in 0...this.frames.length) {
+                var frame = this.frames.unsafeGet(i);
+
                 if (frame.view != null) {
                     if (autoDestroyItems) frame.view.destroy();
                 }
@@ -104,12 +109,13 @@ class CollectionView extends ScrollView {
         var diffX = 0.0;
         var diffY = 0.0;
         var itemIndex = -1;
-        var i = 0;
         var scrollX = includeScroll ? scroller.scrollX : 0.0;
         var scrollY = includeScroll ? scroller.scrollY : 0.0;
 
         if (direction == VERTICAL) {
-            for (frame in frames) {
+            for (i in 0...frames.length) {
+                var frame = frames.unsafeGet(i);
+
                 diffX = Math.abs(x - (frame.x + frame.width * 0.5 - scrollX));
                 diffY = Math.abs(y - (frame.y + frame.height * 0.5 - scrollY));
                 if (diffY < bestDiffY || (diffY == bestDiffY && diffX < bestDiffX)) {
@@ -117,11 +123,12 @@ class CollectionView extends ScrollView {
                     bestDiffY = diffY;
                     itemIndex = i;
                 }
-                i++;
             }
         }
         else {
-            for (frame in frames) {
+            for (i in 0...frames.length) {
+                var frame = frames.unsafeGet(i);
+
                 diffX = Math.abs(x - (frame.x + frame.width * 0.5 - scrollX));
                 diffY = Math.abs(y - (frame.y + frame.height * 0.5 - scrollY));
                 if (diffX < bestDiffX || (diffX == bestDiffX && diffY < bestDiffY)) {
@@ -129,7 +136,6 @@ class CollectionView extends ScrollView {
                     bestDiffY = diffY;
                     itemIndex = i;
                 }
-                i++;
             }
         }
 

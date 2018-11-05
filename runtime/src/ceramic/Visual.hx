@@ -6,6 +6,8 @@ import backend.VisualItem;
 
 import ceramic.Point;
 
+using ceramic.Extensions;
+
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
 class Visual extends Entity {
@@ -97,7 +99,8 @@ class Visual extends Entity {
         this.matrixDirty = matrixDirty;
         if (matrixDirty) {
             if (children != null) {
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.matrixDirty = true;
                 }
             }
@@ -111,7 +114,8 @@ class Visual extends Entity {
         this.renderTargetDirty = renderTargetDirty;
         if (renderTargetDirty) {
             if (children != null) {
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.renderTargetDirty = true;
                 }
             }
@@ -125,7 +129,8 @@ class Visual extends Entity {
         this.visibilityDirty = visibilityDirty;
         if (visibilityDirty) {
             if (children != null) {
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.visibilityDirty = true;
                 }
             }
@@ -139,7 +144,8 @@ class Visual extends Entity {
         this.touchableDirty = touchableDirty;
         if (touchableDirty) {
             if (children != null) {
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.touchableDirty = true;
                 }
             }
@@ -153,7 +159,8 @@ class Visual extends Entity {
         this.clipDirty = clipDirty;
         if (clipDirty) {
             if (children != null) {
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.clipDirty = true;
                 }
             }
@@ -529,11 +536,19 @@ class Visual extends Entity {
 
     public function clear() {
 
-        if (children != null) {
-            for (child in [].concat(@:privateAccess children.mutable)) {
+        if (children != null && children.length > 0) {
+            var len = children.length;
+            var pool = ArrayPool.pool(len);
+            var tmp = pool.get();
+            for (i in 0...len) {
+                tmp.set(i, children.unsafeGet(i));
+            }
+            for (i in 0...len) {
+                var child:Visual = tmp.get(i);
                 child.destroy();
             }
             children = null;
+            pool.release(tmp);
         }
 
     } //clear
@@ -903,7 +918,8 @@ class Visual extends Entity {
         if (children != null) {
 
             // Compute deepest in hierarchy first
-            for (child in children) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
                 child.computedDepth = child.depth;
                 child.computeChildrenDepth();
             }
@@ -915,12 +931,14 @@ class Visual extends Entity {
                 _maxDepth = -9999999999;
 
                 // Compute min/max depth
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.computeMinMaxDepths();
                 }
 
                 // Multiply depth
-                for (child in children) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
                     child.multiplyDepths(computedDepth + Math.min(0.00001, depthRange), Math.max(0, depthRange - 0.00001));
                 }
             }
@@ -935,7 +953,8 @@ class Visual extends Entity {
 
         if (children != null) {
 
-            for (child in children) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
                 child.computeMinMaxDepths();
             }
         }
@@ -953,7 +972,8 @@ class Visual extends Entity {
         // Multiply recursively
         if (children != null) {
 
-            for (child in children) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
                 child.multiplyDepths(startDepth, targetRange);
             }
         }
@@ -1032,7 +1052,8 @@ class Visual extends Entity {
             var maxX = -999999999.9;
             var maxY = -999999999.9;
             var point = new Point();
-            for (child in children) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
 
                 if (child.visible) {
 

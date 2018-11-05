@@ -36,7 +36,9 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
             y += insetStart;
             maxY = y;
 
-            for (frame in frames) {
+            for (i in 0...frames.length) {
+                var frame = frames.unsafeGet(i);
+
                 // Fit item width
                 if (itemSizing > 0) {
                     frame.width = Math.min(width, width * itemSizing);
@@ -59,7 +61,9 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
             x += insetStart;
             maxX = x;
 
-            for (frame in frames) {
+            for (i in 0...frames.length) {
+                var frame = frames.unsafeGet(i);
+
                 // Fit item height
                 if (itemSizing > 0) {
                     frame.height = Math.min(height, height * itemSizing);

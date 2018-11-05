@@ -2,6 +2,8 @@ package ceramic.ui;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
+
 class View extends Quad {
 
 /// Events
@@ -267,9 +269,17 @@ class View extends Quad {
     public function removeAllViews():Void {
 
         if (subviews == null) return;
-        for (view in [].concat(@:privateAccess subviews.mutable)) {
+        var len = subviews.length;
+        var pool = ArrayPool.pool(len);
+        var tmp = pool.get();
+        for (i in 0...len) {
+            tmp.set(i, subviews.unsafeGet(i));
+        }
+        for (i in 0...len) {
+            var view:View = tmp.get(i);
             remove(view);
         }
+        pool.release(tmp);
         subviews = null;
 
     } //removeAllViews
@@ -377,7 +387,8 @@ class View extends Quad {
         var hasAnyDirty = false;
 
         // Gather views to update first
-        for (view in _allViews) {
+        for (i in 0..._allViews.length) {
+            var view = _allViews.unsafeGet(i);
             if (view.layoutDirty) {
                 hasAnyDirty = true;
                 break;
@@ -389,14 +400,17 @@ class View extends Quad {
 
         if (hasAnyDirty) {
             // Mark all parent-of-dirty views as dirty as well
-            for (view in toUpdate) {
+            for (i in 0...toUpdate.length) {
+                var view = toUpdate.unsafeGet(i);
                 _markParentsAsLayoutDirty(view);
             }
             // Then emit layout event by starting from the top-level views
-            for (view in toUpdate) {
+            for (i in 0...toUpdate.length) {
+                var view = toUpdate.unsafeGet(i);
                 _layoutParentThenSelf(view);
             }
-            for (view in toUpdate) {
+            for (i in 0...toUpdate.length) {
+                var view = toUpdate.unsafeGet(i);
                 _layoutParentThenSelf(view);
             }
         }

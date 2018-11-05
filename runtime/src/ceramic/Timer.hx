@@ -1,5 +1,7 @@
 package ceramic;
 
+using ceramic.Extensions;
+
 class Timer {
 
     static var callbacks:Array<TimerCallback> = [];
@@ -20,7 +22,9 @@ class Timer {
             var prevCallbacks = callbacks;
             callbacks = [];
 
-            for (callback in prevCallbacks) {
+            for (i in 0...prevCallbacks.length) {
+                var callback = prevCallbacks.unsafeGet(i);
+
                 if (callback.time <= now) {
                     callback.callback();
                     callback.called = true;

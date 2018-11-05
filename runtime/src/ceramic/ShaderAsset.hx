@@ -5,6 +5,7 @@ import ceramic.Shortcuts.*;
 import haxe.io.Path;
 
 using StringTools;
+using ceramic.Extensions;
 
 class ShaderAsset extends Asset {
 
@@ -31,7 +32,8 @@ class ShaderAsset extends Asset {
         if (path != null && (path.toLowerCase().endsWith('.frag') || path.toLowerCase().endsWith('.vert'))) {
             var paths = Assets.allByName.get(name);
             if (options.fragId == null) {
-                for (path in paths) {
+                for (i in 0...paths.length) {
+                    var path = paths.unsafeGet(i);
                     if (path.toLowerCase().endsWith('.frag')) {
                         options.fragId = path;
                         break;
@@ -39,7 +41,8 @@ class ShaderAsset extends Asset {
                 }
             }
             if (options.vertId == null) {
-                for (path in paths) {
+                for (i in 0...paths.length) {
+                    var path = paths.unsafeGet(i);
                     if (path.toLowerCase().endsWith('.vert')) {
                         options.vertId = path;
                         break;
@@ -87,7 +90,8 @@ class ShaderAsset extends Asset {
                 if (options.customAttributes != null) {
                     customAttributes = [];
                     var rawAttributes:Array<Dynamic> = options.customAttributes;
-                    for (rawAttr in rawAttributes) {
+                    for (i in 0...rawAttributes.length) {
+                        var rawAttr = rawAttributes.unsafeGet(i);
                         customAttributes.push({
                             size: rawAttr.size,
                             name: rawAttr.name
