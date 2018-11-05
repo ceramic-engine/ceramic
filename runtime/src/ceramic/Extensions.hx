@@ -5,8 +5,8 @@ class Extensions<T> {
 
 /// Array extensions
 
-    #if !debug inline #end public static function unsafeGet<T>(array:Array<T>, index:Int):T {
-#if debug
+    #if !ceramic_debug_unsafe inline #end public static function unsafeGet<T>(array:Array<T>, index:Int):T {
+#if ceramic_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeGet: index=$index length=${array.length}';
 #end
 #if cpp
@@ -16,8 +16,8 @@ class Extensions<T> {
 #end
     } //unsafeGet
 
-    #if !debug inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
-#if debug
+    #if !ceramic_debug_unsafe inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
+#if ceramic_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeSet: index=$index length=${array.length}';
 #end
 #if cpp
