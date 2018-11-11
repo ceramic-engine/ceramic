@@ -1,12 +1,16 @@
 package backend;
 
-using StringTools;
-
 #if android
 import android.Http as AndroidHttp;
 #elseif ios
 import ios.Http as IosHttp;
+#elseif js
+import js.html.XMLHttpRequest;
 #end
+
+import ceramic.Shortcuts.*;
+
+using StringTools;
 
 class Http implements spec.Http {
 
@@ -138,6 +142,112 @@ class Http implements spec.Http {
                 error: rawResponse.error
             });
         });
+
+#elseif js
+
+        var contentType = "application/x-www-form-urlencoded";
+        var httpHeaders:Map<String,String>;
+        if (options.headers != null) {
+            httpHeaders = new Map();
+            for (key in options.headers.keys()) {
+                if (key.toLowerCase() == 'content-type') {
+                    contentType = options.headers.get(key);
+                } else {
+                    httpHeaders.set(key, options.headers.get(key));
+                }
+            }
+        } else {
+            httpHeaders = null;
+        }
+
+        var content:String = null;
+        if (options.content != null) {
+            content = options.content;
+        }
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.open(
+            options.method != null ? options.method : 'GET',
+            options.url,
+            true
+        );
+
+        if (httpHeaders != null) {
+            for (key in httpHeaders.keys()) {
+                xhr.setRequestHeader(key, httpHeaders.get(key));
+            }
+        }
+
+        if (content != null) {
+            xhr.setRequestHeader('Content-Type', contentType);
+        }
+
+        xhr.onload = function() {
+            if (done == null) return;
+
+            var rawHeaders = xhr.getAllResponseHeaders();
+            var headers = new Map<String,String>();
+            if (rawHeaders != null) {
+                for (rawHeader in rawHeaders.split("\n")) {
+                    if (rawHeader.trim() == '') continue;
+                    var colonIndex = rawHeader.indexOf(':');
+                    if (colonIndex != -1) {
+                        var key = rawHeader.substring(0, colonIndex).trim();
+                        var value = rawHeader.substring(colonIndex + 1).trim();
+                        headers.set(key, value);
+                    }
+                    else {
+                        warning('Failed to parse header: $rawHeader');
+                    }
+                }
+            }
+
+            var response:HttpResponse = {
+                status: xhr.status,
+                content: xhr.responseText,
+                headers: headers,
+                error: null
+            };
+
+            var _done = done;
+            done = null;
+            _done(response);
+        };
+
+        xhr.onerror = function() {
+            if (done == null) return;
+
+            var rawHeaders = xhr.getAllResponseHeaders();
+            var headers = new Map<String,String>();
+            if (rawHeaders != null) {
+                for (rawHeader in rawHeaders.split("\n")) {
+                    if (rawHeader.trim() == '') continue;
+                    var colonIndex = rawHeader.indexOf(':');
+                    if (colonIndex != -1) {
+                        var key = rawHeader.substring(0, colonIndex).trim();
+                        var value = rawHeader.substring(colonIndex + 1).trim();
+                        headers.set(key, value);
+                    }
+                    else {
+                        warning('Failed to parse header: $rawHeader');
+                    }
+                }
+            }
+
+            var response:HttpResponse = {
+                status: xhr.status,
+                content: null,
+                headers: headers,
+                error: xhr.statusText
+            };
+
+            var _done = done;
+            done = null;
+            _done(response);
+        };
+
+        xhr.send(content);
 
 #elseif akifox_asynchttp
 
