@@ -193,13 +193,17 @@ class Build extends tools.Task {
         function buildWeb() {
             var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
             var hxmlData = tools.Hxml.parse(rawHxml);
-            var hxmlTargetCwd = cwd;
+            var hxmlTargetCwd = Path.join([cwd, 'project/web']);
             var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
             var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
 
-            File.saveContent(Path.join([cwd, 'build.hxml']), finalHxml.rtrim() + "\n");
+            if (!FileSystem.exists(hxmlOriginalCwd)) {
+                FileSystem.createDirectory(hxmlOriginalCwd);
+            }
 
-            haxe([/*'--connect', '127.0.0.1:4061'*/'build.hxml'], { cwd: cwd });
+            File.saveContent(Path.join([cwd, 'project/web/build.hxml']), finalHxml.rtrim() + "\n");
+
+            return haxe([/*'--connect', '127.0.0.1:4061'*/'build.hxml'], { cwd: hxmlTargetCwd });
         }
         
         if (status != 0) {
@@ -210,7 +214,10 @@ class Build extends tools.Task {
 
             // Take shortcut when building for web
             if ((action == 'run' || action == 'build') && target.name == 'web') {
-                buildWeb();
+                var result = buildWeb();
+                if (result.status != 0) {
+                    fail('Failed to build, exited with status ' + result.status);
+                }
             }
 
             if (action == 'run' || action == 'build') {
@@ -281,7 +288,10 @@ class Build extends tools.Task {
                                 var taskArgs = ['luxe', 'build', 'web', '--variant', context.variant];
                                 if (debug) taskArgs.push('--debug');
                                 task.run(cwd, taskArgs);*/
-                                buildWeb();
+                                var result = buildWeb();
+                                if (result.status != 0) {
+                                    fail('Failed to rebuild, exited with status ' + result.status);
+                                }
                                 // Refresh electron runner
                                 var taskArgs = ['web', 'project', '--variant', context.variant];
                                 if (debug) taskArgs.push('--debug');
