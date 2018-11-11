@@ -86,7 +86,9 @@ function createWindow() {
         movable: true,
         title: appName,
         backgroundColor: '#000000',
-        icon: path.join(__dirname, 'resources/AppIcon.png')
+        icon: path.join(__dirname, 'resources/AppIcon.png'),
+        // We don't want to bother with access control policy, other targets don't anyway
+        webPreferences: { webSecurity: false }
     });
     exports.mainWindow = mainWindow;
 
