@@ -23,9 +23,11 @@ class CeramicBatcher extends phoenix.Batcher {
     var customFloatAttributesSize:Int = 0;
     var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
 
+#if cpp
     var view_pos = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
     var view_tcoords = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
     var view_colors = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+#end
 
 #if ceramic_debug_draw
     var lastDebugTime:Float = 0;
@@ -112,7 +114,7 @@ class CeramicBatcher extends phoenix.Batcher {
         var mesh:ceramic.Mesh = null;
 
         var lastTexture:ceramic.Texture = null;
-        var lastTextureId:phoenix.TextureID = 0;
+        var lastTextureId:phoenix.TextureID = #if snow_web null #else 0 #end;
         var lastTextureSlot:Int = 0;
         var lastShader:ceramic.Shader = null;
         var lastRenderTarget:ceramic.RenderTexture = null;
@@ -295,7 +297,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
-                lastTextureId = 0;
+                lastTextureId = #if snow_web null #else 0 #end;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                 //renderer.state.bindTexture2D(null);
 
@@ -387,9 +389,9 @@ class CeramicBatcher extends phoenix.Batcher {
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
-                                lastTextureId = 0;
+                                lastTextureId = #if snow_web null #else 0 #end;
                                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
-                                renderer.state.bindTexture2D(0);
+                                renderer.state.bindTexture2D(#if snow_web null #else 0 #end);
                             }
                         }
                     }
@@ -665,7 +667,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     defaultPlainShader.activate();
                 }
                 lastTexture = null;
-                lastTextureId = 0;
+                lastTextureId = #if snow_web null #else 0 #end;
                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                 //renderer.state.bindTexture2D(null);
 
@@ -756,7 +758,7 @@ class CeramicBatcher extends phoenix.Batcher {
                                     defaultPlainShader.activate();
                                 }
                                 lastTexture = null;
-                                lastTextureId = 0;
+                                lastTextureId = #if snow_web null #else 0 #end;
                                 renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
                                 //renderer.state.bindTexture2D(null);
                             }
@@ -1074,7 +1076,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         // Disable any states set by the batches
         //
-        if (lastTextureId != 0) {
+        if (lastTextureId != #if snow_web null #else 0 #end) {
             // Remove bound texture
             renderer.state.activeTexture(GL.TEXTURE0 + lastTextureSlot);
             //renderer.state.bindTexture2D(null);
@@ -1095,7 +1097,7 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         // Remove shader program
-        renderer.state.useProgram(0);
+        renderer.state.useProgram(#if snow_web null #else 0 #end);
     
         // Restore default blend mode
         renderer.state.enable(GL.BLEND);
@@ -1139,9 +1141,9 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         // fromBuffer takes byte length, so floats * 4
-        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats * 4, view_pos);
-        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats * 4, view_tcoords);
-        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats * 4, view_colors);
+        var _pos = Float32Array.fromBuffer(pos_list.buffer, 0, pos_floats * 4 #if cpp , view_pos #end);
+        var _tcoords = Float32Array.fromBuffer(tcoord_list.buffer, 0, tcoord_floats * 4 #if cpp , view_tcoords #end);
+        var _colors = Float32Array.fromBuffer(color_list.buffer, 0, color_floats * 4 #if cpp , view_colors #end);
 
         // -- Begin submit
 
