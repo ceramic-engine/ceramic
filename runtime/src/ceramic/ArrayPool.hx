@@ -52,7 +52,11 @@ class ArrayPool {
 
 /// Public API
 
-    public function get():ReusableArray<Dynamic> {
+    public function get(?pos:haxe.PosInfos):ReusableArray<Dynamic> {
+
+        #if ceramic_debug_array_pool
+        haxe.Log.trace('pool.get', pos);
+        #end
 
         if (arrays == null) arrays = new ReusableArray(ALLOC_STEP);
         else if (nextFree >= arrays.length) arrays.length += ALLOC_STEP;
@@ -78,6 +82,10 @@ class ArrayPool {
     } //get
 
     public function release(array:ReusableArray<Dynamic>):Void {
+        
+        #if ceramic_debug_array_pool
+        haxe.Log.trace('pool.release', pos);
+        #end
 
         var poolIndex = @:privateAccess array._poolIndex;
         @:privateAccess array._poolIndex = -1;

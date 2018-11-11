@@ -167,6 +167,57 @@ class EventsMacro {
                 };
                 newFields.push(cbOnceField);
 
+#if ceramic_debug_events
+                var cbOnPosArray = '__cbOnPos' + capitalName;
+                var cbOncePosArray = '__cbOncePos' + capitalName;
+
+                // Create __cbOnPos{Name}
+                var cbOnPosField = {
+                    pos: field.pos,
+                    name: cbOnPosArray,
+                    kind: FVar(TPath({
+                        name: 'Array',
+                        pack: [],
+                        params: [
+                            TPType(
+                                macro :haxe.PosInfos
+                            )
+                        ]
+                    })),
+                    access: [APrivate],
+                    doc: doc,
+                    meta: [{
+                        name: ':noCompletion',
+                        params: [],
+                        pos: field.pos
+                    }]
+                };
+                newFields.push(cbOnPosField);
+
+                // Create __cbOncePos{Name}
+                var cbOncePosField = {
+                    pos: field.pos,
+                    name: cbOncePosArray,
+                    kind: FVar(TPath({
+                        name: 'Array',
+                        pack: [],
+                        params: [
+                            TPType(
+                                macro :haxe.PosInfos
+                            )
+                        ]
+                    })),
+                    access: [APrivate],
+                    doc: doc,
+                    meta: [{
+                        name: ':noCompletion',
+                        params: [],
+                        pos: field.pos
+                    }]
+                };
+                newFields.push(cbOncePosField);
+#end
+
                 // Create __cbOnOwnerUnbind{Name}
                 var cbOnOwnerUnbindField = {
                     pos: field.pos,
@@ -247,21 +298,33 @@ class EventsMacro {
                                 //var callbacks = new haxe.ds.Vector<$handlerType>(len);
                                 var pool = ceramic.ArrayPool.pool(len);
                                 var callbacks = pool.get();
+                                #if ceramic_debug_events
+                                var callbacksPos = [];
+                                #end
                                 var i = 0;
                                 if (this.$cbOnArray != null) {
                                     for (ii in 0...this.$cbOnArray.length) {
+                                        #if ceramic_debug_events
+                                        callbacksPos.push(this.$cbOnPosArray[ii]);
+                                        #end
                                         callbacks.set(i, this.$cbOnArray[ii]);
                                         i++;
                                     }
                                 }
                                 if (this.$cbOnceArray != null) {
                                     for (ii in 0...this.$cbOnceArray.length) {
+                                        #if ceramic_debug_events
+                                        callbacksPos.push(this.$cbOncePosArray[ii]);
+                                        #end
                                         callbacks.set(i, this.$cbOnceArray[ii]);
                                         i++;
                                     }
                                     this.$cbOnceArray = null;
                                 }
                                 for (i in 0...len) {
+                                    #if ceramic_debug_events
+                                    haxe.Log.trace($v{emitName}, callbacksPos[i]);
+                                    #end
                                     callbacks.get(i)($a{handlerCallArgs});
                                 }
                                 pool.release(callbacks);
@@ -298,6 +361,13 @@ class EventsMacro {
                                 name: handlerName,
                                 type: handlerType
                             }
+                            #if ceramic_debug_events
+                            ,{
+                                name: 'pos',
+                                type: macro :haxe.PosInfos,
+                                opt: true
+                            }
+                            #end
                         ],
                         ret: macro :Void,
 #if (!display && !completion)
@@ -325,6 +395,12 @@ class EventsMacro {
                             }
 
                             // Add handler
+                            #if ceramic_debug_events
+                            if (this.$cbOnPosArray == null) {
+                                this.$cbOnPosArray = [];
+                            }
+                            this.$cbOnPosArray.push(pos);
+                            #end
                             if (this.$cbOnArray == null) {
                                 this.$cbOnArray = [];
                             }
@@ -355,6 +431,13 @@ class EventsMacro {
                                 name: handlerName,
                                 type: handlerType
                             }
+                            #if ceramic_debug_events
+                            ,{
+                                name: 'pos',
+                                type: macro :haxe.PosInfos,
+                                opt: true
+                            }
+                            #end
                         ],
                         ret: macro :Void,
 #if (!display && !completion)
@@ -382,6 +465,12 @@ class EventsMacro {
                             }
 
                             // Add handler
+                            #if ceramic_debug_events
+                            if (this.$cbOncePosArray == null) {
+                                this.$cbOncePosArray = [];
+                            }
+                            this.$cbOncePosArray.push(pos);
+                            #end
                             if (this.$cbOnceArray == null) {
                                 this.$cbOnceArray = [];
                             }

@@ -83,9 +83,16 @@ class App extends Entity {
 
     /** Schedule immediate callback that is garanteed to be executed before the next time frame
         (before elements are drawn onto screen) */
-    public function onceImmediate(handleImmediate):Void {
+    public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
+        #if ceramic_debug_immediate
+        immediateCallbacks[immediateCallbacksLen++] = function() {
+            haxe.Log.trace('immediate flush', pos);
+            handleImmediate();
+        };
+        #else
         immediateCallbacks[immediateCallbacksLen++] = handleImmediate;
+        #end
 
     } //onceImmediate
 
