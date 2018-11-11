@@ -1,5 +1,7 @@
 package ceramic;
 
+#if cpp
+
 import haxe.ds.Vector;
 import ceramic.Assert.assert;
 
@@ -324,3 +326,34 @@ class IntIntMap {
    	} //phiMix
 
 } //IntIntMap
+
+#else
+
+@:forward(get, set, exists)
+abstract IntIntMap(Map<Int,Int>) {
+
+    inline public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
+        this = new Map<Int,Int>();
+    }
+
+    public var size(get,never):Int;
+    inline function get_size():Int {
+        return Lambda.count(this);
+    }
+
+    public var iterableKeys(get,never):Array<Int>;
+    inline function get_iterableKeys():Array<Int> {
+        var keys = [];
+        for (k in this.keys()) {
+            keys.push(k);
+        }
+        return keys;
+    }
+
+    inline public function remove(key:Int):Int {
+        return this.remove(key) ? 1 : 0;
+    }
+
+} //IntIntMap
+
+#end
