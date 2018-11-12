@@ -2,6 +2,7 @@
 var path = require('path');
 var fs = require('fs');
 var rimraf = require('rimraf');
+var os = require('os');
 var spawnSync = require('child_process').spawnSync;
 
 // Let's not use newrepo
