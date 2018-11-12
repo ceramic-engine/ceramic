@@ -74,11 +74,21 @@ class Web extends tools.Task {
 
             cmdArgs = ['.'].concat(cmdArgs);
 
-            var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, 'node']),
-                ['node_modules/.bin/electron'].concat(cmdArgs),
-                { cwd: context.ceramicRunnerPath }
-            );
+            var proc = null;
+            
+            if (Sys.systemName() == 'Windows') {
+                proc = ChildProcess.spawn(
+                    Path.join([context.ceramicRunnerPath, 'electron.cmd']),
+                    cmdArgs,
+                    { cwd: context.ceramicRunnerPath }
+                );
+            } else {
+                proc = ChildProcess.spawn(
+                    Path.join([context.ceramicToolsPath, 'node']),
+                    ['node_modules/.bin/' + 'electron'].concat(cmdArgs),
+                    { cwd: context.ceramicRunnerPath }
+                );
+            }
 
             var out = StreamSplitter.splitter("\n");
             proc.stdout.pipe(untyped out);

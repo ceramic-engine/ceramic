@@ -33,6 +33,10 @@ function postInstall() {
     var ceramic = process.platform == 'win32' ? 'ceramic.bat' : './ceramic';
     spawnSync(ceramic, ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
 
+    // Install electron runner
+    var npm = process.platform == 'win32' ? 'npm.cmd' : './npm';
+    spawnSync(npm, ['install'], { stdio: "inherit", cwd: __dirname + '/../runner' });
+
 } //installDeps
 
 postInstall();

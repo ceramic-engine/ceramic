@@ -144,8 +144,10 @@ class Build extends tools.Task {
 
         Sync.run(function(done) {
 
+            var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
+
             var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, 'haxelib']),
+                Path.join([context.ceramicToolsPath, haxelib]),
                 cmdArgs,
                 { cwd: flowProjectPath }
             );
@@ -197,8 +199,8 @@ class Build extends tools.Task {
             var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
             var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
 
-            if (!FileSystem.exists(hxmlOriginalCwd)) {
-                FileSystem.createDirectory(hxmlOriginalCwd);
+            if (!FileSystem.exists(hxmlTargetCwd)) {
+                FileSystem.createDirectory(hxmlTargetCwd);
             }
 
             File.saveContent(Path.join([cwd, 'project/web/build.hxml']), finalHxml.rtrim() + "\n");
