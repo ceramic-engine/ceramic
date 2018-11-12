@@ -331,12 +331,20 @@ class Helpers {
         }
         else {
 
+            var spawnOptions:Dynamic = { cwd: options.cwd };
+
+            // Needed for haxe/haxelib commands on windows
+            if (Sys.systemName() == 'Windows') {
+                var originalPATH:String = untyped process.env.PATH;
+                spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
+            }
+
             Sync.run(function(done) {
                 var proc = null;
                 if (args == null) {
-                    proc = ChildProcess.spawn(name, {cwd: options.cwd});
+                    proc = ChildProcess.spawn(name, spawnOptions);
                 } else {
-                    proc = ChildProcess.spawn(name, args, {cwd: options.cwd});
+                    proc = ChildProcess.spawn(name, args, spawnOptions);
                 }
 
                 proc.stdout.on('data', function(input) {
