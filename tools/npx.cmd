@@ -1,3 +1,3 @@
 
 @echo off
-node_modules/.bin/npx %*
+%~dp0/node_modules/.bin/npx %*

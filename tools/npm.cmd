@@ -1,3 +1,3 @@
 
 @echo off
-node_modules/.bin/npm %*
+%~dp0/node_modules/.bin/npm %*

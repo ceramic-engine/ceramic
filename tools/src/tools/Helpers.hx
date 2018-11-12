@@ -270,13 +270,15 @@ class Helpers {
 
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
-        return command(Path.join([context.ceramicToolsPath, 'haxe']), args, options);
+        var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
+        return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
     } //haxe
 
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
-        return command(Path.join([context.ceramicToolsPath, 'haxelib']), args, options);
+        var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
+        return command(Path.join([context.ceramicToolsPath, haxelib]), args, options);
 
     } //haxelib
 
@@ -300,7 +302,7 @@ class Helpers {
         if (Sys.systemName() == 'Windows') {
             // npm
             if (name == 'npm') {
-                name = 'npm.cmd';
+                name = name + '.cmd';
             }
         }
 
