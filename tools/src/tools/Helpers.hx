@@ -333,9 +333,9 @@ class Helpers {
 
             var spawnOptions:Dynamic = { cwd: options.cwd };
 
-            // Needed for haxe/haxelib commands on windows
-            if (Sys.systemName() == 'Windows') {
-                var originalPATH:String = untyped process.env.PATH;
+            // Needed for haxe/haxelib commands
+            var originalPATH:String = untyped process.env.PATH;
+            if (originalPATH != null) {
                 spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
             }
 
