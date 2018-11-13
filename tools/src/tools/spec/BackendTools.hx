@@ -4,6 +4,8 @@ interface BackendTools {
 
     var name(default,null):String;
 
+    var defaultTarget(default,null):String;
+
     /** Init backend. This hook allows backend to add
         custom tasks and perform any specific setup. */
     function init(tools:tools.Tools):Void;

@@ -95,14 +95,7 @@ app:
 
         // Init backend?
         for (backendName in backends) {
-
-            if (extractArgFlag(args, backendName)) {
-
-                runCeramic(projectPath, [backendName, 'setup'].concat(force ? ['--force'] : []));
-
-                break;
-
-            }
+            runCeramic(projectPath, [backendName, 'setup', 'default'].concat(force ? ['--force'] : []));
         }
 
         // Generate vscode files?

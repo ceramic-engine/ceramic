@@ -13,6 +13,8 @@ class BackendTools implements tools.spec.BackendTools {
 
     public var name(default,null):String = 'luxe';
 
+    public var defaultTarget(default,null):String = 'web';
+
     public function new() {}
 
     public function init(tools:tools.Tools):Void {
@@ -24,6 +26,16 @@ class BackendTools implements tools.spec.BackendTools {
     public function getBuildTargets():Array<tools.BuildTarget> {
 
         var targets:Array<tools.BuildTarget> = [];
+
+        targets.push({
+            name: 'web',
+            displayName: 'Web',
+            configs: [
+                Run('Run Web'),
+                Build('Build Web'),
+                Clean('Clean Web')
+            ]
+        });
 
         var os = Sys.systemName();
 
@@ -60,16 +72,6 @@ class BackendTools implements tools.spec.BackendTools {
                 ]
             });
         }
-
-        targets.push({
-            name: 'web',
-            displayName: 'Web',
-            configs: [
-                Run('Run Web'),
-                Build('Build Web'),
-                Clean('Clean Web')
-            ]
-        });
 
         targets.push({
             name: 'ios',

@@ -209,11 +209,27 @@ class Setup extends tools.Task {
 
         var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
+        if (targetName == 'default') targetName = 'web';
 
         // Generate files with flow
         haxelib(['run', 'flow', 'files', targetName], { cwd: targetPath });
 
+        // Run initial project setup if needed
+        runInitialProjectSetupIfNeeded(cwd, args);
+
     } //run
+
+    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>):Void {
+
+        if (FileSystem.exists(Path.join([cwd, 'completion.hxml']))) {
+            return; // Project seems ready
+        }
+
+        // Default to web target
+        runCeramic(cwd, ['luxe', 'libs', 'web']);
+        runCeramic(cwd, ['luxe', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml']);
+
+    } //runInitialProjectSetupIfNeeded
 
     function checkFrameworkSetup(forceSetup:Bool = false):Void {
         

@@ -14,6 +14,8 @@ class BackendTools implements tools.spec.BackendTools {
 
     public var name(default,null):String = 'headless';
 
+    public var defaultTarget(default,null):String = null;
+
     public function new() {}
 
     public function init(tools:tools.Tools):Void {

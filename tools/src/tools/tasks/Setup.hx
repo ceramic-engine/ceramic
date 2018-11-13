@@ -31,6 +31,14 @@ class Setup extends tools.Task {
             if (targetName == null) {
                 fail('You must specify a target to setup.');
             }
+            else if (targetName == 'default') {
+                if (context.backend.defaultTarget != null) {
+                    targetName = context.backend.defaultTarget;
+                } else {
+                    print('No default target, no setup.');
+                    return;
+                }
+            }
 
             // Find target from name
             //

@@ -177,7 +177,11 @@ class Helpers {
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
-        return command(Path.join([context.ceramicToolsPath, 'ceramic']), args, { cwd: cwd, mute: mute });
+        if (Sys.systemName() == 'Windows') {
+            return command(Path.join([context.ceramicToolsPath, 'ceramic.bat']), args, { cwd: cwd, mute: mute });
+        } else {
+            return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(args), { cwd: cwd, mute: mute });
+        }
 
     } //runCeramic
 
@@ -334,10 +338,10 @@ class Helpers {
             var spawnOptions:Dynamic = { cwd: options.cwd };
 
             // Needed for haxe/haxelib commands
-            var originalPATH:String = untyped process.env.PATH;
+            /*var originalPATH:String = untyped process.env.PATH;
             if (originalPATH != null) {
                 spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
-            }
+            }*/
 
             Sync.run(function(done) {
                 var proc = null;
@@ -436,6 +440,10 @@ class Helpers {
         if (targetArg != null && !targetArg.startsWith('--')) {
             targetName = targetArg;
         }
+
+        // Special case
+        if (targetName == 'default') return targetName;
+
         // Return it only if available in targets
         for (target in availableTargets) {
             if (targetName == target.name) {
