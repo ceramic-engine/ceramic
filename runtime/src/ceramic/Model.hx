@@ -6,9 +6,26 @@ using StringTools;
 
 class Model extends Entity implements Observable implements Serializable {
 
+/// Events
+
+    @event function _modelDirty(model:Model);
+
 /// Components
 
     @component public var serializer:SerializeModel;
+
+/// Properties
+
+    public var dirty(default,set):Bool = false;
+
+    inline function set_dirty(dirty:Bool):Bool {
+        if (dirty == this.dirty) return dirty;
+        this.dirty = dirty;
+        if (dirty) {
+            emitModelDirty(this);
+        }
+        return dirty;
+    }
 
 /// Lifecycle
 

@@ -94,6 +94,7 @@ class SerializeModel extends Component {
 
         if (!trackedModels.exists(model._serializeId)) {
             trackedModels.set(model._serializeId, model);
+            model.onModelDirty(this, explicitModelDirty);
             model.onObservedDirty(this, modelDirty);
             model.onceDestroy(this, trackedModelDestroyed);
         }
@@ -104,6 +105,7 @@ class SerializeModel extends Component {
 
         if (trackedModels.exists(model._serializeId)) {
             trackedModels.remove(model._serializeId);
+            model.offModelDirty(explicitModelDirty);
             model.offObservedDirty(modelDirty);
             model.offDestroy(trackedModelDestroyed);
             if (destroyModelOnUntrack) {
@@ -168,6 +170,13 @@ class SerializeModel extends Component {
 
     } //modelDirty
 
+    function explicitModelDirty(model:Model) {
+
+        dirtyModels.set(model._serializeId, model);
+        dirty = true;
+
+    } //explicitModelDirty
+
     /** Synchronize at regular interval */
     public function synchronize() {
 
@@ -178,6 +187,7 @@ class SerializeModel extends Component {
         for (id in dirtyModels.keys()) {
             var model = dirtyModels.get(id);
             if (!model.destroyed && trackedModels.exists(model._serializeId)) {
+                model.dirty = false;
                 serializeModel(model, toAppend);
             }
         }
