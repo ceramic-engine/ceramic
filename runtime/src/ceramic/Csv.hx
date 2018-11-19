@@ -6,7 +6,6 @@ import haxe.DynamicAccess;
 import ceramic.Shortcuts.*;
 #end
 
-using unifill.Unifill;
 using StringTools;
 
 /** Utilities to parse CSV and related */
@@ -17,32 +16,23 @@ class Csv {
         // Cleanup
         csv = csv.trim();
 
-        // Extract chars
-        var csvChars = [];
-        for (codePoint in csv.uIterator()) {
-            var c = codePoint.toString();
-            if (c != "\r") {
-                csvChars.push(c);
-            }
-        }
-
         // Find separator and keys
         //
         var sep = '';
         var i = 0;
         var c = '';
         var cc = '';
-        var len = csvChars.length;
+        var len = csv.length;
         var inString = false;
         var val = '';
         var keys = [];
 
         while (i < len) {
-            c = csvChars[i];
+            c = csv.charAt(i);
 
             if (inString) {
                 if (c == '"') {
-                    cc = c + csvChars[i+1];
+                    cc = c + csv.charAt(i+1);
                     if (cc == '""') {
                         val += '"';
                         i += 2;
@@ -99,11 +89,11 @@ class Csv {
         var tooManyColumnsAt = -1;
 
         while (i < len) {
-            c = csvChars[i];
+            c = csv.charAt(i);
 
             if (inString) {
                 if (c == '"') {
-                    cc = c + csvChars[i+1];
+                    cc = c + csv.charAt(i+1);
                     if (cc == '""') {
                         val += '"';
                         i += 2;
@@ -182,8 +172,8 @@ class Csv {
             
             if (input.length == 0) return;
             output.add('"');
-            for (codePoint in input.uIterator()) {
-                var c = codePoint.toString();
+            for (i in 0...input.length) {
+                var c = input.charAt(i);
                 if (c == '"') {
                     output.add('""');
                 } else {
