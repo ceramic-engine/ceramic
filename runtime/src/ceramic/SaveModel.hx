@@ -87,8 +87,14 @@ class SaveModel {
         serializer.onChangeset(model, function(changeset) {
 
             if (changeset.append) {
+                #if ceramic_debug_save
+                trace('Save $key (append ${changeset.data.length}): ' + changeset.data);
+                #end
                 app.backend.io.appendString('save_' + key, changeset.data.length + ':' + changeset.data);
             } else {
+                #if ceramic_debug_save
+                trace('Save $key (full ${changeset.data.length}): ' + changeset.data);
+                #end
                 app.backend.io.saveString('save_' + key, changeset.data.length + ':' + changeset.data);
             }
 
