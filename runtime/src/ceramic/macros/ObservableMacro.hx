@@ -1,5 +1,7 @@
 package ceramic.macros;
 
+import haxe.macro.ExprTools;
+import haxe.macro.Printer;
 import haxe.macro.TypeTools;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -307,14 +309,73 @@ class ObservableMacro {
 
         }
 
+#if (!display && !completion)
         // Any field to rename?
         if (toRename != null) {
             for (field in unchangedFields) {
                 if (toRename.exists(field.name)) {
-                    field.name = toRename.get(field.name);
+                    var name = field.name;
+                    var newName = toRename.get(name);
+                    field.name = newName;
+                    var isSetter = name.substring(0, 4) == 'set_';
+                    var selfName = name.substring(4);
+                    var newSelfName = newName.substring(4);
+
+                    // Also rename setter/getter content to make it query the unobserved field
+                    switch (field.kind) {
+                        case FieldType.FFun(fn):
+                            var setterArgIsSelfName = (isSetter && fn.args[0].name == selfName);
+
+                            function renameIdent(input:String) {
+                                if (input == selfName) return newSelfName;
+                                return input;
+                            }
+
+                            function renameIdentInString(input:String) {
+                                // TODO?
+                                return input;
+                            }
+
+                            var updateExpr:Expr->Expr;
+                            updateExpr = function(e:Expr):Expr {
+                                switch (e.expr) {
+                                    case EConst(c):
+                                        switch (c) {
+                                            case CIdent(s):
+                                                if (setterArgIsSelfName) {
+                                                    return { expr: EConst(CIdent(s)), pos: e.pos };
+                                                } else {
+                                                    return { expr: EConst(CIdent(renameIdent(s))), pos: e.pos };
+                                                }
+                                            case CString(s):
+                                                return { expr: EConst(CString(renameIdentInString(s))), pos: e.pos };
+                                            case _:
+                                                return ExprTools.map(e, updateExpr);
+                                        }
+                                    case EField(_e, _field):
+                                        var isThis = false;
+                                        switch (_e.expr) {
+                                            case EConst(CIdent(s)):
+                                                isThis = (s == 'this');
+                                            case _:
+                                        }
+                                        if (isThis) {
+                                            return { expr: EField(_e, renameIdent(_field)), pos: e.pos };
+                                        } else {
+                                            return e;
+                                        }
+                                    case _:
+                                        return ExprTools.map(e, updateExpr);
+                                }
+                            };
+                            fn.expr = ExprTools.map(fn.expr, updateExpr);
+
+                        default:
+                    }
                 }
             }
         }
+#end
 
         return newFields;
 
