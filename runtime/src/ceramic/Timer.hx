@@ -9,12 +9,19 @@ class Timer {
 
     /** Current time, relative to app.
         (number of active seconds since app was started) */
-    public static var now:Float = 0;
+    public static var now(default,null):Float = 0;
+
+    /** Current unix time synchronized with ceramic Timer.
+        `Timer.now` and `Timer.timestamp` are garanteed to get incremented
+        exactly at the same rate.
+        (number of seconds since January 1st, 1970) **/
+    public static var timestamp(default,null):Float = Date.now().getTime();
 
     @:allow(ceramic.App)
     static function update(delta:Float):Void {
 
         now += delta;
+        timestamp += delta;
 
         if (next <= now) {
 
