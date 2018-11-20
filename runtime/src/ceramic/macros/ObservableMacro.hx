@@ -33,6 +33,7 @@ class ObservableMacro {
         }
 
         var newFields:Array<Field> = [];
+        var unchangedFields:Array<Field> = [];
 
         var localClassParams:Array<TypeParam> = null;
         if (localClass.params != null) {
@@ -85,6 +86,8 @@ class ObservableMacro {
 
         }
 
+        var toRename:Map<String,String> = null;
+
         for (field in fields) {
 
             var metasCase = hasObserveOrSerializeMeta(field);
@@ -93,186 +96,223 @@ class ObservableMacro {
 
                 var hasObserveMeta = metasCase == 1 || metasCase == 3;
                 var hasSerializeMeta = metasCase == 2 || metasCase == 3;
-                
+                var isProp = false;
+                var get:String = null;
+                var set:String = null;
+                var type:Null<ComplexType>;
+                var expr:Null<Expr>;
+
                 switch(field.kind) {
-                    case FieldType.FVar(type, expr):
 
-                        var fieldName = field.name;
-                        var sanitizedName = field.name;
-                        while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
-                        while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
-                        var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
-                        var unobservedFieldName = 'unobserved' + capitalName;
-                        var emitFieldNameChange = 'emit' + capitalName + 'Change';
-                        var onFieldNameChange = 'on' + capitalName + 'Change';
-                        var offFieldNameChange = 'off' + capitalName + 'Change';
-                        var fieldNameChange = fieldName + 'Change';
+                    case FieldType.FVar(_type, _expr):
+                        type = _type;
+                        expr = _expr;
 
-                        if (expr != null) {
-                            // Compute type from expr
-                            switch (expr.expr) {
-                                case ENew(t,p):
-                                    if (type == null) {
-                                        type = TPath(t);
-                                    }
-                                default:
-                                    if (type == null) {
-                                        throw new Error("Cannot resolve observable field type", field.pos);
-                                    }
-                            }
-                        } else if (type == null) {
-                            throw new Error("Observable field must define a type", field.pos);
-                        }
-
-#if (!display && !completion)
-                        // Create prop from var
-                        var propField = {
-                            pos: field.pos,
-                            name: fieldName,
-                            kind: FProp('get', 'set', type),
-                            access: field.access,
-                            doc: field.doc,
-                            meta: []
-                        };
-                        newFields.push(propField);
-
-                        var getField = {
-                            pos: field.pos,
-                            name: 'get_' + field.name,
-                            kind: FFun({
-                                args: [],
-                                ret: type,
-                                expr: macro {
-                                    // Bind invalidation if getting value
-                                    // inside an Autorun call
-                                    if (ceramic.Autorun.current != null) {
-                                        var autorun = ceramic.Autorun.current;
-                                        var cb = function(_, _) {
-                                            autorun.invalidate();
-                                        };
-                                        autorun.onceReset(null, function() {
-                                            this.$offFieldNameChange(cb);
-                                        });
-                                        this.$onFieldNameChange(autorun, cb);
-                                    }
-
-                                    return this.$unobservedFieldName;
-                                }
-                            }),
-                            access: [APrivate],
-                            doc: '',
-                            meta: []
-                        }
-                        newFields.push(getField);
-
-                        var setField = {
-                            pos: field.pos,
-                            name: 'set_' + field.name,
-                            kind: FFun({
-                                args: [
-                                    {name: field.name, type: type}
-                                ],
-                                ret: type,
-                                expr: macro {
-                                    var prevValue = this.$unobservedFieldName;
-                                    if (prevValue == $i{fieldName}) {
-                                        return prevValue;
-                                    }
-                                    this.$unobservedFieldName = $i{fieldName};
-                                    if (!observedDirty) {
-                                        observedDirty = true;
-                                        emitObservedDirty(this, $v{hasSerializeMeta});
-                                    }
-                                    this.$emitFieldNameChange($i{fieldName}, prevValue);
-                                    return $i{fieldName}
-                                }
-                            }),
-                            access: [APrivate, AInline],
-                            doc: '',
-                            meta: []
-                        }
-                        newFields.push(setField);
-
-                        var invalidateField = {
-                            pos: field.pos,
-                            name: 'invalidate' + capitalName,
-                            kind: FFun({
-                                args: [],
-                                ret: macro :Void,
-                                expr: macro {
-                                    var value = this.$unobservedFieldName;
-                                    this.$emitFieldNameChange(value, value);
-                                }
-                            }),
-                            access: [APublic, AInline],
-                            doc: '',
-                            meta: []
-                        }
-                        newFields.push(invalidateField);
-
-                        // Rename original field from name to observedName
-                        field.name = unobservedFieldName;
-                        field.access = [].concat(field.access);
-                        field.access.remove(APublic);
-                        field.access.remove(APrivate);
-                        newFields.push(field);
-#else
-
-                        var invalidateField = {
-                            pos: field.pos,
-                            name: 'invalidate' + capitalName,
-                            kind: FFun({
-                                args: [],
-                                ret: macro :Void,
-                                expr: macro {}
-                            }),
-                            access: [APublic, AInline],
-                            doc: '',
-                            meta: []
-                        }
-                        newFields.push(invalidateField);
-
-                        newFields.push(field);
-                        var unobservedField = {
-                            pos: field.pos,
-                            name: unobservedFieldName,
-                            kind: field.kind,
-                            access: [].concat(field.access),
-                            doc: '',
-                            meta: []
-                        };
-                        unobservedField.access.remove(APublic);
-                        unobservedField.access.remove(APrivate);
-                        newFields.push(unobservedField);
-#end
-
-                        var eventField = {
-                            pos: field.pos,
-                            name: fieldNameChange,
-                            kind: FFun({
-                                args: [
-                                    {name: 'current', type: type},
-                                    {name: 'previous', type: type}
-                                ],
-                                ret: macro :Void,
-                                expr: null
-                            }),
-                            access: [],
-                            doc: 'Event when $fieldName field changes.',
-                            meta: []
-                        };
-
-                        // Add related events
-                        EventsMacro.createEventFields(eventField, newFields, fieldsByName);
+                    case FieldType.FProp(_get, _set, _type, _expr):
+                        get = _get;
+                        set = _set;
+                        type = _type;
+                        expr = _expr;
+                        isProp = true;
 
                     default:
                         throw new Error("Invalid observed variable", field.pos);
                 }
+
+                var fieldName = field.name;
+                var sanitizedName = field.name;
+                while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
+                while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
+                var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
+                var unobservedFieldName = 'unobserved' + capitalName;
+                var emitFieldNameChange = 'emit' + capitalName + 'Change';
+                var onFieldNameChange = 'on' + capitalName + 'Change';
+                var offFieldNameChange = 'off' + capitalName + 'Change';
+                var fieldNameChange = fieldName + 'Change';
+
+                if (expr != null) {
+                    // Compute type from expr
+                    switch (expr.expr) {
+                        case ENew(t,p):
+                            if (type == null) {
+                                type = TPath(t);
+                            }
+                        default:
+                            if (type == null) {
+                                throw new Error("Cannot resolve observable field type", field.pos);
+                            }
+                    }
+                } else if (type == null) {
+                    throw new Error("Observable field must define a type", field.pos);
+                }
+
+#if (!display && !completion)
+                if (isProp) {
+                    // Original is already a property (may have getter/setter)
+                    if (get == 'get') {
+                        if (toRename == null) toRename = new Map();
+                        toRename.set('get_' + fieldName, 'get_' + unobservedFieldName);
+                    }
+                    if (set == 'set') {
+                        if (toRename == null) toRename = new Map();
+                        toRename.set('set_' + fieldName, 'set_' + unobservedFieldName);
+                    }
+                }
+
+                // Create prop from var
+                var propField = {
+                    pos: field.pos,
+                    name: fieldName,
+                    kind: FProp('get', 'set', type),
+                    access: field.access,
+                    doc: field.doc,
+                    meta: []
+                };
+                newFields.push(propField);
+
+                var getField = {
+                    pos: field.pos,
+                    name: 'get_' + field.name,
+                    kind: FFun({
+                        args: [],
+                        ret: type,
+                        expr: macro {
+                            // Bind invalidation if getting value
+                            // inside an Autorun call
+                            if (ceramic.Autorun.current != null) {
+                                var autorun = ceramic.Autorun.current;
+                                var cb = function(_, _) {
+                                    autorun.invalidate();
+                                };
+                                autorun.onceReset(null, function() {
+                                    this.$offFieldNameChange(cb);
+                                });
+                                this.$onFieldNameChange(autorun, cb);
+                            }
+
+                            return this.$unobservedFieldName;
+                        }
+                    }),
+                    access: [APrivate],
+                    doc: '',
+                    meta: []
+                }
+                newFields.push(getField);
+
+                var setField = {
+                    pos: field.pos,
+                    name: 'set_' + field.name,
+                    kind: FFun({
+                        args: [
+                            {name: field.name, type: type}
+                        ],
+                        ret: type,
+                        expr: macro {
+                            var prevValue = this.$unobservedFieldName;
+                            if (prevValue == $i{fieldName}) {
+                                return prevValue;
+                            }
+                            this.$unobservedFieldName = $i{fieldName};
+                            if (!observedDirty) {
+                                observedDirty = true;
+                                emitObservedDirty(this, $v{hasSerializeMeta});
+                            }
+                            this.$emitFieldNameChange($i{fieldName}, prevValue);
+                            return $i{fieldName}
+                        }
+                    }),
+                    access: [APrivate, AInline],
+                    doc: '',
+                    meta: []
+                }
+                newFields.push(setField);
+
+                var invalidateField = {
+                    pos: field.pos,
+                    name: 'invalidate' + capitalName,
+                    kind: FFun({
+                        args: [],
+                        ret: macro :Void,
+                        expr: macro {
+                            var value = this.$unobservedFieldName;
+                            this.$emitFieldNameChange(value, value);
+                        }
+                    }),
+                    access: [APublic, AInline],
+                    doc: '',
+                    meta: []
+                }
+                newFields.push(invalidateField);
+
+                // Rename original field from name to observedName
+                field.name = unobservedFieldName;
+                field.access = [].concat(field.access);
+                field.access.remove(APublic);
+                field.access.remove(APrivate);
+                newFields.push(field);
+#else
+
+                var invalidateField = {
+                    pos: field.pos,
+                    name: 'invalidate' + capitalName,
+                    kind: FFun({
+                        args: [],
+                        ret: macro :Void,
+                        expr: macro {}
+                    }),
+                    access: [APublic, AInline],
+                    doc: '',
+                    meta: []
+                }
+                newFields.push(invalidateField);
+
+                newFields.push(field);
+                var unobservedField = {
+                    pos: field.pos,
+                    name: unobservedFieldName,
+                    kind: field.kind,
+                    access: [].concat(field.access),
+                    doc: '',
+                    meta: []
+                };
+                unobservedField.access.remove(APublic);
+                unobservedField.access.remove(APrivate);
+                newFields.push(unobservedField);
+#end
+
+                var eventField = {
+                    pos: field.pos,
+                    name: fieldNameChange,
+                    kind: FFun({
+                        args: [
+                            {name: 'current', type: type},
+                            {name: 'previous', type: type}
+                        ],
+                        ret: macro :Void,
+                        expr: null
+                    }),
+                    access: [],
+                    doc: 'Event when $fieldName field changes.',
+                    meta: []
+                };
+
+                // Add related events
+                EventsMacro.createEventFields(eventField, newFields, fieldsByName);
             }
             else {
+                unchangedFields.push(field);
                 newFields.push(field);
             }
 
+        }
+
+        // Any field to rename?
+        if (toRename != null) {
+            for (field in unchangedFields) {
+                if (toRename.exists(field.name)) {
+                    field.name = toRename.get(field.name);
+                }
+            }
         }
 
         return newFields;
