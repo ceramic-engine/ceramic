@@ -147,6 +147,7 @@ class ObservableMacro {
                 }
 
 #if (!display && !completion)
+                
                 if (isProp) {
                     // Original is already a property (may have getter/setter)
                     if (get == 'get') {
@@ -244,7 +245,7 @@ class ObservableMacro {
                 }
                 newFields.push(invalidateField);
 
-                // Rename original field from name to observedName
+                // Rename original field from name to unobservedName
                 field.name = unobservedFieldName;
                 field.access = [].concat(field.access);
                 field.access.remove(APublic);
@@ -270,7 +271,7 @@ class ObservableMacro {
                 var unobservedField = {
                     pos: field.pos,
                     name: unobservedFieldName,
-                    kind: field.kind,
+                    kind: FVar(type, null),
                     access: [].concat(field.access),
                     doc: '',
                     meta: []
