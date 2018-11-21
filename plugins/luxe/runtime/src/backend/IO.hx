@@ -35,21 +35,18 @@ class IO implements spec.IO {
 
     public function appendString(key:String, str:String):Bool {
 
-        // TODO append data for real, dont re-read everything
-
         var _key = Md5.encode('data ~ ' + key);
         var storageDir = ceramic.App.app.backend.info.storageDirectory();
         var filePath = Path.join([storageDir, 'data_' + _key]);
 
-        var str0 = null;
         if (FileSystem.exists(filePath)) {
-            str0 = File.getContent(filePath);
+            var output = File.append(filePath, false);
+            output.writeString(str);
+            output.close();
         }
-        if (str0 == null) {
-            str0 = '';
+        else {
+            File.saveContent(filePath, str);
         }
-
-        File.saveContent(filePath, str0 + str);
 
         return true;
 
