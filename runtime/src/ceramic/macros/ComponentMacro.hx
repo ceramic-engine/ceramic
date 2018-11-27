@@ -5,9 +5,20 @@ import haxe.macro.Expr;
 
 class ComponentMacro {
 
+    static var onReused = false;
+
     static var processed = new Map<String,Bool>();
 
     macro static public function build():Array<Field> {
+
+        if (!onReused) {
+            onReused = true;
+            Context.onMacroContextReused(function() {
+                processed = new Map();
+                return true;
+            });
+        }
+
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
 
