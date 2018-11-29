@@ -31,6 +31,10 @@ class Texts implements spec.Texts {
                 done(null);
             }
         }
+        else {
+            ceramic.App.app.logger.error('File doesn\'t exist at path: $path');
+            done(null);
+        }
 
     } //load
 
