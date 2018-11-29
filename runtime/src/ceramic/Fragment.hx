@@ -197,7 +197,7 @@ class Fragment extends Visual {
                 var value:Dynamic = Reflect.field(item.props, field);
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
                 if (converter != null) {
-                    function(field) {
+                    var fn = function(field) {
                         pendingLoads++;
                         converter.basicToField(
                             context.assets,
@@ -241,7 +241,8 @@ class Fragment extends Visual {
                                 if (pendingLoads == 0) emitReady();
                             }
                         );
-                    }(field);
+                    };
+                    fn(field);
                 }
                 else {
                     if (!basicTypes.exists(fieldType)) {

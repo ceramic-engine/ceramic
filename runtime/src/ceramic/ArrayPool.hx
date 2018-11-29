@@ -36,7 +36,11 @@ class ArrayPool {
 
 /// Properties
 
+#if cs
+    var arrays:ReusableArray<Dynamic> = null; // Arrays or arrays seem to create problems in C#
+#else
     var arrays:ReusableArray<ReusableArray<Dynamic>> = null;
+#end
 
     var nextFree:Int = 0;
 

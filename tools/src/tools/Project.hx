@@ -144,7 +144,7 @@ class Project {
 
         app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(app));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
-        app.hxml += "\n" + "--macro ceramic.macros.ExportRtti.init()";
+        //app.hxml += "\n" + "--macro ceramic.macros.ExportRtti.init()";
 
         if (context.defines.exists('android')) {
             app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=26 -D PLATFORM=android-26";

@@ -40,3 +40,6 @@
 [submodule "git/polyline"]
 	path = git/polyline
 	url = https://github.com/jeremyfa/polyline.git
+[submodule "git/actuate"]
+	path = git/actuate
+	url = https://github.com/ceramic-engine/actuate.git

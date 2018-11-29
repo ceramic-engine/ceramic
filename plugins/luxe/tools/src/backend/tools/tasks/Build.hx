@@ -205,7 +205,7 @@ class Build extends tools.Task {
 
             File.saveContent(Path.join([cwd, 'project/web/build.hxml']), finalHxml.rtrim() + "\n");
 
-            return haxe([/*'--connect', '127.0.0.1:4061'*/'build.hxml'], { cwd: hxmlTargetCwd });
+            return haxe([/*'--connect', '127.0.0.1:1451',*/ 'build.hxml'], { cwd: hxmlTargetCwd });
         }
         
         if (status != 0) {

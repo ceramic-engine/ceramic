@@ -77,7 +77,7 @@ class AssetsMacro {
                         var baseAtIndex = truncatedName.lastIndexOf('@');
                         if (baseAtIndex == -1) baseAtIndex = dotIndex;
 
-                        baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                        baseName = name.substr(0, Std.int(Math.min(baseAtIndex, dotIndex)));
                         fieldName = toAssetConstName(baseName);
                     
                         if (fieldName != null && !used.exists(fieldName) && fileExt != null) {
@@ -306,8 +306,7 @@ class AssetsMacro {
                 var truncatedName = name.substr(0, dotIndex);
                 var baseAtIndex = truncatedName.lastIndexOf('@');
                 if (baseAtIndex == -1) baseAtIndex = dotIndex;
-
-                var baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                var baseName = name.substr(0, Std.int(Math.min(baseAtIndex, dotIndex)));
                 if (!assetsByBaseName.exists(baseName)) {
                     assetsByBaseName.set(baseName, []);
                 }
@@ -326,7 +325,7 @@ class AssetsMacro {
                 var baseAtIndex = truncatedName.lastIndexOf('@');
                 if (baseAtIndex == -1) baseAtIndex = dotIndex;
 
-                var baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
+                var baseName = name.substr(0, Std.int(Math.min(baseAtIndex, dotIndex)));
                 if (!assetDirsByBaseName.exists(baseName)) {
                     assetDirsByBaseName.set(baseName, []);
                 }

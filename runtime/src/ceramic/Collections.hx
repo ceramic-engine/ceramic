@@ -38,7 +38,7 @@ class Collections {
         }
 
         var collectionImpl:CollectionImpl<T> = cast collection;
-        var combinedCollection:Collection<T>;
+        var combinedCollection:Collection<T> = null;
         if (collectionImpl.combinedCollections != null) {
             combinedCollection = cast collectionImpl;
         } else {
@@ -59,6 +59,7 @@ class Collections {
 
     /** Returns a combined collection from the provided ones. */
     public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
+    //public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
 
         // Create key to check if the combined collection already exists
         var keyBuf = new StringBuf();
@@ -73,22 +74,21 @@ class Collections {
 
         // Try to get existing collection from key
         var collection:CollectionImpl<T> = combinedCollections.get(key);
-        if (collection != null) {
-            return cast collection;
-        }
+        if (collection == null) {
         
-        // No combined collection exist, create one and cache it
-        collection = new CollectionImpl<T>();
-        collection.combinedCollections = cast collections.concat([]);
-        collection.combinedCollectionLastChanges = [];
-        for (col in collections) {
-            var colImpl:CollectionImpl<T> = cast col;
-            collection.combinedCollectionLastChanges.push(colImpl.lastChange);
-        }
-        collection.entriesDirty = true;
+            // No combined collection exist, create one and cache it
+            collection = new CollectionImpl<T>();
+            collection.combinedCollections = cast collections.concat([]);
+            collection.combinedCollectionLastChanges = [];
+            for (col in collections) {
+                var colImpl:CollectionImpl<T> = cast col;
+                collection.combinedCollectionLastChanges.push(colImpl.lastChange);
+            }
+            collection.entriesDirty = true;
 
-        // Cache combined collection
-        if (cache) combinedCollections.set(key, collection);
+            // Cache combined collection
+            if (cache) combinedCollections.set(key, collection);
+        }
 
         return cast collection;
 

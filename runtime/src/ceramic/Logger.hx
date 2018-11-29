@@ -9,7 +9,13 @@ class Logger {
     private static var _hasElectronRunner:Bool = false;
 #end
 
-    function new() {}
+    function new() {
+#if unity
+        haxe.Log.trace = function(v:Dynamic, ?infos:haxe.PosInfos):Void {
+            untyped __cs__('UnityEngine.Debug.Log({0})', v);
+        };
+#end
+    }
 
 /// Public API
 

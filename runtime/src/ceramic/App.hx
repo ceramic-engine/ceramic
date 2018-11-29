@@ -428,7 +428,7 @@ class App extends Entity {
         flushImmediate();
 
         // Update actuate stuff at the correct time
-        @:privateAccess motion.actuators.SimpleActuator.stage_onEnterFrame();
+        @:privateAccess motion.actuators.SimpleActuator.stage_onEnterFrame(delta);
 
         // Flush immediate callbacks
         flushImmediate();
