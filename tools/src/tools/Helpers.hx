@@ -488,6 +488,8 @@ class Helpers {
         // We don't want \r char to mess up everything (windows)
         input = input.replace("\r", '');
 
+        if (input.indexOf(': Warning :') != -1) return false; // This is a warning, not an error
+
         var result = RE_HAXE_ERROR.match(input);
 
         return result;
@@ -516,7 +518,11 @@ class Helpers {
             }
             input = input.replace(relativePath, absolutePath);
             if (context.colors) {
-                input = '$absolutePath:$lineNumber: '.gray() + input.substr('$absolutePath:$lineNumber:'.length + 1).red();
+                if (input.indexOf(': Warning :') != -1) {
+                    input = '$absolutePath:$lineNumber: '.gray() + input.replace(': Warning :', ':').substr('$absolutePath:$lineNumber:'.length + 1).yellow();
+                } else {
+                    input = '$absolutePath:$lineNumber: '.gray() + input.substr('$absolutePath:$lineNumber:'.length + 1).red();
+                }
             } else {
                 input = '$absolutePath:$lineNumber: ' + input.substr('$absolutePath:$lineNumber:'.length + 1);
             }
