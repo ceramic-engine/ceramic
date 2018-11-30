@@ -263,7 +263,7 @@ class App extends Entity {
         // Default shaders
         assets.add(Shaders.COLOR);
         assets.add(Shaders.TEXTURED);
-        assets.add(Shaders.FXAA);
+        //assets.add(Shaders.FXAA);
 
         assets.onceComplete(this, function(success) {
 
