@@ -38,6 +38,7 @@ class Tools {
 
         // Initialize context with default values
         Helpers.context = {
+            project: null,
             colors: true,
             debug: (args.indexOf('--debug') != -1),
             defines: new Map(),
@@ -191,6 +192,9 @@ class Tools {
             context.vscode = true;
             args.splice(index, 1);
         }
+
+        // Load project
+        Helpers.context.project = loadProject(cwd, args);
 
         context.args = args;
 

@@ -3,6 +3,9 @@ package tools;
 /** Current tools execution context */
 typedef Context = {
 
+    /** The current project we are working on. */
+    var project:Project;
+
     /** If `true`, the output will get formatted with ANSI colors. */
     var colors:Bool;
 

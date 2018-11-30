@@ -618,6 +618,27 @@ class Helpers {
 
     } //formatLineOutput
 
+    public static function loadProject(cwd:String, args:Array<String>):Project {
+
+        var projectPath = Path.join([cwd, 'ceramic.yml']);
+        if (!FileSystem.exists(projectPath)) return null;
+        var kind = getProjectKind(cwd, args);
+        if (kind == null) return null;
+        switch (kind) {
+            case App:
+                var project = new Project();
+                project.loadAppFile(projectPath);
+                return project;
+
+            case Plugin(_):
+                var project = new Project();
+                project.loadPluginFile(projectPath);
+                return project;
+        }
+        return null;
+
+    } //loadProject
+
     public static function getProjectKind(cwd:String, args:Array<String>):ProjectKind {
 
         return new Project().getKind(Path.join([cwd, 'ceramic.yml']));
