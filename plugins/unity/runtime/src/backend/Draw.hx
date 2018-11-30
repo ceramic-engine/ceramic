@@ -33,19 +33,19 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
-        // Unused in headless
+        // Unused in unity
 
     } //draw
 
     public function stamp(visuals:Array<ceramic.Visual>):Void {
 
-        // Unused in headless
+        // Unused in unity
 
     } //draw
 
     inline public function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void {
 
-        // Unused in headless
+        // Unused in unity
 
     } //transformForRenderTarget
 
