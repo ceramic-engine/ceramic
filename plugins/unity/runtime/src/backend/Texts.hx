@@ -4,6 +4,8 @@ import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 
+import unityengine.TextAsset;
+
 using StringTools;
 
 class Texts implements spec.Texts {
@@ -22,6 +24,23 @@ class Texts implements spec.Texts {
             done(null);
             return;
         }
+        
+        var textFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', path);
+
+        if (textFile == null) {
+            ceramic.App.app.logger.error('Failed to load text file at path: $path');
+            done(null);
+            return;
+        }
+
+        var text = '' + textFile.text;
+        untyped __cs__('Resources.UnloadAsset({0})', textFile);
+        textFile = null;
+
+        done(text);
+
+        /*
+        trace('UNITY LOAD TEXT $path / ' + Sys.getCwd());
 
         if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
             try {
@@ -34,7 +53,7 @@ class Texts implements spec.Texts {
         else {
             ceramic.App.app.logger.error('File doesn\'t exist at path: $path');
             done(null);
-        }
+        }*/
 
     } //load
 

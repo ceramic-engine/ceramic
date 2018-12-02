@@ -1,5 +1,5 @@
 {
-    "window.title": "${activeEditorShort} — Headless Plugin",
+    "window.title": "${activeEditorShort} — Unity Plugin",
     "haxe.displayConfigurations": [
         ["completion.hxml"]
     ],

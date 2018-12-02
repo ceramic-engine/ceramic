@@ -112,7 +112,20 @@ class BackendTools implements tools.spec.BackendTools {
 
         var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
         defines.set('target_path', hxmlProjectPath);
-        defines.set('target_assets_path', Path.join([hxmlProjectPath, 'assets']));
+
+        if (context.project != null
+        && context.project.app != null
+        && context.project.app.unity != null
+        && context.project.app.unity.project != null) {
+            // Allow to point to unity assets directly
+            var unityProjectPath:String = context.project.app.unity.project;
+            if (!Path.isAbsolute(unityProjectPath)) {
+                unityProjectPath = Path.join([cwd, unityProjectPath]);
+            }
+            defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']));
+        } else {
+            defines.set('target_assets_path', Path.join([hxmlProjectPath, 'assets']));
+        }
 
         return defines;
 
@@ -140,12 +153,34 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
+        var txtExtensions = [
+            'vert' => true,
+            'frag' => true,
+            'fnt' => true,
+            'json' => true
+        ];
+
         var newAssets:Array<tools.Asset> = [];
         var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var validDstPaths:Map<String,Bool> = new Map();
         if (dstAssetsPath == null) {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
+        if (context.project != null
+        && context.project.app != null
+        && context.project.app.unity != null
+        && context.project.app.unity.project != null) {
+            // Allow to copy assets right into Unity project
+            var unityProjectPath:String = context.project.app.unity.project;
+            if (!Path.isAbsolute(unityProjectPath)) {
+                unityProjectPath = Path.join([cwd, unityProjectPath]);
+            }
+            dstAssetsPath = Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']);
+        } else {
+            dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
+        }
+
+        trace('context.project: ' + context.project.app.unity.project);
 
         // Add/update missing assets
         //
@@ -153,6 +188,17 @@ class BackendTools implements tools.spec.BackendTools {
 
             var srcPath = asset.absolutePath;
             var dstPath = Path.join([dstAssetsPath, asset.name]);
+
+            var dotIndex = srcPath.lastIndexOf('.');
+            var ext = '';
+            if (dotIndex != -1) {
+                ext = srcPath.substr(dotIndex + 1).toLowerCase();
+            }
+
+            if (txtExtensions.exists(ext)) {
+                // Unity needs a .txt extension to treat an asset as text, let's add it
+                dstPath += '.txt';
+            }
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
                 // Copy and set to same date
@@ -164,7 +210,7 @@ class BackendTools implements tools.spec.BackendTools {
                     sys.FileSystem.createDirectory(dir);
                 }
 
-                if (srcPath.toLowerCase().endsWith('.png')) {
+                if (ext == 'png') {
                     // If it's a png with alpha channel, premultiply its alpha
                     var raw = Images.getRaw(srcPath);
                     if (raw.channels == 4) {
@@ -185,6 +231,7 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         if (!listOnly) {
+            // TODO don't delete meta files
             // Remove outdated assets
             //
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
@@ -197,10 +244,10 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         // Copy rtti data (if any)
-        var rttiPath = Path.join([hxmlProjectPath, '.cache', 'rtti']);
+        /*var rttiPath = Path.join([hxmlProjectPath, '.cache', 'rtti']);
         if (FileSystem.exists(rttiPath)) {
             tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
-        }
+        }*/
 
         return newAssets;
 

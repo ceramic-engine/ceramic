@@ -2,8 +2,6 @@ package;
 
 import haxe.io.Path;
 
-import unityengine.Time;
-
 class Main {
 
     public static var project:Project = null;
@@ -12,7 +10,8 @@ class Main {
 
     public static function main():Void {
 
-        project = @:privateAccess new Project(ceramic.App.init());
+        var settings = ceramic.App.init();
+        project = @:privateAccess new Project(settings);
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..'])); // Fix this TODO
 
         // Init last update time

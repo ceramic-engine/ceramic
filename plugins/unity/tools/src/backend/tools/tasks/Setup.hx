@@ -169,6 +169,8 @@ class Setup extends tools.Task {
                 finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEngine.dll');
                 //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll');
             }
+            // TODO windows
+            // TODO handle custom Unity path
 
             finalHxml.push('-D net-ver=20');
             finalHxml.push('-D erase-generics');
