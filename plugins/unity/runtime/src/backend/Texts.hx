@@ -34,26 +34,10 @@ class Texts implements spec.Texts {
         }
 
         var text = '' + textFile.text;
-        untyped __cs__('Resources.UnloadAsset({0})', textFile);
+        untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', textFile);
         textFile = null;
 
         done(text);
-
-        /*
-        trace('UNITY LOAD TEXT $path / ' + Sys.getCwd());
-
-        if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
-            try {
-                done(File.getContent(path));
-            } catch (e:Dynamic) {
-                ceramic.App.app.logger.error('Failed to load file at path: $path');
-                done(null);
-            }
-        }
-        else {
-            ceramic.App.app.logger.error('File doesn\'t exist at path: $path');
-            done(null);
-        }*/
 
     } //load
 
