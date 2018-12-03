@@ -203,10 +203,19 @@ class App extends Entity {
         untyped __global__.__hxcpp_set_critical_error_handler(function(message:String) throw message);
 #end
 
+        // Setup actuate time
+        motion.actuators.SimpleActuator.getTime = _actuateGetTime;
+
         app = new App();
         return new InitSettings(app.settings);
         
     } //init
+
+    static function _actuateGetTime():Float {
+
+        return Timer.now;
+
+    } //_actuateGetTime
     
 /// Lifecycle
 
