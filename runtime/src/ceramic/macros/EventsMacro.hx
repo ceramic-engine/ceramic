@@ -523,14 +523,20 @@ class EventsMacro {
                                     }
                                 }
                             } else {
-                                for (unbind in this.$cbOnOwnerUnbindArray) {
-                                    if (unbind != null) unbind();
+                                if (this.$cbOnOwnerUnbindArray != null) {
+                                    for (i in 0...this.$cbOnOwnerUnbindArray.length) {
+                                        var unbind = this.$cbOnOwnerUnbindArray[i];
+                                        if (unbind != null) unbind();
+                                    }
+                                    this.$cbOnOwnerUnbindArray = null;
                                 }
-                                this.$cbOnOwnerUnbindArray = null;
-                                for (unbind in this.$cbOnceOwnerUnbindArray) {
-                                    if (unbind != null) unbind();
+                                if (this.$cbOnceOwnerUnbindArray != null) {
+                                    for (i in 0...this.$cbOnceOwnerUnbindArray.length) {
+                                        var unbind = this.$cbOnceOwnerUnbindArray[i];
+                                        if (unbind != null) unbind();
+                                    }
+                                    this.$cbOnceOwnerUnbindArray = null;
                                 }
-                                this.$cbOnceOwnerUnbindArray = null;
                                 this.$cbOnArray = null;
                                 this.$cbOnceArray = null;
                             }
