@@ -11,6 +11,12 @@ class EntityMacro {
 
     static var processed = new Map<String,Bool>();
 
+    static var specialFields = [
+        'destroy' => true,
+        'dispose' => true,
+        'restore' => true
+    ];
+
     macro static public function build():Array<Field> {
 
         if (!onReused) {
@@ -136,37 +142,97 @@ class EntityMacro {
             }
         }
 
-        for (field in newFields) {
-            if (field.name == 'destroy') {
+        var isProcessed = processed.exists(classPath);
+        if (!isProcessed) {
+            processed.set(classPath, true);
 
-                var isProcessed = processed.exists(classPath+'.destroy');
-                if (!isProcessed) {
-                    processed.set(classPath+'.destroy', true);
-                    switch(field.kind) {
-                        case FieldType.FFun(fn):
-                            var printer = new haxe.macro.Printer();
-                            var lines = printer.printExpr(fn.expr).split("\n");
+            for (field in newFields) {
+                if (specialFields.exists(field.name)) {
+                    if (field.name == 'destroy') {
 
-                            // Check there is no explicit super.destroy() call
-                            for (line in lines) {
-                                if (line.indexOf('super.destroy();') != -1) {
-                                    throw new Error("Explicit call to super.destroy() is not allowed. This is done automatically", field.pos);
+                        switch(field.kind) {
+                            case FieldType.FFun(fn):
+                                var printer = new haxe.macro.Printer();
+                                var lines = printer.printExpr(fn.expr).split("\n");
+
+                                // Check there is no explicit super.destroy() call
+                                for (line in lines) {
+                                    if (line.indexOf('super.destroy();') != -1) {
+                                        throw new Error("Explicit call to super.destroy() is not allowed. This is done automatically", field.pos);
+                                    }
                                 }
-                            }
 
-                            switch (fn.expr.expr) {
-                                case EBlock(exprs):
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
 
-                                    // Add if destroyed check at the top
-                                    exprs.unshift(macro {
-                                        if (destroyed) return;
-                                        super.destroy();
-                                    });
+                                        // Add if destroyed check at the top
+                                        exprs.unshift(macro {
+                                            if (destroyed) return;
+                                            super.destroy();
+                                        });
 
-                                default:
-                            }
+                                    default:
+                                }
 
-                        default:
+                            default:
+                        }
+                    }
+                    else if (field.name == 'dispose') {
+
+                        switch(field.kind) {
+                            case FieldType.FFun(fn):
+                                var printer = new haxe.macro.Printer();
+                                var lines = printer.printExpr(fn.expr).split("\n");
+
+                                // Check there is no explicit super.dispose() call
+                                for (line in lines) {
+                                    if (line.indexOf('super.dispose();') != -1) {
+                                        throw new Error("Explicit call to super.dispose() is not allowed. This is done automatically", field.pos);
+                                    }
+                                }
+
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+
+                                        // Add if destroyed check at the top
+                                        exprs.unshift(macro {
+                                            if (disposed) return;
+                                            super.dispose();
+                                        });
+
+                                    default:
+                                }
+
+                            default:
+                        }
+                    }
+                    else if (field.name == 'restore') {
+
+                        switch(field.kind) {
+                            case FieldType.FFun(fn):
+                                var printer = new haxe.macro.Printer();
+                                var lines = printer.printExpr(fn.expr).split("\n");
+
+                                // Check there is no explicit super.restore() call
+                                for (line in lines) {
+                                    if (line.indexOf('super.restore();') != -1) {
+                                        throw new Error("Explicit call to super.restore() is not allowed. This is done automatically", field.pos);
+                                    }
+                                }
+
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+
+                                        // Add if destroyed check at the top
+                                        exprs.unshift(macro {
+                                            super.restore();
+                                        });
+
+                                    default:
+                                }
+
+                            default:
+                        }
                     }
                 }
             }

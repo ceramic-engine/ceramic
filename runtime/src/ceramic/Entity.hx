@@ -15,20 +15,63 @@ class Entity implements Events implements Lazy {
 
     public var id:String = null;
 
-    public var destroyed:Bool = false;
+    var _lifecycleState:Int = 0;
+
+    public var destroyed(get,never):Bool;
+    inline function get_destroyed():Bool {
+        return _lifecycleState >= 2;
+    }
+
+    public var disposed(get,never):Bool;
+    inline function get_disposed():Bool {
+        return _lifecycleState >= 1;
+    }
 
 /// Events
 
     @event function destroy();
 
+    @event function dispose();
+
+    @event function restore();
+
 /// Lifecycle
+
+    /** Allow to dispose an entity. Default implementation doing nothing except firing a `dispose` event,
+        but subclasses can override it to implement recycling, fade-out transitions before destroying... */
+    public function dispose():Void {
+
+        if (_lifecycleState >= 1) return; // if disposed or destroyed
+        _lifecycleState = 1; // disposed = true
+
+        emitDispose();
+
+    } //dispose
+
+    /** Restore a previously disposed entity. Doesn't work on destroyed objects. */
+    public function restore():Void {
+
+        Assert.assert(destroyed == false, 'Cannot restore a destroyed entity');
+
+        if (_lifecycleState != 1) return; // if destroyed or not disposed
+        _lifecycleState = 0; // disposed = false
+
+        emitRestore();
+
+    } //restore
 
     public function destroy():Void {
 
         if (destroyed) return;
-        destroyed = true;
+        _lifecycleState = 2; // destroyed = true
 
         emitDestroy();
+
+        clearComponents();
+
+    } //destroy
+
+    inline public function clearComponents() {
 
         // Destroy each linked component
         if (components != null) {
@@ -44,7 +87,7 @@ class Entity implements Events implements Lazy {
             }
         }
 
-    } //destroy
+    } //clearComponents
 
 /// Autorun
 
