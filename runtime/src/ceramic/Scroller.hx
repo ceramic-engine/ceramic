@@ -56,6 +56,10 @@ class Scroller extends Visual {
 
 /// Fine tuning
 
+    /** When set to `true`, vertical mouse wheel event
+        will also work on horizontal scroller. */
+    public var verticalToHorizontalWheel = false;
+
     public var deceleration = 300.0;
 
     public var wheelDeceleration = 1600.0;
@@ -297,7 +301,7 @@ class Scroller extends Visual {
             }
         }
         else {
-            if (x == 0) {
+            if (verticalToHorizontalWheel && x == 0) {
                 if ((momentum < 0 && y > 0) || (momentum > 0 && y < 0)) {
                     momentum = 0;
                 }
