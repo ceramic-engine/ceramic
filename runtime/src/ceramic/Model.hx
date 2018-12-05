@@ -35,18 +35,7 @@ class Model extends Entity implements Observable implements Serializable {
 
 /// Print
 
-    static var _toStringContext:Array<Dynamic> = null;
-
     override function toString():String {
-
-        var newContext = (_toStringContext == null);
-        if (newContext) {
-            _toStringContext = [];
-        }
-        else {
-            if (_toStringContext.indexOf(this) != -1) return '_';
-        }
-        _toStringContext.push(this);
 
         var prevAutorun = Autorun.current;
         Autorun.current = null;
@@ -68,10 +57,6 @@ class Model extends Entity implements Observable implements Serializable {
         }
 
         Autorun.current = prevAutorun;
-
-        if (newContext) {
-            _toStringContext = null;
-        }
 
         return '' + result;
 
