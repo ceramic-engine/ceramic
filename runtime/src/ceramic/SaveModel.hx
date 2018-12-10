@@ -73,7 +73,7 @@ class SaveModel {
 
     } //loadSaved
 
-    public static function autoSave(model:Model, key:String, interval:Float = #if debug 1.0 #else 60.0 #end) {
+    public static function autoSave(model:Model, key:String, appendInterval:Float = 1.0, compactInterval:Float = 60.0) {
 
         if (model.serializer != null) {
             model.serializer.destroy();
@@ -81,7 +81,8 @@ class SaveModel {
         }
 
         var serializer = new SerializeModel();
-        serializer.checkInterval = interval;
+        serializer.checkInterval = appendInterval;
+        serializer.compactInterval = compactInterval;
 
         // Start listening for changes to save them
         serializer.onChangeset(model, function(changeset) {

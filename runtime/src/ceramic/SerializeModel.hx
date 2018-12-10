@@ -14,7 +14,9 @@ class SerializeModel extends Component {
 
 /// Settings
 
-    public var checkInterval:Float = #if debug 10.0 #else 60.0 #end;
+    public var checkInterval:Float = 1.0;
+
+    public var compactInterval:Float = 60.0;
 
     public var destroyModelOnUntrack:Bool = true;
 
@@ -33,6 +35,9 @@ class SerializeModel extends Component {
 
         // Synchronize with real data at regular interval
         Timer.interval(this, checkInterval, synchronize);
+
+        // Compact at regular interval
+        Timer.interval(this, compactInterval, compactIfNeeded);
 
         // Track root model
         track(model);
@@ -87,6 +92,8 @@ class SerializeModel extends Component {
     var willCleanDestroyedTrackedModels:Bool = false;
 
     var dirtyModels:Map<String,Model> = new Map();
+
+    var canCompact = false;
 
     var dirty:Bool = true;
 
@@ -198,11 +205,23 @@ class SerializeModel extends Component {
             s.serialize(toAppend);
             var data = s.toString();
 
+            // Can compact
+            canCompact = true;
+
             // Emit changeset
             emitChangeset({ data: data, append: true });
         }
 
     } //synchronize
+
+    function compactIfNeeded() {
+
+        if (canCompact) {
+            canCompact = false;
+            compact();
+        }
+
+    } //compactIfNeeded
 
     inline function serializeModel(model:Model, toAppend:Array<{ id:String, type:String, props:Dynamic }>) {
 
