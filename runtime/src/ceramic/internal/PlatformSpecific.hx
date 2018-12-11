@@ -31,7 +31,7 @@ class PlatformSpecific {
     } //postAppInit
 
     public static function getRtti<T>(c:Class<T>):Classdef {
-#if (cpp && snow)
+/*#if (cpp && snow)
 		// For some unknown reason, app is crashing on some c++ platforms when trying to access `__rtti` field
 		// As a workaround, we export rtti data into external asset files at compile time and read them
 		// at runtime to get the same information.
@@ -54,9 +54,9 @@ class PlatformSpecific {
 			case TClassdecl(c): return c;
 			case t: throw 'Enum mismatch: expected TClassDecl but found $t';
 		}
-#else
+#else*/
 		return Rtti.getRtti(c);
-#end
+//#end
     }
 
 } //PlatformSpecific
