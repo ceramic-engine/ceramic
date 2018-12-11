@@ -85,13 +85,7 @@ class Tween extends Entity {
 
         }
 
-#if js
-        // Somehow, Actuate doesn't handle durations the same way
-        // depending on the platform??
         var actuateDuration = duration;
-#else
-        var actuateDuration = duration * 1000;
-#end
         
         startTime = Timer.now;
         target = new UpdateFloat(fromValue);
