@@ -15,7 +15,12 @@ class Timer {
         `Timer.now` and `Timer.timestamp` are garanteed to get incremented
         exactly at the same rate.
         (number of seconds since January 1st, 1970) **/
-    public static var timestamp(default,null):Float = Date.now().getTime();
+    public static var timestamp(get,null):Float;
+    inline static function get_timestamp():Float {
+        return startTimestamp + now;
+    }
+
+    public static var startTimestamp(default,null):Float = Date.now().getTime() / 1000.0;
 
     @:allow(ceramic.App)
     static function update(delta:Float):Void {
