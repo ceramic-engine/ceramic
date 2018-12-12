@@ -98,7 +98,7 @@ class App extends Entity {
 
     /** Execute and flush every awaiting immediate callback, including the ones that
         could have been added with `onceImmediate()` after executing the existing callbacks. */
-    #if !debug inline #end function flushImmediate():Bool {
+    #if !debug inline #end public function flushImmediate():Bool {
 
         var didFlush = false;
 
