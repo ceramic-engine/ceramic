@@ -475,6 +475,36 @@ class Main extends luxe.Game {
 
     } //ongamepaddevice
 
+    override function onevent(event:snow.types.Types.SystemEvent) {
+
+        switch (event.type) {
+            case se_unknown:
+            case se_init:
+            case se_ready:
+            case se_tick:
+            case se_freeze:
+            case se_unfreeze:
+            case se_suspend:
+            case se_shutdown:
+            case se_window:
+            case se_input:
+            case se_quit:
+            case se_app_terminating:
+                @:privateAccess ceramic.App.app.emitTerminate();
+            case se_app_lowmemory:
+                @:privateAccess ceramic.App.app.emitLowMemory();
+            case se_app_willenterbackground:
+                @:privateAccess ceramic.App.app.emitBeginEnterBackground();
+            case se_app_didenterbackground:
+                @:privateAccess ceramic.App.app.emitFinishEnterBackground();
+            case se_app_willenterforeground:
+                @:privateAccess ceramic.App.app.emitBeginEnterForeground();
+            case se_app_didenterforeground:
+                @:privateAccess ceramic.App.app.emitFinishEnterForeground();
+        }
+
+    } //onevent
+
 /// Internal
 
     function triggerResizeIfNeeded():Void {

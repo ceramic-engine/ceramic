@@ -71,6 +71,16 @@ class App extends Entity {
         If this even is handled, app exit should be performed by the event handler. */
     @event function criticalError(error:Dynamic, stack:Array<StackItem>);
 
+    @event function beginEnterBackground();
+    @event function finishEnterBackground();
+
+    @event function beginEnterForeground();
+    @event function finishEnterForeground();
+
+    @event function lowMemory();
+
+    @event function terminate();
+
 /// Immediate update event, custom implementation
 
     var immediateCallbacks:Array<Void->Void> = [];
