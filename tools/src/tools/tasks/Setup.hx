@@ -77,7 +77,6 @@ class Setup extends tools.Task {
             haxelib(['install', 'hxcpp', '--always']);
             haxelib(['install', 'bind', '--always']);
             haxelib(['install', 'unifill', '0.4.1', '--always']);
-            haxelib(['install', 'actuate', '1.8.7', '--always']);
             haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
         }
 
