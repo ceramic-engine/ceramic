@@ -71,6 +71,9 @@ class Build extends tools.Task {
         if (buildConfig == null) {
             fail('Invalid configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
         }
+        else {
+            print('Will build with configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
+        }
 
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
