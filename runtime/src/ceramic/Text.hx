@@ -100,6 +100,17 @@ class Text extends Visual {
         return align;
     }
 
+    /** If set to `true`, text will be displayed with line breaks
+        as needed so that it fits in the requested width. */
+    @editable
+    public var fitWidth(default,set):Float = -1;
+    function set_fitWidth(fitWidth:Float):Float {
+        if (this.fitWidth == fitWidth) return fitWidth;
+        this.fitWidth = fitWidth;
+        contentDirty = true;
+        return fitWidth;
+    }
+
 /// Overrides
 
     override function set_depth(depth:Float):Float {
@@ -195,17 +206,64 @@ class Text extends Visual {
         var lineWidths:Array<Float> = [];
         var lineQuads:Array<Array<Quad>> = [[]];
         var usedQuads = 0;
+        var isLineBreak = false;
+        var isWhiteSpace = false;
+        var justDidBreakToFit = false;
+        var hasSpaceInLine = false;
         
         while (i < len) {
 
             prevChar = char;
             prevCode = code;
+            
             char = content.uCharAt(i);
             code = char.uCharCodeAt(0);
 
-            if (char == "\n") {
+            isLineBreak = (char == "\n");
+            isWhiteSpace = (char == ' ');
+
+            if (!hasSpaceInLine && isWhiteSpace) hasSpaceInLine = true;
+
+            if (isLineBreak || isWhiteSpace) {
+                if (!justDidBreakToFit && fitWidth >= 0 && x >= fitWidth && hasSpaceInLine) {
+                    justDidBreakToFit = true;
+                    // Rewind last word because it doesn't fit
+                    while (i > 0) {
+                        i--;
+                        char = content.uCharAt(i);
+                        code = char.uCharCodeAt(0);
+                        if (i > 0) {
+                            prevChar = content.uCharAt(i - 1);
+                            prevCode = prevChar.uCharCodeAt(0);
+                            glyph = font.chars.get(prevCode);
+                        } else {
+                            prevChar = null;
+                            prevCode = -1;
+                        }
+                        if (prevChar != null) {
+                            x -= font.kerning(prevCode, code) * sizeFactor;
+                        }
+                        x -= glyph.xAdvance * sizeFactor + letterSpacing;
+                        usedQuads--;
+                        quad = glyphQuads.pop();
+                        remove(quad);
+                        if (char == ' ') {
+                            char = "\n";
+                            code = char.uCharCodeAt(0);
+                            isLineBreak = true;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    justDidBreakToFit = false;
+                }
+            }
+
+            if (isLineBreak) {
+                hasSpaceInLine = false;
                 prevChar = null;
-                prevCode = 0;
+                prevCode = -1;
                 i++;
                 y += lineHeight * font.lineHeight * sizeFactor;
                 lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
