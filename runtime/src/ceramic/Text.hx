@@ -111,6 +111,15 @@ class Text extends Visual {
         return fitWidth;
     }
 
+    @editable
+    public var maxLineDiff(default,set):Float = -1;
+    function set_maxLineDiff(maxLineDiff:Float):Float {
+        if (this.maxLineDiff == maxLineDiff) return maxLineDiff;
+        this.maxLineDiff = maxLineDiff;
+        if (fitWidth != -1) contentDirty = true;
+        return maxLineDiff;
+    }
+
 /// Overrides
 
     override function set_depth(depth:Float):Float {
@@ -193,6 +202,21 @@ class Text extends Visual {
             return;
         }
 
+        computeGlyphQuads(fitWidth, maxLineDiff);
+        
+        contentDirty = false;
+        matrixDirty = true;
+
+    } //computeContent
+
+    function computeGlyphQuads(fitWidth:Float, maxLineDiff:Float, fixedNumLines:Int = -1) {
+
+        // Remove unused quads
+        while (glyphQuads.length > 0) {
+            var quad = glyphQuads.pop();
+            quad.destroy();
+        }
+
         var x = 0.0;
         var y = 0.0;
         var len = content.uLength();
@@ -210,6 +234,7 @@ class Text extends Visual {
         var isWhiteSpace = false;
         var justDidBreakToFit = false;
         var hasSpaceInLine = false;
+        var wasWhiteSpace = false;
         
         while (i < len) {
 
@@ -224,7 +249,7 @@ class Text extends Visual {
 
             if (!hasSpaceInLine && isWhiteSpace) hasSpaceInLine = true;
 
-            if (isLineBreak || isWhiteSpace) {
+            if (isLineBreak || isWhiteSpace || i == len - 1) {
                 if (!justDidBreakToFit && fitWidth >= 0 && x >= fitWidth && hasSpaceInLine) {
                     justDidBreakToFit = true;
                     // Rewind last word because it doesn't fit
@@ -239,18 +264,21 @@ class Text extends Visual {
                         } else {
                             prevChar = null;
                             prevCode = -1;
+                            glyph = null;
                         }
                         if (prevChar != null) {
                             x -= font.kerning(prevCode, code) * sizeFactor;
                         }
-                        x -= glyph.xAdvance * sizeFactor + letterSpacing;
-                        usedQuads--;
-                        quad = glyphQuads.pop();
-                        remove(quad);
+                        if (glyph != null) {
+                            x -= glyph.xAdvance * sizeFactor + letterSpacing;
+                            usedQuads--;
+                            lineQuads[lineQuads.length-1].pop();
+                        }
                         if (char == ' ') {
                             char = "\n";
                             code = char.uCharCodeAt(0);
                             isLineBreak = true;
+                            isWhiteSpace = false;
                             break;
                         }
                     }
@@ -354,11 +382,34 @@ class Text extends Visual {
                 }
             default:
         }
-        
-        contentDirty = false;
-        matrixDirty = true;
 
-    } //computeContent
+        if ((fixedNumLines == -1 || fixedNumLines == lineWidths.length) && fitWidth > 0 && maxLineDiff != -1 && fitWidth > pointSize) {
+            // Check if lines have similar sizes
+            var lineDiff = 0.0;
+            var maxLineDiffValue = this.fitWidth * maxLineDiff;
+            for (i in 0...lineWidths.length) {
+                for (j in 0...lineWidths.length) {
+                    var newDiff = lineWidths[i] - lineWidths[j];
+                    if (newDiff < 0) newDiff = -newDiff;
+                    if (newDiff > lineDiff) lineDiff = newDiff;
+                    if (lineDiff > maxLineDiffValue) {
+                        break;
+                    }
+                }
+            }
+
+            if (lineDiff > maxLineDiffValue) {
+                var numLines = computeGlyphQuads(fitWidth - pointSize, maxLineDiff, lineWidths.length);
+                if (numLines > lineWidths.length) {
+                    // Restore previous state
+                    computeGlyphQuads(fitWidth, -1, lineWidths.length);
+                }
+            }
+        }
+
+        return lineWidths.length;
+
+    } //computeGlyphQuads
 
 /// Font destroyed
 
