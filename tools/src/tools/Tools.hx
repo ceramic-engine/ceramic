@@ -109,6 +109,7 @@ class Tools {
         context.tasks.set('path', new tools.tasks.Path());
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
+        context.tasks.set('module', new tools.tasks.Module());
 
         context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
