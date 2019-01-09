@@ -9,6 +9,10 @@ using ceramic.Extensions;
 
 @editable({ implicitSize: true })
 class Text extends Visual {
+    
+    @event function glyphQuadsChange();
+
+    public var glyphQuads(default,null):Array<GlyphQuad> = [];
 
     @editable
     public var color(default,set):Color = Color.WHITE;
@@ -191,8 +195,6 @@ class Text extends Visual {
 
 /// Display
 
-    var glyphQuads:Array<Quad> = [];
-
     override function computeContent() {
 
         if (font == null) {
@@ -203,19 +205,14 @@ class Text extends Visual {
         }
 
         computeGlyphQuads(fitWidth, maxLineDiff);
-        
+        emitGlyphQuadsChange();
+
         contentDirty = false;
         matrixDirty = true;
 
     } //computeContent
 
     function computeGlyphQuads(fitWidth:Float, maxLineDiff:Float, fixedNumLines:Int = -1) {
-
-        // Remove unused quads
-        while (glyphQuads.length > 0) {
-            var quad = glyphQuads.pop();
-            quad.destroy();
-        }
 
         var x = 0.0;
         var y = 0.0;
@@ -311,15 +308,17 @@ class Text extends Visual {
             }
 
             // Reuse or create quad
-            var quad:Quad = usedQuads < glyphQuads.length ? glyphQuads[usedQuads] : null;
+            var quad:GlyphQuad = usedQuads < glyphQuads.length ? glyphQuads[usedQuads] : null;
             if (quad == null) {
-                quad = new Quad();
+                quad = new GlyphQuad();
                 quad.inheritAlpha = true;
                 glyphQuads.push(quad);
                 add(quad);
             }
             usedQuads++;
 
+            quad.char = char;
+            quad.code = code;
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;
             quad.depth = depth;
