@@ -40,9 +40,9 @@ class Module extends tools.Task {
                 var vscodeSettings = Json.parse(File.getContent(Path.join([vscodeDir, 'settings.json'])));
 
                 if (moduleName != null && moduleName != '') {
-                    Reflect.setField(vscodeSettings, "haxe.displayConfigurations", ["completion.hxml", "-D", 'module_$moduleName', "-D", 'ceramic_module=$moduleName']);
+                    Reflect.setField(vscodeSettings, "haxe.displayConfigurations", [["completion.hxml", "-D", 'module_$moduleName']]);
                 } else {
-                    Reflect.setField(vscodeSettings, "haxe.displayConfigurations", ["completion.hxml"]);
+                    Reflect.setField(vscodeSettings, "haxe.displayConfigurations", [["completion.hxml"]]);
                 }
 
                 File.saveContent(Path.join([vscodeDir, 'settings.json']), Json.stringify(vscodeSettings, null, '    '));
