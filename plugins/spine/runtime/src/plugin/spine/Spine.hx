@@ -94,6 +94,10 @@ class Spine extends Visual {
         Hook into this event to set custom bone transforms. */
     @event function updateWorldTransform(delta:Float);
 
+    /** When the current animation chain finishes. If the chain is interrupted
+        (by setting another animation), this event is canceled. */
+    @event function finishCurrentAnimationChain();
+
 /// Properties
 
     /** Skeleton origin X */
@@ -266,10 +270,15 @@ class Spine extends Visual {
         return skin;
     }
 
+    var _settingNextAnimation = false;
+
     @editable({ localCollection: 'animationList', empty: 0 })
     public var animation(default,set):String = null;
     function set_animation(animation:String):String {
-        if (nextAnimations != null) nextAnimations = null;
+        if (!_settingNextAnimation) {
+            if (nextAnimations != null) nextAnimations = null;
+            offFinishCurrentAnimationChain();
+        }
         if (this.animation == animation) return animation;
         this.animation = animation;
         if (spineData != null) animate(animation, loop, 0);
@@ -483,9 +492,15 @@ class Spine extends Visual {
 
         // Chain with the next animations, if any
         if (nextAnimations != null && nextAnimations.length > 0) {
+            _settingNextAnimation = true;
             animation = nextAnimations.shift();
+            _settingNextAnimation = false;
         }
         else {
+            if (listensFinishCurrentAnimationChain()) {
+                trace('EMIT FINISH CHAIN mute=$muteEvents');
+            }
+            emitFinishCurrentAnimationChain();
             if (canFreeze()) {
                 frozen = true;
             }
