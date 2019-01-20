@@ -259,7 +259,7 @@ class ProjectLoader {
                         Reflect.setField(
                             app,
                             'if true || plugin_runtime_' + (pluginI++),
-                            plugin.runtime
+                            Json.parse(Json.stringify(plugin.runtime)) // Copy to prevent plugin to be modified
                         );
                     }
                 }
