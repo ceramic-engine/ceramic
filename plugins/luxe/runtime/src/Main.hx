@@ -230,6 +230,14 @@ class Main extends luxe.Game {
         // Camera size
         Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
 
+#if (mac && linc_sdl && cpp)
+        var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
+        if (runtime.window_hidden_at_startup) {
+            runtime.window_hidden_at_startup = false;
+            sdl.SDL.showWindow(runtime.window);
+        }
+#end
+
         // Emit ready event
         ceramic.App.app.backend.emitReady();
 
