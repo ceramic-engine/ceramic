@@ -4,6 +4,10 @@ package ceramic;
 import hxtelemetry.HxTelemetry;
 #end
 
+#if (cpp && linc_sdl)
+import sdl.SDL;
+#end
+
 import ceramic.internal.PlatformSpecific;
 
 import ceramic.Settings;
@@ -216,6 +220,10 @@ class App extends Entity {
         // Setup actuate time
         motion.actuators.SimpleActuator.getTime = _actuateGetTime;
 
+#if (cpp && linc_sdl)
+        SDL.setLCNumericCLocale();
+#end
+
         app = new App();
         return new InitSettings(app.settings);
         
@@ -247,6 +255,10 @@ class App extends Entity {
     } //new
 
     function backendReady():Void {
+
+#if (cpp && linc_sdl)
+        SDL.setLCNumericCLocale();
+#end
 
         // Init persistent data (that relies on backend)
         persistent = new PersistentData('app');
@@ -424,6 +436,10 @@ class App extends Entity {
     } //assetsLoaded
 
     function update(delta:Float):Void {
+
+#if (cpp && linc_sdl)
+        SDL.setLCNumericCLocale();
+#end
 
 #if hxtelemetry
         hxt.advance_frame();
