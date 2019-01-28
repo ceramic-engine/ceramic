@@ -129,6 +129,8 @@ class ExportSpine extends tools.Task {
                 Files.deleteRecursive(exportPath);
             }
 
+            FileSystem.createDirectory(exportPath);
+
             // Export
             command(spineAppPath, ['--export', tmpConfigPath]);
 

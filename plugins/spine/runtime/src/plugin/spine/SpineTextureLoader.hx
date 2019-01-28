@@ -6,29 +6,29 @@ import spine.support.graphics.TextureLoader;
 @:access(plugin.spine.SpineAsset)
 class SpineTextureLoader implements TextureLoader
 {
-	private var asset:SpineAsset;
+    private var asset:SpineAsset;
 
-	public function new(asset:SpineAsset) {
+    public function new(asset:SpineAsset) {
 
-		this.asset = asset;
+        this.asset = asset;
 
-	} //new
+    } //new
 
-	public function loadPage(page:AtlasPage, path:String):Void {
+    public function loadPage(page:AtlasPage, path:String):Void {
 
         asset.loadPage(page, path);
 
-	} //loadPage
+    } //loadPage
 
-	public function loadRegion(region:AtlasRegion):Void {
+    public function loadRegion(region:AtlasRegion):Void {
 
         // Nothing to do here
 
     } //loadRegion
 
-	public function unloadPage(page:AtlasPage):Void {
+    public function unloadPage(page:AtlasPage):Void {
 
         asset.unloadPage(page);
 
-	} //unloadPage
+    } //unloadPage
 }

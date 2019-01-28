@@ -787,8 +787,13 @@ class Spine extends Visual {
         }
 
         // Set flip
+        #if spine_36
         flipX = skeleton.flipX ? -1 : 1;
         flipY = skeleton.flipY ? -1 : 1;
+        #else
+        flipX = skeleton.scaleX < 0 ? -1 : 1;
+        flipY = skeleton.scaleY < 0 ? -1 : 1;
+        #end
         flip = flipX * flipY;
 
         for (i in 0...numElements)
