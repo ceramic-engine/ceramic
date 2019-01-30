@@ -56,7 +56,7 @@ class Csv {
             else if (sep == '') {
                 if (c == ',' || c == ';') {
                     sep = c;
-                    keys.push(val);
+                    keys.push(val.replace("\r",""));
                     val = '';
                 }
                 else {
@@ -65,7 +65,7 @@ class Csv {
                 i++;
             }
             else if (c == sep) {
-                keys.push(val);
+                keys.push(val.replace("\r",""));
                 val = '';
                 i++;
             }
@@ -75,7 +75,7 @@ class Csv {
             }
         }
 
-        if (val != '') keys.push(val);
+        if (val != '') keys.push(val.replace("\r",""));
 
         // Parse
         //

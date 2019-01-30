@@ -87,12 +87,14 @@ class Main extends luxe.Game {
                 var i = len - 1;
                 var file = '';
                 var line = 0;
+                var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
+                
                 while (i >= 0) {
                     var str = stack[i];
                     str = str.ltrim();
 
                     // File in haxe project
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:', '');
+                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:' + (isWin ? '/' : ''), '');
 
                     // File in compiled project
                     str = str.replace('http://localhost:' + electronRunner.serverPort + '/', electronRunner.appFiles + '/');
