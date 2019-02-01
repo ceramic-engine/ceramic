@@ -1,0 +1,626 @@
+/*
+ * Contents
+ *
+ * Global resets
+ * Masthead
+ * Sidebar
+ * Slide effect
+ * Posts and pages
+ * Pagination
+ * Reverse layout
+ * Themes
+ */
+
+
+/*
+ * Global resets
+ *
+ * Update the foundational and global aspects of the page.
+ */
+
+/* Prevent scroll on narrow devices */
+html,
+body {
+  overflow-x: hidden;
+}
+
+html {
+  font-family: 'Lato', Helvetica, Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', Helvetica, Arial, sans-serif;
+  color: #313131;
+  letter-spacing: -.025rem;
+}
+
+
+/*
+ * Wrapper
+ *
+ * The wrapper is used to position site content when the sidebar is toggled. We
+ * use an outter wrap to position the sidebar without interferring with the
+ * regular page content.
+ */
+
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+
+/*
+ * Container
+ *
+ * Center the page content.
+ */
+
+.container {
+    max-width: 28rem;
+}
+@media (min-width: 38em) {
+  .container {
+    max-width: 32rem;
+}
+}
+@media (min-width: 56em) {
+  .container {
+    max-width: 38rem;
+}
+}
+
+
+/*
+ * Masthead
+ *
+ * Super small header above the content for site name and short description.
+ */
+
+ .masthead {
+  padding-top:    0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 3rem;
+  border-bottom: 1px solid #eee;
+  display: inline-block;
+  width: 100%;
+}
+.masthead-title {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.masthead-title a {
+  color: #505050;
+}
+.masthead-title small {
+  font-size: 75%;
+  font-weight: 100;
+  font-style: italic;
+  color: #c0c0c0;
+  letter-spacing: 0;
+}
+
+.home-template .masthead-title {
+    font-size: 150%;
+    padding-top:    1rem;
+    padding-bottom: 1rem;
+}
+
+@keyframes mastheadShrink{
+    from    {  font-size: 150%;
+               padding-top:    1rem;
+               padding-bottom: 1rem;
+            }
+    to      {  font-size: 100%;
+               padding-top:    0.5rem;
+               padding-bottom: 0.5rem;
+            }
+}
+
+.tag-template .masthead-title {
+    font-size: 150%;
+    padding-top:    1rem;
+    padding-bottom: 1rem;
+}
+
+.post-template .masthead-title a{
+    color: #c0c0c0;
+}
+
+.post-template .masthead-title small{
+    color: #E7E7E7;
+}
+
+.post-template .masthead{
+    animation: mastheadShrink 0.5s linear;
+}
+
+
+@media (max-width: 48em) {
+    .masthead-title {
+        text-align: center;
+    }
+    .nav{
+        text-align: center;
+    }
+    .masthead-title small {
+        display: none;
+    }
+}
+.nav{
+    display: none;
+}
+// .masthead:hover{
+//     display: inherit;
+//     padding-bottom: 1rem;
+//     animation: masterheadGrow .5s;
+// }
+
+// .masthead:hover .nav{
+//     animation: showNav .5s;
+// }
+// @keyframes showNav{
+//     0%{
+//         background: red;
+//         display: none;
+//     }
+//     90%{
+//         background: blue;
+//         display: inherit;
+//     }
+//     100%{
+//         background: blue;
+//         display: inherit;
+//     }
+// }
+// @keyframes masterheadGrow{
+//     0%{
+//         padding-bottom: 1rem;
+//     }
+//     100%{
+//         padding-bottom: 3rem;
+//     }
+// }
+
+/*******Navigation*********/
+
+.nav.container{
+    padding-top: 10px;
+}
+
+.nav.hidden{
+    display: none;
+}
+
+a.nav-item{
+  text-decoration: none;
+}
+
+.nav-item{
+  text-decoration: none;
+  color: #A6A6A6;
+  margin-right: 1em;
+}
+
+.nav-item:hover{
+  color: black;
+}
+
+
+/*
+ * Posts and pages
+ *
+ * Each post is wrapped in `.post` and is used on default and post layouts. Each
+ * page is wrapped in `.page` and is only used on the page layout.
+ */
+
+ .page,
+ .post {
+  margin-bottom: 4em;
+}
+
+.post-content a {
+    color: #f6007b;
+}
+
+.post-content img {
+    display: block;
+    margin: auto;
+}
+
+.post-gallery img {
+  cursor: pointer;
+}
+
+/* Blog post or page title */
+.page-title,
+.post-title,
+.post-title a {
+  color: #303030;
+}
+.page-title,
+.post-title {
+  margin-top: 0;
+}
+
+i.header-icon {
+  font-size: 80%;
+}
+
+/* Meta data line below post title */
+.post-meta {
+  display: block;
+  margin-top: -.5rem;
+  margin-bottom: 1rem;
+  color: #9a9a9a;
+}
+
+.post-meta a {
+  color: #9a9a9a;
+}
+
+/*************Tags**************/
+
+.tags{
+  color: white;
+}
+
+.tags a{
+  color: #B3B3B3;
+  font-size: 14px;
+  font-weight: 200;
+  font-style: italic;
+  padding: 0px 4px;
+}
+
+.tags a:hover{
+    border: 1px solid;
+    border-color: #B3B3B3;
+    border-radius: 5px;
+    text-decoration: none;
+    padding: 0px 3px;
+}
+
+.tag-title{
+    display: inline-block;
+    text-align: center;
+    font-size: 100%;
+    padding: 5px 8px;
+    border: 1px solid;
+    border-color: #707070;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.tag-description{
+    font-size: 16px;
+    font-style: italic;
+}
+
+.tag-image{
+    max-width: 30%;
+    display: block;
+    margin: auto;
+    margin-bottom: 1em;
+}
+
+a.read-more:hover{
+  text-decoration: none;
+  color: #8E8E8E;
+}
+
+/* Related posts */
+.related {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid #eee;
+}
+.related-posts {
+  padding-left: 0;
+  list-style: none;
+}
+.related-posts h3 {
+  margin-top: 0;
+}
+.related-posts li small {
+  font-size: 75%;
+  color: #999;
+}
+.related-posts li a:hover {
+  color: #268bd2;
+  text-decoration: none;
+}
+.related-posts li a:hover small {
+  color: inherit;
+}
+
+
+/*
+ * Pagination
+ *
+ * Super lightweight (HTML-wise) blog pagination. `span`s are provide for when
+ * there are no more previous or next posts to show.
+ */
+
+.pagination {
+  overflow: hidden; /* clearfix */
+  font-family: 'Lato', Helvetica, Arial, sans-serif;
+  color: #ccc;
+  text-align: center;
+  width: 100%;
+}
+
+/* Pagination items can be `span`s or `a`s */
+.pagination-item {
+  display: block;
+  padding: 1rem;
+  border: 1px solid #eee;
+}
+.pagination-item:first-child {
+  margin-bottom: -1px;
+}
+
+/* Only provide a hover state for linked pagination items */
+a.pagination-item:hover {
+  background-color: #f5f5f5;
+}
+
+@media (min-width: 30em) {
+  .pagination {
+    margin: 3rem 0;
+}
+.pagination-item {
+    float: left;
+    width: 50%;
+}
+.pagination-item:first-child {
+    margin-bottom: 0;
+    border-top-left-radius:    4px;
+    border-bottom-left-radius: 4px;
+}
+.pagination-item:last-child {
+    margin-left: -1px;
+    border-top-right-radius:    4px;
+    border-bottom-right-radius: 4px;
+}
+}
+
+/* The author credit area after the post */
+.footnotes {
+    font-size: 0.8rem;
+}
+
+.post-footer {
+    position: relative;
+    margin: 3rem 0 0 0;
+    padding: 2rem 0 0 0;
+    border-top: #EBF2F6 1px solid;
+}
+
+.post-footer h4 {
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+.post-footer p {
+    margin: 0.4rem 0 0.8rem 0;
+    font-size: 1rem;
+    line-height: 1em;
+}
+
+/* list of author links - location / url */
+.author-meta {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 1rem;
+    line-height: 1;
+    font-style: italic;
+    color: #9EABB3;
+}
+
+.author-meta a {
+    color: #9EABB3;
+}
+.author-meta a:hover {
+    color: #111;
+}
+
+/* Create some space to the right for the share links */
+.post-footer .author {
+    margin-right: 180px;
+}
+
+.post-footer h4 a {
+    color: #2e2e2e;
+    text-decoration: none;
+}
+
+.post-footer h4 a:hover {
+    text-decoration: underline;
+}
+
+.post-template .post-header{
+  border-bottom: #EBF2F6 1px solid;
+  margin-bottom: 2em;
+  text-align: center;
+}
+
+.tag-template .tag-header{
+  border-bottom: #EBF2F6 1px solid;
+  margin-bottom: 2em;
+  text-align: center;
+}
+
+.post-image{
+    max-width: 70%;
+    display: block;
+    margin: auto;
+    margin-bottom: 2em;
+}
+
+.tag-head.main-header {
+    height: 40%;
+    min-height: 180px;
+}
+
+.author-head.main-header {
+    height: 40%;
+    min-height: 180px;
+}
+
+.no-cover.author-head.main-header {
+    height: 10%;
+    min-height: 100px;
+    background: transparent;
+}
+
+.author-profile {
+    padding: 0 15px 5rem 15px;
+    border-bottom: #EBF2F6 1px solid;
+    text-align: center;
+}
+
+/* Add a little circle in the middle of the border-bottom */
+.author-profile:after {
+    display: block;
+    content: "";
+    width: 7px;
+    height: 7px;
+    border: #E7EEF2 1px solid;
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    margin-left: -5px;
+    background: #FFF;
+    -webkit-border-radius: 100%;
+    -moz-border-radius: 100%;
+    border-radius: 100%;
+    box-shadow: #FFF 0 0 0 5px;
+}
+
+.author-image {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    margin-left: -40px;
+    width: 80px;
+    height: 80px;
+    border-radius: 100%;
+    overflow: hidden;
+    padding: 6px;
+    background: #fff;
+    z-index: 2;
+    box-shadow: #E7EEF2 0 0 0 1px;
+}
+
+.author-image .img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center center;
+    border-radius: 100%;
+}
+
+.author-profile .author-image {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 120px;
+    height: 120px;
+    padding: 3px;
+    margin: -100px auto 0 auto;
+    box-shadow: none;
+}
+
+.author-title {
+    margin: 1.5rem 0 1rem;
+}
+
+.author-bio {
+    font-size: 1.2rem;
+    line-height: 1.5em;
+    font-weight: 200;
+    color: #50585D;
+    letter-spacing: 0;
+    text-indent: 0;
+}
+
+/* Location, website, and link */
+.author-profile .author-meta {
+    margin: 2rem 0;
+    font-family: "Noto Serif", serif;
+    font-size: 1.7rem;
+}
+.author-meta span {
+    display: inline-block;
+    margin: 0 2rem 1rem 0;
+    word-wrap: break-word;
+}
+.author-meta a {
+    text-decoration: none;
+}
+
+/* Turn off meta for page2+ to make room for extra
+pagination prev/next links */
+.archive-template .author-profile .author-meta {
+    display: none;
+}
+
+.hidden {
+    text-indent: -9999px;
+    visibility: hidden;
+    display: none;
+}
+
+
+.small_logo {
+  display: inline-block !important;
+  height: 3em;
+  position: relative;
+  border-radius: 0;
+}
+
+.container.content {
+  margin-top:2em;
+}
+
+.screenshot {
+  margin:auto; 
+  display:flex; 
+  flex-direction: column;
+  flex:1;
+  justify-content:center;
+}
+
+.screenshot img {
+  display: inline-block !important;
+  position: relative;
+  margin-bottom: 1em !important;
+  border-radius: 0;
+  flex:1;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .screenshot {
+    height:8em;
+    flex-direction: row;
+  }
+
+  .screenshot img {
+    margin-right: 0.3em !important;    
+    margin-left: 0.3em !important;    
+  }
+
+
+  .screenshot.bigger {
+    height:12em;
+  }
+}
