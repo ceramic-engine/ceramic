@@ -27,6 +27,8 @@ class NdkStack extends tools.Task {
             context.defines.set('android', '');
         }
 
+        var filePath = extractArgValue(args, 'file');
+
         var os = Sys.systemName();
         if (os == 'Windows') {
             fail('This command is not supported on Windows systems.');
@@ -95,6 +97,15 @@ class NdkStack extends tools.Task {
         var ndkStackSh = '#!/bin/sh
 $adbPath logcat | $ndkStackPath -sym $symbolsPath
         ';
+
+        if (filePath != null) {
+            if (!Path.isAbsolute(filePath)) {
+                filePath = Path.join([cwd, filePath]);
+                ndkStackSh = '#!/bin/sh
+cat $filePath | $ndkStackPath -sym $symbolsPath';
+            }
+        }
+
         File.saveContent(ndkStackShPath, ndkStackSh);
 
         Sync.run(function(done) {
