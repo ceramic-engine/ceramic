@@ -50,7 +50,7 @@ class ExportSpine extends tools.Task {
         if (Sys.systemName() == 'Mac') {
             spineAppPath = '/Applications/Spine/Spine.app/Contents/MacOS/Spine';
         } else if (Sys.systemName() == 'Windows') {
-            spineAppPath = 'Spine';
+            spineAppPath = 'C:\\Program Files (x86)\\Spine\\Spine.com';
         } else {
             fail('Spine export is not yet supported on ' + Sys.systemName() + ' system.');
         }
