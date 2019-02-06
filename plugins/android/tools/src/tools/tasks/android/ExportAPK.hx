@@ -60,7 +60,7 @@ class ExportAPK extends tools.Task {
 
         // Export APK
         var result = command('./gradlew', [
-            'assembleRelease'
+            'assembleRelease', '--stacktrace'
         ], { cwd: Path.join([cwd, 'project/android']) });
         if (result.status != 0) {
             fail('Gradle build failed with status ' + result.status);

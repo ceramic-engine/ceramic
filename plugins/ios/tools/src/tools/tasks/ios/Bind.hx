@@ -79,7 +79,9 @@ class Bind extends tools.Task {
                         try {
                             allInfo = Json.parse(''+result.stdout);
                         } catch (e:Dynamic) {
-                            fail('Failed to parse bind output: ' + e);
+                            if (result != null) warning('Invalid JSON for header $headerPath: ' + result.stdout);
+                            warning('Failed to parse bind output: ' + e);
+                            allInfo = [];
                         }
 
                         for (fileInfo in allInfo) {
