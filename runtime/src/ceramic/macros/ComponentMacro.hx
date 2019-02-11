@@ -13,10 +13,12 @@ class ComponentMacro {
 
         if (!onReused) {
             onReused = true;
+            /*
             Context.onMacroContextReused(function() {
                 processed = new Map();
                 return true;
             });
+            */
         }
 
         var fields = Context.getBuildFields();
