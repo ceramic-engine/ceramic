@@ -85,8 +85,9 @@ class Build extends tools.Task {
 
         Sync.run(function(done) {
 
+            var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
             var proc = ChildProcess.spawn(
-                'haxe',
+                Path.join([context.ceramicToolsPath, haxe]),
                 cmdArgs,
                 { cwd: hxmlProjectPath }
             );
