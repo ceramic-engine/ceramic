@@ -43,47 +43,7 @@ class Tween extends Entity {
         
         var _owner = owner;
 
-        var actuateEasing = switch (easing) {
-
-            case LINEAR: motion.easing.Linear.easeNone;
-
-            case BACK_EASE_IN: motion.easing.Back.easeIn;
-            case BACK_EASE_IN_OUT: motion.easing.Back.easeInOut;
-            case BACK_EASE_OUT: motion.easing.Back.easeOut;
-
-            case QUAD_EASE_IN: motion.easing.Quad.easeIn;
-            case QUAD_EASE_IN_OUT: motion.easing.Quad.easeInOut;
-            case QUAD_EASE_OUT: motion.easing.Quad.easeOut;
-
-            case BOUNCE_EASE_IN: motion.easing.Bounce.easeIn;
-            case BOUNCE_EASE_IN_OUT: motion.easing.Bounce.easeInOut;
-            case BOUNCE_EASE_OUT: motion.easing.Bounce.easeOut;
-
-            case CUBIC_EASE_IN: motion.easing.Cubic.easeIn;
-            case CUBIC_EASE_IN_OUT: motion.easing.Cubic.easeInOut;
-            case CUBIC_EASE_OUT: motion.easing.Cubic.easeOut;
-
-            case ELASTIC_EASE_IN: motion.easing.Elastic.easeIn;
-            case ELASTIC_EASE_IN_OUT: motion.easing.Elastic.easeInOut;
-            case ELASTIC_EASE_OUT: motion.easing.Elastic.easeOut;
-
-            case EXPO_EASE_IN: motion.easing.Expo.easeIn;
-            case EXPO_EASE_IN_OUT: motion.easing.Expo.easeInOut;
-            case EXPO_EASE_OUT: motion.easing.Expo.easeOut;
-
-            case QUART_EASE_IN: motion.easing.Quart.easeIn;
-            case QUART_EASE_IN_OUT: motion.easing.Quart.easeInOut;
-            case QUART_EASE_OUT: motion.easing.Quart.easeOut;
-
-            case QUINT_EASE_IN: motion.easing.Quint.easeIn;
-            case QUINT_EASE_IN_OUT: motion.easing.Quint.easeInOut;
-            case QUINT_EASE_OUT: motion.easing.Quint.easeOut;
-
-            case SINE_EASE_IN: motion.easing.Sine.easeIn;
-            case SINE_EASE_IN_OUT: motion.easing.Sine.easeInOut;
-            case SINE_EASE_OUT: motion.easing.Sine.easeOut;
-
-        }
+        var actuateEasing = Tween.actuateEasing(easing);
 
         var actuateDuration = duration;
         
@@ -125,6 +85,60 @@ class Tween extends Entity {
         }
 
     } //destroy
+
+/// Helpers
+
+    public static function actuateEasing(easing:TweenEasing) {
+
+        return switch (easing) {
+
+            case LINEAR: motion.easing.Linear.easeNone;
+
+            case BACK_EASE_IN: motion.easing.Back.easeIn;
+            case BACK_EASE_IN_OUT: motion.easing.Back.easeInOut;
+            case BACK_EASE_OUT: motion.easing.Back.easeOut;
+
+            case QUAD_EASE_IN: motion.easing.Quad.easeIn;
+            case QUAD_EASE_IN_OUT: motion.easing.Quad.easeInOut;
+            case QUAD_EASE_OUT: motion.easing.Quad.easeOut;
+
+            case BOUNCE_EASE_IN: motion.easing.Bounce.easeIn;
+            case BOUNCE_EASE_IN_OUT: motion.easing.Bounce.easeInOut;
+            case BOUNCE_EASE_OUT: motion.easing.Bounce.easeOut;
+
+            case CUBIC_EASE_IN: motion.easing.Cubic.easeIn;
+            case CUBIC_EASE_IN_OUT: motion.easing.Cubic.easeInOut;
+            case CUBIC_EASE_OUT: motion.easing.Cubic.easeOut;
+
+            case ELASTIC_EASE_IN: motion.easing.Elastic.easeIn;
+            case ELASTIC_EASE_IN_OUT: motion.easing.Elastic.easeInOut;
+            case ELASTIC_EASE_OUT: motion.easing.Elastic.easeOut;
+
+            case EXPO_EASE_IN: motion.easing.Expo.easeIn;
+            case EXPO_EASE_IN_OUT: motion.easing.Expo.easeInOut;
+            case EXPO_EASE_OUT: motion.easing.Expo.easeOut;
+
+            case QUART_EASE_IN: motion.easing.Quart.easeIn;
+            case QUART_EASE_IN_OUT: motion.easing.Quart.easeInOut;
+            case QUART_EASE_OUT: motion.easing.Quart.easeOut;
+
+            case QUINT_EASE_IN: motion.easing.Quint.easeIn;
+            case QUINT_EASE_IN_OUT: motion.easing.Quint.easeInOut;
+            case QUINT_EASE_OUT: motion.easing.Quint.easeOut;
+
+            case SINE_EASE_IN: motion.easing.Sine.easeIn;
+            case SINE_EASE_IN_OUT: motion.easing.Sine.easeInOut;
+            case SINE_EASE_OUT: motion.easing.Sine.easeOut;
+
+        }
+
+    } //actuateEasing
+
+    public static function easingFunction(easing:TweenEasing):Float->Float {
+
+        return actuateEasing(easing).calculate;
+
+    } //easingFunction
 
 } //Tween
 
