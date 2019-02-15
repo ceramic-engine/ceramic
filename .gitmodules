@@ -43,3 +43,6 @@
 [submodule "git/actuate"]
 	path = git/actuate
 	url = https://github.com/ceramic-engine/actuate.git
+[submodule "git/differ"]
+	path = git/differ
+	url = https://github.com/ceramic-engine/differ.git
