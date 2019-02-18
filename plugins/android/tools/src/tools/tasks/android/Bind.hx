@@ -87,7 +87,15 @@ class Bind extends tools.Task {
                                 FileSystem.createDirectory(Path.directory(filePath));
                             }
 
-                            File.saveContent(filePath, fileInfo.content);
+                            if (FileSystem.exists(filePath)) {
+                                // Only save if content is different
+                                var previous = File.getContent(filePath);
+                                if (fileInfo.content != previous) {
+                                    File.saveContent(filePath, fileInfo.content);
+                                }
+                            } else {
+                                File.saveContent(filePath, fileInfo.content);
+                            }
 
                         }
 
