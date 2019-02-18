@@ -845,15 +845,10 @@ class Visual extends Entity {
             parent.computeClip();
         }
 
-        if (clip != null) {
-            computedClip = true;
-        }
-        else {
-            computedClip = false;
-            if (parent != null) {
-                if (parent.computedClip || parent.clip != null) {
-                    computedClip = true;
-                }
+        computedClip = false;
+        if (parent != null) {
+            if (parent.computedClip || parent.clip != null) {
+                computedClip = true;
             }
         }
 
