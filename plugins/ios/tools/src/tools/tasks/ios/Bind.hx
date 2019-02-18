@@ -90,11 +90,15 @@ class Bind extends tools.Task {
 
                             success('export $filePath');
 
-                            if (!FileSystem.exists(Path.directory(filePath))) {
-                                FileSystem.createDirectory(Path.directory(filePath));
+                            if (FileSystem.exists(filePath)) {
+                                // Only save if content is different
+                                var previous = File.getContent(filePath);
+                                if (fileInfo.content != previous) {
+                                    File.saveContent(filePath, fileInfo.content);
+                                }
+                            } else {
+                                File.saveContent(filePath, fileInfo.content);
                             }
-
-                            File.saveContent(filePath, fileInfo.content);
 
                         }
 
