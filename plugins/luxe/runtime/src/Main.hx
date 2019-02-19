@@ -52,7 +52,14 @@ class Main extends luxe.Game {
     override function config(config:luxe.GameConfig) {
 
         Luxe.core.auto_render = false;
+        #if (linc_sdl && cpp)
+        Luxe.snow.runtime.auto_swap = false;
+        #end
+        #if ceramic_disable_background_sleep
+        Luxe.core.game_config.window.background_sleep = 0;
+        #else
         Luxe.core.game_config.window.background_sleep = 1.0/45;
+        #end
 
 #if web
 
