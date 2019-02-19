@@ -61,6 +61,9 @@ class Draw implements spec.Draw {
         batcher.isMainRender = true;
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
+        #if (linc_sdl && cpp)
+        Luxe.snow.runtime.window_swap();
+        #end
 
         ceramic.App.app.backend.emitEndDraw();
 
@@ -75,6 +78,9 @@ class Draw implements spec.Draw {
         var shouldClear = Luxe.core.renderer.should_clear;
         Luxe.core.renderer.should_clear = false;
         Luxe.core.render();
+        #if (linc_sdl && cpp)
+        Luxe.snow.runtime.window_swap();
+        #end
         Luxe.core.renderer.should_clear = shouldClear;
 
     } //draw
