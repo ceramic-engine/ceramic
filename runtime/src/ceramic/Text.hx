@@ -189,7 +189,12 @@ class Text extends Visual {
 
     override function destroy() {
 
-        glyphQuads = null;
+        if (glyphQuads != null) {
+            for (i in 0...glyphQuads.length) {
+                glyphQuads[i].destroy();
+            }
+            glyphQuads = null;
+        }
 
     } //destroy
 
