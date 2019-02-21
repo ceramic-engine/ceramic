@@ -181,7 +181,6 @@ class Http implements spec.Http {
 
         if (options.timeout != null && options.timeout > 0) {
             xhr.timeout = options.timeout * 1000;
-            trace('OPTION TIMEOUT = ${xhr.timeout}');
 
             ceramic.Timer.delay(null, options.timeout + 1.0, function() {
                 if (done == null) return;
