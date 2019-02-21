@@ -77,6 +77,13 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                     }
                 }
 
+                // Timeout
+                if (params.get("timeout") != null) {
+                    int timeout = (Integer) params.get("timeout");
+                    connection.setConnectTimeout(timeout * 1000);
+                    connection.setReadTimeout(timeout * 1000);
+                }
+
                 // Body
                 if (params.get("content") != null) {
                     DataOutputStream os = new DataOutputStream(connection.getOutputStream());

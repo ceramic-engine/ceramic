@@ -10,4 +10,6 @@ typedef HttpRequestOptions = {
 
     @:optional var content:String;
 
+    @:optional var timeout:Int;
+
 } //HttpRequestOptions

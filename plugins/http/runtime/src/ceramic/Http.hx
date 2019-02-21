@@ -42,6 +42,9 @@ class Http {
         // Get url
         var url = options.url;
 
+        // Get timeout
+        var timeout = options.timeout;
+
         // Encode parameters
         if (options.params != null) {
             var buff = new StringBuf();
@@ -82,7 +85,8 @@ class Http {
             url: url,
             method: method,
             headers: headers,
-            content: content
+            content: content,
+            timeout: timeout
         };
 
         app.backend.http.request(backendOptions, function(backendResponse) {

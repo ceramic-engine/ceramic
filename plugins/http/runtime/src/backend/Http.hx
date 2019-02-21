@@ -30,6 +30,10 @@ class Http implements spec.Http {
         requestOptions.path = url.path;
         requestOptions.method = options.method != null ? options.method : 'GET';
 
+        if (options.timeout != null && options.timeout > 0) {
+            requestOptions.timeout = options.timeout * 1000;
+        }
+
         if (options.headers != null) {
             requestOptions.headers = {};
             for (key in options.headers.keys()) {
@@ -96,6 +100,10 @@ class Http implements spec.Http {
             requestOptions.content = options.content;
         }
 
+        if (options.timeout != null && options.timeout > 0) {
+            requestOptions.timeout = options.timeout;
+        }
+
         AndroidHttp.sendHttpRequest(requestOptions, function(rawResponse) {
             var useContent = rawResponse.status >= 200 && rawResponse.status < 300;
             var headers = new Map<String,String>();
@@ -125,6 +133,10 @@ class Http implements spec.Http {
         }
         if (options.content != null) {
             requestOptions.content = options.content;
+        }
+
+        if (options.timeout != null && options.timeout > 0) {
+            requestOptions.timeout = options.timeout;
         }
 
         IosHttp.sendHTTPRequest(requestOptions, function(rawResponse) {
@@ -167,6 +179,16 @@ class Http implements spec.Http {
 
         var xhr = new XMLHttpRequest();
 
+        if (options.timeout != null && options.timeout > 0) {
+            xhr.timeout = options.timeout * 1000;
+            trace('OPTION TIMEOUT = ${xhr.timeout}');
+
+            ceramic.Timer.delay(null, options.timeout + 1.0, function() {
+                if (done == null) return;
+                xhr.abort();
+            });
+        }
+
         xhr.open(
             options.method != null ? options.method : 'GET',
             options.url,
@@ -182,6 +204,26 @@ class Http implements spec.Http {
         if (content != null) {
             xhr.setRequestHeader('Content-Type', contentType);
         }
+
+        var handleTimeout = function() {
+            if (done == null) return;
+
+            var headers = new Map<String,String>();
+
+            var response:HttpResponse = {
+                status: 408,
+                content: null,
+                headers: headers,
+                error: null
+            };
+
+            var _done = done;
+            done = null;
+            _done(response);
+        };
+
+        xhr.onabort = handleTimeout;
+        xhr.ontimeout = handleTimeout;
 
         xhr.onload = function() {
             if (done == null) return;
