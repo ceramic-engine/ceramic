@@ -12,6 +12,9 @@
 
 + (void)sendHTTPRequest:(NSDictionary *)params done:(void (^)(NSDictionary *response))done {
     
+    // Create session configuration
+    NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
+    
     // Create request
     NSURL *url = [NSURL URLWithString:params[@"url"]];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
@@ -33,14 +36,38 @@
         }];
     }
     
+    // Reply flag
+    __block BOOL didReply = NO;
+    
     // HTTP timeout
     if ([params[@"timeout"] isKindOfClass:[NSNumber class]]) {
-        request.timeoutInterval = [params[@"timeout"] floatValue];
+        request.timeoutInterval = (NSTimeInterval) [params[@"timeout"] integerValue];
+        sessionConfig.timeoutIntervalForRequest = (NSTimeInterval) [params[@"timeout"] integerValue];
+        sessionConfig.timeoutIntervalForResource = (NSTimeInterval) [params[@"timeout"] integerValue];
+        
+        // Bulletproof it, whatever happens, we will reply back at last after timout + 1s delay
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(([params[@"timeout"] intValue] + 1) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (didReply) return;
+            didReply = YES;
+            
+            id statusMessage = [NSHTTPURLResponse localizedStringForStatusCode:408];
+            
+            // Timeout
+            done(@{
+               @"status": @(408),
+               @"content": [NSNull null],
+               @"error": statusMessage ? statusMessage : [NSNull null],
+               @"headers": [NSNull null]
+            });
+        });
     }
     
     // Run request (asynchronously)
-    NSURLSession *session = [NSURLSession sharedSession];
-    [[session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        if (didReply) return;
+        didReply = YES;
         
         dispatch_async(dispatch_get_main_queue(), ^{
             
@@ -90,7 +117,9 @@
             
         });
         
-    }] resume];
+    }];
+    
+    [task resume];
     
 } //sendHTTPRequest
 
