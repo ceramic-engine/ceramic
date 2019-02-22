@@ -294,8 +294,10 @@ class Http implements spec.Http {
 
 #if ceramic_debug_http
         com.akifox.asynchttp.AsyncHttp.logEnabled = true;
+        com.akifox.asynchttp.AsyncHttp.logErrorEnabled = true;
 #else
         com.akifox.asynchttp.AsyncHttp.logEnabled = false;
+        com.akifox.asynchttp.AsyncHttp.logErrorEnabled = false;
 #end
 
         var contentType = "application/x-www-form-urlencoded";
@@ -323,7 +325,10 @@ class Http implements spec.Http {
             method: options.method != null ? options.method : 'GET',
             contentType: contentType,
             headers: httpHeaders,
+            timeout: options.timeout != null && options.timeout > 0 ? options.timeout : null,
             callback: function(res:com.akifox.asynchttp.HttpResponse) {
+
+                if (done == null) return;
 
                 var headers = new Map<String,String>();
                 for (key in res.headers.keys()) {
@@ -337,7 +342,9 @@ class Http implements spec.Http {
                     error: null // TODO
                 };
 
-                done(response);
+                var _done = done;
+                done = null;
+                _done(response);
 
             }
         };
@@ -349,6 +356,22 @@ class Http implements spec.Http {
         }
 
         var request = new com.akifox.asynchttp.HttpRequest(requestOptions);
+
+        if (options.timeout != null && options.timeout > 0) {
+            request.timeout = options.timeout;
+
+            ceramic.Timer.delay(null, options.timeout + 1.0, function() {
+                if (done == null) return;
+                var _done = done;
+                done = null;
+                _done({
+                    status: 408,
+                    content: null,
+                    headers: new Map(),
+                    error: null
+                });
+            });
+        }
 
         request.send();
 
