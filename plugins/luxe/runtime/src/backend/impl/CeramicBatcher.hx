@@ -661,7 +661,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 // Special case of drawing into stencil buffer
 
                 // No texture
-                if (lastShader == null && quad.shader == null) {
+                if (lastShader == null && mesh.shader == null) {
                     // Default plain shader fallback
                     useShader(defaultPlainShader);
                     defaultPlainShader.activate();
