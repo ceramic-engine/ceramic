@@ -46,3 +46,4 @@ plugin-build.hxml
 /editor/vendor/ceramic-runtime
 /runner/node_modules
 /tools-editor
+/plugins/android/support/.idea/caches
