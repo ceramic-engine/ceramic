@@ -112,29 +112,46 @@ class CollectionView extends ScrollView {
         var scrollX = includeScroll ? scroller.scrollX : 0.0;
         var scrollY = includeScroll ? scroller.scrollY : 0.0;
 
-        if (direction == VERTICAL) {
+        if (frames.length > 0) {
             for (i in 0...frames.length) {
                 var frame = frames.unsafeGet(i);
+                var minFrameX = frame.x - scrollX;
+                var maxFrameX = frame.x + frame.width - scrollX;
+                var minFrameY = frame.y - scrollY;
+                var maxFrameY = frame.y + frame.width - scrollY;
 
-                diffX = Math.abs(x - (frame.x + frame.width * 0.5 - scrollX));
-                diffY = Math.abs(y - (frame.y + frame.height * 0.5 - scrollY));
-                if (diffY < bestDiffY || (diffY == bestDiffY && diffX < bestDiffX)) {
-                    bestDiffX = diffX;
-                    bestDiffY = diffY;
-                    itemIndex = i;
+                if (x < minFrameX) {
+                    diffX = maxFrameX - x;
                 }
-            }
-        }
-        else {
-            for (i in 0...frames.length) {
-                var frame = frames.unsafeGet(i);
+                else if (x >= maxFrameX) {
+                    diffX = x - minFrameX;
+                }
+                else {
+                    diffX = 0;
+                }
 
-                diffX = Math.abs(x - (frame.x + frame.width * 0.5 - scrollX));
-                diffY = Math.abs(y - (frame.y + frame.height * 0.5 - scrollY));
-                if (diffX < bestDiffX || (diffX == bestDiffX && diffY < bestDiffY)) {
-                    bestDiffX = diffX;
-                    bestDiffY = diffY;
-                    itemIndex = i;
+                if (y < minFrameY) {
+                    diffY = maxFrameY - y;
+                }
+                else if (y >= maxFrameY) {
+                    diffY = y - minFrameY;
+                }
+                else {
+                    diffY = 0;
+                }
+
+                if (direction == VERTICAL) {
+                    if (diffX < bestDiffX || (diffX == bestDiffX && diffY < bestDiffY)) {
+                        bestDiffX = diffX;
+                        bestDiffY = diffY;
+                        itemIndex = i;
+                    }
+                } else { // HORIZONTAL
+                    if (diffY < bestDiffY || (diffY == bestDiffY && diffX < bestDiffX)) {
+                        bestDiffX = diffX;
+                        bestDiffY = diffY;
+                        itemIndex = i;
+                    }
                 }
             }
         }
