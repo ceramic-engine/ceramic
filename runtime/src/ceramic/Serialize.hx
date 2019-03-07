@@ -10,6 +10,10 @@ using StringTools;
 @:allow(ceramic.SaveModel)
 class Serialize {
 
+    public static var customHxSerialize:Dynamic->String = null;
+
+    public static var customHxDeserialize:String->Dynamic = null;
+
     public static function serialize(serializable:Serializable):String {
 
         _serializedMap = new Map();
@@ -130,12 +134,17 @@ class Serialize {
         }
         else {
 
-            // Use Haxe's built in serializer as a fallback
-            var serializer = new haxe.Serializer();
-            serializer.useCache = true;
-            serializer.serialize(value);
+            if (customHxSerialize != null) {
+                return { hx : customHxSerialize(value) };
+            }
+            else {
+                // Use Haxe's built in serializer as a fallback
+                var serializer = new haxe.Serializer();
+                serializer.useCache = true;
+                serializer.serialize(value);
 
-            return { hx: serializer.toString() };
+                return { hx: serializer.toString() };
+            }
 
         }
 
@@ -236,13 +245,17 @@ class Serialize {
         }
         else if (value.hx != null) {
 
-            var u = new haxe.Unserializer(value.hx);
-            try {
-                return u.unserialize();
-            }
-            catch (e:Dynamic) {
-                warning('Failed to deserialize: ' + value.hx);
-                return null;
+            if (customHxDeserialize != null) {
+                return customHxDeserialize(value.hx);
+            } else {
+                var u = new haxe.Unserializer(value.hx);
+                try {
+                    return u.unserialize();
+                }
+                catch (e:Dynamic) {
+                    warning('Failed to deserialize: ' + value.hx);
+                    return null;
+                }
             }
 
         }
