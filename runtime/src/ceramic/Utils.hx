@@ -202,6 +202,7 @@ class Utils {
         // Reverse stack
         var reverseStack = [].concat(stack);
         reverseStack.reverse();
+        reverseStack.pop(); // Remove last element, no need to display it
 
         // Print stack trace and error
         for (item in reverseStack) {
