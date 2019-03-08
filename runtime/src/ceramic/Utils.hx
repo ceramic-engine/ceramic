@@ -137,13 +137,25 @@ class Utils {
 
     } //base62Id
 
-    public static function callStackToString():String {
+    public static function printStackTrace():String {
 
         var result = new StringBuf();
+#if web
+        var electronRunner:Dynamic = null;
+#end
 
-        inline function add(data:Dynamic) {
-            result.add(''+data);
-            result.add("\n");
+        inline function print(data:Dynamic) {
+            #if web
+            if (electronRunner != null) {
+                electronRunner.consoleLog('[error] ' + data);
+            } else {
+                untyped console.log(''+data);
+            }
+            #elseif sys
+            Sys.println(''+data);
+            #else
+            trace(data);
+            #end
         }
 
 #if web
@@ -162,13 +174,12 @@ class Utils {
         var file = '';
         var line = 0;
         var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
-        var electronRunner:Dynamic = null;
 
         #if luxe
         electronRunner = @:privateAccess Main.electronRunner;
         #end
         
-        while (i >= 0) {
+        while (i >= 2) { // Skip first two entries because they point to the thrown error and printStackTrace() call
             var str = stack[i];
             str = str.ltrim();
 
@@ -180,7 +191,7 @@ class Utils {
                 str = str.replace('http://localhost:' + electronRunner.serverPort + '/', electronRunner.appFiles + '/');
             }
 
-            add(str);
+            print(str);
 
             i--;
         }
@@ -194,13 +205,13 @@ class Utils {
 
         // Print stack trace and error
         for (item in reverseStack) {
-            add(stackItemToString(item));
+            print(stackItemToString(item));
         }
 #end
 
         return result.toString();
 
-    } //callStackToString
+    } //printStackTrace
 
 	public static function stackItemToString(item:StackItem):String {
 
