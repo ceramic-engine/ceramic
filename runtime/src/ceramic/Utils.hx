@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.internal.PlatformSpecific;
 import haxe.rtti.CType;
+import haxe.CallStack;
 import ceramic.Shortcuts.*;
 
 using StringTools;
@@ -135,5 +136,105 @@ class Utils {
         else return Std.string(toChar(r));
 
     } //base62Id
+
+    public static function callStackToString():String {
+
+        var result = new StringBuf();
+
+        inline function add(data:Dynamic) {
+            result.add(''+data);
+            result.add("\n");
+        }
+
+#if web
+        var jsError:Dynamic = null;
+        untyped __js__('
+            try {
+                throw new Error();
+            } catch (e) {
+                {0} = e;
+            }
+        ', jsError);
+
+        var stack = (''+jsError.stack).split("\n");
+        var len = stack.length;
+        var i = len - 1;
+        var file = '';
+        var line = 0;
+        var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
+        var electronRunner:Dynamic = null;
+
+        #if luxe
+        electronRunner = @:privateAccess Main.electronRunner;
+        #end
+        
+        while (i >= 0) {
+            var str = stack[i];
+            str = str.ltrim();
+
+            if (electronRunner != null) {
+                // File in haxe project
+                str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:' + (isWin ? '/' : ''), '');
+
+                // File in compiled project
+                str = str.replace('http://localhost:' + electronRunner.serverPort + '/', electronRunner.appFiles + '/');
+            }
+
+            add(str);
+
+            i--;
+        }
+
+#else
+        var stack = CallStack.callStack();
+
+        // Reverse stack
+        var reverseStack = [].concat(stack);
+        reverseStack.reverse();
+
+        // Print stack trace and error
+        for (item in reverseStack) {
+            add(stackItemToString(item));
+        }
+#end
+
+        return result.toString();
+
+    } //callStackToString
+
+	public static function stackItemToString(item:StackItem):String {
+
+		var str:String = "";
+		switch (item) {
+			case CFunction:
+				str = "a C function";
+			case Module(m):
+				str = "module " + m;
+			case FilePos(itm,file,line):
+				if (itm != null) {
+					str = stackItemToString(itm) + " (";
+				}
+				str += file;
+				#if HXCPP_STACK_LINE
+					str += " line ";
+					str += line;
+				#end
+				if (itm != null) str += ")";
+			case Method(cname,meth):
+				str += (cname);
+				str += (".");
+				str += (meth);
+			#if (haxe_ver >= "3.1.0")
+			case LocalFunction(n):
+			#else
+			case Lambda(n):
+			#end
+				str += ("local function #");
+				str += (n);
+		}
+
+		return str;
+
+	} //stackItemToString
 
 } //Utils

@@ -35,7 +35,7 @@ class Errors {
 
         // Print stack trace and error
         for (item in reverseStack) {
-            print(stackItemToString(item));
+            print(Utils.stackItemToString(item));
         }
         print('[error] ' + e);
 
@@ -44,40 +44,5 @@ class Errors {
 #end
 
     } //handleUncaughtError
-
-	public static function stackItemToString(item:StackItem):String {
-
-		var str:String = "";
-		switch (item) {
-			case CFunction:
-				str = "a C function";
-			case Module(m):
-				str = "module " + m;
-			case FilePos(itm,file,line):
-				if (itm != null) {
-					str = stackItemToString(itm) + " (";
-				}
-				str += file;
-				#if HXCPP_STACK_LINE
-					str += " line ";
-					str += line;
-				#end
-				if (itm != null) str += ")";
-			case Method(cname,meth):
-				str += (cname);
-				str += (".");
-				str += (meth);
-			#if (haxe_ver >= "3.1.0")
-			case LocalFunction(n):
-			#else
-			case Lambda(n):
-			#end
-				str += ("local function #");
-				str += (n);
-		}
-
-		return str;
-
-	} //stackItemToString
 
 } //Errors
