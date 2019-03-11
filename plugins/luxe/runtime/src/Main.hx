@@ -58,7 +58,7 @@ class Main extends luxe.Game {
         #if ceramic_disable_background_sleep
         Luxe.core.game_config.window.background_sleep = 0;
         #else
-        Luxe.core.game_config.window.background_sleep = 1.0/45;
+        Luxe.core.game_config.window.background_sleep = 1.0 / 30;
         #end
 
 #if web
