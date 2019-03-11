@@ -175,7 +175,7 @@ class Utils {
         var line = 0;
         var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
 
-        #if luxe
+        #if (luxe && !completion)
         electronRunner = @:privateAccess Main.electronRunner;
         #end
         
