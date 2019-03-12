@@ -22,11 +22,11 @@ class Utils {
 
     } //realPath
 
-	inline public static function getRtti<T>(c:Class<T>):Classdef {
+    inline public static function getRtti<T>(c:Class<T>):Classdef {
 
-		return PlatformSpecific.getRtti(c);
+        return PlatformSpecific.getRtti(c);
 
-	} //getRtti
+    } //getRtti
 
     static var _nextUniqueIntCursor:Int = 0;
     static var _nextUniqueInt0:Int = Std.random(0x7fffffff);
@@ -214,39 +214,39 @@ class Utils {
 
     } //printStackTrace
 
-	public static function stackItemToString(item:StackItem):String {
+    public static function stackItemToString(item:StackItem):String {
 
-		var str:String = "";
-		switch (item) {
-			case CFunction:
-				str = "a C function";
-			case Module(m):
-				str = "module " + m;
-			case FilePos(itm,file,line):
-				if (itm != null) {
-					str = stackItemToString(itm) + " (";
-				}
-				str += file;
-				#if HXCPP_STACK_LINE
-					str += " line ";
-					str += line;
-				#end
-				if (itm != null) str += ")";
-			case Method(cname,meth):
-				str += (cname);
-				str += (".");
-				str += (meth);
-			#if (haxe_ver >= "3.1.0")
-			case LocalFunction(n):
-			#else
-			case Lambda(n):
-			#end
-				str += ("local function #");
-				str += (n);
-		}
+        var str:String = "";
+        switch (item) {
+            case CFunction:
+                str = "a C function";
+            case Module(m):
+                str = "module " + m;
+            case FilePos(itm,file,line):
+                if (itm != null) {
+                    str = stackItemToString(itm) + " (";
+                }
+                str += file;
+                #if HXCPP_STACK_LINE
+                    str += " line ";
+                    str += line;
+                #end
+                if (itm != null) str += ")";
+            case Method(cname,meth):
+                str += (cname);
+                str += (".");
+                str += (meth);
+            #if (haxe_ver >= "3.1.0")
+            case LocalFunction(n):
+            #else
+            case Lambda(n):
+            #end
+                str += ("local function #");
+                str += (n);
+        }
 
-		return str;
+        return str;
 
-	} //stackItemToString
+    } //stackItemToString
 
 } //Utils
