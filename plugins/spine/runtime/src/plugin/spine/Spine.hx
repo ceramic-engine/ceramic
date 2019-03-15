@@ -71,7 +71,7 @@ class Spine extends Visual {
 
     var clipper:SkeletonClipping = new SkeletonClipping();
 
-    var muteEvents:Bool = false;
+    var muteCompleteEvents:Bool = false;
 
 /// Events
 
@@ -97,6 +97,9 @@ class Spine extends Visual {
     /** When the current animation chain finishes. If the chain is interrupted
         (by setting another animation), this event is canceled. */
     @event function finishCurrentAnimationChain();
+
+    /** When a spine animation event is triggered. */
+    @event function spineEvent(entry:TrackEntry, event:Event);
 
 /// Properties
 
@@ -460,7 +463,7 @@ class Spine extends Visual {
 
         listener.onComplete = function(track) {
             
-            if (!muteEvents) emitComplete();
+            if (!muteCompleteEvents) emitComplete();
 
         };
 
@@ -470,6 +473,8 @@ class Spine extends Visual {
 
         listener.onEvent = function(track, event) {
             
+            emitSpineEvent(track, event);
+
         };
         
         state.addListener(listener);
@@ -497,9 +502,6 @@ class Spine extends Visual {
             _settingNextAnimation = false;
         }
         else {
-            if (listensFinishCurrentAnimationChain()) {
-                trace('EMIT FINISH CHAIN mute=$muteEvents');
-            }
             emitFinishCurrentAnimationChain();
             if (canFreeze()) {
                 frozen = true;
@@ -554,7 +556,7 @@ class Spine extends Visual {
             if (canFreeze()) {
                 frozen = true;
                 app.onceImmediate(function() {
-                    if (!muteEvents) emitComplete();
+                    if (!muteCompleteEvents) emitComplete();
                 });
             } else {
                 frozen = false;
@@ -575,10 +577,10 @@ class Spine extends Visual {
 
         var prevPaused = paused;
         var prevFrozen = frozen;
-        var prevMuteEvents = muteEvents;
+        var prevMuteEvents = muteCompleteEvents;
         paused = false;
         frozen = false;
-        muteEvents = true;
+        muteCompleteEvents = true;
 
         var i = 0;
         for (aTrack in state.tracks) {
@@ -598,7 +600,7 @@ class Spine extends Visual {
 
         paused = prevPaused;
         frozen = prevFrozen;
-        muteEvents = prevMuteEvents;
+        muteCompleteEvents = prevMuteEvents;
 
     } //forceRender
 
