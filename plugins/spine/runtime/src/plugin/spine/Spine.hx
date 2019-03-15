@@ -71,7 +71,7 @@ class Spine extends Visual {
 
     var clipper:SkeletonClipping = new SkeletonClipping();
 
-    var muteCompleteEvents:Bool = false;
+    var muteEvents:Bool = false;
 
 /// Events
 
@@ -463,7 +463,7 @@ class Spine extends Visual {
 
         listener.onComplete = function(track) {
             
-            if (!muteCompleteEvents) emitComplete();
+            if (!muteEvents) emitComplete();
 
         };
 
@@ -473,7 +473,7 @@ class Spine extends Visual {
 
         listener.onEvent = function(track, event) {
             
-            emitSpineEvent(track, event);
+            if (!muteEvents) emitSpineEvent(track, event);
 
         };
         
@@ -556,7 +556,7 @@ class Spine extends Visual {
             if (canFreeze()) {
                 frozen = true;
                 app.onceImmediate(function() {
-                    if (!muteCompleteEvents) emitComplete();
+                    if (!muteEvents) emitComplete();
                 });
             } else {
                 frozen = false;
@@ -577,10 +577,10 @@ class Spine extends Visual {
 
         var prevPaused = paused;
         var prevFrozen = frozen;
-        var prevMuteEvents = muteCompleteEvents;
+        var prevMuteEvents = muteEvents;
         paused = false;
         frozen = false;
-        muteCompleteEvents = true;
+        muteEvents = true;
 
         var i = 0;
         for (aTrack in state.tracks) {
@@ -600,7 +600,7 @@ class Spine extends Visual {
 
         paused = prevPaused;
         frozen = prevFrozen;
-        muteCompleteEvents = prevMuteEvents;
+        muteEvents = prevMuteEvents;
 
     } //forceRender
 
