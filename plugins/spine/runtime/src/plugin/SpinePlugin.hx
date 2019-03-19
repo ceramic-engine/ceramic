@@ -101,4 +101,10 @@ class SpinePlugin {
 
     } //spine
 
+    inline public static function toSkeletonName(name:AssetId<Dynamic>):String {
+
+        return Reflect.field(name, '_id');
+
+    } //spineSkeletonName
+
 } //SpinePlugin
