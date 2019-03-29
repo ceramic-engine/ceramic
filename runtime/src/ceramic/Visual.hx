@@ -1123,6 +1123,18 @@ class Visual extends Entity {
             maxX = point.x;
             maxY = point.y;
 
+            // max and min could be inverted if the visual has a custom render target
+            if (maxX < minX) {
+                var prevMinX = minX;
+                minX = maxX;
+                maxX = prevMinX;
+            }
+            if (maxY < minY) {
+                var prevMinY = minY;
+                minY = maxY;
+                maxY = prevMinY;
+            }
+
             _width = maxX - minX;
             _height = maxY - minY;
 
