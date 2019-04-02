@@ -10,6 +10,7 @@ import spine.*;
 import plugin.SpinePlugin;
 
 using StringTools;
+using ceramic.Extensions;
 
 class SpineData extends Entity {
 
@@ -37,6 +38,27 @@ class SpineData extends Entity {
         );
 
     } //new
+
+    /** Find a slot index from its name */
+    public function findSlotIndex(slotName:String):Int {
+
+        // TODO cache this info
+
+        if (slotName == null || skeletonData == null) {
+            return -1;
+        }
+        else {
+            var allSlots = skeletonData.slots;
+            for (i in 0...allSlots.length) {
+                var slot = allSlots.unsafeGet(i);
+                if (slot.name == slotName) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+    } //findSlotIndex
 
     override public function destroy():Void {
 
