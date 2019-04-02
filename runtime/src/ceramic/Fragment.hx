@@ -53,11 +53,22 @@ class Fragment extends Visual {
         entities = [];
         items = [];
 
+        #if ceramic_debug_fragments
+        trace('new Fragment(context=$context)');
+        #end
+
     } //new
 
 /// Data
 
     function set_fragmentData(fragmentData:FragmentData):FragmentData {
+
+        #if ceramic_debug_fragments
+        trace('set fragmentData ${fragmentData.name} / $fragmentData');
+        onceReady(this, function() {
+            success('READY fragment ${fragmentData.name}');
+        });
+        #end
         
         pendingLoads++;
 
@@ -150,6 +161,9 @@ class Fragment extends Visual {
                     editedItems: false
                 };
                 newArgs.push(subContext);
+                #if ceramic_debug_fragments
+                if (isFragment) log('load item (fragment) ${item.id}');
+                #end
             }
             instance = cast Type.createInstance(entityClass, newArgs);
         }
@@ -455,6 +469,48 @@ class Fragment extends Visual {
 #end
 
 /// Fragment components
+
+    // We need to override this setter to ensure a component is not accidentally destroyed
+    // if provided from fragmentComponents property
+    override function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+        if (_components == components) return components;
+
+        // Remove older components
+        if (_components != null) {
+            for (name in _components.keys()) {
+                if (components == null || !components.exists(name)) {
+                    if (fragmentComponents == null || !fragmentComponents.exists(name)) {
+                        removeComponent(name);
+                    }
+                }
+            }
+        }
+
+        // Add new components
+        if (components != null) {
+            for (name in components.keys()) {
+                var newComponent = components.get(name);
+                if (_components != null) {
+                    var existing = _components.get(name);
+                    if (existing != null) {
+                        if (existing != newComponent) {
+                            removeComponent(name);
+                            component(name, newComponent);
+                        }
+                    } else {
+                        component(name, newComponent);
+                    }
+                } else {
+                    component(name, newComponent);
+                }
+            }
+        }
+
+        // Update mapping
+        _components = components;
+
+        return components;
+    }
 
     /** Fragment components mapping. Does not contain components
         created separatelywith `component()` or macro-based components or components property. */

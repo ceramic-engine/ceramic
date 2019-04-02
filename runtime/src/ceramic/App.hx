@@ -327,7 +327,7 @@ class App extends Entity {
         converters.set('ceramic.FragmentData', new ConvertFragmentData());
         converters.set('Map<String,String>', new ConvertMap<String>());
         converters.set('Map<String,Bool>', new ConvertMap<Bool>());
-        converters.set('ImmutableMap<String,String>', new ConvertMap<String>());
+        converters.set('ceramic.ImmutableMap<String,String>', new ConvertMap<String>());
         converters.set('ceramic.ImmutableMap<String,Bool>', new ConvertMap<Bool>());
         converters.set('ceramic.ImmutableMap<String,ceramic.Component>', new ConvertComponentMap());
 

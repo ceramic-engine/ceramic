@@ -9,4 +9,11 @@ class FragmentContext {
     /** Whether the items are edited items or not */
     public var editedItems:Bool;
 
+    function toString() {
+        return '' + {
+            assets: assets,
+            editedItems: editedItems
+        };
+    }
+
 } //FragmentContext
