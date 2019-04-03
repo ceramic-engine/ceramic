@@ -291,19 +291,119 @@ class View extends Quad {
 
     } //autoSize
 
-    public function sizeToFitHeight(height:Float):Void {
+    /** Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
+        Typically used to compute image size with _scale to fit_ requirements and similar */
+    public function computeSizeWithIntrinsicBounds(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool, intrinsicWidth:Float, intrinsicHeight:Float):Float {
 
-        computeSize(0, height, ViewLayoutMask.FLEXIBLE_WIDTH, true);
-        size(computedWidth, computedHeight);
+        var shouldComputeWidth = false;
+        var shouldComputeHeight = false;
 
-    } //sizeToFitHeight
+        var paddedParentWidth = parentWidth - paddingLeft - paddingRight;
+        var paddedParentHeight = parentHeight - paddingTop - paddingBottom;
 
-    public function sizeToFitWidth(width:Float):Void {
+        var appliedScale = 1.0;
+        var hasExplicitWidth = !ViewSize.isAuto(viewWidth);
+        var hasExplicitHeight = !ViewSize.isAuto(viewHeight);
 
-        computeSize(width, 0, ViewLayoutMask.FLEXIBLE_HEIGHT, true);
-        size(computedWidth, computedHeight);
+        // Force fixed width if not flexible
+        if (!hasExplicitWidth) {
+            if (!layoutMask.canIncreaseWidth()) {
+                if (computedWidth > paddedParentWidth) {
+                    computedWidth = paddedParentWidth;
+                }
+            }
+            if (!layoutMask.canDecreaseWidth()) {
+                if (computedWidth < paddedParentWidth) {
+                    computedWidth = paddedParentWidth;
+                }
+            }
+        }
 
-    } //sizeToFitWidth
+        // Force fixed height if not flexible
+        if (!hasExplicitHeight) {
+            if (!layoutMask.canIncreaseHeight()) {
+                if (computedHeight > paddedParentHeight) {
+                    computedHeight = paddedParentHeight;
+                }
+            }
+            if (!layoutMask.canDecreaseHeight()) {
+                if (computedHeight < paddedParentHeight) {
+                    computedHeight = paddedParentHeight;
+                }
+            }
+        }
+
+        // Update size from intrinsic bounds
+        if (intrinsicWidth > 0 && intrinsicHeight > 0) {
+
+            if (!hasExplicitWidth && !hasExplicitHeight) {
+                // Width and heigh are both implicit
+                
+                var newWidth = computedHeight * intrinsicWidth / intrinsicHeight;
+                if (newWidth > computedWidth && layoutMask.canIncreaseWidth()) {
+                    computedWidth = newWidth;
+                }
+                else if (newWidth < computedWidth && layoutMask.canDecreaseWidth()) {
+                    computedWidth = newWidth;
+                }
+            
+                var newHeight = computedWidth * intrinsicHeight / intrinsicWidth;
+                if (newHeight > computedHeight && layoutMask.canIncreaseHeight()) {
+                    computedHeight = newHeight;
+                }
+                else if (newHeight < computedHeight && layoutMask.canDecreaseHeight()) {
+                    computedHeight = newHeight;
+                }
+            }
+            else {
+                if (hasExplicitWidth && !hasExplicitHeight) {
+
+                    // Remove padding for calculations
+                    computedHeight -= paddingTop + paddingBottom;
+
+                    // Width is explicit, height is implicit
+                    var newHeight = computedWidth * intrinsicHeight / intrinsicWidth;
+                    if (newHeight > computedHeight && layoutMask.canIncreaseHeight()) {
+                        computedHeight = newHeight;
+                    }
+                    else if (newHeight < computedHeight && layoutMask.canDecreaseHeight()) {
+                        computedHeight = newHeight;
+                    }
+                }
+                else if (!hasExplicitWidth && hasExplicitHeight) {
+
+                    // Remove padding for calculations
+                    computedWidth -= paddingLeft + paddingRight;
+
+                    // Width is implicit, height is explicit
+                    var newWidth = computedHeight * intrinsicWidth / intrinsicHeight;
+                    if (newWidth > computedWidth && layoutMask.canIncreaseWidth()) {
+                        computedWidth = newWidth;
+                    }
+                    else if (newWidth < computedWidth && layoutMask.canDecreaseWidth()) {
+                        computedWidth = newWidth;
+                    }
+                }
+                else if (hasExplicitWidth && hasExplicitHeight) {
+
+                    // Remove padding for calculations
+                    computedWidth -= paddingLeft + paddingRight;
+                    computedHeight -= paddingTop + paddingBottom;
+
+                }
+            }
+
+            appliedScale = Math.min(computedWidth / intrinsicWidth, computedHeight / intrinsicHeight);
+
+            // Add padding
+            computedWidth += paddingLeft + paddingRight;
+            computedHeight += paddingTop + paddingBottom;
+
+        }
+
+        return appliedScale;
+
+    } //computeSizeWithIntrinsecBounds
 
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
