@@ -291,6 +291,20 @@ class View extends Quad {
 
     } //autoSize
 
+    public function autoSizeWithFixedHeight(height:Float):Void {
+
+        computeSize(0, height, ViewLayoutMask.FLEXIBLE_WIDTH, true);
+        size(computedWidth, computedHeight);
+
+    } //autoSizeWithFixedHeight
+
+    public function autoSizeWithFixedWidth(width:Float):Void {
+
+        computeSize(width, 0, ViewLayoutMask.FLEXIBLE_HEIGHT, true);
+        size(computedWidth, computedHeight);
+
+    } //autoSizeWithFixedWidth
+
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
         // Compute width
