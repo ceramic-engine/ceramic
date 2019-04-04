@@ -15,11 +15,13 @@ class View extends Quad {
     /** Same as `children` but typed as a list of `View` instances instead of `Visual` (thus only contains children that are of `View` type). */
     public var subviews:ImmutableArray<View> = null;
 
+    /** Width after being computed by View layout engine from constraints and `viewWidth`/`viewHeight` */
     public var computedWidth:Float = -1;
 
+    /** Height after being computed by View layout engine from constraints and `viewWidth`/`viewHeight` */
     public var computedHeight:Float = -1;
 
-    /** Width processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    /** Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
     public var viewWidth(default,set):Float = ViewSize.auto();
     function set_viewWidth(viewWidth:Float):Float {
         if (this.viewWidth == viewWidth) return viewWidth;
@@ -28,7 +30,7 @@ class View extends Quad {
         return viewWidth;
     }
 
-    /** Height processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    /** Height that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
     public var viewHeight(default,set):Float = ViewSize.auto();
     function set_viewHeight(viewHeight:Float):Float {
         if (this.viewHeight == viewHeight) return viewHeight;
@@ -284,12 +286,22 @@ class View extends Quad {
 
     } //removeAllViews
 
-    public function autoSize():Void {
+    /** Auto compute size from constraints and `viewWidth`/`viewHeight`.
+        @param applyComputedSize if `true`, apply the computed size to the view. */
+    inline public function autoComputeSize(applyComputedSize:Bool = false):Void {
 
         computeSize(0, 0, ViewLayoutMask.FLEXIBLE, true);
+        if (applyComputedSize) this.applyComputedSize();
+
+    } //autoComputeAndApplySize
+
+    /** Apply the computed size to the view.
+        This is equivalent to `size(computedWidth, computedHeight)` */
+    inline public function applyComputedSize():Void {
+
         size(computedWidth, computedHeight);
 
-    } //autoSize
+    } //applyComputedSize
 
     /** Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
         Typically used to compute image size with _scale to fit_ requirements and similar */
