@@ -64,6 +64,12 @@ class Serialize {
         if (value == null) return null;
         if (_serializedMap == null) return null;
 
+        // Ensure we don't serialize anything that got destroyed
+        if (Std.is(value, Entity)) {
+            var entity:Entity = cast value;
+            if (entity.destroyed) return null;
+        }
+
         if (Std.is(value, Serializable)) {
 
             var clazz = Type.getClass(value);

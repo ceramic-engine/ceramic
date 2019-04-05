@@ -99,7 +99,7 @@ class SerializeModel extends Component {
 
     inline function track(model:Model) {
 
-        if (!trackedModels.exists(model._serializeId)) {
+        if (!model.destroyed && !trackedModels.exists(model._serializeId)) {
             trackedModels.set(model._serializeId, model);
             model.onModelDirty(this, explicitModelDirty);
             model.onObservedDirty(this, modelDirty);
@@ -135,7 +135,9 @@ class SerializeModel extends Component {
             }
             for (key in keys) {
                 var model = trackedModels.get(key);
-                untrack(model);
+                if (model.destroyed) {
+                    untrack(model);
+                }
             }
 
             willCleanDestroyedTrackedModels = false;
