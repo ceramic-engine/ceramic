@@ -34,6 +34,7 @@ class Text extends Visual {
     @editable({ multiline: true })
     public var content(default,set):String = '';
     function set_content(content:String):String {
+        Assert.assert(content != null, 'Text.content should not be null');
         if (this.content == content) return content;
         contentDirty = true;
         this.content = content;
