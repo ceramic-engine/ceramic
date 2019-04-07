@@ -43,4 +43,10 @@ class Screen implements ceramic.Events #if !completion implements spec.Screen #e
 
     } //setBackground
 
+    public function setWindowTitle(title:String):Void {
+
+        //
+
+    } //setWindowTitle
+
 } //Screen

@@ -27,9 +27,8 @@ class Settings implements Observable {
     /** Screen scaling (FIT, FILL, RESIZE or FIT_RESIZE). */
     @observe public var scaling:ScreenScaling = FIT;
 
-    /** App window title.
-        Can only be set at `app startup` from `Project constructor`. */
-    public var title(default,null):String = 'App';
+    /** App window title. */
+    @observe public var title:String = 'App';
 
     /** Antialiasing value (0 means disabled). */
     public var antialiasing(default,null):Int = 0;

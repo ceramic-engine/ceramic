@@ -167,6 +167,10 @@ class Screen extends Entity implements Observable {
             #if debug log('Setting background=$background'); #end
             app.backend.screen.setBackground(background);
         });
+        settings.onTitleChange(this, function(title, prevTitle) {
+            #if debug log('Setting title=$title'); #end
+            app.backend.screen.setWindowTitle(title);
+        });
         settings.onScalingChange(this, function(scaling, prevScaling) {
             #if debug log('Setting scaling=$scaling'); #end
             resize();

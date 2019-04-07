@@ -10,4 +10,6 @@ interface Screen {
 
     function setBackground(background:Int):Void;
 
+    function setWindowTitle(title:String):Void;
+
 } //Screen

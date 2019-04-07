@@ -67,8 +67,7 @@ class InitSettings {
         return settings.scaling = scaling;
     }
 
-    /** App window title.
-        Can only be set at `app startup` from `Project constructor`. */
+    /** App window title. */
     public var title(get,set):String;
     inline function get_title():String {
         return settings.title;

@@ -45,4 +45,15 @@ class Screen implements ceramic.Events implements spec.Screen {
 
     } //setBackground
 
+    public function setWindowTitle(title:String):Void {
+
+        Luxe.core.app.config.window.title = title;
+        
+        #if (cpp && linc_sdl)
+        var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
+        sdl.SDL.setWindowTitle(runtime.window, title);
+        #end
+
+    } //setWindowTitle
+
 } //Screen
