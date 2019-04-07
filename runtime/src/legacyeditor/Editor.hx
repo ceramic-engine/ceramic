@@ -1,4 +1,4 @@
-package editor;
+package legacyeditor;
 
 import ceramic.InitSettings;
 import ceramic.Entity;

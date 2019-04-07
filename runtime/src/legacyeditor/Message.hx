@@ -1,4 +1,4 @@
-package editor;
+package legacyeditor;
 
 typedef Message = {
 

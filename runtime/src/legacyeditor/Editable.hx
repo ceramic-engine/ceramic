@@ -1,4 +1,4 @@
-package editor;
+package legacyeditor;
 
 import ceramic.Component;
 import ceramic.Visual;
