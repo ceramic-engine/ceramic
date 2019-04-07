@@ -109,7 +109,7 @@ class Editor extends Entity {
         if (editor != null) throw 'Only one single editor can be created.';
         editor = this;
 
-        settings.antialiasing = true;
+        settings.antialiasing = 4;
         settings.background = 0x282828;
         settings.scaling = FIT;
 
