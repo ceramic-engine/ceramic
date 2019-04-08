@@ -18,7 +18,7 @@ class Http implements spec.Http {
 
     public function request(options:HttpRequestOptions, done:HttpResponse->Void):Void {
 
-#if nodejs
+#if (nodejs || hxnodejs || node)
 
         var isSSL = options.url.startsWith('https');
         var http = isSSL ? js.Node.require('https') : js.Node.require('http');
