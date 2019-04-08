@@ -162,10 +162,6 @@ class ExportIPA extends tools.Task {
             pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE = ""', 'PROVISIONING_PROFILE = "$profileId"', 2);
             pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE_SPECIFIER = ""', 'PROVISIONING_PROFILE_SPECIFIER = "$profileName"', 2);
 
-            print('ORIGINAL PBX $originalPbxContent');
-            print('--------------------------------');
-            print('NEW PBX $pbxContent');
-
             File.saveContent(pbxPath, pbxContent);
 
             restorePbx = function() {
