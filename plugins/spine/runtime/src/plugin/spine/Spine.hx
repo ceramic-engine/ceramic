@@ -535,7 +535,7 @@ class Spine extends Visual {
 /// Public API
 
     /** Start running an animation available in the skeleton. **/
-    public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0):Void {
+    public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0, trackTime:Float = -1):Void {
         if (destroyed) return;
 
         var track;
@@ -546,6 +546,9 @@ class Spine extends Visual {
             var _animation = skeletonData.findAnimation(animationName);
             if (_animation != null) {
                 track = state.setAnimation(trackIndex, _animation, loop);
+                if (trackTime >= 0) {
+                    track.trackTime = trackTime;
+                }
             } else {
                 warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')');
                 track = state.setEmptyAnimation(trackIndex, 0);
