@@ -678,7 +678,7 @@ class Draw implements spec.Draw {
                         x = vertices.unsafeGet(j * 2);
                         y = vertices.unsafeGet(j * 2 + 1);
                         if (!singleColor) {
-                            color = indicesColor ? colors.unsafeGet(j) : colors.unsafeGet(i);
+                            color = indicesColor ? colors.unsafeGet(i) : colors.unsafeGet(j);
                         }
 
                         // Update color
