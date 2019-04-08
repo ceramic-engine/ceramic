@@ -101,6 +101,7 @@ class ExportIPA extends tools.Task {
             command('rm', ['-rf', Path.join([context.cwd, 'tmp/xcodebuild'])]);
 
             // Install signing certificate
+            print('Install signing certificate $p12path / $keychainFile / $signingIdentity');
             command('security', ['import', p12Path, '-t', 'agg', '-k', keychainFile, '-P', p12Password, '-A']);
         }
 
@@ -157,6 +158,10 @@ class ExportIPA extends tools.Task {
             // This should be improved as for now it will only work with ceramic-generated Xcode projects. Should be smarter
             pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE = ""', 'PROVISIONING_PROFILE = "$profileId"', 2);
             pbxContent = replaceWithLimit(pbxContent, 'PROVISIONING_PROFILE_SPECIFIER = ""', 'PROVISIONING_PROFILE_SPECIFIER = "$profileName"', 2);
+
+            print('ORIGINAL PBX $originalPbxContent');
+            print('--------------------------------');
+            print('NEW PBX $pbxContent');
 
             File.saveContent(pbxPath, pbxContent);
 
