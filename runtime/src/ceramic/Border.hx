@@ -53,6 +53,38 @@ class Border extends Mesh {
         return borderSize;
     }
 
+    public var borderTopSize(default,set):Float = -1;
+    inline function set_borderTopSize(borderTopSize:Float):Float {
+        if (this.borderTopSize == borderTopSize) return borderTopSize;
+        this.borderTopSize = borderTopSize;
+        if (autoComputeVertices) computeVertices();
+        return borderTopSize;
+    }
+
+    public var borderBottomSize(default,set):Float = -1;
+    inline function set_borderBottomSize(borderBottomSize:Float):Float {
+        if (this.borderBottomSize == borderBottomSize) return borderBottomSize;
+        this.borderBottomSize = borderBottomSize;
+        if (autoComputeVertices) computeVertices();
+        return borderBottomSize;
+    }
+
+    public var borderLeftSize(default,set):Float = -1;
+    inline function set_borderLeftSize(borderLeftSize:Float):Float {
+        if (this.borderLeftSize == borderLeftSize) return borderLeftSize;
+        this.borderLeftSize = borderLeftSize;
+        if (autoComputeVertices) computeVertices();
+        return borderLeftSize;
+    }
+
+    public var borderRightSize(default,set):Float = -1;
+    inline function set_borderRightSize(borderRightSize:Float):Float {
+        if (this.borderRightSize == borderRightSize) return borderRightSize;
+        this.borderRightSize = borderRightSize;
+        if (autoComputeVertices) computeVertices();
+        return borderRightSize;
+    }
+
     public var borderColor(default,set):Color = Color.GRAY;
     inline function set_borderColor(borderColor:Color):Color {
         if (this.borderColor == borderColor) return borderColor;

@@ -131,6 +131,38 @@ class View extends Quad {
         return borderSize;
     }
 
+    public var borderTopSize(default,set):Float = -1;
+    inline function set_borderTopSize(borderTopSize:Float):Float {
+        if (this.borderTopSize == borderTopSize) return borderTopSize;
+        this.borderTopSize = borderTopSize;
+        updateBorder();
+        return borderTopSize;
+    }
+
+    public var borderBottomSize(default,set):Float = -1;
+    inline function set_borderBottomSize(borderBottomSize:Float):Float {
+        if (this.borderBottomSize == borderBottomSize) return borderBottomSize;
+        this.borderBottomSize = borderBottomSize;
+        updateBorder();
+        return borderBottomSize;
+    }
+
+    public var borderLeftSize(default,set):Float = -1;
+    inline function set_borderLeftSize(borderLeftSize:Float):Float {
+        if (this.borderLeftSize == borderLeftSize) return borderLeftSize;
+        this.borderLeftSize = borderLeftSize;
+        updateBorder();
+        return borderLeftSize;
+    }
+
+    public var borderRightSize(default,set):Float = -1;
+    inline function set_borderRightSize(borderRightSize:Float):Float {
+        if (this.borderRightSize == borderRightSize) return borderRightSize;
+        this.borderRightSize = borderRightSize;
+        updateBorder();
+        return borderRightSize;
+    }
+
     public var borderColor(default,set):Color = Color.GRAY;
     inline function set_borderColor(borderColor:Color):Color {
         if (this.borderColor == borderColor) return borderColor;
@@ -173,7 +205,7 @@ class View extends Quad {
 
     function updateBorder():Void {
 
-        if (borderSize > 0) {
+        if (borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0) {
             if (border == null) {
                 border = new Border();
                 border.depth = depthRange >= 0 ? 0 : depth;
@@ -188,6 +220,10 @@ class View extends Quad {
             border.borderRightColor = borderRightColor;
             border.borderPosition = borderPosition;
             border.borderSize = borderSize;
+            border.borderTopSize = borderTopSize;
+            border.borderBottomSize = borderBottomSize;
+            border.borderLeftSize = borderLeftSize;
+            border.borderRightSize = borderRightSize;
             border.size(width, height);
             border.autoComputeVertices = true;
             border.autoComputeColors = true;
