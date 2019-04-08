@@ -17,6 +17,8 @@ package ceramic;
  */
 abstract Color(Int) from Int from UInt to Int to UInt
 {
+    public static inline var NONE:Color =        -1;
+
     public static inline var WHITE:Color =       0xFFFFFF;
     public static inline var GRAY:Color =        0x808080;
     public static inline var BLACK:Color =       0x000000;
