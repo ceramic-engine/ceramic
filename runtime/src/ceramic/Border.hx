@@ -227,45 +227,58 @@ class Border extends Mesh {
             inner = 1.0;
         }
 
-        outer *= borderSize;
-        inner *= borderSize;
+        var leftSize = borderLeftSize >= 0 ? borderLeftSize : borderSize;
+        var leftOuter = outer * leftSize;
+        var leftInner = inner * leftSize;
+
+        var topSize = borderTopSize >= 0 ? borderTopSize : borderSize;
+        var topOuter = outer * topSize;
+        var topInner = inner * topSize;
+
+        var rightSize = borderRightSize >= 0 ? borderRightSize : borderSize;
+        var rightOuter = outer * rightSize;
+        var rightInner = inner * rightSize;
+
+        var bottomSize = borderBottomSize >= 0 ? borderBottomSize : borderSize;
+        var bottomOuter = outer * bottomSize;
+        var bottomInner = inner * bottomSize;
 
         var w = width;
         var h = height;
         var tmp:Float;
 
         // 0
-        vertices.unsafeSet(0, -outer);
-        vertices.unsafeSet(1, -outer);
+        vertices.unsafeSet(0, -leftOuter);
+        vertices.unsafeSet(1, -topOuter);
         // 1
-        tmp = w + outer;
+        tmp = w + rightOuter;
         vertices.unsafeSet(2, tmp);
-        vertices.unsafeSet(3, -outer);
+        vertices.unsafeSet(3, -topOuter);
         // 2
-        vertices.unsafeSet(4, inner);
-        vertices.unsafeSet(5, inner);
+        vertices.unsafeSet(4, leftInner);
+        vertices.unsafeSet(5, topInner);
         // 3
-        tmp = w - inner;
+        tmp = w - rightInner;
         vertices.unsafeSet(6, tmp);
-        vertices.unsafeSet(7, inner);
+        vertices.unsafeSet(7, topInner);
 
         // 4
-        vertices.unsafeSet(8, inner);
-        tmp = h - inner;
+        vertices.unsafeSet(8, leftInner);
+        tmp = h - bottomInner;
         vertices.unsafeSet(9, tmp);
         // 5
-        tmp = w - inner;
+        tmp = w - rightInner;
         vertices.unsafeSet(10, tmp);
-        tmp = h - inner;
+        tmp = h - bottomInner;
         vertices.unsafeSet(11, tmp);
         // 6
-        vertices.unsafeSet(12, -outer);
-        tmp = h + outer;
+        vertices.unsafeSet(12, -leftOuter);
+        tmp = h + bottomOuter;
         vertices.unsafeSet(13, tmp);
         // 7
-        tmp = w + outer;
+        tmp = w + rightOuter;
         vertices.unsafeSet(14, tmp);
-        tmp = h + outer;
+        tmp = h + bottomOuter;
         vertices.unsafeSet(15, tmp);
 
     } //computeVertices
