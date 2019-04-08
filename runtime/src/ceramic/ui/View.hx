@@ -124,6 +124,38 @@ class View extends Quad {
         return borderColor;
     }
 
+    public var borderTopColor(default,set):Color = Color.NONE;
+    inline function set_borderTopColor(borderTopColor:Color):Color {
+        if (this.borderTopColor == borderTopColor) return borderTopColor;
+        this.borderTopColor = borderTopColor;
+        if (borderSize > 0) updateBorder();
+        return borderTopColor;
+    }
+
+    public var borderBottomColor(default,set):Color = Color.NONE;
+    inline function set_borderBottomColor(borderBottomColor:Color):Color {
+        if (this.borderBottomColor == borderBottomColor) return borderBottomColor;
+        this.borderBottomColor = borderBottomColor;
+        if (borderSize > 0) updateBorder();
+        return borderBottomColor;
+    }
+
+    public var borderLeftColor(default,set):Color = Color.NONE;
+    inline function set_borderLeftColor(borderLeftColor:Color):Color {
+        if (this.borderLeftColor == borderLeftColor) return borderLeftColor;
+        this.borderLeftColor = borderLeftColor;
+        if (borderSize > 0) updateBorder();
+        return borderLeftColor;
+    }
+
+    public var borderRightColor(default,set):Color = Color.NONE;
+    inline function set_borderRightColor(borderRightColor:Color):Color {
+        if (this.borderRightColor == borderRightColor) return borderRightColor;
+        this.borderRightColor = borderRightColor;
+        if (borderSize > 0) updateBorder();
+        return borderRightColor;
+    }
+
     function updateBorder():Void {
 
         if (borderSize > 0) {
@@ -133,11 +165,17 @@ class View extends Quad {
                 add(border);
             }
             border.autoComputeVertices = false;
-            border.color = borderColor;
+            border.autoComputeColors = false;
+            border.borderColor = borderColor;
+            border.borderTopColor = borderTopColor;
+            border.borderBottomColor = borderBottomColor;
+            border.borderLeftColor = borderLeftColor;
+            border.borderRightColor = borderRightColor;
             border.borderPosition = borderPosition;
             border.borderSize = borderSize;
             border.size(width, height);
             border.autoComputeVertices = true;
+            border.autoComputeColors = true;
             border.anchor(0, 0);
             border.pos(0, 0);
         }

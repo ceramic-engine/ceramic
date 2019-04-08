@@ -15,6 +15,16 @@ class Border extends Mesh {
         return autoComputeVertices;
     }
 
+    @:noCompletion public var autoComputeColors(default,set):Bool = true;
+    inline function set_autoComputeColors(autoComputeColors:Bool):Bool {
+        if (this.autoComputeColors == autoComputeColors) return autoComputeColors;
+        this.autoComputeColors = autoComputeColors;
+        if (autoComputeColors) {
+            computeColors();
+        }
+        return autoComputeColors;
+    }
+
     override function set_width(width:Float):Float {
         super.set_width(width);
         if (autoComputeVertices) computeVertices();
@@ -43,15 +53,53 @@ class Border extends Mesh {
         return borderSize;
     }
 
+    public var borderColor(default,set):Color = Color.GRAY;
+    inline function set_borderColor(borderColor:Color):Color {
+        if (this.borderColor == borderColor) return borderColor;
+        this.borderColor = borderColor;
+        if (autoComputeColors) computeColors();
+        return borderColor;
+    }
+
+    public var borderTopColor(default,set):Color = Color.NONE;
+    inline function set_borderTopColor(borderTopColor:Color):Color {
+        if (this.borderTopColor == borderTopColor) return borderTopColor;
+        this.borderTopColor = borderTopColor;
+        if (autoComputeColors) computeColors();
+        return borderTopColor;
+    }
+
+    public var borderBottomColor(default,set):Color = Color.NONE;
+    inline function set_borderBottomColor(borderBottomColor:Color):Color {
+        if (this.borderBottomColor == borderBottomColor) return borderBottomColor;
+        this.borderBottomColor = borderBottomColor;
+        if (autoComputeColors) computeColors();
+        return borderBottomColor;
+    }
+
+    public var borderLeftColor(default,set):Color = Color.NONE;
+    inline function set_borderLeftColor(borderLeftColor:Color):Color {
+        if (this.borderLeftColor == borderLeftColor) return borderLeftColor;
+        this.borderLeftColor = borderLeftColor;
+        if (autoComputeColors) computeColors();
+        return borderLeftColor;
+    }
+
+    public var borderRightColor(default,set):Color = Color.NONE;
+    inline function set_borderRightColor(borderRightColor:Color):Color {
+        if (this.borderRightColor == borderRightColor) return borderRightColor;
+        this.borderRightColor = borderRightColor;
+        if (autoComputeColors) computeColors();
+        return borderRightColor;
+    }
+
     public function new() {
 
         super();
 
+        colorMapping = MeshColorMapping.INDICES;
+
         vertices = [
-            0, 0,
-            0, 0,
-            0, 0,
-            0, 0,
             0, 0,
             0, 0,
             0, 0,
@@ -64,22 +112,74 @@ class Border extends Mesh {
 
         indices = [
             // Top border
-            0, 1, 5,
-            0, 5, 2,
+            0, 1, 2,
+            2, 1, 3,
             // Right border
-            4, 5, 9,
-            4, 9, 8,
+            3, 1, 5,
+            5, 1, 7,
             // Bottom border
-            6, 9, 11,
-            6, 11, 10,
+            4, 5, 6,
+            6, 5, 7,
             // Left border
-            2, 3, 7,
-            2, 7, 6
+            0, 2, 6,
+            6, 2, 4
+        ];
+
+        colors = [
+            // Top border
+            0, 0, 0,
+            0, 0, 0,
+            // Right border
+            0, 0, 0,
+            0, 0, 0,
+            // Bottom border
+            0, 0, 0,
+            0, 0, 0,
+            // Left border
+            0, 0, 0,
+            0, 0, 0
         ];
 
         computeVertices();
 
     } //new
+
+    function computeColors() {
+
+        var topColor = new AlphaColor(borderTopColor != Color.NONE ? borderTopColor : borderColor);
+        var bottomColor = new AlphaColor(borderBottomColor != Color.NONE ? borderBottomColor : borderColor);
+        var leftColor = new AlphaColor(borderLeftColor != Color.NONE ? borderLeftColor : borderColor);
+        var rightColor = new AlphaColor(borderRightColor != Color.NONE ? borderRightColor : borderColor);
+
+        colors.unsafeSet(0, topColor);
+        colors.unsafeSet(1, topColor);
+        colors.unsafeSet(2, topColor);
+        colors.unsafeSet(3, topColor);
+        colors.unsafeSet(4, topColor);
+        colors.unsafeSet(5, topColor);
+
+        colors.unsafeSet(6, rightColor);
+        colors.unsafeSet(7, rightColor);
+        colors.unsafeSet(8, rightColor);
+        colors.unsafeSet(9, rightColor);
+        colors.unsafeSet(10, rightColor);
+        colors.unsafeSet(11, rightColor);
+
+        colors.unsafeSet(12, bottomColor);
+        colors.unsafeSet(13, bottomColor);
+        colors.unsafeSet(14, bottomColor);
+        colors.unsafeSet(15, bottomColor);
+        colors.unsafeSet(16, bottomColor);
+        colors.unsafeSet(17, bottomColor);
+
+        colors.unsafeSet(18, leftColor);
+        colors.unsafeSet(19, leftColor);
+        colors.unsafeSet(20, leftColor);
+        colors.unsafeSet(21, leftColor);
+        colors.unsafeSet(22, leftColor);
+        colors.unsafeSet(23, leftColor);
+
+    } //computeColors
 
     function computeVertices() {
 
@@ -110,47 +210,31 @@ class Border extends Mesh {
         vertices.unsafeSet(2, tmp);
         vertices.unsafeSet(3, -outer);
         // 2
-        vertices.unsafeSet(4, -outer);
+        vertices.unsafeSet(4, inner);
         vertices.unsafeSet(5, inner);
         // 3
-        vertices.unsafeSet(6, inner);
-        vertices.unsafeSet(7, inner);
-        // 4
         tmp = w - inner;
-        vertices.unsafeSet(8, tmp);
-        vertices.unsafeSet(9, inner);
-        // 5
-        tmp = w + outer;
-        vertices.unsafeSet(10, tmp);
-        vertices.unsafeSet(11, inner);
+        vertices.unsafeSet(6, tmp);
+        vertices.unsafeSet(7, inner);
 
+        // 4
+        vertices.unsafeSet(8, inner);
+        tmp = h - inner;
+        vertices.unsafeSet(9, tmp);
+        // 5
+        tmp = w - inner;
+        vertices.unsafeSet(10, tmp);
+        tmp = h - inner;
+        vertices.unsafeSet(11, tmp);
         // 6
         vertices.unsafeSet(12, -outer);
-        tmp = h - inner;
+        tmp = h + outer;
         vertices.unsafeSet(13, tmp);
         // 7
-        vertices.unsafeSet(14, inner);
-        tmp = h - inner;
+        tmp = w + outer;
+        vertices.unsafeSet(14, tmp);
+        tmp = h + outer;
         vertices.unsafeSet(15, tmp);
-        // 8
-        tmp = w - inner;
-        vertices.unsafeSet(16, tmp);
-        tmp = h - inner;
-        vertices.unsafeSet(17, tmp);
-        // 9
-        tmp = w + outer;
-        vertices.unsafeSet(18, tmp);
-        tmp = h - inner;
-        vertices.unsafeSet(19, tmp);
-        // 10
-        vertices.unsafeSet(20, -outer);
-        tmp = h + outer;
-        vertices.unsafeSet(21, tmp);
-        // 11
-        tmp = w + outer;
-        vertices.unsafeSet(22, tmp);
-        tmp = h + outer;
-        vertices.unsafeSet(23, tmp);
 
     } //computeVertices
 
