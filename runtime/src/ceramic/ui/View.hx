@@ -45,17 +45,32 @@ class View extends Quad {
         viewHeight = height;
     }
 
-    public function padding(left:Float, ?top:Float, ?right:Float, ?bottom:Float):Void {
-        paddingLeft = left;
-        if (top != null && right != null && bottom != null) {
-            paddingTop = top;
-            paddingRight = right;
-            paddingBottom = bottom;
-        } else {
-            paddingTop = left;
-            paddingRight = left;
-            paddingBottom = left;
+    /** Set padding. Order and number of parameters following CSS padding convention.
+        Examples:
+        ```
+        padding(10) // top=10, right=10, bottom=10, left=10
+        padding(3, 5) // top=3, right=5, bottom=3, left=5
+        padding(3, 5, 8, 4) // top=3, right=5, bottom=8, left=4
+        ``` */
+    public function padding(top:Float, ?right:Float, ?bottom:Float, ?left:Float):Void {
+        if (right == null && bottom == null && left == null) {
+            right = top;
+            bottom = top;
+            left = top;
         }
+        else if (bottom == null && left == null) {
+            bottom = top;
+            left = right;
+        }
+        else {
+            if (right == null) right = top;
+            if (bottom == null) bottom = top;
+            if (left == null) left = top;
+        }
+        paddingLeft = left;
+        paddingTop = top;
+        paddingRight = right;
+        paddingBottom = bottom;
     }
 
     public var paddingLeft(default,set):Float = 0;
