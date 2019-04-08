@@ -101,7 +101,10 @@ class ExportIPA extends tools.Task {
             command('rm', ['-rf', Path.join([context.cwd, 'tmp/xcodebuild'])]);
 
             // Install signing certificate
-            print('Install signing certificate $p12Path / $keychainFile / $signingIdentity');
+            print('Install signing certificate');
+            print('p12: $p12Path');
+            print('keychain: $keychainFile');
+            print('identity: $signingIdentity');
             command('security', ['import', p12Path, '-t', 'agg', '-k', keychainFile, '-P', p12Password, '-A']);
         }
 
