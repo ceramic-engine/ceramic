@@ -146,7 +146,6 @@ class Main extends luxe.Game {
             config.runtime.prevent_default_keys = [];
         }
 
-#if !editor
         var containerElId:String = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
         if (app.settings.resizable) {
 
@@ -205,7 +204,6 @@ class Main extends luxe.Game {
             });
 
         }
-#end
 
         // Are we running from ceramic/electron runner
         if (electronRunner != null) {
