@@ -667,4 +667,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
         var lowerBound:Float = (min != null && value < min) ? min : value;
         return (max != null && lowerBound > max) ? max : lowerBound;
     }
+
+/// To string
+
+    inline public function toString() {
+
+        return toHexString();
+
+    } //toString
+
 }

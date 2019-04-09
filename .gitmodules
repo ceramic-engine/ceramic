@@ -40,9 +40,16 @@
 [submodule "git/polyline"]
 	path = git/polyline
 	url = https://github.com/jeremyfa/polyline.git
+	branch = master
 [submodule "git/actuate"]
 	path = git/actuate
 	url = https://github.com/ceramic-engine/actuate.git
+	branch = master
 [submodule "git/differ"]
 	path = git/differ
 	url = https://github.com/ceramic-engine/differ.git
+	branch = master
+[submodule "git/generate"]
+	path = git/generate
+	url = https://github.com/jeremyfa/generate.git
+	branch = master
