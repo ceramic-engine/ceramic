@@ -505,6 +505,27 @@ class Visual extends Entity {
 
     } //anchor
 
+    /** Returns the first child matching the requested `id` or `null` otherwise. */
+    public function findChildWithId(id:String, recursive:Bool = true):Visual {
+
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                if (child.id == id) return child;
+            }
+            if (recursive) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
+                    var childResult = child.findChildWithId(id, true);
+                    if (childResult != null) return childResult;
+                }
+            }
+        }
+
+        return null;
+
+    } //findChildWithId
+
 /// Lifecycle
 
     public function new() {
