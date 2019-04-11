@@ -516,7 +516,7 @@ class Visual extends Entity {
             if (recursive) {
                 for (i in 0...children.length) {
                     var child = children.unsafeGet(i);
-                    var childResult = child.findChildWithId(id, true);
+                    var childResult = child.childWithId(id, true);
                     if (childResult != null) return childResult;
                 }
             }
