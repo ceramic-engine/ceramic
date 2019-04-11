@@ -506,7 +506,7 @@ class Visual extends Entity {
     } //anchor
 
     /** Returns the first child matching the requested `id` or `null` otherwise. */
-    public function findChildWithId(id:String, recursive:Bool = true):Visual {
+    public function childWithId(id:String, recursive:Bool = true):Visual {
 
         if (children != null) {
             for (i in 0...children.length) {
@@ -524,7 +524,7 @@ class Visual extends Entity {
 
         return null;
 
-    } //findChildWithId
+    } //childWithId
 
 /// Lifecycle
 
