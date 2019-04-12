@@ -325,6 +325,7 @@ class Text extends Visual {
 
             quad.char = char;
             quad.code = code;
+            quad.uIndex = i;
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;
             quad.depth = depth;
