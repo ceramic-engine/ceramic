@@ -191,7 +191,9 @@ class CollectionView extends ScrollView {
                     }
                     var prevWidth = view.width;
                     var prevHeight = view.height;
+                    view.viewSize(frame.width, frame.height);
                     view.size(frame.width, frame.height);
+                    if (view.layoutDirty) contentView.layoutDirty = true;
                     var newX = frame.x + frame.width * view.anchorX;
                     var newY = frame.y + frame.height * view.anchorY;
                     view.pos(newX, newY);
