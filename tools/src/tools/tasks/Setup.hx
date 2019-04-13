@@ -62,14 +62,20 @@ class Setup extends tools.Task {
         }
         else {
 
-            // Check haxelib repository
+            // Check global/local haxelib repository
+            var globalHaxelibRepo = (''+haxelibGlobal(['config'], { mute: true }).stdout).trim();
             var haxelibRepo = (''+haxelib(['config'], { mute: true }).stdout).trim();
+
             if (!FileSystem.exists(haxelibRepo)) {
                 haxelibRepo = Path.join([untyped Os.homedir(), '.ceramic/haxelib']);
                 haxelib(['setup', haxelibRepo]);
+                haxelibGlobal(['setup', haxelibRepo]);
                 success('Set new haxelib repository: ' + haxelibRepo);
             }
             else {
+                if (globalHaxelibRepo != haxelibRepo) {
+                    haxelibGlobal(['setup', haxelibRepo]);
+                }
                 success('Keep existing haxelib repository: ' + haxelibRepo);
             }
 

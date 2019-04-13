@@ -37,31 +37,23 @@ Install latest stable version (LTS) of Node.js from [nodejs.org](https://nodejs.
 
 ### Install Haxe
 
-Install latest stable haxe from [haxe.org](http://haxe.org/).
+If not already installed, install latest haxe from [haxe.org](http://haxe.org/).
 
-Open a terminal an run:
+`ceramic` is already bundled with its own `haxe` binary (3.4.7) but installing haxe globally on your machine is required to ensure Visual Studio Code will work correctly. You global haxe version must be equal to or higher than `3.4.7` (installing haxe 4+ is fine).
 
-```
-haxelib setup
-```
-
-Unless you know what you are doing, just choose default.
-
-### Install Xcode (Mac only)
+### Install Xcode (mac)
 
 Xcode (with its command line tools) is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12).
 
-### Install Visual C++ (Windows only)
+If you only want to test ceramic on its **web** target, you can skip this step.
+
+### Install Visual C++ (windows)
 
 Visual C++ Desktop is required on Windows in order to compile C++ files. Any version of Visual C++ compatible with [HXCPP](https://github.com/HaxeFoundation/hxcpp) should work, but at the moment we recommend to install [Visual Studio Express 2015](https://www.visualstudio.com/fr/post-download-vs/?sku=xdesk&clcid=0x409&telem=ga).
 
-### Install windows-build-tools (Windows only)
+If you only want to test ceramic on its **web** target, you can skip this step.
 
-Some native node modules that **ceramic** depends on need to be compiled with _node-gyp_. You can easily set up _node-gyp_ on Windows thanks to the NPM module [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools).
-
-Open a terminal (Powershell/CMD) **as administrator** and run ``npm install --global --production windows-build-tools`` (it may take a while to install).
-
-### Install git (Windows only)
+### Install git (windows)
 
 **ceramic** relies on **git** command line tools to perform some of its tasks. It is included with Xcode command line tools on Mac but needs to be installed on windows: download and install it from https://git-scm.com/ (keep default settings unless you know what you are doing).
 
@@ -71,10 +63,13 @@ While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is
 
 ```
 git clone --recursive https://github.com/ceramic-engine/ceramic.git
-cd ceramic
+cd ceramic/tools
 npm install
-npm link .
+sudo ./ceramic link
+ceramic setup
 ```
+
+⚠️ For now, global **haxelib** should use the same haxelib repository than **ceramic**'s. `ceramic setup` will make your global `haxelib` repository point to `/path/to/ceramic/tools/node_modules/haxe/.haxelib`. If you want to restore your previous haxelib repository, you will need to use `haxelib setup` command. This is temporary, until we ensure **ceramic** is able to work with any global haxelib configuration.
 
 You can now run **ceramic** globally from terminal:
 
@@ -117,7 +112,7 @@ You can also install them by browsing the [Extension Marketplace](https://code.v
 Create a new project named `MyProject` by running:
 
 ```
-ceramic init --name MyProject --vscode --backend luxe
+ceramic init --path MyProject --name MyProject --vscode --backend luxe
 ```
 
 A new ceramic project is now created inside a `MyProject` directory, using the `luxe` backend and providing Visual Studio Code project files.
@@ -127,14 +122,6 @@ Open the `MyProject` directory with Visual Studio Code (you can do so by draggin
 Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should work!**
 
 Thanks to the [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extension, you can choose which target to run by selecting it in the status bar.
-
-## Update ceramic backends
-
-Open a terminal and run:
-
-```
-ceramic luxe update
-```
 
 ## Available backends
 

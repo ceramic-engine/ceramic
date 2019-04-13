@@ -287,6 +287,12 @@ class Helpers {
 
     } //haxelib
 
+    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+
+        return command('haxelib', args, options);
+
+    } //haxelibGlobal
+
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
         if (options == null) {
