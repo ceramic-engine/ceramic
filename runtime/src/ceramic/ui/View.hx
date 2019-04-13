@@ -203,14 +203,20 @@ class View extends Quad {
         return borderRightColor;
     }
 
+    function initBorder():Void {
+
+        border = new Border();
+        add(border);
+
+    } //initBorder
+
     function updateBorder():Void {
 
         if (borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0) {
             if (border == null) {
-                border = new Border();
-                border.depth = depthRange >= 0 ? 0 : depth;
-                add(border);
+                initBorder();
             }
+            border.depth = depthRange >= 0 ? 0 : depth;
             border.autoComputeVertices = false;
             border.autoComputeColors = false;
             border.borderColor = borderColor;

@@ -42,6 +42,13 @@ class ScrollView extends View {
 
     } //defaultAdd
 
+    override function initBorder() {
+
+        border = new Border();
+        defaultAdd(border);
+
+    } //initBorder
+
 /// Lifecycle
 
     public function new() {
