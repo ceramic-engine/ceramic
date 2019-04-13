@@ -14,6 +14,12 @@ class Text extends Visual {
 
     public var glyphQuads(default,null):Array<GlyphQuad> = [];
 
+    public var numLines(get,null):Int = 1;
+    function get_numLines():Int {
+        if (contentDirty) computeContent();
+        return this.numLines;
+    }
+
     @editable
     public var color(default,set):Color = Color.WHITE;
     function set_color(color:Color):Color {
@@ -210,7 +216,7 @@ class Text extends Visual {
             return;
         }
 
-        computeGlyphQuads(fitWidth, maxLineDiff);
+        numLines = computeGlyphQuads(fitWidth, maxLineDiff);
         emitGlyphQuadsChange();
 
         contentDirty = false;
