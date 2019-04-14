@@ -37,7 +37,7 @@ class Border extends Mesh {
         return height;
     }
 
-    public var borderPosition(default,set):BorderPosition = MIDDLE;
+    public var borderPosition(default,set):BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
         this.borderPosition = borderPosition;

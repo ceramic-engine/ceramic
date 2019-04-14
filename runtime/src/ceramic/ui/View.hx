@@ -115,7 +115,7 @@ class View extends Quad {
 
     var border:Border = null;
 
-    public var borderPosition:BorderPosition = MIDDLE;
+    public var borderPosition:BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
         this.borderPosition = borderPosition;
