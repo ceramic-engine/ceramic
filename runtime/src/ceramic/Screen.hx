@@ -364,6 +364,23 @@ class Screen extends Entity implements Observable {
 
     } //backendReady
 
+    function updatePointerOverState(delta:Float):Void {
+
+        // Update mouse over state
+        updateMouseOver(mouseX, mouseY);
+
+        // Update touch over state
+        var numTouches = touches.values.length;
+        if (numTouches > 0) {
+            for (i in 0...numTouches) {
+                var touch = touches.get(i);
+                if (touch == null) continue;
+                updateTouchOver(touch.index, touch.x, touch.y);
+            }
+        }
+
+    } //updatePointerOverState
+
     function resize():Void {
 
         // Already resizing?
@@ -532,7 +549,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -556,7 +573,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -585,7 +602,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -669,7 +686,7 @@ class Screen extends Entity implements Observable {
 
     } //didEmitMouseUp
 
-    inline function didEmitMouseMove(x:Float, y:Float):Void {
+    inline function updateMouseOver(x:Float, y:Float) {
 
         var id = 10000;
         var prevMatched = matchedOverListeners.get(id);
@@ -706,7 +723,7 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //didEmitMouseMove
+    } //updateMouseOver
 
     inline function didEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
 
@@ -749,7 +766,7 @@ class Screen extends Entity implements Observable {
 
     } //didEmitTouchUp
 
-    inline function didEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+    inline function updateTouchOver(touchIndex:Int, x:Float, y:Float):Void {
 
         var id = 20000 + touchIndex;
         var prevMatched = matchedOverListeners.get(id);
@@ -786,6 +803,6 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //didEmitTouchMove
+    } //updateTouchOver
 
 }

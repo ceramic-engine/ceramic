@@ -456,6 +456,9 @@ class App extends Entity {
             }
         }
 
+        // Screen pointer over/out events detection
+        screen.updatePointerOverState(delta);
+
         // Trigger pre-update event
         emitPreUpdate(delta);
 
