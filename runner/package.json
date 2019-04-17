@@ -11,9 +11,10 @@
   "license": "MIT",
   "dependencies": {
     "detect-port": "^1.2.2",
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "pngjs": "^3.4.0"
   },
   "devDependencies": {
-    "electron": "^1.8.3"
+    "electron": "^4.1.4"
   }
 }

@@ -46,6 +46,9 @@ if (!fs.existsSync(appFiles)) {
     process.exit(1);
 }
 
+// Set cwd to appFiles
+process.chdir(appFiles);
+
 // App icon
 if (process.platform == 'darwin') {
     app.dock.setIcon(path.join(__dirname, 'resources/AppIcon.png'));
