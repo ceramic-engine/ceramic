@@ -65,7 +65,7 @@ class CollectionEntry {
                         }
                         else {
                             value = Std.parseInt(''+rawValue);
-                            if (Math.isNaN(value)) value = 0;
+                            if (value == null || Math.isNaN(value)) value = 0;
                         }
 
                     case 'Float':
@@ -74,7 +74,7 @@ class CollectionEntry {
                         }
                         else {
                             value = Std.parseFloat(''+rawValue);
-                            if (Math.isNaN(value)) value = 0.0;
+                            if (value == null || Math.isNaN(value)) value = 0.0;
                         }
 
                     case 'String':
