@@ -15,7 +15,7 @@ class Texts implements spec.Texts {
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
-        // Is text currently loading?B
+        // Is text currently loading?
         if (loadingTextCallbacks.exists(path)) {
             // Yes, just bind it
             loadingTextCallbacks.get(path).push(function(text:String) {
