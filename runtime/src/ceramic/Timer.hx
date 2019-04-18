@@ -37,13 +37,27 @@ class Timer {
             for (i in 0...prevCallbacks.length) {
                 var callback = prevCallbacks.unsafeGet(i);
 
-                if (callback.time <= now) {
-                    callback.callback();
-                    callback.called = true;
-                }
-                else {
-                    callbacks.push(callback);
-                    next = Math.min(callback.time, next);
+                if (!callback.cleared) {
+                    if (callback.time <= now) {
+                        if (callback.interval >= 0) {
+                            while (callback.time <= now && !callback.cleared) {
+                                callback.callback();
+                                if (callback.interval == 0) break;
+                                callback.time += callback.interval;
+                            }
+                            if (!callback.cleared) {
+                                callbacks.push(callback);
+                                next = Math.min(callback.time, next);
+                            }
+                        }
+                        else {
+                            callback.callback();
+                        }
+                    }
+                    else {
+                        callbacks.push(callback);
+                        next = Math.min(callback.time, next);
+                    }
                 }
             }
         }
@@ -52,67 +66,61 @@ class Timer {
 
 // Public API
 
-    public static function delay(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    inline public static function delay(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
 
-        var time = now + seconds;
-        next = Math.min(time, next);
-
-        var stop = false;
-
-        var clearDelay = null;
-        clearDelay = function() {
-            stop = true;
-        };
-
-        var delayed:Void->Void = null;
-        delayed = function() {
-            if (stop || (owner != null && owner.destroyed)) return;
-            callback();
-        }
-
-        callbacks.push(new TimerCallback(delayed, time));
-
-        return clearDelay;
+        return schedule(owner, seconds, callback, -1);
 
     } //delay
 
     public static function interval(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
-
-        var stop = false;
-
-        var clearInterval = null;
-        clearInterval = function() {
-            stop = true;
-        };
-
-        var tick:Void->Void = null;
-        tick = function() {
-            if (stop || (owner != null && owner.destroyed)) return;
-            callback();
-            if (!stop) delay(seconds, tick);
-        }
         
-        delay(seconds, tick);
-
-        // TODO handle owned long intervals without needing to keep destroyed objects in memory
-
-        return clearInterval;
+        return schedule(owner, seconds, callback, seconds);
 
     } //interval
+
+    private static function schedule(owner:Entity, seconds:Float, callback:Void->Void, interval:Float):Void->Void {
+
+        var time = now + seconds;
+        next = Math.min(time, next);
+
+        var timerCallback = new TimerCallback();
+
+        var clearScheduled:Void->Void = null;
+        clearScheduled = function() {
+            timerCallback.cleared = true;
+        };
+
+        var scheduled:Void->Void = null;
+        scheduled = function() {
+            if (timerCallback.cleared) {
+                return;
+            }
+            if (owner != null && owner.destroyed) {
+                timerCallback.cleared = true;
+                return;
+            }
+            callback();
+        }
+
+        timerCallback.callback = scheduled;
+        timerCallback.time = time;
+        timerCallback.interval = interval;
+
+        callbacks.push(timerCallback);
+
+        return clearScheduled;
+
+    } //schedule
 
 } //Timer
 
 class TimerCallback {
 
-    public var callback:Void->Void;
-    public var time:Float;
-    public var called:Bool = false;
+    public var callback:Void->Void = null;
+    public var time:Float = 0;
+    public var interval:Float = -1;
+    public var cleared:Bool = false;
 
-    public function new(callback:Void->Void, time:Float) {
-
-        this.callback = callback;
-        this.time = time;
-
-    } //new
+    public function new() {}
 
 } //TimerCallback
