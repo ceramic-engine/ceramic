@@ -87,6 +87,7 @@ function createWindow() {
         minHeight: 320,
         resizable: false,
         movable: true,
+        nodeIntegration: true,
         title: appName,
         backgroundColor: '#000000',
         icon: path.join(__dirname, 'resources/AppIcon.png'),
