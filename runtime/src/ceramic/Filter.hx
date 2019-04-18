@@ -4,28 +4,54 @@ import ceramic.RenderTexture;
 import ceramic.Quad;
 import ceramic.Visual;
 
-/** A visuals that displays its children through a filter. */
+/** A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
+    allowing to process the result through a shader, apply blending or alpha on the final result... */
 class Filter extends Quad {
+
+/// Public properties
+
+    /** If `enabled` is set to `false`, no render texture will be used.
+        The children will be displayed on screen directly.
+        Useful to toggle a filter without touching visuals hierarchy. */
+    public var enabled(default,set):Bool = true;
+    function set_enabled(enabled:Bool):Bool {
+        if (this.enabled == enabled) return enabled;
+        this.enabled = enabled;
+        contentDirty = true;
+        return enabled;
+    }
+
+/// Internal
 
     var renderTexture:RenderTexture = null;
 
-    public function filterSize(filterWidth:Int, filterHeight:Int):Void {
+    function filterSize(filterWidth:Int, filterHeight:Int):Void {
 
-        if (renderTexture == null || renderTexture.width != filterWidth || renderTexture.height != filterHeight) {
+        if (enabled) {
+            if (renderTexture == null || renderTexture.width != filterWidth || renderTexture.height != filterHeight) {
+                if (renderTexture != null) {
+                    texture = null;
+                    renderTexture.destroy();
+                    renderTexture = null;
+                }
+                if (filterWidth > 0 && filterHeight > 0) {
+                    renderTexture = new RenderTexture(filterWidth, filterHeight);
+                    texture = renderTexture;
+                }
+            }
+        }
+        else {
             if (renderTexture != null) {
                 texture = null;
                 renderTexture.destroy();
                 renderTexture = null;
             }
-            if (filterWidth > 0 && filterHeight > 0) {
-                renderTexture = new RenderTexture(filterWidth, filterHeight);
-                texture = renderTexture;
-            }
-            if (children != null) {
-                for (i in 0...children.length) {
-                    var child = children.unsafeGet(i);
-                    child.renderTarget = renderTexture;
-                }
+        }
+
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                child.renderTarget = renderTexture;
             }
         }
 
@@ -60,6 +86,7 @@ class Filter extends Quad {
     }
 
     override function destroy() {
+        texture = null;
         if (renderTexture != null) {
             renderTexture.destroy();
             renderTexture = null;
