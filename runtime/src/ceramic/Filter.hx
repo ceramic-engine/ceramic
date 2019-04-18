@@ -59,4 +59,11 @@ class Filter extends Quad {
         visual.renderTarget = null;
     }
 
+    override function destroy() {
+        if (renderTexture != null) {
+            renderTexture.destroy();
+            renderTexture = null;
+        }
+    }
+
 } //Filter
