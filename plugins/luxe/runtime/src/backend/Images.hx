@@ -118,6 +118,11 @@ class Images implements spec.Images {
         doLoad();
 //#end
 
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        ceramic.App.app.onceImmediate(function() {
+            snow.api.Promise.Promises.step();
+        });
+
     } //load
 
     var nextRenderIndex:Int = 0;

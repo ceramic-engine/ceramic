@@ -71,6 +71,11 @@ class Texts implements spec.Texts {
             done(null);
         });
 
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        ceramic.App.app.onceImmediate(function() {
+            snow.api.Promise.Promises.step();
+        });
+
     } //load
 
 /// Internal
