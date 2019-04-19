@@ -11,10 +11,10 @@ class TouchInfo {
         Otherwise it will be -1.*/
     public var buttonId(default,null):Int;
 
-    /** X coordinate of the input. */
+    /** X coordinate of the input (relative to screen). */
     public var x(default,null):Float;
 
-    /** Y coordinate of the input. */
+    /** Y coordinate of the input (relative to screen). */
     public var y(default, null):Float;
 
     /** Whether these info do hit the related visual. This is usually `true`,
