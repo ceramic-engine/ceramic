@@ -284,6 +284,7 @@ class ProjectLoader {
             app.libs.push('actuate');
             app.libs.push('polyline');
             app.libs.push('bind');
+            app.libs.push('earcut');
 
             if (app.paths == null) {
                 app.paths = [];
