@@ -120,7 +120,7 @@ class CeramicBatcher extends phoenix.Batcher {
         var lastRenderTarget:ceramic.RenderTexture = null;
         var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
 
-#if debug
+#if ceramic_debug_rendering_option
         var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
 #end
         
@@ -336,7 +336,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         stateDirty =
                             quad.shader != lastShader ||
                             quad.blending != lastBlending ||
-#if debug
+#if ceramic_debug_rendering_option
                             quad.debugRendering != lastDebugRendering ||
 #end
                             quad.computedRenderTarget != lastRenderTarget;
@@ -433,7 +433,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         applyBlending(lastBlending);
                     }
 
-#if debug
+#if ceramic_debug_rendering_option
                     lastDebugRendering = quad.debugRendering;
                     primitiveType = lastDebugRendering == ceramic.DebugRendering.WIREFRAME ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
 #end
@@ -703,7 +703,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         stateDirty =
                             mesh.shader != lastShader ||
                             mesh.blending != lastBlending ||
-#if debug
+#if ceramic_debug_rendering_option
                             mesh.debugRendering != lastDebugRendering ||
 #end
                             mesh.computedRenderTarget != lastRenderTarget;
@@ -802,7 +802,7 @@ class CeramicBatcher extends phoenix.Batcher {
                         applyBlending(lastBlending);
                     }
 
-#if debug
+#if ceramic_debug_rendering_option
                     lastDebugRendering = mesh.debugRendering;
                     primitiveType = lastDebugRendering == ceramic.DebugRendering.WIREFRAME ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
 #end
@@ -856,7 +856,7 @@ class CeramicBatcher extends phoenix.Batcher {
             meshVertices = mesh.vertices;
             meshIndices = mesh.indices;
 
-#if debug
+#if ceramic_debug_rendering_option
             // TODO avoid allocating an array
             if (lastDebugRendering == ceramic.DebugRendering.WIREFRAME) {
                 meshIndices = [];

@@ -68,7 +68,7 @@ class Visual extends Entity {
         return inheritAlpha;
     }
 
-#if debug
+#if ceramic_debug_rendering_option
 
     public var debugRendering:DebugRendering = DebugRendering.DEFAULT;
 
