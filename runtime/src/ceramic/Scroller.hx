@@ -31,6 +31,8 @@ class Scroller extends Visual {
 
     public var direction = VERTICAL;
 
+    public var pointerEventsOutsideBounds:Bool = true;
+
     public var scrollTransform(default,null):Transform = new Transform();
 
     public var scrollEnabled(default,set):Bool = true;
@@ -152,6 +154,16 @@ class Scroller extends Visual {
         return height;
 
     } //set_height
+
+    override function interceptPointerEvent(hittingVisual:Visual, x:Float, y:Float):Bool {
+
+        if (!pointerEventsOutsideBounds && !hits(x, y)) {
+            return true;
+        }
+
+        return false;
+        
+    } //interceptPointerEvent
 
 /// Public API
 
