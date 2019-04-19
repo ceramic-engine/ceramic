@@ -431,8 +431,6 @@ class Visual extends Entity {
 
     static var _matrix:Transform = new Transform();
 
-    static var _inHitTest:Bool = false;
-
     static var _degToRad:Float = Math.PI / 180.0;
 
     static var _point:Point = new Point();
@@ -739,8 +737,6 @@ class Visual extends Entity {
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget != null) return false;
 
-        _inHitTest = true;
-
         if (matrixDirty) {
             computeMatrix();
         }
@@ -756,8 +752,6 @@ class Visual extends Entity {
         var testY0 = _matrix.transformY(x, y);
         var testX1 = _matrix.transformX(x - 1, y - 1);
         var testY1 = _matrix.transformY(x - 1, y - 1);
-
-        _inHitTest = false;
 
         return testX0 >= 0
             && testX1 <= width
