@@ -76,6 +76,14 @@ class TextView extends View {
         return align;
     }
 
+    public var centerIfOneLine(default,set):Bool = false;
+    function set_centerIfOneLine(centerIfOneLine:Bool):Bool {
+        if (this.centerIfOneLine == centerIfOneLine) return centerIfOneLine;
+        this.centerIfOneLine = centerIfOneLine;
+        layoutDirty = true;
+        return centerIfOneLine;
+    }
+
     public function new() {
 
         super();
@@ -225,6 +233,11 @@ class TextView extends View {
                     width * 0.5 + paddingLeft - paddingRight,
                     height - paddingBottom
                 );
+        }
+
+        if (centerIfOneLine && text.numLines == 1) {
+            text.anchorX = 0.5;
+            text.x = width * 0.5 + paddingLeft - paddingRight;
         }
 
     } //layout
