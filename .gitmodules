@@ -53,3 +53,7 @@
 	path = git/generate
 	url = https://github.com/jeremyfa/generate.git
 	branch = master
+[submodule "git/earcut"]
+	path = git/earcut
+	url = https://github.com/ceramic-engine/earcut.git
+	branch = master
