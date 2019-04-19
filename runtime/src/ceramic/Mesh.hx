@@ -1,15 +1,27 @@
 package ceramic;
 
+import ceramic.GeometryUtils;
 import ceramic.Assert.*;
+
+using ceramic.Extensions;
 
 /** Draw anything composed of triangles/vertices. */
 class Mesh extends Visual {
+
+/// Internal
+
+    static var _matrix:Transform = Visual._matrix;
 
 /// Settings
 
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
     public var primitiveType:MeshPrimitiveType = MeshPrimitiveType.TRIANGLE;
+
+    /** When set to `true` hit test on this mesh will be performed at vertices level instead
+        of simply using bounds. This make the test substancially more expensive however.
+        Use only when needed. */
+    public var complexHit:Bool = false;
 
 /// Lifecycle
 
@@ -86,5 +98,86 @@ class Mesh extends Visual {
         this.texture = null;
 
     } //textureDestroyed
+
+/// Overrides
+
+    override function hits(x:Float, y:Float):Bool {
+
+        if (complexHit) {
+
+            // A visuals that renders to texture never hits
+            if (renderTargetDirty) computeRenderTarget();
+            if (computedRenderTarget != null) return false;
+
+            if (matrixDirty) {
+                computeMatrix();
+            }
+
+            _matrix.identity();
+            // Apply whole visual transform
+            _matrix.setTo(a, b, c, d, tx, ty);
+            // But remove screen transform from it
+            _matrix.concat(ceramic.App.app.screen.reverseMatrix);
+            _matrix.invert();
+
+            // Convert x and y coordinate
+            var testX = _matrix.transformX(x, y);
+            var testY = _matrix.transformY(x, y);
+
+            // Test every triangle to see if our point hits one of these
+            var i = 0;
+            var j = 0;
+            var k:Int;
+            var numTriangles = indices.length / 3;
+            var na:Int;
+            var nb:Int;
+            var nc:Int;
+            var ax:Float;
+            var ay:Float;
+            var bx:Float;
+            var by:Float;
+            var cx:Float;
+            var cy:Float;
+            while (i < numTriangles) {
+                
+                na = indices.unsafeGet(j);
+                j++;
+                nb = indices.unsafeGet(j);
+                j++;
+                nc = indices.unsafeGet(j);
+                j++;
+
+                k = na * 2;
+                ax = vertices.unsafeGet(k);
+                k++;
+                ay = vertices.unsafeGet(k);
+
+                k = nb * 2;
+                bx = vertices.unsafeGet(k);
+                k++;
+                by = vertices.unsafeGet(k);
+
+                k = nc * 2;
+                cx = vertices.unsafeGet(k);
+                k++;
+                cy = vertices.unsafeGet(k);
+                
+                if (GeometryUtils.pointInTriangle(
+                    testX, testY,
+                    ax, ay, bx, by, cx, cy
+                )) {
+                    return true;
+                }
+
+                i++;
+            }
+
+            return false;
+        }
+        else {
+            return super.hits(x, y);
+        }
+
+    } //hits
 
 } //Mesh
