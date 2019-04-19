@@ -166,15 +166,19 @@ class Mesh extends Visual {
                     testX, testY,
                     ax, ay, bx, by, cx, cy
                 )) {
+                    // Yes, it does!
                     return true;
                 }
 
                 i++;
             }
 
+            // Nope, it didn't
             return false;
         }
         else {
+
+            // Perform regular bounds-based hit test
             return super.hits(x, y);
         }
 
