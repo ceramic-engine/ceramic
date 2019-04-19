@@ -735,7 +735,7 @@ class Visual extends Entity {
     /** Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds */
     public function hits(x:Float, y:Float):Bool {
 
-        // Disable touch on visuals that render to texture
+        // A visuals that renders to texture never hits
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget != null) return false;
 
@@ -765,6 +765,14 @@ class Visual extends Entity {
             && testY1 <= height;
 
     } //hits
+
+    /** Override this method in subclasses to intercept hitting pointer events on this visual's children (any level in sub-hierarchy).
+        Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
+    function interceptPointerEvent(hittingVisual:Visual, x:Float, y:Float):Bool {
+
+        return false;
+
+    } //interceptPointerEvent
 
 /// Screen to visual positions and vice versa
 
