@@ -155,7 +155,7 @@ class Scroller extends Visual {
 
     } //set_height
 
-    override function interceptPointerEvent(hittingVisual:Visual, x:Float, y:Float):Bool {
+    override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
 
         if (!pointerEventsOutsideBounds && !hits(x, y)) {
             return true;
@@ -163,7 +163,17 @@ class Scroller extends Visual {
 
         return false;
         
-    } //interceptPointerEvent
+    } //interceptPointerDown
+
+    override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
+
+        if (!pointerEventsOutsideBounds && !hits(x, y)) {
+            return true;
+        }
+
+        return false;
+        
+    } //interceptPointerOver
 
 /// Public API
 

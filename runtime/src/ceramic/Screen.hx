@@ -510,7 +510,7 @@ class Screen extends Entity implements Observable {
                 var intercepts = false;
                 var parent = visual.parent;
                 while (parent != null) {
-                    intercepts = parent.interceptPointerEvent(visual, x, y);
+                    intercepts = parent.interceptPointerDown(visual, x, y);
                     if (intercepts) break;
                     parent = parent.parent;
                 }
@@ -543,7 +543,7 @@ class Screen extends Entity implements Observable {
                 var intercepts = false;
                 var parent = visual.parent;
                 while (parent != null) {
-                    intercepts = parent.interceptPointerEvent(visual, x, y);
+                    intercepts = parent.interceptPointerOver(visual, x, y);
                     if (intercepts) break;
                     parent = parent.parent;
                 }

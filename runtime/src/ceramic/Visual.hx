@@ -760,13 +760,21 @@ class Visual extends Entity {
 
     } //hits
 
-    /** Override this method in subclasses to intercept hitting pointer events on this visual's children (any level in sub-hierarchy).
+    /** Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
         Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
-    function interceptPointerEvent(hittingVisual:Visual, x:Float, y:Float):Bool {
+    function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
 
         return false;
 
-    } //interceptPointerEvent
+    } //interceptPointerDown
+
+    /** Override this method in subclasses to intercept hitting pointer over events on this visual's children (any level in sub-hierarchy).
+        Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
+    function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
+
+        return false;
+
+    } //interceptPointerOver
 
 /// Screen to visual positions and vice versa
 
