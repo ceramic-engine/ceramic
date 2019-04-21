@@ -28,27 +28,6 @@ class ScrollView extends View {
         return scroller.direction = direction;
     }
 
-/// Overrides
-
-    override function add(visual:Visual) {
-
-        contentView.add(visual);
-
-    } //add
-
-    function defaultAdd(visual:Visual) {
-
-        super.add(visual);
-
-    } //defaultAdd
-
-    override function initBorder() {
-
-        border = new Border();
-        defaultAdd(border);
-
-    } //initBorder
-
 /// Lifecycle
 
     public function new() {
@@ -57,7 +36,7 @@ class ScrollView extends View {
 
         contentView = new View();
         scroller = new Scroller(contentView);
-        super.add(scroller);
+        add(scroller);
 
     } //new
 
