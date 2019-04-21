@@ -31,7 +31,7 @@ class Scroller extends Visual {
 
     public var direction = VERTICAL;
 
-    public var pointerEventsOutsideBounds:Bool = true;
+    public var allowPointerOutside:Bool = true;
 
     public var scrollTransform(default,null):Transform = new Transform();
 
@@ -157,7 +157,7 @@ class Scroller extends Visual {
 
     override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
 
-        if (!pointerEventsOutsideBounds && !hits(x, y)) {
+        if (!allowPointerOutside && !hits(x, y)) {
             return true;
         }
 
@@ -167,7 +167,7 @@ class Scroller extends Visual {
 
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
-        if (!pointerEventsOutsideBounds && !hits(x, y)) {
+        if (!allowPointerOutside && !hits(x, y)) {
             return true;
         }
 
