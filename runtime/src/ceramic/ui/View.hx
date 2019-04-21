@@ -115,11 +115,19 @@ class View extends Quad {
 
     var border:Border = null;
 
-    public var borderPosition:BorderPosition = INSIDE;
+    public var borderDepth(default,set):Float = 0;
+    inline function set_borderDepth(borderDepth:Float):Float {
+        if (this.borderDepth == borderDepth) return borderDepth;
+        this.borderDepth = borderDepth;
+        if (border != null) border.depth = depth;
+        return borderDepth;
+    }
+
+    public var borderPosition(default,set):BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
         this.borderPosition = borderPosition;
-        if (borderSize > 0) updateBorder();
+        if (shouldDisplayBorder()) updateBorder();
         return borderPosition;
     }
 
@@ -167,7 +175,7 @@ class View extends Quad {
     inline function set_borderColor(borderColor:Color):Color {
         if (this.borderColor == borderColor) return borderColor;
         this.borderColor = borderColor;
-        if (borderSize > 0) updateBorder();
+        if (shouldDisplayBorder()) updateBorder();
         return borderColor;
     }
 
@@ -175,7 +183,7 @@ class View extends Quad {
     inline function set_borderTopColor(borderTopColor:Color):Color {
         if (this.borderTopColor == borderTopColor) return borderTopColor;
         this.borderTopColor = borderTopColor;
-        if (borderSize > 0) updateBorder();
+        if (borderSize > 0 || borderTopSize > 0) updateBorder();
         return borderTopColor;
     }
 
@@ -183,7 +191,7 @@ class View extends Quad {
     inline function set_borderBottomColor(borderBottomColor:Color):Color {
         if (this.borderBottomColor == borderBottomColor) return borderBottomColor;
         this.borderBottomColor = borderBottomColor;
-        if (borderSize > 0) updateBorder();
+        if (borderSize > 0 || borderBottomSize > 0) updateBorder();
         return borderBottomColor;
     }
 
@@ -191,7 +199,7 @@ class View extends Quad {
     inline function set_borderLeftColor(borderLeftColor:Color):Color {
         if (this.borderLeftColor == borderLeftColor) return borderLeftColor;
         this.borderLeftColor = borderLeftColor;
-        if (borderSize > 0) updateBorder();
+        if (borderSize > 0 || borderLeftSize > 0) updateBorder();
         return borderLeftColor;
     }
 
@@ -199,9 +207,15 @@ class View extends Quad {
     inline function set_borderRightColor(borderRightColor:Color):Color {
         if (this.borderRightColor == borderRightColor) return borderRightColor;
         this.borderRightColor = borderRightColor;
-        if (borderSize > 0) updateBorder();
+        if (borderSize > 0 || borderRightSize > 0) updateBorder();
         return borderRightColor;
     }
+
+    inline function shouldDisplayBorder() {
+
+        return borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0;
+
+    } //shouldDisplayBorder
 
     function initBorder():Void {
 
@@ -212,11 +226,11 @@ class View extends Quad {
 
     function updateBorder():Void {
 
-        if (borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0) {
+        if (shouldDisplayBorder()) {
             if (border == null) {
                 initBorder();
             }
-            border.depth = depthRange >= 0 ? 0 : depth;
+            border.depth = borderDepth;
             border.autoComputeVertices = false;
             border.autoComputeColors = false;
             border.borderColor = borderColor;
