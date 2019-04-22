@@ -60,7 +60,7 @@ class TextInput implements Events {
         multiline:Bool = false,
         selectionStart:Int = -1, selectionEnd:Int = -1,
         allowMovingCursor:Bool = false,
-        delegate:TextInputDelegate
+        delegate:TextInputDelegate = null
     ):Void {
 
         if (inputActive) stop();
@@ -228,7 +228,7 @@ class TextInput implements Events {
                     selectionEnd++;
                     emitSelection(selectionStart, selectionEnd);
                 }
-                
+
                 explicitPosInLine = posInCurrentLine(selectionEnd);
                 explicitPosLine = lineForPos(selectionEnd);
             }
