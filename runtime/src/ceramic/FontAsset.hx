@@ -10,7 +10,7 @@ class FontAsset extends Asset {
 
     public var pages:Map<String,Texture> = null;
 
-    public var font:BitmapFont = null;
+    @observe public var font:BitmapFont = null;
 
 /// Lifecycle
 
@@ -87,12 +87,15 @@ class FontAsset extends Asset {
 
                             // Create bitmap font
                             var prevFont = this.font;
-                            this.font = new BitmapFont(fontData, pages);
-                            this.font.id = 'font:' + path;
+                            var newFont = new BitmapFont(fontData, pages);
+                            newFont.id = 'font:' + path;
 
                             // Link the font to this asset so that
                             // destroying one will destroy the other
-                            this.font.asset = this;
+                            newFont.asset = this;
+
+                            // Do the actual font replacement
+                            this.font = newFont;
 
                             if (prevFont != null) {
                                 // Is this app's default font?

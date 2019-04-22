@@ -217,10 +217,11 @@ class Text extends Visual {
         }
 
         numLines = computeGlyphQuads(fitWidth, maxLineDiff);
-        emitGlyphQuadsChange();
 
         contentDirty = false;
         matrixDirty = true;
+        
+        emitGlyphQuadsChange();
 
     } //computeContent
 
@@ -331,11 +332,16 @@ class Text extends Visual {
 
             quad.char = char;
             quad.code = code;
-            quad.uIndex = i;
+            quad.index = i;
+            quad.line = lineQuads.length - 1;
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;
             quad.depth = depth;
             quad.blending = blending;
+            quad.glyphX = x;
+            quad.glyphY = y;
+            quad.glyphAdvance = glyph.xAdvance * sizeFactor + letterSpacing;
+            quad.glyph = glyph;
             quad.frame(
                 glyph.x / quad.texture.density,
                 glyph.y / quad.texture.density,
