@@ -64,4 +64,22 @@ abstract ViewLayoutMask(Int) from Int to Int {
         }
     }
 
+/// Print
+
+    function toString():String {
+
+        if (this == INCREASE_WIDTH) return 'INCREASE_WIDTH';
+        if (this == DECREASE_WIDTH) return 'DECREASE_WIDTH';
+        if (this == INCREASE_HEIGHT) return 'INCREASE_HEIGHT';
+        if (this == DECREASE_HEIGHT) return 'DECREASE_HEIGHT';
+        if (this == FIXED) return 'FIXED';
+        if (this == FLEXIBLE_WIDTH) return 'FLEXIBLE_WIDTH';
+        if (this == FLEXIBLE_HEIGHT) return 'FLEXIBLE_HEIGHT';
+        if (this == FLEXIBLE) return 'FLEXIBLE';
+        if (this == INCREASE) return 'INCREASE';
+        if (this == DECREASE) return 'DECREASE';
+        return ''+this;
+
+    } //toString
+
 } //ViewLayoutMask

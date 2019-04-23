@@ -73,4 +73,15 @@ class ViewSize {
 
     } //computeWithParentSize
 
+/// Print
+
+    public static function toString(encodedSize:Float) {
+
+        if (ViewSize.isPercent(encodedSize)) return Math.round(ViewSize.percentToFloat(encodedSize) * 100) + '%';
+        if (ViewSize.isAuto(encodedSize)) return 'auto';
+        if (ViewSize.isFill(encodedSize)) return 'fill';
+        return '' + encodedSize;
+
+    } //toString
+
 } //ViewSize
