@@ -19,6 +19,7 @@ import ceramic.CollectionEntry;
 import ceramic.Collections;
 import ceramic.Shader;
 import ceramic.Shaders;
+import ceramic.Triangulate;
 import ceramic.Shortcuts.*;
 
 using plugin.SpinePlugin;
@@ -68,6 +69,8 @@ class Spine extends Visual {
     var globalBoundParentSlotVisible:Bool = false;
 
     var setupBoneTransforms:Map<String,Transform> = null;
+
+    var firstBoundingBoxSlotIndex:Int = -1;
 
     var clipper:SkeletonClipping = new SkeletonClipping();
 
@@ -161,6 +164,25 @@ class Spine extends Visual {
         this.animationTriggers = animationTriggers;
         if (pausedOrFrozen) render(0, 0, false);
         return animationTriggers;
+    }
+
+    /** Specify which slot to use to hit this visual or `-1` (default) is not using any. */
+    @editable
+    public var hitWithSlotIndex(default,set):Int = -1;
+    function set_hitWithSlotIndex(hitWithSlotIndex:Int):Int {
+        if (this.hitWithSlotIndex == hitWithSlotIndex) return hitWithSlotIndex;
+        this.hitWithSlotIndex = hitWithSlotIndex;
+        return hitWithSlotIndex;
+    }
+
+    /** Use first bounding box to hit this visual.
+        When this is set to `true`, `hitWithSlotIndex` value is ignored. */
+    @editable
+    public var hitWithFirstBoundingBox(default,set):Bool = false;
+    function set_hitWithFirstBoundingBox(hitWithFirstBoundingBox:Bool):Bool {
+        if (this.hitWithFirstBoundingBox == hitWithFirstBoundingBox) return hitWithFirstBoundingBox;
+        this.hitWithFirstBoundingBox = hitWithFirstBoundingBox;
+        return hitWithFirstBoundingBox;
     }
 
     /** Is `true` if this spine animation has a parent animation. */
@@ -761,6 +783,7 @@ class Spine extends Visual {
         var slot:Slot;
         var meshAttachment:MeshAttachment;
         var mesh:Mesh;
+        var boundingBoxAttachment:BoundingBoxAttachment;
         var verticesLength:Int;
         var clipAttachment:ClippingAttachment = null;
         var colors:Array<AlphaColor>;
@@ -779,6 +802,7 @@ class Spine extends Visual {
         var count:Int = 0;
         var tintBlack:Bool = false;
         var vertices:Array<Float>;
+        var firstBoundingBoxSlotIndex = -1;
 
         var diffX:Float = width * skeletonOriginX;
         var diffY:Float = height * skeletonOriginY;
@@ -837,7 +861,8 @@ class Spine extends Visual {
 
                 regionAttachment = Std.is(slot.attachment, RegionAttachment) ? cast slot.attachment : null;
                 meshAttachment = Std.is(slot.attachment, MeshAttachment) ? cast slot.attachment : null;
-                if (regionAttachment != null || meshAttachment != null) {
+                boundingBoxAttachment = regionAttachment == null && meshAttachment == null && Std.is(slot.attachment, BoundingBoxAttachment) ? cast slot.attachment : null;
+                if (regionAttachment != null || meshAttachment != null || boundingBoxAttachment != null) {
 
                     tx = skeleton.x + bone.worldX;
                     ty = skeleton.y - bone.worldY;
@@ -867,8 +892,17 @@ class Spine extends Visual {
 
                             emptySlotMesh = false;
                             
-                            atlasRegion = cast (meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion());
-                            texture = cast atlasRegion.page.rendererObject;
+                            if (boundingBoxAttachment != null) {
+                                if (firstBoundingBoxSlotIndex == -1) {
+                                    firstBoundingBoxSlotIndex = slot.data.index;
+                                }
+                                atlasRegion = null;
+                                texture = null;
+                            }
+                            else {
+                                atlasRegion = cast (meshAttachment != null ? meshAttachment.getRegion() : regionAttachment.getRegion());
+                                texture = cast atlasRegion.page.rendererObject;
+                            }
 
                             if (mesh == null)
                             {
@@ -881,7 +915,11 @@ class Spine extends Visual {
                             
                             mesh.texture = texture;
 
-                            if (meshAttachment != null) {
+                            if (boundingBoxAttachment != null) {
+                                count = boundingBoxAttachment.getWorldVerticesLength();
+                                verticesLength = count;
+                            }
+                            else if (meshAttachment != null) {
                                 count = meshAttachment.getWorldVerticesLength();
                                 verticesLength = (count >> 1) * vertexSize;
                             } else {
@@ -891,6 +929,24 @@ class Spine extends Visual {
                             
                             if (verticesLength == 0) {
                                 mesh.visible = false;
+                            }
+                            else if (boundingBoxAttachment != null) {
+                                #if ceramic_debug_spine_bounding_boxes
+                                mesh.visible = true;
+                                #else
+                                mesh.visible = false;
+                                #end
+                                mesh.depth = 999;
+                                mesh.colorMapping = MeshColorMapping.MESH;
+                                mesh.color = Color.LIME;
+                                mesh.alpha = 0.7;
+                                mesh.shader = null;
+                                boundingBoxAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, 2);
+                                Triangulate.triangulate(mesh.vertices, mesh.indices);
+
+                                if (mesh.vertices.length > verticesLength) {
+                                    mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
+                                }
                             }
                             else {
                                 if (slotInfo.drawDefault) {
@@ -1097,6 +1153,11 @@ class Spine extends Visual {
                                 }
                             }
 
+                            if (boundingBoxAttachment != null) {
+                                // Not sure why this is needed, but that makes it work
+                                mesh.transform.scale(1, -1);
+                            }
+
                             if (skeletonScale != 1.0) mesh.transform.scale(skeletonScale, skeletonScale);
                             mesh.transform.translate(diffX, diffY);
                         }
@@ -1195,6 +1256,8 @@ class Spine extends Visual {
 
         }
         clipper.clipEnd();
+
+        this.firstBoundingBoxSlotIndex = firstBoundingBoxSlotIndex;
 
         if (regularRender) {
             emitEndRender(delta);
@@ -1307,6 +1370,40 @@ class Spine extends Visual {
         return 1.0 * (value & 0xFEFFFFFF);
 
     } //intToFloatColor
+
+/// Hit test
+
+    override function hits(x:Float, y:Float):Bool {
+
+        if (hitWithFirstBoundingBox) {
+            if (firstBoundingBoxSlotIndex != -1) {
+                var mesh = slotMeshes.get(firstBoundingBoxSlotIndex);
+                if (mesh != null) {
+                    mesh.complexHit = true;
+                    return mesh.hits(x, y);
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else if (hitWithSlotIndex != -1) {
+            var mesh = slotMeshes.get(hitWithSlotIndex);
+            if (mesh != null) {
+                mesh.complexHit = true;
+                return mesh.hits(x, y);
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return super.hits(x, y);
+        }
+    }
 
 /// Editor stuff
 
