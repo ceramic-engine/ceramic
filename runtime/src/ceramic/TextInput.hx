@@ -169,9 +169,11 @@ class TextInput implements Events {
                 explicitPosLine = lineForPos(selectionEnd);
             }
             else {
-                invertedSelection = true;
-                selectionStart--;
-                emitSelection(selectionStart, selectionEnd);
+                if (selectionStart > 0) {
+                    invertedSelection = true;
+                    selectionStart--;
+                    emitSelection(selectionStart, selectionEnd);
+                }
 
                 explicitPosInLine = posInCurrentLine(selectionStart);
                 explicitPosLine = lineForPos(selectionStart);
@@ -260,29 +262,58 @@ class TextInput implements Events {
 
         if (!allowMovingCursor) return;
 
-        invertedSelection = false;
-
-        if (selectionStart > 0) {
-            var currentLine = lineForPos(selectionStart);
-            if (currentLine > 0) {
+        if (shiftPressed) {
+            var startLine = lineForPos(selectionStart);
+            var endLine = lineForPos(selectionEnd);
+            if (!invertedSelection && endLine > startLine) {
                 // Move the cursor by one line to the top
                 var offset = explicitPosInLine;
+                var currentLine = endLine;
                 if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
-                selectionStart = globalPosForLine(currentLine - 1, offset);
-                selectionEnd = selectionStart;
+                var newPos = globalPosForLine(currentLine - 1, offset);
+                selectionEnd = Std.int(Math.max(selectionStart, newPos));
                 emitSelection(selectionStart, selectionEnd);
             }
-            else {
-                // Move the cursor to the beginning of the text
-                selectionStart = 0;
-                selectionEnd = 0;
+            else if (selectionStart > 0) {
+                invertedSelection = true;
+                if (startLine > 0) {
+                    // Move the cursor by one line to the top
+                    var offset = explicitPosInLine;
+                    var currentLine = startLine;
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
+                    selectionStart = globalPosForLine(currentLine - 1, offset);
+                }
+                else {
+                    selectionStart = 0;
+                }
                 emitSelection(selectionStart, selectionEnd);
             }
         }
         else {
-            selectionStart = 0;
-            selectionEnd = 0;
-            emitSelection(selectionStart, selectionEnd);
+            invertedSelection = false;
+
+            if (selectionStart > 0) {
+                var currentLine = lineForPos(selectionStart);
+                if (currentLine > 0) {
+                    // Move the cursor by one line to the top
+                    var offset = explicitPosInLine;
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
+                    selectionStart = globalPosForLine(currentLine - 1, offset);
+                    selectionEnd = selectionStart;
+                    emitSelection(selectionStart, selectionEnd);
+                }
+                else {
+                    // Move the cursor to the beginning of the text
+                    selectionStart = 0;
+                    selectionEnd = 0;
+                    emitSelection(selectionStart, selectionEnd);
+                }
+            }
+            else {
+                selectionStart = 0;
+                selectionEnd = 0;
+                emitSelection(selectionStart, selectionEnd);
+            }
         }
 
     } //moveUp
@@ -293,30 +324,87 @@ class TextInput implements Events {
 
         var textLength = text.uLength();
 
-        invertedSelection = false;
+        if (shiftPressed) {
+            var startLine = lineForPos(selectionStart);
+            var endLine = lineForPos(selectionEnd);
+            if (!invertedSelection) {
+                if (selectionEnd < textLength - 1) {
+                    var offset = explicitPosInLine;
+                    var currentLine = endLine;
+                    var numLines = numLines();
+                    if (currentLine < numLines - 1) {
+                        // Move the cursor by one line to the bottom
+                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                        selectionEnd = globalPosForLine(currentLine + 1, offset);
+                    }
+                    else {
+                        selectionEnd = textLength;
+                    }
+                    emitSelection(selectionStart, selectionEnd);
+                }
+                else if (selectionEnd < textLength) {
+                    selectionEnd = textLength;
+                    emitSelection(selectionStart, selectionEnd);
+                }
+            }
+            else if (invertedSelection) {
+                if (endLine > startLine) {
+                    var offset = explicitPosInLine;
+                    var currentLine = startLine;
+                    // Move the cursor by one line to the bottom
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                    var newPos = globalPosForLine(currentLine + 1, offset);
+                    selectionStart = Std.int(Math.min(selectionEnd, newPos));
+                    emitSelection(selectionStart, selectionEnd);
+                }
+                else if (selectionEnd < textLength - 1) {
+                    invertedSelection = false;
+                    var currentLine = startLine;
+                    var numLines = numLines();
+                    var offset = explicitPosInLine;
+                    if (currentLine < numLines - 1) {
+                        // Move the cursor by one line to the bottom
+                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                        selectionEnd = globalPosForLine(currentLine + 1, offset);
+                    }
+                    else {
+                        selectionEnd = textLength;
+                    }
+                    emitSelection(selectionStart, selectionEnd);
+                }
+                else if (selectionEnd < textLength) {
+                    invertedSelection = false;
+                    selectionEnd = textLength;
+                    emitSelection(selectionStart, selectionEnd);
+                }
+            }
+        }
+        else {
+            invertedSelection = false;
 
-        if (selectionEnd < textLength - 1) {
-            var currentLine = lineForPos(selectionEnd);
-            var numLines = numLines();
-            if (currentLine < numLines - 1) {
-                // Move the cursor by one line to the bottom
-                var offset = explicitPosInLine;
-                if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
-                selectionStart = globalPosForLine(currentLine + 1, offset);
-                selectionEnd = selectionStart;
-                emitSelection(selectionStart, selectionEnd);
+            if (selectionEnd < textLength - 1) {
+                var currentLine = lineForPos(selectionEnd);
+                var numLines = numLines();
+                if (currentLine < numLines - 1) {
+                    // Move the cursor by one line to the bottom
+                    var offset = explicitPosInLine;
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                    selectionStart = globalPosForLine(currentLine + 1, offset);
+                    selectionEnd = selectionStart;
+                    emitSelection(selectionStart, selectionEnd);
+                }
+                else {
+                    // Move the cursor to the end of the text
+                    selectionStart = textLength;
+                    selectionEnd = selectionStart;
+                    emitSelection(selectionStart, selectionEnd);
+                }
             }
             else {
-                // Move the cursor to the end of the text
                 selectionStart = textLength;
                 selectionEnd = selectionStart;
                 emitSelection(selectionStart, selectionEnd);
             }
-        }
-        else {
-            selectionStart = textLength;
-            selectionEnd = selectionStart;
-            emitSelection(selectionStart, selectionEnd);
         }
 
     } //moveDown
