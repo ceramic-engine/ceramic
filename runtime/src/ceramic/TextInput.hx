@@ -269,7 +269,7 @@ class TextInput implements Events {
                 // Move the cursor by one line to the top
                 var offset = explicitPosInLine;
                 var currentLine = endLine;
-                if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
+                if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine - 1);
                 var newPos = globalPosForLine(currentLine - 1, offset);
                 selectionEnd = Std.int(Math.max(selectionStart, newPos));
                 emitSelection(selectionStart, selectionEnd);
@@ -280,7 +280,7 @@ class TextInput implements Events {
                     // Move the cursor by one line to the top
                     var offset = explicitPosInLine;
                     var currentLine = startLine;
-                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine - 1);
                     selectionStart = globalPosForLine(currentLine - 1, offset);
                 }
                 else {
@@ -297,7 +297,7 @@ class TextInput implements Events {
                 if (currentLine > 0) {
                     // Move the cursor by one line to the top
                     var offset = explicitPosInLine;
-                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine - 1);
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine - 1);
                     selectionStart = globalPosForLine(currentLine - 1, offset);
                     selectionEnd = selectionStart;
                     emitSelection(selectionStart, selectionEnd);
@@ -334,7 +334,7 @@ class TextInput implements Events {
                     var numLines = numLines();
                     if (currentLine < numLines - 1) {
                         // Move the cursor by one line to the bottom
-                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine + 1);
                         selectionEnd = globalPosForLine(currentLine + 1, offset);
                     }
                     else {
@@ -352,7 +352,7 @@ class TextInput implements Events {
                     var offset = explicitPosInLine;
                     var currentLine = startLine;
                     // Move the cursor by one line to the bottom
-                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine + 1);
                     var newPos = globalPosForLine(currentLine + 1, offset);
                     selectionStart = Std.int(Math.min(selectionEnd, newPos));
                     emitSelection(selectionStart, selectionEnd);
@@ -364,7 +364,7 @@ class TextInput implements Events {
                     var offset = explicitPosInLine;
                     if (currentLine < numLines - 1) {
                         // Move the cursor by one line to the bottom
-                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                        if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine + 1);
                         selectionEnd = globalPosForLine(currentLine + 1, offset);
                     }
                     else {
@@ -388,7 +388,7 @@ class TextInput implements Events {
                 if (currentLine < numLines - 1) {
                     // Move the cursor by one line to the bottom
                     var offset = explicitPosInLine;
-                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(text, explicitPosInLine, explicitPosLine, currentLine + 1);
+                    if (delegate != null) offset = delegate.textInputClosestPositionInLine(explicitPosInLine, explicitPosLine, currentLine + 1);
                     selectionStart = globalPosForLine(currentLine + 1, offset);
                     selectionEnd = selectionStart;
                     emitSelection(selectionStart, selectionEnd);
@@ -449,6 +449,8 @@ class TextInput implements Events {
     /** Get the position in the current line, from the given global position in text */
     function posInCurrentLine(globalPos:Int):Int {
 
+        if (delegate != null) return delegate.textInputPosInLineForIndex(globalPos);
+
         var text = this.text;
 
         var posInLine = 0;
@@ -469,6 +471,8 @@ class TextInput implements Events {
     /** Get the current line (starts from 0) from the given global position in text */
     function lineForPos(globalPos:Int):Int {
 
+        if (delegate != null) return delegate.textInputLineForIndex(globalPos);
+
         var text = this.text;
 
         var lineNumber = 0;
@@ -485,11 +489,15 @@ class TextInput implements Events {
 
     function numLines():Int {
 
+        if (delegate != null) return delegate.textInputNumberOfLines();
+
         return text.split("\n").length;
 
     } //numLines
 
     function globalPosForLine(lineNumber:Int, lineOffset:Int):Int {
+
+        if (delegate != null) return delegate.textInputIndexForPosInLine(lineNumber, lineOffset);
 
         var text = this.text;
         var i = 0;

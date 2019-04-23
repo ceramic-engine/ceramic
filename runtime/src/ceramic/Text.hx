@@ -245,6 +245,7 @@ class Text extends Visual {
         var justDidBreakToFit = false;
         var hasSpaceInLine = false;
         var wasWhiteSpace = false;
+        var numCharsBeforeLine = 0;
         
         while (i < len) {
 
@@ -303,6 +304,7 @@ class Text extends Visual {
                 prevChar = null;
                 prevCode = -1;
                 i++;
+                numCharsBeforeLine = i;
                 y += lineHeight * font.lineHeight * sizeFactor;
                 lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
                 lineQuads.push([]);
@@ -333,6 +335,7 @@ class Text extends Visual {
             quad.char = char;
             quad.code = code;
             quad.index = i;
+            quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
             quad.texture = font.pages.get(glyph.page);
             quad.color = color;

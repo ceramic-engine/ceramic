@@ -8,6 +8,8 @@ class GlyphQuad extends Quad {
 
     public var index:Int = -1;
 
+    public var posInLine:Int = -1;
+
     public var line:Int = -1;
 
     public var code:Int = -1;
