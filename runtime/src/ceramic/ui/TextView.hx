@@ -89,6 +89,7 @@ class TextView extends View {
         super();
 
         text = new Text();
+        text.maxLineDiff = 0.5;
         add(text);
 
         transparent = true;
@@ -118,7 +119,6 @@ class TextView extends View {
                 } else {
                     text.fitWidth = computedWidth;
                 }
-                text.maxLineDiff = 0.5;
             } else {
                 text.fitWidth = -1;
             }
