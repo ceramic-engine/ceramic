@@ -101,11 +101,12 @@ class TextInput implements Events {
 
     } //stop
 
-    public function updateSelection(selectionStart:Int, selectionEnd):Void {
+    public function updateSelection(selectionStart:Int, selectionEnd:Int, ?inverted:Bool):Void {
 
         if (this.selectionStart != selectionStart || this.selectionEnd != selectionEnd) {
             this.selectionStart = selectionStart;
             this.selectionEnd = selectionEnd;
+            if (inverted != null) invertedSelection = inverted;
             emitSelection(selectionStart, selectionEnd);
         }
 
