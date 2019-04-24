@@ -129,13 +129,15 @@ class TextInput implements Events {
 
         // Clear selection and erase text in place
 
+        var eraseSelection = selectionEnd > selectionStart;
+
         var newText = '';
         if (selectionStart > 1) {
-            newText += this.text.uSubstring(0, selectionStart - 1);
+            newText += this.text.uSubstring(0, eraseSelection ? selectionStart : selectionStart - 1);
         }
         newText += this.text.uSubstring(selectionEnd);
 
-        if (selectionStart > 0) selectionStart--;
+        if (selectionStart > 0 && !eraseSelection) selectionStart--;
         selectionEnd = selectionStart;
         this.text = newText;
 
