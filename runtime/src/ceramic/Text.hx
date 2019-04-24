@@ -8,6 +8,8 @@ using unifill.Unifill;
 using ceramic.Extensions;
 using StringTools;
 
+/** A visual to layout and display text.
+    Works with UTF-8 strings. */
 @editable({ implicitSize: true })
 class Text extends Visual {
     
