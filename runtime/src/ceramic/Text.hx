@@ -455,6 +455,193 @@ class Text extends Visual {
 
     } //computeGlyphQuads
 
+/// Helpers
+
+    /** Get the line number matching the given `y` position.
+        `y` is relative this `Text` visual. */
+    public function lineForYPosition(y:Float):Int {
+
+        if (contentDirty) computeContent();
+
+        var computedLineHeight = lineHeight * font.lineHeight * pointSize / font.pointSize;
+        var maxLine = 0;
+
+        if (computedLineHeight <= 0) return 0;
+
+        var glyphQuads = this.glyphQuads;
+        if (glyphQuads.length > 0) {
+            maxLine = glyphQuads[glyphQuads.length-1].line;
+        }
+
+        var line = Math.floor(y / computedLineHeight);
+        if (line < 0) line = 0;
+        if (line > maxLine) line = maxLine;
+
+        return line;
+
+    } //lineForYPosition
+
+    /** Get the character index position relative to `line` at the requested `x` value.
+        `x` is relative this `Text` visual. */
+    public function posInLineForX(line:Int, x:Float):Int {
+
+        if (contentDirty) computeContent();
+
+        var glyphQuads = this.glyphQuads;
+        var pos:Int = 0;
+
+        if (glyphQuads.length == 0 || x == 0) return pos;
+
+        for (i in 0...glyphQuads.length) {
+            var glyphQuad = glyphQuads.unsafeGet(i);
+            if (glyphQuad.line == line) {
+                if (glyphQuad.glyphX >= x) return pos;
+                else if (glyphQuad.glyphX + glyphQuad.glyphAdvance >= x) {
+                    var distanceAfter = glyphQuad.glyphX + glyphQuad.glyphAdvance - x;
+                    var distanceBefore = x - glyphQuad.glyphX;
+                    if (distanceBefore <= distanceAfter) {
+                        return pos;
+                    }
+                }
+                pos++;
+            }
+            else if (glyphQuad.line > line) {
+                break;
+            }
+        }
+
+        return pos;
+
+    } //posInLineForX
+
+    /** Get the _global_ character index from the given `line` and `posInLine` index position relative to `line` */
+    public function indexForPosInLine(line:Int, posInLine:Int):Int {
+
+        if (contentDirty) computeContent();
+
+        var glyphQuads = this.glyphQuads;
+        if (glyphQuads.length == 0) return 0;
+
+        for (i in 0...glyphQuads.length) {
+            var glyphQuad = glyphQuads.unsafeGet(i);
+            if (glyphQuad.line == line && glyphQuad.posInLine >= posInLine) {
+                return glyphQuad.index + posInLine - glyphQuad.posInLine;
+            }
+            else if (glyphQuad.line > line) {
+                return glyphQuad.index - glyphQuad.posInLine - (glyphQuad.line - line);
+            }
+        }
+
+        return content.uLength();
+
+    } //indexForPosInLine
+
+    /** Get an `x` position from the given character `index`.
+        `x` is relative to this `Text` visual. */
+    public function xPositionAtIndex(index:Int):Float {
+
+        if (contentDirty) computeContent();
+
+        var glyphQuads = this.glyphQuads;
+
+        if (glyphQuads.length == 0) return 0;
+
+        for (i in 0...glyphQuads.length) {
+            var glyphQuad = glyphQuads.unsafeGet(i);
+            if (glyphQuad.index >= index) {
+                if (glyphQuad.glyphX == 0 && glyphQuad.index > index) {
+                    if (i >= 1) {
+                        var glyphQuadBefore = glyphQuads[i-1];
+                        return glyphQuadBefore.glyphX + glyphQuadBefore.glyphAdvance;
+                    }
+                    else {
+                        return 0;
+                    }
+                }
+                else {
+                    return glyphQuad.glyphX;
+                }
+            }
+        }
+
+        var lastGlyphQuad = glyphQuads[glyphQuads.length-1];
+        return lastGlyphQuad.glyphX + lastGlyphQuad.glyphAdvance;
+
+        return 0;
+
+    } //xPositionAtIndex
+
+    /** Get the line number (starting from zero) of the character at the given `index` */
+    public function lineForIndex(index:Int):Int {
+
+        if (contentDirty) computeContent();
+
+        var glyphQuads = this.glyphQuads;
+        if (glyphQuads.length == 0) return 0;
+
+        for (i in 0...glyphQuads.length) {
+            var glyphQuad = glyphQuads.unsafeGet(i);
+            if (glyphQuad.index >= index) {
+                if (glyphQuad.posInLine > index - glyphQuad.index) {
+                    var currentLineIndex = glyphQuad.index - glyphQuad.posInLine;
+                    var line = glyphQuad.line;
+                    while (currentLineIndex > index) {
+                        currentLineIndex--;
+                        line--;
+                    }
+                    return line;
+                }
+                else {
+                    return glyphQuad.line;
+                }
+            }
+        }
+
+        return glyphQuads[glyphQuads.length-1].line;
+
+    } //lineForIndex
+
+    /** Get a character index position relative to its line from its _global_ `index` position. */
+    public function posInLineForIndex(index:Int):Int {
+
+        if (contentDirty) computeContent();
+
+        var glyphQuads = this.glyphQuads;
+        if (glyphQuads.length == 0) return 0;
+        
+        var computedTargetLine = false;
+        var targetLine = -1;
+
+        for (i in 0...glyphQuads.length) {
+            var glyphQuad = glyphQuads.unsafeGet(i);
+            if (glyphQuad.index >= index) {
+                var pos = glyphQuad.posInLine + index - glyphQuad.index;
+                if (pos < 0) {
+                    var j = i - 1;
+                    while (j >= 0) {
+                        var glyphQuadBefore = glyphQuads.unsafeGet(j);
+                        if (!computedTargetLine) {
+                            computedTargetLine = true;
+                            targetLine = lineForIndex(index);
+                        }
+                        if (glyphQuadBefore.line == targetLine) {
+                            pos = glyphQuadBefore.posInLine + index - glyphQuadBefore.index;
+                            return pos;
+                        }
+                        else if (glyphQuadBefore.line < targetLine) {
+                            return 0;
+                        }
+                        j--;
+                    }
+                }
+                return pos >= 0 ? pos : 0;
+            }
+        }
+
+        return 0;
+
+    } //posInLineForIndex
+
 /// Font destroyed
 
     function fontDestroyed() {
