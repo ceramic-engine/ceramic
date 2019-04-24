@@ -6,6 +6,7 @@ import ceramic.Shortcuts.*;
 
 using unifill.Unifill;
 using ceramic.Extensions;
+using StringTools;
 
 @editable({ implicitSize: true })
 class Text extends Visual {
@@ -229,7 +230,6 @@ class Text extends Visual {
 
         var x = 0.0;
         var y = 0.0;
-        var len = content.uLength();
         var sizeFactor = pointSize / font.pointSize;
         var char = null;
         var code = -1;
@@ -246,6 +246,14 @@ class Text extends Visual {
         var hasSpaceInLine = false;
         var wasWhiteSpace = false;
         var numCharsBeforeLine = 0;
+        var addTrailingSpace = false;
+
+        var content = this.content;
+        if (content == '' || content.endsWith("\n")) {
+            addTrailingSpace = true;
+            content += ' ';
+        }
+        var len = content.uLength();
         
         while (i < len) {
 
@@ -335,6 +343,7 @@ class Text extends Visual {
             quad.char = char;
             quad.code = code;
             quad.index = i;
+            quad.visible = true;
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
             quad.texture = font.pages.get(glyph.page);
@@ -364,6 +373,18 @@ class Text extends Visual {
 
         if (x > 0) {
             lineWidths.push(x);
+        }
+
+        // If we added a trailing space, ensure it doesn't add any width
+        if (addTrailingSpace) {
+            var lastQuad = glyphQuads[usedQuads-1];
+            var lastLineWidth = lineWidths[lineWidths.length-1];
+
+            lastLineWidth -= lastQuad.glyphAdvance;
+            lineWidths[lineWidths.length-1] = lastLineWidth;
+            
+            lastQuad.glyphAdvance = 0;
+            lastQuad.visible = false;
         }
 
         // Remove unused quads
