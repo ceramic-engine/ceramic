@@ -218,8 +218,16 @@ class Entity implements Events implements Lazy {
             _components.set(name, component);
             component.setProperty('entity', this);
             component.onceDestroy(this, function() {
+                // Remove entity reference from component
                 if (component.getProperty('entity') == this) {
                     component.setProperty('entity', null);
+                }
+                // Remove component reference from entity
+                if (!destroyed) {
+                    var existing = _components.get(name);
+                    if (existing == component) {
+                        _components.remove(name);
+                    }
                 }
             });
             @:privateAccess component.init();
