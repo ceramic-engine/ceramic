@@ -101,6 +101,16 @@ class TextInput implements Events {
 
     } //stop
 
+    public function updateSelection(selectionStart:Int, selectionEnd):Void {
+
+        if (this.selectionStart != selectionStart || this.selectionEnd != selectionEnd) {
+            this.selectionStart = selectionStart;
+            this.selectionEnd = selectionEnd;
+            emitSelection(selectionStart, selectionEnd);
+        }
+
+    } //updateSelection
+
     public function appendText(text:String):Void {
 
         // Clear selection and add text in place
