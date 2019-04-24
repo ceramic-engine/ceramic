@@ -103,7 +103,9 @@ class TextView extends View {
         var shouldComputeWidth = false;
         var shouldComputeHeight = false;
 
-        if (ViewSize.isAuto(viewWidth)) {
+        var hasExplicitWidth = !ViewSize.isAuto(viewWidth);
+
+        if (!hasExplicitWidth) {
             shouldComputeWidth = true;
         }
 
@@ -111,15 +113,17 @@ class TextView extends View {
             shouldComputeHeight = true;
         }
 
-        // Compute size from text
         if (shouldComputeHeight || shouldComputeWidth) {
+            // Compute size from text
             if (computedWidth > 0) {
-                if (!shouldComputeWidth) {
+                if (hasExplicitWidth) {
                     text.fitWidth = computedWidth - paddingLeft - paddingRight;
-                } else {
+                }
+                else {
                     text.fitWidth = computedWidth;
                 }
-            } else {
+            }
+            else {
                 text.fitWidth = -1;
             }
 
@@ -130,6 +134,15 @@ class TextView extends View {
             }
             if (shouldComputeWidth) {
                 computedWidth = textWidth;
+            }
+        }
+        else {
+            // Still update fitWidth value in other cases
+            if (hasExplicitWidth && computedWidth > 0) {
+                text.fitWidth = computedWidth - paddingLeft - paddingRight;
+            }
+            else {
+                text.fitWidth = -1;
             }
         }
 
