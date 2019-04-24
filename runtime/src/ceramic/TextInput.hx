@@ -419,9 +419,6 @@ class TextInput implements Events {
         if (multiline) {
             appendText("\n");
         }
-        else {
-            stop();
-        }
 
     } //enter
 
