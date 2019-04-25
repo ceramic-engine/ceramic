@@ -20,6 +20,7 @@ class Help extends tools.Task {
 
         var lines = [];
         var tab = '  ';
+        var toolsPath = context.ceramicToolsPath;
 
         // Compute tools version
         var version = 'v' + context.ceramicVersion;

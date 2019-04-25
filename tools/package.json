@@ -1,6 +1,6 @@
 {
   "name": "ceramic-tools",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Cross-platform game/multimedia engine built on top of existing game/graphics/audio frameworks.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -25,6 +25,7 @@
     "applescript": "^1.0.0",
     "chokidar": "^2.0.3",
     "colors": "^1.1.2",
+    "command-exists": "^1.2.8",
     "decompress": "^4.2.0",
     "decompress-targz": "^4.1.0",
     "detect-port": "^1.2.3",

@@ -81,6 +81,12 @@ class Tools {
         if (FileSystem.exists(versionPath)) {
             version = File.getContent(versionPath);
         }
+        if (commandExists('git')) {
+            var hash:String = command('git', ['rev-parse', '--short', 'HEAD'], { cwd: context.ceramicToolsPath, mute: true }).stdout.trim();
+            if (hash != null && hash != '') {
+                version += '-$hash';
+            }
+        }
         context.ceramicVersion = version;
         
         // Compute .ceramic path (global or local)

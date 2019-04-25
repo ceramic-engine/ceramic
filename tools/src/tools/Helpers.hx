@@ -293,6 +293,12 @@ class Helpers {
 
     } //haxelibGlobal
 
+    public static function commandExists(name:String):Bool {
+
+        return npm.CommandExists.existsSync(name);
+
+    } //commandExists
+
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
         if (options == null) {
