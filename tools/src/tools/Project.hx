@@ -37,6 +37,15 @@ typedef ProjectPlugin = {
 
 class Project {
 
+    /** A list of haxe libraryes required to make ceramic runtime work */
+    public static var runtimeLibraries:Array<Dynamic> = [
+        { unifill: '0.4.1' },
+        { actuate: 'github:ceramic-engine/actuate' },
+        { polyline: 'github:jeremyfa/polyline' },
+        { bind: 'github:jeremyfa/polyline' },
+        { earcut: 'github:ceramic-engine/earcut' }
+    ];
+
 /// Properties
 
     // TODO use project format typedefs
@@ -280,11 +289,26 @@ class ProjectLoader {
             }
 
             // Add required libs
-            app.libs.push({ unifill: '0.4.1' });
-            app.libs.push('actuate');
-            app.libs.push('polyline');
-            app.libs.push('bind');
-            app.libs.push('earcut');
+            for (item in Project.runtimeLibraries) {
+                if (Std.is(item, String)) {
+                    app.libs.push(item);
+                }
+                else {
+                    var libName:String = null;
+                    var libVersion:String = null;
+                    for (key in Reflect.fields(item)) {
+                        libName = key;
+                        libVersion = Reflect.field(item, key);
+                        break;
+                    }
+                    if (libVersion != null && libVersion.startsWith('github:')) {
+                        app.libs.push(libName);
+                    }
+                    else {
+                        app.libs.push(item);
+                    }
+                }
+            }
 
             if (app.paths == null) {
                 app.paths = [];

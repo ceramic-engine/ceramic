@@ -121,6 +121,8 @@ class Tools {
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
         context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());
 
+        context.tasks.set('lib export', new tools.tasks.haxelib.ExportLibrary());
+
         context.tasks.set('images export', new tools.tasks.images.ExportImages());
 
         //#end
