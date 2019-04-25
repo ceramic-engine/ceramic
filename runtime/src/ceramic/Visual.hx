@@ -980,7 +980,7 @@ class Visual extends Entity {
     function computeMinMaxDepths():Void {
 
         if (_minDepth > computedDepth) _minDepth = computedDepth;
-        if (_maxDepth < computedDepth) _maxDepth = computedDepth;
+        if (_maxDepth < computedDepth + 1) _maxDepth = computedDepth + 1;
 
         if (children != null) {
 
