@@ -209,6 +209,8 @@ class App extends Entity {
         Useful to run some specific code once exactly before update event is sent. */
     var beginUpdateCallbacks:Array<Void->Void> = [];
 
+    var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
+
 /// Public initializer
 
     public static function init():InitSettings {
@@ -599,4 +601,30 @@ class App extends Entity {
 
     } //sortVisuals
 
-}
+/// Keyboard
+
+    function willEmitKeyDown(key:Key):Void {
+
+        pressedScanCodes.set(key.scanCode, pressedScanCodes.get(key.scanCode) + 1);
+
+    } //willEmitKeyDown
+
+    function willEmitKeyUp(key:Key):Void {
+
+        pressedScanCodes.set(key.scanCode, 0);
+
+    } //willEmitKeyUp
+
+    public function isKeyPressed(key:Key):Bool {
+
+        return pressedScanCodes.get(key.scanCode) > 0;
+
+    } //isKeyPressed
+
+    public function isKeyJustPressed(key:Key):Bool {
+
+        return pressedScanCodes.get(key.scanCode) == 1;
+
+    } //isKeyJustPressed
+
+} //App
