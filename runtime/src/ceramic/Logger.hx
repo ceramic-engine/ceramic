@@ -1,7 +1,19 @@
 package ceramic;
 
 @:allow(ceramic.App)
-class Logger {
+class Logger extends Entity {
+
+/// Events
+
+    @event function _log(value:Dynamic, ?pos:haxe.PosInfos);
+
+    @event function _debug(value:Dynamic, ?pos:haxe.PosInfos);
+
+    @event function _success(value:Dynamic, ?pos:haxe.PosInfos);
+
+    @event function _warning(value:Dynamic, ?pos:haxe.PosInfos);
+
+    @event function _error(value:Dynamic, ?pos:haxe.PosInfos);
 
 /// Internal
 
@@ -20,18 +32,24 @@ class Logger {
 /// Public API
 
     public function log(value:Dynamic, ?pos:haxe.PosInfos):Void {
+        
+        emitLog(value, pos);
 
         haxe.Log.trace(prefixLines('[log] ', value), pos);
 
     } //log
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
+        
+        emitSuccess(value, pos);
 
         haxe.Log.trace(prefixLines('[success] ', value), pos);
 
     } //success
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
+        
+        emitWarning(value, pos);
 
 #if (web && luxe)
         if (_hasElectronRunner) {
@@ -48,6 +66,8 @@ class Logger {
     } //warning
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
+        
+        emitError(value, pos);
 
 #if (web && luxe)
         if (_hasElectronRunner) {
