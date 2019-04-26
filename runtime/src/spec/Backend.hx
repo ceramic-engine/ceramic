@@ -21,5 +21,7 @@ interface Backend {
     var http(default,null):backend.Http;
 
     var textInput(default,null):backend.TextInput;
+
+    var clipboard(default,null):backend.Clipboard;
     
 } //Backend

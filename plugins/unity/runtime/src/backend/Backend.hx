@@ -26,6 +26,8 @@ class Backend implements ceramic.Events implements spec.Backend {
 
     public var textInput(default,null) = new backend.TextInput();
 
+    public var clipboard(default,null) = new backend.Clipboard();
+
     public function new() {}
 
     public function init(app:ceramic.App) {
