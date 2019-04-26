@@ -129,6 +129,15 @@ class Hxml {
         return updatedData;
     }
 
+    public static function convertLibsToCps(hxmlData:Array<String>):Array<String> {
+
+        var updatedData = [];
+
+        // TODO
+
+        return updatedData;
+
+    } //convertLibsToCps
 
     /** Match any single/double quoted string */
     static var RE_BEGINS_WITH_STRING:EReg = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;

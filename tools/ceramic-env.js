@@ -6,6 +6,7 @@ var os = require('os');
 var spawnSync = require('child_process').spawnSync;
 
 // Let's not use newrepo
+// TODO do the opposite: use local haxelib repo, but convert -lib to -cp
 if (fs.existsSync(path.join(__dirname, '.haxelib'))) {
     rimraf.sync(path.join(__dirname, '.haxelib'));
 }
