@@ -1126,7 +1126,7 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 
         if (pos_floats > max_floats) {
-            throw "Too many floats are being submitted (max:$max_floats, attempt:$pos_floats).";
+            throw 'Too many floats are being submitted (max:$max_floats, attempt:$pos_floats).';
         }
 
         var vertexSize = 4;
