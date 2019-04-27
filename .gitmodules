@@ -57,3 +57,7 @@
 	path = git/earcut
 	url = https://github.com/ceramic-engine/earcut.git
 	branch = master
+[submodule "git/format-tiled"]
+	path = git/format-tiled
+	url = https://github.com/ceramic-engine/format-tiled.git
+	branch = master
