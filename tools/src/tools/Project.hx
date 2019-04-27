@@ -39,11 +39,13 @@ class Project {
 
     /** A list of haxe libraryes required to make ceramic runtime work */
     public static var runtimeLibraries:Array<Dynamic> = [
-        { unifill: '0.4.1' },
-        { actuate: 'github:ceramic-engine/actuate' },
-        { polyline: 'github:jeremyfa/polyline' },
-        { bind: 'github:jeremyfa/polyline' },
-        { earcut: 'github:ceramic-engine/earcut' }
+        { 'unifill': '0.4.1' },
+        { 'format': '3.4.2' },
+        { 'actuate': 'github:ceramic-engine/actuate' },
+        { 'polyline': 'github:jeremyfa/polyline' },
+        { 'bind': 'github:jeremyfa/polyline' },
+        { 'earcut': 'github:ceramic-engine/earcut' },
+        { 'format-tiled': 'github:ceramic-engine/format-tiled' }
     ];
 
 /// Properties

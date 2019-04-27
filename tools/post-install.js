@@ -19,6 +19,7 @@ function postInstall() {
     spawnSync(haxelib, ['install', 'hxnodejs', '4.0.9', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'hxcpp', '4.0.8', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'bind', '0.4.1', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'format', '3.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'unifill', '0.4.1', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'spine-hx', '../git/spine-hx'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'polyline', '../git/polyline'], { stdio: "inherit", cwd: __dirname });
@@ -26,6 +27,7 @@ function postInstall() {
     spawnSync(haxelib, ['dev', 'actuate', '../git/actuate'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'differ', '../git/differ'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'format-tiled', '../git/format-tiled'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
     // Patch hxcpp toolchain on iOS

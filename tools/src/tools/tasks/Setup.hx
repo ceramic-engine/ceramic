@@ -82,6 +82,7 @@ class Setup extends tools.Task {
             // Install required dependencies
             haxelib(['install', 'hxcpp', '--always']);
             haxelib(['install', 'bind', '--always']);
+            haxelib(['install', 'format', '3.4.2', '--always']);
             haxelib(['install', 'unifill', '0.4.1', '--always']);
             haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
         }
