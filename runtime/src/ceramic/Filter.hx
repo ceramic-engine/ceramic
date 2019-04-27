@@ -21,6 +21,15 @@ class Filter extends Quad {
         return enabled;
     }
 
+    /** Texture filter */
+    public var textureFilter(default,set):TextureFilter = LINEAR;
+    function set_textureFilter(textureFilter:TextureFilter):TextureFilter {
+        if (this.textureFilter == textureFilter) return textureFilter;
+        this.textureFilter = textureFilter;
+        if (renderTexture != null) renderTexture.filter = textureFilter;
+        return textureFilter;
+    } 
+
 /// Internal
 
     var renderTexture:RenderTexture = null;
@@ -36,6 +45,7 @@ class Filter extends Quad {
                 }
                 if (filterWidth > 0 && filterHeight > 0) {
                     renderTexture = new RenderTexture(filterWidth, filterHeight);
+                    renderTexture.filter = textureFilter;
                     texture = renderTexture;
                 }
             }
