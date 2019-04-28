@@ -126,6 +126,11 @@ class TilemapAsset extends Asset {
             assets.onceComplete(this, function(isSuccess) {
                 if (isSuccess) {
                     var texture = assets.texture(asset.name);
+
+                    // NEAREST is usually preferred for tilemaps so use that by default,
+                    // although it is still possible to set it to LINEAR manually after
+                    texture.filter = NEAREST;
+
                     done(texture);
                 }
             });

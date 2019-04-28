@@ -1,5 +1,7 @@
 package ceramic;
 
+using ceramic.Extensions;
+
 /** Tilemap data.
     Strongly inspired from Tiled TMX format.
     (https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) */
@@ -64,6 +66,24 @@ class TilemapData extends Entity {
         }
         
     } //destroy
+
+/// Helpers
+
+    inline public function tilesetForGid(gid:Int):Tileset {
+
+        var t = tilesets.length - 1;
+        var result:Tileset = null;
+        while (t >= 0) {
+            var tileset = tilesets.unsafeGet(t);
+            if (gid >= tileset.firstGid) {
+                result = tileset;
+                break;
+            }
+            t--;
+        }
+        return result;
+
+    } //Tileset
 
 /// Print
 
