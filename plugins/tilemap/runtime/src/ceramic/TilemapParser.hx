@@ -1,5 +1,6 @@
 package ceramic;
 
+import format.tmx.Data.TmxImage;
 import format.tmx.Data.TmxBaseLayer;
 import format.tmx.Data.TmxLayer;
 import format.tmx.Data.TmxMap;
@@ -25,7 +26,7 @@ class TilemapParser {
 
     } //parseTmx
 
-    public static function tmxMapToTilemapData(tmxMap:TmxMap):TilemapData {
+    public static function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
 
         var tilemapData = new TilemapData();
 
@@ -143,8 +144,12 @@ class TilemapParser {
                         image.source = tmxImage.source;
                     }
 
-                    if (tmxImage.data != null) {
-                        // Do something with data?
+                    if (loadTexture != null) {
+                        (function(image:TilesetImage, tmxImage:TmxImage) {
+                            loadTexture(tmxImage, function(texture:Texture) {
+                                image.texture = texture;
+                            });
+                        })(image, tmxImage);
                     }
 
                     tileset.image = image;
@@ -160,8 +165,6 @@ class TilemapParser {
         if (tmxMap.layers != null && tmxMap.layers.length > 0) {
             for (i in 0...tmxMap.layers.length) {
                 var tmxLayer = tmxMap.layers[i];
-
-                trace('TMX LAYER $tmxLayer');
 
                 inline function copyTmxLayerData(tmxLayer:TmxBaseLayer, layer:TilemapLayer) {
                     layer.name = tmxLayer.name;

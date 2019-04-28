@@ -32,7 +32,7 @@ class TilemapPlugin {
             log('Init tilemap plugin');
 
             // Extend assets with `tilemap` kind
-            Assets.addAssetKind('tilemap', addTilemap, ['tilemap'], true, ['ceramic.TilemapData']);
+            Assets.addAssetKind('tilemap', addTilemap, ['tmx'], false, ['ceramic.TilemapData']);
 
             // Extend converters
             var convertTilemapData = new ConvertTilemapData();
@@ -65,10 +65,11 @@ class TilemapPlugin {
     @:access(ceramic.Assets)
     public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>):TilemapData {
 
-        if (!name.startsWith('tilemap:')) name = 'tilemap:' + name;
+        var nameStr:String = cast name;
+        if (nameStr.startsWith('tilemap:')) nameStr = nameStr.substr(8);
         
         if (!assets.assetsByKindAndName.exists('tilemap')) return null;
-        var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(name);
+        var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(nameStr);
         if (asset == null) return null;
 
         return asset.tilemapData;
