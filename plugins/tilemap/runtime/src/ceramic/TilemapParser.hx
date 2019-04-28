@@ -50,9 +50,7 @@ class TilemapParser {
         tilemapData.tileWidth = tmxMap.tileWidth;
         tilemapData.tileHeight = tmxMap.tileHeight;
 
-        if (tmxMap.backgroundColor != null) {
-            tilemapData.backgroundColor = tmxMap.backgroundColor;
-        }
+        tilemapData.backgroundColor = tmxMap.backgroundColor;
 
         if (tmxMap.renderOrder != null) {
             switch (tmxMap.renderOrder) {
@@ -82,9 +80,7 @@ class TilemapParser {
             }
         }
 
-        if (tmxMap.hexSideLength != null) {
-            tilemapData.hexSideLength = tmxMap.hexSideLength;
-        }
+        tilemapData.hexSideLength = tmxMap.hexSideLength;
 
         if (tmxMap.tilesets != null && tmxMap.tilesets.length > 0) {
             for (i in 0...tmxMap.tilesets.length) {
@@ -115,13 +111,9 @@ class TilemapParser {
                     tileset.margin = tmxTileset.margin;
                 }
 
-                if (tmxTileset.tileCount != null) {
-                    tileset.tileCount = tmxTileset.tileCount;
-                }
+                tileset.tileCount = tmxTileset.tileCount;
 
-                if (tmxTileset.columns != null) {
-                    tileset.columns = tmxTileset.columns;
-                }
+                tileset.columns = tmxTileset.columns;
 
                 if (tmxTileset.tileOffset != null) {
                     tileset.tileOffsetX = tmxTileset.tileOffset.x;
@@ -153,6 +145,20 @@ class TilemapParser {
                     }
 
                     tileset.image = image;
+
+                    if (tileset.columns <= 0) {
+                        // If needed, compute tileset columns from image
+                        var cols = 0;
+                        var usedWidth = 0;
+                        var computedTileWidth = tileset.tileWidth + tileset.margin * 2;
+                        if (computedTileWidth > 0) {
+                            while (usedWidth + computedTileWidth <= image.width) {
+                                cols++;
+                                usedWidth += computedTileWidth + tileset.spacing;
+                            }
+                        }
+                        tileset.columns = cols;
+                    }
                 }
 
                 tilemapData.tilesets.push(tileset);
