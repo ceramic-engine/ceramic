@@ -1,4 +1,4 @@
-package plugin.spine.macros;
+package ceramic.macros;
 
 import ceramic.macros.AssetsMacro;
 import ceramic.macros.MacroCache;

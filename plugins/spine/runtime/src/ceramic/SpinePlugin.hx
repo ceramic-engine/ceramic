@@ -1,4 +1,4 @@
-package plugin;
+package ceramic;
 
 import ceramic.App;
 import ceramic.Entity;
@@ -8,10 +8,10 @@ import ceramic.AssetId;
 import ceramic.Asset;
 import ceramic.Either;
 
-import plugin.spine.SpineAsset;
-import plugin.spine.SpineData;
-import plugin.spine.Spines;
-import plugin.spine.ConvertSpineData;
+import ceramic.SpineAsset;
+import ceramic.SpineData;
+import ceramic.Spines;
+import ceramic.ConvertSpineData;
 
 import spine.Bone;
 
@@ -39,7 +39,7 @@ class SpinePlugin {
             log('Init spine plugin');
 
             // Generate spine asset ids
-            var clazz = Type.resolveClass('plugin.spine.Spines');
+            var clazz = Type.resolveClass('ceramic.Spines');
             for (key in @:privateAccess Spines._ids.keys()) {
                 var id = @:privateAccess Spines._ids.get(key);
                 var info:Dynamic = Reflect.field(clazz, key);
@@ -47,11 +47,11 @@ class SpinePlugin {
             }
 
             // Extend assets with `spine` kind
-            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['plugin.spine.SpineData']);
+            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['ceramic.SpineData']);
 
             // Extend converters
             var convertSpineData = new ConvertSpineData();
-            ceramic.App.app.converters.set('plugin.spine.SpineData', convertSpineData);
+            ceramic.App.app.converters.set('ceramic.SpineData', convertSpineData);
 
             // Load additional shaders required by spine
             ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {

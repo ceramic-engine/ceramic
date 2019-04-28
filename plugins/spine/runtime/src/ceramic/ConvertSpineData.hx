@@ -1,10 +1,10 @@
-package plugin.spine;
+package ceramic;
 
 import ceramic.Assets;
 import ceramic.ConvertField;
 
-import plugin.SpinePlugin;
-using plugin.SpinePlugin;
+import ceramic.SpinePlugin;
+using ceramic.SpinePlugin;
 
 class ConvertSpineData implements ConvertField<String,SpineData> {
 

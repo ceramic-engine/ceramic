@@ -7,5 +7,5 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-import plugin.SpinePlugin;
-using plugin.SpinePlugin;
+import ceramic.SpinePlugin;
+using ceramic.SpinePlugin;

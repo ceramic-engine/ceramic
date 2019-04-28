@@ -1,9 +1,9 @@
-package plugin.spine;
+package ceramic;
 
 import spine.support.graphics.TextureAtlas;
 import spine.support.graphics.TextureLoader;
 
-@:access(plugin.spine.SpineAsset)
+@:access(ceramic.SpineAsset)
 class SpineTextureLoader implements TextureLoader
 {
     private var asset:SpineAsset;

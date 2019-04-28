@@ -1,4 +1,4 @@
-package plugin.spine;
+package ceramic;
 
 import spine.support.files.FileHandle;
 

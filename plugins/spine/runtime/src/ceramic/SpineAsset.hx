@@ -1,4 +1,4 @@
-package plugin.spine;
+package ceramic;
 
 import spine.support.graphics.TextureAtlas;
 import haxe.io.Path;

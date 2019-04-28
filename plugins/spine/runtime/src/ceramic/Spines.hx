@@ -1,9 +1,9 @@
-package plugin.spine;
+package ceramic;
 
 import ceramic.AssetId;
 
 #if !macro
-@:build(plugin.spine.macros.SpineMacros.buildNames())
+@:build(ceramic.macros.SpineMacros.buildNames())
 #end
 class Spines {
 
@@ -11,7 +11,7 @@ class Spines {
 
     public static function toAssetId(skeletonName:String):AssetId<Dynamic> {
 
-        if (_clazz == null) _clazz = Type.resolveClass('plugin.spine.Spines');
+        if (_clazz == null) _clazz = Type.resolveClass('ceramic.Spines');
         return Reflect.field(_clazz, skeletonName);
 
     } //toAssetId

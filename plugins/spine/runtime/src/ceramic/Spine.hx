@@ -1,4 +1,4 @@
-package plugin.spine;
+package ceramic;
 
 import spine.utils.SkeletonClipping;
 import spine.support.graphics.TextureAtlas;
@@ -22,7 +22,7 @@ import ceramic.Shaders;
 import ceramic.Triangulate;
 import ceramic.Shortcuts.*;
 
-using plugin.SpinePlugin;
+using ceramic.SpinePlugin;
 using ceramic.Extensions;
 
 using StringTools;
@@ -1510,7 +1510,7 @@ typedef BindSlotOptions = {
 
 } //BindSlotOptions
 
-@:allow(plugin.spine.Spine)
+@:allow(ceramic.Spine)
 private class BindSlot {
 
     public var fromParentSlot:String = null;

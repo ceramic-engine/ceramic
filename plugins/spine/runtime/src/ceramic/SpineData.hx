@@ -1,4 +1,4 @@
-package plugin.spine;
+package ceramic;
 
 import ceramic.Entity;
 
@@ -7,7 +7,7 @@ import spine.support.files.FileHandle;
 import spine.attachments.*;
 import spine.*;
 
-import plugin.SpinePlugin;
+import ceramic.SpinePlugin;
 
 using StringTools;
 using ceramic.Extensions;

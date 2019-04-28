@@ -2,8 +2,8 @@ package;
 
 import ceramic.InitSettings;
 
-import plugin.spine.Spine;
-import plugin.spine.Spines;
+import ceramic.Spine;
+import ceramic.Spines;
 
 class Project extends Entity {
 
