@@ -1,4 +1,4 @@
-package plugin.spine.macros;
+package ceramic.macros;
 
 import ceramic.macros.AssetsMacro;
 import ceramic.macros.MacroCache;
@@ -24,7 +24,7 @@ class TilemapMacros {
 
         AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);
 
-        var nameFields = AssetsMacro.computeNames(fields, pos, 'tilemap', ['tmx'], true);
+        var nameFields = AssetsMacro.computeNames(fields, pos, 'tilemap', ['tmx']);
 
         for (field in nameFields) {
             fields.push(field);

@@ -1,4 +1,4 @@
-package plugin.spine;
+package ceramic;
 
 import ceramic.Assets;
 import ceramic.ConvertField;

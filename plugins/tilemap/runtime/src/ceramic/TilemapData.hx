@@ -46,6 +46,10 @@ class TilemapData extends Entity {
     
     public var layers:Array<TilemapLayer> = [];
 
+/// Related asset
+
+    public var asset:TilemapAsset;
+
 /// Lifecycle
 
     public function new() {

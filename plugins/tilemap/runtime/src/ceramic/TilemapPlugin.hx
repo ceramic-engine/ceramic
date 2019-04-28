@@ -52,7 +52,7 @@ class TilemapPlugin {
 
     } //addTilemap
 
-    public static function ensureSpine(assets:Assets, name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TilemapAsset->Void):Void {
+    public static function ensureTilemap(assets:Assets, name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TilemapAsset->Void):Void {
 
         if (!name.startsWith('tilemap:')) name = 'tilemap:' + name;
 
@@ -63,7 +63,7 @@ class TilemapPlugin {
     } //ensureTilemap
 
     @:access(ceramic.Assets)
-    public static function spine(assets:Assets, name:Either<String,AssetId<String>>):SpineData {
+    public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>):TilemapData {
 
         if (!name.startsWith('tilemap:')) name = 'tilemap:' + name;
         
@@ -71,7 +71,7 @@ class TilemapPlugin {
         var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(name);
         if (asset == null) return null;
 
-        return asset.spineData;
+        return asset.tilemapData;
 
     } //tilemap
 
