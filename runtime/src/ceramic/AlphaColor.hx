@@ -130,4 +130,24 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
         return value > 0xff ? 0xff : value < 0 ? 0 : value;
     }
 
+    /**
+     * Return a String representation of the color in the format
+     *
+     * @param prefix Whether to include "0x" prefix at start of string
+     * @return    A string of length 10 in the format 0xAARRGGBB
+     */
+    public inline function toHexString(prefix:Bool = true):String
+    {
+        return (prefix ? "0x" : "") +
+            StringTools.hex(alpha, 2) + StringTools.hex(red, 2) + StringTools.hex(green, 2) + StringTools.hex(blue, 2);
+    }
+
+/// To string
+
+    inline public function toString() {
+
+        return toHexString();
+
+    } //toString
+
 } //AlphaColor
