@@ -172,7 +172,7 @@ class TilemapParser {
             for (i in 0...tmxMap.layers.length) {
                 var tmxLayer = tmxMap.layers[i];
 
-                inline function copyTmxLayerData(tmxLayer:TmxBaseLayer, layer:TilemapLayer) {
+                inline function copyTmxLayerData(tmxLayer:TmxBaseLayer, layer:TilemapLayerData) {
                     layer.name = tmxLayer.name;
                     if (tmxLayer.x != null) layer.x = Std.int(tmxLayer.x);
                     if (tmxLayer.y != null) layer.y = Std.int(tmxLayer.y);
@@ -186,7 +186,7 @@ class TilemapParser {
 
                 switch (tmxLayer) {
                     case LTileLayer(_layer):
-                        var layer = new TilemapLayer();
+                        var layer = new TilemapLayerData();
                         copyTmxLayerData(_layer, layer);
                         if (_layer.data != null && _layer.data.tiles != null) {
                             // Ceramic tilemap tile encoding follows TMX tile encoding,

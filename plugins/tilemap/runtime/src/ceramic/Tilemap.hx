@@ -18,11 +18,47 @@ class Tilemap extends Quad {
     function set_tileScale(tileScale:Float):Float {
         if (this.tileScale == tileScale) return tileScale;
         this.tileScale = tileScale;
-        contentDirty = true;
+        if (tileScale != -1) {
+            for (i in 0...layers.length) {
+                layers.unsafeGet(i).tileScale = tileScale;
+            }
+        }
         return tileScale;
     }
 
-    public var tileQuads(default,null):Array<Quad> = [];
+    public var clipTilesX(default,set):Float = -1;
+    function set_clipTilesX(clipTilesX:Float):Float {
+        if (this.clipTilesX == clipTilesX) return clipTilesX;
+        this.clipTilesX = clipTilesX;
+        contentDirty = true;
+        return clipTilesX;
+    }
+
+    public var clipTilesY(default,set):Float = -1;
+    function set_clipTilesY(clipTilesY:Float):Float {
+        if (this.clipTilesY == clipTilesY) return clipTilesY;
+        this.clipTilesY = clipTilesY;
+        contentDirty = true;
+        return clipTilesY;
+    }
+
+    public var clipTilesWidth(default,set):Float = -1;
+    function set_clipTilesWidth(clipTilesWidth:Float):Float {
+        if (this.clipTilesWidth == clipTilesWidth) return clipTilesWidth;
+        this.clipTilesWidth = clipTilesWidth;
+        contentDirty = true;
+        return clipTilesWidth;
+    }
+
+    public var clipTilesHeight(default,set):Float = -1;
+    function set_clipTilesHeight(clipTilesHeight:Float):Float {
+        if (this.clipTilesHeight == clipTilesHeight) return clipTilesHeight;
+        this.clipTilesHeight = clipTilesHeight;
+        contentDirty = true;
+        return clipTilesHeight;
+    }
+
+    public var layers:Array<TilemapLayer> = [];
 
 /// Overrides
 
@@ -55,66 +91,55 @@ class Tilemap extends Quad {
             return;
         }
 
-        computeTileQuads();
+        computeLayers();
 
         contentDirty = false;
 
     } //computeContent
 
-    function computeTileQuads() {
+    function computeLayers() {
 
-        var usedQuads = 0;
+        var usedLayers = 0;
         var tileScale = this.tileScale;
-        
-        // TODO
-        /*switch (tilemapData.renderOrder) {
-            case RIGHT_DOWN:
-            case RIGHT_UP:
-            case LEFT_DOWN:
-            case LEFT_UP:
-        }*/
 
         for (l in 0...tilemapData.layers.length) {
-            var layer = tilemapData.layers.unsafeGet(l);
+            var layerData = tilemapData.layers.unsafeGet(l);
 
-            if (layer.visible && layer.tiles != null) {
-                for (t in 0...layer.tiles.length) {
-                    var tile = layer.tiles.unsafeGet(t);
-                    var gid = tile.gid;
-                    
-                    var tileset = tilemapData.tilesetForGid(gid);
-
-                    if (tileset != null && tileset.image != null && tileset.columns > 0) {
-                        var index = gid - tileset.firstGid;
-
-                        var quad:Quad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
-                        if (quad == null) {
-                            quad = new Quad();
-                            quad.inheritAlpha = true;
-                            tileQuads.push(quad);
-                            add(quad);
-                        }
-                        usedQuads++;
-
-                        quad.visible = true;
-                        quad.texture = tileset.image.texture;
-                        quad.frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
-                        quad.frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2) + tileset.spacing;
-                        quad.frameWidth = tileset.tileWidth;
-                        quad.frameHeight = tileset.tileHeight;
-                        quad.depth = l; // TODO
-                        quad.x = ((t % layer.width) + layer.x) * tileset.tileWidth + layer.offsetX;
-                        quad.y = (Math.floor(t / layer.width) + layer.y) * tileset.tileWidth + layer.offsetY;
-                        quad.scaleX = (tile.horizontalFlip ? -1 : 1) * tileScale;
-                        quad.scaleY = (tile.verticalFlip ? -1 : 1) * tileScale;
-                        quad.rotation = tile.diagonalFlip ? -90 : 0; // Not sure about this, need to test
-
-                    }
-
-                }
+            var layer:TilemapLayer = usedLayers < layers.length ? layers[usedLayers] : null;
+            if (layer == null) {
+                layer = new TilemapLayer();
+                if (tileScale != -1) layer.tileScale = tileScale;
+                layer.depthRange = 1;
+                layers.push(layer);
+                add(layer);
             }
+            usedLayers++;
+
+            layer.depth = l + 1;
+            layer.layerData = layerData;
+            layer.clipTilesX = clipTilesX;
+            layer.clipTilesY = clipTilesY;
+            layer.clipTilesWidth = clipTilesWidth;
+            layer.clipTilesHeight = clipTilesHeight;
         }
 
-    } //computeTileQuads
+        // Remove unused layers
+        while (usedLayers < layers.length) {
+            var layer = layers.pop();
+            layer.destroy();
+        }
+
+    } //computeLayers
+
+/// Clip
+
+    public function clipTiles(clipTilesX, clipTilesY, clipTilesWidth, clipTilesHeight) {
+
+        this.clipTilesX = clipTilesX;
+        this.clipTilesY = clipTilesY;
+        this.clipTilesWidth = clipTilesWidth;
+        this.clipTilesHeight = clipTilesHeight;
+
+    } //clipTiles
 
 } //Tilemap

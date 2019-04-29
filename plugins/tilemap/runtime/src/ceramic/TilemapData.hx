@@ -46,7 +46,7 @@ class TilemapData extends Entity {
     
     public var tilesets:Array<Tileset> = [];
     
-    public var layers:Array<TilemapLayer> = [];
+    public var layers:Array<TilemapLayerData> = [];
 
 /// Related asset
 
@@ -64,6 +64,11 @@ class TilemapData extends Entity {
             asset.destroy();
             asset = null;
         }
+
+        for (i in 0...layers.length) {
+            layers[i].destroy();
+        }
+        layers = null;
         
     } //destroy
 
