@@ -50,6 +50,9 @@ class ImageAsset extends Asset {
 
                 if (prevTexture != null) {
 
+                    // Use same filter as previous texture
+                    this.texture.filter = prevTexture.filter;
+
                     // When replacing the texture, emit an event to notify about it
                     emitReplaceTexture(this.texture, prevTexture);
 
