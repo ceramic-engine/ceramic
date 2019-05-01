@@ -4,6 +4,10 @@ import ceramic.Shortcuts.*;
 
 class ImageAsset extends Asset {
 
+/// Events
+
+    @event function replaceTexture(newTexture:Texture, prevTexture:Texture);
+
 /// Properties
 
     public var pixels:Pixels = null;
@@ -45,6 +49,10 @@ class ImageAsset extends Asset {
                 this.texture.asset = this;
 
                 if (prevTexture != null) {
+
+                    // When replacing the texture, emit an event to notify about it
+                    emitReplaceTexture(this.texture, prevTexture);
+
                     // Texture was reloaded. Update related visuals
                     for (visual in [].concat(app.visuals)) {
                         if (visual.quad != null) {

@@ -15,6 +15,10 @@ using StringTools;
 
 class SpineAsset extends Asset {
 
+/// Events
+
+    @event function replaceSpineData(newSpineData:SpineData, prevSpineData:SpineData);
+
 /// Properties
 
     public var json:String = null;
@@ -165,6 +169,10 @@ class SpineAsset extends Asset {
 
                         // Update prev spine data
                         if (prevSpineData != null) {
+
+                            // When replacing the spine data, emit an event to notify about it
+                            emitReplaceSpineData(this.spineData, prevSpineData);
+
                             for (visual in [].concat(ceramic.App.app.visuals)) {
                                 if (Std.is(visual, Spine)) {
                                     var spine:Spine = cast visual;

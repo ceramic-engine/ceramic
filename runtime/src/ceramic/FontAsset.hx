@@ -4,6 +4,10 @@ import ceramic.Shortcuts.*;
 
 class FontAsset extends Asset {
 
+/// Events
+
+    @event function replaceFont(newFont:BitmapFont, prevFont:BitmapFont);
+
 /// Properties
 
     public var fontData:BitmapFontData = null;
@@ -98,6 +102,10 @@ class FontAsset extends Asset {
                             this.font = newFont;
 
                             if (prevFont != null) {
+
+                                // When replacing the font, emit an event to notify about it
+                                emitReplaceFont(this.font, prevFont);
+
                                 // Is this app's default font?
                                 if (prevFont == app.defaultFont) {
                                     // Yes, then replace it with new one
