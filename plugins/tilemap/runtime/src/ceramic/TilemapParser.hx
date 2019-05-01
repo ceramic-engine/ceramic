@@ -87,6 +87,12 @@ class TilemapParser {
                 var tmxTileset = tmxMap.tilesets[i];
                 var tileset = new Tileset();
 
+                // Need to cleanup tileset when destroying related tilemap,
+                // because this tileset is embedded.
+                // May handle this differently later if tilesets are shared
+                // across multiple tilemaps
+                tilemapData.onDestroy(tileset, function() tileset.destroy());
+
                 if (tmxTileset.firstGID != null) {
                     tileset.firstGid = tmxTileset.firstGID;
                 }
@@ -123,6 +129,9 @@ class TilemapParser {
                 if (tmxTileset.image != null) {
                     var tmxImage = tmxTileset.image;
                     var image = new TilesetImage();
+
+                    // Need to cleanup images when destroying related tileset
+                    tileset.onDestroy(image, function() image.destroy());
 
                     if (tmxImage.width != null) {
                         image.width = tmxImage.width;

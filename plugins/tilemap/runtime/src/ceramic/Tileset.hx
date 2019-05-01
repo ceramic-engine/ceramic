@@ -1,6 +1,6 @@
 package ceramic;
 
-class Tileset {
+class Tileset extends Entity {
 
     /** First global id. Maps to the first tile in this tileset. */
     public var firstGid:Int = -1;

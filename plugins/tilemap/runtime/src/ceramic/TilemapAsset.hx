@@ -31,7 +31,7 @@ class TilemapAsset extends Asset {
     override public function new(name:String, ?options:AssetOptions) {
 
         super('tilemap', name, options);
-        handleTexturesDensityChange = true;
+        handleTexturesDensityChange = false;
 
         assets = new Assets();
 
@@ -117,8 +117,7 @@ class TilemapAsset extends Asset {
             var path = tmxImage.source;
             var pathInfo = Assets.decodePath(path);
             var asset = new ImageAsset(pathInfo.name);
-            asset.handleTexturesDensityChange = false;
-            asset.path = pathInfo.path;
+            asset.handleTexturesDensityChange = true;
             asset.onDestroy(this, function() {
                 // Should we do some cleanup here?
             });
