@@ -489,4 +489,19 @@ class Assets extends Entity {
 
     } //addAssetKind
 
+    public static function assetNameFromPath(path:String):String {
+
+        for (name in Assets.allByName.keys()) {
+            var list = Assets.allByName.get(name);
+            for (i in 0...list.length) {
+                if (list[i] == path) {
+                    return name;
+                }
+            }
+        }
+
+        return null;
+
+    } //assetIdForFilePath
+
 } //Assets
