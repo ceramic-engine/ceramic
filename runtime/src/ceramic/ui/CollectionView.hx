@@ -252,6 +252,9 @@ class CollectionView extends ScrollView {
             for (i in 0...frames.length) {
                 var frame = frames[i];
                 frame.visible = collectionViewLayout.isFrameVisible(this, frame);
+                if (frame.visible && frame.width <= 0 || frame.height <= 0) {
+                    frame.visible = false;
+                }
 
                 // We first handle all invisible frames, so that we can harvest reusable views
                 // and provide them on new frames right after
