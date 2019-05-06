@@ -24,4 +24,10 @@ class CollectionViewItemFrame {
 
     } //new
 
+/// Print
+
+    function toString() {
+        return 'Frame(x=$x y=$y w=$width h=$height)';
+    }
+
 } //CollectionViewItemFrame
