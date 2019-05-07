@@ -72,6 +72,17 @@ class EntityMacro {
                                         // Add initialization code in constructor
                                         switch (constructor.kind) {
                                             case FFun(fn):
+
+                                                // Ensure expr is surrounded with a block
+                                                switch (fn.expr.expr) {
+                                                    case EBlock(exprs):
+                                                    default:
+                                                        fn.expr.expr = EBlock([{
+                                                            pos: fn.expr.pos,
+                                                            expr: fn.expr.expr
+                                                        }]);
+                                                }
+                                                
                                                 switch (fn.expr.expr) {
                                                     case EBlock(exprs):
 
@@ -162,6 +173,16 @@ class EntityMacro {
                                     }
                                 }
 
+                                // Ensure expr is surrounded with a block
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+                                    default:
+                                        fn.expr.expr = EBlock([{
+                                            pos: fn.expr.pos,
+                                            expr: fn.expr.expr
+                                        }]);
+                                }
+
                                 switch (fn.expr.expr) {
                                     case EBlock(exprs):
 
@@ -191,10 +212,20 @@ class EntityMacro {
                                     }
                                 }
 
+                                // Ensure expr is surrounded with a block
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+                                    default:
+                                        fn.expr.expr = EBlock([{
+                                            pos: fn.expr.pos,
+                                            expr: fn.expr.expr
+                                        }]);
+                                }
+
+                                // Add if destroyed check at the top
                                 switch (fn.expr.expr) {
                                     case EBlock(exprs):
 
-                                        // Add if destroyed check at the top
                                         exprs.unshift(macro {
                                             if (disposed) return;
                                             super.dispose();
@@ -218,6 +249,16 @@ class EntityMacro {
                                     if (line.indexOf('super.restore();') != -1) {
                                         throw new Error("Explicit call to super.restore() is not allowed. This is done automatically", field.pos);
                                     }
+                                }
+
+                                // Ensure expr is surrounded with a block
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+                                    default:
+                                        fn.expr.expr = EBlock([{
+                                            pos: fn.expr.pos,
+                                            expr: fn.expr.expr
+                                        }]);
                                 }
 
                                 switch (fn.expr.expr) {

@@ -50,6 +50,16 @@ class ComponentMacro {
                                     throw new Error("Explicit call to super.init() is not allowed. This is done automatically", field.pos);
                                 }
                             }
+                            
+                            // Ensure expr is surrounded with a block
+                            switch (fn.expr.expr) {
+                                case EBlock(exprs):
+                                default:
+                                    fn.expr.expr = EBlock([{
+                                        pos: fn.expr.pos,
+                                        expr: fn.expr.expr
+                                    }]);
+                            }
 
                             switch (fn.expr.expr) {
                                 case EBlock(exprs):
