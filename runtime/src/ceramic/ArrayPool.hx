@@ -14,6 +14,8 @@ class ArrayPool {
 
     static var dynPool10000:ArrayPool = new ArrayPool(10000);
 
+    static var dynPool100000:ArrayPool = new ArrayPool(100000);
+
     public static function pool(size:Int):ArrayPool {
 
         if (size <= 10) {
@@ -28,6 +30,9 @@ class ArrayPool {
         else if (size <= 10000) {
             return cast dynPool10000;
         }
+        else if (size <= 100000) {
+            return cast dynPool100000;
+        }
         else {
             return null;
         }
@@ -37,7 +42,7 @@ class ArrayPool {
 /// Properties
 
 #if cs
-    var arrays:ReusableArray<Dynamic> = null; // Arrays or arrays seem to create problems in C#
+    var arrays:ReusableArray<Dynamic> = null; // Arrays of arrays seem to create problems in C#
 #else
     var arrays:ReusableArray<ReusableArray<Dynamic>> = null;
 #end
