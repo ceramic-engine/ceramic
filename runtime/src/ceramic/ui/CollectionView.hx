@@ -271,7 +271,9 @@ class CollectionView extends ScrollView {
 
 /// Helpers
 
-    public function scrollToItem(itemIndex:Int) {
+    public function scrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.START) {
+
+        // TODO handle itemPosition option
 
         var targetScrollX = scroller.scrollX;
         var targetScrollY = scroller.scrollY;
@@ -297,6 +299,16 @@ class CollectionView extends ScrollView {
             else if (targetScrollX < frame.x + frame.width - width) {
                 targetScrollX = frame.x + frame.width - width;
             }
+        }
+
+        // Check bounds
+        var lastFrame = frames[frames.length - 1];
+        var maxScrollX = lastFrame.x + lastFrame.width - width;
+        if (targetScrollX > maxScrollX) {
+            targetScrollX = maxScrollX;
+        }
+        if (targetScrollX < 0) {
+            targetScrollX = 0;
         }
 
         scroller.scrollTo(targetScrollX, targetScrollY);
