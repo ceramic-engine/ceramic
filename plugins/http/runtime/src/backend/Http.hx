@@ -73,6 +73,7 @@ class Http implements spec.Http {
             done({
                 status: resStatus,
                 content: resStatus < 200 || resStatus >= 300 ? null : resContent,
+                binaryContent: null,
                 headers: resHeaders,
                 error: resError
             });
@@ -115,6 +116,7 @@ class Http implements spec.Http {
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
+                binaryContent: null,
                 headers: headers,
                 error: rawResponse.error
             });
@@ -150,6 +152,7 @@ class Http implements spec.Http {
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
+                binaryContent: null,
                 headers: headers,
                 error: rawResponse.error
             });
@@ -212,6 +215,7 @@ class Http implements spec.Http {
             var response:HttpResponse = {
                 status: 408,
                 content: null,
+                binaryContent: null,
                 headers: headers,
                 error: null
             };
@@ -247,6 +251,7 @@ class Http implements spec.Http {
             var response:HttpResponse = {
                 status: xhr.status,
                 content: xhr.responseText,
+                binaryContent: null,
                 headers: headers,
                 error: null
             };
@@ -279,6 +284,7 @@ class Http implements spec.Http {
             var response:HttpResponse = {
                 status: xhr.status,
                 content: null,
+                binaryContent: null,
                 headers: headers,
                 error: xhr.statusText
             };
@@ -338,6 +344,7 @@ class Http implements spec.Http {
                 var response:HttpResponse = {
                     status: res.status,
                     content: res.content,
+                    binaryContent: res.contentIsBinary ? res.contentRaw : null,
                     headers: headers,
                     error: null // TODO
                 };
@@ -367,6 +374,7 @@ class Http implements spec.Http {
                 _done({
                     status: 408,
                     content: null,
+                    binaryContent: null,
                     headers: new Map(),
                     error: null
                 });
@@ -380,6 +388,7 @@ class Http implements spec.Http {
         done({
             status: 404,
             content: null,
+            binaryContent: null,
             headers: new Map(),
             error: 'Not implemented'
         });
