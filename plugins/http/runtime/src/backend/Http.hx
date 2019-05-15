@@ -9,6 +9,7 @@ import js.html.XMLHttpRequest;
 #end
 
 import ceramic.Shortcuts.*;
+import haxe.io.Path;
 
 using StringTools;
 
@@ -395,5 +396,20 @@ class Http implements spec.Http {
 #end
 
     } //request
+
+    public function download(url:String, targetPath:String, done:String->Void):Void {
+
+        if (!Path.isAbsolute(targetPath)) {
+            var basePath = app.backend.info.storageDirectory();
+            if (basePath == null) {
+                warning('Cannot download $url at path $targetPath because there is no storage directory');
+                return;
+            }
+            targetPath = Path.join([basePath, targetPath]);
+        }
+
+        // TODO
+
+    } //download
 
 } //Http
