@@ -449,9 +449,9 @@ class App extends Entity {
         hxt.advance_frame();
 #end
 
-        Runner.tick();
-
         Timer.update(delta);
+
+        Runner.tick();
 
         // Run 'begin update' callbacks, like touch/mouse/key events etc...
         if (beginUpdateCallbacks.length > 0) {
