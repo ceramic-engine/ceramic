@@ -247,6 +247,8 @@ class App extends Entity {
         hxt = new HxTelemetry(cfg);
 #end
 
+        Runner.init();
+
         settings = new Settings();
         screen = new Screen();
 
@@ -446,6 +448,8 @@ class App extends Entity {
 #if hxtelemetry
         hxt.advance_frame();
 #end
+
+        Runner.tick();
 
         Timer.update(delta);
 
