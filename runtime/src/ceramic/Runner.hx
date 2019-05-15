@@ -67,7 +67,7 @@ class Runner {
         #if cpp
         queue.push(_fn);
         #else
-        app.onceImmediate(fn);
+        app.onceImmediate(_fn);
         #end
 
     } //runInMain
