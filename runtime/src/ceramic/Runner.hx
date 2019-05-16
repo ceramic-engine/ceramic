@@ -72,34 +72,6 @@ class Runner {
 
     } //runInMain
 
-    /** Call a function on the primary thread and wait for the return value.
-        This will block the calling thread for a maximum of _timeout, default to 0.1s.
-        To call without a return or blocking, use call_primary */
-    public static function runInMainBlocking<T>(_fn:Void->T, _timeout:Float=0.1):Null<T> {
-
-        #if cpp
-        var res:T = null;
-        var lock = new cpp.vm.Lock();
-
-        //add to main to call this
-        queue.push(function() {
-            res = _fn();
-            lock.release();
-        });
-
-        //wait for the lock release or timeout
-        lock.wait(_timeout);
-
-        //clean up
-        lock = null;
-        //return result
-        return res;
-        #else
-        return _fn();
-        #end
-
-    } //runInMainBlocking
-
     /** Create a background thread using the given function, or just run (deferred) the function if threads are not supported */
     public static function runInBackground(fn:Void->Void):Void {
 
