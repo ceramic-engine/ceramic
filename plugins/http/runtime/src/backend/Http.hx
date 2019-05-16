@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.Runner;
 #if android
 import android.Http as AndroidHttp;
 #elseif ios
@@ -10,6 +11,11 @@ import js.html.XMLHttpRequest;
 
 import ceramic.Shortcuts.*;
 import haxe.io.Path;
+
+#if sys
+import sys.FileSystem;
+import sys.io.File;
+#end
 
 using StringTools;
 
@@ -403,12 +409,92 @@ class Http implements spec.Http {
             var basePath = app.backend.info.storageDirectory();
             if (basePath == null) {
                 warning('Cannot download $url at path $targetPath because there is no storage directory');
+                done(null);
                 return;
             }
             targetPath = Path.join([basePath, targetPath]);
         }
 
-        // TODO
+        var tmpTargetPath = targetPath + '.tmpdl';
+
+        #if cpp
+
+        // Ensure we can write the file at the desired location
+        if (FileSystem.exists(tmpTargetPath)) {
+            if (FileSystem.isDirectory(tmpTargetPath)) {
+                error('Cannot overwrite directory named $tmpTargetPath');
+                done(null);
+                return;
+            }
+            FileSystem.deleteFile(tmpTargetPath);
+        }
+        var dir = Path.directory(tmpTargetPath);
+        if (!FileSystem.exists(dir)) {
+            FileSystem.createDirectory(dir);
+        }
+        else if (!FileSystem.isDirectory(dir)) {
+            error('Target directory $dir should be a directory, but it is a file');
+            done(null);
+            return;
+        }
+
+        function finishDownload() {
+            
+            if (FileSystem.exists(tmpTargetPath)) {
+                if (FileSystem.exists(targetPath)) {
+                    if (FileSystem.isDirectory(targetPath)) {
+                        error('Cannot overwrite directory named $targetPath');
+                        done(null);
+                        return;
+                    }
+                    FileSystem.deleteFile(targetPath);
+                }
+                FileSystem.rename(tmpTargetPath, targetPath);
+                if (FileSystem.exists(targetPath) && !FileSystem.isDirectory(targetPath)) {
+                    success('Downloaded file from url $url at path $targetPath');
+                    done(targetPath);
+                    return;
+                }
+                else {
+                    error('Error when copying $tmpTargetPath to $targetPath');
+                    done(null);
+                    return;
+                }
+            }
+            else {
+                error('Failed to download $url at path $targetPath. No downloaded file.');
+                done(null);
+                return;
+            }
+
+        } //finishDownload
+
+        #if (mac || linux)
+        // Use built-in curl on mac & linux, that's the easiest!
+        Runner.runInBackground(function() {
+            Sys.command('curl', ['-sS', url, '--output', tmpTargetPath]);
+            Runner.runInMain(finishDownload);
+        });
+        return;
+        #elseif windows
+        // Use curl through powershell on windows
+        Runner.runInBackground(function() {
+            var escapedArgs = [];
+            for (arg in ['-sS', url, '--output', tmpTargetPath]) {
+                escapedArgs.push(StringTools.quoteWinArg(arg));
+            }
+            
+            Sys.command('powershell', ['-command', escapedArgs.join(' ')]);
+            Runner.runInMain(finishDownload);
+        });
+        return;
+        #end
+
+        #end
+
+        // Too bad
+        error('Cannot download $url at path $targetPath because download is not supported on this target');
+        done(null);
 
     } //download
 
