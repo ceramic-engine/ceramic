@@ -12,4 +12,6 @@
 
 + (void)sendHTTPRequest:(NSDictionary *)params done:(void (^)(NSDictionary *response))done;
 
++ (void)download:(NSDictionary *)params targetPath:(NSString *)targetPath done:(void (^)(NSString *fullPath))done;
+
 @end

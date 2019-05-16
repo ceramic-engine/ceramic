@@ -417,7 +417,17 @@ class Http implements spec.Http {
 
         var tmpTargetPath = targetPath + '.tmpdl';
 
-        #if cpp
+        #if ios
+
+        IosHttp.download({ url: url }, targetPath, function(fullPath) {
+            if (fullPath == null) {
+                error('Failed to download $url at path $targetPath');
+            }
+            done(fullPath);
+        });
+        return;
+
+        #elseif cpp
 
         // Ensure we can write the file at the desired location
         if (FileSystem.exists(tmpTargetPath)) {
