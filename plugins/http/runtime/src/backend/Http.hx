@@ -427,6 +427,16 @@ class Http implements spec.Http {
         });
         return;
 
+        #elseif android
+
+        AndroidHttp.download({ url: url }, targetPath, function(fullPath) {
+            if (fullPath == null) {
+                error('Failed to download $url at path $targetPath');
+            }
+            done(fullPath);
+        });
+        return;
+
         #elseif cpp
 
         // Ensure we can write the file at the desired location
