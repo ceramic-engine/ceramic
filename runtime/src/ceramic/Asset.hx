@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
+import haxe.io.Path;
 
 using StringTools;
 
@@ -131,6 +132,11 @@ class Asset extends Entity implements Observable {
         ;
 
         var name = this.name;
+
+        // When the name is an absolute path, use it as path
+        if (path == null && name != null && Path.isAbsolute(name)) {
+            path = name;
+        }
 
         if (extensions.length > 0) {
 
