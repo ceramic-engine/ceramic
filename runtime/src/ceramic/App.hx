@@ -30,6 +30,10 @@ using ceramic.Extensions;
 #end
 @:allow(ceramic.Visual)
 @:allow(ceramic.Screen)
+#if lua
+@dynamicEvents
+@:dce
+#end
 class App extends Entity {
 
 /// Shared instances

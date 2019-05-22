@@ -5,6 +5,10 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
+#if lua
+@dynamicEvents
+@:dce
+#end
 class Screen extends Entity implements Observable {
 
 /// Properties

@@ -10,6 +10,10 @@ using ceramic.Extensions;
 
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
+#if lua
+@dynamicEvents
+@:dce
+#end
 class Visual extends Entity {
 
 /// Events
