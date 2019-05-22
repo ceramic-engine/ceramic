@@ -293,9 +293,6 @@ class EventsMacro {
                             if (this.$cbOnArray != null) len += this.$cbOnArray.length;
                             if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
                             if (len > 0) {
-                                // TODO avoid allocation here while still keeping this safe?
-                                // Some recycling of Vector objects could probably be done here
-                                //var callbacks = new haxe.ds.Vector<$handlerType>(len);
                                 var pool = ceramic.ArrayPool.pool(len);
                                 var callbacks = pool.get();
                                 #if ceramic_debug_events
