@@ -128,6 +128,10 @@ class Setup extends tools.Task {
         }
 
         for (key in Reflect.fields(project.app.defines)) {
+
+            // Reserved by haxe
+            if (key == 'lua') continue;
+
             var val = Reflect.field(project.app.defines, key);
             if (val == true) {
                 haxeflags.push('-D $key');
@@ -158,13 +162,17 @@ class Setup extends tools.Task {
         finalHxml = finalHxml.concat(libs);
         finalHxml = finalHxml.concat(haxeflags);
 
-        if (target.name == 'node') {
+        if (target.name == 'lua') {
+            finalHxml.push('-lua app.lua');
+        }
+        else if (target.name == 'node') {
             finalHxml.push('-js app.js');
             finalHxml.push('--macro allowPackage("sys")');
             if (variant == 'scripts') {
                 finalHxml.push('--macro include("scripts", true)');
             }
-        } else {
+        }
+        else {
             finalHxml.push('-cpp bin');
         }
 

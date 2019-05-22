@@ -37,9 +37,16 @@ class BackendTools implements tools.spec.BackendTools {
                 Clean('Clean Node')
             ]
         });
-
-        // For now, let's focus on Node.js implementation
-        /*
+        
+        targets.push({
+            name: 'lua',
+            displayName: 'Lua',
+            configs: [
+                Run('Run Lua'),
+                Build('Build Lua'),
+                Clean('Clean Lua')
+            ]
+        });
 
         var os = Sys.systemName();
 
@@ -76,7 +83,6 @@ class BackendTools implements tools.spec.BackendTools {
                 ]
             });
         }
-        */
 
         return targets;
 
