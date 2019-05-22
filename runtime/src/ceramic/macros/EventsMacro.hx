@@ -7,8 +7,26 @@ using StringTools;
 
 class EventsMacro {
 
+    @:allow(ceramic.macros.ObservableMacro)
+    @:allow(ceramic.macros.SerializableMacro)
+    static var _nextEventIndexes:Map<String,Int> = new Map();
+
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
+
+        // Should we dispatch events dynamically?
+        var localClass = Context.getLocalClass().get();
+
+        // Get next event index for this class path
+        var classPath = localClass.pack != null && localClass.pack.length > 0 ? localClass.pack.join('.') + '.' + localClass.name : localClass.name;
+        var nextEventIndex = _nextEventIndexes.exists(classPath) ? _nextEventIndexes.get(classPath) : 1;
+
+        // Check if events should be dispatched dynamically by default on this class
+        #if (!completion && !display)
+        var dynamicDispatch = hasDynamicEventsMeta(localClass.meta.get());
+        #else
+        var dynamicDispatch = false;
+        #end
 
         // Gather all emit{EventName}
         var allEmits:Map<String,Bool> = new Map();
@@ -19,9 +37,12 @@ class EventsMacro {
             fieldsByName.set(field.name, true);
         }
 
+        var newFields = [];
+
         // Also check parent fields
-        var parentHold = Context.getLocalClass().get().superClass;
+        var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
+        var numParents = 0;
         while (parent != null) {
 
             for (field in parent.get().fields.get()) {
@@ -37,13 +58,22 @@ class EventsMacro {
 
             parentHold = parent.get().superClass;
             parent = parentHold != null ? parentHold.t : null;
+            numParents++;
         }
 
-        var newFields = [];
+        // In case of dynamic dispatch, check if event dispatcher
+        // field was added already on current class fields
+        var dispatcherName:String = null;
+        if (dynamicDispatch) {
+            dispatcherName = '__events' + numParents;
+            if (!fieldsByName.exists(dispatcherName)) {
+                EventsMacro.createEventDispatcherField(Context.currentPos(), newFields, dispatcherName);
+            }
+        }
 
         for (field in fields) {
             if (hasEventMeta(field)) {
-                createEventFields(field, newFields, fieldsByName);
+                nextEventIndex = createEventFields(field, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
             }
             else {
                 // Keep field
@@ -71,13 +101,44 @@ class EventsMacro {
             }
         }
 
+        // Store next event index for this class path
+        _nextEventIndexes.set(classPath, nextEventIndex);
+
         return newFields;
 
     } //build
 
     @:allow(ceramic.macros.ObservableMacro)
     @:allow(ceramic.macros.SerializableMacro)
-    static function createEventFields(field:Field, newFields:Array<Field>, fieldsByName:Map<String,Bool>):Void {
+    static function createEventDispatcherField(currentPos:Position, fields:Array<Field>, dispatcherName:String):Void {
+
+        fields.push({
+            pos: currentPos,
+            name: dispatcherName,
+            kind: FVar(
+                macro :ceramic.EventDispatcher,
+                macro new ceramic.EventDispatcher()
+            ),
+            access: [APrivate],
+            doc: '',
+            meta: [{
+                name: ':noCompletion',
+                params: [],
+                pos: currentPos
+            }]
+        });
+
+    } //createEventDispatcherField
+
+    @:allow(ceramic.macros.ObservableMacro)
+    @:allow(ceramic.macros.SerializableMacro)
+    static function createEventFields(field:Field, newFields:Array<Field>, fieldsByName:Map<String,Bool>, dynamicDispatch:Bool, eventIndex:Int, dispatcherName:String):Int {
+
+        // Still allow a field to be generated with static dispatch, even
+        // if default is to generate dynamic dispatch
+        if (dynamicDispatch && hasStaticEventMeta(field)) {
+            dynamicDispatch = false;
+        }
 
         switch (field.kind) {
 
@@ -99,6 +160,7 @@ class EventsMacro {
 
                 var handlerName = 'handle' + [for (arg in fn.args) arg.name.substr(0,1).toUpperCase() + arg.name.substr(1)].join('');
                 var handlerType = TFunction([for (arg in fn.args) arg.type], macro :Void);
+                var handlerNumArgs = fn.args.length;
                 var handlerCallArgs = [for (arg in fn.args) macro $i{arg.name}];
                 var sanitizedName = field.name;
                 while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
@@ -116,153 +178,158 @@ class EventsMacro {
                 }
 
 #if (!display && !completion)
+
                 var cbOnArray = '__cbOn' + capitalName;
                 var cbOnceArray = '__cbOnce' + capitalName;
                 var cbOnOwnerUnbindArray = '__cbOnOwnerUnbind' + capitalName;
                 var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
 
-                // Create __cbOn{Name}
-                var cbOnField = {
-                    pos: field.pos,
-                    name: cbOnArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                handlerType
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOnField);
+                if (!dynamicDispatch) {
 
-                // Create __cbOnce{Name}
-                var cbOnceField = {
-                    pos: field.pos,
-                    name: cbOnceArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                handlerType
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOnceField);
+                    // Create __cbOn{Name}
+                    var cbOnField = {
+                        pos: field.pos,
+                        name: cbOnArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    handlerType
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOnField);
 
-#if ceramic_debug_events
-                var cbOnPosArray = '__cbOnPos' + capitalName;
-                var cbOncePosArray = '__cbOncePos' + capitalName;
+                    // Create __cbOnce{Name}
+                    var cbOnceField = {
+                        pos: field.pos,
+                        name: cbOnceArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    handlerType
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOnceField);
 
-                // Create __cbOnPos{Name}
-                var cbOnPosField = {
-                    pos: field.pos,
-                    name: cbOnPosArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                macro :haxe.PosInfos
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOnPosField);
+                    #if ceramic_debug_events
+                    var cbOnPosArray = '__cbOnPos' + capitalName;
+                    var cbOncePosArray = '__cbOncePos' + capitalName;
 
-                // Create __cbOncePos{Name}
-                var cbOncePosField = {
-                    pos: field.pos,
-                    name: cbOncePosArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                macro :haxe.PosInfos
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOncePosField);
-#end
+                    // Create __cbOnPos{Name}
+                    var cbOnPosField = {
+                        pos: field.pos,
+                        name: cbOnPosArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    macro :haxe.PosInfos
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOnPosField);
 
-                // Create __cbOnOwnerUnbind{Name}
-                var cbOnOwnerUnbindField = {
-                    pos: field.pos,
-                    name: cbOnOwnerUnbindArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                macro :Void->Void
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOnOwnerUnbindField);
+                    // Create __cbOncePos{Name}
+                    var cbOncePosField = {
+                        pos: field.pos,
+                        name: cbOncePosArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    macro :haxe.PosInfos
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOncePosField);
+                    #end
 
-                // Create __cbOnceOwnerUnbind{Name}
-                var cbOnceOwnerUnbindField = {
-                    pos: field.pos,
-                    name: cbOnceOwnerUnbindArray,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                macro :Void->Void
-                            )
-                        ]
-                    })),
-                    access: [APrivate],
-                    doc: doc,
-                    meta: [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }]
-                };
-                newFields.push(cbOnceOwnerUnbindField);
+                    // Create __cbOnOwnerUnbind{Name}
+                    var cbOnOwnerUnbindField = {
+                        pos: field.pos,
+                        name: cbOnOwnerUnbindArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    macro :Void->Void
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOnOwnerUnbindField);
+
+                    // Create __cbOnceOwnerUnbind{Name}
+                    var cbOnceOwnerUnbindField = {
+                        pos: field.pos,
+                        name: cbOnceOwnerUnbindArray,
+                        kind: FVar(TPath({
+                            name: 'Array',
+                            pack: [],
+                            params: [
+                                TPType(
+                                    macro :Void->Void
+                                )
+                            ]
+                        })),
+                        access: [APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(cbOnceOwnerUnbindField);
+
+                }
 
                 // Create emit{Name}()
                 //
@@ -271,310 +338,495 @@ class EventsMacro {
 
                 var willEmit = macro null;
                 if (fieldsByName.exists(fnWillEmit)) {
-                    willEmit = macro this.$fnWillEmit($a{handlerCallArgs});
+                    if (dynamicDispatch) {
+                        willEmit = macro this.$dispatcherName.setWillEmit($v{eventIndex}, this.$fnWillEmit);
+                    }
+                    else {
+                        willEmit = macro this.$fnWillEmit($a{handlerCallArgs});
+                    }
                 }
 
                 var didEmit = macro null;
                 if (fieldsByName.exists(fnDidEmit)) {
-                    didEmit = macro this.$fnDidEmit($a{handlerCallArgs});
+                    if (dynamicDispatch) {
+                        didEmit = macro this.$dispatcherName.setDidEmit($v{eventIndex}, this.$fnDidEmit);
+                    }
+                    else {
+                        didEmit = macro this.$fnDidEmit($a{handlerCallArgs});
+                    }
                 }
 #end
 
-                var emitField = {
-                    pos: field.pos,
-                    name: emitName,
-                    kind: FFun({
-                        args: fn.args,
-                        ret: macro :Void,
+                if (dynamicDispatch) {
+
+                    var emitField = {
+                        pos: field.pos,
+                        name: emitName,
+                        kind: FProp('get', 'never', macro :Dynamic),
+                        access: [hasPublicModifier ? APublic : APrivate],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(emitField);
+                    var get_emitField = {
+                        pos: field.pos,
+                        name: 'get_' + emitName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Dynamic,
+                            expr: macro {
+                                $willEmit;
+                                $didEmit;
+                                return this.$dispatcherName.wrapEmit($v{eventIndex}, $v{handlerNumArgs});
+                            }
+                        }),
+                        access: [AInline, APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':dce',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(get_emitField);
+
+                    var onField = {
+                        pos: field.pos,
+                        name: onName,
+                        kind: FProp('get', 'never', macro :Dynamic),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(onField);
+                    var get_onField = {
+                        pos: field.pos,
+                        name: 'get_' + onName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Dynamic,
+                            expr: macro {
+                                return this.$dispatcherName.wrapOn($v{eventIndex});
+                            }
+                        }),
+                        access: [AInline, APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':dce',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(get_onField);
+
+                    var onceField = {
+                        pos: field.pos,
+                        name: onceName,
+                        kind: FProp('get', 'never', macro :Dynamic),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(onceField);
+                    var get_onceField = {
+                        pos: field.pos,
+                        name: 'get_' + onceName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Dynamic,
+                            expr: macro {
+                                return this.$dispatcherName.wrapOnce($v{eventIndex});
+                            }
+                        }),
+                        access: [AInline, APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':dce',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(get_onceField);
+
+                    var offField = {
+                        pos: field.pos,
+                        name: offName,
+                        kind: FProp('get', 'never', macro :Dynamic),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(offField);
+                    var get_offField = {
+                        pos: field.pos,
+                        name: 'get_' + offName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Dynamic,
+                            expr: macro {
+                                return this.$dispatcherName.wrapOff($v{eventIndex});
+                            }
+                        }),
+                        access: [AInline, APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':dce',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(get_offField);
+
+                    var listensField = {
+                        pos: field.pos,
+                        name: listensName,
+                        kind: FProp('get', 'never', macro :Dynamic),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(listensField);
+                    var get_listensField = {
+                        pos: field.pos,
+                        name: 'get_' + listensName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Dynamic,
+                            expr: macro {
+                                return this.$dispatcherName.wrapListens($v{eventIndex});
+                            }
+                        }),
+                        access: [AInline, APrivate],
+                        doc: doc,
+                        meta: [{
+                            name: ':dce',
+                            params: [],
+                            pos: field.pos
+                        }]
+                    };
+                    newFields.push(get_listensField);
+
+                }
+                else {
+                        
+                    var emitField = {
+                        pos: field.pos,
+                        name: emitName,
+                        kind: FFun({
+                            args: fn.args,
+                            ret: macro :Void,
 #if (!display && !completion)
-                        expr: macro {
-                            $willEmit;
-                            var len = 0;
-                            if (this.$cbOnArray != null) len += this.$cbOnArray.length;
-                            if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
-                            if (len > 0) {
-                                var pool = ceramic.ArrayPool.pool(len);
-                                var callbacks = pool.get();
-                                #if ceramic_debug_events
-                                var callbacksPos = [];
-                                #end
-                                var i = 0;
-                                if (this.$cbOnArray != null) {
-                                    for (ii in 0...this.$cbOnArray.length) {
-                                        #if ceramic_debug_events
-                                        callbacksPos.push(this.$cbOnPosArray[ii]);
-                                        #end
-                                        callbacks.set(i, this.$cbOnArray[ii]);
-                                        i++;
+                            expr: macro {
+                                $willEmit;
+                                var len = 0;
+                                if (this.$cbOnArray != null) len += this.$cbOnArray.length;
+                                if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
+                                if (len > 0) {
+                                    var pool = ceramic.ArrayPool.pool(len);
+                                    var callbacks = pool.get();
+                                    #if ceramic_debug_events
+                                    var callbacksPos = [];
+                                    #end
+                                    var i = 0;
+                                    if (this.$cbOnArray != null) {
+                                        for (ii in 0...this.$cbOnArray.length) {
+                                            #if ceramic_debug_events
+                                            callbacksPos.push(this.$cbOnPosArray[ii]);
+                                            #end
+                                            callbacks.set(i, this.$cbOnArray[ii]);
+                                            i++;
+                                        }
                                     }
+                                    if (this.$cbOnceArray != null) {
+                                        for (ii in 0...this.$cbOnceArray.length) {
+                                            #if ceramic_debug_events
+                                            callbacksPos.push(this.$cbOncePosArray[ii]);
+                                            #end
+                                            callbacks.set(i, this.$cbOnceArray[ii]);
+                                            i++;
+                                        }
+                                        this.$cbOnceArray = null;
+                                    }
+                                    for (i in 0...len) {
+                                        #if ceramic_debug_events
+                                        haxe.Log.trace($v{emitName}, callbacksPos[i]);
+                                        #end
+                                        callbacks.get(i)($a{handlerCallArgs});
+                                    }
+                                    pool.release(callbacks);
+                                    callbacks = null;
                                 }
-                                if (this.$cbOnceArray != null) {
-                                    for (ii in 0...this.$cbOnceArray.length) {
-                                        #if ceramic_debug_events
-                                        callbacksPos.push(this.$cbOncePosArray[ii]);
-                                        #end
-                                        callbacks.set(i, this.$cbOnceArray[ii]);
-                                        i++;
+                                $didEmit;
+                            }
+#else
+                            expr: macro {}
+#end
+                        }),
+                        access: [hasPublicModifier ? APublic : APrivate],
+                        doc: doc,
+                        meta: hasPrivateModifier ? [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }] : []
+                    };
+                    newFields.push(emitField);
+
+                    // Create on{Name}()
+                    var onField = {
+                        pos: field.pos,
+                        name: onName,
+                        kind: FFun({
+                            args: [
+                                {
+                                    name: 'owner',
+                                    type: macro :ceramic.Entity,
+                                    opt: true
+                                },
+                                {
+                                    name: handlerName,
+                                    type: handlerType
+                                }
+                                #if ceramic_debug_events
+                                ,{
+                                    name: 'pos',
+                                    type: macro :haxe.PosInfos,
+                                    opt: true
+                                }
+                                #end
+                            ],
+                            ret: macro :Void,
+#if (!display && !completion)
+                            expr: macro {
+                                // Map owner to handler
+                                if (owner != null) {
+                                    if (owner.destroyed) {
+                                        return;
                                     }
+                                    var destroyCb = function() {
+                                        this.$offName($i{handlerName});
+                                    };
+                                    owner.onceDestroy(null, destroyCb);
+                                    if (this.$cbOnOwnerUnbindArray == null) {
+                                        this.$cbOnOwnerUnbindArray = [];
+                                    }
+                                    this.$cbOnOwnerUnbindArray.push(function() {
+                                        owner.offDestroy(destroyCb);
+                                    });
+                                } else {
+                                    if (this.$cbOnOwnerUnbindArray == null) {
+                                        this.$cbOnOwnerUnbindArray = [];
+                                    }
+                                    this.$cbOnOwnerUnbindArray.push(null);
+                                }
+
+                                // Add handler
+                                #if ceramic_debug_events
+                                if (this.$cbOnPosArray == null) {
+                                    this.$cbOnPosArray = [];
+                                }
+                                this.$cbOnPosArray.push(pos);
+                                #end
+                                if (this.$cbOnArray == null) {
+                                    this.$cbOnArray = [];
+                                }
+                                this.$cbOnArray.push($i{handlerName});
+                            }
+#else
+                            expr: macro {}
+#end
+                        }),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: []
+                    };
+                    newFields.push(onField);
+
+                    // Create once{Name}()
+                    var onceField = {
+                        pos: field.pos,
+                        name: onceName,
+                        kind: FFun({
+                            args: [
+                                {
+                                    name: 'owner',
+                                    type: macro :ceramic.Entity,
+                                    opt: true
+                                },
+                                {
+                                    name: handlerName,
+                                    type: handlerType
+                                }
+                                #if ceramic_debug_events
+                                ,{
+                                    name: 'pos',
+                                    type: macro :haxe.PosInfos,
+                                    opt: true
+                                }
+                                #end
+                            ],
+                            ret: macro :Void,
+#if (!display && !completion)
+                            expr: macro {
+                                // Map owner to handler
+                                if (owner != null) {
+                                    if (owner.destroyed) {
+                                        return;
+                                    }
+                                    var destroyCb = function() {
+                                        this.$offName($i{handlerName});
+                                    };
+                                    owner.onceDestroy(null, destroyCb);
+                                    if (this.$cbOnceOwnerUnbindArray == null) {
+                                        this.$cbOnceOwnerUnbindArray = [];
+                                    }
+                                    this.$cbOnceOwnerUnbindArray.push(function() {
+                                        owner.offDestroy(destroyCb);
+                                    });
+                                } else {
+                                    if (this.$cbOnceOwnerUnbindArray == null) {
+                                        this.$cbOnceOwnerUnbindArray = [];
+                                    }
+                                    this.$cbOnceOwnerUnbindArray.push(null);
+                                }
+
+                                // Add handler
+                                #if ceramic_debug_events
+                                if (this.$cbOncePosArray == null) {
+                                    this.$cbOncePosArray = [];
+                                }
+                                this.$cbOncePosArray.push(pos);
+                                #end
+                                if (this.$cbOnceArray == null) {
+                                    this.$cbOnceArray = [];
+                                }
+                                this.$cbOnceArray.push($i{handlerName});
+                            }
+#else
+                            expr: macro {}
+#end
+                        }),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: []
+                    };
+                    newFields.push(onceField);
+
+                    // Create off{Name}()
+                    var offField = {
+                        pos: field.pos,
+                        name: offName,
+                        kind: FFun({
+                            args: [
+                                {
+                                    name: handlerName,
+                                    type: handlerType,
+                                    opt: true
+                                }
+                            ],
+                            ret: macro :Void,
+#if (!display && !completion)
+                            expr: macro {
+                                if ($i{handlerName} != null) {
+                                    var index:Int;
+                                    var unbind:Void->Void;
+                                    if (this.$cbOnArray != null) {
+                                        index = this.$cbOnArray.indexOf($i{handlerName});
+                                        if (index != -1) {
+                                            this.$cbOnArray.splice(index, 1);
+                                            unbind = this.$cbOnOwnerUnbindArray[index];
+                                            if (unbind != null) unbind();
+                                            this.$cbOnOwnerUnbindArray.splice(index, 1);
+                                        }
+                                    }
+                                    if (this.$cbOnceArray != null) {
+                                        index = this.$cbOnceArray.indexOf($i{handlerName});
+                                        if (index != -1) {
+                                            this.$cbOnceArray.splice(index, 1);
+                                            unbind = this.$cbOnceOwnerUnbindArray[index];
+                                            if (unbind != null) unbind();
+                                            this.$cbOnceOwnerUnbindArray.splice(index, 1);
+                                        }
+                                    }
+                                } else {
+                                    if (this.$cbOnOwnerUnbindArray != null) {
+                                        for (i in 0...this.$cbOnOwnerUnbindArray.length) {
+                                            var unbind = this.$cbOnOwnerUnbindArray[i];
+                                            if (unbind != null) unbind();
+                                        }
+                                        this.$cbOnOwnerUnbindArray = null;
+                                    }
+                                    if (this.$cbOnceOwnerUnbindArray != null) {
+                                        for (i in 0...this.$cbOnceOwnerUnbindArray.length) {
+                                            var unbind = this.$cbOnceOwnerUnbindArray[i];
+                                            if (unbind != null) unbind();
+                                        }
+                                        this.$cbOnceOwnerUnbindArray = null;
+                                    }
+                                    this.$cbOnArray = null;
                                     this.$cbOnceArray = null;
                                 }
-                                for (i in 0...len) {
-                                    #if ceramic_debug_events
-                                    haxe.Log.trace($v{emitName}, callbacksPos[i]);
-                                    #end
-                                    callbacks.get(i)($a{handlerCallArgs});
-                                }
-                                pool.release(callbacks);
-                                callbacks = null;
                             }
-                            $didEmit;
-                        }
 #else
-                        expr: macro {}
+                            expr: macro {}
 #end
-                    }),
-                    access: [hasPublicModifier ? APublic : APrivate],
-                    doc: doc,
-                    meta: hasPrivateModifier ? [{
-                        name: ':noCompletion',
-                        params: [],
-                        pos: field.pos
-                    }] : []
-                };
-                newFields.push(emitField);
+                        }),
+                        access: [hasPrivateModifier ? APrivate : APublic],
+                        doc: doc,
+                        meta: []
+                    };
+                    newFields.push(offField);
 
-                // Create on{Name}()
-                var onField = {
-                    pos: field.pos,
-                    name: onName,
-                    kind: FFun({
-                        args: [
-                            {
-                                name: 'owner',
-                                type: macro :ceramic.Entity,
-                                opt: true
-                            },
-                            {
-                                name: handlerName,
-                                type: handlerType
-                            }
-                            #if ceramic_debug_events
-                            ,{
-                                name: 'pos',
-                                type: macro :haxe.PosInfos,
-                                opt: true
-                            }
-                            #end
-                        ],
-                        ret: macro :Void,
+                    // Create listens{Name}()
+                    var listensField = {
+                        pos: field.pos,
+                        name: listensName,
+                        kind: FFun({
+                            args: [],
+                            ret: macro :Bool,
 #if (!display && !completion)
-                        expr: macro {
-                            // Map owner to handler
-                            if (owner != null) {
-                                if (owner.destroyed) {
-                                    return;
-                                }
-                                var destroyCb = function() {
-                                    this.$offName($i{handlerName});
-                                };
-                                owner.onceDestroy(null, destroyCb);
-                                if (this.$cbOnOwnerUnbindArray == null) {
-                                    this.$cbOnOwnerUnbindArray = [];
-                                }
-                                this.$cbOnOwnerUnbindArray.push(function() {
-                                    owner.offDestroy(destroyCb);
-                                });
-                            } else {
-                                if (this.$cbOnOwnerUnbindArray == null) {
-                                    this.$cbOnOwnerUnbindArray = [];
-                                }
-                                this.$cbOnOwnerUnbindArray.push(null);
+                            expr: macro {
+                                return (this.$cbOnArray != null && this.$cbOnArray.length > 0)
+                                    || (this.$cbOnceArray != null && this.$cbOnceArray.length > 0);
                             }
-
-                            // Add handler
-                            #if ceramic_debug_events
-                            if (this.$cbOnPosArray == null) {
-                                this.$cbOnPosArray = [];
-                            }
-                            this.$cbOnPosArray.push(pos);
-                            #end
-                            if (this.$cbOnArray == null) {
-                                this.$cbOnArray = [];
-                            }
-                            this.$cbOnArray.push($i{handlerName});
-                        }
 #else
-                        expr: macro {}
+                            expr: macro {
+                                return false;
+                            }
 #end
-                    }),
-                    access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: doc,
-                    meta: []
-                };
-                newFields.push(onField);
-
-                // Create once{Name}()
-                var onceField = {
-                    pos: field.pos,
-                    name: onceName,
-                    kind: FFun({
-                        args: [
-                            {
-                                name: 'owner',
-                                type: macro :ceramic.Entity,
-                                opt: true
-                            },
-                            {
-                                name: handlerName,
-                                type: handlerType
-                            }
-                            #if ceramic_debug_events
-                            ,{
-                                name: 'pos',
-                                type: macro :haxe.PosInfos,
-                                opt: true
-                            }
-                            #end
-                        ],
-                        ret: macro :Void,
-#if (!display && !completion)
-                        expr: macro {
-                            // Map owner to handler
-                            if (owner != null) {
-                                if (owner.destroyed) {
-                                    return;
-                                }
-                                var destroyCb = function() {
-                                    this.$offName($i{handlerName});
-                                };
-                                owner.onceDestroy(null, destroyCb);
-                                if (this.$cbOnceOwnerUnbindArray == null) {
-                                    this.$cbOnceOwnerUnbindArray = [];
-                                }
-                                this.$cbOnceOwnerUnbindArray.push(function() {
-                                    owner.offDestroy(destroyCb);
-                                });
-                            } else {
-                                if (this.$cbOnceOwnerUnbindArray == null) {
-                                    this.$cbOnceOwnerUnbindArray = [];
-                                }
-                                this.$cbOnceOwnerUnbindArray.push(null);
-                            }
-
-                            // Add handler
-                            #if ceramic_debug_events
-                            if (this.$cbOncePosArray == null) {
-                                this.$cbOncePosArray = [];
-                            }
-                            this.$cbOncePosArray.push(pos);
-                            #end
-                            if (this.$cbOnceArray == null) {
-                                this.$cbOnceArray = [];
-                            }
-                            this.$cbOnceArray.push($i{handlerName});
-                        }
-#else
-                        expr: macro {}
-#end
-                    }),
-                    access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: doc,
-                    meta: []
-                };
-                newFields.push(onceField);
-
-                // Create off{Name}()
-                var offField = {
-                    pos: field.pos,
-                    name: offName,
-                    kind: FFun({
-                        args: [
-                            {
-                                name: handlerName,
-                                type: handlerType,
-                                opt: true
-                            }
-                        ],
-                        ret: macro :Void,
-#if (!display && !completion)
-                        expr: macro {
-                            if ($i{handlerName} != null) {
-                                var index:Int;
-                                var unbind:Void->Void;
-                                if (this.$cbOnArray != null) {
-                                    index = this.$cbOnArray.indexOf($i{handlerName});
-                                    if (index != -1) {
-                                        this.$cbOnArray.splice(index, 1);
-                                        unbind = this.$cbOnOwnerUnbindArray[index];
-                                        if (unbind != null) unbind();
-                                        this.$cbOnOwnerUnbindArray.splice(index, 1);
-                                    }
-                                }
-                                if (this.$cbOnceArray != null) {
-                                    index = this.$cbOnceArray.indexOf($i{handlerName});
-                                    if (index != -1) {
-                                        this.$cbOnceArray.splice(index, 1);
-                                        unbind = this.$cbOnceOwnerUnbindArray[index];
-                                        if (unbind != null) unbind();
-                                        this.$cbOnceOwnerUnbindArray.splice(index, 1);
-                                    }
-                                }
-                            } else {
-                                if (this.$cbOnOwnerUnbindArray != null) {
-                                    for (i in 0...this.$cbOnOwnerUnbindArray.length) {
-                                        var unbind = this.$cbOnOwnerUnbindArray[i];
-                                        if (unbind != null) unbind();
-                                    }
-                                    this.$cbOnOwnerUnbindArray = null;
-                                }
-                                if (this.$cbOnceOwnerUnbindArray != null) {
-                                    for (i in 0...this.$cbOnceOwnerUnbindArray.length) {
-                                        var unbind = this.$cbOnceOwnerUnbindArray[i];
-                                        if (unbind != null) unbind();
-                                    }
-                                    this.$cbOnceOwnerUnbindArray = null;
-                                }
-                                this.$cbOnArray = null;
-                                this.$cbOnceArray = null;
-                            }
-                        }
-#else
-                        expr: macro {}
-#end
-                    }),
-                    access: [hasPrivateModifier ? APrivate : APublic],
-                    doc: doc,
-                    meta: []
-                };
-                newFields.push(offField);
-
-                // Create listens{Name}()
-                var listensField = {
-                    pos: field.pos,
-                    name: listensName,
-                    kind: FFun({
-                        args: [],
-                        ret: macro :Bool,
-#if (!display && !completion)
-                        expr: macro {
-                            return (this.$cbOnArray != null && this.$cbOnArray.length > 0)
-                                || (this.$cbOnceArray != null && this.$cbOnceArray.length > 0);
-                        }
-#else
-                        expr: macro {
-                            return false;
-                        }
-#end
-                    }),
-                    access: [hasPrivateModifier ? APrivate : APublic, AInline],
-                    doc: origDoc != doc ? 'Does it listen to ' + doc : doc,
-                    meta: []
-                };
-                newFields.push(listensField);
+                        }),
+                        access: [hasPrivateModifier ? APrivate : APublic, AInline],
+                        doc: origDoc != doc ? 'Does it listen to ' + doc : doc,
+                        meta: []
+                    };
+                    newFields.push(listensField);
+                }
 
             default:
                 throw new Error("Invalid event syntax", field.pos);
         }
+
+        return dynamicDispatch ? eventIndex + 1 : eventIndex;
 
     } //createEventFields
 
@@ -591,6 +843,35 @@ class EventsMacro {
         return false;
 
     } //hasEventMeta
+
+    static function hasStaticEventMeta(field:Field):Bool {
+
+        if (field.meta == null || field.meta.length == 0) return false;
+
+        for (meta in field.meta) {
+            if (meta.name == 'staticEvent') {
+                return true;
+            }
+        }
+
+        return false;
+    } //hasStaticEventMeta
+
+    @:allow(ceramic.macros.ObservableMacro)
+    @:allow(ceramic.macros.SerializableMacro)
+    static function hasDynamicEventsMeta(metas:Null<Metadata>):Bool {
+
+        if (metas == null || metas.length == 0) return false;
+
+        for (meta in metas) {
+            if (meta.name == 'dynamicEvents') {
+                return true;
+            }
+        }
+
+        return false;
+
+    } //hasDynamicEventsMeta
 
     static function isEmpty(expr:Expr) {
 

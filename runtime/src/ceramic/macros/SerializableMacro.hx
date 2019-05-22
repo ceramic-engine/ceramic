@@ -10,6 +10,18 @@ class SerializableMacro {
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
+        var localClass = Context.getLocalClass().get();
+
+        // Get next event index for this class path
+        var classPath = localClass.pack != null && localClass.pack.length > 0 ? localClass.pack.join('.') + '.' + localClass.name : localClass.name;
+        var nextEventIndex = EventsMacro._nextEventIndexes.exists(classPath) ? EventsMacro._nextEventIndexes.get(classPath) : 1;
+
+        // Check if events should be dispatched dynamically by default on this class
+        #if (!completion && !display)
+        var dynamicDispatch = EventsMacro.hasDynamicEventsMeta(localClass.meta.get());
+        #else
+        var dynamicDispatch = false;
+        #end
 
         // Check class fields
         var fieldsByName = new Map<String,Bool>();
@@ -18,8 +30,9 @@ class SerializableMacro {
         }
 
         // Also check parent fields
-        var parentHold = Context.getLocalClass().get().superClass;
+        var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
+        var numParents = 0;
         while (parent != null) {
 
             for (field in parent.get().fields.get()) {
@@ -28,6 +41,17 @@ class SerializableMacro {
 
             parentHold = parent.get().superClass;
             parent = parentHold != null ? parentHold.t : null;
+            numParents++;
+        }
+
+        // In case of dynamic dispatch, check if event dispatcher
+        // field was added already on current class fields
+        var dispatcherName:String = null;
+        if (dynamicDispatch) {
+            dispatcherName = '__events' + numParents;
+            if (!fieldsByName.exists(dispatcherName)) {
+                EventsMacro.createEventDispatcherField(pos, fields, dispatcherName);
+            }
         }
 
 #if (!display && !completion)
@@ -107,7 +131,7 @@ class SerializableMacro {
                 doc: 'Event when this object gets serialized.',
                 meta: []
             };
-            EventsMacro.createEventFields(eventField, fields, fieldsByName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
 
             eventField = {
                 pos: pos,
@@ -121,8 +145,11 @@ class SerializableMacro {
                 doc: 'Event when this object gets deserialized.',
                 meta: []
             };
-            EventsMacro.createEventFields(eventField, fields, fieldsByName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
         }
+
+        // Store next event index for this class path
+        EventsMacro._nextEventIndexes.set(classPath, nextEventIndex);
 
         return fields;
 

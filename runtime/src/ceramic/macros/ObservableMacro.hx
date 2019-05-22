@@ -13,17 +13,29 @@ class ObservableMacro {
     macro static public function build():Array<Field> {
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
+        var localClass = Context.getLocalClass().get();
+
+        // Get next event index for this class path
+        var classPath = localClass.pack != null && localClass.pack.length > 0 ? localClass.pack.join('.') + '.' + localClass.name : localClass.name;
+        var nextEventIndex = EventsMacro._nextEventIndexes.exists(classPath) ? EventsMacro._nextEventIndexes.get(classPath) : 1;
 
         // Check class fields
-        var localClass = Context.getLocalClass().get();
         var fieldsByName = new Map<String,Bool>();
         for (field in fields) {
             fieldsByName.set(field.name, true);
         }
 
+        // Check if events should be dispatched dynamically by default on this class
+        #if (!completion && !display)
+        var dynamicDispatch = EventsMacro.hasDynamicEventsMeta(localClass.meta.get());
+        #else
+        var dynamicDispatch = false;
+        #end
+
         // Also check parent fields
         var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
+        var numParents = 0;
         while (parent != null) {
 
             for (field in parent.get().fields.get()) {
@@ -32,9 +44,21 @@ class ObservableMacro {
 
             parentHold = parent.get().superClass;
             parent = parentHold != null ? parentHold.t : null;
+            numParents++;
         }
 
         var newFields:Array<Field> = [];
+
+        // In case of dynamic dispatch, check if event dispatcher
+        // field was added already on current class fields
+        var dispatcherName:String = null;
+        if (dynamicDispatch) {
+            dispatcherName = '__events' + numParents;
+            if (!fieldsByName.exists(dispatcherName)) {
+                EventsMacro.createEventDispatcherField(pos, newFields, dispatcherName);
+            }
+        }
+
         var unchangedFields:Array<Field> = [];
 
         var localClassParams:Array<TypeParam> = null;
@@ -74,7 +98,7 @@ class ObservableMacro {
             };
 
             // Add event
-            EventsMacro.createEventFields(eventField, newFields, fieldsByName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
 
             // Create observedDirty var
             newFields.push({
@@ -300,7 +324,7 @@ class ObservableMacro {
                 };
 
                 // Add related events
-                EventsMacro.createEventFields(eventField, newFields, fieldsByName);
+                nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
             }
             else {
                 unchangedFields.push(field);
@@ -376,6 +400,9 @@ class ObservableMacro {
             }
         }
 #end
+
+        // Store next event index for this class path
+        EventsMacro._nextEventIndexes.set(classPath, nextEventIndex);
 
         return newFields;
 
