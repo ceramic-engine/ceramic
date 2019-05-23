@@ -379,9 +379,13 @@ class EventsMacro {
                             args: [],
                             ret: macro :Dynamic,
                             expr: macro {
+#if (!display && !completion)
                                 $willEmit;
                                 $didEmit;
                                 return this.$dispatcherName.wrapEmit($v{eventIndex}, $v{handlerNumArgs});
+#else
+                                return null;
+#end
                             }
                         }),
                         access: [AInline, APrivate],
