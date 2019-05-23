@@ -29,8 +29,6 @@ class RuntimeAssets {
         allDirsByName: Map<String,Array<String>>
     } = null;
 
-    static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
-
     public function new(allAssets:Array<String>) {
 
         this.allAssets = allAssets;
@@ -227,7 +225,7 @@ class RuntimeAssets {
                 res.add('_');
                 canAddSpace = false;
             }
-            else if (reAsciiChar.match(c)) {
+            else if (isAsciiChar(c)) {
 
                 var uc = c.toUpperCase();
                 var isUpperCase = (c == uc);
@@ -320,5 +318,14 @@ class RuntimeAssets {
         }
 
     } //initData
+
+    function isAsciiChar(c:String):Bool {
+
+        var code = c.charCodeAt(0);
+        return (code >= '0'.code && code <= '9'.code)
+            || (code >= 'A'.code && code <= 'Z'.code)
+            || (code >= 'a'.code && code <= 'z'.code);
+
+    } //isAsciiChar
 
 } //RuntimeAssets
