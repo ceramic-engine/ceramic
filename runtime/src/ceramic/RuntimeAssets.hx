@@ -319,7 +319,7 @@ class RuntimeAssets {
 
     } //initData
 
-    function isAsciiChar(c:String):Bool {
+    static function isAsciiChar(c:String):Bool {
 
         var code = c.charCodeAt(0);
         return (code >= '0'.code && code <= '9'.code)
