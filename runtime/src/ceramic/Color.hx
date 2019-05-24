@@ -1,5 +1,7 @@
 package ceramic;
 
+using StringTools;
+
 // Substantial portion taken from: https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx
 
 /**
@@ -66,8 +68,6 @@ abstract Color(Int) from Int from UInt to Int to UInt
      * The lightness of the color (from 0 to 1)
      */
     public var lightness(get, set):Float;
-
-    private static var RE_COLOR = ~/^(0x|#)(([A-F0-9]{2}){3})([A-F0-9]{2})?$/i;
 
     /**
      * Generate a random color (away from white or black)
@@ -181,9 +181,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
         var result:Null<Color> = null;
         str = StringTools.trim(str);
 
-        if (RE_COLOR.match(str))
+        if (str.startsWith('0x'))
         {
-            var hexColor:String = "0x" + RE_COLOR.matched(2);
+            result = new Color(Std.parseInt(str.substring(0, 8)));
+        }
+        else if (str.startsWith('#'))
+        {
+            var hexColor:String = "0x" + str.substring(1, 7);
             result = new Color(Std.parseInt(hexColor));
         }
         else
