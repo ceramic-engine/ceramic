@@ -1,6 +1,6 @@
 package;
 
-import haxe.io.Path;
+import ceramic.Path;
 
 class Main {
 

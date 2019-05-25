@@ -1,7 +1,7 @@
 package ceramic;
 
 import spine.support.graphics.TextureAtlas;
-import haxe.io.Path;
+import ceramic.Path;
 import ceramic.Asset;
 import ceramic.ImageAsset;
 import ceramic.TextAsset;

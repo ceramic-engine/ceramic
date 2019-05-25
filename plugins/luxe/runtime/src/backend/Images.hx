@@ -3,7 +3,7 @@ package backend;
 import snow.systems.assets.Asset;
 import luxe.Resources;
 import luxe.options.ResourceOptions;
-import haxe.io.Path;
+import ceramic.Path;
 
 using StringTools;
 

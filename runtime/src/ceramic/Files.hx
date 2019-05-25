@@ -9,7 +9,7 @@ import js.node.Fs;
 import js.node.ChildProcess;
 #end
 
-import haxe.io.Path;
+import ceramic.Path;
 import ceramic.Shortcuts.*;
 
 using StringTools;

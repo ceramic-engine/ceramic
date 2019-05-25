@@ -41,7 +41,7 @@ class PlatformSpecific {
 #if (ios || tvos)
         root = 'assets/';
 #end
-		var xmlPath = haxe.io.Path.join([root, 'assets', 'rtti', Md5.encode(cStr + '.xml')]);
+		var xmlPath = ceramic.Path.join([root, 'assets', 'rtti', Md5.encode(cStr + '.xml')]);
 		rtti = @:privateAccess Luxe.snow.io.module._data_load(xmlPath).toBytes().toString();
 
 		if (rtti == null) {

@@ -10,7 +10,7 @@ import js.html.XMLHttpRequest;
 #end
 
 import ceramic.Shortcuts.*;
-import haxe.io.Path;
+import ceramic.Path;
 
 #if sys
 import sys.FileSystem;

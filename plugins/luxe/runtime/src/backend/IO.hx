@@ -7,7 +7,7 @@ import sys.io.File;
 
 import haxe.crypto.Md5;
 
-import haxe.io.Path;
+import ceramic.Path;
 
 class IO implements spec.IO {
 

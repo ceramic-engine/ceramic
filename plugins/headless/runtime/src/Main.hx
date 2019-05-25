@@ -1,6 +1,6 @@
 package;
 
-import haxe.io.Path;
+import ceramic.Path;
 
 class Main {
 
@@ -11,7 +11,10 @@ class Main {
     public static function main():Void {
 
         project = @:privateAccess new Project(ceramic.App.init());
+        
+        #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..']));
+        #end
 
         #if js
         _lastUpdateTime = untyped __js__('new Date().getTime()');

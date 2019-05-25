@@ -1,7 +1,7 @@
 package ceramic;
 
 import haxe.DynamicAccess;
-import haxe.io.Path;
+import ceramic.Path;
 
 using StringTools;
 

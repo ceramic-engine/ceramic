@@ -13,10 +13,10 @@ class Utils {
 
     public static function realPath(path:String):String {
 
-        path = haxe.io.Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+        path = ceramic.Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
         :
-            haxe.io.Path.join([ceramic.App.app.settings.assetsPath, path]);
+            ceramic.Path.join([ceramic.App.app.settings.assetsPath, path]);
 
         return path;
 

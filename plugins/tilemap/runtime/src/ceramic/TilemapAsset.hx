@@ -2,7 +2,7 @@ package ceramic;
 
 import format.tmx.Data.TmxImage;
 import format.tmx.Data.TmxMap;
-import haxe.io.Path;
+import ceramic.Path;
 import ceramic.Asset;
 import ceramic.ImageAsset;
 import ceramic.TextAsset;

@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
-import haxe.io.Path;
+import ceramic.Path;
 
 using StringTools;
 

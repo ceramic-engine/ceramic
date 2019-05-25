@@ -1,7 +1,7 @@
 package backend;
 
 import luxe.Resources;
-import haxe.io.Path;
+import ceramic.Path;
 
 using StringTools;
 

@@ -1,8 +1,11 @@
 package backend;
 
-import haxe.io.Path;
+import ceramic.Path;
+
+#if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 import sys.FileSystem;
 import sys.io.File;
+#end
 
 using StringTools;
 
@@ -11,6 +14,8 @@ class Texts implements spec.Texts {
     public function new() {}
 
     public function load(path:String, ?options:LoadTextOptions, done:String->Void):Void {
+
+        #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
@@ -35,6 +40,13 @@ class Texts implements spec.Texts {
             ceramic.App.app.logger.error('File doesn\'t exist at path: $path');
             done(null);
         }
+
+        #else
+
+        ceramic.App.app.logger.warning('Backend cannot read file at path: $path ; returning empty string');
+        done('');
+
+        #end
 
     } //load
 

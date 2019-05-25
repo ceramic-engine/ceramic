@@ -5,7 +5,7 @@ import ceramic.macros.MacroCache;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.io.Path;
+import ceramic.Path;
 import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
