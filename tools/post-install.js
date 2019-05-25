@@ -2,7 +2,7 @@
 
 var spawnSync = require('child_process').spawnSync;
 var download = require('download');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var os = require('os');
 var decompress = require('decompress');
@@ -37,6 +37,11 @@ function postInstall() {
     var iphoneToolchain = '' + fs.readFileSync(iphoneToolchainPath);
     iphoneToolchain = iphoneToolchain.split('<flag value="-O2" unless="debug"/>').join('<flag value="-O1" unless="debug"/>');
     fs.writeFileSync(iphoneToolchainPath, iphoneToolchain);
+
+    // Patch haxe std with ceramic's overrides
+    var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');
+    var overrideHaxeStdDir = path.join(__dirname, '../haxe/std');
+    fs.copySync(overrideHaxeStdDir, haxeStdDir);
     
     // Build tools
     spawnSync(haxe, ['build.hxml'], { stdio: "inherit", cwd: __dirname });
