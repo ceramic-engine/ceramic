@@ -362,7 +362,7 @@ class EventsMacro {
                     var emitField = {
                         pos: field.pos,
                         name: emitName,
-                        kind: FProp('get', 'never', macro :Dynamic),
+                        kind: FProp('get', 'never', handlerType),
                         access: [hasPublicModifier ? APublic : APrivate],
                         doc: doc,
                         meta: hasPrivateModifier ? [{
@@ -377,7 +377,7 @@ class EventsMacro {
                         name: 'get_' + emitName,
                         kind: FFun({
                             args: [],
-                            ret: macro :Dynamic,
+                            ret: handlerType,
                             expr: macro {
 #if (!display && !completion)
                                 $willEmit;
@@ -401,7 +401,10 @@ class EventsMacro {
                     var onField = {
                         pos: field.pos,
                         name: onName,
-                        kind: FProp('get', 'never', macro :Dynamic),
+                        kind: FProp('get', 'never', TFunction([
+                            TOptional(macro :ceramic.Entity),
+                            handlerType
+                        ], macro :Void)),
                         access: [hasPrivateModifier ? APrivate : APublic],
                         doc: doc,
                         meta: hasPrivateModifier ? [{
@@ -416,7 +419,10 @@ class EventsMacro {
                         name: 'get_' + onName,
                         kind: FFun({
                             args: [],
-                            ret: macro :Dynamic,
+                            ret: TFunction([
+                                TOptional(macro :ceramic.Entity),
+                                handlerType
+                            ], macro :Void),
                             expr: macro {
                                 return this.$dispatcherName.wrapOn($v{eventIndex});
                             }
@@ -434,7 +440,10 @@ class EventsMacro {
                     var onceField = {
                         pos: field.pos,
                         name: onceName,
-                        kind: FProp('get', 'never', macro :Dynamic),
+                        kind: FProp('get', 'never', TFunction([
+                            TOptional(macro :ceramic.Entity),
+                            handlerType
+                        ], macro :Void)),
                         access: [hasPrivateModifier ? APrivate : APublic],
                         doc: doc,
                         meta: hasPrivateModifier ? [{
@@ -449,7 +458,10 @@ class EventsMacro {
                         name: 'get_' + onceName,
                         kind: FFun({
                             args: [],
-                            ret: macro :Dynamic,
+                            ret: TFunction([
+                                TOptional(macro :ceramic.Entity),
+                                handlerType
+                            ], macro :Void),
                             expr: macro {
                                 return this.$dispatcherName.wrapOnce($v{eventIndex});
                             }
@@ -467,7 +479,9 @@ class EventsMacro {
                     var offField = {
                         pos: field.pos,
                         name: offName,
-                        kind: FProp('get', 'never', macro :Dynamic),
+                        kind: FProp('get', 'never', TFunction([
+                            handlerType
+                        ], macro :Void)),
                         access: [hasPrivateModifier ? APrivate : APublic],
                         doc: doc,
                         meta: hasPrivateModifier ? [{
@@ -482,7 +496,9 @@ class EventsMacro {
                         name: 'get_' + offName,
                         kind: FFun({
                             args: [],
-                            ret: macro :Dynamic,
+                            ret: TFunction([
+                                handlerType
+                            ], macro :Void),
                             expr: macro {
                                 return this.$dispatcherName.wrapOff($v{eventIndex});
                             }
@@ -500,7 +516,7 @@ class EventsMacro {
                     var listensField = {
                         pos: field.pos,
                         name: listensName,
-                        kind: FProp('get', 'never', macro :Dynamic),
+                        kind: FProp('get', 'never', macro :Void->Bool),
                         access: [hasPrivateModifier ? APrivate : APublic],
                         doc: doc,
                         meta: hasPrivateModifier ? [{
@@ -515,7 +531,7 @@ class EventsMacro {
                         name: 'get_' + listensName,
                         kind: FFun({
                             args: [],
-                            ret: macro :Dynamic,
+                            ret: macro :Void->Bool,
                             expr: macro {
                                 return this.$dispatcherName.wrapListens($v{eventIndex});
                             }
