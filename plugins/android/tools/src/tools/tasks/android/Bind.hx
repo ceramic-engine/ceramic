@@ -83,10 +83,6 @@ class Bind extends tools.Task {
 
                             success('export $filePath');
 
-                            if (!FileSystem.exists(Path.directory(filePath))) {
-                                FileSystem.createDirectory(Path.directory(filePath));
-                            }
-
                             if (FileSystem.exists(filePath)) {
                                 // Only save if content is different
                                 var previous = File.getContent(filePath);
@@ -94,6 +90,12 @@ class Bind extends tools.Task {
                                     File.saveContent(filePath, fileInfo.content);
                                 }
                             } else {
+                                // Create intermediate directories if needed
+                                var dirPath = Path.directory(filePath);
+                                if (!FileSystem.exists(dirPath)) {
+                                    FileSystem.createDirectory(dirPath);
+                                }
+                                
                                 File.saveContent(filePath, fileInfo.content);
                             }
 

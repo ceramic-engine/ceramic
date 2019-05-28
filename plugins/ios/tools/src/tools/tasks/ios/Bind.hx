@@ -97,6 +97,12 @@ class Bind extends tools.Task {
                                     File.saveContent(filePath, fileInfo.content);
                                 }
                             } else {
+                                // Create intermediate directories if needed
+                                var dirPath = Path.directory(filePath);
+                                if (!FileSystem.exists(dirPath)) {
+                                    FileSystem.createDirectory(dirPath);
+                                }
+                                
                                 File.saveContent(filePath, fileInfo.content);
                             }
 
