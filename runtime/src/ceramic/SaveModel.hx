@@ -17,15 +17,21 @@ class SaveModel {
         var instance = Type.createInstance(modelClass, args != null ? args : []);
 
         // Load saved data
-        loadSaved(instance, key);
+        loadFromKey(instance, key);
 
         return instance;
 
     } //modelClass
 
-    public static function loadSaved(model:Model, key:String):Bool {
+    public static function loadFromKey(model:Model, key:String):Bool {
 
         var data = app.backend.io.readString('save_' + key);
+
+        return loadFromData(model, data);
+
+    } //loadFromKey
+
+    public static function loadFromData(model:Model, data:String):Bool {
 
         if (data == null) {
             // No data, stop here
@@ -38,7 +44,7 @@ class SaveModel {
 
         Serialize.serializeValue(model);
 
-        var prevDeserializedMap = Serialize._deserializedMap;
+        var prevDeserializedMap:Map<String, Serializable> = Serialize._deserializedMap;
         Serialize._serializedMap = null;
         Serialize._deserializedMap = null;
 
@@ -51,15 +57,15 @@ class SaveModel {
 
         Serialize.deserializeValue(decoded.serialized, model);
 
-        var deserializedMap = Serialize._deserializedMap;
+        var deserializedMap:Map<String, Serializable> = Serialize._deserializedMap;
         Serialize._deserializedMap = null;
         Serialize._serializedMap = null;
 
         // Destroy previous model objects not used anymore (if any)
         // Use previous serialized map to perform the change
-        for (key in prevDeserializedMap.keys()) {
-            if (!deserializedMap.exists(key)) {
-                var item = prevDeserializedMap.get(key);
+        for (k in prevDeserializedMap.keys()) {
+            if (!deserializedMap.exists(k)) {
+                var item = prevDeserializedMap.get(k);
                 if (Std.is(item, Model)) {
                     var _model:Model = cast item;
                     if (_model != model) {
@@ -71,9 +77,9 @@ class SaveModel {
 
         return true;
 
-    } //loadSaved
+    } //loadFromData
 
-    public static function autoSave(model:Model, key:String, appendInterval:Float = 1.0, compactInterval:Float = 60.0) {
+    public static function autoSaveAsKey(model:Model, key:String, appendInterval:Float = 1.0, compactInterval:Float = 60.0) {
 
         if (model.serializer != null) {
             model.serializer.destroy();
@@ -104,7 +110,7 @@ class SaveModel {
         // Assign component
         model.serializer = serializer;
 
-    } //autoSave
+    } //autoSaveAsKey
 
 /// Internal
 
@@ -123,7 +129,8 @@ class SaveModel {
             if (colonIndex == -1) break;
 
             var len = Std.parseInt(rawData.substr(0, colonIndex));
-            changesetData.push(rawData.substr(colonIndex + 1, len));
+            var dataPart:String = rawData.substr(colonIndex + 1, len);
+            changesetData.push(dataPart);
 
             rawData = rawData.substr(colonIndex + 1 + len);
         }
