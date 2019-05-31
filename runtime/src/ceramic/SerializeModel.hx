@@ -51,7 +51,7 @@ class SerializeModel extends Component {
 
     /** Recompute the whole object tree instead of appending. This will untrack every object not on the model anymore
         and generate a new changeset with the whole serialized object tree. */
-    public function compact():Void {
+    public function compact(?done:String->Void):Void {
 
         var prevSerializedMap = serializedMap;
 
@@ -82,6 +82,9 @@ class SerializeModel extends Component {
 
         // Emit full changeset
         emitChangeset({ data: data, append: false });
+
+        // Call done() callback if provided
+        if (done != null) done(data);
 
     } //compact
 
