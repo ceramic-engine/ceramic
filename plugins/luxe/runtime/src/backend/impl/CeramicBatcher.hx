@@ -119,6 +119,7 @@ class CeramicBatcher extends phoenix.Batcher {
         var lastShader:ceramic.Shader = null;
         var lastRenderTarget:ceramic.RenderTexture = null;
         var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
+        var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
 
 #if ceramic_debug_rendering_option
         var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
@@ -219,11 +220,11 @@ class CeramicBatcher extends phoenix.Batcher {
                     //src_rgb
                     phoenix.Batcher.BlendMode.one,
                     //dest_rgb
-                    phoenix.Batcher.BlendMode.one,
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha,
                     //src_alpha
                     phoenix.Batcher.BlendMode.one,
                     //dest_alpha
-                    phoenix.Batcher.BlendMode.one
+                    phoenix.Batcher.BlendMode.one_minus_src_alpha
                 );
             } else if (blending == ceramic.Blending.SET) {
                 GL.blendFuncSeparate(
@@ -335,7 +336,11 @@ class CeramicBatcher extends phoenix.Batcher {
                     if (!stateDirty) {
                         stateDirty =
                             quad.shader != lastShader ||
-                            quad.blending != lastBlending ||
+                            (quad.blending != lastBlending &&
+                            (
+                                (quad.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                                (quad.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                            )) ||
 #if ceramic_debug_rendering_option
                             quad.debugRendering != lastDebugRendering ||
 #end
@@ -421,16 +426,19 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    var newBlending = quad.blending;
-                    if (newBlending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
-                        newBlending = ceramic.Blending.ALPHA;
+                    var newComputedBlending = quad.blending;
+                    if (newComputedBlending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+                        newComputedBlending = ceramic.Blending.ALPHA;
                     }
-                    if (newBlending != lastBlending) {
+                    else if (newComputedBlending == ceramic.Blending.ADD) {
+                        newComputedBlending = ceramic.Blending.NORMAL;
+                    }
+                    if (newComputedBlending != lastComputedBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
+                        if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
 #end
-                        lastBlending = newBlending;
-                        applyBlending(lastBlending);
+                        lastComputedBlending = newComputedBlending;
+                        applyBlending(lastComputedBlending);
                     }
 
 #if ceramic_debug_rendering_option
@@ -630,6 +638,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 r = quad.color.redFloat * a;
                 g = quad.color.greenFloat * a;
                 b = quad.color.blueFloat * a;
+                if (quad.blending == ceramic.Blending.ADD) a = 0;
             }
 
             i = 0;
@@ -702,7 +711,11 @@ class CeramicBatcher extends phoenix.Batcher {
                     if (!stateDirty) {
                         stateDirty =
                             mesh.shader != lastShader ||
-                            mesh.blending != lastBlending ||
+                            (mesh.blending != lastBlending &&
+                            (
+                                (mesh.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                                (mesh.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                            )) ||
 #if ceramic_debug_rendering_option
                             mesh.debugRendering != lastDebugRendering ||
 #end
@@ -790,16 +803,19 @@ class CeramicBatcher extends phoenix.Batcher {
                     }
 
                     // Update blending
-                    var newBlending = mesh.blending;
-                    if (newBlending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
-                        newBlending = ceramic.Blending.ALPHA;
+                    var newComputedBlending = mesh.blending;
+                    if (newComputedBlending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+                        newComputedBlending = ceramic.Blending.ALPHA;
                     }
-                    if (newBlending != lastBlending) {
+                    else if (newComputedBlending == ceramic.Blending.ADD) {
+                        newComputedBlending = ceramic.Blending.NORMAL;
+                    }
+                    if (newComputedBlending != lastComputedBlending) {
 #if ceramic_debug_draw
-                        if (debugDraw) trace('- blending ' + lastBlending + ' -> ' + newBlending);
+                        if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
 #end
-                        lastBlending = newBlending;
-                        applyBlending(lastBlending);
+                        lastComputedBlending = newComputedBlending;
+                        applyBlending(lastComputedBlending);
                     }
 
 #if ceramic_debug_rendering_option
@@ -848,6 +864,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     r = meshAlphaColor.redFloat * a;
                     g = meshAlphaColor.greenFloat * a;
                     b = meshAlphaColor.blueFloat * a;
+                    if (mesh.blending == ceramic.Blending.ADD) a = 0;
                 }
             }
 
@@ -935,6 +952,7 @@ class CeramicBatcher extends phoenix.Batcher {
                     r = meshAlphaColor.redFloat * a;
                     g = meshAlphaColor.greenFloat * a;
                     b = meshAlphaColor.blueFloat * a;
+                    if (mesh.blending == ceramic.Blending.ADD) a = 0;
 
                     color_list[color_floats++] = r;
                     color_list[color_floats++] = g;
