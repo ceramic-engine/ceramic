@@ -36,7 +36,7 @@ class TextInput implements Events {
 
     public var multiline(default,null):Bool = false;
 
-    public var text(default,null):String = '';
+    public var text(default,set):String = '';
 
     public var selectionStart(default,null):Int = -1;
 
@@ -533,5 +533,23 @@ class TextInput implements Events {
         return i;
 
     } //globalPosForLine
+
+    function set_text(text:String):String {
+
+        if (this.text == text) return text;
+        this.text = text;
+
+        var len = text.uLength();
+
+        var selectionStart = this.selectionStart;
+        var selectionEnd = this.selectionEnd;
+
+        if (selectionEnd > len) selectionEnd = len;
+        if (selectionStart > selectionEnd) selectionStart = selectionEnd;
+        updateSelection(selectionStart, selectionEnd);
+
+        return text;
+
+    } //set_text
 
 } //TextInput
