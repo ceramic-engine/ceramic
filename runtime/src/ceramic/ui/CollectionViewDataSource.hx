@@ -3,7 +3,7 @@ package ceramic.ui;
 interface CollectionViewDataSource {
 
     /** Get the number of elements. */
-    function collectionViewSize(collectionView:CollectionViewcollectionView:CollectionView):Int;
+    function collectionViewSize(collectionView:CollectionView):Int;
 
     /** Get the item frame at the requested index. */
     function collectionViewItemFrameAtIndex(collectionView:CollectionView, itemIndex:Int, frame:CollectionViewItemFrame):Void;
