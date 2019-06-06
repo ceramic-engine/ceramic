@@ -62,7 +62,7 @@ class CollectionView extends ScrollView {
         }
 
         if (dataSource != null) {
-            var numItems = dataSource.collectionViewSize();
+            var numItems = dataSource.collectionViewSize(this);
             var frames:Array<CollectionViewItemFrame> = [];
             for (i in 0...numItems) {
                 frames.push(new CollectionViewItemFrame(0, 0, 0, 0));
@@ -85,7 +85,7 @@ class CollectionView extends ScrollView {
         if (frames.length > 0) {
             // Get item sizes
             for (i in 0...frames.length) {
-                dataSource.collectionViewItemFrameAtIndex(i, frames[i]);
+                dataSource.collectionViewItemFrameAtIndex(this, i, frames[i]);
             }
             // Layout items
             collectionViewLayout.collectionViewLayout(this, frames);
@@ -170,13 +170,13 @@ class CollectionView extends ScrollView {
                 if (!freezeVisibleItems && frame.view == null) {
                     if (reusableViews.length > 0) {
                         var reusableView = reusableViews.pop();
-                        frame.view = dataSource.collectionViewItemAtIndex(itemIndex, reusableView);
+                        frame.view = dataSource.collectionViewItemAtIndex(this, itemIndex, reusableView);
                         if (frame.view != reusableView) {
                             if (autoDestroyItems) reusableView.destroy();
                         }
                     }
                     else {
-                        frame.view = dataSource.collectionViewItemAtIndex(itemIndex, null);
+                        frame.view = dataSource.collectionViewItemAtIndex(this, itemIndex, null);
                     }
                 }
 
@@ -216,7 +216,7 @@ class CollectionView extends ScrollView {
             if (!frame.visible) {
                 // Remove view which is not visible anymore
                 if (frame.view != null) {
-                    if (!dataSource.collectionViewReleaseItemAtIndex(itemIndex, frame.view)) {
+                    if (!dataSource.collectionViewReleaseItemAtIndex(this, itemIndex, frame.view)) {
                         if (!frame.view.destroyed) {
                             frame.view.visible = false;
                             if (autoDestroyItems) frame.view.destroy();
