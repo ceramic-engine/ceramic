@@ -41,10 +41,13 @@ class EntityMacro {
         }
 
         var componentFields = [];
+        var ownFields:Array<String> = null;
 
         for (field in fields) {
 
-            if (hasComponentMeta(field)) {
+            var hasMeta = hasOwnerOrComponentMeta(field);
+
+            if (hasMeta == 2 || hasMeta == 3) { // has component meta
 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -148,6 +151,13 @@ class EntityMacro {
                 }
 
             }
+            else if (hasMeta == 1 || hasMeta == 3) { // has owner meta
+                if (ownFields == null) {
+                    ownFields = [];
+                }
+                ownFields.push(field.name);
+                newFields.push(field);
+            }
             else {
                 newFields.push(field);
             }
@@ -192,6 +202,19 @@ class EntityMacro {
                                             super.destroy();
                                         });
 
+                                        // Destroy owned entities as well
+                                        if (ownFields != null) {
+                                            for (name in ownFields) {
+                                                exprs.unshift(macro {
+                                                    var toDestroy = this.$name;
+                                                    if (toDestroy != null) {
+                                                        toDestroy.destroy();
+                                                        this.$name = null;
+                                                    }
+                                                });
+                                            }
+                                        }
+
                                     default:
                                 }
 
@@ -231,6 +254,18 @@ class EntityMacro {
                                             super.dispose();
                                         });
 
+                                        // Dispose owned entities as well
+                                        if (ownFields != null) {
+                                            for (name in ownFields) {
+                                                exprs.unshift(macro {
+                                                    var toDispose = this.$name;
+                                                    if (toDispose != null) {
+                                                        toDispose.dispose();
+                                                    }
+                                                });
+                                            }
+                                        }
+
                                     default:
                                 }
 
@@ -264,10 +299,22 @@ class EntityMacro {
                                 switch (fn.expr.expr) {
                                     case EBlock(exprs):
 
-                                        // Add if destroyed check at the top
                                         exprs.unshift(macro {
+                                            if (!disposed) return;
                                             super.restore();
                                         });
+
+                                        // Restore owned entities as well
+                                        if (ownFields != null) {
+                                            for (name in ownFields) {
+                                                exprs.unshift(macro {
+                                                    var toRestore = this.$name;
+                                                    if (toRestore != null) {
+                                                        toRestore.restore();
+                                                    }
+                                                });
+                                            }
+                                        }
 
                                     default:
                                 }
@@ -283,18 +330,35 @@ class EntityMacro {
 
     } //build
 
-    static function hasComponentMeta(field:Field):Bool {
+    static function hasOwnerOrComponentMeta(field:Field):Int {
 
-        if (field.meta == null || field.meta.length == 0) return false;
+        if (field.meta == null || field.meta.length == 0) return 0;
+
+        var hasComponentMeta = false;
+        var hasOwnerMeta = false;
 
         for (meta in field.meta) {
             if (meta.name == 'component') {
-                return true;
+                hasComponentMeta = true;
+            }
+            else if (meta.name == 'owner') {
+                hasOwnerMeta = true;
             }
         }
 
-        return false;
+        if (hasComponentMeta && hasOwnerMeta) {
+            return 3;
+        }
+        else if (hasComponentMeta) {
+            return 2;
+        }
+        else if (hasOwnerMeta) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
 
-    } //hasComponentMeta
+    } //hasOwnerOrComponentMeta
 
 }
