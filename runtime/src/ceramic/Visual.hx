@@ -175,7 +175,11 @@ class Visual extends Entity {
     /** If set, children will be sort by depth and their computed depth
         will be within range [parent.depth, parent.depth + depthRange] */
     @editable
+    #if ceramic_no_depth_range
     public var depthRange(default,set):Float = -1;
+    #else
+    public var depthRange(default,set):Float = 1;
+    #end
     function set_depthRange(depthRange:Float):Float {
         if (this.depthRange == depthRange) return depthRange;
         this.depthRange = depthRange;
