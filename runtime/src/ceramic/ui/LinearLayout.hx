@@ -90,6 +90,9 @@ class LinearLayout extends View {
             else if (!parentLayoutMask.canIncreaseHeight()) {
                 computedHeight -= paddingTop + paddingBottom;
             }
+            else if (computedHeight > 0) {
+                computedHeight -= paddingTop + paddingBottom;
+            }
 
             if (subviews != null) {
                 for (i in 0...subviews.length) {
@@ -120,7 +123,6 @@ class LinearLayout extends View {
             // Add cumulated item spacing
             var diff = numChildren > 1 ? itemSpacing * (numChildren - 1) : 0;
             childrenHeight += diff;
-            computedHeight += diff;
 
             // Compute fill views
             var fillHeight = 0.0;
@@ -229,6 +231,9 @@ class LinearLayout extends View {
             else if (!parentLayoutMask.canIncreaseWidth()) {
                 computedWidth -= paddingLeft + paddingRight;
             }
+            else if (computedWidth > 0) {
+                computedWidth -= paddingLeft + paddingRight;
+            }
 
             if (subviews != null) {
                 for (i in 0...subviews.length) {
@@ -259,7 +264,6 @@ class LinearLayout extends View {
             // Add cumulated item spacing
             var diff = numChildren > 1 ? itemSpacing * (numChildren - 1) : 0;
             childrenWidth += diff;
-            computedWidth += diff;
 
             // Compute fill views
             var fillWidth = 0.0;
