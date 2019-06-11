@@ -206,6 +206,13 @@ class Spine extends Visual {
         
         // Save animation info
         var prevSpineData = this.spineData;
+
+        if (prevSpineData != null) {
+            if (prevSpineData.asset != null) {
+                prevSpineData.asset.release();
+            }
+        }
+
         var toResume:Array<Dynamic> = null;
         if (!destroyed && prevSpineData != null && animation == null && state != null) {
             toResume = [];
@@ -231,6 +238,12 @@ class Spine extends Visual {
         }
 
         this.spineData = spineData;
+
+        if (this.spineData != null) {
+            if (this.spineData.asset != null) {
+                this.spineData.asset.retain();
+            }
+        }
 
 #if editor
         computeAnimationList();
@@ -641,6 +654,7 @@ class Spine extends Visual {
 
     override function destroy() {
 
+        // Will update reference counting
         spineData = null;
 
         for (mesh in slotMeshes) {
