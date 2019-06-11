@@ -19,10 +19,10 @@ typedef FragmentData = {
     /** Fragment height */
     public var height:Float;
 
-    /** Fragment items (visuals or other entities) */
-    public var items:Array<FragmentItem>;
-
     /** Fragment-level components */
     public var components:DynamicAccess<String>;
+
+    /** Fragment items (visuals or other entities) */
+    @:optional public var items:Array<FragmentItem>;
 
 } //FragmentData

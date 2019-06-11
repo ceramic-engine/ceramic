@@ -10,7 +10,7 @@ using ceramic.Extensions;
 
 /** A fragment is a group of visuals rendered from data (.fragment file) */
 @editable({ implicitSize: true })
-class Fragment extends Visual {
+class Fragment extends Quad {
 
     public var entities(default,null):Array<Entity>;
 
@@ -52,6 +52,7 @@ class Fragment extends Visual {
         this.context = context;
         entities = [];
         items = [];
+        transparent = true;
 
         #if ceramic_debug_fragments
         trace('new Fragment(context=$context)');
