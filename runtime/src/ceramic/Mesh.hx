@@ -33,6 +33,13 @@ class Mesh extends Visual {
 
     } //new
 
+    override function destroy() {
+
+        // Will update texture asset retain count accordingly
+        texture = null;
+
+    } //destroy
+
 /// Color
 
     /** Can be used instead of colors array when the mesh is only composed of a single color. */

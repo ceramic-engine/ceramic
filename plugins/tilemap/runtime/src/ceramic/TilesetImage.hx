@@ -11,12 +11,14 @@ class TilesetImage extends Entity {
             if (prevTexture.asset != null) {
                 prevTexture.asset.offReplaceTexture(replaceTexture);
             }
+            if (prevTexture.asset != null) prevTexture.asset.release();
         }
         this.texture = texture;
         if (this.texture != null) {
             if (this.texture.asset != null) {
                 this.texture.asset.onReplaceTexture(this, replaceTexture);
             }
+            if (this.texture.asset != null) this.texture.asset.retain();
         }
         return texture;
     }
@@ -33,6 +35,13 @@ class TilesetImage extends Entity {
     public function new() {
 
     } //new
+
+    override function destroy() {
+
+        // Will update texture asset retain count accordingly
+        texture = null;
+
+    } //destroy
 
 /// Internal
 

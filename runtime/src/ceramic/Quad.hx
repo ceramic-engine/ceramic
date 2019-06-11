@@ -128,6 +128,13 @@ class Quad extends Visual {
 
     } //new
 
+    override function destroy() {
+
+        // Will update texture asset retain count accordingly
+        texture = null;
+
+    } //destroy
+
 /// Helpers
 
     inline public function frame(frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float):Void {
