@@ -37,6 +37,8 @@ class Scroller extends Visual {
 
     public var scrollEnabled(default,set):Bool = true;
 
+    public var dragEnabled:Bool = true;
+
     public var status(default,set):ScrollerStatus = IDLE;
 
     function set_status(status:ScrollerStatus):ScrollerStatus {
@@ -361,6 +363,11 @@ class Scroller extends Visual {
 
         if (!computedTouchable) {
             // Not touchable, do nothing
+            return;
+        }
+
+        if (!dragEnabled) {
+            // Dragging disabled
             return;
         }
 
