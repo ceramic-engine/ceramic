@@ -34,11 +34,23 @@ class ScrollView extends View {
 
         super();
 
+        initContentView();
+        initScroller();
+
+    } //new
+
+    function initContentView() {
+
         contentView = new View();
+
+    } //initContentView
+
+    function initScroller() {
+
         scroller = new Scroller(contentView);
         add(scroller);
 
-    } //new
+    } //initScroller
 
     override function layout() {
 
