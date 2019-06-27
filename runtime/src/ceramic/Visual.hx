@@ -1045,7 +1045,13 @@ class Visual extends Entity {
 
         if (children == null) return;
 
-        @:privateAccess children.mutable.splice(children.indexOf(visual), 1);
+        var index = children.indexOf(visual);
+        if (index != -1) {
+            @:privateAccess children.mutable.splice(children.indexOf(visual), 1);
+        }
+        else {
+            ceramic.Shortcuts.warning('Cannot remove visual $visual, index is -1');
+        }
         visual.parent = null;
         visual.visibilityDirty = true;
         visual.matrixDirty = true;
