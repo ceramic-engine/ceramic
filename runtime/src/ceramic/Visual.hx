@@ -26,6 +26,25 @@ class Visual extends Entity {
     @event function focus();
     @event function blur();
 
+#if ceramic_arcade_physics
+
+/// Physics
+
+    public var body(default,set):arcade.Body = null;
+    function set_body(body:arcade.Body):arcade.Body {
+        if (this.body == body) return body;
+        if (this.body != null && this.body.visual == this) {
+            this.body.visual = null;
+        }
+        this.body = body;
+        if (body != null) {
+            body.visual = this;
+        }
+        return body;
+    }
+
+#end
+
 /// Access as specific types
 
     /** Get this visual typed as `Quad` or null if it isn't a `Quad` */
@@ -556,6 +575,13 @@ class Visual extends Entity {
 
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
+
+#if ceramic_arcade_physics
+        if (body != null) {
+            body.destroy();
+            body = null;
+        }
+#end
 
         clear();
 
