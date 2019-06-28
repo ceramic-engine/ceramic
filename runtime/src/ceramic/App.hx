@@ -205,6 +205,12 @@ class App extends Entity {
 
     public var componentInitializers:Map<String,Array<Dynamic>->Component> = new Map();
 
+#if ceramic_arcade_physics
+
+    public var physics:ArcadePhysics = null;
+
+#end
+
 /// Internal
 
     var hierarchyDirty:Bool = false;
@@ -293,6 +299,10 @@ class App extends Entity {
 
         // Init collections
         initCollections();
+
+#if ceramic_arcade_physics
+        physics = new ArcadePhysics();
+#end
 
         // Load default assets
         //
@@ -474,7 +484,7 @@ class App extends Entity {
 
         // Pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-        preUpdatePhysicsBodies(physicsBodies);
+        physics.preUpdate(delta);
 #end
 
         // Flush immediate callbacks
@@ -497,7 +507,7 @@ class App extends Entity {
 
         // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-        postUpdatePhysicsBodies(physicsBodies);
+        physics.postUpdate(delta);
 #end
 
         // Flush immediate callbacks
@@ -644,74 +654,5 @@ class App extends Entity {
         return pressedScanCodes.get(key.scanCode) == 1;
 
     } //isKeyJustPressed
-
-#if ceramic_arcade_physics
-
-    @:allow(ceramic.PhysicsBody)
-    var _destroyedPhysicsBodies:Array<PhysicsBody> = [];
-    @:allow(ceramic.PhysicsBody)
-    var _createdPhysicsBodies:Array<PhysicsBody> = [];
-    @:allow(ceramic.PhysicsBody)
-    var _freezePhysicsBodies:Bool = false;
-
-    public var physicsBodies:Array<arcade.Body> = [];
-
-    inline function preUpdatePhysicsBodies(physicsBodies:Array<arcade.Body>):Void {
-
-        _freezePhysicsBodies = true;
-
-        // Run preUpdate()
-        for (i in 0...physicsBodies.length) {
-            var body:arcade.Body = physicsBodies.unsafeGet(i);
-            if (!body.destroyed) {
-                @:privateAccess body.preUpdate();
-            }
-        }
-
-        _freezePhysicsBodies = false;
-
-        flushDestroyedPhysicsBodies(physicsBodies);
-        flushCreatedPhysicsBodies(physicsBodies);
-
-    } //preUpdatePhysicsBodies
-
-    inline function postUpdatePhysicsBodies(physicsBodies:Array<arcade.Body>):Void {
-
-        _freezePhysicsBodies = true;
-
-        // Run postUpdate()
-        for (i in 0...physicsBodies.length) {
-            var body:arcade.Body = physicsBodies.unsafeGet(i);
-            if (!body.destroyed) {
-                @:privateAccess body.postUpdate();
-            }
-        }
-
-        _freezePhysicsBodies = false;
-
-        flushDestroyedPhysicsBodies(physicsBodies);
-        flushCreatedPhysicsBodies(physicsBodies);
-
-    } //postUpdatePhysicsBodies
-
-    inline function flushDestroyedPhysicsBodies(physicsBodies:Array<arcade.Body>):Void {
-
-        while (_destroyedPhysicsBodies.length > 0) {
-            var body = _destroyedPhysicsBodies.pop();
-            physicsBodies.remove(cast body);
-        }
-        
-    } //flushDestroyedPhysicsBodies
-
-    inline function flushCreatedPhysicsBodies(physicsBodies:Array<arcade.Body>):Void {
-
-        while (_createdPhysicsBodies.length > 0) {
-            var body = _createdPhysicsBodies.pop();
-            physicsBodies.push(cast body);
-        }
-        
-    } //flushCreatedPhysicsBodies
-
-#end
 
 } //App

@@ -1,5 +1,6 @@
 package ceramic;
 
+import arcade.Body;
 #if ceramic_luxe_legacy
 import backend.VisualItem;
 #end
@@ -30,6 +31,7 @@ class Visual extends Entity {
 
 /// Physics
 
+    /** The arcade physics body bound to this visual. */
     public var body(default,set):arcade.Body = null;
     function set_body(body:arcade.Body):arcade.Body {
         if (this.body == body) return body;
@@ -42,6 +44,29 @@ class Visual extends Entity {
         }
         return body;
     }
+
+    /** Init arcade physics body bound to this visual. */
+    public function initBody():arcade.Body {
+
+        if (body != null) {
+            body.destroy();
+            body = null;
+        }
+
+        var w = width * scaleX;
+        var h = height * scaleY;
+
+        body = new Body(
+            x - w * anchorX,
+            y - h * anchorY,
+            w,
+            h,
+            rotation
+        );
+
+        return body;
+
+    } //initBody
 
 #end
 

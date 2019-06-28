@@ -6,11 +6,11 @@ class PhysicsBody extends Entity {
 
     public function new() {
 
-        if (ceramic.App.app._freezePhysicsBodies) {
-            ceramic.App.app._createPhysicsBodies.push(this);
+        if (ceramic.App.app.physics._freezeBodies) {
+            ceramic.App.app.physics._createdBodies.push(this);
         }
         else {
-            ceramic.App.app.physicsBodies.push(cast this);
+            ceramic.App.app.physics.bodies.push(cast this);
         }
 
     } //new
@@ -24,11 +24,11 @@ class PhysicsBody extends Entity {
             visual = null;
         }
 
-        if (ceramic.App.app._freezePhysicsBodies) {
-            ceramic.App.app._destroyedPhysicsBodies.push(this);
+        if (ceramic.App.app.physics._freezeBodies) {
+            ceramic.App.app.physics._destroyedBodies.push(this);
         }
         else {
-            ceramic.App.app.physicsBodies.remove(cast this);
+            ceramic.App.app.physics.bodies.remove(cast this);
         }
 
     } //destroy
