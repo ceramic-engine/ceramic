@@ -57,3 +57,7 @@
 	path = git/format-tiled
 	url = https://github.com/ceramic-engine/format-tiled.git
 	branch = master
+[submodule "git/arcade"]
+	path = git/arcade
+	url = https://github.com/jeremyfa/arcade.git
+	branch = master
