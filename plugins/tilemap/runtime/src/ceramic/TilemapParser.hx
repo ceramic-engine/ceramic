@@ -7,6 +7,12 @@ import format.tmx.Data.TmxMap;
 import format.tmx.Data.TmxTileset;
 import format.tmx.Reader as TmxReader;
 
+#if (haxe_ver >= 4)
+import haxe.xml.Access as Fast;
+#else
+import haxe.xml.Fast;
+#end
+
 import ceramic.Shortcuts.*;
 
 class TilemapParser {
@@ -25,6 +31,33 @@ class TilemapParser {
         return tmxMap;
 
     } //parseTmx
+
+    public static function parseExternalTilesetNames(rawTmxData:String):Array<String> {
+
+        var xml = Xml.parse(rawTmxData);
+        
+        var map:Fast = new Fast(xml).node.map;
+
+        var result:Array<String> = [];
+
+        for (element in map.elements)
+        {
+            switch (element.name)
+            {
+                case "tileset":
+                    var input:Fast = element;
+                    if (input.has.source) {
+                        var source:String = input.att.source;
+                        if (result.indexOf(source) == -1) {
+                            result.push(source);
+                        }
+                    }
+            }
+        }
+
+        return result;
+
+    } //parseExternalTilesetNames
 
     public static function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
 
@@ -87,11 +120,10 @@ class TilemapParser {
                 var tmxTileset = tmxMap.tilesets[i];
                 var tileset = new Tileset();
 
-                // Need to cleanup tileset when destroying related tilemap,
-                // because this tileset is embedded.
-                // May handle this differently later if tilesets are shared
-                // across multiple tilemaps
-                tilemapData.onDestroy(tileset, function() tileset.destroy());
+                // Need to cleanup tileset when destroying related tilemap
+                tilemapData.onDestroy(tileset, function() {
+                    tileset.destroy();
+                });
 
                 if (tmxTileset.firstGID != null) {
                     tileset.firstGid = tmxTileset.firstGID;
