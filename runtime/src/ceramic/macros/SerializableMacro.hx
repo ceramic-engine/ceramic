@@ -8,6 +8,11 @@ using StringTools;
 class SerializableMacro {
 
     macro static public function build():Array<Field> {
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN SerializableMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
         var localClass = Context.getLocalClass().get();
@@ -150,6 +155,10 @@ class SerializableMacro {
 
         // Store next event index for this class path
         EventsMacro._nextEventIndexes.set(classPath, nextEventIndex);
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END SerializableMacro.build()');
+        #end
 
         return fields;
 

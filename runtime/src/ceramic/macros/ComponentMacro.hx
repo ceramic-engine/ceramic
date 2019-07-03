@@ -11,6 +11,10 @@ class ComponentMacro {
 
     macro static public function build():Array<Field> {
 
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN ComponentMacro.build()');
+        #end
+
         if (!onReused) {
             onReused = true;
             /*
@@ -117,6 +121,10 @@ class ComponentMacro {
             };
             fields.push(field);
         }
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END ComponentMacro.build()');
+        #end
 
         return fields;
 

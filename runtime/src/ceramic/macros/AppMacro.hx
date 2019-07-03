@@ -21,6 +21,10 @@ class AppMacro {
 
     macro static public function build():Array<Field> {
 
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN AppMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
 
         var data = getComputedInfo(Context.definedValue('app_info'));
@@ -68,6 +72,10 @@ class AppMacro {
             doc: 'App info extracted from `ceramic.yml`',
             meta: []
         });
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END AppMacro.build()');
+        #end
 
         return fields;
 

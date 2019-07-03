@@ -6,6 +6,11 @@ import haxe.macro.Expr;
 class LazyMacro {
 
     macro static public function build():Array<Field> {
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN LazyMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
 
         var newFields:Array<Field> = [];
@@ -120,6 +125,10 @@ class LazyMacro {
             }
 
         }
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END LazyMacro.build()');
+        #end
 
         return newFields;
 

@@ -15,6 +15,10 @@ class CollectionsMacro {
 
     macro static public function build():Array<Field> {
 
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN CollectionsMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
 
         #if (completion || display)
@@ -179,6 +183,10 @@ class CollectionsMacro {
                 }
             }
         }
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END CollectionsMacro.build()');
+        #end
 
         return fields;
 

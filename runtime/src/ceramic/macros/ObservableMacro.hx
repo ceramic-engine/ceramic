@@ -11,6 +11,11 @@ using StringTools;
 class ObservableMacro {
 
     macro static public function build():Array<Field> {
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN ObservableMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
         var localClass = Context.getLocalClass().get();
@@ -403,6 +408,10 @@ class ObservableMacro {
 
         // Store next event index for this class path
         EventsMacro._nextEventIndexes.set(classPath, nextEventIndex);
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END ObservableMacro.build()');
+        #end
 
         return newFields;
 

@@ -20,6 +20,10 @@ class ExportRtti {
 
     public static function init():Void {
 
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN ExportRtti.build()');
+        #end
+
         var isCompletion = Context.defined('completion') || Context.defined('display');
         if (isCompletion) return;
 
@@ -102,6 +106,10 @@ class ExportRtti {
             }
 
         });
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END ExportRtti.build()');
+        #end
 
     } //init
 

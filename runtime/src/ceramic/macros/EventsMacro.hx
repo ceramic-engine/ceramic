@@ -12,6 +12,11 @@ class EventsMacro {
     static var _nextEventIndexes:Map<String,Int> = new Map();
 
     macro static public function build():Array<Field> {
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN EventsMacro.build()');
+        #end
+
         var fields = Context.getBuildFields();
 
         // Should we dispatch events dynamically?
@@ -103,6 +108,10 @@ class EventsMacro {
 
         // Store next event index for this class path
         _nextEventIndexes.set(classPath, nextEventIndex);
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END EventsMacro.build()');
+        #end
 
         return newFields;
 

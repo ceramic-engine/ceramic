@@ -19,6 +19,11 @@ class EntityMacro {
 
     macro static public function build():Array<Field> {
 
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN EntityMacro.build()');
+        #end
+
+        #if (haxe_ver < 4)
         if (!onReused) {
             onReused = true;
             Context.onMacroContextReused(function() {
@@ -26,6 +31,7 @@ class EntityMacro {
                 return true;
             });
         }
+        #end
 
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
@@ -325,6 +331,10 @@ class EntityMacro {
                 }
             }
         }
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END EntityMacro.build()');
+        #end
 
         return newFields;
 

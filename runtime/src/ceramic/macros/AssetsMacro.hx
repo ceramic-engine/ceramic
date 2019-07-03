@@ -25,6 +25,10 @@ class AssetsMacro {
     public static var reConstStart = ~/^[a-zA-Z_]$/;
 
     macro static public function buildNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> BEGIN AssetsMacro.buildNames($kind, $extensions, $dir)');
+        #end
         
         initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_plugins_assets_paths'), Context.definedValue('ceramic_assets_path'));
 
@@ -34,6 +38,10 @@ class AssetsMacro {
         for (field in computeNames(fields, pos, kind, extensions, dir)) {
             fields.push(field);
         }
+
+        #if ceramic_debug_macro
+        trace(Context.getLocalClass() + ' -> END AssetsMacro.buildNames()');
+        #end
 
         return fields;
 
