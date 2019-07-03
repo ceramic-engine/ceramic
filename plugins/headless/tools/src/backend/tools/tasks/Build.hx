@@ -87,7 +87,9 @@ class Build extends tools.Task {
 
             var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
             var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, haxe]),
+                // Using global haxe (expecting haxe 4 for now)
+                // because using haxe 3.4.7 seems to make the build hang forever in some cases
+                'haxe'/*Path.join([context.ceramicToolsPath, haxe])*/,
                 cmdArgs,
                 { cwd: hxmlProjectPath }
             );
