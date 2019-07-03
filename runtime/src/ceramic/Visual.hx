@@ -1,6 +1,5 @@
 package ceramic;
 
-import arcade.Body;
 #if ceramic_luxe_legacy
 import backend.VisualItem;
 #end
@@ -56,7 +55,7 @@ class Visual extends Entity {
         var w = width * scaleX;
         var h = height * scaleY;
 
-        body = new Body(
+        body = new arcade.Body(
             x - w * anchorX,
             y - h * anchorY,
             w,
