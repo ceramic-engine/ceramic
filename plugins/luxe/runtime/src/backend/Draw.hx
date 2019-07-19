@@ -6,6 +6,9 @@ import backend.impl.CeramicBatcher;
 
 #end
 
+import snow.modules.opengl.GL;
+import snow.api.buffers.Float32Array;
+
 import ceramic.RotateFrame;
 
 using ceramic.Extensions;
@@ -108,6 +111,123 @@ class Draw implements spec.Draw {
         matrix.scale(sX, sY);
 
     } //transformForRenderTarget
+
+/// Render driver
+
+    var luxeRenderer:phoenix.Renderer; // TODO
+
+    var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
+
+    var view:phoenix.Camera;
+
+    var defaultTransformScaleX:Float;
+
+    var defaultTransformScaleY:Float;
+
+    var defaultViewport:phoenix.Rectangle;
+
+    var currentRenderTarget:ceramic.RenderTexture = null;
+
+    inline public function beginRender():Void {
+
+        defaultTransformScaleX = view.transform.scale.x;
+        defaultTransformScaleY = view.transform.scale.y;
+        defaultViewport = view.viewport;
+
+    } //beginRender
+
+    inline public function setActiveTexture(slot:Int):Void {
+
+        luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
+
+    } //setActiveTexture
+
+    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture):Void {
+
+        if (currentRenderTarget != renderTarget) {
+            if (renderTarget != null) {
+                var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
+                luxeRenderer.target = renderTexture;
+                view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
+                view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
+                view.process();
+                GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+                if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+            } else {
+                luxeRenderer.target = null;
+                view.transform.scale.x = defaultTransformScaleX;
+                view.transform.scale.y = defaultTransformScaleY;
+                view.viewport = defaultViewport;
+                view.process();
+                luxeRenderer.state.viewport(view.viewport.x, view.viewport.y, view.viewport.w, view.viewport.h);
+            }
+        }
+
+    } //computeRenderTarget
+
+    inline public function useShader(shader:backend.impl.CeramicShader):Void {
+
+        if (!shader.no_default_uniforms) {
+            shader.set_matrix4_arr('projectionMatrix', view.proj_arr);
+            shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
+        }
+        
+        if (shader != null) {
+            shader.activate();
+        }
+
+    } //useShader
+
+    inline public function shaderCustomFloatAttributesSize(shader:backend.impl.CeramicShader):Int {
+
+        var customFloatAttributesSize = 0;
+
+        var allAttrs = shader.customAttributes;
+        if (allAttrs != null) {
+            for (ii in 0...allAttrs.length) {
+                var attr = allAttrs.unsafeGet(ii);
+                customFloatAttributesSize += attr.size;
+            }
+        }
+
+        return customFloatAttributesSize;
+
+    } //shaderCustomFloatAttributesSize
+
+    inline public function enableBlending():Void {
+
+        luxeRenderer.state.enable(GL.BLEND);
+
+    } //enableBlending
+
+    inline public function disableBlending():Void {
+
+        luxeRenderer.state.disable(GL.BLEND);
+
+    } //disableBlending
+
+    inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
+
+        GL.blendFuncSeparate(
+            srcRgb,
+            dstRgb,
+            srcAlpha,
+            dstAlpha
+        );
+
+    } //setBlendFuncSeparate
+
+    inline public function enableStencilTest():Void {
+
+        GL.enable(GL.STENCIL_TEST);
+
+    } //enableStencilTest
+
+    inline public function disableStencilTest():Void {
+
+        GL.disable(GL.STENCIL_TEST);
+
+    } //disableStencilTest
 
 #else
 
