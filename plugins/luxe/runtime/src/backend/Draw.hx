@@ -128,6 +128,10 @@ class Draw implements spec.Draw {
 
     var currentRenderTarget:ceramic.RenderTexture = null;
 
+    var renderWireframe:Bool = false;
+
+    //var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+
     inline public function beginRender():Void {
 
         defaultTransformScaleX = view.transform.scale.x;
@@ -135,12 +139,6 @@ class Draw implements spec.Draw {
         defaultViewport = view.viewport;
 
     } //beginRender
-
-    inline public function setActiveTexture(slot:Int):Void {
-
-        luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
-
-    } //setActiveTexture
 
     inline public function setRenderTarget(renderTarget:ceramic.RenderTexture):Void {
 
@@ -228,6 +226,61 @@ class Draw implements spec.Draw {
         GL.disable(GL.STENCIL_TEST);
 
     } //disableStencilTest
+
+    inline public function setActiveTexture(slot:Int):Void {
+
+        luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
+
+    } //setActiveTexture
+
+    inline public function textureBackendItemMatchesId(backendItem:backend.Image, textureId:backend.TextureId):Bool {
+
+        return (backendItem : phoenix.Texture).texture == textureId;
+
+    } //textureBackendItemMatchesId
+
+    inline public function getTextureId(backendItem:backend.Image):backend.TextureId {
+
+        return (backendItem : phoenix.Texture).texture;
+
+    } //getTextureId
+
+    inline public function getTextureSlot(backendItem:backend.Image):Int {
+
+        return (backendItem : phoenix.Texture).slot;
+
+    } //getTextureSlot
+
+    inline public function getTextureWidthActual(backendItem:backend.Image):Int {
+
+        return (backendItem : phoenix.Texture).width_actual;
+
+    } //getTextureWidthActual
+
+    inline public function getTextureHeightActual(backendItem:backend.Image):Int {
+
+        return (backendItem : phoenix.Texture).height_actual;
+
+    } //getTextureHeightActual
+
+    inline public function bindTexture(backendItem:backend.Image):Void {
+
+        return (backendItem : phoenix.Texture).bind();
+
+    } //getTextureHeightActual
+
+    inline public function bindNoTexture():Void {
+
+        luxeRenderer.state.bindTexture2D(#if snow_web null #else 0 #end);
+
+    } //bindNoTexture
+
+    inline public function setRenderWireframe(value:Bool):Void {
+
+        renderWireframe = value;
+        //primitiveType = value ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
+
+    } //renderWireframe
 
 #else
 

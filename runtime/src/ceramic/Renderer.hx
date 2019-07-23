@@ -35,6 +35,8 @@ class Renderer extends Entity {
     var quad:ceramic.Quad = null;
     var mesh:ceramic.Mesh = null;
 
+    var stateDirty:Bool = true;
+
 #if ceramic_debug_draw
     var debugDraw:Int = false;
     var drawnQuad:Int = 0;
@@ -139,7 +141,7 @@ class Renderer extends Entity {
         var texWidthActual:Float = 0;
         var texHeightActual:Float = 0;
 
-        var stateDirty = true;
+        stateDirty = true;
 
         var defaultPlainShader:backend.Shader = ceramic.App.app.defaultColorShader.backendItem;
         var defaultTexturedShader:backend.Shader = ceramic.App.app.defaultTexturedShader.backendItem;
@@ -254,7 +256,137 @@ class Renderer extends Entity {
             draw.setRenderTarget(lastRenderTarget);
         }
         else {
-            // TODO
+            // Check if state is dirty
+            if (!stateDirty) {
+                if (quad.texture != lastTexture) {
+                    if (quad.texture != null && lastTexture != null) {
+                        // Different ceramic textures could use the same GL texture
+                        if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
+                            stateDirty = true;
+                        }
+                    } else {
+                        stateDirty = true;
+                    }
+                }
+                if (!stateDirty) {
+                    stateDirty =
+                        quad.shader != lastShader ||
+                        (quad.blending != lastBlending &&
+                        (
+                            (quad.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                            (quad.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                        )) ||
+#if ceramic_debug_rendering_option
+                        quad.debugRendering != lastDebugRendering ||
+#end
+                        quad.computedRenderTarget != lastRenderTarget;
+                }
+            }
+
+            if (stateDirty) {
+#if ceramic_debug_draw
+                if (debugDraw) trace('-- flush --');
+#end
+                flush();
+
+                // Update texture
+                if (quad.texture != lastTexture) {
+                    if (quad.texture != null && lastTexture != null) {
+                        if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
+                            lastTexture = quad.texture;
+                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
+                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
+                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
+                            draw.bindTexture(lastTexture.backendItem);
+                        }
+                    } else {
+                        if (quad.texture != null) {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
+                            if (lastShader == null && quad.shader == null) {
+                                // Default textured shader fallback
+                                useShader(defaultTexturedShader);
+                            }
+                            lastTexture = quad.texture;
+                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
+                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
+                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
+                            draw.bindTexture(lastTexture.backendItem);
+                        } else {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
+#end
+                            if (lastShader == null && quad.shader == null) {
+                                // Default plain shader fallback
+                                useShader(defaultPlainShader);
+                            }
+                            lastTexture = null;
+                            lastTextureId = backend.TextureId.DEFAULT;
+                            draw.setActiveTexture(lastTextureSlot);
+                            draw.bindNoTexture();
+                        }
+                    }
+                }
+
+                // Update shader
+                if (quad.shader != lastShader) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- shader ' + lastShader + ' -> ' + quad.shader);
+#end
+                    lastShader = quad.shader;
+
+                    if (lastShader != null) {
+                        // Custom shader
+                        useShader(lastShader.backendItem);
+                    }
+                    else if (lastTexture != null) {
+                        // Default textured shader fallback
+                        useShader(defaultTexturedShader);
+                    }
+                    else {
+                        // Default plain shader fallback
+                        useShader(defaultPlainShader);
+                    }
+                }
+
+                // Update blending
+                var newComputedBlending = quad.blending;
+                if (newComputedBlending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+                    newComputedBlending = ceramic.Blending.ALPHA;
+                }
+                else if (newComputedBlending == ceramic.Blending.ADD) {
+                    newComputedBlending = ceramic.Blending.NORMAL;
+                }
+                if (newComputedBlending != lastComputedBlending) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
+#end
+                    lastComputedBlending = newComputedBlending;
+                    applyBlending(lastComputedBlending);
+                }
+
+#if ceramic_debug_rendering_option
+                lastDebugRendering = quad.debugRendering;
+                draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+#end
+
+                // Update render target
+                if (quad.computedRenderTarget != lastRenderTarget) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
+#end
+                    lastRenderTarget = quad.computedRenderTarget;
+                    computeRenderTarget(lastRenderTarget);
+                }
+
+                stateDirty = false;
+            }
         }
 
     } //drawQuad
