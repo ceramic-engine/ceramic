@@ -103,7 +103,7 @@ class LinearLayout extends View {
                         // Skip 'auto' sizes
                         if (!ViewSize.isFill(view.viewHeight)) {
 
-                            view.computeSize(computedWidth, computedHeight, layoutMask, false);
+                            view.computeSizeIfNeeded(computedWidth, computedHeight, layoutMask, false);
 
                             // Compute maximum width
                             if (view.computedWidth > maximumWidth) {
@@ -141,7 +141,7 @@ class LinearLayout extends View {
                         var view = subviews.unsafeGet(i);
                         if (view.active && ViewSize.isFill(view.viewHeight)) {
 
-                            view.computeSize(computedWidth, fillHeight, subLayoutMask, false);
+                            view.computeSizeIfNeeded(computedWidth, fillHeight, subLayoutMask, false);
 
                             // Compute maximum width
                             if (view.computedWidth > maximumWidth) {
@@ -175,7 +175,7 @@ class LinearLayout extends View {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
                         if (view.active && !ViewSize.isFill(view.viewHeight)) {
-                            view.computeSize(computedWidth, computedHeight, persistingLayoutMask, persist);
+                            view.computeSizeIfNeeded(computedWidth, computedHeight, persistingLayoutMask, persist);
                         }
                     }
                 }
@@ -185,7 +185,7 @@ class LinearLayout extends View {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
                         if (view.active && ViewSize.isFill(view.viewHeight)) {
-                            view.computeSize(computedWidth, fillHeight, subLayoutMask, persist);
+                            view.computeSizeIfNeeded(computedWidth, fillHeight, subLayoutMask, persist);
                         }
                     }
                 }
@@ -244,7 +244,7 @@ class LinearLayout extends View {
                         // Skip 'auto' sizes
                         if (!ViewSize.isFill(view.viewWidth)) {
 
-                            view.computeSize(computedWidth, computedHeight, layoutMask, false);
+                            view.computeSizeIfNeeded(computedWidth, computedHeight, layoutMask, false);
 
                             // Compute maximum height
                             if (view.computedHeight > maximumHeight) {
@@ -282,7 +282,7 @@ class LinearLayout extends View {
                         var view = subviews.unsafeGet(i);
                         if (view.active && ViewSize.isFill(view.viewWidth)) {
 
-                            view.computeSize(fillWidth, computedHeight, subLayoutMask, false);
+                            view.computeSizeIfNeeded(fillWidth, computedHeight, subLayoutMask, false);
 
                             // Compute maximum height
                             if (view.computedHeight > maximumHeight) {
@@ -316,7 +316,7 @@ class LinearLayout extends View {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
                         if (view.active && !ViewSize.isFill(view.viewWidth)) {
-                            view.computeSize(computedWidth, computedHeight, persistingLayoutMask, persist);
+                            view.computeSizeIfNeeded(computedWidth, computedHeight, persistingLayoutMask, persist);
                         }
                     }
                 }
@@ -326,7 +326,7 @@ class LinearLayout extends View {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
                         if (view.active && ViewSize.isFill(view.viewWidth)) {
-                            view.computeSize(fillWidth, computedHeight, subLayoutMask, persist);
+                            view.computeSizeIfNeeded(fillWidth, computedHeight, subLayoutMask, persist);
                         }
                     }
                 }
@@ -335,6 +335,10 @@ class LinearLayout extends View {
             // Add padding
             computedWidth += paddingLeft + paddingRight;
             computedHeight += paddingTop + paddingBottom;
+        }
+
+        if (persist) {
+            persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
         }
 
     } //computeSize
@@ -366,7 +370,7 @@ class LinearLayout extends View {
                         numChildren++;
 
                         if (!ViewSize.isFill(view.viewHeight)) {
-                            view.computeSize(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_HEIGHT, true);
+                            view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_HEIGHT, true);
                             view.x = paddingLeft;
                             view.size(
                                 Math.min(paddedWidth, view.computedWidth),
@@ -389,7 +393,7 @@ class LinearLayout extends View {
                 for (i in 0...subviews.length) {
                     var view = subviews.unsafeGet(i);
                     if (view.active && ViewSize.isFill(view.viewHeight)) {
-                        view.computeSize(paddedWidth, fillHeight, ViewLayoutMask.FIXED, true);
+                        view.computeSizeIfNeeded(paddedWidth, fillHeight, ViewLayoutMask.FIXED, true);
                         view.pos(paddingLeft, 0);
                         view.size(paddedWidth, fillHeight);
                     }
@@ -465,7 +469,7 @@ class LinearLayout extends View {
                         numChildren++;
 
                         if (!ViewSize.isFill(view.viewWidth)) {
-                            view.computeSize(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_WIDTH, true);
+                            view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_WIDTH, true);
                             view.y = paddingTop;
                             view.size(
                                 view.computedWidth,
@@ -487,7 +491,7 @@ class LinearLayout extends View {
                 var fillWidth = leftWidth / numFill;
                 for (view in subviews) {
                     if (view.active && ViewSize.isFill(view.viewWidth)) {
-                        view.computeSize(fillWidth, paddedHeight, ViewLayoutMask.FIXED, true);
+                        view.computeSizeIfNeeded(fillWidth, paddedHeight, ViewLayoutMask.FIXED, true);
                         view.pos(0, paddingTop);
                         view.size(fillWidth, paddedHeight);
                     }

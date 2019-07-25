@@ -256,6 +256,49 @@ class View extends Quad {
 
     } //updateBorder
 
+/// Computed size context
+
+    var persistedParentLayoutMask:ViewLayoutMask = ViewLayoutMask.FLEXIBLE;
+
+    var persistedParentWidth:Float = -1;
+
+    var persistedParentHeight:Float = -1;
+
+    var persistedComputedWidth:Float = -1;
+
+    var persistedComputedHeight:Float = -1;
+
+    /*inline public function shouldRecomputeSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
+
+        return computedWidth == -1 || persistedComputedWidth || parentWidth != persistedParentWidth || parentHeight != persistedParentHeight;
+
+    } //shouldRecomputeSizeWithContext*/
+
+    inline public function persistComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Void {
+
+        persistedParentWidth = parentWidth;
+        persistedParentHeight = parentHeight;
+        persistedParentLayoutMask = parentLayoutMask;
+        persistedComputedWidth = computedWidth;
+        persistedComputedHeight = computedHeight;
+
+    } //persistComputedSizeWithContext
+
+    inline public function hasPersistentComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
+
+        // TODO use context details?
+
+        return persistedComputedWidth != -1;
+
+    } //hasPersistentComputedSize
+
+    inline public function resetComputedSize():Void {
+        
+        computedWidth = -1;
+        persistedComputedWidth = -1;
+
+    } //resetComputedSize
+
 /// Overrides
 
     override function set_active(active:Bool):Bool {
@@ -402,7 +445,16 @@ class View extends Quad {
         computeSize(0, 0, ViewLayoutMask.FLEXIBLE, true);
         if (applyComputedSize) this.applyComputedSize();
 
-    } //autoComputeAndApplySize
+    } //autoComputeSize
+
+    /** Auto compute size (if needed) from constraints and `viewWidth`/`viewHeight`.
+        @param applyComputedSize if `true`, apply the computed size to the view. */
+    inline public function autoComputeSizeIfNeeded(applyComputedSize:Bool = false):Void {
+
+        computeSizeIfNeeded(0, 0, ViewLayoutMask.FLEXIBLE, true);
+        if (applyComputedSize) this.applyComputedSize();
+
+    } //autoComputeSize
 
     /** Apply the computed size to the view.
         This is equivalent to `size(computedWidth, computedHeight)` */
@@ -522,9 +574,25 @@ class View extends Quad {
 
         }
 
+        if (persist) {
+            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
+        }
+
         return appliedScale;
 
     } //computeSizeWithIntrinsecBounds
+
+    inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
+
+        /*if (hasPersistentComputedSizeWithContext(parentWidth, parentHeight, layoutMask)) {
+            computedWidth = persistedComputedWidth;
+            computedHeight = persistedComputedHeight;
+        }
+        else {*/
+            computeSize(parentWidth, parentHeight, layoutMask, persist);
+        //}
+
+    } //computeSizeIfNeeded
 
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
@@ -576,6 +644,10 @@ class View extends Quad {
             if (computedHeight > parentHeight) {
                 computedHeight = parentHeight;
             }
+        }
+
+        if (persist) {
+            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
         }
 
     } //computeSize
@@ -639,6 +711,16 @@ class View extends Quad {
                 var view = toUpdate.unsafeGet(i);
                 _markParentsAsLayoutDirty(view);
             }
+
+            // Reset computed sizes
+            // TODO: only reset computed size of views that match these conditions:
+            //  - view width or height depends on a parent size that has its layout dirty
+            //  - view's own layout is dirty
+            for (i in 0..._allViews.length) {
+                var view = _allViews.unsafeGet(i);
+                view.resetComputedSize();
+            }
+
             // Then emit layout event by starting from the top-level views
             for (i in 0...toUpdate.length) {
                 var view = toUpdate.unsafeGet(i);
@@ -658,6 +740,7 @@ class View extends Quad {
 
         if (view.layoutDirty) {
             var root = view;
+
             while (root.parent != null && Std.is(root.parent, View)) {
                 root = cast root.parent;
                 root.layoutDirty = true;
