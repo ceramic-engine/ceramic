@@ -5,11 +5,11 @@ class ImageView extends View implements Observable {
 
 /// Public properties
 
-    /** Image scale (ignored if `scaleToFit` is `true`) */
+    /** Image scale (ignored unless `scaling` is `CUSTOM`) */
     @observe public var imageScale:Float = 1.0;
 
-    /** If set to `true`, image will be scaled to fit the `ImageView` (and its paddings) */
-    @observe public var scaleToFit:Bool = false;
+    /** How the image is scaled depending on its constraints */
+    @observe public var scaling:ImageViewScaling = ImageViewScaling.FIT;
 
     /** The actual image (as asset id or string) to display */
     @observe public var image:AssetId<String> = null;
@@ -44,10 +44,16 @@ class ImageView extends View implements Observable {
 
     function updateImageScale() {
 
-        var scaleToFit = this.scaleToFit;
+        var isAutoScaling = (this.scaling != ImageViewScaling.CUSTOM);
         var imageScale = this.imageScale;
 
-        imageQuad.scale(scaleToFit ? computedImageScale : imageScale);
+        var scale = switch (this.scaling) {
+            case CUSTOM: imageScale;
+            case FIT: computedImageScale;
+            case FILL: 1.0;
+        }
+
+        imageQuad.scale(scale);
 
     } //updateImageScale
 
@@ -55,7 +61,7 @@ class ImageView extends View implements Observable {
 
         var image = this.image;
 
-        unobserve();
+        Autorun.unobserve();
 
         if (image != null) {
             var assets = new Assets();
@@ -86,7 +92,7 @@ class ImageView extends View implements Observable {
             setImageTexture(null);
         }
 
-        reobserve();
+        Autorun.reobserve();
 
     } //updateImage
 
@@ -101,9 +107,6 @@ class ImageView extends View implements Observable {
 
         imageQuad.texture = texture;
         layoutDirty = true;
-        app.onceUpdate(this, function(_) {
-            layoutDirty = true;
-        });
 
     } //setImageTexture
 
@@ -142,15 +145,47 @@ class ImageView extends View implements Observable {
 
         var availableWidth = width - paddingLeft - paddingRight;
         var availableHeight = height - paddingTop - paddingBottom;
-        
+
         imageQuad.pos(
             paddingLeft + availableWidth * 0.5,
             paddingTop + availableHeight * 0.5
         );
 
-        imageQuad.alpha = 0.5;
+        if (imageQuad.texture != null) {
+            switch (scaling) {
+                case FILL:
+                    var fillScale = Math.max(
+                        availableWidth / imageQuad.texture.width,
+                        availableHeight / imageQuad.texture.height
+                    );
+                    var textureScaledWidth = imageQuad.texture.width * fillScale;
+                    var textureScaledHeight = imageQuad.texture.height * fillScale;
+                    var hiddenLeft = (textureScaledWidth - availableWidth) * 0.5;
+                    var hiddenTop = (textureScaledHeight - availableHeight) * 0.5;
 
-        trace(' - layout $width $height scale=${imageQuad.scaleX},${imageQuad.scaleY} size=${imageQuad.width},${imageQuad.height} pos=${imageQuad.x},${imageQuad.y}');
+                    imageQuad.size(
+                        availableWidth,
+                        availableHeight
+                    );
+                    imageQuad.frame(
+                        hiddenLeft / fillScale,
+                        hiddenTop / fillScale,
+                        availableWidth / fillScale,
+                        availableHeight / fillScale
+                    );
+
+                default:
+                    imageQuad.size(
+                        imageQuad.texture.width,
+                        imageQuad.texture.height
+                    );
+                    imageQuad.frame(
+                        0, 0,
+                        imageQuad.texture.width,
+                        imageQuad.texture.height
+                    );
+            }
+        }
 
     } //layout
 
