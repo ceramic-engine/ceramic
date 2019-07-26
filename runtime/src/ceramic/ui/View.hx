@@ -584,13 +584,13 @@ class View extends Quad {
 
     inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
-        /*if (hasPersistentComputedSizeWithContext(parentWidth, parentHeight, layoutMask)) {
+        if (hasPersistentComputedSizeWithContext(parentWidth, parentHeight, layoutMask)) {
             computedWidth = persistedComputedWidth;
             computedHeight = persistedComputedHeight;
         }
-        else {*/
+        else {
             computeSize(parentWidth, parentHeight, layoutMask, persist);
-        //}
+        }
 
     } //computeSizeIfNeeded
 

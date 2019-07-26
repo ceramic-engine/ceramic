@@ -96,6 +96,8 @@ class TextView extends View {
 
     } //new
 
+    var persistedFitWidth:Float = -1;
+
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
         
         super.computeSize(parentWidth, parentHeight, layoutMask, persist);
@@ -182,6 +184,11 @@ class TextView extends View {
         computedWidth = Math.round(computedWidth);
         computedHeight = Math.round(computedHeight);
 
+        if (persist) {
+            persistedFitWidth = text.fitWidth;
+            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
+        }
+
     } //computeSize
 
     override function layout() {
@@ -190,6 +197,14 @@ class TextView extends View {
         var paddingTop = ViewSize.computeWithParentSize(paddingTop, height);
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, width);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, height);
+
+        // Match text fit width with persisted computed width, if any
+        if (persistedComputedWidth != -1) {
+            text.fitWidth = persistedFitWidth;
+        }
+        else {
+            text.fitWidth = -1;
+        }
         
         switch [verticalAlign, text.align] {
             case [TOP, LEFT]:
