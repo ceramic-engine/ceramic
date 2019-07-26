@@ -580,7 +580,7 @@ class View extends Quad {
 
         return appliedScale;
 
-    } //computeSizeWithIntrinsecBounds
+    } //computeSizeWithIntrinsicBounds
 
     inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
