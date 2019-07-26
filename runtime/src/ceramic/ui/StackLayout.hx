@@ -108,13 +108,19 @@ class StackLayout extends View {
             for (i in 0...subviews.length) {
                 var view = subviews.unsafeGet(i);
                 if (view.active) {
+
+                    // Apply size
                     view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE, false);
-                    view.x = paddingLeft;
-                    view.y = paddingTop;
                     view.size(
                         view.computedWidth,
                         view.computedHeight
                     );
+
+                    // Apply paddings, offsets, compensate anchors
+                    view.x = view.width * view.anchorX + paddingLeft + ViewSize.computeWithParentSize(view.offsetX, paddedWidth);
+                    view.y = view.height * view.anchorY + paddingTop + ViewSize.computeWithParentSize(view.offsetY, paddedHeight);
+
+                    // Increase depth
                     view.depth = d++;
                 }
             }

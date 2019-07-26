@@ -350,11 +350,11 @@ class LinearLayout extends View {
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, width);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, height);
 
+        var paddedWidth = width - paddingLeft - paddingRight;
+        var paddedHeight = height - paddingTop - paddingBottom;
+
         if (direction == VERTICAL) {
 
-            // Compute padding
-            var paddedWidth = width - paddingLeft - paddingRight;
-            var paddedHeight = height - paddingTop - paddingBottom;
             var y = paddingTop;
             var h = 0.0;
             var numChildren = 0;
@@ -438,7 +438,8 @@ class LinearLayout extends View {
 
                         // Update every children y
                         if (subviews != null) {
-                            for (view in subviews) {
+                            for (i in 0...subviews.length) {
+                                var view = subviews.unsafeGet(i);
                                 if (view.active) {
                                     view.y += diff;
                                 }
@@ -452,9 +453,6 @@ class LinearLayout extends View {
         }
         else {
 
-            // Compute padding
-            var paddedWidth = width - paddingLeft - paddingRight;
-            var paddedHeight = height - paddingTop - paddingBottom;
             var x = paddingLeft;
             var w = 0.0;
             var numChildren = 0;
@@ -549,13 +547,13 @@ class LinearLayout extends View {
             }
         }
 
-        // Compensate anchors
+        // Compensate anchors and apply offsets
         if (subviews != null) {
             for (i in 0...subviews.length) {
                 var view = subviews.unsafeGet(i);
                 if (view.active) {
-                    view.x += view.width * view.anchorX;
-                    view.y += view.height * view.anchorY;
+                    view.x += view.width * view.anchorX + ViewSize.computeWithParentSize(view.offsetX, paddedWidth);
+                    view.y += view.height * view.anchorY + ViewSize.computeWithParentSize(view.offsetY, paddedHeight);
                 }
             }
         }

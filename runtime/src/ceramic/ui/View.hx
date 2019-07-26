@@ -105,6 +105,27 @@ class View extends Quad {
         return paddingBottom;
     }
 
+    inline public function offset(x:Float, y:Float):Void {
+        offsetX = x;
+        offsetY = y;
+    }
+
+    public var offsetX(default,set):Float = 0;
+    function set_offsetX(offsetX:Float):Float {
+        if (this.offsetX == offsetX) return offsetX;
+        this.offsetX = offsetX;
+        layoutDirty = true;
+        return offsetX;
+    }
+
+    public var offsetY(default,set):Float = 0;
+    function set_offsetY(offsetY:Float):Float {
+        if (this.offsetY == offsetY) return offsetY;
+        this.offsetY = offsetY;
+        layoutDirty = true;
+        return offsetY;
+    }
+
     /** Setting this to `false` will prevent this view from updating its layout.
         Default is `true` */
     public var canLayout:Bool;
