@@ -1,6 +1,6 @@
 package ceramic.ui;
 
-class StackLayout extends View {
+class LayersLayout extends View {
 
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
 
@@ -128,4 +128,4 @@ class StackLayout extends View {
 
     } //layout
 
-} //StackLayout
+} //LayersLayout
