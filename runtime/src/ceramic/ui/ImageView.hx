@@ -32,8 +32,6 @@ class ImageView extends View implements Observable {
 
         imageQuad = new Quad();
         imageQuad.anchor(0.5, 0.5);
-        imageQuad.transparent = false;
-        imageQuad.color = Color.RED;
         imageQuad.depth = 1;
         add(imageQuad);
 
