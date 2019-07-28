@@ -105,11 +105,19 @@ class View extends Quad {
         return paddingBottom;
     }
 
+    /** Offset this view position by `x` and `y`.
+        This offset is added to the view's resulting position
+        from its default layout. This has only effect when the view is layouted
+        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
     inline public function offset(x:Float, y:Float):Void {
         offsetX = x;
         offsetY = y;
     }
 
+    /** Offset this view position by `offsetX`.
+        This offset is added to the view's resulting position
+        from its default layout. This has only effect when the view is layouted
+        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
     public var offsetX(default,set):Float = 0;
     function set_offsetX(offsetX:Float):Float {
         if (this.offsetX == offsetX) return offsetX;
@@ -118,6 +126,10 @@ class View extends Quad {
         return offsetX;
     }
 
+    /** Offset this view position by `offsetY`.
+        This offset is added to the view's resulting position
+        from its default layout. This has only effect when the view is layouted
+        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
     public var offsetY(default,set):Float = 0;
     function set_offsetY(offsetY:Float):Float {
         if (this.offsetY == offsetY) return offsetY;
