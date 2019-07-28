@@ -13,8 +13,8 @@ class ColumnLayout extends LinearLayout {
 
     override function set_direction(direction:LayoutDirection):LayoutDirection {
 
-        throw('Changing direction of a ColumnLayout is not allowed. Use a LinearLayout if you want to change direction at runtime.');
-        return VERTICAL;
+        if (direction != VERTICAL) throw('Changing direction of a ColumnLayout is not allowed. Use a LinearLayout if you want to change direction at runtime.');
+        return this.direction = VERTICAL;
 
     } //set_direction
 
