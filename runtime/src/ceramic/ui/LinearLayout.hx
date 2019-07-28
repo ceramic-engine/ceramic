@@ -1,5 +1,7 @@
 package ceramic.ui;
 
+/** A layout that arranges other views either horizontally
+    in a single column or vertically in a single row. */
 class LinearLayout extends View {
 
     public var direction(default,set):LayoutDirection = VERTICAL;
