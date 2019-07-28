@@ -126,6 +126,21 @@ class View extends Quad {
         return offsetY;
     }
 
+    /** A hint to tell how much space this view should take,
+        relative to the space taken by a whole group of views.
+        Example:
+
+            view1.flex = 1; // Fills 1/3 of available space
+            view2.flex = 2; // Fills 2/3 of available space
+        */
+    public var flex(default,set):Int = 1;
+    inline function set_flex(flex:Int):Int {
+        if (this.flex == flex) return flex;
+        this.flex = flex;
+        layoutDirty = true;
+        return flex;
+    }
+
     /** Setting this to `false` will prevent this view from updating its layout.
         Default is `true` */
     public var canLayout:Bool;
