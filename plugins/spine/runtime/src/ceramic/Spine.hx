@@ -185,6 +185,9 @@ class Spine extends Visual {
         return hitWithFirstBoundingBox;
     }
 
+    @editable
+    public var renderWhenInvisible:Bool = false;
+
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
 
@@ -688,7 +691,7 @@ class Spine extends Visual {
         // Update skeleton
         updateSkeleton(delta);
 
-        if (visible) {
+        if (visible && !renderWhenInvisible) {
             // We are visible and are root spine animation, let's render
             render(delta, 0, false);
         }
