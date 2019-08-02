@@ -74,7 +74,7 @@ class DynamicTexture extends RenderTexture {
         addChildren(visual, flatVisuals);
 
         // Update & sort visuals
-        //app.computeHierarchy();
+        app.computeHierarchy();
         app.updateVisuals(flatVisuals);
         app.sortVisuals(flatVisuals);
 
