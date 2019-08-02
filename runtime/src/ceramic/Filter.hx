@@ -30,9 +30,18 @@ class Filter extends Quad {
         return textureFilter;
     } 
 
+    /** Auto render? */
+    public var autoRender(default,set):Bool = true;
+    function set_autoRender(autoRender:Bool):Bool {
+        if (this.autoRender == autoRender) return autoRender;
+        this.autoRender = autoRender;
+        if (renderTexture != null) renderTexture.autoRender = autoRender;
+        return autoRender;
+    } 
+
 /// Internal
 
-    var renderTexture:RenderTexture = null;
+    public var renderTexture(default,null):RenderTexture = null;
 
     function filterSize(filterWidth:Int, filterHeight:Int):Void {
 
@@ -46,6 +55,7 @@ class Filter extends Quad {
                 if (filterWidth > 0 && filterHeight > 0) {
                     renderTexture = new RenderTexture(filterWidth, filterHeight);
                     renderTexture.filter = textureFilter;
+                    renderTexture.autoRender = autoRender;
                     texture = renderTexture;
                 }
             }
