@@ -29,12 +29,12 @@ class Quad extends Visual {
         else {
             if (texture != tile.texture) {
                 texture = tile.texture;
-            } else {
-                frameX = tile.frameX;
-                frameY = tile.frameY;
-                frameWidth = tile.frameWidth;
-                frameHeight = tile.frameHeight;
             }
+            
+            frameX = tile.frameX;
+            frameY = tile.frameY;
+            frameWidth = tile.frameWidth;
+            frameHeight = tile.frameHeight;
         }
 
         return tile;
