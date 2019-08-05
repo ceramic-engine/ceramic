@@ -85,6 +85,9 @@ class App extends Entity {
     @event function beginEnterForeground();
     @event function finishEnterForeground();
 
+    @event function beginDraw();
+    @event function finishDraw();
+
     @event function lowMemory();
 
     @event function terminate();
@@ -93,7 +96,11 @@ class App extends Entity {
 
     var immediateCallbacks:Array<Void->Void> = [];
 
-    var immediateCallbacksLen = 0;
+    var immediateCallbacksLen:Int = 0;
+
+    var postFlushImmediateCallbacks:Array<Void->Void> = [];
+
+    var postFlushImmediateCallbacksLen:Int = 0;
 
 #if hxtelemetry
     var hxt:HxTelemetry;
@@ -114,12 +121,33 @@ class App extends Entity {
 
     } //onceImmediate
 
+    /** Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
+        @param defer if `true` (default), will box this call into an immediate callback */
+    public function oncePostFlushImmediate(handlePostFlushImmediate:Void->Void, defer:Bool = true):Void {
+
+        if (!defer) {
+            if (immediateCallbacksLen == 0) {
+                handlePostFlushImmediate();
+            }
+            else {
+                postFlushImmediateCallbacks[postFlushImmediateCallbacksLen++] = handlePostFlushImmediate;
+            }
+        }
+        else {
+            app.onceImmediate(function() {
+                oncePostFlushImmediate(handlePostFlushImmediate, false);
+            });
+        }
+
+    } //oncePostFlushImmediate
+
     /** Execute and flush every awaiting immediate callback, including the ones that
         could have been added with `onceImmediate()` after executing the existing callbacks. */
     #if !debug inline #end public function flushImmediate():Bool {
 
         var didFlush = false;
 
+        // Immediate callbacks
         while (immediateCallbacksLen > 0) {
 
             didFlush = true;
@@ -132,6 +160,28 @@ class App extends Entity {
             for (i in 0...len) {
                 callbacks.set(i, immediateCallbacks.unsafeGet(i));
                 immediateCallbacks[i] = null;
+            }
+
+            for (i in 0...len) {
+                var cb = callbacks.get(i);
+                cb();
+            }
+
+            pool.release(callbacks);
+
+        }
+
+        // Post flush immediate callbacks
+        if (postFlushImmediateCallbacksLen > 0) {
+
+            var pool = ArrayPool.pool(postFlushImmediateCallbacksLen);
+            var callbacks = pool.get();
+            var len = postFlushImmediateCallbacksLen;
+            postFlushImmediateCallbacksLen = 0;
+
+            for (i in 0...len) {
+                callbacks.set(i, postFlushImmediateCallbacks.unsafeGet(i));
+                postFlushImmediateCallbacks[i] = null;
             }
 
             for (i in 0...len) {
@@ -522,8 +572,14 @@ class App extends Entity {
         // Sort visuals depending on their settings
         sortVisuals(visuals);
 
+        // Begin draw
+        emitBeginDraw();
+
         // Draw
         backend.draw.draw(visuals);
+
+        // End draw
+        emitFinishDraw();
 
     } //update
 
