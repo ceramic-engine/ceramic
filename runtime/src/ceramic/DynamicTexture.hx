@@ -23,7 +23,7 @@ class DynamicTexture extends RenderTexture {
 
 /// Public API
 
-    public function clear(color:Color = 0xFFFFFF, alpha:Float = 0, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1) {
+    public function clear(color:Color = 0xFFFFFF, alpha:Float = 0, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1, done:Void->Void) {
 
         if (_clearQuad == null) {
             _clearQuad = new Quad();
@@ -34,6 +34,7 @@ class DynamicTexture extends RenderTexture {
 
         _clearQuad.color = color;
         _clearQuad.alpha = alpha;
+        _clearQuad.depth = -1;
 
         if (clipX != -1 && clipY != -1 && clipWidth != -1 && clipHeight != -1) {
             _clearQuad.size(clipWidth, clipHeight);
@@ -44,12 +45,12 @@ class DynamicTexture extends RenderTexture {
             _clearQuad.pos(0, 0);
         }
 
-        stamp(_clearQuad);
+        stamp(_clearQuad, done);
 
     } //clear
 
     /** Draws the given visual onto the render texture */
-    public function stamp(visual:Visual) {
+    public function stamp(visual:Visual, done:Void->Void) {
 
         // Keep original values as needed
         var visualParent = visual.parent;
@@ -61,33 +62,21 @@ class DynamicTexture extends RenderTexture {
         visual.renderTarget = this;
         visual.visible = true;
 
-        // Create flat array of visuals to draw
-        var flatVisuals:Array<Visual> = [visual];
-        function addChildren(visual:Visual, visuals:Array<Visual>) {
-            if (visual.children != null) {
-                for (child in visual.children) {
-                    visuals.push(child);
-                    addChildren(child, visuals);
-                }
-            }
-        }
-        addChildren(visual, flatVisuals);
+        app.onceUpdate(this, function(_) {
 
-        // Update & sort visuals
-        app.computeHierarchy();
-        app.updateVisuals(flatVisuals);
-        app.sortVisuals(flatVisuals);
+            renderDirty = true;
 
-        // Mark render texture as dirty
-        renderDirty = true;
+            app.onceFinishDraw(this, function() {
 
-        // Call backend and do actual draw
-        app.backend.draw.stamp(flatVisuals);
+                // Restore visual state
+                visual.visible = visualVisible;
+                visual.renderTarget = visualRenderTarget;
+                if (visualParent != null) visualParent.add(visual);
 
-        // Restore visual state
-        visual.visible = visualVisible;
-        visual.renderTarget = visualRenderTarget;
-        if (visualParent != null) visualParent.add(visual);
+                done();
+
+            });
+        });
 
     } //stamp
 
