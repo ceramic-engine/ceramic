@@ -72,6 +72,7 @@ class Draw implements spec.Draw {
 
     } //draw
 
+    @:deprecated
     public function stamp(visuals:Array<ceramic.Visual>):Void {
 
         initBatcherIfNeeded();
