@@ -4,6 +4,8 @@ import ceramic.RenderTexture;
 import ceramic.Quad;
 import ceramic.Visual;
 
+import ceramic.Shortcuts.*;
+
 /** A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
     allowing to process the result through a shader, apply blending or alpha on the final result... */
 class Filter extends Quad {
@@ -37,7 +39,62 @@ class Filter extends Quad {
         this.autoRender = autoRender;
         if (renderTexture != null) renderTexture.autoRender = autoRender;
         return autoRender;
-    } 
+    }
+
+    /** If set to true, this filter will not render automatically its children.
+        It will instead set their `active` state to `false` unless explicitly rendered.
+        Note that when using explicit render, `active` property on children is managed
+        by this filter. */
+    public var explicitRender(default,set):Bool = false;
+    function set_explicitRender(explicitRender:Bool):Bool {
+        if (this.explicitRender == explicitRender) return explicitRender;
+        this.explicitRender = explicitRender;
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                child.active = !explicitRender;
+            }
+        }
+        return explicitRender;
+    }
+
+    public function render(?done:Void->Void):Void {
+
+        if (!explicitRender) {
+            warning('Explicit render is disabled on this filter. Ignoring render() call.');
+            return;
+        }
+
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                child.active = true;
+            }
+        }
+
+        app.requestFullUpdateAndDrawInFrame();
+
+        app.onceUpdate(this, function(_) {
+
+            if (contentDirty) {
+                computeContent();
+            }
+
+            renderTexture.renderDirty = true;
+
+            app.onceFinishDraw(this, function() {
+
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
+                    child.active = !explicitRender;
+                }
+
+                if (done != null) done();
+
+            });
+        });
+
+    } //render
 
 /// Internal
 
@@ -98,6 +155,9 @@ class Filter extends Quad {
     override function add(visual:Visual):Void {
         super.add(visual);
         visual.renderTarget = renderTexture;
+        if (explicitRender) {
+            visual.active = false;
+        }
     }
 
     override function remove(visual:Visual):Void {
