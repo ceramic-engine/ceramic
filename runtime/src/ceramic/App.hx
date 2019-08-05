@@ -197,6 +197,18 @@ class App extends Entity {
 
     } //flushImmediate
 
+    public var inUpdate(default,null):Bool = false;
+
+    var shouldUpdateAndDrawAgain(default,null):Bool = false;
+
+    inline public function requestFullUpdateAndDrawInFrame():Void {
+
+        if (inUpdate) {
+            shouldUpdateAndDrawAgain = true;
+        }
+
+    } //requestFullUpdateAndDrawInFrame
+
 /// Static pre-init code (used to add plugins)
 
     static var preInitCallbacks:Array<Void->Void>;
@@ -529,57 +541,82 @@ class App extends Entity {
         // Screen pointer over/out events detection
         screen.updatePointerOverState(delta);
 
-        // Trigger pre-update event
-        emitPreUpdate(delta);
+        inUpdate = true;
+        shouldUpdateAndDrawAgain = true;
+        var isFirstUpdateInFrame = true;
 
-        // Pre-update physics bodies (if enabled)
+        // Allow update section to be run multiple times before drawing
+        // if this has been explicitly requested with requestFullUpdateBeforeDraw()
+        while (shouldUpdateAndDrawAgain) {
+            shouldUpdateAndDrawAgain = false;
+            var _delta:Float = isFirstUpdateInFrame ? delta : 0;
+
+            // Trigger pre-update event
+            emitPreUpdate(_delta);
+
+            // Pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-        physics.preUpdate(delta);
+            if (_delta > 0) physics.preUpdate(_delta);
 #end
 
-        // Flush immediate callbacks
-        flushImmediate();
+            // Flush immediate callbacks
+            flushImmediate();
 
-        // Update actuate stuff at the correct time
-        @:privateAccess motion.actuators.SimpleActuator.stage_onEnterFrame(delta);
+            if (_delta > 0) {
+                // Update actuate stuff at the correct time
+                @:privateAccess motion.actuators.SimpleActuator.stage_onEnterFrame(_delta);
 
-        // Flush immediate callbacks
-        flushImmediate();
+                // Flush immediate callbacks
+                flushImmediate();
+            }
 
-        // Then update
-        emitUpdate(delta);
+            // Then update
+            emitUpdate(_delta);
 
-        // Flush immediate callbacks
-        flushImmediate();
+            // Flush immediate callbacks
+            flushImmediate();
 
-        // Emit post-update event
-        emitPostUpdate(delta);
+            // Emit post-update event
+            emitPostUpdate(_delta);
 
-        // Post-update physics bodies (if enabled)
+            // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-        physics.postUpdate(delta);
+            if (_delta > 0) physics.postUpdate(_delta);
 #end
 
-        // Flush immediate callbacks
-        flushImmediate();
+            // Flush immediate callbacks
+            flushImmediate();
 
-        // Update visuals
-        updateVisuals(visuals);
+            // Update visuals
+            updateVisuals(visuals);
 
-        // Update hierarchy from depth
-        computeHierarchy();
+            // Update hierarchy from depth
+            computeHierarchy();
 
-        // Sort visuals depending on their settings
-        sortVisuals(visuals);
+            // Sort visuals depending on their settings
+            sortVisuals(visuals);
 
-        // Begin draw
-        emitBeginDraw();
+            // First update in frame finished
+            isFirstUpdateInFrame = false;
 
-        // Draw
-        backend.draw.draw(visuals);
+            // Begin draw
+            emitBeginDraw();
 
-        // End draw
-        emitFinishDraw();
+            // Draw (clears anything drawn before)
+            backend.draw.draw(visuals);
+
+            // End draw
+            emitFinishDraw();
+
+            // Will update again if requested
+            // or continue with drawing
+        }
+
+        // Swap display (if backends needs to)
+        backend.draw.swap();
+
+        // Update finished
+        inUpdate = false;
 
     } //update
 

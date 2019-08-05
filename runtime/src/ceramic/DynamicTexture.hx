@@ -62,6 +62,11 @@ class DynamicTexture extends RenderTexture {
         visual.renderTarget = this;
         visual.visible = true;
 
+        // Request full update in current frame
+        app.requestFullUpdateAndDrawInFrame();
+
+        // Running post-update code allows to ensure this is executed after visuals
+        // have been prepared for update, but before this is applied
         app.onceUpdate(this, function(_) {
 
             renderDirty = true;

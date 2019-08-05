@@ -51,9 +51,6 @@ class Backend implements ceramic.Events implements spec.Backend {
     @event function keyDown(key:ceramic.Key);
     @event function keyUp(key:ceramic.Key);
 
-    @event function beginDraw();
-    @event function endDraw();
-
     @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
     @event function controllerDown(controllerId:Int, buttonId:Int);
     @event function controllerUp(controllerId:Int, buttonId:Int);

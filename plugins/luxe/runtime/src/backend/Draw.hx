@@ -59,18 +59,19 @@ class Draw implements spec.Draw {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
-        ceramic.App.app.backend.emitBeginDraw();
-
         batcher.isMainRender = true;
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
+
+    } //draw
+
+    public function swap():Void {
+
         #if (linc_sdl && cpp)
         Luxe.snow.runtime.window_swap();
         #end
 
-        ceramic.App.app.backend.emitEndDraw();
-
-    } //draw
+    } //swap
 
     @:deprecated
     public function stamp(visuals:Array<ceramic.Visual>):Void {
