@@ -13,6 +13,8 @@ class TextureTilePacker extends Entity {
 
     public var margin(default,null):Int;
 
+    public var nextPacker:TextureTilePacker = null;
+
     var areas:Array<TextureTile>;
 
     var numCols:Int = 0;
@@ -57,6 +59,20 @@ class TextureTilePacker extends Entity {
 
     } //new
 
+    override function destroy() {
+
+        if (nextPacker != null) {
+            nextPacker.destroy();
+            nextPacker = null;
+        }
+
+        texture.destroy();
+        texture = null;
+
+        areas = null;
+
+    } //destroy
+
     inline function getTileAtPosition(col:Int, row:Int):TextureTile {
 
         return areas[row * numCols + col];
@@ -76,13 +92,16 @@ class TextureTilePacker extends Entity {
         var texWidth = texture.width;
         var texHeight = texture.height;
 
-        if (width > texWidth || height > texHeight) {
-            warning('Cannot alloc tile bigger than $texWidth x $texHeight');
-            return null;
-        }
-
         var padWidthWithMargin = padWidth + margin * 2;
         var padHeightWithMargin = padHeight + margin * 2;
+
+        var maxWidth = padWidthWithMargin * numCols - margin * 2;
+        var maxHeight = padHeightWithMargin * numRows - margin * 2;
+
+        if (width > maxWidth || height > maxHeight) {
+            warning('Cannot alloc tile bigger than $maxWidth x $maxHeight');
+            return null;
+        }
 
         // TODO proper texture filling
 
@@ -145,10 +164,11 @@ class TextureTilePacker extends Entity {
             }
         }
 
-        // TODO chain call to another texture tile packer if not possible to allocate on this one
-
-        warning('Failed to alloc tile of size $width x $height');
-        return null;
+        // No space available, use another packer (with another texture)
+        if (nextPacker == null) {
+            nextPacker = new TextureTilePacker(texture.autoRender, padWidth, padHeight, margin);
+        }
+        return nextPacker.allocTile(width, height);
 
     } //allocTile
 
@@ -162,15 +182,27 @@ class TextureTilePacker extends Entity {
 
         var packedTile:PackedTextureTile = cast tile;
 
+        // Find related packer (could be a chained packer)
+        var packer = this;
+        while (packer != null && packer.texture != packedTile.texture) {
+            packer = packer.nextPacker;
+        }
+
+        if (packer == null) {
+            warning('Failed to release tile: ' + packedTile + ' (it doesn\'t belong to this packer)');
+            return;
+        }
+
         app.onceUpdate(this, function(_) {
             app.onceUpdate(this, function(_) {
                 var didRelease = false;
             
+                // Free up packer areas
                 for (r in packedTile.row...packedTile.row+packedTile.usedRows) {
                     for (c in packedTile.col...packedTile.col+packedTile.usedCols) {
-                        if (getTileAtPosition(c, r) == packedTile) {
+                        if (packer.getTileAtPosition(c, r) == packedTile) {
                             didRelease = true;
-                            setTileAtPosition(c, r, null);
+                            packer.setTileAtPosition(c, r, null);
                         }
                     }
                 }
@@ -217,6 +249,12 @@ class TextureTilePacker extends Entity {
         });
 
     } //stamp
+
+    public function managesTexture(texture:Texture):Bool {
+
+        return this.texture == texture || (nextPacker != null && nextPacker.managesTexture(texture));
+
+    } //managesTexture
 
 } //TextureTilePacker
 
