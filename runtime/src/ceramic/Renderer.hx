@@ -6,8 +6,8 @@ class Renderer extends Entity {
 
     public var maxVerts:Int = 16384;
 
-    public var drawQuads(default,null):Int = 0;
-    public var drawMeshes(default,null):Int = 0;
+    public var drawnQuads(default,null):Int = 0;
+    public var drawnMeshes(default,null):Int = 0;
 
     var posFloats:Int = 0;
     var tcoordsFloats:Int = 0;
@@ -36,6 +36,8 @@ class Renderer extends Entity {
     var mesh:ceramic.Mesh = null;
 
     var stateDirty:Bool = true;
+
+    var z:Float = 0;
 
 #if ceramic_debug_draw
     var debugDraw:Int = false;
@@ -74,6 +76,7 @@ class Renderer extends Entity {
         normalFloats = 0;
 
         maxVertFloats = maxVerts * 4;
+        draw.initBuffers(maxVerts);
 
         visualNumVertices = 0;
         quad = null;
@@ -81,7 +84,7 @@ class Renderer extends Entity {
 
         lastTexture = null;
         lastTextureId = backend.TextureId.DEFAULT;
-        lastTextureSlot: = 0;
+        lastTextureSlot = 0;
         lastShader = null;
         lastRenderTarget = null;
         lastBlending = ceramic.Blending.NORMAL;
@@ -95,36 +98,16 @@ class Renderer extends Entity {
         var clip:ceramic.Visual = null;
         stencilClip = false;
 
+        z = 0;
+
         var vertIndex:Int = 0;
-        var i:Int = 0;
         var j:Int = 0;
         var k:Int = 0;
         var l:Int = 0;
         var n:Int = 0;
-        var z:Float = 0;
-
-        var r:Float = 1;
-        var g:Float = 1;
-        var b:Float = 1;
-        var a:Float = 1;
 
         var x:Float;
         var y:Float;
-
-        var matA:Float = 0;
-        var matB:Float = 0;
-        var matC:Float = 0;
-        var matD:Float = 0;
-        var matTX:Float = 0;
-        var matTY:Float = 0;
-
-        var uvX:Float = 0;
-        var uvY:Float = 0;
-        var uvW:Float = 0;
-        var uvH:Float = 0;
-
-        var w:Float;
-        var h:Float;
 
         var meshAlphaColor:ceramic.AlphaColor = 0xFFFFFFFF;
         var meshIndicesColor = false;
@@ -287,7 +270,7 @@ class Renderer extends Entity {
 #if ceramic_debug_draw
                 if (debugDraw) trace('-- flush --');
 #end
-                flush();
+                flush(draw);
 
                 // Update texture
                 if (quad.texture != lastTexture) {
@@ -389,6 +372,236 @@ class Renderer extends Entity {
             }
         }
 
+        // Update num vertices
+        visualNumVertices = 6;
+        countAfter = posFloats + visualNumVertices * 4;
+
+        // Submit the current batch if we exceed the max buffer size
+        if (countAfter > maxVertFloats) {
+            flush(draw);
+        }
+
+        var w:Float;
+        var h:Float;
+
+        // Update size
+        if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
+            w = quad.height;
+            h = quad.width;
+        } else {
+            w = quad.width;
+            h = quad.height;
+        }
+
+        // Fetch matrix
+        //
+        var matA:Float = quad.a;
+        var matB:Float = quad.b;
+        var matC:Float = quad.c;
+        var matD:Float = quad.d;
+        var matTX:Float = quad.tx;
+        var matTY:Float = quad.ty;
+        var z:Float = this.z;
+        var posFloats:Int = this.posFloats;
+
+        // Position
+        n = posFloats;
+        if (customFloatAttributesSize == 0) {
+            var n8 = matTX + matA * w + matC * h;
+            var n9 = matTY + matB * w + matD * h;
+
+            //tl
+            draw.putInPosList(posFloats++, matTX);
+            draw.putInPosList(posFloats++, matTY;
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            //tr
+            draw.putInPosList(posFloats++, matTX + matA * w);
+            draw.putInPosList(posFloats++, matTY + matB * w);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            //br
+            draw.putInPosList(posFloats++, n8);
+            draw.putInPosList(posFloats++, n9);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            //bl
+            draw.putInPosList(posFloats++, matTX + matC * h);
+            draw.putInPosList(posFloats++, matTY + matD * h);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            //tl2
+            draw.putInPosList(posFloats++, matTX);
+            draw.putInPosList(posFloats++, matTY);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            //br2
+            draw.putInPosList(posFloats++, n8);
+            draw.putInPosList(posFloats++, n9);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+        }
+        else {
+            //tl
+            draw.putInPosList(posFloats++, matTX);
+            draw.putInPosList(posFloats++, matTY;
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+            //tr
+            draw.putInPosList(posFloats++, matTX + matA * w);
+            draw.putInPosList(posFloats++, matTY + matB * w);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+            //br
+            draw.putInPosList(posFloats++, n8);
+            draw.putInPosList(posFloats++, n9);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+            //bl
+            draw.putInPosList(posFloats++, matTX + matC * h);
+            draw.putInPosList(posFloats++, matTY + matD * h);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+            //tl2
+            draw.putInPosList(posFloats++, matTX);
+            draw.putInPosList(posFloats++, matTY);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+            //br2
+            draw.putInPosList(posFloats++, n8);
+            draw.putInPosList(posFloats++, n9);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+            for (l in 0...customFloatAttributesSize) {
+                draw.putInPosList(pos_floats++, 0.0);
+            }
+        }
+
+        this.posFloats = posFloats;
+
+        var uvX:Float = 0;
+        var uvY:Float = 0;
+        var uvW:Float = 0;
+        var uvH:Float = 0;
+        var tcoordFloats = this.tcoordFloats;
+
+        if (lastTexture != null) {
+
+            var texWidthActual = this.texWidthActual;
+            var texHeightActual = this.texHeightActual;
+            var texDensity = quad.texture.density;
+
+            // UV
+            //
+            if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
+                uvX = (quad.frameX * texDensity) / texWidthActual;
+                uvY = (quad.frameY * texDensity) / texHeightActual;
+                uvW = (quad.frameHeight * texDensity) / texWidthActual;
+                uvH = (quad.frameWidth * texDensity) / texHeightActual;
+            }
+            else {
+                uvX = (quad.frameX * texDensity) / texWidthActual;
+                uvY = (quad.frameY * texDensity) / texHeightActual;
+                uvW = (quad.frameWidth * texDensity) / texWidthActual;
+                uvH = (quad.frameHeight * texDensity) / texHeightActual;
+            }
+
+            //tl
+            draw.putInTcoordList(tcoordFloats++, uvX);
+            draw.putInTcoordList(tcoordFloats++, uvY);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            //tr
+            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
+            draw.putInTcoordList(tcoordFloats++, uvY);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            //br
+            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
+            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            //bl
+            draw.putInTcoordList(tcoordFloats++, uvX);
+            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            //tl2
+            draw.putInTcoordList(tcoordFloats++, uvX);
+            draw.putInTcoordList(tcoordFloats++, uvY);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            //br2
+            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
+            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
+            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInTcoordList(tcoordFloats++, 0);
+
+        } else {
+            var i = 0;
+            while (i++ < 24)
+                draw.putInTcoordList(tcoordFloats++, 0);
+        }
+
+        this.tcoordFloats = tcoordFloats;
+
+        // Colors
+        //
+        var r:Float = 1;
+        var g:Float = 1;
+        var b:Float = 1;
+        var a:Float = 1;
+
+        if (stencilClip) {
+            a = 1;
+            r = 1;
+            g = 0;
+            b = 0;
+        } else {
+            a = quad.computedAlpha;
+            r = quad.color.redFloat * a;
+            g = quad.color.greenFloat * a;
+            b = quad.color.blueFloat * a;
+            if (quad.blending == ceramic.Blending.ADD) a = 0;
+        }
+
+        var colorFloats = this.colorFloats; 
+
+        var i = 0;
+        while (i < 24) {
+            draw.putInColorList(colorFloats++, r);
+            draw.putInColorList(colorFloats++, g);
+            draw.putInColorList(colorFloats++, b);
+            draw.putInColorList(colorFloats++, a);
+            i += 4;
+        }
+
+        this.colorFloats = colorFloats;
+
+        // Increase counts
+        this.z = z + 0.001;
+
     } //drawQuad
+
+    inline function flush(draw:backend.Draw) {
+
+        // TODO
+
+    } //flush
 
 } //Renderer

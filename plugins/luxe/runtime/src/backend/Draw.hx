@@ -132,7 +132,27 @@ class Draw implements spec.Draw {
 
     var renderWireframe:Bool = false;
 
+    var posList:Float32Array;
+
+    var tcoordList:Float32Array;
+
+    var colorList:Float32Array;
+
     //var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+
+    inline public function initBuffers(maxVerts:Int):Void {
+
+        if (posList == null) {
+
+            var maxFloats = maxVerts * 4;
+
+            posList = new Float32Array(maxFloats);
+            tcoordList = new Float32Array(maxFloats);
+            colorList = new Float32Array(maxFloats);
+
+        }
+
+    } //initBuffers
 
     inline public function beginRender():Void {
 
@@ -283,6 +303,24 @@ class Draw implements spec.Draw {
         //primitiveType = value ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
 
     } //renderWireframe
+
+    inline public function putInPosList(index:Int, value:Float):Void {
+
+        posList[index] = value;
+
+    } //putInPosList
+
+    inline public function putInTcoordList(index:Int, value:Float):Void {
+
+        tcoordList[index] = value;
+
+    } //putInTcoordList
+
+    inline public function putInColorList(index:Int, value:Float):Void {
+
+        colorList[index] = value;
+
+    } //putInColorList
 
 #else
 
