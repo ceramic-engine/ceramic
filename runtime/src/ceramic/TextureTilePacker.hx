@@ -43,8 +43,8 @@ class TextureTilePacker extends Entity {
         var texWidth = texture.width;
         var texHeight = texture.height;
 
-        var x = margin * 2;
-        var y = margin * 2;
+        var x = margin;
+        var y = margin;
         while (y + padHeight < texHeight) {
             while (x + padWidth < texWidth) {
                 areas.push(null);
