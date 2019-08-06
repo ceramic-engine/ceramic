@@ -68,6 +68,8 @@ class Filter extends Quad {
             this.textureTilePacker.releaseTile(textureTile);
             textureTile = null;
             tile = null;
+            this.tile = null;
+            content.renderTarget = null;
         }
 
         this.textureTilePacker = textureTilePacker;
@@ -197,14 +199,17 @@ class Filter extends Quad {
 
     override function computeContent() {
         filterSize(Math.ceil(width), Math.ceil(height));
+        contentDirty = false;
     }
 
     override function destroy() {
         texture = null;
-        if (renderTexture != null) {
+        if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
             renderTexture.destroy();
             renderTexture = null;
         }
+        textureTilePacker = null;
+        renderTexture = null;
     }
 
 } //Filter
