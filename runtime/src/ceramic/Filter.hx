@@ -99,7 +99,11 @@ class Filter extends Quad {
     function filterSize(filterWidth:Int, filterHeight:Int):Void {
 
         if (enabled) {
-            if (renderTexture == null || renderTexture.width != filterWidth || renderTexture.height != filterHeight || (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture))) {
+            if (renderTexture == null ||
+                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight)) ||
+                (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
+                (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
+                ) {
                 
                 // Destroy any invalid texture managed by this filter
                 if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
@@ -108,13 +112,16 @@ class Filter extends Quad {
                     renderTexture = null;
                 }
 
+                // Release any texture tile
+                if (textureTile != null && textureTilePacker != null) {
+                    textureTilePacker.releaseTile(textureTile);
+                    textureTile = null;
+                }
+
                 // Instanciate a new texture or tile to match constraints
                 if (filterWidth > 0 && filterHeight > 0) {
                     if (textureTilePacker != null) {
                         renderTexture = textureTilePacker.texture;
-                        if (textureTile != null) {
-                            textureTilePacker.releaseTile(textureTile);
-                        }
                         textureTile = textureTilePacker.allocTile(filterWidth, filterHeight);
                         tile = textureTile;
                     }
@@ -147,6 +154,10 @@ class Filter extends Quad {
         }
         else {
             content.pos(0, 0);
+        }
+
+        if (content.contentDirty) {
+            content.computeContent();
         }
 
     } //filterSize
