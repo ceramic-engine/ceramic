@@ -12,6 +12,8 @@ class Filter extends Quad {
 
 /// Public properties
 
+    public var content(default,null):Quad;
+
     /** If `enabled` is set to `false`, no render texture will be used.
         The children will be displayed on screen directly.
         Useful to toggle a filter without touching visuals hierarchy. */
@@ -30,7 +32,7 @@ class Filter extends Quad {
         this.textureFilter = textureFilter;
         if (renderTexture != null) renderTexture.filter = textureFilter;
         return textureFilter;
-    } 
+    }
 
     /** Auto render? */
     public var autoRender(default,set):Bool = true;
@@ -58,6 +60,97 @@ class Filter extends Quad {
         return explicitRender;
     }
 
+    public var textureTilePacker(default,set):TextureTilePacker = null;
+    function set_textureTilePacker(textureTilePacker:TextureTilePacker):TextureTilePacker {
+        if (this.textureTilePacker == textureTilePacker) return textureTilePacker;
+
+        if (textureTile != null && this.textureTilePacker != null) {
+            this.textureTilePacker.releaseTile(textureTile);
+            textureTile = null;
+            tile = null;
+        }
+
+        this.textureTilePacker = textureTilePacker;
+        contentDirty = true;
+        return textureTilePacker;
+    }
+
+    public var textureTile(default,null):TextureTile = null;
+
+    public var renderTexture(default,null):RenderTexture = null;
+
+/// Lifecycle
+
+    public function new() {
+
+        super();
+
+        content = new Quad();
+        content.transparent = true;
+        content.color = Color.WHITE;
+        add(content);
+
+    } //new
+
+/// Internal
+
+    function filterSize(filterWidth:Int, filterHeight:Int):Void {
+
+        if (enabled) {
+            if (renderTexture == null || renderTexture.width != filterWidth || renderTexture.height != filterHeight || (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture))) {
+                
+                // Destroy any invalid texture managed by this filter
+                if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
+                    texture = null;
+                    renderTexture.destroy();
+                    renderTexture = null;
+                }
+
+                // Instanciate a new texture or tile to match constraints
+                if (filterWidth > 0 && filterHeight > 0) {
+                    if (textureTilePacker != null) {
+                        renderTexture = textureTilePacker.texture;
+                        if (textureTile != null) {
+                            textureTilePacker.releaseTile(textureTile);
+                        }
+                        textureTile = textureTilePacker.allocTile(filterWidth, filterHeight);
+                        tile = textureTile;
+                    }
+                    else {
+                        renderTexture = new RenderTexture(filterWidth, filterHeight);
+                        renderTexture.filter = textureFilter;
+                        renderTexture.autoRender = autoRender;
+                        tile = null;
+                        texture = renderTexture;
+                    }
+                }
+            }
+        }
+        else {
+            // Disabled, remove any texture/tile
+            if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
+                tile = null;
+                texture = null;
+                renderTexture.destroy();
+                renderTexture = null;
+            }
+        }
+
+        content.size(filterWidth, filterHeight);
+        content.renderTarget = renderTexture;
+
+        // When using a texture tile, move content to match its position with tile position
+        if (textureTile != null) {
+            content.pos(textureTile.frameX, textureTile.frameY);
+        }
+        else {
+            content.pos(0, 0);
+        }
+
+    } //filterSize
+
+/// Public API
+
     public function render(?done:Void->Void):Void {
 
         if (!explicitRender) {
@@ -65,12 +158,7 @@ class Filter extends Quad {
             return;
         }
 
-        if (children != null) {
-            for (i in 0...children.length) {
-                var child = children.unsafeGet(i);
-                child.active = true;
-            }
-        }
+        content.active = true;
 
         app.requestFullUpdateAndDrawInFrame();
 
@@ -84,10 +172,7 @@ class Filter extends Quad {
 
             app.onceFinishDraw(this, function() {
 
-                for (i in 0...children.length) {
-                    var child = children.unsafeGet(i);
-                    child.active = !explicitRender;
-                }
+                content.active = false;
 
                 if (done != null) done();
 
@@ -95,44 +180,6 @@ class Filter extends Quad {
         });
 
     } //render
-
-/// Internal
-
-    public var renderTexture(default,null):RenderTexture = null;
-
-    function filterSize(filterWidth:Int, filterHeight:Int):Void {
-
-        if (enabled) {
-            if (renderTexture == null || renderTexture.width != filterWidth || renderTexture.height != filterHeight) {
-                if (renderTexture != null) {
-                    texture = null;
-                    renderTexture.destroy();
-                    renderTexture = null;
-                }
-                if (filterWidth > 0 && filterHeight > 0) {
-                    renderTexture = new RenderTexture(filterWidth, filterHeight);
-                    renderTexture.filter = textureFilter;
-                    renderTexture.autoRender = autoRender;
-                    texture = renderTexture;
-                }
-            }
-        }
-        else {
-            if (renderTexture != null) {
-                texture = null;
-                renderTexture.destroy();
-                renderTexture = null;
-            }
-        }
-
-        if (children != null) {
-            for (i in 0...children.length) {
-                var child = children.unsafeGet(i);
-                child.renderTarget = renderTexture;
-            }
-        }
-
-    } //filterSize
 
 /// Overrides
 
@@ -150,19 +197,6 @@ class Filter extends Quad {
 
     override function computeContent() {
         filterSize(Math.ceil(width), Math.ceil(height));
-    }
-
-    override function add(visual:Visual):Void {
-        super.add(visual);
-        visual.renderTarget = renderTexture;
-        if (explicitRender) {
-            visual.active = false;
-        }
-    }
-
-    override function remove(visual:Visual):Void {
-        super.remove(visual);
-        visual.renderTarget = null;
     }
 
     override function destroy() {
