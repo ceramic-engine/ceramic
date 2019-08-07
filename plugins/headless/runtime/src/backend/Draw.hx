@@ -37,6 +37,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     } //draw
 
+    public function swap():Void {
+
+        // Unused in headless
+
+    } //swap
+
     public function stamp(visuals:Array<ceramic.Visual>):Void {
 
         // Unused in headless
