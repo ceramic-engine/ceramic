@@ -977,9 +977,40 @@ class Visual extends Entity {
             parent.computeRenderTarget();
         }
 
+        var prevComputedRenderTarget = computedRenderTarget;
+
         computedRenderTarget = renderTarget;
         if (computedRenderTarget == null && parent != null && parent.computedRenderTarget != null) {
             computedRenderTarget = parent.computedRenderTarget;
+        }
+
+        if (prevComputedRenderTarget != computedRenderTarget) {
+            // Release dependant render target texture
+            if (prevComputedRenderTarget != null) {
+                if (quad != null) {
+                    if (quad.texture != null && quad.texture.isRenderTexture) {
+                        prevComputedRenderTarget.decrementDependantTextureCount(quad.texture);
+                    }
+                }
+                else if (mesh != null) {
+                    if (mesh.texture != null && mesh.texture.isRenderTexture) {
+                        prevComputedRenderTarget.decrementDependantTextureCount(mesh.texture);
+                    }
+                }
+            }
+            // Add dependent render target texture
+            if (computedRenderTarget != null) {
+                if (quad != null) {
+                    if (quad.texture != null && quad.texture.isRenderTexture) {
+                        prevComputedRenderTarget.incrementDependantTextureCount(quad.texture);
+                    }
+                }
+                else if (mesh != null) {
+                    if (mesh.texture != null && mesh.texture.isRenderTexture) {
+                        prevComputedRenderTarget.incrementDependantTextureCount(mesh.texture);
+                    }
+                }
+            }
         }
         
         renderTargetDirty = false;

@@ -113,4 +113,16 @@ class RenderTexture extends Texture {
 
     } //clear
 
+    @:noCompletion inline public function incrementDependantTextureCount(texture:Texture):Void {
+
+        // TODO
+
+    } //incrementDependantTextureCount
+
+    @:noCompletion inline public function decrementDependantTextureCount(texture:Texture):Void {
+
+        // TODO
+
+    } //decrementDependantTextureCount
+
 } //RenderTexture
