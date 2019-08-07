@@ -89,7 +89,7 @@ class TextView extends View {
         super();
 
         text = new Text();
-        text.maxLineDiff = 0.5;
+        text.maxLineDiff = 0.75;
         add(text);
 
         transparent = true;
