@@ -397,7 +397,11 @@ class EventsMacro {
 #end
                             }
                         }),
+#if telemetry
+                        access: [APrivate],
+#else
                         access: [AInline, APrivate],
+#end
                         doc: doc,
                         meta: [{
                             name: ':dce',
@@ -436,7 +440,11 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOn($v{eventIndex});
                             }
                         }),
+#if telemetry
+                        access: [APrivate],
+#else
                         access: [AInline, APrivate],
+#end
                         doc: doc,
                         meta: [{
                             name: ':dce',
@@ -475,7 +483,11 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOnce($v{eventIndex});
                             }
                         }),
+#if telemetry
+                        access: [APrivate],
+#else
                         access: [AInline, APrivate],
+#end
                         doc: doc,
                         meta: [{
                             name: ':dce',
@@ -512,7 +524,11 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOff($v{eventIndex});
                             }
                         }),
+#if telemetry
+                        access: [APrivate],
+#else
                         access: [AInline, APrivate],
+#end
                         doc: doc,
                         meta: [{
                             name: ':dce',
@@ -545,7 +561,11 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapListens($v{eventIndex});
                             }
                         }),
+#if telemetry
+                        access: [APrivate],
+#else
                         access: [AInline, APrivate],
+#end
                         doc: doc,
                         meta: [{
                             name: ':dce',
@@ -844,7 +864,11 @@ class EventsMacro {
                             }
 #end
                         }),
+#if telemetry
+                        access: [hasPrivateModifier ? APrivate : APublic],
+#else
                         access: [hasPrivateModifier ? APrivate : APublic, AInline],
+#end
                         doc: origDoc != doc ? 'Does it listen to ' + doc : doc,
                         meta: []
                     };
