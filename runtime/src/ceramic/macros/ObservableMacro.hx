@@ -212,14 +212,16 @@ class ObservableMacro {
                             // Bind invalidation if getting value
                             // inside an Autorun call
                             if (ceramic.Autorun.current != null) {
+                                var _that = this;
                                 var autorun = ceramic.Autorun.current;
                                 var cb = function(_, _) {
                                     autorun.invalidate();
                                 };
                                 autorun.onceReset(null, function() {
-                                    this.$offFieldNameChange(cb);
+                                    _that.$offFieldNameChange(cb);
+                                    _that = null;
                                 });
-                                this.$onFieldNameChange(autorun, cb);
+                                _that.$onFieldNameChange(autorun, cb);
                             }
 
                             return this.$unobservedFieldName;
