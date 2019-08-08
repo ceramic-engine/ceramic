@@ -213,7 +213,7 @@ class CeramicBatcher extends phoenix.Batcher {
         // Default stencil test
         GL.disable(GL.STENCIL_TEST);
 
-        inline function applyBlending(blending:ceramic.Blending) {
+        #if !telemetry inline #end function applyBlending(blending:ceramic.Blending) {
 
             if (blending == ceramic.Blending.ADD) {
                 GL.blendFuncSeparate(
@@ -263,7 +263,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //applyBlending
 
-        inline function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
+        #if !telemetry inline #end function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
 
             if (lastRenderTarget != null) {
                 var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
@@ -283,7 +283,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //computeRenderTarget
 
-        #if !ceramic_debug_draw inline #end function drawQuad() {
+        #if (!ceramic_debug_draw && !telemetry) inline #end function drawQuad() {
 #if ceramic_debug_draw
             drawnQuads++;
 #end
@@ -657,7 +657,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //drawQuad
 
-        #if !ceramic_debug_draw inline #end function drawMesh() {
+        #if (!ceramic_debug_draw && !telemetry) inline #end function drawMesh() {
 
 #if ceramic_debug_draw
             drawnMeshes++;
@@ -1137,7 +1137,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
     } //batch
 
-    #if !ceramic_debug_draw inline #end function flush():Bool {
+    #if (!ceramic_debug_draw && !telemetry) inline #end function flush():Bool {
 
         if (pos_floats == 0) {
             return false;
@@ -1246,7 +1246,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
     } //flush
 
-    inline public function useShader(_shader:backend.impl.CeramicShader) {
+    #if !telemetry inline #end public function useShader(_shader:backend.impl.CeramicShader) {
 
         activeShader = _shader;
 
