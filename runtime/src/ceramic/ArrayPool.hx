@@ -61,7 +61,7 @@ class ArrayPool {
 
 /// Public API
 
-    public function get(?pos:haxe.PosInfos):ReusableArray<Dynamic> {
+    public function get(#if ceramic_debug_array_pool ?pos:haxe.PosInfos #end):ReusableArray<Dynamic> {
 
         #if ceramic_debug_array_pool
         haxe.Log.trace('pool.get', pos);
