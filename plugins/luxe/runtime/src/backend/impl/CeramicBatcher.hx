@@ -46,6 +46,8 @@ class CeramicBatcher extends phoenix.Batcher {
     public var buffers_index = 0;
 #end
 
+    var customGLBuffers:Array<GLBuffer> = [];
+
     public function new( _r : Renderer, ?_name:String = '', ?_max_verts:Int=16384 ) {
 
         super(_r, _name, _max_verts);
@@ -213,7 +215,7 @@ class CeramicBatcher extends phoenix.Batcher {
         // Default stencil test
         GL.disable(GL.STENCIL_TEST);
 
-        #if !telemetry inline #end function applyBlending(blending:ceramic.Blending) {
+        inline function applyBlending(blending:ceramic.Blending) {
 
             if (blending == ceramic.Blending.ADD) {
                 GL.blendFuncSeparate(
@@ -263,7 +265,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //applyBlending
 
-        #if !telemetry inline #end function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
+        inline function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
 
             if (lastRenderTarget != null) {
                 var renderTexture:backend.impl.CeramicRenderTexture = cast lastRenderTarget.backendItem;
@@ -283,7 +285,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //computeRenderTarget
 
-        #if (!ceramic_debug_draw && !telemetry) inline #end function drawQuad() {
+        #if (!ceramic_debug_draw) inline #end function drawQuad() {
 #if ceramic_debug_draw
             drawnQuads++;
 #end
@@ -657,7 +659,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         } //drawQuad
 
-        #if (!ceramic_debug_draw && !telemetry) inline #end function drawMesh() {
+        #if (!ceramic_debug_draw) inline #end function drawMesh() {
 
 #if ceramic_debug_draw
             drawnMeshes++;
@@ -1181,18 +1183,18 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.vertexAttribPointer(color_attribute, 4, GL.FLOAT, false, 0, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
 
-        var customGLBuffers = null;
+        var customGLBuffersLen:Int = 0;
         if (activeShader != null && activeShader.customAttributes != null) {
 
             var n = color_attribute + 1;
             var offset = 4;
             var allAttrs = activeShader.customAttributes;
-            for (ii in 0...allAttrs.length) {
+            customGLBuffersLen = allAttrs.length;
+            for (ii in 0...customGLBuffersLen) {
                 var attr = allAttrs.unsafeGet(ii);
 
                 var b = GL.createBuffer();
-                if (customGLBuffers == null) customGLBuffers = [];
-                customGLBuffers.push(b);
+                customGLBuffers[ii] = b;
 
                 GL.enableVertexAttribArray(n);
                 GL.bindBuffer(GL.ARRAY_BUFFER, b);
@@ -1212,16 +1214,15 @@ class CeramicBatcher extends phoenix.Batcher {
         GL.deleteBuffer(cb);
         GL.deleteBuffer(tb);
 
-        if (customGLBuffers != null) {
+        if (customGLBuffersLen > 0) {
             var n = color_attribute + 1;
-            for (ii in 0...customGLBuffers.length) {
+            for (ii in 0...customGLBuffersLen) {
                 var b = customGLBuffers.unsafeGet(ii);
                 GL.deleteBuffer(b);
                 GL.disableVertexAttribArray(n);
                 n++;
             }
         }
-        customGLBuffers = null;
 
         draw_calls++;
 
