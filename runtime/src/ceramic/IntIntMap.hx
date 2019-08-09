@@ -58,10 +58,10 @@ class IntIntMap {
 
     public function exists(key:Int):Bool {
 
-        var ptr = (phiMix(key) & mask) << 1;
-
         if (key == FREE_KEY)
             return hasFreeKey ? true : false;
+
+        var ptr = (phiMix(key) & mask) << 1;
 
         var k = data.get(ptr);
 
@@ -91,10 +91,11 @@ class IntIntMap {
 
     public function get(key:Int):Int {
 
-        var ptr = (phiMix(key) & mask) << 1;
-
         if (key == FREE_KEY)
             return hasFreeKey ? freeValue : NO_VALUE;
+
+        var ptr = (phiMix(key) & mask) << 1;
+        var ptrPlus1 = ptr + 1;
 
         var k = data.get(ptr);
 
@@ -104,7 +105,7 @@ class IntIntMap {
         }
         if (k == key) {
             // We check FREE prior to this call
-            return data.get(ptr + 1);
+            return data.get(ptrPlus1);
         }
 
         while (true)
@@ -116,7 +117,7 @@ class IntIntMap {
                 return NO_VALUE;
             }
             if (k == key) {
-                return data.get(ptr + 1);
+                return data.get(ptrPlus1);
             }
         }
 
@@ -139,11 +140,12 @@ class IntIntMap {
         }
 
         var ptr = (phiMix(key) & mask) << 1;
+        var ptrPlus1 = ptr + 1;
         var k = data.get(ptr);
         if (k == FREE_KEY) // End of chain already
         {
             data.set(ptr, key);
-            data.set(ptr + 1, value);
+            data.set(ptrPlus1, value);
             if (size >= threshold) {
                 rehash(data.length * 2); // Size is set inside
             } else {
@@ -156,19 +158,20 @@ class IntIntMap {
         }
         else if (k == key) // We check FREE prior to this call
         {
-            var ret = data.get(ptr + 1);
-            data.set(ptr + 1, value);
+            var ret = data.get(ptrPlus1);
+            data.set(ptrPlus1, value);
             return ret;
         }
 
         while (true)
         {
             ptr = (ptr + 2) & mask2; // That's next index calculation
+            ptrPlus1 = ptr + 1;
             k = data.get(ptr);
             if (k == FREE_KEY)
             {
                 data.set(ptr, key);
-                data.set(ptr + 1, value);
+                data.set(ptrPlus1, value);
                 if (size >= threshold) {
                     rehash(data.length * 2); // Size is set inside
                 }
@@ -182,8 +185,8 @@ class IntIntMap {
             }
             else if (k == key)
             {
-                var ret = data.get(ptr + 1);
-                data.set(ptr + 1, value);
+                var ret = data.get(ptrPlus1);
+                data.set(ptrPlus1, value);
                 return ret;
             }
         }
@@ -206,10 +209,11 @@ class IntIntMap {
         }
 
         var ptr = (phiMix(key) & mask) << 1;
+        var ptrPlus1 = ptr + 1;
         var k = data.get(ptr);
         if (k == key) // We check FREE prior to this call
         {
-            var res = data.get(ptr + 1);
+            var res = data.get(ptrPlus1);
             shiftKeys(ptr);
             size--;
             if (iterableKeys != null) {
@@ -226,7 +230,8 @@ class IntIntMap {
             k = data.get(ptr);
             if (k == key)
             {
-                var res = data.get(ptr + 1);
+                ptrPlus1 = ptr + 1;
+                var res = data.get(ptrPlus1);
                 shiftKeys(ptr);
                 size--;
                 if (iterableKeys != null) {
