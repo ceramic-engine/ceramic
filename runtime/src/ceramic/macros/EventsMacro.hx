@@ -169,8 +169,10 @@ class EventsMacro {
 
                 var handlerName = 'handle' + [for (arg in fn.args) arg.name.substr(0,1).toUpperCase() + arg.name.substr(1)].join('');
                 var handlerType = TFunction([for (arg in fn.args) arg.type], macro :Void);
+                var handlerTypeBoxed = TFunction([for (i in 0...fn.args.length+1) macro :Dynamic], macro :Void);
                 var handlerNumArgs = fn.args.length;
                 var handlerCallArgs = [for (arg in fn.args) macro $i{arg.name}];
+                var handlerCallArgsBoxed = [macro $i{'callbacks'}, macro $i{'len'}].concat([for (arg in fn.args) macro $i{arg.name}]);
                 var sanitizedName = field.name;
                 while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
                 while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
@@ -186,12 +188,22 @@ class EventsMacro {
                     doc = sanitizedName + ' event';
                 }
 
+                // Explicit boxing at emit call is required on c++ target to prevent
+                // implicit boxing for each callback bound to event
+                var needsBoxing = false;
+                if (Context.defined('cpp')) {
+                    if (fn.args.length > 0) {
+                        needsBoxing = true;
+                    }
+                }
+
 #if (!display && !completion)
 
                 var cbOnArray = '__cbOn' + capitalName;
                 var cbOnceArray = '__cbOnce' + capitalName;
                 var cbOnOwnerUnbindArray = '__cbOnOwnerUnbind' + capitalName;
                 var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
+                var emitNameBoxed = emitName + 'Boxed';
 
                 if (!dynamicDispatch) {
 
@@ -577,69 +589,158 @@ class EventsMacro {
 
                 }
                 else {
-                        
-                    var emitField = {
-                        pos: field.pos,
-                        name: emitName,
-                        kind: FFun({
-                            args: fn.args,
-                            ret: macro :Void,
+
+                    if (needsBoxing) {
+                        var emitField = {
+                            pos: field.pos,
+                            name: emitName,
+                            kind: FFun({
+                                args: fn.args,
+                                ret: macro :Void,
 #if (!display && !completion)
-                            expr: macro {
-                                $willEmit;
-                                var len = 0;
-                                if (this.$cbOnArray != null) len += this.$cbOnArray.length;
-                                if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
-                                if (len > 0) {
-                                    var pool = ceramic.ArrayPool.pool(len);
-                                    var callbacks = pool.get();
-                                    #if ceramic_debug_events
-                                    var callbacksPos = [];
-                                    #end
-                                    var i = 0;
-                                    if (this.$cbOnArray != null) {
-                                        for (ii in 0...this.$cbOnArray.length) {
-                                            #if ceramic_debug_events
-                                            callbacksPos.push(this.$cbOnPosArray[ii]);
-                                            #end
-                                            callbacks.set(i, this.$cbOnArray[ii]);
-                                            i++;
-                                        }
-                                    }
-                                    if (this.$cbOnceArray != null) {
-                                        for (ii in 0...this.$cbOnceArray.length) {
-                                            #if ceramic_debug_events
-                                            callbacksPos.push(this.$cbOncePosArray[ii]);
-                                            #end
-                                            callbacks.set(i, this.$cbOnceArray[ii]);
-                                            i++;
-                                        }
-                                        this.$cbOnceArray = null;
-                                    }
-                                    for (i in 0...len) {
+                                expr: macro {
+                                    $willEmit;
+                                    var len = 0;
+                                    if (this.$cbOnArray != null) len += this.$cbOnArray.length;
+                                    if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
+                                    if (len > 0) {
+                                        var pool = ceramic.ArrayPool.pool(len);
+                                        var callbacks = pool.get();
                                         #if ceramic_debug_events
-                                        haxe.Log.trace($v{emitName}, callbacksPos[i]);
+                                        var callbacksPos = [];
                                         #end
-                                        callbacks.get(i)($a{handlerCallArgs});
+                                        var i = 0;
+                                        if (this.$cbOnArray != null) {
+                                            for (ii in 0...this.$cbOnArray.length) {
+                                                #if ceramic_debug_events
+                                                callbacksPos.push(this.$cbOnPosArray[ii]);
+                                                #end
+                                                callbacks.set(i, this.$cbOnArray[ii]);
+                                                i++;
+                                            }
+                                        }
+                                        if (this.$cbOnceArray != null) {
+                                            for (ii in 0...this.$cbOnceArray.length) {
+                                                #if ceramic_debug_events
+                                                callbacksPos.push(this.$cbOncePosArray[ii]);
+                                                #end
+                                                callbacks.set(i, this.$cbOnceArray[ii]);
+                                                i++;
+                                            }
+                                            this.$cbOnceArray = null;
+                                        }
+                                        this.$emitNameBoxed($a{handlerCallArgsBoxed});
+                                        pool.release(callbacks);
+                                        callbacks = null;
                                     }
-                                    pool.release(callbacks);
-                                    callbacks = null;
+                                    $didEmit;
                                 }
-                                $didEmit;
-                            }
 #else
-                            expr: macro {}
+                                expr: macro {}
 #end
-                        }),
-                        access: [hasPublicModifier ? APublic : APrivate],
-                        doc: doc,
-                        meta: hasPrivateModifier ? [{
-                            name: ':noCompletion',
-                            params: [],
-                            pos: field.pos
-                        }] : []
-                    };
-                    newFields.push(emitField);
+                            }),
+                            access: [hasPublicModifier ? APublic : APrivate],
+                            doc: doc,
+                            meta: hasPrivateModifier ? [{
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }] : []
+                        };
+                        newFields.push(emitField);
+
+#if (!display && !completion)
+                        var emitFieldBoxed = {
+                            pos: field.pos,
+                            name: emitNameBoxed,
+                            kind: FFun({
+                                args: [{
+                                    name: '_cbsArray',
+                                    type: macro :ceramic.ReusableArray<Dynamic>
+                                }, {
+                                    name: '_cbsLen',
+                                    type: macro :Int
+                                }].concat([for (i in 0...fn.args.length) {
+                                    name: fn.args[i].name,
+                                    type: macro :Dynamic
+                                }]),
+                                ret: macro :Void,
+                                expr: macro {
+                                    for (i in 0..._cbsLen) {
+                                        var cb = _cbsArray.get(i);
+                                        cb($a{handlerCallArgs});
+                                    }
+                                }
+                            }),
+                            access: [APrivate],
+                            doc: '',
+                            meta: []
+                        };
+                        newFields.push(emitFieldBoxed);
+#end
+                    }
+                    else {
+                        var emitField = {
+                            pos: field.pos,
+                            name: emitName,
+                            kind: FFun({
+                                args: fn.args,
+                                ret: macro :Void,
+#if (!display && !completion)
+                                expr: macro {
+                                    $willEmit;
+                                    var len = 0;
+                                    if (this.$cbOnArray != null) len += this.$cbOnArray.length;
+                                    if (this.$cbOnceArray != null) len += this.$cbOnceArray.length;
+                                    if (len > 0) {
+                                        var pool = ceramic.ArrayPool.pool(len);
+                                        var callbacks = pool.get();
+                                        #if ceramic_debug_events
+                                        var callbacksPos = [];
+                                        #end
+                                        var i = 0;
+                                        if (this.$cbOnArray != null) {
+                                            for (ii in 0...this.$cbOnArray.length) {
+                                                #if ceramic_debug_events
+                                                callbacksPos.push(this.$cbOnPosArray[ii]);
+                                                #end
+                                                callbacks.set(i, this.$cbOnArray[ii]);
+                                                i++;
+                                            }
+                                        }
+                                        if (this.$cbOnceArray != null) {
+                                            for (ii in 0...this.$cbOnceArray.length) {
+                                                #if ceramic_debug_events
+                                                callbacksPos.push(this.$cbOncePosArray[ii]);
+                                                #end
+                                                callbacks.set(i, this.$cbOnceArray[ii]);
+                                                i++;
+                                            }
+                                            this.$cbOnceArray = null;
+                                        }
+                                        for (i in 0...len) {
+                                            var cb = callbacks.get(i);
+                                            cb($a{handlerCallArgs});
+                                        }
+                                        pool.release(callbacks);
+                                        callbacks = null;
+                                    }
+                                    $didEmit;
+                                }
+#else
+                                expr: macro {}
+#end
+                            }),
+                            access: [hasPublicModifier ? APublic : APrivate],
+                            doc: doc,
+                            meta: hasPrivateModifier ? [{
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }] : []
+                        };
+                        newFields.push(emitField);
+                    }
 
                     // Create on{Name}()
                     var onField = {
