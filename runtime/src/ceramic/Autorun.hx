@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
+
 class Autorun extends Entity {
 
 /// Current autorun
@@ -17,6 +19,8 @@ class Autorun extends Entity {
 /// Properties
 
     var onRun:Void->Void;
+
+    var boundAutorunArrays:Array<Array<Autorun>> = null;
 
     public var invalidated(default,null):Bool = false;
 
@@ -40,6 +44,12 @@ class Autorun extends Entity {
         onRun = null;
 
     } //destroy
+
+    inline function willEmitReset():Void {
+
+        unbindFromAllAutorunArrays();
+
+    } //willEmitReset
 
     public function run():Void {
 
@@ -70,6 +80,8 @@ class Autorun extends Entity {
 
         if (invalidated) return;
         invalidated = true;
+
+        unbindFromAllAutorunArrays();
 
         app.onceImmediate(run);
 
@@ -107,5 +119,119 @@ class Autorun extends Entity {
         reobserve();
 
     } //unobserved
+
+/// Autorun arrays
+
+    public function bindToAutorunArray(autorunArray:Array<Autorun>):Void {
+
+        // There is no reason to bind to an already invalidated autorun.
+        // (this should not happen when correctly used by the way)
+        if (invalidated) return;
+        
+        // Check if this autorun array is already bound
+        var alreadyBound = false;
+        if (boundAutorunArrays == null) {
+            boundAutorunArrays = getArrayOfAutorunArrays();
+        }
+        else {
+            for (i in 0...boundAutorunArrays.length) {
+                if (boundAutorunArrays.unsafeGet(i) == autorunArray) {
+                    alreadyBound = true;
+                    break;
+                }
+            }
+        }
+
+        // If not, do it
+        if (!alreadyBound) {
+            autorunArray.push(this);
+            boundAutorunArrays.push(autorunArray);
+        }
+
+    } //bindToAutorunArray
+
+    public function unbindFromAllAutorunArrays():Void {
+
+        if (boundAutorunArrays != null) {
+            for (ii in 0...boundAutorunArrays.length) {
+                var autorunArray = boundAutorunArrays.unsafeGet(ii);
+
+                for (i in 0...autorunArray.length) {
+                    var autorun = autorunArray.unsafeGet(i);
+                    if (autorun == this) {
+                        autorunArray.unsafeSet(i, null);
+                    }
+                }
+            }
+
+            recycleArrayOfAutorunArrays(boundAutorunArrays);
+            boundAutorunArrays = null;
+        }
+
+    } //unbindFromAllAutorunArrays
+
+/// Recycling autorun arrays
+
+    static var _autorunArrays:Array<Array<Autorun>> = [];
+    static var _autorunArraysLen:Int = 0;
+
+    public static function getAutorunArray():Array<Autorun> {
+
+        if (_autorunArraysLen > 0) {
+            _autorunArraysLen--;
+            var array = _autorunArrays[_autorunArraysLen];
+            _autorunArrays[_autorunArraysLen] = null;
+            return array;
+        }
+        else {
+            return [];
+        }
+
+    } //getAutorunArray
+
+    public static function recycleAutorunArray(array:Array<Autorun>):Void {
+
+        #if cpp
+        untyped array.__SetSize(0);
+        #else
+        array.splice(0, array.length);
+        #end
+
+        _autorunArrays[_autorunArraysLen] = array;
+        _autorunArraysLen++;
+
+    } //recycleAutorunArray
+
+/// Recycling array of autorun arrays
+
+    static var _arrayOfAutorunArrays:Array<Array<Array<Autorun>>> = [];
+    static var _arrayOfAutorunArraysLen:Int = 0;
+
+    inline public static function getArrayOfAutorunArrays():Array<Array<Autorun>> {
+
+        if (_arrayOfAutorunArraysLen > 0) {
+            _arrayOfAutorunArraysLen--;
+            var array = _arrayOfAutorunArrays[_arrayOfAutorunArraysLen];
+            _arrayOfAutorunArrays[_arrayOfAutorunArraysLen] = null;
+            return array;
+        }
+        else {
+            return [];
+        }
+
+    } //getArrayOfAutorunArrays
+
+    inline public static function recycleArrayOfAutorunArrays(array:Array<Array<Autorun>>):Void {
+
+        #if cpp
+        untyped array.__SetSize(0);
+        #else
+        array.splice(0, array.length);
+        #end
+
+        _arrayOfAutorunArrays[_arrayOfAutorunArraysLen] = array;
+        _arrayOfAutorunArraysLen++;
+
+    } //recycleArrayOfAutorunArrays
 
 } //Autorun

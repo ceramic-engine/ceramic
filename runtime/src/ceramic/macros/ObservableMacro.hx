@@ -159,6 +159,7 @@ class ObservableMacro {
                 var emitFieldNameChange = 'emit' + capitalName + 'Change';
                 var onFieldNameChange = 'on' + capitalName + 'Change';
                 var offFieldNameChange = 'off' + capitalName + 'Change';
+                var fieldNameAutoruns = fieldName + 'Autoruns';
                 var fieldNameChange = fieldName + 'Change';
 
                 if (expr != null) {
@@ -202,6 +203,22 @@ class ObservableMacro {
                 };
                 newFields.push(propField);
 
+                var fieldAutoruns = {
+                    pos: field.pos,
+                    name: fieldNameAutoruns,
+                    kind: FVar(TPath({
+                        name: 'Array',
+                        pack: [],
+                        params: [
+                            TPType(
+                                macro :ceramic.Autorun
+                            )
+                        ]
+                    }), macro null),
+                    access: [APrivate],
+                };
+                newFields.push(fieldAutoruns);
+
                 var getField = {
                     pos: field.pos,
                     name: 'get_' + field.name,
@@ -212,16 +229,11 @@ class ObservableMacro {
                             // Bind invalidation if getting value
                             // inside an Autorun call
                             if (ceramic.Autorun.current != null) {
-                                var _that = this;
                                 var autorun = ceramic.Autorun.current;
-                                var cb = function(_, _) {
-                                    autorun.invalidate();
-                                };
-                                autorun.onceReset(null, function() {
-                                    _that.$offFieldNameChange(cb);
-                                    _that = null;
-                                });
-                                _that.$onFieldNameChange(autorun, cb);
+                                if (this.$fieldNameAutoruns == null) {
+                                    this.$fieldNameAutoruns = ceramic.Autorun.getAutorunArray();
+                                }
+                                autorun.bindToAutorunArray(this.$fieldNameAutoruns);
                             }
 
                             return this.$unobservedFieldName;
@@ -252,6 +264,21 @@ class ObservableMacro {
                                 emitObservedDirty(this, $v{hasSerializeMeta});
                             }
                             this.$emitFieldNameChange($i{fieldName}, prevValue);
+                            
+                            if (this.$fieldNameAutoruns != null) {
+                                var fieldAutoruns = this.$fieldNameAutoruns;
+                                this.$fieldNameAutoruns = null;
+
+                                for (i in 0...fieldAutoruns.length) {
+                                    var autorun = fieldAutoruns[i];
+                                    if (autorun != null) {
+                                        autorun.invalidate();
+                                    }
+                                }
+
+                                ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
+                            }
+
                             return $i{fieldName}
                         }
                     }),
@@ -270,6 +297,20 @@ class ObservableMacro {
                         expr: macro {
                             var value = this.$unobservedFieldName;
                             this.$emitFieldNameChange(value, value);
+                            
+                            if (this.$fieldNameAutoruns != null) {
+                                var fieldAutoruns = this.$fieldNameAutoruns;
+                                this.$fieldNameAutoruns = null;
+
+                                for (i in 0...fieldAutoruns.length) {
+                                    var autorun = fieldAutoruns[i];
+                                    if (autorun != null) {
+                                        autorun.invalidate();
+                                    }
+                                }
+
+                                ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
+                            }
                         }
                     }),
                     access: [APublic, AInline],
