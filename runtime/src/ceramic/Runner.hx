@@ -15,7 +15,7 @@ from https://github.com/underscorediscovery/
 
 Usage:
 - call Runner.init() from your primary thread 
-- call Runner.run() periodically to service callbacks (i.e inside your main loop)
+- call Runner.tick() periodically to service callbacks (i.e inside your main loop)
 - use Runner.thread(function() { ... }) to make a thread
 - use Runner.runInMainThread(function() { ... }) to run code on the main thread
 - use runInMainThreadBlocking to run code on the main thread and wait for the return value
@@ -59,6 +59,18 @@ class Runner {
         #end
 
     } //tick
+
+    /** Returns `true` if _running in background_ is emulated on this platform by
+        running _background_ code in main thread instead of using background thread. */
+    inline public static function isEmulatingBackgroundWithMain():Bool {
+
+        #if cpp
+        return false;
+        #else
+        return true;
+        #end
+
+    } //isEmulatingBackgroundWithMain
 
     /** Call a function on the primary thread without waiting or blocking.
         If you want return values see runInMainBlocking */
