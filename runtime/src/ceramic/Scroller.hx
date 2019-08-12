@@ -90,6 +90,12 @@ class Scroller extends Visual {
 
     public var touchableStrictHierarchy = true;
 
+/// Internal
+
+    var prevPointerX:Float = -999999;
+    
+    var prevPointerY:Float = -999999;
+
 /// Lifecycle
 
     public function new(?content:Visual) {
@@ -400,6 +406,8 @@ class Scroller extends Visual {
             }
 
             // Yes, then let's start touching
+            prevPointerX = -999999;
+            prevPointerY = -999999;
             status = TOUCHING;
             touchIndex = info.touchIndex;
             if (direction == VERTICAL) {
@@ -533,19 +541,54 @@ class Scroller extends Visual {
 
     function update(delta:Float):Void {
 
-        var realPointerX:Float = screen.pointerX;
-        var realPointerY:Float = screen.pointerY;
+        if (delta == 0) return;
+
+        var pointerX:Float = screen.pointerX;
+        var pointerY:Float = screen.pointerY;
 
         if (touchIndex != -1) {
             var pointer = screen.touches.get(touchIndex);
             if (pointer != null) {
-                realPointerX = pointer.x;
-                realPointerY = pointer.y;
+                pointerX = pointer.x;
+                pointerY = pointer.y;
             }
         }
 
-        var pointerX = realPointerX;
-        var pointerY = realPointerY;
+        // Scroll is expected to work fine on 60 FPS
+        // If FPS is lower (higher delta), compute more frames with shorter deltas
+        var optimalDelta = 1.0 / 60;
+        if (delta >= optimalDelta * 1.5) {
+            if (prevPointerX != -999999 && prevPointerY != -999999) {
+                scrollUpdate((pointerX + prevPointerX) * 0.5, (pointerY + prevPointerY) * 0.5, delta * 0.5, delta * 0.5);
+            }
+            else {
+                scrollUpdate(pointerX, pointerY, delta * 0.5, delta * 0.5);
+            }
+            scrollUpdate(pointerX, pointerY, delta * 0.5);
+        }
+        else {
+            scrollUpdate(pointerX, pointerY, delta);
+        }
+
+        if (lastWheelEventTime != -1) {
+            if (Timer.now - lastWheelEventTime > wheelEndDelay) {
+                lastWheelEventTime = -1;
+                emitWheelEnd();
+            }
+        }
+
+        switch (status) {
+            case TOUCHING | DRAGGING:
+                prevPointerX = pointerX;
+                prevPointerY = pointerY;
+            default:
+                prevPointerX = -999999;
+                prevPointerY = -999999;
+        }
+
+    } //update
+
+    function scrollUpdate(pointerX:Float, pointerY:Float, delta:Float, minusDelta:Float = 0):Void {
 
         switch (status) {
 
@@ -581,7 +624,7 @@ class Scroller extends Visual {
                         screen.focusedVisual = this;
                     }
 
-                    velocity.add(pointerY - pointerStart);
+                    velocity.add(pointerY - pointerStart, minusDelta);
                 }
                 else {
 
@@ -610,12 +653,12 @@ class Scroller extends Visual {
                         screen.focusedVisual = this;
                     }
 
-                    velocity.add(pointerX - pointerStart);
+                    velocity.add(pointerX - pointerStart, minusDelta);
                 }
             
             case DRAGGING:
                 if (direction == VERTICAL) {
-                    pointerX = pointerStart + (realPointerY - pointerStart) * dragFactor;
+                    pointerX = pointerStart + (pointerY - pointerStart) * dragFactor;
                     scrollTransform.ty = contentStart + pointerY - pointerStart;
 
                     var maxY = Math.max(contentStart, 0);
@@ -630,10 +673,10 @@ class Scroller extends Visual {
                     }
 
                     scrollTransform.changedDirty = true;
-                    velocity.add(pointerY - pointerStart);
+                    velocity.add(pointerY - pointerStart, minusDelta);
                 }
                 else {
-                    pointerX = pointerStart + (realPointerX - pointerStart) * dragFactor;
+                    pointerX = pointerStart + (pointerX - pointerStart) * dragFactor;
                     scrollTransform.tx = contentStart + pointerX - pointerStart;
 
                     var maxX = Math.max(contentStart, 0);
@@ -648,7 +691,7 @@ class Scroller extends Visual {
                     }
 
                     scrollTransform.changedDirty = true;
-                    velocity.add(pointerX - pointerStart);
+                    velocity.add(pointerX - pointerStart, minusDelta);
                 }
             
             case SCROLLING:
@@ -710,14 +753,7 @@ class Scroller extends Visual {
 
         }
 
-        if (lastWheelEventTime != -1) {
-            if (Timer.now - lastWheelEventTime > wheelEndDelay) {
-                lastWheelEventTime = -1;
-                emitWheelEnd();
-            }
-        }
-
-    } //update
+    }
 
 /// Helpers
 

@@ -344,6 +344,8 @@ class Screen extends Entity implements Observable {
         });
         app.backend.screen.onTouchMove(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);

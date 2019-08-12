@@ -22,9 +22,9 @@ class Velocity {
 
     } //reset
 
-    public function add(position:Float):Void {
+    public function add(position:Float, minusDelta:Float = 0):Void {
 
-        var now = Timer.now;
+        var now = Timer.now - minusDelta;
 
         positions.push(position);
         times.push(now);
