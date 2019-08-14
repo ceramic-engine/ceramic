@@ -54,9 +54,9 @@ class Spine extends Visual {
 
     var subSpines:Array<Spine> = null;
 
-    var boundParentSlots:Map<String,Array<BindSlot>> = null;
+    var boundParentSlots:Map<Int,Array<BindSlot>> = null;
 
-    var boundChildSlots:Map<String,BindSlot> = null;
+    var boundChildSlots:Map<Int,BindSlot> = null;
 
     var boundChildSlotsDirty:Bool = false;
 
@@ -847,6 +847,7 @@ class Spine extends Visual {
             slot = drawOrder[i];
             bone = slot.bone;
             slotName = slot.data.name;
+            var slotGlobalIndex = globalSlotIndexForName(slotName);
 
             if (disabledSlots != null && disabledSlots.exists(slotName)) {
                 continue;
@@ -871,7 +872,7 @@ class Spine extends Visual {
             if (slot.attachment != null)
             {
                 if (boundChildSlots != null) {
-                    boundSlot = boundChildSlots.get(slotName);
+                    boundSlot = boundChildSlots.get(slotGlobalIndex);
                 } else {
                     boundSlot = null;
                 }
@@ -1211,8 +1212,8 @@ class Spine extends Visual {
                     for (sub in subSpines) {
 
                         // Parent slot to child slot
-                        if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotName)) {
-                            for (bindInfo in sub.boundParentSlots.get(slotName)) {
+                        if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotGlobalIndex)) {
+                            for (bindInfo in sub.boundParentSlots.get(slotGlobalIndex)) {
                                 
                                 // Keep parent info
                                 if (slot.attachment == null) {
@@ -1325,16 +1326,18 @@ class Spine extends Visual {
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
+
+        var parentSlotGlobalIndex = globalSlotIndexForName(parentSlot);
         
         if (options != null) {
 
             var info = new BindSlot();
-            info.fromParentSlot = parentSlot;
+            info.fromParentSlot = parentSlotGlobalIndex;
 
             // Bind parent slot to child slot
             //
             if (options.toLocalSlot != null) {
-                info.toLocalSlot = options.toLocalSlot;
+                info.toLocalSlot = globalSlotIndexForName(options.toLocalSlot);
                 boundChildSlotsDirty = true;
             }
 
@@ -1342,10 +1345,10 @@ class Spine extends Visual {
             if (options.flipYOnConcat != null) info.flipYOnConcat = options.flipYOnConcat;
 
             if (boundParentSlots == null) boundParentSlots = new Map();
-            var bindList = boundParentSlots.get(parentSlot);
+            var bindList = boundParentSlots.get(parentSlotGlobalIndex);
             if (bindList == null) {
                 bindList = [];
-                boundParentSlots.set(parentSlot, bindList);
+                boundParentSlots.set(parentSlotGlobalIndex, bindList);
             }
 
             bindList.push(info);
@@ -1370,7 +1373,7 @@ class Spine extends Visual {
         for (parentSlot in boundParentSlots.keys()) {
             var bindList = boundParentSlots.get(parentSlot);
             for (bindItem in bindList) {
-                if (bindItem.toLocalSlot != null && !boundChildSlots.exists(bindItem.toLocalSlot)) {
+                if (bindItem.toLocalSlot > 0 && !boundChildSlots.exists(bindItem.toLocalSlot)) {
                     boundChildSlots.set(bindItem.toLocalSlot, bindItem);
                 }
             }
@@ -1471,7 +1474,25 @@ class Spine extends Visual {
 
 #end
 
-} //Visual
+    static var _globalSlotIndexes:Map<String,Int> = new Map();
+    static var _nextGlobalSlotIndex:Int = 1;
+
+    /** Retrieve a slot index that works with any skeleton.
+        In other words, for a given slot name, its global index will always be identical
+        regardless of which skeleton is used. This is not the case with regular slot
+        indexes that depend on their skeleton structure.
+        A global slot index is a prefered solution over strings to identify a slot. */
+    inline static public function globalSlotIndexForName(slotName:String):Int {
+
+        // Retrieve global slot index (an index that works with any skeleton)
+        if (!_globalSlotIndexes.exists(slotName)) {
+            _globalSlotIndexes.set(slotName, _nextGlobalSlotIndex++);
+        }
+        return _globalSlotIndexes.get(slotName);
+
+    } //globalSlotIndexForName
+
+} //Spine
 
 class SpineListener implements AnimationStateListener {
 
@@ -1530,9 +1551,9 @@ typedef BindSlotOptions = {
 @:allow(ceramic.Spine)
 private class BindSlot {
 
-    public var fromParentSlot:String = null;
+    public var fromParentSlot:Int = -1;
 
-    public var toLocalSlot:String = null;
+    public var toLocalSlot:Int = -1;
 
     public var parentDepth:Float = 0;
 
@@ -1550,8 +1571,8 @@ private class BindSlot {
 
     function toString() {
         var props:Dynamic = {};
-        if (fromParentSlot != null) props.fromParentSlot = fromParentSlot;
-        if (toLocalSlot != null) props.toLocalSlot = toLocalSlot;
+        props.fromParentSlot = fromParentSlot;
+        props.toLocalSlot = toLocalSlot;
         props.parentDepth = parentDepth;
         if (parentTransform != null) props.parentTransform = parentTransform;
         if (parentVisible) props.parentVisible = parentVisible;
