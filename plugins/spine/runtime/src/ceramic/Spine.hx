@@ -60,7 +60,7 @@ class Spine extends Visual {
 
     var boundChildSlotsDirty:Bool = false;
 
-    var globalBoundParentSlotName:String = null;
+    var globalBoundParentSlotGlobalIndex:Int = -1;
 
     var globalBoundParentSlot:Slot = null;
 
@@ -1238,7 +1238,7 @@ class Spine extends Visual {
                         }
 
                         // Parent slot to every children
-                        if (sub.globalBoundParentSlotName != null && sub.globalBoundParentSlotName == slotName) {
+                        if (sub.globalBoundParentSlotGlobalIndex == slotGlobalIndex) {
 
                             // Keep parent info
                             if (slot.attachment == null) {
@@ -1357,7 +1357,7 @@ class Spine extends Visual {
 
             // Bind parent slot to every children
             //
-            globalBoundParentSlotName = parentSlot;
+            globalBoundParentSlotGlobalIndex = parentSlotGlobalIndex;
             if (transform == null) transform = new Transform();
 
         }
