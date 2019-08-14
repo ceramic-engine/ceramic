@@ -484,6 +484,8 @@ class Spine extends Visual {
         //
         skeletonData = spineData.skeletonData;
 
+        updateSlotIndexMappings();
+
         stateData = new AnimationStateData(skeletonData);
         state = new AnimationState(stateData);
 
@@ -847,7 +849,8 @@ class Spine extends Visual {
             slot = drawOrder[i];
             bone = slot.bone;
             slotName = slot.data.name;
-            var slotGlobalIndex = globalSlotIndexForName(slotName);
+            //var slotGlobalIndex = globalSlotIndexForName(slotName);
+            var slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
 
             if (disabledSlots != null && disabledSlots.exists(slotName)) {
                 continue;
@@ -1323,6 +1326,22 @@ class Spine extends Visual {
         }
 
     } //add
+
+    var globalSlotIndexFromSkeletonSlotIndex:Array<Int> = [];
+
+    inline function updateSlotIndexMappings():Void {
+
+        var skeletonSlots = skeletonData.slots;
+        for (i in 0...skeletonSlots.length) {
+            var slot = skeletonSlots.unsafeGet(i);
+            var slotName = slot.name;
+            var slotIndex = slot.index;
+            
+            var globalIndex = globalSlotIndexForName(slotName);
+            globalSlotIndexFromSkeletonSlotIndex[slotIndex] = globalIndex;
+        }
+
+    } //updateSlotIndexMappings
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
