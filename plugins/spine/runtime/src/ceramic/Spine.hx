@@ -452,6 +452,23 @@ class Spine extends Visual {
 
     } //new
 
+    override function clear():Void {
+
+        for (mesh in slotMeshes) {
+            mesh.indices = null;
+            mesh.uvs = null;
+            if (mesh.transform != null) {
+                TransformPool.recycle(mesh.transform);
+                mesh.transform = null;
+            }
+            MeshPool.recycle(mesh);
+        }
+        slotMeshes = destroyed ? null : new Map();
+
+        super.clear();
+
+    } //clear
+
 /// Content
 
     override function computeContent():Void {
@@ -464,7 +481,13 @@ class Spine extends Visual {
 
         // Clean meshes
         for (mesh in slotMeshes) {
-            mesh.destroy();
+            mesh.indices = null;
+            mesh.uvs = null;
+            if (mesh.transform != null) {
+                TransformPool.recycle(mesh.transform);
+                mesh.transform = null;
+            }
+            MeshPool.recycle(mesh);
         }
         slotMeshes = new Map();
 
@@ -661,11 +684,6 @@ class Spine extends Visual {
 
         // Will update reference counting
         spineData = null;
-
-        for (mesh in slotMeshes) {
-            if (mesh != null) mesh.destroy();
-        }
-        slotMeshes = null;
 
         if (state != null && listener != null) {
             state.removeListener(listener);
@@ -928,7 +946,15 @@ class Spine extends Visual {
 
                             if (mesh == null)
                             {
-                                mesh = new Mesh();
+                                mesh = MeshPool.get();
+
+                                // Indices and UVs arrays are created by spine runtime,
+                                // no need to use default ones.
+                                MeshPool.recycleIntArray(mesh.indices);
+                                MeshPool.recycleFloatArray(mesh.uvs);
+
+                                mesh.indices = null;
+                                mesh.uvs = null;
                                 mesh.touchable = false;
                                 mesh.transform = new Transform();
                                 add(mesh);
@@ -967,7 +993,11 @@ class Spine extends Visual {
                                 Triangulate.triangulate(mesh.vertices, mesh.indices);
 
                                 if (mesh.vertices.length > verticesLength) {
+                                    #if cpp
+                                    untyped mesh.vertices.__SetSize(verticesLength);
+                                    #else
                                     mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
+                                    #end
                                 }
                             }
                             else {
@@ -1022,7 +1052,11 @@ class Spine extends Visual {
                                         }
 
                                         if (mesh.vertices.length > verticesLength) {
+                                            #if cpp
+                                            untyped mesh.vertices.__SetSize(verticesLength);
+                                            #else
                                             mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
+                                            #end
                                         }
 
                                     } else {
@@ -1083,7 +1117,19 @@ class Spine extends Visual {
                                         clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
                                         var clippedVertices = clipper.getClippedVertices();
                                         var clippedTriangles = clipper.getClippedTriangles();
-                                        mesh.vertices = clippedVertices.items;
+                                        var verticeItems = clippedVertices.items;
+
+                                        for (i in 0...verticeItems.length) {
+                                            mesh.vertices[i] = verticeItems.unsafeGet(i);
+                                        }
+                                        if (mesh.vertices.length > verticeItems.length) {
+                                            #if cpp
+                                            untyped mesh.vertices.__SetSize(verticeItems.length);
+                                            #else
+                                            mesh.vertices.splice(verticeItems.length, mesh.vertices.length - verticeItems.length);
+                                            #end
+                                        }
+
                                         mesh.indices = clippedTriangles.items;
                                     }
 

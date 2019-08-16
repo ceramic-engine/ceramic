@@ -8,6 +8,7 @@ package ceramic;
     | a | c | tx |
     | b | d | ty |
     | 0 | 0 | 1  | */
+@:allow(ceramic.TransformPool)
 class Transform implements Events {
 
 /// Events

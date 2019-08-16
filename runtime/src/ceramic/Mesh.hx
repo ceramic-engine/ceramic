@@ -6,6 +6,7 @@ import ceramic.Assert.*;
 using ceramic.Extensions;
 
 /** Draw anything composed of triangles/vertices. */
+@:allow(ceramic.MeshPool)
 class Mesh extends Visual {
 
 /// Internal

@@ -10,6 +10,7 @@ using ceramic.Extensions;
 
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
+@:allow(ceramic.MeshPool)
 #if lua
 @dynamicEvents
 @:dce
