@@ -54,9 +54,9 @@ class Spine extends Visual {
 
     var subSpines:Array<Spine> = null;
 
-    var boundParentSlots:Map<Int,Array<BindSlot>> = null;
+    var boundParentSlots:IntMap<Array<BindSlot>> = null;
 
-    var boundChildSlots:Map<Int,BindSlot> = null;
+    var boundChildSlots:IntMap<BindSlot> = null;
 
     var boundChildSlotsDirty:Bool = false;
 
@@ -148,8 +148,8 @@ class Spine extends Visual {
 
     /** Disabled slots */
     @editable
-    public var disabledSlots(default,set):Map<String,Bool> = null;
-    function set_disabledSlots(disabledSlots:Map<String,Bool>):Map<String,Bool> {
+    public var disabledSlots(default,set):IntBoolMap = null;
+    function set_disabledSlots(disabledSlots:IntBoolMap):IntBoolMap {
         if (this.disabledSlots == disabledSlots) return disabledSlots;
         this.disabledSlots = disabledSlots;
         if (pausedOrFrozen) render(0, 0, false);
@@ -852,7 +852,7 @@ class Spine extends Visual {
             slotName = slot.data.name;
             slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
 
-            if (disabledSlots != null && disabledSlots.exists(slotName)) {
+            if (disabledSlots != null && disabledSlots.get(slotGlobalIndex)) {
                 continue;
             }
 
@@ -1216,7 +1216,7 @@ class Spine extends Visual {
                     for (sub in subSpines) {
 
                         // Parent slot to child slot
-                        if (sub.boundParentSlots != null && sub.boundParentSlots.exists(slotGlobalIndex)) {
+                        if (sub.boundParentSlots != null && sub.boundParentSlots.get(slotGlobalIndex) != null) {
                             for (bindInfo in sub.boundParentSlots.get(slotGlobalIndex)) {
                                 
                                 // Keep parent info
@@ -1364,7 +1364,7 @@ class Spine extends Visual {
             if (options.flipXOnConcat != null) info.flipXOnConcat = options.flipXOnConcat;
             if (options.flipYOnConcat != null) info.flipYOnConcat = options.flipYOnConcat;
 
-            if (boundParentSlots == null) boundParentSlots = new Map();
+            if (boundParentSlots == null) boundParentSlots = new IntMap();
             var bindList = boundParentSlots.get(parentSlotGlobalIndex);
             if (bindList == null) {
                 bindList = [];
@@ -1388,13 +1388,16 @@ class Spine extends Visual {
         to gather parent slot transformations when drawing child animation. */
     function computeBoundChildSlots() {
 
-        boundChildSlots = new Map();
+        boundChildSlots = new IntMap();
 
-        for (parentSlot in boundParentSlots.keys()) {
-            var bindList = boundParentSlots.get(parentSlot);
-            for (bindItem in bindList) {
-                if (bindItem.toLocalSlot > 0 && !boundChildSlots.exists(bindItem.toLocalSlot)) {
-                    boundChildSlots.set(bindItem.toLocalSlot, bindItem);
+        var values = boundParentSlots.values;
+        for (i in 0...values.length) {
+            var bindList = values.get(i);
+            if (bindList != null) {
+                for (bindItem in bindList) {
+                    if (bindItem.toLocalSlot > 0 && boundChildSlots.get(bindItem.toLocalSlot) == null) {
+                        boundChildSlots.set(bindItem.toLocalSlot, bindItem);
+                    }
                 }
             }
         }
