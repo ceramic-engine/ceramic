@@ -138,8 +138,8 @@ class Spine extends Visual {
 
     /** Hidden slots */
     @editable
-    public var hiddenSlots(default,set):Map<String,Bool> = null;
-    function set_hiddenSlots(hiddenSlots:Map<String,Bool>):Map<String,Bool> {
+    public var hiddenSlots(default,set):IntBoolMap = null;
+    function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
         if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
         this.hiddenSlots = hiddenSlots;
         if (pausedOrFrozen) render(0, 0, false);
@@ -809,6 +809,7 @@ class Spine extends Visual {
         var alphaColor:AlphaColor;
         var emptySlotMesh:Bool = false;
         var slotName:String = null;
+        var slotGlobalIndex:Int = -1;
         var boundSlot:BindSlot = null;
         var microDepth:Float = 0.0001;
         var boneData:BoneData = null;
@@ -849,8 +850,7 @@ class Spine extends Visual {
             slot = drawOrder[i];
             bone = slot.bone;
             slotName = slot.data.name;
-            //var slotGlobalIndex = globalSlotIndexForName(slotName);
-            var slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
+            slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
 
             if (disabledSlots != null && disabledSlots.exists(slotName)) {
                 continue;
@@ -865,7 +865,8 @@ class Spine extends Visual {
             // Emit event and allow to override drawing of this slot
             slotInfo.customTransform = null;
             slotInfo.depth = z;
-            slotInfo.drawDefault = hiddenSlots == null || !hiddenSlots.exists(slotName);
+            slotInfo.globalSlotIndex = slotGlobalIndex;
+            slotInfo.drawDefault = hiddenSlots == null || !hiddenSlots.get(slotGlobalIndex);
             slotInfo.slot = slot;
 
             offsetX = 0;
@@ -1607,6 +1608,9 @@ class SlotInfo {
 
     /** The slot that is about to have its attachment drawn (if any). */
     public var slot:spine.Slot = null;
+
+    /** The global index matching with this current slot name. */
+    public var globalSlotIndex:Int = -1;
 
     /** A custom transform applied to this slot (defaults to identity). */
     public var customTransform:Transform = null;
