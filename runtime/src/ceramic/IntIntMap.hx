@@ -117,6 +117,7 @@ class IntIntMap {
                 return NO_VALUE;
             }
             if (k == key) {
+                ptrPlus1 = ptr + 1;
                 return data.get(ptrPlus1);
             }
         }
