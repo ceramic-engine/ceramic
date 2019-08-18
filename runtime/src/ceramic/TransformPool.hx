@@ -17,6 +17,8 @@ class TransformPool {
     /** Recycle an existing transform. The transform will be cleaned up. */
     public static function recycle(transform:Transform):Void {
 
+        transform.offChange();
+
         transform.a = 1;
         transform.b = 0;
         transform.c = 0;
