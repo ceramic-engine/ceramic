@@ -48,7 +48,7 @@ class Spine extends Visual {
 
     var listener:SpineListener;
 
-    var slotMeshes:Map<Int,Mesh> = new Map();
+    var slotMeshes:IntMap<Mesh> = new IntMap(16, 0.5, true);
 
     var slotInfo:SlotInfo = new SlotInfo();
 
@@ -452,18 +452,39 @@ class Spine extends Visual {
 
     } //new
 
+    inline function clearMeshes():Void {
+
+        var keys = slotMeshes.iterableKeys;
+        var foundMeshes = [];
+        var foundKeys = [];
+        for (i in 0...keys.length) {
+            var key = keys.unsafeGet(i);
+            var mesh = slotMeshes.get(key);
+            if (mesh != null) {
+                foundKeys.push(key);
+                foundMeshes.push(mesh);
+                mesh.indices = null;
+                mesh.uvs = null;
+                if (mesh.transform != null) {
+                    TransformPool.recycle(mesh.transform);
+                    mesh.transform = null;
+                }
+                MeshPool.recycle(mesh);
+                if (!destroyed) {
+                    slotMeshes.set(key, null);
+                }
+            }
+        }
+
+        if (destroyed) {
+            slotMeshes = null;
+        }
+
+    } //clearMeshes
+
     override function clear():Void {
 
-        for (mesh in slotMeshes) {
-            mesh.indices = null;
-            mesh.uvs = null;
-            if (mesh.transform != null) {
-                TransformPool.recycle(mesh.transform);
-                mesh.transform = null;
-            }
-            MeshPool.recycle(mesh);
-        }
-        slotMeshes = destroyed ? null : new Map();
+        clearMeshes();
 
         super.clear();
 
@@ -479,17 +500,7 @@ class Spine extends Visual {
             state.removeListener(listener);
         }
 
-        // Clean meshes
-        for (mesh in slotMeshes) {
-            mesh.indices = null;
-            mesh.uvs = null;
-            if (mesh.transform != null) {
-                TransformPool.recycle(mesh.transform);
-                mesh.transform = null;
-            }
-            MeshPool.recycle(mesh);
-        }
-        slotMeshes = new Map();
+        clearMeshes();
 
         // Handle empty spine data
         if (spineData == null) {
