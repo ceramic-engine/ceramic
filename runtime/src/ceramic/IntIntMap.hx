@@ -31,6 +31,7 @@ class IntIntMap {
 
     /** When this map is marked as iterable, this array will contain every key. */
     public var iterableKeys(default,null):Array<Int> = null;
+    var iterableKeysUsed:IntBoolMap = null;
 
     /** Mask to calculate the original position */
     var mask:Int;
@@ -52,6 +53,7 @@ class IntIntMap {
         
         if (iterable) {
             iterableKeys = [];
+            iterableKeysUsed = new IntBoolMap();
         }
 
     } //new
@@ -131,7 +133,10 @@ class IntIntMap {
             var ret = freeValue;
             if (!hasFreeKey) {
                 if (iterableKeys != null) {
-                    iterableKeys.push(key);
+                    if (!iterableKeysUsed.get(key)) {
+                        iterableKeysUsed.set(key, true);
+                        iterableKeys.push(key);
+                    }
                 }
                 size++;
             }
@@ -153,7 +158,10 @@ class IntIntMap {
                 size++;
             }
             if (iterableKeys != null) {
-                iterableKeys.push(key);
+                if (!iterableKeysUsed.get(key)) {
+                    iterableKeysUsed.set(key, true);
+                    iterableKeys.push(key);
+                }
             }
             return NO_VALUE;
         }
@@ -180,7 +188,10 @@ class IntIntMap {
                     size++;
                 }
                 if (iterableKeys != null) {
-                    iterableKeys.push(key);
+                    if (!iterableKeysUsed.get(key)) {
+                        iterableKeysUsed.set(key, true);
+                        iterableKeys.push(key);
+                    }
                 }
                 return NO_VALUE;
             }
@@ -204,7 +215,10 @@ class IntIntMap {
             hasFreeKey = false;
             size--;
             if (iterableKeys != null) {
-                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                if (iterableKeysUsed.get(key)) {
+                    iterableKeysUsed.set(key, false);
+                    iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                }
             }
             return freeValue; // Value is not cleaned
         }
@@ -218,7 +232,10 @@ class IntIntMap {
             shiftKeys(ptr);
             size--;
             if (iterableKeys != null) {
-                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                if (iterableKeysUsed.get(key)) {
+                    iterableKeysUsed.set(key, false);
+                    iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                }
             }
             return res;
         }
@@ -236,7 +253,10 @@ class IntIntMap {
                 shiftKeys(ptr);
                 size--;
                 if (iterableKeys != null) {
-                    iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                    if (iterableKeysUsed.get(key)) {
+                        iterableKeysUsed.set(key, false);
+                        iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                    }
                 }
                 return res;
             }
