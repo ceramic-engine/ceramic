@@ -16,8 +16,7 @@ class IntMap<V> {
     var nextFreeIndex:Int = 0;
 
     /** When this map is marked as iterable, this array will contain every key. */
-    public var iterableKeys(get,never):Array<Int>;
-    inline function get_iterableKeys():Array<Int> return keys.iterableKeys;
+    public var iterableKeys(default,null):Array<Int> = null;
 
     /** Values as they are stored.
         Can be used to iterate on values directly,
@@ -26,8 +25,12 @@ class IntMap<V> {
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 
-        keys = new IntIntMap(size, fillFactor, iterable);
+        keys = new IntIntMap(size, fillFactor);
         values = new Vector(size);
+        
+        if (iterable) {
+            iterableKeys = [];
+        }
 
     } //new
 
@@ -68,6 +71,10 @@ class IntMap<V> {
                 // New key, but null value,
                 // no need to touch values array
                 keys.set(key, NULL_VALUE);
+                // Update iterable keys
+                if (iterableKeys != null) {
+                    iterableKeys.push(key);
+                }
             }
         }
         else {
@@ -78,6 +85,11 @@ class IntMap<V> {
             }
             values.set(nextFreeIndex, value);
             keys.set(key, nextFreeIndex + RESERVED_GAP);
+
+            // Update iterable keys
+            if (iterableKeys != null) {
+                iterableKeys.push(key);
+            };
 
             do {
                 // Move free index to next location
@@ -100,6 +112,10 @@ class IntMap<V> {
             }
             // Remove key
             keys.remove(key);
+            // Update iterable keys
+            if (iterableKeys != null) {
+                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+            }
         }
 
     } //remove
