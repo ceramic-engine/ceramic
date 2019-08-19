@@ -238,10 +238,11 @@ class Spine extends Visual {
         if (!destroyed && prevSpineData != null && animation == null && state != null) {
             toResume = [];
 
-            var i = 0;
             var tracks = state.getTracks();
 
-            for (track in tracks) {
+            for (i in 0...tracks.length) {
+
+                var track = tracks[i];
 
                 if (track != null && track.animation != null) {
 
@@ -252,8 +253,6 @@ class Spine extends Visual {
                         track.trackTime
                     ]);
                 }
-
-                i++;
             }
 
         }
@@ -276,8 +275,11 @@ class Spine extends Visual {
         // Restore animation info (if any)
         if (toResume != null && toResume.length > 0) {
 
-            var i = 0;
-            for (entry in toResume) {
+            for (i in 0...toResume.length) {
+
+                // TODO remove dynamic access here
+
+                var entry:Dynamic = toResume[i];
 
                 var animationName:String = entry[0];
                 var timeScale:Float = entry[1];
@@ -290,8 +292,6 @@ class Spine extends Visual {
                     track.trackTime = trackTime;
                     track.timeScale = timeScale;
                 }
-
-                i++;
             }
 
         }
@@ -674,15 +674,17 @@ class Spine extends Visual {
         frozen = false;
         muteEvents = true;
 
-        var i = 0;
-        for (aTrack in state.tracks) {
+        var tracks = state.tracks;
+        for (i in 0...tracks.length) {
+            var aTrack = tracks[i];
             if (aTrack == null) break;
-            _trackTimes[i++] = aTrack.trackTime;
+            _trackTimes[i] = aTrack.trackTime;
         }
         
+        var i = tracks.length;
         update(0.1);
         while (i-- > 0) {
-            var track = state.tracks[i];
+            var track = tracks[i];
             if (track != null) {
                 track.trackTime = _trackTimes[i];
             }
@@ -1285,11 +1287,14 @@ class Spine extends Visual {
 
                 // Gather information for child animations if needed
                 if (subSpines != null) {
-                    for (sub in subSpines) {
+                    for (s in 0...subSpines.length) {
+                        var sub = subSpines.unsafeGet(s);
 
                         // Parent slot to child slot
                         if (sub.boundParentSlots != null && sub.boundParentSlots.get(slotGlobalIndex) != null) {
-                            for (bindInfo in sub.boundParentSlots.get(slotGlobalIndex)) {
+                            var bindList = sub.boundParentSlots.get(slotGlobalIndex);
+                            for (bi in 0...bindList.length) {
+                                var bindInfo = bindList.unsafeGet(bi);
                                 
                                 // Keep parent info
                                 if (slot.attachment == null) {
@@ -1362,7 +1367,8 @@ class Spine extends Visual {
 
         // Render children (if any)
         if (!setup && subSpines != null) {
-            for (sub in subSpines) {
+            for (s in 0...subSpines.length) {
+                var sub = subSpines.unsafeGet(s);
                 sub.updateSkeleton(delta);
                 sub.render(delta, z, false);
             }
@@ -1514,7 +1520,8 @@ class Spine extends Visual {
         for (i in 0...values.length) {
             var bindList = values.get(i);
             if (bindList != null) {
-                for (bindItem in bindList) {
+                for (b in 0...bindList.length) {
+                    var bindItem = bindList.unsafeGet(b);
                     if (bindItem.toLocalSlot > 0 && boundChildSlots.get(bindItem.toLocalSlot) == null) {
                         boundChildSlots.set(bindItem.toLocalSlot, bindItem);
                     }
@@ -1592,7 +1599,9 @@ class Spine extends Visual {
         if (spineData != null) {
 
             // Compute content
-            for (animation in spineData.skeletonData.animations) {
+            var anims = spineData.skeletonData.animations;
+            for (a in 0...anims.length) {
+                var animation = anims[a];
                 animationList.push({
                     id: animation.name,
                     name: animation.name
@@ -1600,7 +1609,8 @@ class Spine extends Visual {
             }
 
             // Send to editor
-            for (entry in animationList) {
+            for (e in 0...animationList.length) {
+                var entry = animationList[e];
                 collectionData.push(entry.getEditableData());
             }
         }
