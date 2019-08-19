@@ -1468,11 +1468,18 @@ class Spine extends Visual {
     } //updateSlotIndexMappings
 
     /** A more optimal way of listening to updated slots.
-        With this method, we are targeting a specific slot by its name.
+        With this method, we are targeting a specific slot by its name (global index internally).
         This allows the spine object to skip calls to the handler for every other slots we don't care about. */
-    inline function onUpdateSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
+    inline public function onUpdateSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
 
-        var index = globalSlotIndexForName(slotName);
+        onUpdateSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
+
+    } //onUpdateSlotWithName
+
+    /** A more optimal way of listening to updated slots.
+        With this method, we are targeting a specific slot by its global index.
+        This allows the spine object to skip calls to the handler for every other slots we don't care about. */
+    public function onUpdateSlotWithGlobalIndex(?owner:Entity, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
         if (updateSlotWithNameDispatchers == null) {
@@ -1491,12 +1498,42 @@ class Spine extends Visual {
         // Bind handler
         dispatch.onDispatch(owner, handleInfo);
 
-    } //onUpdateSpecificSlot
+    } //onUpdateSlotWithGlobalIndex
+
+    inline public function offUpdateSlotWithName(slotName:String, ?handleInfo:SlotInfo->Void):Void {
+
+        offUpdateSlotWithGlobalIndex(globalSlotIndexForName(slotName), handleInfo);
+
+    } //offUpdateSlotWithName
+
+    public function offUpdateSlotWithGlobalIndex(index:Int, ?handleInfo:SlotInfo->Void):Void {
+
+        // No binding map? Nothing to unbind
+        if (updateSlotWithNameDispatchers == null) {
+            return;
+        }
+
+        // Get dispatcher for this index
+        var dispatch = updateSlotWithNameDispatchers.get(index);
+        if (dispatch == null) {
+            // No dispatcher, nothing to unbind
+            return;
+        }
+
+        // Unbind handler (or every handler if handleInfo is null)
+        dispatch.offDispatch(handleInfo);
+
+    } //offUpdateSlotWithGlobalIndex
 
     /** Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`) */
-    inline function onUpdateVisibleSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
+    inline public function onUpdateVisibleSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
 
-        var index = globalSlotIndexForName(slotName);
+        onUpdateVisibleSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
+
+    } //onUpdateVisibleSlotWithName
+
+    /** Same as `onUpdateSlotWithGlobalIndex`, but fired only for visible slots (`drawDefault=true`) */
+    public function onUpdateVisibleSlotWithGlobalIndex(?owner:Entity, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
         if (updateVisibleSlotWithNameDispatchers == null) {
@@ -1515,7 +1552,32 @@ class Spine extends Visual {
         // Bind handler
         dispatch.onDispatch(owner, handleInfo);
 
-    } //onUpdateSpecificSlot
+    } //onUpdateVisibleSlotWithGlobalIndex
+
+    inline public function offUpdateVisibleSlotWithName(slotName:String, ?handleInfo:SlotInfo->Void):Void {
+
+        offUpdateVisibleSlotWithGlobalIndex(globalSlotIndexForName(slotName), handleInfo);
+
+    } //offUpdateVisibleSlotWithName
+
+    public function offUpdateVisibleSlotWithGlobalIndex(index:Int, ?handleInfo:SlotInfo->Void):Void {
+
+        // No binding map? Nothing to unbind
+        if (updateVisibleSlotWithNameDispatchers == null) {
+            return;
+        }
+
+        // Get dispatcher for this index
+        var dispatch = updateVisibleSlotWithNameDispatchers.get(index);
+        if (dispatch == null) {
+            // No dispatcher, nothing to unbind
+            return;
+        }
+
+        // Unbind handler (or every handler if handleInfo is null)
+        dispatch.offDispatch(handleInfo);
+
+    } //offUpdateVisibleSlotWithGlobalIndex
 
     inline function willEmitUpdateSlot(info:SlotInfo):Void {
 
