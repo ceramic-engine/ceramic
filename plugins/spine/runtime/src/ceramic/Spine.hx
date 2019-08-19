@@ -90,6 +90,9 @@ class Spine extends Visual {
     /** When a slot is about to be updated. */
     @event function updateSlot(info:SlotInfo);
 
+    /** When a visible slot is about to be updated. */
+    @event function updateVisibleSlot(info:SlotInfo);
+
     /** When the skeleton is going to be updated. */
     @event function updateSkeleton(delta:Float);
 
@@ -717,6 +720,24 @@ class Spine extends Visual {
             state.removeListener(listener);
         }
         
+        if (updateSlotWithNameDispatchersAsList != null) {
+            for (i in 0...updateSlotWithNameDispatchersAsList.length) {
+                var dispatch = updateSlotWithNameDispatchersAsList.unsafeGet(i);
+                dispatch.destroy();
+            }
+            updateSlotWithNameDispatchers = null;
+            updateSlotWithNameDispatchersAsList = null;
+        }
+        
+        if (updateVisibleSlotWithNameDispatchersAsList != null) {
+            for (i in 0...updateVisibleSlotWithNameDispatchersAsList.length) {
+                var dispatch = updateVisibleSlotWithNameDispatchersAsList.unsafeGet(i);
+                dispatch.destroy();
+            }
+            updateVisibleSlotWithNameDispatchers = null;
+            updateVisibleSlotWithNameDispatchersAsList = null;
+        }
+        
         skeletonData = null;
         stateData = null;
         state = null;
@@ -953,6 +974,9 @@ class Spine extends Visual {
                     if (regularRender) {
                         
                         emitUpdateSlot(slotInfo);
+                        if (slotInfo.drawDefault) {
+                            emitUpdateVisibleSlot(slotInfo);
+                        }
 
                         mesh = slotMeshes.get(slot.data.index);
 
@@ -1415,6 +1439,10 @@ class Spine extends Visual {
 
     var updateSlotWithNameDispatchersAsList:Array<DispatchSlotInfo> = null;
 
+    var updateVisibleSlotWithNameDispatchers:IntMap<DispatchSlotInfo> = null;
+
+    var updateVisibleSlotWithNameDispatchersAsList:Array<DispatchSlotInfo> = null;
+
     inline function updateSlotIndexMappings():Void {
 
         var skeletonSlots = skeletonData.slots;
@@ -1455,6 +1483,30 @@ class Spine extends Visual {
 
     } //onUpdateSpecificSlot
 
+    /** Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`) */
+    inline function onUpdateVisibleSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
+
+        var index = globalSlotIndexForName(slotName);
+
+        // Create update slot binding map if needed
+        if (updateVisibleSlotWithNameDispatchers == null) {
+            updateVisibleSlotWithNameDispatchers = new IntMap();
+            updateVisibleSlotWithNameDispatchersAsList = [];
+        }
+
+        // Get or create dispatcher for this index
+        var dispatch = updateVisibleSlotWithNameDispatchers.get(index);
+        if (dispatch == null) {
+            dispatch = new DispatchSlotInfo();
+            updateVisibleSlotWithNameDispatchers.set(index, dispatch);
+            updateVisibleSlotWithNameDispatchersAsList.push(dispatch);
+        }
+
+        // Bind handler
+        dispatch.onDispatch(owner, handleInfo);
+
+    } //onUpdateSpecificSlot
+
     inline function willEmitUpdateSlot(info:SlotInfo):Void {
 
         // Dispatch to handlers specifically listening to this slot index
@@ -1469,6 +1521,21 @@ class Spine extends Visual {
         }
 
     } //willEmitUpdateSlot
+
+    inline function willEmitUpdateVisibleSlot(info:SlotInfo):Void {
+
+        // Dispatch to handlers specifically listening to this slot index
+        if (updateVisibleSlotWithNameDispatchers != null) {
+            var index:Int = globalSlotIndexFromSkeletonSlotIndex[info.slot.data.index];
+            if (index > 0) {
+                var dispatch = updateVisibleSlotWithNameDispatchers.get(index);
+                if (dispatch != null) {
+                    dispatch.emitDispatch(info);
+                }
+            }
+        }
+
+    } //willEmitUpdateVisibleSlot
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
