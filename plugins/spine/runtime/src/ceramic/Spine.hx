@@ -945,7 +945,7 @@ class Spine extends Visual {
                     );
 
                     if (setup && setupBoneTransforms.get(bone.data.index) == null) {
-                        boneSetupTransform = new Transform();
+                        boneSetupTransform = TransformPool.get();
                         boneSetupTransform.setToTransform(slotInfo.transform);
                         setupBoneTransforms.set(bone.data.index, boneSetupTransform);
                     }
