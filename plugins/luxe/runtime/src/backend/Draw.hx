@@ -134,7 +134,7 @@ class Draw implements spec.Draw {
 
     var posList:Float32Array;
 
-    var tcoordList:Float32Array;
+    var uvList:Float32Array;
 
     var colorList:Float32Array;
 
@@ -147,7 +147,7 @@ class Draw implements spec.Draw {
             var maxFloats = maxVerts * 4;
 
             posList = new Float32Array(maxFloats);
-            tcoordList = new Float32Array(maxFloats);
+            uvList = new Float32Array(maxFloats);
             colorList = new Float32Array(maxFloats);
 
         }
@@ -310,11 +310,11 @@ class Draw implements spec.Draw {
 
     } //putInPosList
 
-    inline public function putInTcoordList(index:Int, value:Float):Void {
+    inline public function putInUvList(index:Int, value:Float):Void {
 
-        tcoordList[index] = value;
+        uvList[index] = value;
 
-    } //putInTcoordList
+    } //putInUvList
 
     inline public function putInColorList(index:Int, value:Float):Void {
 

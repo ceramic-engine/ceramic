@@ -1,5 +1,9 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
+using ceramic.Extensions;
+
 /** An implementation-independant GPU 2D renderer.
     To be used in pair with a draw backend implementation. */
 class Renderer extends Entity {
@@ -10,7 +14,7 @@ class Renderer extends Entity {
     public var drawnMeshes(default,null):Int = 0;
 
     var posFloats:Int = 0;
-    var tcoordsFloats:Int = 0;
+    var uvFloats:Int = 0;
     var colorFloats:Int = 0;
     var normalFloats:Int = 0;
 
@@ -27,7 +31,11 @@ class Renderer extends Entity {
     var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
 
-    var draw:backend.Draw = null;
+    var texWidthActual:Int = 0;
+    var texHeightActual:Int = 0;
+
+    var defaultPlainShader:backend.Shader = null;
+    var defaultTexturedShader:backend.Shader = null;
 
     var maxVertFloats:Int = 0;
 
@@ -53,7 +61,10 @@ class Renderer extends Entity {
 
     public function render(isMainRender:Bool):Void {
 
-        draw = app.backend.draw;
+        var draw = app.backend.draw;
+
+        defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
+        defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
 
 #if ceramic_debug_draw
         if (isMainRender) {
@@ -71,7 +82,7 @@ class Renderer extends Entity {
 #end
 
         posFloats = 0;
-        tcoordFloats = 0;
+        uvFloats = 0;
         colorFloats = 0;
         normalFloats = 0;
 
@@ -89,6 +100,9 @@ class Renderer extends Entity {
         lastRenderTarget = null;
         lastBlending = ceramic.Blending.NORMAL;
         lastComputedBlending = ceramic.Blending.NORMAL;
+
+        texWidthActual = 0;
+        texHeightActual = 0;
 
 #if ceramic_debug_rendering_option
         var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
@@ -159,7 +173,7 @@ class Renderer extends Entity {
 
     } //render
 
-    inline function useShader(shader:backend.Shader):Void {
+    inline function useShader(draw:backend.Draw, shader:backend.Shader):Void {
 
         activeShader = shader;
         draw.useShader(shader);
@@ -172,7 +186,7 @@ class Renderer extends Entity {
 
     } //useShader
 
-    inline function applyBlending(blending:ceramic.Blending) {
+    inline function applyBlending(draw:backend.Draw, blending:ceramic.Blending) {
 
         if (blending == ceramic.Blending.ADD) {
             draw.setBlendFuncSeparate(
@@ -218,7 +232,7 @@ class Renderer extends Entity {
             // No texture
             if (lastShader == null && quad.shader == null) {
                 // Default plain shader fallback
-                useShader(defaultPlainShader);
+                useShader(draw, defaultPlainShader);
             }
             lastTexture = null;
             lastTextureId = backend.TextureId.DEFAULT;
@@ -293,7 +307,7 @@ class Renderer extends Entity {
 #end
                             if (lastShader == null && quad.shader == null) {
                                 // Default textured shader fallback
-                                useShader(defaultTexturedShader);
+                                useShader(draw, defaultTexturedShader);
                             }
                             lastTexture = quad.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
@@ -307,7 +321,7 @@ class Renderer extends Entity {
 #end
                             if (lastShader == null && quad.shader == null) {
                                 // Default plain shader fallback
-                                useShader(defaultPlainShader);
+                                useShader(draw, defaultPlainShader);
                             }
                             lastTexture = null;
                             lastTextureId = backend.TextureId.DEFAULT;
@@ -326,15 +340,15 @@ class Renderer extends Entity {
 
                     if (lastShader != null) {
                         // Custom shader
-                        useShader(lastShader.backendItem);
+                        useShader(draw, lastShader.backendItem);
                     }
                     else if (lastTexture != null) {
                         // Default textured shader fallback
-                        useShader(defaultTexturedShader);
+                        useShader(draw, defaultTexturedShader);
                     }
                     else {
                         // Default plain shader fallback
-                        useShader(defaultPlainShader);
+                        useShader(draw, defaultPlainShader);
                     }
                 }
 
@@ -351,7 +365,7 @@ class Renderer extends Entity {
                     if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
 #end
                     lastComputedBlending = newComputedBlending;
-                    applyBlending(lastComputedBlending);
+                    applyBlending(draw, lastComputedBlending);
                 }
 
 #if ceramic_debug_rendering_option
@@ -412,7 +426,7 @@ class Renderer extends Entity {
 
             //tl
             draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY;
+            draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             //tr
@@ -444,7 +458,7 @@ class Renderer extends Entity {
         else {
             //tl
             draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY;
+            draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
@@ -498,7 +512,7 @@ class Renderer extends Entity {
         var uvY:Float = 0;
         var uvW:Float = 0;
         var uvH:Float = 0;
-        var tcoordFloats = this.tcoordFloats;
+        var uvFloats = this.uvFloats;
 
         if (lastTexture != null) {
 
@@ -522,43 +536,44 @@ class Renderer extends Entity {
             }
 
             //tl
-            draw.putInTcoordList(tcoordFloats++, uvX);
-            draw.putInTcoordList(tcoordFloats++, uvY);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX);
+            draw.putInUvList(uvFloats++, uvY);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
             //tr
-            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
-            draw.putInTcoordList(tcoordFloats++, uvY);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX + uvW);
+            draw.putInUvList(uvFloats++, uvY);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
             //br
-            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
-            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX + uvW);
+            draw.putInUvList(uvFloats++, uvY + uvH);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
             //bl
-            draw.putInTcoordList(tcoordFloats++, uvX);
-            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX);
+            draw.putInUvList(uvFloats++, uvY + uvH);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
             //tl2
-            draw.putInTcoordList(tcoordFloats++, uvX);
-            draw.putInTcoordList(tcoordFloats++, uvY);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX);
+            draw.putInUvList(uvFloats++, uvY);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
             //br2
-            draw.putInTcoordList(tcoordFloats++, uvX + uvW);
-            draw.putInTcoordList(tcoordFloats++, uvY + uvH);
-            draw.putInTcoordList(tcoordFloats++, 0);
-            draw.putInTcoordList(tcoordFloats++, 0);
+            draw.putInUvList(uvFloats++, uvX + uvW);
+            draw.putInUvList(uvFloats++, uvY + uvH);
+            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvFloats++, 0);
 
         } else {
             var i = 0;
-            while (i++ < 24)
-                draw.putInTcoordList(tcoordFloats++, 0);
+            while (i++ < 24) {
+                draw.putInUvList(uvFloats++, 0);
+            }
         }
 
-        this.tcoordFloats = tcoordFloats;
+        this.uvFloats = uvFloats;
 
         // Colors
         //
