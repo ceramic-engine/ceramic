@@ -68,7 +68,7 @@ class Spine extends Visual {
 
     var globalBoundParentSlotVisible:Bool = false;
 
-    var setupBoneTransforms:Map<String,Transform> = null;
+    var setupBoneTransforms:IntMap<Transform> = null;
 
     var firstBoundingBoxSlotIndex:Int = -1;
 
@@ -877,8 +877,8 @@ class Spine extends Visual {
             emitBeginRender(delta);
         }
 
-        if (setup) {
-            setupBoneTransforms = new Map();
+        if (setup && setupBoneTransforms == null) {
+            setupBoneTransforms = new IntMap();
         }
 
         // Set flip
@@ -944,10 +944,10 @@ class Spine extends Visual {
                         ty
                     );
 
-                    if (setup && !setupBoneTransforms.exists(bone.data.name)) {
+                    if (setup && setupBoneTransforms.get(bone.data.index) == null) {
                         boneSetupTransform = new Transform();
                         boneSetupTransform.setToTransform(slotInfo.transform);
-                        setupBoneTransforms.set(bone.data.name, boneSetupTransform);
+                        setupBoneTransforms.set(bone.data.index, boneSetupTransform);
                     }
 
                     if (regularRender) {
@@ -1182,7 +1182,7 @@ class Spine extends Visual {
 
                                 mesh.transform.identity();
 
-                                boneSetupTransform = setupBoneTransforms.get(bone.data.name);
+                                boneSetupTransform = setupBoneTransforms.get(bone.data.index);
                                 if (boneSetupTransform != null) {
                                     mesh.transform.translate(
                                         -boneSetupTransform.tx,
