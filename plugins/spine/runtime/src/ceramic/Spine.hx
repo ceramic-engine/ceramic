@@ -1324,21 +1324,50 @@ class Spine extends Visual {
                     for (s in 0...subSpines.length) {
                         var sub = subSpines.unsafeGet(s);
 
-                        // Parent slot to child slot
-                        if (sub.boundParentSlots != null && sub.boundParentSlots.get(slotGlobalIndex) != null) {
-                            var bindList = sub.boundParentSlots.get(slotGlobalIndex);
-                            for (bi in 0...bindList.length) {
-                                var bindInfo = bindList.unsafeGet(bi);
-                                
+                        // Skip invisible sub spines by default
+                        if (sub.visible || sub.renderWhenInvisible) {
+
+                            // Parent slot to child slot
+                            if (sub.boundParentSlots != null && sub.boundParentSlots.get(slotGlobalIndex) != null) {
+                                var bindList = sub.boundParentSlots.get(slotGlobalIndex);
+                                for (bi in 0...bindList.length) {
+                                    var bindInfo = bindList.unsafeGet(bi);
+                                    
+                                    // Keep parent info
+                                    if (slot.attachment == null) {
+                                        bindInfo.parentVisible = false;
+                                    }
+                                    else {
+
+                                        bindInfo.parentVisible = true;
+                                        bindInfo.parentDepth = slotInfo.depth;
+                                        bindInfo.parentTransform.setTo(
+                                            slotInfo.transform.a,
+                                            slotInfo.transform.b,
+                                            slotInfo.transform.c,
+                                            slotInfo.transform.d,
+                                            slotInfo.transform.tx,
+                                            slotInfo.transform.ty
+                                        );
+                                        bindInfo.parentSlot = slotInfo.slot;
+                                    }
+
+                                }
+                            }
+
+                            // Parent slot to every children
+                            if (sub.globalBoundParentSlotGlobalIndex == slotGlobalIndex) {
+
                                 // Keep parent info
                                 if (slot.attachment == null) {
-                                    bindInfo.parentVisible = false;
+                                    sub.globalBoundParentSlotVisible = false;
                                 }
                                 else {
 
-                                    bindInfo.parentVisible = true;
-                                    bindInfo.parentDepth = slotInfo.depth;
-                                    bindInfo.parentTransform.setTo(
+                                    sub.globalBoundParentSlotVisible = true;
+                                    sub.globalBoundParentSlotDepth = slotInfo.depth;
+                                    sub.globalBoundParentSlot = slotInfo.slot;
+                                    sub.transform.setTo(
                                         slotInfo.transform.a,
                                         slotInfo.transform.b,
                                         slotInfo.transform.c,
@@ -1346,40 +1375,15 @@ class Spine extends Visual {
                                         slotInfo.transform.tx,
                                         slotInfo.transform.ty
                                     );
-                                    bindInfo.parentSlot = slotInfo.slot;
+                                    sub.depth = z;
+                                    sub.depthRange = _globalBindDepthRange;
+
                                 }
 
-                            }
-                        }
-
-                        // Parent slot to every children
-                        if (sub.globalBoundParentSlotGlobalIndex == slotGlobalIndex) {
-
-                            // Keep parent info
-                            if (slot.attachment == null) {
-                                sub.globalBoundParentSlotVisible = false;
-                            }
-                            else {
-
-                                sub.globalBoundParentSlotVisible = true;
-                                sub.globalBoundParentSlotDepth = slotInfo.depth;
-                                sub.globalBoundParentSlot = slotInfo.slot;
-                                sub.transform.setTo(
-                                    slotInfo.transform.a,
-                                    slotInfo.transform.b,
-                                    slotInfo.transform.c,
-                                    slotInfo.transform.d,
-                                    slotInfo.transform.tx,
-                                    slotInfo.transform.ty
-                                );
-                                sub.depth = z;
-                                sub.depthRange = _globalBindDepthRange;
+                                // Increase z to give more precise depth 'space' in sub animation
+                                z += _globalBindDepthRange;
 
                             }
-
-                            // Increase z to give more precise depth 'space' in sub animation
-                            z += _globalBindDepthRange;
-
                         }
                     }
                 }
@@ -1403,8 +1407,12 @@ class Spine extends Visual {
         if (!setup && subSpines != null) {
             for (s in 0...subSpines.length) {
                 var sub = subSpines.unsafeGet(s);
-                sub.updateSkeleton(delta);
-                sub.render(delta, z, false);
+                
+                // Skip rendering of sub spines if they are not visible, by default
+                if (sub.visible || sub.renderWhenInvisible) {
+                    sub.updateSkeleton(delta);
+                    sub.render(delta, z, false);
+                }
             }
         }
 
