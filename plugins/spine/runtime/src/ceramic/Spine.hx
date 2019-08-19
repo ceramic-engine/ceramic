@@ -157,7 +157,7 @@ class Spine extends Visual {
         return skeletonScale;
     }
 
-    /** Hidden slots */
+    /** Hidden slots (slot blacklist) */
     @editable
     public var hiddenSlots(default,set):IntBoolMap = null;
     function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
@@ -165,6 +165,16 @@ class Spine extends Visual {
         this.hiddenSlots = hiddenSlots;
         renderDirty = true;
         return hiddenSlots;
+    }
+
+    /** Visible slots (slot whitelist) */
+    @editable
+    public var visibleSlots(default,set):IntBoolMap = null;
+    function set_visibleSlots(visibleSlots:IntBoolMap):IntBoolMap {
+        if (this.visibleSlots == visibleSlots) return visibleSlots;
+        this.visibleSlots = visibleSlots;
+        renderDirty = true;
+        return visibleSlots;
     }
 
     /** Disabled slots */
@@ -925,7 +935,7 @@ class Spine extends Visual {
 
             boundSlot = null;
             tintBlack = slot.data.darkColor != null;
-            // ⚠️ TODO clipping
+            // /!\ TODO clipping
             vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
             if (tintBlack) vertexSize += 4;
 
@@ -933,7 +943,7 @@ class Spine extends Visual {
             slotInfo.customTransform = null;
             slotInfo.depth = z;
             slotInfo.globalSlotIndex = slotGlobalIndex;
-            slotInfo.drawDefault = hiddenSlots == null || !hiddenSlots.get(slotGlobalIndex);
+            slotInfo.drawDefault = (hiddenSlots == null || !hiddenSlots.get(slotGlobalIndex)) && (visibleSlots == null || visibleSlots.get(slotGlobalIndex));
             slotInfo.slot = slot;
 
             offsetX = 0;
