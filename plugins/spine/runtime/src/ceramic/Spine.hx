@@ -1459,6 +1459,8 @@ class Spine extends Visual {
             }
         }
 
+        boundChildSlotsDirty = false;
+
     } //computeBoundChildSlots
 
 /// Helpers
