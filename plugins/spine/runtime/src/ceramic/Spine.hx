@@ -104,6 +104,24 @@ class Spine extends Visual {
     /** When a spine animation event is triggered. */
     @event function spineEvent(entry:TrackEntry, event:Event);
 
+/// Render status
+
+    var renderScheduled:Bool = false;
+
+    // Not sure this is needed, but it may prevent some unnecessary allocation
+    function renderNoParam():Void render(0, 0, false);
+    var renderDyn:Void->Void = null;
+
+    public var renderDirty(default,set):Bool = false;
+    inline function set_renderDirty(renderDirty:Bool):Bool {
+        if (renderDirty && pausedOrFrozen && !renderScheduled) {
+            renderScheduled = true;
+            if (renderDyn == null) renderDyn = renderNoParam;
+            app.onceImmediate(renderDyn);
+        }
+        return (this.renderDirty = renderDirty);
+    }
+
 /// Properties
 
     /** Skeleton origin X */
@@ -112,7 +130,7 @@ class Spine extends Visual {
     function set_skeletonOriginX(skeletonOriginX:Float):Float {
         if (this.skeletonOriginX == skeletonOriginX) return skeletonOriginX;
         this.skeletonOriginX = skeletonOriginX;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return skeletonOriginX;
     }
 
@@ -122,7 +140,7 @@ class Spine extends Visual {
     function set_skeletonOriginY(skeletonOriginY:Float):Float {
         if (this.skeletonOriginY == skeletonOriginY) return skeletonOriginY;
         this.skeletonOriginY = skeletonOriginY;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return skeletonOriginY;
     }
 
@@ -132,7 +150,7 @@ class Spine extends Visual {
     function set_skeletonScale(skeletonScale:Float):Float {
         if (this.skeletonScale == skeletonScale) return skeletonScale;
         this.skeletonScale = skeletonScale;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return skeletonScale;
     }
 
@@ -142,7 +160,7 @@ class Spine extends Visual {
     function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
         if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
         this.hiddenSlots = hiddenSlots;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return hiddenSlots;
     }
 
@@ -152,7 +170,7 @@ class Spine extends Visual {
     function set_disabledSlots(disabledSlots:IntBoolMap):IntBoolMap {
         if (this.disabledSlots == disabledSlots) return disabledSlots;
         this.disabledSlots = disabledSlots;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return disabledSlots;
     }
 
@@ -162,7 +180,7 @@ class Spine extends Visual {
     function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
         if (this.animationTriggers == animationTriggers) return animationTriggers;
         this.animationTriggers = animationTriggers;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return animationTriggers;
     }
 
@@ -197,7 +215,7 @@ class Spine extends Visual {
     function set_color(color:Color):Color {
         if (this.color == color) return color;
         this.color = color;
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return color;
     }
 
@@ -560,10 +578,7 @@ class Spine extends Visual {
         updateSkeleton(0);
         render(0, 0, true);
 
-        // If we are paused, ensure setup pos gets rendered once
-        if (pausedOrFrozen) {
-            render(0, 0, false);
-        }
+        renderDirty = true;
 
     } //computeContent
 
@@ -1342,6 +1357,9 @@ class Spine extends Visual {
             emitEndRender(delta);
         }
 
+        renderDirty = false;
+        renderScheduled = false;
+
         // Render children (if any)
         if (!setup && subSpines != null) {
             for (sub in subSpines) {
@@ -1387,6 +1405,10 @@ class Spine extends Visual {
 
     var globalSlotIndexFromSkeletonSlotIndex:Array<Int> = [];
 
+    var updateSlotWithNameDispatchers:IntMap<DispatchSlotInfo> = null;
+
+    var updateSlotWithNameDispatchersAsList:Array<DispatchSlotInfo> = null;
+
     inline function updateSlotIndexMappings():Void {
 
         var skeletonSlots = skeletonData.slots;
@@ -1400,6 +1422,47 @@ class Spine extends Visual {
         }
 
     } //updateSlotIndexMappings
+
+    /** A more optimal way of listening to updated slots.
+        With this method, we are targeting a specific slot by its name.
+        This allows the spine object to skip calls to the handler for every other slots we don't care about. */
+    inline function onUpdateSlotWithName(?owner:Entity, slotName:String, handleInfo:SlotInfo->Void):Void {
+
+        var index = globalSlotIndexForName(slotName);
+
+        // Create update slot binding map if needed
+        if (updateSlotWithNameDispatchers == null) {
+            updateSlotWithNameDispatchers = new IntMap();
+            updateSlotWithNameDispatchersAsList = [];
+        }
+
+        // Get or create dispatcher for this index
+        var dispatch = updateSlotWithNameDispatchers.get(index);
+        if (dispatch == null) {
+            dispatch = new DispatchSlotInfo();
+            updateSlotWithNameDispatchers.set(index, dispatch);
+            updateSlotWithNameDispatchersAsList.push(dispatch);
+        }
+
+        // Bind handler
+        dispatch.onDispatch(owner, handleInfo);
+
+    } //onUpdateSpecificSlot
+
+    inline function willEmitUpdateSlot(info:SlotInfo):Void {
+
+        // Dispatch to handlers specifically listening to this slot index
+        if (updateSlotWithNameDispatchers != null) {
+            var index:Int = globalSlotIndexFromSkeletonSlotIndex[info.slot.data.index];
+            if (index > 0) {
+                var dispatch = updateSlotWithNameDispatchers.get(index);
+                if (dispatch != null) {
+                    dispatch.emitDispatch(info);
+                }
+            }
+        }
+
+    } //willEmitUpdateSlot
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
@@ -1689,3 +1752,12 @@ class SlotInfo {
     public function new() {}
 
 } //SlotInfo
+
+@:allow(ceramic.Spine)
+private class DispatchSlotInfo extends Entity {
+
+    @event function dispatch(info:SlotInfo);
+
+    public function new() {}
+
+} //DispatchSlotInfo
