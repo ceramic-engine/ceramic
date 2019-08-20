@@ -823,7 +823,7 @@ class Spine extends Visual {
             return;
         }
 
-        emitUpdateSkeleton(delta);
+        emitUpdateSkeleton();
 
         if (resetSkeleton) {
             resetSkeleton = false;
@@ -843,7 +843,7 @@ class Spine extends Visual {
             // triggered when updating state
             if (destroyed) return;
 
-            emitUpdateWorldTransform(delta);
+            emitUpdateWorldTransform();
 
             skeleton.updateWorldTransform();
         }
@@ -910,7 +910,7 @@ class Spine extends Visual {
         var diffY:Float = height * skeletonOriginY;
 
         if (regularRender) {
-            emitBeginRender(delta);
+            emitBeginRender();
         }
 
         if (setup && setupBoneTransforms == null) {
@@ -1402,7 +1402,7 @@ class Spine extends Visual {
         this.firstBoundingBoxSlotIndex = firstBoundingBoxSlotIndex;
 
         if (regularRender) {
-            emitEndRender(delta);
+            emitEndRender();
         }
 
         renderDirty = false;
