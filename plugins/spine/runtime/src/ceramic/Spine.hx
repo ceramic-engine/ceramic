@@ -82,10 +82,10 @@ class Spine extends Visual {
     @event function complete();
 
     /** When a render begins. */
-    @event function beginRender(delta:Float);
+    @event function beginRender();
 
     /** When a render ends. */
-    @event function endRender(delta:Float);
+    @event function endRender();
 
     /** When a slot is about to be updated. */
     @event function updateSlot(info:SlotInfo);
@@ -94,11 +94,11 @@ class Spine extends Visual {
     @event function updateVisibleSlot(info:SlotInfo);
 
     /** When the skeleton is going to be updated. */
-    @event function updateSkeleton(delta:Float);
+    @event function updateSkeleton();
 
     /** When the world transform is going to be updated.
         Hook into this event to set custom bone transforms. */
-    @event function updateWorldTransform(delta:Float);
+    @event function updateWorldTransform();
 
     /** When the current animation chain finishes. If the chain is interrupted
         (by setting another animation), this event is canceled. */
@@ -112,15 +112,20 @@ class Spine extends Visual {
     var renderScheduled:Bool = false;
 
     // Not sure this is needed, but it may prevent some unnecessary allocation
-    function renderNoParam():Void render(0, 0, false);
-    var renderDyn:Void->Void = null;
+    function runScheduledRender():Void {
+        renderScheduled = false;
+        if (renderDirty) {
+            render(0, 0, false);
+        }
+    }
+    var runScheduledRenderDyn:Void->Void = null;
 
     public var renderDirty(default,set):Bool = false;
     inline function set_renderDirty(renderDirty:Bool):Bool {
         if (renderDirty && pausedOrFrozen && !renderScheduled) {
             renderScheduled = true;
-            if (renderDyn == null) renderDyn = renderNoParam;
-            app.onceImmediate(renderDyn);
+            if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
+            app.onceImmediate(runScheduledRenderDyn);
         }
         return (this.renderDirty = renderDirty);
     }
@@ -1401,7 +1406,6 @@ class Spine extends Visual {
         }
 
         renderDirty = false;
-        renderScheduled = false;
 
         // Render children (if any)
         if (!setup && subSpines != null) {
