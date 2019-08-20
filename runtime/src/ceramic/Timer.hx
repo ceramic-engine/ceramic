@@ -66,13 +66,17 @@ class Timer {
 
 // Public API
 
+    /** Execute a callback after the given delay in seconds.
+        @return a function to cancel this timer delay */
     inline public static function delay(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
 
         return schedule(owner, seconds, callback, -1);
 
     } //delay
 
-    public static function interval(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    /** Execute a callback periodically at the given interval in seconds.
+        @return a function to cancel this timer interval */
+    inline public static function interval(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
         
         return schedule(owner, seconds, callback, seconds);
 
