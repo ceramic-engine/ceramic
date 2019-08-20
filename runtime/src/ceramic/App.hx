@@ -219,6 +219,9 @@ class App extends Entity {
 
 /// Properties
 
+    /** Current frame delta time */
+    public var delta(default,null):Float;
+
     /** Backend instance */
     public var backend(default,null):Backend;
 
@@ -516,6 +519,9 @@ class App extends Entity {
     } //assetsLoaded
 
     function update(delta:Float):Void {
+
+        // Update frame delta time
+        this.delta = delta;
 
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
