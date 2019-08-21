@@ -14,7 +14,7 @@ interface Backend {
 
     var texts(default,null):backend.Texts;
 
-    var images(default,null):backend.Images;
+    var textures(default,null):backend.Textures;
 
     var screen(default,null):backend.Screen;
 

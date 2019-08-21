@@ -28,8 +28,8 @@ class Texture extends Entity {
     function set_density(density:Float):Float {
         if (this.density == density) return density;
         this.density = density;
-        width = app.backend.images.getImageWidth(backendItem) / density;
-        height = app.backend.images.getImageHeight(backendItem) / density;
+        width = app.backend.textures.getTextureWidth(backendItem) / density;
+        height = app.backend.textures.getTextureHeight(backendItem) / density;
         return density;
     }
 
@@ -37,17 +37,17 @@ class Texture extends Entity {
     function set_filter(filter:TextureFilter):TextureFilter {
         if (this.filter == filter) return filter;
         this.filter = filter;
-        app.backend.images.setTextureFilter(backendItem, filter);
+        app.backend.textures.setTextureFilter(backendItem, filter);
         return filter;
     }
 
-    public var backendItem:backend.Image;
+    public var backendItem:backend.Texture;
 
     public var asset:ImageAsset;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Image, density:Float = -1) {
+    public function new(backendItem:backend.Texture, density:Float = -1) {
 
         if (density == -1) density = screen.texturesDensity;
 
@@ -60,7 +60,7 @@ class Texture extends Entity {
 
         if (asset != null) asset.destroy();
 
-        app.backend.images.destroyImage(backendItem);
+        app.backend.textures.destroyTexture(backendItem);
         backendItem = null;
 
     } //destroy

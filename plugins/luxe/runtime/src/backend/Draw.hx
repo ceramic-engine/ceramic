@@ -214,7 +214,7 @@ class Draw implements spec.Draw {
 
     } //shaderCustomFloatAttributesSize
 
-    inline public function useRenderTarget(renderTarget:backend.Image):Void {
+    inline public function useRenderTarget(renderTarget:backend.Texture):Void {
 
         if (renderTarget != null) {
             var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget;
@@ -282,37 +282,37 @@ class Draw implements spec.Draw {
 
     } //setActiveTexture
 
-    inline public function textureBackendItemMatchesId(backendItem:backend.Image, textureId:backend.TextureId):Bool {
+    inline public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem : phoenix.Texture).texture == textureId;
 
     } //textureBackendItemMatchesId
 
-    inline public function getTextureId(backendItem:backend.Image):backend.TextureId {
+    inline public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem : phoenix.Texture).texture;
 
     } //getTextureId
 
-    inline public function getTextureSlot(backendItem:backend.Image):Int {
+    inline public function getTextureSlot(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).slot;
 
     } //getTextureSlot
 
-    inline public function getTextureWidthActual(backendItem:backend.Image):Int {
+    inline public function getTextureWidthActual(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).width_actual;
 
     } //getTextureWidthActual
 
-    inline public function getTextureHeightActual(backendItem:backend.Image):Int {
+    inline public function getTextureHeightActual(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).height_actual;
 
     } //getTextureHeightActual
 
-    inline public function bindTexture(backendItem:backend.Image):Void {
+    inline public function bindTexture(backendItem:backend.Texture):Void {
 
         return (backendItem : phoenix.Texture).bind();
 

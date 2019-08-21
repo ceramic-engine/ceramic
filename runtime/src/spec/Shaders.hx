@@ -2,7 +2,7 @@ package spec;
 
 import backend.LoadShaderOptions;
 import backend.Shader;
-import backend.Image;
+import backend.Texture;
 
 interface Shaders {
     
@@ -28,6 +28,6 @@ interface Shaders {
 
     function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void;
 
-    function setTexture(shader:Shader, name:String, image:Image):Void;
+    function setTexture(shader:Shader, name:String, texture:Texture):Void;
 
 } //Shaders

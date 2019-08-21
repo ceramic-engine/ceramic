@@ -7,11 +7,11 @@ import ceramic.Path;
 
 using StringTools;
 
-class Images implements spec.Images {
+class Textures implements spec.Textures {
 
     public function new() {}
 
-    public function load(path:String, ?options:backend.LoadImageOptions, done:Image->Void):Void {
+    public function load(path:String, ?options:backend.LoadTextureOptions, done:Texture->Void):Void {
 
         // Create empty texture
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
@@ -34,7 +34,7 @@ class Images implements spec.Images {
         // Is texture currently loading?
         if (loadingTextureCallbacks.exists(path)) {
             // Yes, just bind it
-            loadingTextureCallbacks.get(path).push(function(texture:Image) {
+            loadingTextureCallbacks.get(path).push(function(texture:Texture) {
                 if (texture != null) {
                     var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
                     loadedTexturesRetainCount.set(path, retain + 1);
@@ -59,7 +59,7 @@ class Images implements spec.Images {
         Luxe.resources.add(texture);
 
         // Create callbacks list with first entry
-        loadingTextureCallbacks.set(path, [function(texture:Image) {
+        loadingTextureCallbacks.set(path, [function(texture:Texture) {
             if (texture != null) {
                 var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
                 loadedTexturesRetainCount.set(path, retain + 1);
@@ -127,13 +127,13 @@ class Images implements spec.Images {
 
     var nextRenderIndex:Int = 0;
 
-    public function createImage(width:Int, height:Int):Image {
+    public function createTexture(width:Int, height:Int):Texture {
 
         return null;
 
-    } //createImage
+    } //createTexture
 
-    inline public function createRenderTarget(width:Int, height:Int):Image {
+    inline public function createRenderTarget(width:Int, height:Int):Texture {
 
         var id = 'render:' + (nextRenderIndex++);
 
@@ -149,7 +149,7 @@ class Images implements spec.Images {
 
     } //createRenderTarget
 
-    public function destroyImage(texture:Image):Void {
+    public function destroyTexture(texture:Texture):Void {
 
         var id = (texture:phoenix.Texture).id;
         if (loadedTexturesRetainCount.get(id) > 1) {
@@ -163,25 +163,25 @@ class Images implements spec.Images {
 
     } //destroy
 
-    inline public function getImageWidth(texture:Image):Int {
+    inline public function getTextureWidth(texture:Texture):Int {
 
         return (texture:phoenix.Texture).width;
 
     } //getWidth
 
-    inline public function getImageHeight(texture:Image):Int {
+    inline public function getTextureHeight(texture:Texture):Int {
 
         return (texture:phoenix.Texture).height;
 
     } //getHeight
 
-    inline public function getImagePixels(texture:Image):Null<UInt8Array> {
+    inline public function getTexturePixels(texture:Texture):Null<UInt8Array> {
 
         return null;
 
-    } //getImagePixels
+    } //getTexturePixels
 
-    inline public function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void {
+    inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
         switch (filter) {
             case LINEAR:
@@ -196,7 +196,7 @@ class Images implements spec.Images {
 
 /// Internal
 
-    var loadingTextureCallbacks:Map<String,Array<Image->Void>> = new Map();
+    var loadingTextureCallbacks:Map<String,Array<Texture->Void>> = new Map();
 
     var loadedTextures:Map<String,phoenix.Texture> = new Map();
 

@@ -35,7 +35,7 @@ class ImageAsset extends Asset {
         }
 
         log('Load image $path');
-        app.backend.images.load(path, {
+        app.backend.textures.load(path, {
         }, function(image) {
 
             if (image != null) {

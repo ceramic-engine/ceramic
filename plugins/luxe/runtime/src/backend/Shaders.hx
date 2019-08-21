@@ -94,7 +94,7 @@ class Shaders implements spec.Shaders {
 
     } //setFloatArray
 
-    inline public function setTexture(shader:Shader, name:String, texture:Image):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:Texture):Void {
         
         (shader:phoenix.Shader).set_texture(name, texture);
 

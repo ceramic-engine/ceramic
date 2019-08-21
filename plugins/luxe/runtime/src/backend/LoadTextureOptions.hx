@@ -1,5 +1,5 @@
 package backend;
 
-typedef LoadImageOptions = {
+typedef LoadTextureOptions = {
     ?premultiplyAlpha:Bool
 }

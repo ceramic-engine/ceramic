@@ -70,7 +70,7 @@ class Shaders implements spec.Shaders {
 
     } //setFloatArray
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Image):Void {
+    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
         
         //
 

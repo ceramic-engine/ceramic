@@ -21,7 +21,7 @@ class RenderTexture extends Texture {
 
         if (density == -1) density = screen.texturesDensity;
 
-        var backendItem = app.backend.images.createRenderTarget(
+        var backendItem = app.backend.textures.createRenderTarget(
             Math.round(width * density),
             Math.round(height * density)
         );
