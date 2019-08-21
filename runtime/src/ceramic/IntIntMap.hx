@@ -406,6 +406,14 @@ abstract IntIntMap(Map<Int,Int>) {
         return this.remove(key) ? 1 : 0;
     }
 
+    inline public function getInline(key:Int):Int {
+        return this.get(key);
+    }
+
+    inline public function existsInline(key:Int):Bool {
+        return this.exists(key);
+    }
+
 } //IntIntMap
 
 #end
