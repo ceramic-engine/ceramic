@@ -60,71 +60,97 @@ class IntIntMap {
 
     public function exists(key:Int):Bool {
 
-        if (key == FREE_KEY)
-            return hasFreeKey ? true : false;
-
-        var ptr = (phiMix(key) & mask) << 1;
-
-        var k = data.get(ptr);
-
-        if (k == FREE_KEY) {
-            // End of chain already
-            return false;
-        }
-        if (k == key) {
-            // We check FREE prior to this call
-            return true;
-        }
-
-        while (true)
-        {
-            // That's next index
-            ptr = (ptr + 2) & mask2;
-            k = data.get(ptr);
-            if (k == FREE_KEY) {
-                return false;
-            }
-            if (k == key) {
-                return true;
-            }
-        }
+        return existsInline(key);
 
     } //exists
 
+    inline public function existsInline(key:Int):Bool {
+
+        var res:Bool = false;
+
+        if (key == FREE_KEY) {
+            res = hasFreeKey ? true : false;
+        }
+        else {
+            var ptr = (phiMix(key) & mask) << 1;
+
+            var k = data.get(ptr);
+
+            if (k != FREE_KEY) {
+                if (k == key) {
+                    // We check FREE prior to this call
+                    res = true;
+                }
+                else {
+                    while (true)
+                    {
+                        // That's next index
+                        ptr = (ptr + 2) & mask2;
+                        k = data.get(ptr);
+                        if (k == FREE_KEY) {
+                            // res = false;
+                            break;
+                        }
+                        if (k == key) {
+                            res = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return res;
+
+    } //existsInline
+
     public function get(key:Int):Int {
 
-        if (key == FREE_KEY)
-            return hasFreeKey ? freeValue : NO_VALUE;
-
-        var ptr = (phiMix(key) & mask) << 1;
-        var ptrPlus1 = ptr + 1;
-
-        var k = data.get(ptr);
-
-        if (k == FREE_KEY) {
-            // End of chain already
-            return NO_VALUE;
-        }
-        if (k == key) {
-            // We check FREE prior to this call
-            return data.get(ptrPlus1);
-        }
-
-        while (true)
-        {
-            // That's next index
-            ptr = (ptr + 2) & mask2;
-            k = data.get(ptr);
-            if (k == FREE_KEY) {
-                return NO_VALUE;
-            }
-            if (k == key) {
-                ptrPlus1 = ptr + 1;
-                return data.get(ptrPlus1);
-            }
-        }
+        return getInline(key);
 
     } //get
+
+    inline public function getInline(key:Int):Int {
+
+        var res:Int = NO_VALUE;
+
+        if (key == FREE_KEY) {
+            res = hasFreeKey ? freeValue : NO_VALUE;
+        }
+        else {
+            var ptr = (phiMix(key) & mask) << 1;
+            var ptrPlus1 = ptr + 1;
+
+            var k = data.get(ptr);
+
+            if (k != FREE_KEY) {
+                if (k == key) {
+                    // We check FREE prior to this call
+                    res = data.get(ptrPlus1);
+                }
+                else {
+                    while (true)
+                    {
+                        // That's next index
+                        ptr = (ptr + 2) & mask2;
+                        k = data.get(ptr);
+                        if (k == FREE_KEY) {
+                            // res = NO_VALUE;
+                            break;
+                        }
+                        if (k == key) {
+                            ptrPlus1 = ptr + 1;
+                            res = data.get(ptrPlus1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return res;
+
+    } //getInline
 
     public function set(key:Int, value:Int):Int {
 

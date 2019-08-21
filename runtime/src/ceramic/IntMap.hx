@@ -34,18 +34,30 @@ class IntMap<V> {
 
     } //new
 
-    inline public function get(key:Int):V {
+    public function get(key:Int):V {
 
-        var index = keys.get(key);
-        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : null;
+        return getInline(key);
 
     } //get
 
-    inline public function exists(key:Int) {
+    inline public function getInline(key:Int):V {
 
-        return keys.exists(key);
+        var index = keys.getInline(key);
+        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : null;
+
+    } //getInline
+
+    public function exists(key:Int) {
+
+        return existsInline(key);
 
     } //exists
+
+    inline public function existsInline(key:Int) {
+
+        return keys.existsInline(key);
+
+    } //existsInline
 
     public function set(key:Int, value:V):Void {
 

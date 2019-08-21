@@ -16,8 +16,7 @@ class IntFloatMap {
     var nextFreeIndex:Int = 0;
 
     /** When this map is marked as iterable, this array will contain every key. */
-    public var iterableKeys(get,never):Array<Int>;
-    inline function get_iterableKeys():Array<Int> return keys.iterableKeys;
+    public var iterableKeys(default,null):Array<Int> = null;
 
     /** Values as they are stored.
         Can be used to iterate on values directly,
@@ -26,23 +25,39 @@ class IntFloatMap {
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 
-        keys = new IntIntMap(size, fillFactor, iterable);
+        keys = new IntIntMap(size, fillFactor, false);
         values = new Vector(size);
+        
+        if (iterable) {
+            iterableKeys = [];
+        }
 
     } //new
 
-    inline public function get(key:Int):Float {
+    public function get(key:Int):Float {
 
-        var index = keys.get(key);
-        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : 0.0;
+        return getInline(key);
 
     } //get
 
-    inline public function exists(key:Int) {
+    inline public function getInline(key:Int):Float {
 
-        return keys.exists(key);
+        var index = keys.getInline(key);
+        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : 0.0;
+
+    } //getInline
+
+    public function exists(key:Int) {
+
+        return existsInline(key);
 
     } //exists
+
+    inline public function existsInline(key:Int) {
+
+        return keys.existsInline(key);
+
+    } //existsInline
 
     public function set(key:Int, value:Float):Void {
 
@@ -59,6 +74,10 @@ class IntFloatMap {
             }
             values.set(nextFreeIndex, value);
             keys.set(key, nextFreeIndex + RESERVED_GAP);
+            // Update iterable keys
+            if (iterableKeys != null) {
+                iterableKeys.push(key);
+            }
 
             do {
                 // Move free index to next location
@@ -81,6 +100,10 @@ class IntFloatMap {
             }
             // Remove key
             keys.remove(key);
+            // Update iterable keys
+            if (iterableKeys != null) {
+                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+            }
         }
 
     } //remove

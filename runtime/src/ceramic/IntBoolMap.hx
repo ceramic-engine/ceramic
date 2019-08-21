@@ -17,8 +17,16 @@ abstract IntBoolMap(IntIntMap) {
         return this.exists(key);
     }
 
+    inline public function existsInline(key:Int):Bool {
+        return this.existsInline(key);
+    }
+
     inline public function get(key:Int):Bool {
         return this.get(key) != 0;
+    }
+
+    inline public function getInline(key:Int):Bool {
+        return this.getInline(key) != 0;
     }
 
     inline public function set(key:Int, value:Bool):Void {
