@@ -186,7 +186,7 @@ class Renderer extends Entity {
 
     } //useShader
 
-    inline function applyBlending(draw:backend.Draw, blending:ceramic.Blending) {
+    inline function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
 
         if (blending == ceramic.Blending.ADD) {
             draw.setBlendFuncSeparate(
@@ -218,7 +218,19 @@ class Renderer extends Entity {
             );
         }
 
-    } //applyBlending
+    } //useBlending
+
+    inline function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
+
+        if (renderTarget != null) {
+            draw.useRenderTarget(renderTarget.backendItem);
+            if (renderTarget.clearOnRender) draw.clear();
+        }
+        else {
+            draw.useRenderTarget(null);
+        }
+
+    } //useRenderTarget
 
     inline function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
 
@@ -365,7 +377,7 @@ class Renderer extends Entity {
                     if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
 #end
                     lastComputedBlending = newComputedBlending;
-                    applyBlending(draw, lastComputedBlending);
+                    useBlending(draw, lastComputedBlending);
                 }
 
 #if ceramic_debug_rendering_option
@@ -379,7 +391,7 @@ class Renderer extends Entity {
                     if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
 #end
                     lastRenderTarget = quad.computedRenderTarget;
-                    computeRenderTarget(lastRenderTarget);
+                    useRenderTarget(draw, lastRenderTarget);
                 }
 
                 stateDirty = false;
