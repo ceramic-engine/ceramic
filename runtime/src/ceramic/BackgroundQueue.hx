@@ -46,11 +46,13 @@ class BackgroundQueue extends Entity {
         #else
 
         // Defer in main thread if background threading is not available
-        app.onceImmediate(fn);
+        ceramic.App.app.onceImmediate(fn);
 
         #end
 
     } //schedule
+
+    #if cpp
 
     private function internalRunInBackground():Void {
 
@@ -75,6 +77,8 @@ class BackgroundQueue extends Entity {
         }
 
     } //internalRunInBackground
+
+    #end
 
     override function destroy():Void {
 
