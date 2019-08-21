@@ -11,15 +11,26 @@ class CollectionEntry {
 
     static var _nextId:Int = 1;
 
+    static var _nextIndex:Int = 1;
+
     @editable
     public var id:String;
 
     @editable
     public var name:String;
 
+    /** A unique index for this collection entry instance.
+        Warning:
+            this index is in no way predictable and may vary
+            for each entry between each run of the app!
+            This is intended to be used as a fast integer-typed runtime identifier,
+            but do not use this to identify entries when persisting data to disk etc... */
+    public var index(default,null):Int;
+
     /** Constructor */
     public function new(?id:String, ?name:String) {
 
+        this.index = (_nextIndex++);
         this.id = id != null ? id : 'id' + (_nextId++);
         this.name = name;
 
