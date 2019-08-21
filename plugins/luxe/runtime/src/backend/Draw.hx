@@ -214,6 +214,33 @@ class Draw implements spec.Draw {
 
     } //shaderCustomFloatAttributesSize
 
+    inline public function useRenderTarget(renderTarget:backend.Image):Void {
+
+        if (renderTarget != null) {
+            var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget;
+            luxeRenderer.target = renderTexture;
+            view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
+            view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
+            view.process();
+            GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+        }
+        else {
+            luxeRenderer.target = null;
+            view.transform.scale.x = defaultTransformScaleX;
+            view.transform.scale.y = defaultTransformScaleY;
+            view.viewport = defaultViewport;
+            view.process();
+            luxeRenderer.state.viewport(view.viewport.x, view.viewport.y, view.viewport.w, view.viewport.h);
+        }
+
+    } //useRenderTarget
+
+    inline public function clear():Void {
+
+        Luxe.renderer.clear(transparentColor);
+
+    } //clear
+
     inline public function enableBlending():Void {
 
         luxeRenderer.state.enable(GL.BLEND);
