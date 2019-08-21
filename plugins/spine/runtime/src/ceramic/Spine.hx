@@ -495,7 +495,7 @@ class Spine extends Visual {
         var foundKeys = [];
         for (i in 0...keys.length) {
             var key = keys.unsafeGet(i);
-            var mesh = slotMeshes.get(key);
+            var mesh = slotMeshes.getInline(key);
             if (mesh != null) {
                 foundKeys.push(key);
                 foundMeshes.push(mesh);
@@ -934,7 +934,7 @@ class Spine extends Visual {
             slotName = slot.data.name;
             slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
 
-            if (disabledSlots != null && disabledSlots.get(slotGlobalIndex)) {
+            if (disabledSlots != null && disabledSlots.getInline(slotGlobalIndex)) {
                 continue;
             }
 
@@ -948,7 +948,7 @@ class Spine extends Visual {
             slotInfo.customTransform = null;
             slotInfo.depth = z;
             slotInfo.globalSlotIndex = slotGlobalIndex;
-            slotInfo.drawDefault = (hiddenSlots == null || !hiddenSlots.get(slotGlobalIndex)) && (visibleSlots == null || visibleSlots.get(slotGlobalIndex));
+            slotInfo.drawDefault = (hiddenSlots == null || !hiddenSlots.getInline(slotGlobalIndex)) && (visibleSlots == null || visibleSlots.getInline(slotGlobalIndex));
             slotInfo.slot = slot;
 
             offsetX = 0;
@@ -958,7 +958,7 @@ class Spine extends Visual {
             if (slot.attachment != null)
             {
                 if (boundChildSlots != null) {
-                    boundSlot = boundChildSlots.get(slotGlobalIndex);
+                    boundSlot = boundChildSlots.getInline(slotGlobalIndex);
                 } else {
                     boundSlot = null;
                 }
@@ -980,7 +980,7 @@ class Spine extends Visual {
                         ty
                     );
 
-                    if (setup && setupBoneTransforms.get(bone.data.index) == null) {
+                    if (setup && setupBoneTransforms.getInline(bone.data.index) == null) {
                         boneSetupTransform = TransformPool.get();
                         boneSetupTransform.setToTransform(slotInfo.transform);
                         setupBoneTransforms.set(bone.data.index, boneSetupTransform);
@@ -993,7 +993,7 @@ class Spine extends Visual {
                             emitUpdateVisibleSlot(slotInfo);
                         }
 
-                        mesh = slotMeshes.get(slot.data.index);
+                        mesh = slotMeshes.getInline(slot.data.index);
 
                         if (boundSlot == null || boundSlot.parentVisible) {
 
@@ -1221,7 +1221,7 @@ class Spine extends Visual {
 
                                 mesh.transform.identity();
 
-                                boneSetupTransform = setupBoneTransforms.get(bone.data.index);
+                                boneSetupTransform = setupBoneTransforms.getInline(bone.data.index);
                                 if (boneSetupTransform != null) {
                                     mesh.transform.translate(
                                         -boneSetupTransform.tx,
@@ -1318,7 +1318,7 @@ class Spine extends Visual {
 
             if (regularRender) {
                 if (emptySlotMesh) {
-                    mesh = slotMeshes.get(slot.data.index);
+                    mesh = slotMeshes.getInline(slot.data.index);
                     if (mesh != null) {
                         mesh.visible = false;
                     }
@@ -1333,8 +1333,8 @@ class Spine extends Visual {
                         if (sub.visible || sub.renderWhenInvisible) {
 
                             // Parent slot to child slot
-                            if (sub.boundParentSlots != null && sub.boundParentSlots.get(slotGlobalIndex) != null) {
-                                var bindList = sub.boundParentSlots.get(slotGlobalIndex);
+                            if (sub.boundParentSlots != null && sub.boundParentSlots.getInline(slotGlobalIndex) != null) {
+                                var bindList = sub.boundParentSlots.getInline(slotGlobalIndex);
                                 for (bi in 0...bindList.length) {
                                     var bindInfo = bindList.unsafeGet(bi);
                                     
@@ -1500,7 +1500,7 @@ class Spine extends Visual {
         }
 
         // Get or create dispatcher for this index
-        var dispatch = updateSlotWithNameDispatchers.get(index);
+        var dispatch = updateSlotWithNameDispatchers.getInline(index);
         if (dispatch == null) {
             dispatch = new DispatchSlotInfo();
             updateSlotWithNameDispatchers.set(index, dispatch);
@@ -1597,7 +1597,7 @@ class Spine extends Visual {
         if (updateSlotWithNameDispatchers != null) {
             var index:Int = globalSlotIndexFromSkeletonSlotIndex[info.slot.data.index];
             if (index > 0) {
-                var dispatch = updateSlotWithNameDispatchers.get(index);
+                var dispatch = updateSlotWithNameDispatchers.getInline(index);
                 if (dispatch != null) {
                     dispatch.emitDispatch(info);
                 }
@@ -1612,7 +1612,7 @@ class Spine extends Visual {
         if (updateVisibleSlotWithNameDispatchers != null) {
             var index:Int = globalSlotIndexFromSkeletonSlotIndex[info.slot.data.index];
             if (index > 0) {
-                var dispatch = updateVisibleSlotWithNameDispatchers.get(index);
+                var dispatch = updateVisibleSlotWithNameDispatchers.getInline(index);
                 if (dispatch != null) {
                     dispatch.emitDispatch(info);
                 }
@@ -1700,7 +1700,7 @@ class Spine extends Visual {
 
         if (hitWithFirstBoundingBox) {
             if (firstBoundingBoxSlotIndex != -1) {
-                var mesh = slotMeshes.get(firstBoundingBoxSlotIndex);
+                var mesh = slotMeshes.getInline(firstBoundingBoxSlotIndex);
                 if (mesh != null) {
                     mesh.complexHit = true;
                     return mesh.hits(x, y);
@@ -1714,7 +1714,7 @@ class Spine extends Visual {
             }
         }
         else if (hitWithSlotIndex != -1) {
-            var mesh = slotMeshes.get(hitWithSlotIndex);
+            var mesh = slotMeshes.getInline(hitWithSlotIndex);
             if (mesh != null) {
                 mesh.complexHit = true;
                 return mesh.hits(x, y);
