@@ -692,7 +692,7 @@ class Spine extends Visual {
         frozen = false;
         muteEvents = true;
 
-        var tracks = state.tracks;
+        /*var tracks = state.tracks;
         for (i in 0...tracks.length) {
             var aTrack = tracks[i];
             if (aTrack == null) break;
@@ -706,7 +706,16 @@ class Spine extends Visual {
             if (track != null) {
                 track.trackTime = _trackTimes[i];
             }
+        }*/
+
+        // This ensure every track will be updated
+        var tracks = state.tracks;
+        for (i in 0...tracks.length) {
+            var aTrack = tracks[i];
+            if (aTrack == null) continue;
+            aTrack.delay = 0;
         }
+        
         updateSkeleton(0);
         render(0, 0, false);
 
