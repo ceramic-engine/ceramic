@@ -48,7 +48,7 @@ class Spine extends Visual {
 
     var listener:SpineListener;
 
-    var slotMeshes:IntMap<Mesh> = new IntMap(16, 0.5, true);
+    var slotMeshes:IntMap<Mesh> = new IntMap(16, 0.5, true); // TODO This could be an array or vector
 
     var slotInfo:SlotInfo = new SlotInfo();
 
@@ -160,6 +160,16 @@ class Spine extends Visual {
         this.skeletonScale = skeletonScale;
         renderDirty = true;
         return skeletonScale;
+    }
+
+    /** Force tint black even if skeleton doesn't need it */
+    @editable
+    public var forceTintBlack(default,set):Bool = false;
+    function set_forceTintBlack(forceTintBlack:Bool):Bool {
+        if (this.forceTintBlack == forceTintBlack) return forceTintBlack;
+        this.forceTintBlack = forceTintBlack;
+        renderDirty = true;
+        return forceTintBlack;
     }
 
     /** Hidden slots (slot blacklist) */
@@ -948,7 +958,7 @@ class Spine extends Visual {
             }
 
             boundSlot = null;
-            tintBlack = slot.data.darkColor != null;
+            tintBlack = slot.data.darkColor != null || forceTintBlack;
             // /!\ TODO clipping
             vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
             if (tintBlack) vertexSize += 4;
@@ -1089,10 +1099,18 @@ class Spine extends Visual {
 
                                         if (tintBlack) {
                                             a = skeleton.color.a * slot.color.a * meshAttachment.getColor().a * alpha;
-                                            r = skeleton.color.r * slot.darkColor.r * meshAttachment.getColor().r * a;
-                                            g = skeleton.color.g * slot.darkColor.g * meshAttachment.getColor().g * a;
-                                            b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b * a;
-                                            a = slot.darkColor.a;
+                                            if (slot.darkColor != null) {
+                                                r = skeleton.color.r * slot.darkColor.r * meshAttachment.getColor().r * a;
+                                                g = skeleton.color.g * slot.darkColor.g * meshAttachment.getColor().g * a;
+                                                b = skeleton.color.b * slot.darkColor.b * meshAttachment.getColor().b * a;
+                                                a = slot.darkColor.a;
+                                            }
+                                            else {
+                                                r = 0;
+                                                g = 0;
+                                                b = 0;
+                                                a = 1;
+                                            }
 
                                             if (color != Color.WHITE) {
                                                 r *= color.redFloat;
@@ -1107,11 +1125,11 @@ class Spine extends Visual {
                                                 k = n + vertexSize - 1;
                                                 vertices[k] = a;
                                                 k -= 3;
-                                                mesh.vertices.unsafeSet(k, r);
+                                                vertices.unsafeSet(k, r);
                                                 k++;
-                                                mesh.vertices.unsafeSet(k, g);
+                                                vertices.unsafeSet(k, g);
                                                 k++;
-                                                mesh.vertices.unsafeSet(k, b);
+                                                vertices.unsafeSet(k, b);
                                                 n += vertexSize;
                                             }
                                         }
@@ -1143,10 +1161,18 @@ class Spine extends Visual {
 
                                         if (tintBlack) {
                                             a = skeleton.color.a * slot.color.a * regionAttachment.getColor().a * alpha;
-                                            r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * a;
-                                            g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * a;
-                                            b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * a;
-                                            a = slot.darkColor.a;
+                                            if (slot.darkColor != null) {
+                                                r = skeleton.color.r * slot.darkColor.r * regionAttachment.getColor().r * a;
+                                                g = skeleton.color.g * slot.darkColor.g * regionAttachment.getColor().g * a;
+                                                b = skeleton.color.b * slot.darkColor.b * regionAttachment.getColor().b * a;
+                                                a = slot.darkColor.a;
+                                            }
+                                            else {
+                                                r = 0;
+                                                g = 0;
+                                                b = 0;
+                                                a = 1;
+                                            }
 
                                             if (color != Color.WHITE) {
                                                 r *= color.redFloat;
