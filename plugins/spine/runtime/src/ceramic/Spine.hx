@@ -115,14 +115,19 @@ class Spine extends Visual {
     function runScheduledRender():Void {
         renderScheduled = false;
         if (renderDirty) {
-            render(0, 0, false);
+            if (visible || renderWhenInvisible) {
+                render(0, 0, false);
+            }
+            else {
+                renderDirty = false;
+            }
         }
     }
     var runScheduledRenderDyn:Void->Void = null;
 
     public var renderDirty(default,set):Bool = false;
     inline function set_renderDirty(renderDirty:Bool):Bool {
-        if (renderDirty && pausedOrFrozen && !renderScheduled) {
+        if (renderDirty && pausedOrFrozen && !renderScheduled && (visible || renderWhenInvisible)) {
             renderScheduled = true;
             if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
             app.onceImmediate(runScheduledRenderDyn);
@@ -231,8 +236,25 @@ class Spine extends Visual {
         return hitWithFirstBoundingBox;
     }
 
+    override function set_visible(visible:Bool):Bool {
+        if (this.visible == visible) return visible;
+        this.visible = visible;
+        visibilityDirty = true;
+        // When changing from invisible to visible, we should render
+        if (visible && !renderWhenInvisible) renderDirty = true;
+        return visible;
+    }
+
     @editable
-    public var renderWhenInvisible:Bool = false;
+    public var renderWhenInvisible(default,set):Bool = false;
+    function set_renderWhenInvisible(renderWhenInvisible:Bool):Bool {
+        if (this.renderWhenInvisible == renderWhenInvisible) return renderWhenInvisible;
+        this.renderWhenInvisible = renderWhenInvisible;
+        if (!visible && renderWhenInvisible) {
+            renderDirty = true;
+        }
+        return renderWhenInvisible;
+    }
 
     /** Is `true` if this spine animation has a parent animation. */
     public var hasParentSpine(default,null):Bool = false;
@@ -632,14 +654,14 @@ class Spine extends Visual {
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         super.set_width(width);
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return width;
     }
 
     override function set_height(height:Float):Float {
         if (_height == height) return height;
         super.set_height(height);
-        if (pausedOrFrozen) render(0, 0, false);
+        renderDirty = true;
         return height;
     }
     
