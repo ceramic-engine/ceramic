@@ -349,6 +349,22 @@ class Draw implements spec.Draw {
 
     } //putInColorList
 
+    inline public function beginDrawQuad():Void {
+
+    } //beginDrawQuad
+
+    inline public function endDrawQuad():Void {
+
+    } //endDrawQuad
+
+    inline public function beginDrawMesh():Void {
+
+    } //beginDrawMesh
+
+    inline public function endDrawMesh():Void {
+
+    } //endDrawMesh
+
 #else
 
 /// Internal

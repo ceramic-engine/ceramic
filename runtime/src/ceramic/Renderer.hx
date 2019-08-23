@@ -400,7 +400,7 @@ class Renderer extends Entity {
 
         // Update num vertices
         visualNumVertices = 6;
-        countAfter = posFloats + visualNumVertices * 4;
+        var countAfter = posFloats + visualNumVertices * 4;
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
@@ -430,11 +430,12 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var posFloats:Int = this.posFloats;
 
+        // Let backend know we will start sending quad data
+        draw.beginDrawQuad();
+
         // Position
-        n = posFloats;
+        var n = posFloats;
         if (customFloatAttributesSize == 0) {
-            var n8 = matTX + matA * w + matC * h;
-            var n9 = matTY + matB * w + matD * h;
 
             //tl
             draw.putInPosList(posFloats++, matTX);
@@ -446,6 +447,10 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTY + matB * w);
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
+
+            var n8 = matTX + matA * w + matC * h;
+            var n9 = matTY + matB * w + matD * h;
+
             //br
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
@@ -468,13 +473,14 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, 0);
         }
         else {
+
             //tl
             draw.putInPosList(posFloats++, matTX);
             draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
             //tr
             draw.putInPosList(posFloats++, matTX + matA * w);
@@ -482,15 +488,19 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
+            
+            var n8 = matTX + matA * w + matC * h;
+            var n9 = matTY + matB * w + matD * h;
+
             //br
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
             //bl
             draw.putInPosList(posFloats++, matTX + matC * h);
@@ -498,7 +508,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
             //tl2
             draw.putInPosList(posFloats++, matTX);
@@ -506,7 +516,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
             //br2
             draw.putInPosList(posFloats++, n8);
@@ -514,7 +524,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, z);
             draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(pos_floats++, 0.0);
+                draw.putInPosList(posFloats++, 0.0);
             }
         }
 
@@ -617,6 +627,9 @@ class Renderer extends Entity {
             draw.putInColorList(colorFloats++, a);
             i += 4;
         }
+
+        // Let backend know we did finish sending quad data
+        draw.endDrawQuad();
 
         this.colorFloats = colorFloats;
 
