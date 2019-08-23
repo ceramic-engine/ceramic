@@ -5,6 +5,10 @@ import luxe.Resources;
 import luxe.options.ResourceOptions;
 import ceramic.Path;
 
+#if cpp
+import opengl.GL;
+#end
+
 using StringTools;
 
 class Textures implements spec.Textures {
@@ -193,6 +197,52 @@ class Textures implements spec.Textures {
         }
 
     } //setTextureFilter
+
+    #if cpp
+
+    static var _maxTextureWidth:Int = -1;
+    static var _maxTextureHeight:Int = -1;
+
+    // Just a dummy method to force opengl headers to be imported
+    // in our generated c++ file
+    @:noCompletion @:keep function importGlHeaders():Void {
+        GL.glClear(0);
+    } //importGlHeaders
+
+    inline function computeMaxTextureSizeIfNeeded() {
+
+        if (_maxTextureWidth == -1) {
+            var maxSize:Array<Int> = [0];
+            GL.glGetIntegerv(GL.GL_MAX_TEXTURE_SIZE, maxSize);
+            _maxTextureWidth = maxSize[0];
+            _maxTextureHeight = maxSize[0];
+        }
+
+    } //computeMaxTextureSizeIfNeeded
+
+    #end
+
+    public function maxTextureWidth():Int {
+
+        #if cpp
+        computeMaxTextureSizeIfNeeded();
+        return _maxTextureWidth;
+        #else
+        return 2048;
+        #end
+
+    } //maxTextureWidth
+
+    public function maxTextureHeight():Int {
+
+        #if cpp
+        computeMaxTextureSizeIfNeeded();
+        return _maxTextureHeight;
+        #else
+        return 2048;
+        #end
+
+    } //maxTextureHeight
 
 /// Internal
 
