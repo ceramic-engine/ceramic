@@ -20,15 +20,30 @@ class TextureTilePacker extends Entity {
     var numCols:Int = 0;
 
     var numRows:Int = 0;
+    
+    var maxPixelTextureWidth:Int = 0;
 
-    public function new(autoRender:Bool, padWidth:Int = 16, padHeight:Int = 16, margin:Int = 1) {
+    var maxPixelTextureHeight:Int = 0;
+
+    public function new(autoRender:Bool, maxPixelTextureWidth:Int = -1, maxPixelTextureHeight:Int = -1, padWidth:Int = 16, padHeight:Int = 16, margin:Int = 1) {
 
         this.padWidth = padWidth;
         this.padHeight = padHeight;
         this.margin = margin;
 
-        var textureSize = Std.int(2048 / screen.texturesDensity);
-        texture = new RenderTexture(textureSize, textureSize);
+        this.maxPixelTextureWidth = maxPixelTextureWidth;
+        this.maxPixelTextureHeight = maxPixelTextureHeight;
+
+        if (maxPixelTextureWidth == -1) {
+            maxPixelTextureWidth = Std.int(2048 / screen.texturesDensity);
+        }
+        if (maxPixelTextureHeight == -1) {
+            maxPixelTextureHeight = Std.int(2048 / screen.texturesDensity);
+        }
+
+        var textureWidth = Std.int(Math.min(maxPixelTextureWidth, 2048 / screen.texturesDensity));
+        var textureHeight = Std.int(Math.min(maxPixelTextureHeight, 2048 / screen.texturesDensity));
+        texture = new RenderTexture(textureWidth, textureHeight);
 
         if (autoRender) {
             texture.autoRender = true;
@@ -166,7 +181,7 @@ class TextureTilePacker extends Entity {
 
         // No space available, use another packer (with another texture)
         if (nextPacker == null) {
-            nextPacker = new TextureTilePacker(texture.autoRender, padWidth, padHeight, margin);
+            nextPacker = new TextureTilePacker(texture.autoRender, maxPixelTextureWidth, maxPixelTextureHeight, padWidth, padHeight, margin);
         }
         return nextPacker.allocTile(width, height);
 
