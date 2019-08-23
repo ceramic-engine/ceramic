@@ -349,7 +349,7 @@ class Draw implements spec.Draw {
 
     } //putInColorList
 
-    inline public function beginDrawQuad():Void {
+    inline public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     } //beginDrawQuad
 
@@ -357,7 +357,7 @@ class Draw implements spec.Draw {
 
     } //endDrawQuad
 
-    inline public function beginDrawMesh():Void {
+    inline public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
     } //beginDrawMesh
 

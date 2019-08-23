@@ -39,7 +39,6 @@ class Renderer extends Entity {
 
     var maxVertFloats:Int = 0;
 
-    var visualNumVertices:Int = 0;
     var quad:ceramic.Quad = null;
     var mesh:ceramic.Mesh = null;
 
@@ -269,7 +268,7 @@ class Renderer extends Entity {
             if (!stateDirty) {
                 if (quad.texture != lastTexture) {
                     if (quad.texture != null && lastTexture != null) {
-                        // Different ceramic textures could use the same GL texture
+                        // Different ceramic textures could use the same backend texture
                         if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
                             stateDirty = true;
                         }
@@ -399,7 +398,7 @@ class Renderer extends Entity {
         }
 
         // Update num vertices
-        visualNumVertices = 6;
+        var visualNumVertices = 6;
         var countAfter = posFloats + visualNumVertices * 4;
 
         // Submit the current batch if we exceed the max buffer size
@@ -431,7 +430,7 @@ class Renderer extends Entity {
         var posFloats:Int = this.posFloats;
 
         // Let backend know we will start sending quad data
-        draw.beginDrawQuad();
+        draw.beginDrawQuad(quad);
 
         // Position
         var n = posFloats;
@@ -490,7 +489,7 @@ class Renderer extends Entity {
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
-            
+
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
@@ -599,10 +598,10 @@ class Renderer extends Entity {
 
         // Colors
         //
-        var r:Float = 1;
-        var g:Float = 1;
-        var b:Float = 1;
-        var a:Float = 1;
+        var r:Float;
+        var g:Float;
+        var b:Float;
+        var a:Float;
 
         if (stencilClip) {
             a = 1;
@@ -628,15 +627,361 @@ class Renderer extends Entity {
             i += 4;
         }
 
+        this.colorFloats = colorFloats;
+
         // Let backend know we did finish sending quad data
         draw.endDrawQuad();
-
-        this.colorFloats = colorFloats;
 
         // Increase counts
         this.z = z + 0.001;
 
     } //drawQuad
+
+    inline function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+
+#if ceramic_debug_draw
+        drawnMeshes++;
+#end
+        // The following code is doing pretty much the same thing as quads, but for meshes.
+        // We could try to refactor to prevent redundancy but this is not required as our
+        // main concern here is raw performance and anyway this code won't be updated often.
+
+        if (stencilClip) {
+            // Special case of drawing into stencil buffer
+
+            // No texture
+            if (lastShader == null && mesh.shader == null) {
+                // Default plain shader fallback
+                useShader(defaultPlainShader);
+            }
+            lastTexture = null;
+            lastTextureId = backend.TextureId.DEFAULT;
+            draw.setActiveTexture(lastTextureSlot);
+
+            // Default blending
+            draw.setBlendFuncSeparate(
+                backend.BlendMode.ONE,
+                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                backend.BlendMode.ONE,
+                backend.BlendMode.ONE_MINUS_SRC_ALPHA
+            );
+            lastBlending = ceramic.Blending.NORMAL;
+
+            stateDirty = false;
+
+            // No render target when writing to stencil buffer
+            draw.setRenderTarget(lastRenderTarget);
+        }
+        else {
+            // Check if state is dirty
+            if (!stateDirty) {
+                if (mesh.texture != lastTexture) {
+                    if (mesh.texture != null && lastTexture != null) {
+                        // Different ceramic textures could use the same backend texture
+                        if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
+                            stateDirty = true;
+                        }
+                    } else {
+                        stateDirty = true;
+                    }
+                }
+                if (!stateDirty) {
+                    stateDirty =
+                        mesh.shader != lastShader ||
+                        (mesh.blending != lastBlending &&
+                        (
+                            (mesh.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                            (mesh.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                        )) ||
+#if ceramic_debug_rendering_option
+                        mesh.debugRendering != lastDebugRendering ||
+#end
+                        mesh.computedRenderTarget != lastRenderTarget;
+                }
+            }
+
+            if (stateDirty) {
+#if ceramic_debug_draw
+                if (debugDraw) trace('-- flush --');
+#end
+                flush(draw);
+
+                // Update texture
+                if (mesh.texture != lastTexture) {
+                    if (mesh.texture != null && lastTexture != null) {
+                        if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
+                            lastTexture = mesh.texture;
+                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
+                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
+                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
+                            draw.bindTexture(lastTexture.backendItem);
+                        }
+                    } else {
+                        if (mesh.texture != null) {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
+                            if (lastShader == null && mesh.shader == null) {
+                                // Default textured shader fallback
+                                useShader(draw, defaultTexturedShader);
+                            }
+                            lastTexture = mesh.texture;
+                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
+                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
+                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
+                            draw.bindTexture(lastTexture.backendItem);
+                        } else {
+#if ceramic_debug_draw
+                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
+#end
+                            if (lastShader == null && mesh.shader == null) {
+                                // Default plain shader fallback
+                                useShader(draw, defaultPlainShader);
+                            }
+                            lastTexture = null;
+                            lastTextureId = backend.TextureId.DEFAULT;
+                            draw.setActiveTexture(lastTextureSlot);
+                            draw.bindNoTexture(); // This was commented out. Why? Try to run uncommented
+                        }
+                    }
+                }
+
+                // Update shader
+                if (mesh.shader != lastShader) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- shader ' + lastShader + ' -> ' + mesh.shader);
+#end
+                    lastShader = mesh.shader;
+
+                    if (lastShader != null) {
+                        // Custom shader
+                        useShader(draw, lastShader.backendItem);
+                    }
+                    else if (lastTexture != null) {
+                        // Default textured shader fallback
+                        useShader(draw, defaultTexturedShader);
+                    }
+                    else {
+                        // Default plain shader fallback
+                        useShader(draw, defaultPlainShader);
+                    }
+                }
+
+                // Update blending
+                var newComputedBlending = mesh.blending;
+                if (newComputedBlending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+                    newComputedBlending = ceramic.Blending.ALPHA;
+                }
+                else if (newComputedBlending == ceramic.Blending.ADD) {
+                    newComputedBlending = ceramic.Blending.NORMAL;
+                }
+                if (newComputedBlending != lastComputedBlending) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
+#end
+                    lastComputedBlending = newComputedBlending;
+                    useBlending(draw, lastComputedBlending);
+                }
+
+#if ceramic_debug_rendering_option
+                lastDebugRendering = mesh.debugRendering;
+                draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+#end
+
+                // Update render target
+                if (mesh.computedRenderTarget != lastRenderTarget) {
+#if ceramic_debug_draw
+                    if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + mesh.computedRenderTarget);
+#end
+                    lastRenderTarget = mesh.computedRenderTarget;
+                    useRenderTarget(draw, lastRenderTarget);
+                }
+
+                stateDirty = false;
+            }
+        }
+
+        // Fetch matrix
+        //
+        var matA:Float = quad.a;
+        var matB:Float = quad.b;
+        var matC:Float = quad.c;
+        var matD:Float = quad.d;
+        var matTX:Float = quad.tx;
+        var matTY:Float = quad.ty;
+        var z:Float = this.z;
+
+        // Color
+        var meshColors = mesh.colors;
+        var meshSingleColor = stencilClip || mesh.colorMapping == MESH;
+        var meshIndicesColor = !stencilClip && mesh.colorMapping == INDICES;
+
+        // Data
+        var meshUvs = mesh.uvs;
+        var meshVertices = mesh.vertices;
+        var meshIndices = mesh.indices;
+
+        // Let backend know we will start sending mesh data
+        draw.beginDrawMesh(mesh); // TODO pass mesh info
+
+#if ceramic_debug_rendering_option
+        // TODO avoid allocating an array
+        if (lastDebugRendering == ceramic.DebugRendering.WIREFRAME) {
+            meshIndices = [];
+            i = 0;
+            while (i < mesh.indices.length) {
+                meshIndices.push(mesh.indices[i]);
+                meshIndices.push(mesh.indices[i+1]);
+                meshIndices.push(mesh.indices[i+1]);
+                meshIndices.push(mesh.indices[i+2]);
+                meshIndices.push(mesh.indices[i+2]);
+                meshIndices.push(mesh.indices[i]);
+                i += 3;
+            }
+            meshSingleColor = true;
+        }
+#end
+
+        // Update num vertices
+        var visualNumVertices = meshIndices.length;
+        var countAfter = pos_floats + visualNumVertices * 4;
+
+        // Submit the current batch if we exceed the max buffer size
+        if (countAfter > maxVertFloats) {
+            flush();
+        }
+
+        // Actual texture size may differ from its logical one.
+        // Keep factor values to generate UV mapping that matches the real texture.
+        if (lastTexture != null) {
+            uvFactorX = texWidth / texWidthActual;
+            uvFactorY = texHeight / texHeightActual;
+        }
+        
+        var posFloats = this.posFloats;
+        var uvFloats = this.uvFloats;
+        var colorFloats = this.colorFloats; 
+
+        i = 0;
+        while (i < visualNumVertices) {
+
+            j = meshIndices.unsafeGet(i);
+            k = j * 2;
+            l = j * (2 + customFloatAttributesSize);
+
+            // Position
+            //
+            x = meshVertices.unsafeGet(l++);
+            y = meshVertices.unsafeGet(l++);
+
+            draw.putInPosList(posFloats++, matTX + matA * x + matC * y);
+            draw.putInPosList(posFloats++, matTY + matB * x + matD * y);
+            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posFloats++, 0);
+
+            // Custom (float) attributes
+            //
+            if (customFloatAttributesSize != 0) {
+                for (n in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posFloats++, meshVertices.unsafeGet(l++));
+                }
+            }
+
+            // UV
+            //
+            if (lastTexture != null) {
+                uvX = meshUvs.unsafeGet(k) * uvFactorX;
+                uvY = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                draw.putInUvList(uvFloats++, uvX);
+                draw.putInUvList(uvFloats++, uvY);
+                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvFloats++, 0);
+            }
+
+            // Color
+            //
+            if (!meshSingleColor) {
+                meshAlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+
+                var a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                var r = meshAlphaColor.redFloat * a;
+                var g = meshAlphaColor.greenFloat * a;
+                var b = meshAlphaColor.blueFloat * a;
+                if (mesh.blending == ceramic.Blending.ADD) a = 0;
+
+                draw.putInColorList(colorFloats++, r);
+                draw.putInColorList(colorFloats++, g);
+                draw.putInColorList(colorFloats++, b);
+                draw.putInColorList(colorFloats++, a);
+            }
+
+            i++;
+        }
+
+        this.posFloats = posFloats;
+
+        // No texture, all uvs to zero
+        //
+        if (lastTexture == null) {
+            i = 0;
+            while (i < visualNumVertices) {
+                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvFloats++, 0);
+                i++;
+            }
+        }
+
+        this.uvFloats = uvFloats;
+
+        // Single color
+        //
+        if (meshSingleColor) {
+
+            var r:Float;
+            var g:Float;
+            var b:Float;
+            var a:Float;
+
+            if (stencilClip) {
+                a = 1;
+                r = 1;
+                g = 0;
+                b = 0;
+            } else {
+                var meshAlphaColor = meshColors.unsafeGet(0);
+                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                r = meshAlphaColor.redFloat * a;
+                g = meshAlphaColor.greenFloat * a;
+                b = meshAlphaColor.blueFloat * a;
+                if (mesh.blending == ceramic.Blending.ADD) a = 0;
+            }
+
+            i = 0;
+            while (i < visualNumVertices) {
+                draw.putInColorList(colorFloats++, r);
+                draw.putInColorList(colorFloats++, g);
+                draw.putInColorList(colorFloats++, b);
+                draw.putInColorList(colorFloats++, a);
+                i++;
+            }
+        }
+
+        this.colorFloats = colorFloats;
+
+        // Let backend know we did finish sending quad data
+        draw.endDrawMesh();
+
+        // Increase counts
+        this.z = z + 0.001;
+
+    } //drawMesh
 
     inline function flush(draw:backend.Draw) {
 
