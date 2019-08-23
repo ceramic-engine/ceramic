@@ -794,7 +794,7 @@ class Spine extends Visual {
         // Update skeleton
         updateSkeleton(delta);
 
-        if (visible && !renderWhenInvisible) {
+        if (visible || renderWhenInvisible) {
             // We are visible and are root spine animation, let's render
             render(delta, 0, false);
         }
