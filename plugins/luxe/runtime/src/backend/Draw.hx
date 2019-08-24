@@ -264,18 +264,6 @@ class Draw implements spec.Draw {
 
     } //setBlendFuncSeparate
 
-    inline public function enableStencilTest():Void {
-
-        GL.enable(GL.STENCIL_TEST);
-
-    } //enableStencilTest
-
-    inline public function disableStencilTest():Void {
-
-        GL.disable(GL.STENCIL_TEST);
-
-    } //disableStencilTest
-
     inline public function setActiveTexture(slot:Int):Void {
 
         luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
@@ -376,6 +364,40 @@ class Draw implements spec.Draw {
     inline public function endDrawMesh():Void {
 
     } //endDrawMesh
+
+    inline public function beginDrawingInStencilBuffer():Void {
+
+        GL.stencilMask(0xFF);
+        GL.clearStencil(0xFF);
+        GL.clear(GL.STENCIL_BUFFER_BIT);
+        GL.enable(GL.STENCIL_TEST);
+
+        GL.stencilOp(GL.KEEP, GL.KEEP, GL.REPLACE);
+
+        GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
+        GL.stencilMask(0xFF);
+        GL.colorMask(false, false, false, false);
+
+    } //beginDrawingInStencilBuffer
+
+    inline public function endDrawingInStencilBuffer():Void {
+
+    } //endDrawingInStencilBuffer
+
+    inline public function drawWithStencilTest():Void {
+
+        GL.stencilFunc(GL.EQUAL, 1, 0xFF);
+        GL.stencilMask(0x00);
+        GL.colorMask(true, true, true, true);
+        GL.enable(GL.STENCIL_TEST);
+
+    } //drawWithStencilTest
+
+    inline public function drawWithoutStencilTest():Void {
+
+        GL.disable(GL.STENCIL_TEST);
+
+    } //drawWithStencilTest
 
 #else
 

@@ -60,7 +60,7 @@ class Renderer extends Entity {
 
     } //new
 
-    public function render(isMainRender:Bool):Void {
+    public function render(isMainRender:Bool, ceramicVisuals:Array<Visual>):Void {
 
         var draw = app.backend.draw;
 
@@ -143,7 +143,92 @@ class Renderer extends Entity {
         );
 
         // Default stencil test
-        draw.disableStencilTest();
+        draw.drawWithoutStencilTest();
+
+        // For each ceramic visual in the list
+        //
+        if (ceramicVisuals != null) {
+
+            var lastClip:ceramic.Visual = null;
+
+            for (ii in 0...ceramicVisuals.length) {
+                var visual = ceramicVisuals.unsafeGet(ii);
+                var quad = visual.quad;
+                var mesh = visual.mesh;
+
+                // If it's valid to be drawn
+                if (visual.computedVisible) {
+
+                    // If it should be redrawn anyway
+                    if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
+
+                        var clip:ceramic.Visual;
+                        if (visual.computedClip && visual.computedRenderTarget == null) {
+                            // Get new clip and compare with last
+                            var clippingVisual = visual;
+                            while (clippingVisual != null && clippingVisual.clip == null) {
+                                clippingVisual = clippingVisual.parent;
+                            }
+                            clip = clippingVisual != null ? clippingVisual.clip : null;
+
+                        } else {
+                            clip = null;
+                        }
+
+                        if (clip != lastClip) {
+                            lastClip = clip;
+
+                            if (lastClip != null) {
+                                // Update stencil buffer
+                                flush(draw);
+
+                                draw.beginDrawingInStencilBuffer();
+
+                                if (lastClip.quad != null) {
+                                    quad = lastClip.quad;
+                                    stencilClip = true;
+                                    drawQuad(draw, quad);
+                                    stencilClip = false;
+                                    quad = visual.quad;
+                                }
+                                else if (lastClip.mesh != null) {
+                                    mesh = lastClip.mesh;
+                                    stencilClip = true;
+                                    drawMesh(draw, mesh);
+                                    stencilClip = false;
+                                    mesh = visual.mesh;
+                                }
+
+                                // Next things to be drawn will be clipped
+                                flush(draw);
+
+                                draw.endDrawingInStencilBuffer();
+                                draw.drawWithStencilTest();
+                            }
+                            else {
+
+                                // Clipping gets disabled
+                                flush(draw);
+                                
+                                draw.drawWithoutStencilTest();
+                            }
+                        }
+
+                        if (quad != null && !quad.transparent) {
+
+                            drawQuad(draw, quad);
+
+                        } //quad
+
+                        else if (mesh != null) {
+
+                            drawMesh(draw, mesh);
+
+                        } //mesh
+                    }
+                }
+            }
+        }
 
     } //render
 
