@@ -31,6 +31,8 @@ class Renderer extends Entity {
     var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
 
+    var texWidth:Int = 0;
+    var texHeight:Int = 0;
     var texWidthActual:Int = 0;
     var texHeightActual:Int = 0;
 
@@ -88,7 +90,6 @@ class Renderer extends Entity {
         maxVertFloats = maxVerts * 4;
         draw.initBuffers(maxVerts);
 
-        visualNumVertices = 0;
         quad = null;
         mesh = null;
 
@@ -100,43 +101,17 @@ class Renderer extends Entity {
         lastBlending = ceramic.Blending.NORMAL;
         lastComputedBlending = ceramic.Blending.NORMAL;
 
+        texWidth = 0;
+        texHeight = 0;
         texWidthActual = 0;
         texHeightActual = 0;
 
 #if ceramic_debug_rendering_option
         var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
 #end
-        
-        var lastClip:ceramic.Visual = null;
-        var clip:ceramic.Visual = null;
+
         stencilClip = false;
-
         z = 0;
-
-        var vertIndex:Int = 0;
-        var j:Int = 0;
-        var k:Int = 0;
-        var l:Int = 0;
-        var n:Int = 0;
-
-        var x:Float;
-        var y:Float;
-
-        var meshAlphaColor:ceramic.AlphaColor = 0xFFFFFFFF;
-        var meshIndicesColor = false;
-        var meshSingleColor = false;
-        var meshColors:Array<ceramic.AlphaColor> = null;
-        var meshUvs:Array<Float> = null;
-        var meshVertices:Array<Float> = null;
-        var meshIndices:Array<Int> = null;
-        var uvFactorX:Float = 1;
-        var uvFactorY:Float = 1;
-
-        var texWidth:Float = 0;
-        var texHeight:Float = 0;
-        var texWidthActual:Float = 0;
-        var texHeightActual:Float = 0;
-
         stateDirty = true;
 
         var defaultPlainShader:backend.Shader = ceramic.App.app.defaultColorShader.backendItem;
@@ -307,6 +282,8 @@ class Renderer extends Entity {
                             lastTexture = quad.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
+                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
                             texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
@@ -323,6 +300,8 @@ class Renderer extends Entity {
                             lastTexture = quad.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
+                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
                             texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
@@ -652,7 +631,7 @@ class Renderer extends Entity {
             // No texture
             if (lastShader == null && mesh.shader == null) {
                 // Default plain shader fallback
-                useShader(defaultPlainShader);
+                useShader(draw, defaultPlainShader);
             }
             lastTexture = null;
             lastTextureId = backend.TextureId.DEFAULT;
@@ -849,35 +828,38 @@ class Renderer extends Entity {
 
         // Update num vertices
         var visualNumVertices = meshIndices.length;
-        var countAfter = pos_floats + visualNumVertices * 4;
+        var posFloats = this.posFloats;
+        var customFloatAttributesSize = this.customFloatAttributesSize;
+        var countAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
-            flush();
+            flush(draw);
         }
 
         // Actual texture size may differ from its logical one.
         // Keep factor values to generate UV mapping that matches the real texture.
+        var uvFactorX:Float = 0;
+        var uvFactorY:Float = 0;
         if (lastTexture != null) {
             uvFactorX = texWidth / texWidthActual;
             uvFactorY = texHeight / texHeightActual;
         }
         
-        var posFloats = this.posFloats;
         var uvFloats = this.uvFloats;
         var colorFloats = this.colorFloats; 
 
-        i = 0;
+        var i = 0;
         while (i < visualNumVertices) {
 
-            j = meshIndices.unsafeGet(i);
-            k = j * 2;
-            l = j * (2 + customFloatAttributesSize);
+            var j = meshIndices.unsafeGet(i);
+            var k = j * 2;
+            var l = j * (2 + customFloatAttributesSize);
 
             // Position
             //
-            x = meshVertices.unsafeGet(l++);
-            y = meshVertices.unsafeGet(l++);
+            var x = meshVertices.unsafeGet(l++);
+            var y = meshVertices.unsafeGet(l++);
 
             draw.putInPosList(posFloats++, matTX + matA * x + matC * y);
             draw.putInPosList(posFloats++, matTY + matB * x + matD * y);
@@ -895,8 +877,8 @@ class Renderer extends Entity {
             // UV
             //
             if (lastTexture != null) {
-                uvX = meshUvs.unsafeGet(k) * uvFactorX;
-                uvY = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
+                var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
                 draw.putInUvList(uvFloats++, uvX);
                 draw.putInUvList(uvFloats++, uvY);
                 draw.putInUvList(uvFloats++, 0);
@@ -906,7 +888,7 @@ class Renderer extends Entity {
             // Color
             //
             if (!meshSingleColor) {
-                meshAlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+                var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
 
                 var a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
                 var r = meshAlphaColor.redFloat * a;

@@ -300,6 +300,18 @@ class Draw implements spec.Draw {
 
     } //getTextureSlot
 
+    inline public function getTextureWidth(backendItem:backend.Texture):Int {
+
+        return (backendItem : phoenix.Texture).width;
+
+    } //getTextureWidth
+
+    inline public function getTextureHeight(backendItem:backend.Texture):Int {
+
+        return (backendItem : phoenix.Texture).height;
+
+    } //getTextureHeight
+
     inline public function getTextureWidthActual(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).width_actual;
