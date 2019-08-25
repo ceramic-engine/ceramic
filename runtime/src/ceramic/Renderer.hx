@@ -784,6 +784,8 @@ class Renderer extends Entity {
                             lastTexture = mesh.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
+                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
                             texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
@@ -800,6 +802,8 @@ class Renderer extends Entity {
                             lastTexture = mesh.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
+                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
+                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
                             texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
@@ -928,9 +932,10 @@ class Renderer extends Entity {
 
         // Actual texture size may differ from its logical one.
         // Keep factor values to generate UV mapping that matches the real texture.
+        var texture = this.lastTexture;
         var uvFactorX:Float = 0;
         var uvFactorY:Float = 0;
-        if (lastTexture != null) {
+        if (texture != null) {
             uvFactorX = texWidth / texWidthActual;
             uvFactorY = texHeight / texHeightActual;
         }
@@ -965,7 +970,7 @@ class Renderer extends Entity {
 
             // UV
             //
-            if (lastTexture != null) {
+            if (texture != null) {
                 var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
                 var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
                 draw.putInUvList(uvFloats++, uvX);
@@ -998,7 +1003,7 @@ class Renderer extends Entity {
 
         // No texture, all uvs to zero
         //
-        if (lastTexture == null) {
+        if (texture == null) {
             i = 0;
             while (i < visualNumVertices) {
                 draw.putInUvList(uvFloats++, 0);
