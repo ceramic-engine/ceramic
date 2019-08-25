@@ -38,6 +38,9 @@ class Draw implements spec.Draw {
 
         if (batcher == null) {
 
+            luxeRenderer = Luxe.renderer;
+            view = luxeRenderer.camera;
+
             batcher = new CeramicBatcher(Luxe.renderer, 'ceramic_batcher', 16384);
             batcher.layer = 2;
 
@@ -116,7 +119,7 @@ class Draw implements spec.Draw {
 
 /// Render driver
 
-    var luxeRenderer:phoenix.Renderer; // TODO
+    var luxeRenderer:phoenix.Renderer;
 
     var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
 

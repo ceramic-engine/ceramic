@@ -1,5 +1,28 @@
 package backend.impl;
 
+#if ceramic_new_renderer
+
+using ceramic.Extensions;
+
+/** A custom luxe/phoenix batcher for ceramic. */
+class CeramicBatcher extends phoenix.Batcher {
+
+    public var ceramicRenderer:ceramic.Renderer = new ceramic.Renderer();
+    public var isMainRender:Bool = false;
+    public var ceramicVisuals:Array<ceramic.Visual> = null;
+
+    override function batch(persist_immediate:Bool = false) {
+
+        if (ceramic.App.app.defaultColorShader == null) return;
+
+        ceramicRenderer.render(isMainRender, ceramicVisuals);
+
+    } //batch
+
+} //CeramicBatcher
+
+#else
+
 import phoenix.Texture;
 import phoenix.Renderer;
 
@@ -1271,3 +1294,5 @@ class CeramicBatcher extends phoenix.Batcher {
     } //applyDefaultUniforms
 
 } //CeramicBatcher
+
+#end

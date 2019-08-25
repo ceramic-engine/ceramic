@@ -876,12 +876,12 @@ class Renderer extends Entity {
 
         // Fetch matrix
         //
-        var matA:Float = quad.a;
-        var matB:Float = quad.b;
-        var matC:Float = quad.c;
-        var matD:Float = quad.d;
-        var matTX:Float = quad.tx;
-        var matTY:Float = quad.ty;
+        var matA:Float = mesh.a;
+        var matB:Float = mesh.b;
+        var matC:Float = mesh.c;
+        var matD:Float = mesh.d;
+        var matTX:Float = mesh.tx;
+        var matTY:Float = mesh.ty;
         var z:Float = this.z;
 
         // Color
