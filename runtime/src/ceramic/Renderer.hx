@@ -18,6 +18,8 @@ class Renderer extends Entity {
     var colorFloats:Int = 0;
     var normalFloats:Int = 0;
 
+    var drawCalls:Int = 0;
+
     var activeShader:backend.Shader = null;
     var customFloatAttributesSize:Int = 0;
 
@@ -86,6 +88,8 @@ class Renderer extends Entity {
         uvFloats = 0;
         colorFloats = 0;
         normalFloats = 0;
+
+        drawCalls = 0;
 
         maxVertFloats = maxVerts * 4;
         draw.initBuffers(maxVerts);
@@ -1050,9 +1054,25 @@ class Renderer extends Entity {
 
     } //drawMesh
 
-    inline function flush(draw:backend.Draw) {
+    inline function flush(draw:backend.Draw):Bool {
 
-        // TODO
+        if (this.posFloats == 0) {
+            return false;
+        }
+
+        if (this.posFloats > draw.maxPosFloats()) {
+            throw 'Too many floats are being submitted: max=${draw.maxPosFloats()} attempt=${this.posFloats}).';
+        }
+
+        draw.flush(posFloats, uvFloats, colorFloats);
+
+        drawCalls++;
+
+        this.posFloats = 0;
+        this.uvFloats = 0;
+        this.colorFloats = 0;
+
+        return true;
 
     } //flush
 

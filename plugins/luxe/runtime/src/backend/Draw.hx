@@ -138,13 +138,122 @@ class Draw implements spec.Draw {
 
     var colorList:Float32Array;
 
+    var maxFloats:Int;
+
+    var activeShader:backend.impl.CeramicShader;
+
+    var customGLBuffers:Array<GLBuffer> = [];
+
+    var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+
+    inline static var posAttribute:Int = 0;
+    inline static var uvAttribute:Int = 1;
+    inline static var colorAttribute:Int = 2;
+
+#if cpp
+    var viewPosBuffer = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+    var viewUvsBuffer = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+    var viewColorsBuffer = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
+#end
+
     //var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+
+    inline public function maxPosFloats():Int {
+
+        return maxFloats;
+
+    } //maxPosFloats
+
+    inline public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {
+
+        var vertexSize:Int = 4;
+        if (activeShader != null) {
+            var allAttrs = activeShader.customAttributes;
+            if (allAttrs != null) {
+                for (ii in 0...allAttrs.length) {
+                    var attr = allAttrs.unsafeGet(ii);
+                    vertexSize += attr.size;
+                }
+            }
+        }
+
+        // fromBuffer takes byte length, so floats * 4
+        var _pos = Float32Array.fromBuffer(posList.buffer, 0, posFloats * 4 #if cpp , viewPosBuffer #end);
+        var _uvs = Float32Array.fromBuffer(uvList.buffer, 0, uvFloats * 4 #if cpp , viewUvsBuffer #end);
+        var _colors = Float32Array.fromBuffer(colorList.buffer, 0, colorFloats * 4 #if cpp , viewColorsBuffer #end);
+
+        // Begin submit
+
+        var pb = GL.createBuffer();
+        var cb = GL.createBuffer();
+        var tb = GL.createBuffer();
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, pb);
+        GL.vertexAttribPointer(posAttribute, 4, GL.FLOAT, false, vertexSize * 4, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, tb);
+        GL.vertexAttribPointer(uvAttribute, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _uvs, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, cb);
+        GL.vertexAttribPointer(colorAttribute, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
+
+        var customGLBuffersLen:Int = 0;
+        if (activeShader != null && activeShader.customAttributes != null) {
+
+            var n = colorAttribute + 1;
+            var offset = 4;
+            var allAttrs = activeShader.customAttributes;
+            customGLBuffersLen = allAttrs.length;
+            for (ii in 0...customGLBuffersLen) {
+                var attr = allAttrs.unsafeGet(ii);
+
+                var b = GL.createBuffer();
+                customGLBuffers[ii] = b;
+
+                GL.enableVertexAttribArray(n);
+                GL.bindBuffer(GL.ARRAY_BUFFER, b);
+                GL.vertexAttribPointer(n, attr.size, GL.FLOAT, false, vertexSize * 4, offset * 4);
+                GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
+
+                n++;
+                offset += attr.size;
+
+            }
+        }
+
+        // Draw
+        GL.drawArrays(primitiveType, 0, Std.int(_colors.length/4));
+
+        GL.deleteBuffer(pb);
+        GL.deleteBuffer(cb);
+        GL.deleteBuffer(tb);
+
+        if (customGLBuffersLen > 0) {
+            var n = colorAttribute + 1;
+            for (ii in 0...customGLBuffersLen) {
+                var b = customGLBuffers.unsafeGet(ii);
+                GL.deleteBuffer(b);
+                GL.disableVertexAttribArray(n);
+                n++;
+            }
+        }
+
+        // End submit
+
+        _pos = null;
+        _uvs = null;
+        _colors = null;
+
+    } //flush
 
     inline public function initBuffers(maxVerts:Int):Void {
 
         if (posList == null) {
 
-            var maxFloats = maxVerts * 4;
+            maxFloats = maxVerts * 4;
 
             posList = new Float32Array(maxFloats);
             uvList = new Float32Array(maxFloats);
@@ -192,9 +301,9 @@ class Draw implements spec.Draw {
             shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
         }
         
-        if (shader != null) {
-            shader.activate();
-        }
+        shader.activate();
+        
+        activeShader = shader;
 
     } //useShader
 
@@ -327,7 +436,7 @@ class Draw implements spec.Draw {
     inline public function setRenderWireframe(value:Bool):Void {
 
         renderWireframe = value;
-        //primitiveType = value ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
+        primitiveType = value ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
 
     } //renderWireframe
 
