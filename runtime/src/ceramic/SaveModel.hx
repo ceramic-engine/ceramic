@@ -115,7 +115,7 @@ class SaveModel {
 
             if (changeset.append) {
                 #if ceramic_debug_save
-                trace('Save $key (append ${changeset.data.length}): ' + changeset.data);
+                trace('Save $key (append ${changeset.data.length})');//: ' + changeset.data);
                 #end
 
                 (function(data:String) {
@@ -144,7 +144,7 @@ class SaveModel {
 
             } else {
                 #if ceramic_debug_save
-                trace('Save $key (full ${changeset.data.length}): ' + changeset.data);
+                trace('Save $key (full ${changeset.data.length})');//: ' + changeset.data);
                 #end
                 
                 (function(data:String) {
