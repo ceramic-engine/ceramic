@@ -481,9 +481,9 @@ class Visual extends Entity {
 
 /// Internal
 
-    static var _matrix:Transform = new Transform();
+    inline static var _degToRad:Float = 0.017453292519943295;
 
-    static var _degToRad:Float = Math.PI / 180.0;
+    static var _matrix:Transform = new Transform();
 
     static var _point:Point = new Point();
 
