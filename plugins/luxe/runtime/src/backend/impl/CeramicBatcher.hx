@@ -1,6 +1,6 @@
 package backend.impl;
 
-#if ceramic_new_renderer
+#if !ceramic_legacy_renderer
 
 using ceramic.Extensions;
 
