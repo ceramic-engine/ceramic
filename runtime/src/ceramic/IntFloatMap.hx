@@ -2,6 +2,8 @@ package ceramic;
 
 import haxe.ds.Vector;
 
+#if cpp
+
 /** An float map that uses integers as key. */
 class IntFloatMap {
 
@@ -121,3 +123,54 @@ class IntFloatMap {
     } //resizeValues
 
 } //IntFloatMap
+
+#else
+
+abstract IntFloatMap(Map<Int,Float>) {
+
+    inline public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
+        this = new Map<Int,Float>();
+    }
+
+    public var size(get,never):Int;
+    inline function get_size():Int {
+        return Lambda.count(this);
+    }
+
+    public var iterableKeys(get,never):Array<Int>;
+    inline function get_iterableKeys():Array<Int> {
+        var keys:Array<Int> = [];
+        for (k in this.keys()) {
+            keys.push(k);
+        }
+        return keys;
+    }
+
+    inline public function exists(key:Int):Bool {
+        return this.exists(Std.int(key));
+    }
+
+    inline public function set(key:Int, value:Float):Float {
+        this.set(Std.int(key), value);
+        return value;
+    }
+
+    inline public function get(key:Int):Float {
+        return this.get(Std.int(key));
+    }
+
+    inline public function remove(key:Int):Void {
+        this.remove(Std.int(key));
+    }
+
+    inline public function getInline(key:Int):Float {
+        return this.get(key);
+    }
+
+    inline public function existsInline(key:Int):Bool {
+        return this.exists(key);
+    }
+
+} //IntFloatMap
+
+#end

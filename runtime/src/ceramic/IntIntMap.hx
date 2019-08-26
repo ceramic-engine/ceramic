@@ -381,7 +381,6 @@ class IntIntMap {
 
 #else
 
-@:forward(get, set, exists)
 abstract IntIntMap(Map<Int,Int>) {
 
     inline public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
@@ -395,15 +394,28 @@ abstract IntIntMap(Map<Int,Int>) {
 
     public var iterableKeys(get,never):Array<Int>;
     inline function get_iterableKeys():Array<Int> {
-        var keys = [];
+        var keys:Array<Int> = [];
         for (k in this.keys()) {
             keys.push(k);
         }
         return keys;
     }
 
+    inline public function exists(key:Int):Bool {
+        return this.exists(Std.int(key));
+    }
+
+    inline public function set(key:Int, value:Int):Int {
+        this.set(Std.int(key), value);
+        return value;
+    }
+
+    inline public function get(key:Int):Int {
+        return this.get(Std.int(key));
+    }
+
     inline public function remove(key:Int):Int {
-        return this.remove(key) ? 1 : 0;
+        return this.remove(Std.int(key)) ? 1 : 0;
     }
 
     inline public function getInline(key:Int):Int {
