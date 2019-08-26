@@ -6,8 +6,8 @@ import sys.io.File;
 #end
 
 import haxe.crypto.Md5;
-
 import ceramic.Path;
+import ceramic.Shortcuts.*;
 
 class IO implements spec.IO {
 
@@ -67,7 +67,78 @@ class IO implements spec.IO {
 
     } //readString
 
+#elseif web
+
+    public function saveString(key:String, str:String):Bool {
+
+        var storage = js.Browser.window.localStorage;
+        if (storage == null) {
+            error('Cannot save string: localStorage not supported on this browser');
+            return false;
+        }
+
+        try {
+            storage.setItem(key, str);
+        }
+        catch (e:Dynamic) {
+            error('Failed to save string (key=$key): ' + e);
+            return false;
+        }
+
+        return true;
+
+    } //saveString
+
+    public function appendString(key:String, str:String):Bool {
+
+        var storage = js.Browser.window.localStorage;
+        if (storage == null) {
+            error('Cannot append string: localStorage not supported on this browser');
+            return false;
+        }
+
+        try {
+            var existing = storage.getItem(key);
+            if (existing == null) {
+                storage.setItem(key, str);
+            }
+            else {
+                storage.setItem(key, existing + str);
+            }
+        }
+        catch (e:Dynamic) {
+            error('Failed to append string (key=$key): ' + e);
+            return false;
+        }
+
+        return true;
+
+    } //appendString
+
+    public function readString(key:String):String {
+
+        var storage = js.Browser.window.localStorage;
+        if (storage == null) {
+            error('Cannot read string: localStorage not supported on this browser');
+            return null;
+        }
+
+        try {
+            return storage.getItem(key);
+        }
+        catch (e:Dynamic) {
+            error('Failed to read string (key=$key): ' + e);
+            return null;
+        }
+
+    } //readString
+
 #else
+
+    // Default luxe implementation is not optimal as it does
+    // re-encode a whole map slot everytime we change a key.
+    // As we are only using cpp and web targets in practice,
+    // this code is actually not used but we keep it for reference.
 
     public function saveString(key:String, str:String):Bool {
 
