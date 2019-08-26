@@ -232,6 +232,8 @@ class Renderer extends Entity {
                     }
                 }
             }
+
+            flush(draw);
         }
 
     } //render
