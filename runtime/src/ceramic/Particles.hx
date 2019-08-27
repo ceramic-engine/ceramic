@@ -2,7 +2,9 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-// Ported to ceramic from HaxeFlixel FlxEmitter & FlxParticle:
+using ceramic.Extensions;
+
+// Ported to ceramic from HaxeFlixel FlxEmitter, FlxParticle & FlxVelocity:
 // https://github.com/HaxeFlixel/flixel/blob/02e2d18158761d0d508a06126daef2487aa7373c/flixel/effects/particles/FlxEmitter.hx
 
 /** A visual that act as a particle emitter. */
@@ -24,6 +26,11 @@ class Particles extends Visual {
     public var emitting:Bool = false;
 
     /**
+     * Determines whether the emitter is currently paused. It is totally safe to directly toggle this.
+     */
+    public var paused:Bool = false;
+
+    /**
      * How often a particle is emitted (if emitter is started with `explode=false`).
      */
     public var frequency:Float = 0.1;
@@ -40,40 +47,51 @@ class Particles extends Visual {
     public var keepScaleRatio:Bool = false;
 
 	/**
-	 * Enable or disable the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+	 * If you are using `acceleration`, you can use `maxVelocity` with it
+	 * to cap the speed automatically (very useful!).
 	 */
+    public var maxVelocityX:Float = 10000;
+	/**
+	 * If you are using `acceleration`, you can use `maxVelocity` with it
+	 * to cap the speed automatically (very useful!).
+	 */
+    public var maxVelocityY:Float = 10000;
+
+    /**
+     * Enable or disable the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityActive:Bool = true;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityStartMinX:Float = -100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityStartMinY:Float = -100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityStartMaxX:Float = 100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityStartMaxY:Float = 100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityEndMinX:Float = -100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityEndMinY:Float = -100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityEndMaxX:Float = 100;
-	/**
-	 * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
-	 */
+    /**
+     * Sets the velocity range of particles launched from this emitter. Only used with `ParticlesMode.SQUARE`.
+     */
     public var velocityEndMaxY:Float = 100;
 
     /**
@@ -92,10 +110,15 @@ class Particles extends Visual {
      * Set the speed range of particles launched from this emitter. Only used with `ParticlesMode.CIRCLE`.
      */
     public var speedEndMax:Float = 100;
-
-	/**
-	 * Enable or disable the angular acceleration range of particles launched from this emitter.
+    
+    /**
+	 * Use in conjunction with angularAcceleration for fluid spin speed control.
 	 */
+	public var maxAngular:Float = 10000;
+
+    /**
+     * Enable or disable the angular acceleration range of particles launched from this emitter.
+     */
     public var angularAccelerationActive:Bool = true;
     /**
      * Set the angular acceleration range of particles launched from this emitter.
@@ -106,9 +129,9 @@ class Particles extends Visual {
      */
     public var angularAccelerationStartMax:Float = 0;
 
-	/**
-	 * Enable or disable the angular deceleration range of particles launched from this emitter.
-	 */
+    /**
+     * Enable or disable the angular deceleration range of particles launched from this emitter.
+     */
     public var angularDecelerationActive:Bool = true;
     /**
      * Set the angular deceleration range of particles launched from this emitter.
@@ -284,37 +307,37 @@ class Particles extends Visual {
      * Enable or disable X and Y deceleration component of particles launched from this emitter.
      */
     public var decelerationActive:Bool = true;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationStartMinX:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationStartMinY:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationStartMaxX:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationStartMaxY:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationEndMinX:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationEndMinY:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationEndMaxX:Float = 0;
-	/**
-	 * Sets X and Y deceleration component of particles launched from this emitter.
-	 */
+    /**
+     * Sets X and Y deceleration component of particles launched from this emitter.
+     */
     public var decelerationEndMaxY:Float = 0;
 
     /**
@@ -364,25 +387,11 @@ class Particles extends Visual {
     public var accelerationEndMaxY:Float = 0;
 
     /**
-     * Enable or disable the `elasticity`, or bounce, range of particles launched from this emitter.
+     * If set to `true`, this particles emitter will be destroyed once
+     * there are no particles anymore to display
      */
-    public var elasticityActive:Bool = true;
-    /**
-     * Sets the `elasticity`, or bounce, range of particles launched from this emitter.
-     */
-    public var elasticityStartMin:Float = 0;
-    /**
-     * Sets the `elasticity`, or bounce, range of particles launched from this emitter.
-     */
-    public var elasticityStartMax:Float = 0;
-    /**
-     * Sets the `elasticity`, or bounce, range of particles launched from this emitter.
-     */
-    public var elasticityEndMin:Float = 0;
-    /**
-     * Sets the `elasticity`, or bounce, range of particles launched from this emitter.
-     */
-    public var elasticityEndMax:Float = 0;
+    public var destroyOnceUnused:Bool = false;
+
 
     /**
      * Internal helper for deciding how many particles to launch.
@@ -434,51 +443,138 @@ class Particles extends Visual {
     {
         super();
 
+        depthRange = 1;
+
         app.onUpdate(this, update);
     }
 
     /**
      * Called automatically by the game loop, decides when to launch particles and when to "die".
      */
-    function update(elapsed:Float):Void
+    function update(delta:Float):Void
     {
+        if (paused) return;
+
         if (emitting)
         {
-            if (_explode)
+            if (_explode) {
                 explode();
-            else
-                emitContinuously(elapsed);
+            }
+            else {
+                emitContinuously(delta);
+            }
         }
         else if (_waitForDestroy)
         {
-            _timer += elapsed;
-
-            if ((lifespanMax > 0) && (_timer > lifespanMax))
+            if (_activeParticles.length == 0)
             {
                 destroy();
                 return;
             }
         }
 
+        for (i in 0..._activeParticles.length) {
+            var particle = _activeParticles.unsafeGet(i);
+            updateParticle(particle, delta);
+        }
+
     } //update
+
+    inline function updateParticle(particle:ParticleItem, delta:Float):Void {
+
+        if (particle.age < particle.lifespan) {
+            particle.age += delta;
+        }
+
+        if (particle.age >= particle.lifespan && particle.lifespan != 0)
+        {
+            recycleParticle(particle);
+        }
+        else
+        {
+            if (particle.lifespan > 0) {
+
+                var lifespanDelta:Float = delta / particle.lifespan;
+                var lifespanPercent:Float = particle.age / particle.lifespan;
+
+                if (particle.velocityRangeActive)
+                {
+                    particle.velocityX += (particle.velocityRangeEndX - particle.velocityRangeStartX) * lifespanDelta;
+                    particle.velocityY += (particle.velocityRangeEndY - particle.velocityRangeStartY) * lifespanDelta;
+                }
+
+                if (particle.angularVelocityRangeActive)
+                {
+                    particle.angularVelocity += (particle.angularVelocityRangeEnd - particle.angularVelocityRangeStart) * lifespanDelta;
+                }
+
+                if (particle.scaleRangeActive)
+                {
+                    particle.scaleX += (particle.scaleRangeEndX - particle.scaleRangeStartX) * lifespanDelta;
+                    particle.scaleY += (particle.scaleRangeEndY - particle.scaleRangeStartY) * lifespanDelta;
+                }
+
+                if (particle.alphaRangeActive)
+                {
+                    particle.alpha += (particle.alphaRangeEnd - particle.alphaRangeStart) * lifespanDelta;
+                }
+
+                if (particle.colorRangeActive)
+                {
+                    particle.color = interpolateColor(particle.colorRangeStart, particle.colorRangeEnd, lifespanPercent);
+                }
+
+                if (particle.decelerationRangeActive)
+                {
+                    particle.decelerationX += (particle.decelerationRangeEndX - particle.decelerationRangeStartX) * lifespanDelta;
+                    particle.decelerationY += (particle.decelerationRangeEndY - particle.decelerationRangeStartY) * lifespanDelta;
+                }
+
+                if (particle.accelerationRangeActive)
+                {
+                    particle.accelerationX += (particle.accelerationRangeEndX - particle.accelerationRangeStartX) * lifespanDelta;
+                    particle.accelerationY += (particle.accelerationRangeEndY - particle.accelerationRangeStartY) * lifespanDelta;
+                }
+            }
+
+            // Update motion
+            //
+
+            var velocityDelta = computeVelocity(particle.angularVelocity, particle.angularAcceleration, particle.angularDeceleration, maxAngular, delta) - particle.angularVelocity;
+            particle.angularVelocity += velocityDelta;
+            if (particle.angularVelocity != 0) {
+                particle.angle += particle.angularVelocity * delta;
+            }
+
+            velocityDelta = computeVelocity(particle.velocityX, particle.accelerationX, particle.decelerationX, maxVelocityX, delta) - particle.velocityX;
+            particle.velocityX += velocityDelta;
+            if (particle.velocityX != 0) {
+                particle.x += particle.velocityX * delta;
+            }
+
+            velocityDelta = computeVelocity(particle.velocityY, particle.accelerationY, particle.decelerationY, maxVelocityY, delta) - particle.velocityY;
+            particle.velocityY += velocityDelta;
+            if (particle.velocityY != 0) {
+                particle.y += particle.velocityY * delta;
+            }
+        }
+
+    } //updateParticle
 
     function explode():Void
     {
-        // TODO port to ceramic
-
-        /*
         var amount:Int = _quantity;
-        if (amount <= 0 || amount > length)
-            amount = length;
+        _quantity = 0;
 
-        for (i in 0...amount)
-            emitParticle();
-            */
+        if (amount > 0) {
+            for (i in 0...amount)
+                emitParticle();
+        }
 
         emitFinish();
     }
 
-    function emitContinuously(elapsed:Float):Void
+    function emitContinuously(delta:Float):Void
     {
         // Spawn one particle per frame
         if (frequency <= 0)
@@ -487,7 +583,7 @@ class Particles extends Visual {
         }
         else
         {
-            _timer += elapsed;
+            _timer += delta;
 
             while (_timer > frequency)
             {
@@ -499,17 +595,21 @@ class Particles extends Visual {
 
     function emitParticleContinuously():Void
     {
-        emitParticle();
-        _counter++;
-
-        if (_quantity > 0 && _counter >= _quantity)
+        trace(' - emitParticleContinuously');
+        if (_quantity <= 0) {
             emitFinish();
+        }
+
+        emitParticle();
+        _quantity--;
     }
 
     function didEmitFinish():Void
     {
         emitting = false;
-        _waitForDestroy = true;
+        if (destroyOnceUnused) {
+            _waitForDestroy = true;
+        }
         _quantity = 0;
     }
 
@@ -535,38 +635,70 @@ class Particles extends Visual {
             particle = new ParticleItem();
         }
 
-        if (particle.visual == null) {
-            particle.visual = getParticleVisual();
+        particle.visual = getParticleVisual(particle.visual);
+
+        if (particle.visual.parent != this) {
+            add(particle.visual);
         }
+
+        _activeParticles.push(particle);
 
         return particle;
 
     } //getParticle
 
-    function getParticleVisual():Visual {
+    /** Get a visual for a particle that will be emitted right after.
+        If a visual is being recycled, provide it as argument. */
+    function getParticleVisual(existingVisual:Visual):Visual {
 
         // Default implementation return a random-colored 2x2 quad
         // This method can be overrided in a subclass to use a different visual as particle
 
+        if (existingVisual != null) {
+            existingVisual.active = true;
+            return existingVisual;
+        }
+
         var quad = new Quad();
-        quad.size(2, 2);
+        quad.size(10, 10);
         quad.anchor(0.5, 0.5);
         quad.color = Color.random();
         return quad;
 
     } //getParticleVisual
 
+    function recycleParticle(particle:ParticleItem):Void {
+
+        recycleParticleVisual(particle.visual);
+
+        if (particle.visual.destroyed) {
+            particle.visual = null;
+        }
+
+        _recycledParticles.push(particle);
+
+    } //recycleParticle
+
+    /** Recycle a particle's visual to reuse it later. */
+    function recycleParticleVisual(visual:Visual):Void {
+
+        // Just make the visual inactive
+        visual.active = false;
+
+    } //recycleParticleVisual
+
+
 /// Public API
 
     /**
      * Call this function to start emitting particles.
      *
+     * @param   quantity    How many particles to launch.
      * @param   explode     Whether the particles should all burst out at once.
      * @param   frequency   Ignored if `explode` is set to `true`. `frequency` is how often to emit a particle.
      *                      `0` = never emit, `0.1` = 1 particle every 0.1 seconds, `5` = 1 particle every 5 seconds.
-     * @param   quantity    How many particles to launch. `0` = "all of the particles".
      */
-    public function start(explode:Bool = true, frequency:Float = 0.1, quantity:Int = 0):Void
+    public function startEmitting(quantity:Int, explode:Bool = false, frequency:Float = 0.1):Void
     {
         emitting = true;
 
@@ -581,13 +713,14 @@ class Particles extends Visual {
 
         emitStart();
 
-    } //start
+    } //startEmitting
 
     /**
      * This function can be used both internally and externally to emit the next particle.
      */
     public function emitParticle():Void
     {
+        log(' - emitParticle()');
         var particle:ParticleItem = getParticle();
 
         particle.reset();
@@ -727,17 +860,6 @@ class Particles extends Visual {
         else
             particle.accelerationRangeActive = false;
 
-        // Particle elasticity settings
-        if (elasticityActive)
-        {
-            particle.elasticityRangeStart = randomBetweenFloats(elasticityStartMin, elasticityStartMax);
-            particle.elasticityRangeEnd = randomBetweenFloats(elasticityEndMin, elasticityEndMax);
-            particle.elasticityRangeActive = particle.lifespan > 0 && particle.elasticityRangeStart != particle.elasticityRangeEnd;
-            particle.elasticity = particle.elasticityRangeStart;
-        }
-        else
-            particle.elasticityRangeActive = false;
-
         // Set position
         particle.pos(randomBetweenFloats(0, width), randomBetweenFloats(0, height));
 
@@ -770,6 +892,16 @@ class Particles extends Visual {
 
     } //randomBetweenColors
 
+    inline static function interpolateColor(a:Color, b:Color, percent:Float):Color {
+
+        return Color.fromRGBFloat(
+            a.redFloat + (b.redFloat - a.redFloat) * percent,
+            a.greenFloat + (b.greenFloat - a.greenFloat) * percent,
+            a.blueFloat + (b.blueFloat - a.blueFloat) * percent
+        );
+
+    } //interpolateColor
+
     inline static function velocityFromAngle(angle:Float, speed:Float, result:Point):Void {
 
         var a:Float = degToRad(angle);
@@ -777,6 +909,54 @@ class Particles extends Visual {
         result.y = Math.sin(a) * speed;
 
     } //velocityFromAngle
+
+    /**
+     * A tween-like function that takes a starting velocity and some other factors and returns an altered velocity.
+     *
+     * @param	velocity		Any component of velocity (e.g. 20).
+     * @param	acceleration	Rate at which the velocity is changing.
+     * @param	deceleration	This is how much the velocity changes if Acceleration is not set.
+     * @param	max				An absolute value cap for the velocity (0 for no cap).
+     * @param	elapsed			The amount of time passed in to the latest update cycle
+     * @return	The altered velocity value.
+     */
+    inline static function computeVelocity(velocity:Float, acceleration:Float, deceleration:Float, max:Float, elapsed:Float):Float
+    {
+        if (acceleration != 0)
+        {
+            velocity += acceleration * elapsed;
+        }
+        else if (deceleration != 0)
+        {
+            var drag:Float = deceleration * elapsed;
+            if (velocity - drag > 0)
+            {
+                velocity -= drag;
+            }
+            else if (velocity + drag < 0)
+            {
+                velocity += drag;
+            }
+            else
+            {
+                velocity = 0;
+            }
+        }
+        if (velocity != 0 && max != 0)
+        {
+            if (velocity > max)
+            {
+                velocity = max;
+            }
+            else if (velocity < -max)
+            {
+                velocity = -max;
+            }
+        }
+
+        return velocity;
+
+    } //computeVelocity
 
 } //Particles
 
@@ -793,6 +973,7 @@ class ParticleItem {
     public var visual:Visual = null;
 
     public var lifespan:Float = 0;
+    public var age:Float = 0;
 
     public var colorRangeActive:Bool = true;
     public var colorRangeStart:Color = Color.WHITE;
@@ -841,11 +1022,6 @@ class ParticleItem {
     public var velocityRangeEndY:Float = 0;
     public var velocityX:Float = 0;
     public var velocityY:Float = 0;
-
-    public var elasticityRangeActive:Bool = true;
-    public var elasticityRangeStart:Float = 0;
-    public var elasticityRangeEnd:Float = 0;
-    public var elasticity:Float = 0;
 
     public var angularVelocityRangeActive:Bool = true;
     public var angularVelocityRangeStart:Float = 0;
@@ -927,9 +1103,61 @@ class ParticleItem {
 
     public function new() {}
 
-    public function reset():Void {
+    inline public function reset():Void {
 
+        colorRangeActive = true;
+        colorRangeStart = Color.WHITE;
+        colorRangeEnd = Color.WHITE;
+        color = Color.WHITE;
+
+        accelerationRangeActive = true;
+        accelerationRangeStartX = 0;
+        accelerationRangeStartY = 0;
+        accelerationRangeEndX = 0;
+        accelerationRangeEndY = 0;
+        accelerationX = 0;
+        accelerationY = 0;
+
+        decelerationRangeActive = true;
+        decelerationRangeStartX = 0;
+        decelerationRangeStartY = 0;
+        decelerationRangeEndX = 0;
+        decelerationRangeEndY = 0;
+        decelerationX = 0;
+        decelerationY = 0;
+
+        velocityRangeActive = true;
+        velocityRangeStartX = 0;
+        velocityRangeStartY = 0;
+        velocityRangeEndX = 0;
+        velocityRangeEndY = 0;
+        velocityX = 0;
+        velocityY = 0;
+
+        angularVelocityRangeActive = true;
+        angularVelocityRangeStart = 0;
+        angularVelocityRangeEnd = 0;
+        angularVelocity = 0;
+
+        angularAccelerationRangeActive = true;
+        angularAccelerationRangeStart = 0;
+        angularAccelerationRangeEnd = 0;
+        angularAcceleration = 0;
+
+        angularDeceleration = 0;
+
+        scaleRangeActive = true;
+        scaleRangeStartX = 1;
+        scaleRangeStartY = 1;
+        scaleRangeEndX = 1;
+        scaleRangeEndY = 1;
+
+        pos(0, 0);
+        scale(1, 1);
+        alpha = 1;
         angle = 0;
+        age = 0;
+        lifespan = 0;
 
     } //reset
 
