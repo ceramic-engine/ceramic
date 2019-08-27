@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
 // Ported to ceramic from HaxeFlixel FlxEmitter & FlxParticle:
 // https://github.com/HaxeFlixel/flixel/blob/02e2d18158761d0d508a06126daef2487aa7373c/flixel/effects/particles/FlxEmitter.hx
 
@@ -12,7 +14,7 @@ class Particles extends Visual {
 
     @event function _finish();
 
-    @event function _emitParticle();
+    @event function _emitParticle(particle:ParticleItem);
 
 /// Properties
 
@@ -105,17 +107,17 @@ class Particles extends Visual {
     public var angularAccelerationStartMax:Float = 0;
 
 	/**
-	 * Enable or disable the angular drag range of particles launched from this emitter.
+	 * Enable or disable the angular deceleration range of particles launched from this emitter.
 	 */
-    public var angularDragActive:Bool = true;
+    public var angularDecelerationActive:Bool = true;
     /**
-     * Set the angular drag range of particles launched from this emitter.
+     * Set the angular deceleration range of particles launched from this emitter.
      */
-    public var angularDragStartMin:Float = 0;
+    public var angularDecelerationStartMin:Float = 0;
     /**
-     * Set the angular drag range of particles launched from this emitter.
+     * Set the angular deceleration range of particles launched from this emitter.
      */
-    public var angularDragStartMax:Float = 0;
+    public var angularDecelerationStartMax:Float = 0;
 
     /**
      * Enable or disable the angular velocity range of particles launched from this emitter.
@@ -279,41 +281,41 @@ class Particles extends Visual {
     public var colorEndMax:Color = Color.WHITE;
 
     /**
-     * Enable or disable X and Y drag component of particles launched from this emitter.
+     * Enable or disable X and Y deceleration component of particles launched from this emitter.
      */
-    public var dragActive:Bool = true;
+    public var decelerationActive:Bool = true;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragStartMinX:Float = 0;
+    public var decelerationStartMinX:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragStartMinY:Float = 0;
+    public var decelerationStartMinY:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragStartMaxX:Float = 0;
+    public var decelerationStartMaxX:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragStartMaxY:Float = 0;
+    public var decelerationStartMaxY:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragEndMinX:Float = 0;
+    public var decelerationEndMinX:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragEndMinY:Float = 0;
+    public var decelerationEndMinY:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragEndMaxX:Float = 0;
+    public var decelerationEndMaxX:Float = 0;
 	/**
-	 * Sets X and Y drag component of particles launched from this emitter.
+	 * Sets X and Y deceleration component of particles launched from this emitter.
 	 */
-    public var dragEndMaxY:Float = 0;
+    public var decelerationEndMaxY:Float = 0;
 
     /**
      * Enable or disable the `acceleration` range of particles launched from this emitter.
@@ -382,9 +384,6 @@ class Particles extends Visual {
      */
     public var elasticityEndMax:Float = 0;
 
-    /** The `size`, number of particles managede by this emitter. */
-    public var size(default,null):Int;
-
     /**
      * Internal helper for deciding how many particles to launch.
      */
@@ -431,11 +430,9 @@ class Particles extends Visual {
      * Creates a new `Particles` object.
      * Does NOT automatically generate or attach particles!
      */
-    public function new(size:Int)
+    public function new()
     {
         super();
-        
-        this.size = size;
 
         app.onUpdate(this, update);
     }
@@ -467,12 +464,16 @@ class Particles extends Visual {
 
     function explode():Void
     {
+        // TODO port to ceramic
+
+        /*
         var amount:Int = _quantity;
         if (amount <= 0 || amount > length)
             amount = length;
 
         for (i in 0...amount)
             emitParticle();
+            */
 
         emitFinish();
     }
@@ -519,15 +520,14 @@ class Particles extends Visual {
     {
         emitting = false;
         _waitForDestroy = false;
-
-        super.destroy();
     }
 
 /// Managing particles and visuals
 
     function getParticle():ParticleItem {
 
-        var particle:Particle;
+        var particle:ParticleItem;
+
         if (_recycledParticles.length > 0) {
             particle = _recycledParticles.pop();
         }
@@ -538,6 +538,8 @@ class Particles extends Visual {
         if (particle.visual == null) {
             particle.visual = getParticleVisual();
         }
+
+        return particle;
 
     } //getParticle
 
@@ -566,8 +568,6 @@ class Particles extends Visual {
      */
     public function start(explode:Bool = true, frequency:Float = 0.1, quantity:Int = 0):Void
     {
-        exists = true;
-        visible = true;
         emitting = true;
 
         _explode = explode;
@@ -601,7 +601,7 @@ class Particles extends Visual {
         if (velocityActive)
         {
             // Particle velocity/launch angle settings
-            particle.velocityRangeActive = particle.lifespan > 0 && (particle.velocityRangeStartX != particle.velocityRangeEndX || particle.velocityRangeStartY != particle.velocityRangeEndY));
+            particle.velocityRangeActive = particle.lifespan > 0 && (particle.velocityRangeStartX != particle.velocityRangeEndX || particle.velocityRangeStartY != particle.velocityRangeEndY);
 
             if (launchMode == ParticlesMode.CIRCLE)
             {
@@ -610,14 +610,14 @@ class Particles extends Visual {
                     particleAngle = randomBetweenFloats(launchAngleMin, launchAngleMax);
 
                 // Calculate launch velocity
-                velocityFromAngle(particleAngle, randomBetweenFloats(speedStartMin, speedStartMmax), _point);
+                velocityFromAngle(particleAngle, randomBetweenFloats(speedStartMin, speedStartMax), _point);
                 particle.velocityX = _point.x;
                 particle.velocityY = _point.y;
                 particle.velocityRangeStartX = _point.x;
                 particle.velocityRangeStartY = _point.y;
 
                 // Calculate final velocity
-                _point = velocityFromAngle(particleAngle, randomBetweenFloats(speedEndMin, speedEndMax));
+                velocityFromAngle(particleAngle, randomBetweenFloats(speedEndMin, speedEndMax), _point);
                 particle.velocityRangeEndX = _point.x;
                 particle.velocityRangeEndY = _point.y;
             }
@@ -635,7 +635,7 @@ class Particles extends Visual {
             particle.velocityRangeActive = false;
 
         // Particle angular velocity settings
-        particle.angularVelocityRangeActive = particle.lifespan > 0 && angularVelocityStart != angularVelocityEnd;
+        particle.angularVelocityRangeActive = particle.lifespan > 0 && (angularVelocityStartMin != angularVelocityEndMin || angularVelocityStartMax != angularVelocityEndMax);
 
         if (!ignoreAngularVelocity)
         {
@@ -649,8 +649,8 @@ class Particles extends Visual {
                 particle.angularVelocity = particle.angularVelocityRangeStart;
             }
 
-            if (angularDragActive)
-                particle.angularDrag = randomBetweenFloats(angularDragStartMin, angularDragStartMax);
+            if (angularDecelerationActive)
+                particle.angularDeceleration = randomBetweenFloats(angularDecelerationStartMin, angularDecelerationStartMax);
         }
         else if (angularVelocityActive)
         {
@@ -671,8 +671,7 @@ class Particles extends Visual {
             particle.scaleRangeEndX = randomBetweenFloats(scaleEndMinX, scaleEndMaxX);
             particle.scaleRangeEndY = keepScaleRatio ? particle.scaleRangeEndX : randomBetweenFloats(scaleEndMinY, scaleEndMaxY);
             particle.scaleRangeActive = particle.lifespan > 0 && (particle.scaleRangeStartX != particle.scaleRangeEndX || particle.scaleRangeStartY != particle.scaleRangeEndY);
-            particle.scaleX = particle.scaleRangeStartX;
-            particle.scaleY = particle.scaleRangeStartY;
+            particle.scale(particle.scaleRangeStartX, particle.scaleRangeStartY);
         }
         else
             particle.scaleRangeActive = false;
@@ -699,19 +698,19 @@ class Particles extends Visual {
         else
             particle.colorRangeActive = false;
 
-        // Particle drag settings
-        if (dragActive)
+        // Particle deceleration settings
+        if (decelerationActive)
         {
-            particle.dragRangeStartX = randomBetweenFloats(dragStartMinX, dragStartMaxX);
-            particle.dragRangeStartY = randomBetweenFloats(dragStartMinY, dragStartMaxY);
-            particle.dragRangeEndX = randomBetweenFloats(dragEndMinX, dragEndMaxX);
-            particle.dragRangeEndY = randomBetweenFloats(dragEndMinY, dragEndMaxY);
-            particle.dragRangeActive = particle.lifespan > 0 && (particle.dragRangeStartX != particle.dragRange.endX || particle.dragRangeStartY != particle.dragRange.endY);
-            particle.dragX = particle.dragRangeStartX;
-            particle.dragY = particle.dragRangeStartY;
+            particle.decelerationRangeStartX = randomBetweenFloats(decelerationStartMinX, decelerationStartMaxX);
+            particle.decelerationRangeStartY = randomBetweenFloats(decelerationStartMinY, decelerationStartMaxY);
+            particle.decelerationRangeEndX = randomBetweenFloats(decelerationEndMinX, decelerationEndMaxX);
+            particle.decelerationRangeEndY = randomBetweenFloats(decelerationEndMinY, decelerationEndMaxY);
+            particle.decelerationRangeActive = particle.lifespan > 0 && (particle.decelerationRangeStartX != particle.decelerationRangeEndX || particle.decelerationRangeStartY != particle.decelerationRangeEndY);
+            particle.decelerationX = particle.decelerationRangeStartX;
+            particle.decelerationY = particle.decelerationRangeStartY;
         }
         else
-            particle.dragRangeActive = false;
+            particle.decelerationRangeActive = false;
 
         // Particle acceleration settings
         if (accelerationActive)
@@ -721,7 +720,7 @@ class Particles extends Visual {
             particle.accelerationRangeEndX = randomBetweenFloats(accelerationEndMinX, accelerationEndMaxX);
             particle.accelerationRangeEndY = randomBetweenFloats(accelerationEndMinY, accelerationEndMaxY);
             particle.accelerationRangeActive = particle.lifespan > 0
-                && !particle.accelerationRange.start.equals(particle.accelerationRange.end);
+                && (particle.accelerationRangeStartX != particle.accelerationRangeEndX || particle.accelerationRangeStartY != particle.accelerationRangeEndY);
             particle.accelerationX = particle.accelerationRangeStartX;
             particle.accelerationY = particle.accelerationRangeStartY;
         }
@@ -740,8 +739,7 @@ class Particles extends Visual {
             particle.elasticityRangeActive = false;
 
         // Set position
-        particle.x = randomBetweenFloats(0, width) - particle.width * 0.5;
-        particle.y = randomBetweenFloats(0, height) - particle.height * 0.5;
+        particle.pos(randomBetweenFloats(0, width), randomBetweenFloats(0, height));
 
         emitEmitParticle(particle);
 
@@ -796,9 +794,142 @@ class ParticleItem {
 
     public var lifespan:Float = 0;
 
+    public var colorRangeActive:Bool = true;
+    public var colorRangeStart:Color = Color.WHITE;
+    public var colorRangeEnd:Color = Color.WHITE;
+    public var color(get,set):Color;
+    inline function get_color():Color {
+        var color:Color = Color.WHITE;
+        if (visual.quad != null) {
+            color = visual.quad.color;
+        }
+        else if (visual.mesh != null) {
+            color = visual.mesh.color;
+        }
+        return color;
+    }
+    inline function set_color(color:Color):Color {
+        if (visual.quad != null) {
+            visual.quad.color = color;
+        }
+        else if (visual.mesh != null) {
+            visual.mesh.color = color;
+        }
+        return color;
+    }
+
+    public var accelerationRangeActive:Bool = true;
+    public var accelerationRangeStartX:Float = 0;
+    public var accelerationRangeStartY:Float = 0;
+    public var accelerationRangeEndX:Float = 0;
+    public var accelerationRangeEndY:Float = 0;
+    public var accelerationX:Float = 0;
+    public var accelerationY:Float = 0;
+
+    public var decelerationRangeActive:Bool = true;
+    public var decelerationRangeStartX:Float = 0;
+    public var decelerationRangeStartY:Float = 0;
+    public var decelerationRangeEndX:Float = 0;
+    public var decelerationRangeEndY:Float = 0;
+    public var decelerationX:Float = 0;
+    public var decelerationY:Float = 0;
+
+    public var velocityRangeActive:Bool = true;
+    public var velocityRangeStartX:Float = 0;
+    public var velocityRangeStartY:Float = 0;
+    public var velocityRangeEndX:Float = 0;
+    public var velocityRangeEndY:Float = 0;
+    public var velocityX:Float = 0;
+    public var velocityY:Float = 0;
+
+    public var elasticityRangeActive:Bool = true;
+    public var elasticityRangeStart:Float = 0;
+    public var elasticityRangeEnd:Float = 0;
+    public var elasticity:Float = 0;
+
+    public var angularVelocityRangeActive:Bool = true;
+    public var angularVelocityRangeStart:Float = 0;
+    public var angularVelocityRangeEnd:Float = 0;
+    public var angularVelocity:Float = 0;
+
+    public var angularAccelerationRangeActive:Bool = true;
+    public var angularAccelerationRangeStart:Float = 0;
+    public var angularAccelerationRangeEnd:Float = 0;
+    public var angularAcceleration:Float = 0;
+
+    public var angularDeceleration:Float = 0;
+
+    public var scaleRangeActive:Bool = true;
+    public var scaleRangeStartX:Float = 1;
+    public var scaleRangeStartY:Float = 1;
+    public var scaleRangeEndX:Float = 1;
+    public var scaleRangeEndY:Float = 1;
+    public var scaleX(get,set):Float;
+    inline function get_scaleX():Float {
+        return visual.scaleX;
+    }
+    inline function set_scaleX(scaleX:Float):Float {
+        visual.scaleX = scaleX;
+        return scaleX;
+    }
+    public var scaleY:Float;
+    inline function get_scaleY():Float {
+        return visual.scaleY;
+    }
+    inline function set_scaleY(scaleY:Float):Float {
+        visual.scaleY = scaleY;
+        return scaleY;
+    }
+    inline public function scale(scaleX:Float, scaleY:Float):Void {
+        visual.scale(scaleX, scaleY);
+    }
+
+    public var x(get,set):Float;
+    inline function get_x():Float {
+        return visual.x;
+    }
+    inline function set_x(x:Float):Float {
+        visual.x = x;
+        return x;
+    }
+    public var y:Float;
+    inline function get_y():Float {
+        return visual.y;
+    }
+    inline function set_y(y:Float):Float {
+        visual.y = y;
+        return y;
+    }
+    inline public function pos(x:Float, y:Float):Void {
+        visual.pos(x, y);
+    }
+
+    public var angle(get,set):Float;
+    inline function get_angle():Float {
+        return visual.rotation;
+    }
+    inline function set_angle(angle:Float):Float {
+        visual.rotation = angle;
+        return angle;
+    }
+
+    public var alphaRangeActive:Bool = true;
+    public var alphaRangeStart:Float = 1;
+    public var alphaRangeEnd:Float = 1;
+    public var alpha(get,set):Float;
+    inline function get_alpha():Float {
+        return visual.alpha;
+    }
+    inline function set_alpha(alpha:Float):Float {
+        visual.alpha = alpha;
+        return alpha;
+    }
+
     public function new() {}
 
     public function reset():Void {
+
+        angle = 0;
 
     } //reset
 
