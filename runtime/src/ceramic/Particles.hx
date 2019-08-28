@@ -28,6 +28,7 @@ class Particles extends Visual implements Observable {
 
     /**
      * How often a particle is emitted, if currently emitting.
+     * Can be modified at the middle of an emission safely;
      */
     public var frequency:Float = 0.1;
 
@@ -470,6 +471,14 @@ class Particles extends Visual implements Observable {
 
         _continuousTimer += delta;
 
+        // Somehow frequency was set to 0 or below.
+        // Stop in that case
+        if (frequency <= 0) {
+            frequency = 0;
+            stop();
+            return;
+        }
+
         while (_continuousTimer >= frequency) {
 
             // Check quantity is zero.
@@ -652,6 +661,7 @@ class Particles extends Visual implements Observable {
     public function emitContinuously(frequency:Float = 0.1, quantity:Int = -1):Void
     {
         if (frequency <= 0 || quantity == 0) {
+            this.frequency = 0;
             stop();
             return;
         }
