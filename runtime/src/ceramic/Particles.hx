@@ -14,6 +14,292 @@ class Particles extends Visual implements Observable {
 
     @event function _emitParticle(particle:ParticleItem);
 
+/// Configuration shorthands
+
+	/**
+	 * If you are using `acceleration`, you can use `maxVelocity` with it
+	 * to cap the speed automatically (very useful!).
+	 */
+    inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
+        this.maxVelocityX = maxVelocityX;
+        this.maxVelocityY = maxVelocityY;
+    }
+
+    /**
+     * Sets the velocity starting range of particles launched from this emitter. Only used with `SQUARE`.
+     */
+    inline public function velocityStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        this.velocityStartMinX = startMinX;
+        this.velocityStartMinY = startMinY;
+        if (startMaxX == null) {
+            this.velocityStartMaxX = startMinX;
+        }
+        else {
+            this.velocityStartMaxX = startMaxX;
+        }
+        if (startMaxY == null) {
+            this.velocityStartMaxY = startMinY;
+        }
+        else {
+            this.velocityStartMaxY = startMaxY;
+        }
+    }
+
+    /**
+     * Sets the velocity ending range of particles launched from this emitter. Only used with `SQUARE`.
+     */
+    inline public function velocityEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        this.velocityEndMinX = endMinX;
+        this.velocityEndMinY = endMinY;
+        if (endMaxX == null) {
+            this.velocityEndMaxX = endMinX;
+        }
+        else {
+            this.velocityEndMaxX = endMaxX;
+        }
+        if (endMaxY == null) {
+            this.velocityEndMaxY = endMinY;
+        }
+        else {
+            this.velocityEndMaxY = endMaxY;
+        }
+    }
+
+    /**
+     * Set the speed starting range of particles launched from this emitter. Only used with `CIRCLE`.
+     */
+    inline public function speedStart(startMin:Float, ?startMax:Float):Void {
+        speedStartMin = startMin;
+        speedStartMax = startMax != null ? startMax : startMin;
+    }
+
+    /**
+     * Set the speed ending range of particles launched from this emitter. Only used with `CIRCLE`.
+     */
+    inline public function speedEnd(endMin:Float, ?endMax:Float):Void {
+        speedEndMin = endMin;
+        speedEndMax = endMax != null ? endMax : endMin;
+    }
+
+    /**
+     * Set the angular acceleration range of particles launched from this emitter.
+     */
+    inline public function angularAcceleration(startMin:Float, startMax:Float):Void {
+        angularAccelerationStartMin = startMin;
+        angularAccelerationStartMax = startMax;
+    }
+
+    /**
+     * Set the angular deceleration range of particles launched from this emitter.
+     */
+    inline public function angularDeceleration(startMin:Float, startMax:Float):Void {
+        angularDecelerationStartMin = startMin;
+        angularDecelerationStartMax = startMax;
+    }
+
+    /**
+     * The angular velocity starting range of particles launched from this emitter.
+     */
+    inline public function angularVelocityStart(startMin:Float, ?startMax:Float):Void {
+        angularVelocityStartMin = startMin;
+        angularVelocityStartMax = startMax != null ? startMax : startMin;
+    }
+
+    /**
+     * The angular velocity ending range of particles launched from this emitter.
+     */
+    inline public function angularVelocityEnd(endMin:Float, ?endMax:Float):Void {
+        angularVelocityEndMin = endMin;
+        angularVelocityEndMax = endMax != null ? endMax : endMin;
+    }
+
+    /**
+     * The angle starting range of particles launched from this emitter.
+     * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
+     */
+    inline public function angleStart(startMin:Float, ?startMax:Float):Void {
+        angleStartMin = startMin;
+        angleStartMax = startMax != null ? startMax : startMin;
+    }
+
+    /**
+     * The angle ending range of particles launched from this emitter.
+     * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
+     */
+    inline public function angleEnd(endMin:Float, ?endMax:Float):Void {
+        angleEndMin = endMin;
+        angleEndMax = endMax != null ? endMax : endMax;
+    }
+
+    /**
+     * The angle range at which particles will be launched from this emitter.
+     * Ignored unless `launchMode` is set to `CIRCLE`.
+     */
+    inline public function launchAngle(min:Float, max:Float):Void {
+        launchAngleMin = min;
+        launchAngleMax = max;
+    }
+
+    /**
+     * The life, or duration, range of particles launched from this emitter.
+     */
+    inline public function lifespan(min:Float, max:Float):Void {
+        lifespanMin = min;
+        lifespanMax = max;
+    }
+
+    /**
+     * Sets `scale` starting range of particles launched from this emitter.
+     */
+    inline public function scaleStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        this.scaleStartMinX = startMinX;
+        this.scaleStartMinY = startMinY;
+        if (startMaxX == null) {
+            this.scaleStartMaxX = startMinX;
+        }
+        else {
+            this.scaleStartMaxX = startMaxX;
+        }
+        if (startMaxY == null) {
+            this.scaleStartMaxY = startMinY;
+        }
+        else {
+            this.scaleStartMaxY = startMaxY;
+        }
+    }
+
+    /**
+     * Sets `scale` ending range of particles launched from this emitter.
+     */
+    inline public function scaleEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        this.scaleEndMinX = endMinX;
+        this.scaleEndMinY = endMinY;
+        if (endMaxX == null) {
+            this.scaleEndMaxX = endMinX;
+        }
+        else {
+            this.scaleEndMaxX = endMaxX;
+        }
+        if (endMaxY == null) {
+            this.scaleEndMaxY = endMinY;
+        }
+        else {
+            this.scaleEndMaxY = endMaxY;
+        }
+    }
+
+    /**
+     * Sets `acceleration` starting range of particles launched from this emitter.
+     */
+    inline public function accelerationStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        this.accelerationStartMinX = startMinX;
+        this.accelerationStartMinY = startMinY;
+        if (startMaxX == null) {
+            this.accelerationStartMaxX = startMinX;
+        }
+        else {
+            this.accelerationStartMaxX = startMaxX;
+        }
+        if (startMaxY == null) {
+            this.accelerationStartMaxY = startMinY;
+        }
+        else {
+            this.accelerationStartMaxY = startMaxY;
+        }
+    }
+
+    /**
+     * Sets `acceleration` ending range of particles launched from this emitter.
+     */
+    inline public function accelerationEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        this.accelerationEndMinX = endMinX;
+        this.accelerationEndMinY = endMinY;
+        if (endMaxX == null) {
+            this.accelerationEndMaxX = endMinX;
+        }
+        else {
+            this.accelerationEndMaxX = endMaxX;
+        }
+        if (endMaxY == null) {
+            this.accelerationEndMaxY = endMinY;
+        }
+        else {
+            this.accelerationEndMaxY = endMaxY;
+        }
+    }
+
+    /**
+     * Sets `deceleration` starting range of particles launched from this emitter.
+     */
+    inline public function decelerationStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        this.decelerationStartMinX = startMinX;
+        this.decelerationStartMinY = startMinY;
+        if (startMaxX == null) {
+            this.decelerationStartMaxX = startMinX;
+        }
+        else {
+            this.decelerationStartMaxX = startMaxX;
+        }
+        if (startMaxY == null) {
+            this.decelerationStartMaxY = startMinY;
+        }
+        else {
+            this.decelerationStartMaxY = startMaxY;
+        }
+    }
+
+    /**
+     * Sets `deceleration` ending range of particles launched from this emitter.
+     */
+    inline public function decelerationEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        this.decelerationEndMinX = endMinX;
+        this.decelerationEndMinY = endMinY;
+        if (endMaxX == null) {
+            this.decelerationEndMaxX = endMinX;
+        }
+        else {
+            this.decelerationEndMaxX = endMaxX;
+        }
+        if (endMaxY == null) {
+            this.decelerationEndMaxY = endMinY;
+        }
+        else {
+            this.decelerationEndMaxY = endMaxY;
+        }
+    }
+
+    /**
+     * Sets `color` starting range of particles launched from this emitter.
+     */
+    inline public function colorStart(startMin:Color, ?startMax:Color):Void {
+        colorStartMin = startMin;
+        colorStartMax = startMax != null ? startMax : startMin;
+    }
+
+    /**
+     * Sets `color` ending range of particles launched from this emitter.
+     */
+    inline public function colorEnd(endMin:Color, ?endMax:Color):Void {
+        colorEndMin = endMin;
+        colorEndMax = endMax != null ? endMax : endMin;
+    }
+
+    /**
+     * Sets `alpha` starting range of particles launched from this emitter.
+     */
+    inline public function alphaStart(startMin:Float, ?startMax:Float):Void {
+        alphaStartMin = startMin;
+        alphaStartMax = startMax != null ? startMax : startMin;
+    }
+
+    /**
+     * Sets `alpha` ending range of particles launched from this emitter.
+     */
+    inline public function alphaEnd(endMin:Float, ?endMax:Float):Void {
+        alphaEndMin = endMin;
+        alphaEndMax = endMax != null ? endMax : endMin;
+    }
+
 /// Properties
 
     /**
