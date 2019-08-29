@@ -730,7 +730,6 @@ class Spine extends Visual {
         }
 
         // Ensure animation gets rendered once to prevent 1-frame glitches
-        // TODO find a less agressive solution?
         forceRender();
 
     } //animate
