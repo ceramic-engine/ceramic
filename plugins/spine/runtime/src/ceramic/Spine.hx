@@ -117,6 +117,7 @@ class Spine extends Visual {
         if (renderDirty) {
             if (visible || renderWhenInvisible) {
                 if (renderDirtyBecauseSkinChanged) {
+                    renderDirtyBecauseSkinChanged = false;
                     forceRender();
                 }
                 else {
