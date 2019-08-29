@@ -114,7 +114,7 @@ class TextureTilePacker extends Entity {
         var maxHeight = padHeightWithMargin * numRows - margin * 2;
 
         if (width > maxWidth || height > maxHeight) {
-            warning('Cannot alloc tile bigger than $maxWidth x $maxHeight');
+            warning('Cannot alloc tile of $width x $height because this is bigger than $maxWidth x $maxHeight');
             return null;
         }
 
