@@ -114,15 +114,18 @@ class Spine extends Visual {
     // Not sure this is needed, but it may prevent some unnecessary allocation
     function runScheduledRender():Void {
         renderScheduled = false;
-        if (renderDirty) {
+        if (renderDirtyBecauseSkinChanged) {
             if (visible || renderWhenInvisible) {
-                if (renderDirtyBecauseSkinChanged) {
-                    renderDirtyBecauseSkinChanged = false;
-                    forceRender();
-                }
-                else {
-                    render(0, 0, false);
-                }
+                forceRender();
+            }
+            else {
+                renderDirtyBecauseSkinChanged = false;
+                renderDirty = false;
+            }
+        }
+        else if (renderDirty) {
+            if (visible || renderWhenInvisible) {
+                render(0, 0, false);
             }
             else {
                 renderDirty = false;
@@ -132,7 +135,15 @@ class Spine extends Visual {
     var runScheduledRenderDyn:Void->Void = null;
 
     /** Internal flag to know if render became dirty because of a skin change. */
-    var renderDirtyBecauseSkinChanged:Bool = false;
+    var renderDirtyBecauseSkinChanged(default,set):Bool = false;
+    inline function set_renderDirtyBecauseSkinChanged(renderDirtyBecauseSkinChanged:Bool):Bool {
+        if (renderDirtyBecauseSkinChanged && pausedOrFrozen && !renderScheduled && (visible || renderWhenInvisible)) {
+            renderScheduled = true;
+            if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
+            app.onceImmediate(runScheduledRenderDyn);
+        }
+        return (this.renderDirtyBecauseSkinChanged = renderDirtyBecauseSkinChanged);
+    }
 
     public var renderDirty(default,set):Bool = false;
     inline function set_renderDirty(renderDirty:Bool):Bool {
@@ -392,7 +403,6 @@ class Spine extends Visual {
             // If there is an animation running, render needs to be updated
             // more eagerly to use the new skin. Keep that info in a flag.
             renderDirtyBecauseSkinChanged = true;
-            renderDirty = true;
         }
         return skin;
     }
@@ -737,6 +747,9 @@ class Spine extends Visual {
     public function forceRender():Void {
 
         if (state == null) return;
+
+        // Forced rendering will update skin display anyway
+        renderDirtyBecauseSkinChanged = false;
 
         var prevPaused = paused;
         var prevFrozen = frozen;
