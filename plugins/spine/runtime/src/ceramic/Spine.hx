@@ -116,7 +116,12 @@ class Spine extends Visual {
         renderScheduled = false;
         if (renderDirty) {
             if (visible || renderWhenInvisible) {
-                render(0, 0, false);
+                if (renderDirtyBecauseSkinChanged) {
+                    forceRender();
+                }
+                else {
+                    render(0, 0, false);
+                }
             }
             else {
                 renderDirty = false;
@@ -124,6 +129,9 @@ class Spine extends Visual {
         }
     }
     var runScheduledRenderDyn:Void->Void = null;
+
+    /** Internal flag to know if render became dirty because of a skin change. */
+    var renderDirtyBecauseSkinChanged:Bool = false;
 
     public var renderDirty(default,set):Bool = false;
     inline function set_renderDirty(renderDirty:Bool):Bool {
@@ -274,6 +282,9 @@ class Spine extends Visual {
     public var spineData(default,set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
+
+        // Render will be updated from skeleton change anyway
+        renderDirtyBecauseSkinChanged = false;
         
         // Save animation info
         var prevSpineData = this.spineData;
@@ -376,6 +387,12 @@ class Spine extends Visual {
                 skeleton.setSkin(spineSkin);
             }
         }
+        if (animation != null) {
+            // If there is an animation running, render needs to be updated
+            // more eagerly to use the new skin. Keep that info in a flag.
+            renderDirtyBecauseSkinChanged = true;
+            renderDirty = true;
+        }
         return skin;
     }
 
@@ -390,6 +407,10 @@ class Spine extends Visual {
         }
         if (this.animation == animation) return animation;
         this.animation = animation;
+
+        // Render will be updated from animation change anyway
+        renderDirtyBecauseSkinChanged = false;
+
         if (spineData != null) animate(animation, loop, 0);
         return animation;
     }
