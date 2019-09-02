@@ -1,0 +1,576 @@
+{
+	"disableFormatting": false,
+	"emptyLines": {
+		"abstractEmptyLines": {
+			"betweenStaticVars": 1,
+			"betweenVars": 1,
+			"existingBetweenFields": "keep"
+		},
+		"afterBlocks": "keep",
+		"afterLeftCurly": "keep",
+		"afterPackage": 1,
+		"afterReturn": "keep",
+		"beforeBlocks": "keep",
+		"beforeRightCurly": "keep",
+		"betweenMultilineComments": 0,
+		"betweenSingleLineTypes": 0,
+		"betweenTypes": 1,
+		"classEmptyLines": {
+			"afterPrivateFunctions": 1,
+			"afterPrivateVars": 1,
+			"afterStaticFunctions": 1,
+			"afterStaticVars": 1,
+			"afterVars": 1,
+			"beginType": 1,
+			"betweenFunctions": 1,
+			"betweenStaticFunctions": 1,
+			"betweenStaticVars": 1,
+			"betweenVars": 1,
+			"endType": 1
+		},
+		"conditionalsEmptyLines": {
+			"afterElse": 0,
+			"afterError": 0,
+			"afterIf": 0,
+			"beforeElse": 0,
+			"beforeEnd": 0,
+			"beforeError": 0
+		},
+		"enumAbstractEmptyLines": {
+			"afterVars": 1,
+			"beginType": 1,
+			"betweenFunctions": 1,
+			"betweenVars": 1,
+			"endType": 1
+		},
+		"enumEmptyLines": {
+			"beginType": 1,
+			"betweenFields": 1,
+			"endType": 1
+		},
+		"externClassEmptyLines": {
+			"afterVars": 1,
+			"beginType": 1,
+			"betweenFunctions": 1,
+			"betweenVars": 1,
+			"endType": 1
+		},
+		"finalNewline": true,
+		"importAndUsing": {
+			"beforeType": 1,
+			"beforeUsing": 1,
+			"betweenImports": 0,
+			"betweenImportsLevel": "all"
+		},
+		"interfaceEmptyLines": {
+			"afterVars": 1,
+			"beginType": 1,
+			"betweenFunctions": 1,
+			"betweenVars": 1,
+			"endType": 1
+		},
+		"lineCommentsBetweenFunctions": "keep",
+		"lineCommentsBetweenTypes": "keep",
+		"macroClassEmptyLines": {
+			"afterPrivateFunctions": 1,
+			"afterPrivateVars": 1,
+			"afterStaticFunctions": 1,
+			"afterStaticVars": 1,
+			"afterVars": 1,
+			"beginType": 1,
+			"betweenFunctions": 1,
+			"betweenStaticFunctions": 1,
+			"betweenStaticVars": 1,
+			"betweenVars": 1,
+			"endType": 1
+		},
+		"maxAnywhereInFile": 1,
+		"typedefEmptyLines": {
+			"beginType": 1,
+			"betweenFields": 1,
+			"endType": 1
+		}
+	},
+	"sameLine": {
+		"anonFunctionBody": "same",
+		"caseBody": "next",
+		"catchBody": "next",
+		"comprehensionFor": "same",
+		"doWhile": "same",
+		"doWhileBody": "next",
+		"elseBody": "next",
+		"elseIf": "same",
+		"expressionCase": "keep",
+		"expressionIf": "same",
+		"expressionIfWithBlocks": false,
+		"expressionTry": "same",
+		"forBody": "next",
+		"functionBody": "next",
+		"ifBody": "next",
+		"ifElse": "next",
+		"returnBody": "same",
+		"returnBodySingleLine": "same",
+		"tryBody": "next",
+		"tryCatch": "same",
+		"untypedBody": "same",
+		"whileBody": "next"
+	},
+	"whitespace": {
+		"addLineCommentSpace": false
+	},
+	"excludes": [
+		"\\.haxelib",
+		"\\.git"
+	],
+	"indentation": {
+		"character": "    "
+	},
+	"wrapping": {
+		"anonFunctionSignature": {
+			"defaultWrap": "keep",
+			"rules": []
+		},
+		"anonType": {
+			"defaultWrap": "keep",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "itemCount <= n",
+							"value": 3
+						}
+					],
+					"type": "keep"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 30
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength >= n",
+							"value": 60
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"type": "onePerLine"
+				}
+			]
+		},
+		"arrayMatrixWrap": "matrixWrapWithAlign",
+		"arrayWrap": {
+			"defaultWrap": "keep",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "hasMultilineItems",
+							"value": 1
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength <= n",
+							"value": 80
+						}
+					],
+					"type": "keep"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 10
+						}
+					],
+					"type": "fillLineWithLeadingBreak"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 30
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"type": "onePerLine"
+				}
+			]
+		},
+		"callParameter": {
+			"defaultWrap": "keep",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 7
+						}
+					],
+					"type": "keep"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength >= n",
+							"value": 140
+						}
+					],
+					"type": "keep"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 80
+						}
+					],
+					"type": "keep"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 160
+						}
+					],
+					"type": "keep"
+				}
+			]
+		},
+		"functionSignature": {
+			"defaultWrap": "fillLine",
+			"defaultAdditionalIndent": 1,
+			"rules": []
+		},
+		"implementsExtends": {
+			"defaultWrap": "keep",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 140
+						}
+					],
+					"type": "fillLine",
+					"additionalIndent": 2
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"type": "fillLine",
+					"additionalIndent": 2
+				}
+			]
+		},
+		"maxLineLength": 160,
+		"metadataCallParameter": {
+			"defaultWrap": "keep",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength >= n",
+							"value": 140
+						}
+					],
+					"type": "fillLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 160
+						}
+					],
+					"type": "fillLine"
+				}
+			]
+		},
+		"methodChain": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 160
+						}
+					],
+					"type": "onePerLineAfterFirst"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount <= n",
+							"value": 3
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength <= n",
+							"value": 80
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 30
+						},
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"type": "onePerLineAfterFirst"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 7
+						}
+					],
+					"type": "onePerLineAfterFirst"
+				}
+			]
+		},
+		"multiVar": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength <= n",
+							"value": 15
+						}
+					],
+					"type": "fillLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 80
+						}
+					],
+					"type": "onePerLineAfterFirst"
+				}
+			]
+		},
+		"objectLiteral": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "itemCount <= n",
+							"value": 3
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 30
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength >= n",
+							"value": 60
+						}
+					],
+					"type": "onePerLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"type": "onePerLine"
+				}
+			]
+		},
+		"opAddSubChain": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 160
+						},
+						{
+							"cond": "anyItemLength >= n",
+							"value": 60
+						}
+					],
+					"location": "beforeLast",
+					"type": "onePerLineAfterFirst"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 160
+						}
+					],
+					"location": "beforeLast",
+					"type": "fillLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount <= n",
+							"value": 3
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength <= n",
+							"value": 120
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"location": "beforeLast",
+					"type": "onePerLineAfterFirst"
+				}
+			]
+		},
+		"opBoolChain": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 140
+						},
+						{
+							"cond": "anyItemLength >= n",
+							"value": 40
+						}
+					],
+					"location": "beforeLast",
+					"type": "onePerLineAfterFirst"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "lineLength >= n",
+							"value": 140
+						}
+					],
+					"location": "beforeLast",
+					"type": "fillLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount <= n",
+							"value": 3
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength <= n",
+							"value": 120
+						}
+					],
+					"type": "noWrap"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "itemCount >= n",
+							"value": 4
+						}
+					],
+					"location": "beforeLast",
+					"type": "onePerLineAfterFirst"
+				}
+			]
+		},
+		"typeParameter": {
+			"defaultWrap": "noWrap",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 50
+						}
+					],
+					"type": "fillLine"
+				},
+				{
+					"conditions": [
+						{
+							"cond": "totalItemLength >= n",
+							"value": 70
+						}
+					],
+					"type": "fillLine"
+				}
+			]
+		}
+	}
+}
