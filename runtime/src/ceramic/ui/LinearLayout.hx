@@ -385,7 +385,7 @@ class LinearLayout extends View {
                 d = subviews != null ? subviews.length : 1;
             case SAME:
                 dDiff = 0;
-                d = 0;
+                d = 1;
         }
 
         if (direction == VERTICAL) {
