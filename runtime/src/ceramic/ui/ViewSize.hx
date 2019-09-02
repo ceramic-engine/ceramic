@@ -5,7 +5,7 @@ class ViewSize {
 
     inline public static function isStandard(encoded:Float):Bool {
 
-        return encoded >= 0;
+        return encoded > -39999.9;
 
     } //isStandard
 
@@ -13,19 +13,20 @@ class ViewSize {
 
     inline public static function percent(value:Float):Float {
 
-        return -100.0 - (value < 0.0 ? 0.0 : (value > 100.0 ? 1.0 : value * 0.01));
+        return -50000.0 + (value < -10000.0 ? -10000.0 : (value > 10000.0 ? 10000.0 : value));
 
     } //percent
 
     inline public static function isPercent(encoded:Float):Bool {
 
-        return encoded <= -100 && encoded >= -101;
+        // Slightly extend range to ensure float precision doesn't create surprises
+        return encoded < -39999.9 && encoded > -60000.1;
 
     } //isPercent
 
     inline public static function percentToFloat(encoded:Float):Float {
 
-        return -(encoded + 100.0);
+        return (encoded + 50000.0) * 0.01;
 
     } //percentToFloat
 
@@ -33,13 +34,14 @@ class ViewSize {
 
     inline public static function fill():Float {
 
-        return -2;
+        return -60002.0;
 
     } //auto
 
     inline public static function isFill(encodedSize:Float):Bool {
 
-        return encodedSize == -2;
+        // Slightly extend range to ensure float precision doesn't create surprises
+        return encodedSize > -60002.1 && encodedSize < -60001.9;
 
     } //isFill
 
@@ -47,13 +49,14 @@ class ViewSize {
 
     inline public static function auto():Float {
 
-        return -1;
+        return -60001.0;
 
     } //auto
 
     inline public static function isAuto(encodedSize:Float):Bool {
 
-        return encodedSize == -1;
+        // Slightly extend range to ensure float precision doesn't create surprises
+        return encodedSize > -60001.1 && encodedSize < -60000.9;
 
     } //isAuto
 
