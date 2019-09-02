@@ -12,7 +12,14 @@ class CollectionView extends ScrollView {
 
     public var autoDestroyItems:Bool = true;
 
-    public var depthPerItem:Bool = false;
+    /** Control how children depth is sorted. */
+    public var childrenDepth(default,set):ChildrenDepth = SAME;
+    function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {
+        if (this.childrenDepth == childrenDepth) return childrenDepth;
+        this.childrenDepth = childrenDepth;
+        layoutDirty = true;
+        return childrenDepth;
+    }
 
     public var frames:ImmutableArray<CollectionViewItemFrame> = [];
 
@@ -182,10 +189,14 @@ class CollectionView extends ScrollView {
 
                 var view = frame.view;
                 if (view != null) {
-                    if (depthPerItem) {
+                    if (childrenDepth == INCREMENT) {
                         view.depth = itemIndex;
-                    } else {
-                        view.depth = 0.5;
+                    }
+                    else if (childrenDepth == DECREMENT) {
+                        view.depth = frames.length - itemIndex;
+                    }
+                    else {
+                        view.depth = 1;
                     }
                     var prevWidth = view.width;
                     var prevHeight = view.height;

@@ -4,16 +4,19 @@ package ceramic.ui;
     in a single column or vertically in a single row. */
 class LinearLayout extends View {
 
-    public var direction(default,set):LayoutDirection = VERTICAL;
+    public var direction(default, set):LayoutDirection = VERTICAL;
+
     function set_direction(direction:LayoutDirection):LayoutDirection {
-        if (this.direction == direction) return direction;
+        if (this.direction == direction)
+            return direction;
         if (direction == VERTICAL) {
             align = switch (align) {
                 case LEFT: TOP;
                 case RIGHT: BOTTOM;
                 default: align;
             }
-        } else {
+        }
+        else {
             align = switch (align) {
                 case TOP: LEFT;
                 case BOTTOM: RIGHT;
@@ -25,20 +28,35 @@ class LinearLayout extends View {
         return direction;
     }
 
-    public var itemSpacing(default,set):Float = 0;
+    public var itemSpacing(default, set):Float = 0;
+
     function set_itemSpacing(itemSpacing:Float):Float {
-        if (this.itemSpacing == itemSpacing) return itemSpacing;
+        if (this.itemSpacing == itemSpacing)
+            return itemSpacing;
         this.itemSpacing = itemSpacing;
         layoutDirty = true;
         return itemSpacing;
     }
 
-    public var align(default,set):LayoutAlign = TOP;
+    public var align(default, set):LayoutAlign = TOP;
+
     function set_align(align:LayoutAlign):LayoutAlign {
-        if (this.align == align) return align;
+        if (this.align == align)
+            return align;
         this.align = align;
         layoutDirty = true;
         return align;
+    }
+
+    /** Control how children depth is sorted. */
+    public var childrenDepth(default, set):ChildrenDepth = INCREMENT;
+
+    function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {
+        if (this.childrenDepth == childrenDepth)
+            return childrenDepth;
+        this.childrenDepth = childrenDepth;
+        layoutDirty = true;
+        return childrenDepth;
     }
 
     public function new() {
@@ -172,7 +190,7 @@ class LinearLayout extends View {
             if (persist) {
                 var persistingLayoutMask = layoutMask;
                 persistingLayoutMask.canDecreaseWidth(false);
-                
+
                 if (subviews != null) {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
@@ -313,7 +331,7 @@ class LinearLayout extends View {
             if (persist) {
                 var persistingLayoutMask = layoutMask;
                 persistingLayoutMask.canDecreaseHeight(false);
-                
+
                 if (subviews != null) {
                     for (i in 0...subviews.length) {
                         var view = subviews.unsafeGet(i);
@@ -355,13 +373,28 @@ class LinearLayout extends View {
         var paddedWidth = width - paddingLeft - paddingRight;
         var paddedHeight = height - paddingTop - paddingBottom;
 
+        // Compute depth sorting fashion
+        var d:Float;
+        var dDiff:Float;
+        switch (childrenDepth) {
+            case INCREMENT:
+                dDiff = 1;
+                d = 1;
+            case DECREMENT:
+                dDiff = -1;
+                d = subviews != null ? subviews.length : 1;
+            case SAME:
+                dDiff = 0;
+                d = 0;
+        }
+
         if (direction == VERTICAL) {
 
             var y = paddingTop;
             var h = 0.0;
             var numChildren = 0;
             var numFill = 0;
-            var d = 1.0;
+
             var itemSpacing = ViewSize.computeWithParentSize(itemSpacing, height);
 
             // Layout each view
@@ -421,7 +454,8 @@ class LinearLayout extends View {
                         y += view.height;
 
                         // Set depth
-                        view.depth = d++;
+                        view.depth = d;
+                        d += dDiff;
                     }
                 }
             }
@@ -459,7 +493,6 @@ class LinearLayout extends View {
             var w = 0.0;
             var numChildren = 0;
             var numFill = 0;
-            var d = 1.0;
             var itemSpacing = ViewSize.computeWithParentSize(itemSpacing, width);
 
             // Layout each view
@@ -517,7 +550,8 @@ class LinearLayout extends View {
                         x += view.width;
 
                         // Set depth
-                        view.depth = d++;
+                        view.depth = d;
+                        d += dDiff;
                     }
                 }
             }
