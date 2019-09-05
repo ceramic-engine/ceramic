@@ -1291,7 +1291,7 @@ class Spine extends Visual {
                                     }
 
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
-                                    mesh.depth = z;
+                                    mesh.depth = slotInfo.depth;
                                     mesh.scaleY = -1;
 
                                 }
@@ -1365,7 +1365,7 @@ class Spine extends Visual {
 
                                 slotInfo.transform.concat(mesh.transform);
 
-                                mesh.depth = boundSlot.parentDepth + microDepth;
+                                mesh.depth = boundSlot.parentDepth + microDepth + slotInfo.depth - z;
                                 slotInfo.depth = mesh.depth;
                                 microDepth += 0.0001;
                             }
