@@ -104,6 +104,9 @@ class Spine extends Visual {
         (by setting another animation), this event is canceled. */
     @event function finishCurrentAnimationChain();
 
+    /** When a next animation is applied and assigned as main animation. */
+    @event function applyNextAnimation(animation:String);
+
     /** When a spine animation event is triggered. */
     @event function spineEvent(entry:TrackEntry, event:Event);
 
@@ -669,6 +672,7 @@ class Spine extends Visual {
         if (nextAnimations != null && nextAnimations.length > 0) {
             _settingNextAnimation = true;
             animation = nextAnimations.shift();
+            emitApplyNextAnimation(animation);
             _settingNextAnimation = false;
         }
         else {
