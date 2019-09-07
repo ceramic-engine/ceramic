@@ -9,7 +9,7 @@ class Assert {
         This check is only done in `debug` builds and doesn't affect `release` builds. */
     macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
 
-#if debug
+#if (debug || ceramic_assert)
         var str = haxe.macro.ExprTools.toString(expr);
 
         reason = switch(reason) {
