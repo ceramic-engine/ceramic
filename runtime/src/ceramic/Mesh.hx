@@ -123,7 +123,7 @@ class Mesh extends Visual {
 
             _matrix.identity();
             // Apply whole visual transform
-            _matrix.setTo(a, b, c, d, tx, ty);
+            _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
             // But remove screen transform from it
             _matrix.concat(ceramic.App.app.screen.reverseMatrix);
             _matrix.invert();

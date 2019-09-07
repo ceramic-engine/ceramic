@@ -447,17 +447,17 @@ class Visual extends Entity {
 
 /// Properties (Matrix)
 
-    public var a:Float = 1;
+    @:noCompletion public var matA:Float = 1;
 
-    public var b:Float = 0;
+    @:noCompletion public var matB:Float = 0;
 
-    public var c:Float = 0;
+    @:noCompletion public var matC:Float = 0;
 
-    public var d:Float = 1;
+    @:noCompletion public var matD:Float = 1;
 
-    public var tx:Float = 0;
+    @:noCompletion public var matTX:Float = 0;
 
-    public var ty:Float = 0;
+    @:noCompletion public var matTY:Float = 0;
 
 /// Properties (Computed)
 
@@ -714,29 +714,29 @@ class Visual extends Entity {
             //
             if (translatesOnly && transform == null) {
 
-                _matrix.a = parent.a;
-                _matrix.b = parent.b;
-                _matrix.c = parent.c;
-                _matrix.d = parent.d;
+                _matrix.a = parent.matA;
+                _matrix.b = parent.matB;
+                _matrix.c = parent.matC;
+                _matrix.d = parent.matD;
 
-                var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
-                _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
+                var tx1 = _matrix.tx * parent.matA + _matrix.ty * parent.matC + parent.matTX;
+                _matrix.ty = _matrix.tx * parent.matB + _matrix.ty * parent.matD + parent.matTY;
                 _matrix.tx = tx1;
 
             }
             else {
 
-                var a1 = _matrix.a * parent.a + _matrix.b * parent.c;
-                _matrix.b = _matrix.a * parent.b + _matrix.b * parent.d;
+                var a1 = _matrix.a * parent.matA + _matrix.b * parent.matC;
+                _matrix.b = _matrix.a * parent.matB + _matrix.b * parent.matD;
                 _matrix.a = a1;
 
-                var c1 = _matrix.c * parent.a + _matrix.d * parent.c;
-                _matrix.d = _matrix.c * parent.b + _matrix.d * parent.d;
+                var c1 = _matrix.c * parent.matA + _matrix.d * parent.matC;
+                _matrix.d = _matrix.c * parent.matB + _matrix.d * parent.matD;
 
                 _matrix.c = c1;
 
-                var tx1 = _matrix.tx * parent.a + _matrix.ty * parent.c + parent.tx;
-                _matrix.ty = _matrix.tx * parent.b + _matrix.ty * parent.d + parent.ty;
+                var tx1 = _matrix.tx * parent.matA + _matrix.ty * parent.matC + parent.matTX;
+                _matrix.ty = _matrix.tx * parent.matB + _matrix.ty * parent.matD + parent.matTY;
                 _matrix.tx = tx1;
             }
 
@@ -775,12 +775,12 @@ class Visual extends Entity {
 
         // Assign final matrix values to visual
         //
-        a = _matrix.a;
-        b = _matrix.b;
-        c = _matrix.c;
-        d = _matrix.d;
-        tx = _matrix.tx;
-        ty = _matrix.ty;
+        matA = _matrix.a;
+        matB = _matrix.b;
+        matC = _matrix.c;
+        matD = _matrix.d;
+        matTX = _matrix.tx;
+        matTY = _matrix.ty;
 
         // Matrix is up to date
         matrixDirty = false;
@@ -802,7 +802,7 @@ class Visual extends Entity {
 
         _matrix.identity();
         // Apply whole visual transform
-        _matrix.setTo(a, b, c, d, tx, ty);
+        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
         // But remove screen transform from it
         _matrix.concat(ceramic.App.app.screen.reverseMatrix);
         _matrix.invert();
@@ -846,7 +846,7 @@ class Visual extends Entity {
 
         _matrix.identity();
         // Apply whole visual transform
-        _matrix.setTo(a, b, c, d, tx, ty);
+        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
         // But remove screen transform from it if needed
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget == null) {
@@ -868,7 +868,7 @@ class Visual extends Entity {
 
         _matrix.identity();
         // Apply whole visual transform
-        _matrix.setTo(a, b, c, d, tx, ty);
+        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
         // But remove screen transform from it if needed
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget == null) {
@@ -891,7 +891,7 @@ class Visual extends Entity {
 
         transform.identity();
         // Apply whole visual transform
-        transform.setTo(a, b, c, d, tx, ty);
+        transform.setTo(matA, matB, matC, matD, matTX, matTY);
         // But remove screen transform from it
         transform.concat(ceramic.App.app.screen.reverseMatrix);
 

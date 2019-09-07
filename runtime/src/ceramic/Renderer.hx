@@ -490,12 +490,12 @@ class Renderer extends Entity {
 
         // Fetch matrix
         //
-        var matA:Float = quad.a;
-        var matB:Float = quad.b;
-        var matC:Float = quad.c;
-        var matD:Float = quad.d;
-        var matTX:Float = quad.tx;
-        var matTY:Float = quad.ty;
+        var matA:Float = quad.matA;
+        var matB:Float = quad.matB;
+        var matC:Float = quad.matC;
+        var matD:Float = quad.matD;
+        var matTX:Float = quad.matTX;
+        var matTY:Float = quad.matTY;
         var z:Float = this.z;
         var posFloats:Int = this.posFloats;
 
@@ -882,12 +882,12 @@ class Renderer extends Entity {
 
         // Fetch matrix
         //
-        var matA:Float = mesh.a;
-        var matB:Float = mesh.b;
-        var matC:Float = mesh.c;
-        var matD:Float = mesh.d;
-        var matTX:Float = mesh.tx;
-        var matTY:Float = mesh.ty;
+        var matA:Float = mesh.matA;
+        var matB:Float = mesh.matB;
+        var matC:Float = mesh.matC;
+        var matD:Float = mesh.matD;
+        var matTX:Float = mesh.matTX;
+        var matTY:Float = mesh.matTY;
         var z:Float = this.z;
 
         // Color
