@@ -75,24 +75,6 @@ class Entity implements Events implements Lazy {
 
     } //destroy
 
-    inline public function clearComponents() {
-
-        // Destroy each linked component
-        if (components != null) {
-            var toRemove:Array<String> = null;
-            for (name in components.keys()) {
-                if (toRemove == null) toRemove = [name];
-                else toRemove.push(name);
-            }
-            if (toRemove != null) {
-                for (name in toRemove) {
-                    removeComponent(name);
-                }
-            }
-        }
-
-    } //clearComponents
-
 /// Autorun
 
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
@@ -159,8 +141,26 @@ class Entity implements Events implements Lazy {
 
 /// Components
 
-    /** Public components mapping. Does not contain components
-        created separatelywith `component()` or macro-based components. */
+    inline public function clearComponents() {
+
+        // Destroy each linked component
+        if (components != null) {
+            var toRemove:Array<String> = null;
+            for (name in components.keys()) {
+                if (toRemove == null) toRemove = [name];
+                else toRemove.push(name);
+            }
+            if (toRemove != null) {
+                for (name in toRemove) {
+                    removeComponent(name);
+                }
+            }
+        }
+
+    } //clearComponents
+
+    /** Public components mapping. Contain components
+        created separately with `component()` or macro-based components as well. */
     @editable
     public var components(get,set):ImmutableMap<String,Component>;
     inline function get_components():ImmutableMap<String,Component> {
