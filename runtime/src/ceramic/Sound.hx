@@ -19,6 +19,8 @@ class Sound extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (asset != null) asset.destroy();
 
         app.backend.audio.destroy(backendItem);

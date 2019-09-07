@@ -82,6 +82,8 @@ class BackgroundQueue extends Entity {
 
     override function destroy():Void {
 
+        super.destroy();
+
         stop = true;
 
     } //destroy

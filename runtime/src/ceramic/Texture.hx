@@ -58,6 +58,8 @@ class Texture extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (asset != null) asset.destroy();
 
         app.backend.textures.destroyTexture(backendItem);

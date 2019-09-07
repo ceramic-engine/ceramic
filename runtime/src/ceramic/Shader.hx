@@ -60,6 +60,8 @@ class Shader extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (asset != null) asset.destroy();
 
         app.backend.shaders.destroy(backendItem);

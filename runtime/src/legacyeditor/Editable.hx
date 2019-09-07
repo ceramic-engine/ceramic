@@ -42,6 +42,8 @@ class Editable extends Component {
 
     override function destroy() {
 
+        super.destroy();
+
         if (active == this && highlight != null) {
             highlight.destroy();
         }

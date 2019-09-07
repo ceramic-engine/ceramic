@@ -52,6 +52,8 @@ class DatabaseAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         database = null;
 
     } //destroy

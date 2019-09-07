@@ -201,6 +201,8 @@ class FontAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (font != null) {
             font.destroy();
             font = null;

@@ -43,6 +43,9 @@ class Autorun extends Entity {
         // Remove any callback as we won't use it anymore
         onRun = null;
 
+        // Destroy
+        super.destroy();
+
     } //destroy
 
     inline function willEmitReset():Void {

@@ -46,6 +46,8 @@ class SoundAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (sound != null) {
             sound.destroy();
             sound = null;

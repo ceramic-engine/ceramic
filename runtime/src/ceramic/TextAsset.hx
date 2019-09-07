@@ -43,6 +43,8 @@ class TextAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         text = null;
 
     } //destroy

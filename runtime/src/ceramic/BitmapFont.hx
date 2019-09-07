@@ -82,6 +82,8 @@ class BitmapFont extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (asset != null) asset.destroy();
         
         for (texture in pages) {

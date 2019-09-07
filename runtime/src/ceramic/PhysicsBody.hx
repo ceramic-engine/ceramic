@@ -17,6 +17,8 @@ class PhysicsBody extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (visual != null) {
             if (visual.body == this) {
                 visual.body = null;

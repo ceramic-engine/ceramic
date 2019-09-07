@@ -183,10 +183,15 @@ class EntityMacro {
                                 var lines = printer.printExpr(fn.expr).split("\n");
 
                                 // Check there is no explicit super.destroy() call
+                                var foundIt = false;
                                 for (line in lines) {
                                     if (line.indexOf('super.destroy();') != -1) {
-                                        throw new Error("Explicit call to super.destroy() is not allowed. This is done automatically", field.pos);
+                                        foundIt = true;
+                                        break;
                                     }
+                                }
+                                if (!foundIt) {
+                                    Context.error("Call to super.destroy() is required", field.pos);
                                 }
 
                                 // Ensure expr is surrounded with a block
@@ -202,10 +207,12 @@ class EntityMacro {
                                 switch (fn.expr.expr) {
                                     case EBlock(exprs):
 
-                                        // Add if destroyed check at the top
+                                        // Check lifecycle state first and continue only
+                                        // if the entity is not destroyed already
+                                        // Mark destroyed, but still allow call to super.destroy()
                                         exprs.unshift(macro {
-                                            if (destroyed) return;
-                                            super.destroy();
+                                            if (_lifecycleState >= 2) return;
+                                            _lifecycleState = 1;
                                         });
 
                                         // Destroy owned entities as well
@@ -216,107 +223,6 @@ class EntityMacro {
                                                     if (toDestroy != null) {
                                                         toDestroy.destroy();
                                                         this.$name = null;
-                                                    }
-                                                });
-                                            }
-                                        }
-
-                                    default:
-                                }
-
-                            default:
-                        }
-                    }
-                    else if (field.name == 'dispose') {
-
-                        switch(field.kind) {
-                            case FieldType.FFun(fn):
-                                var printer = new haxe.macro.Printer();
-                                var lines = printer.printExpr(fn.expr).split("\n");
-
-                                // Check there is no explicit super.dispose() call
-                                for (line in lines) {
-                                    if (line.indexOf('super.dispose();') != -1) {
-                                        throw new Error("Explicit call to super.dispose() is not allowed. This is done automatically", field.pos);
-                                    }
-                                }
-
-                                // Ensure expr is surrounded with a block
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
-                                    default:
-                                        fn.expr.expr = EBlock([{
-                                            pos: fn.expr.pos,
-                                            expr: fn.expr.expr
-                                        }]);
-                                }
-
-                                // Add if destroyed check at the top
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
-
-                                        exprs.unshift(macro {
-                                            if (disposed) return;
-                                            super.dispose();
-                                        });
-
-                                        // Dispose owned entities as well
-                                        if (ownFields != null) {
-                                            for (name in ownFields) {
-                                                exprs.unshift(macro {
-                                                    var toDispose = this.$name;
-                                                    if (toDispose != null) {
-                                                        toDispose.dispose();
-                                                    }
-                                                });
-                                            }
-                                        }
-
-                                    default:
-                                }
-
-                            default:
-                        }
-                    }
-                    else if (field.name == 'restore') {
-
-                        switch(field.kind) {
-                            case FieldType.FFun(fn):
-                                var printer = new haxe.macro.Printer();
-                                var lines = printer.printExpr(fn.expr).split("\n");
-
-                                // Check there is no explicit super.restore() call
-                                for (line in lines) {
-                                    if (line.indexOf('super.restore();') != -1) {
-                                        throw new Error("Explicit call to super.restore() is not allowed. This is done automatically", field.pos);
-                                    }
-                                }
-
-                                // Ensure expr is surrounded with a block
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
-                                    default:
-                                        fn.expr.expr = EBlock([{
-                                            pos: fn.expr.pos,
-                                            expr: fn.expr.expr
-                                        }]);
-                                }
-
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
-
-                                        exprs.unshift(macro {
-                                            if (!disposed) return;
-                                            super.restore();
-                                        });
-
-                                        // Restore owned entities as well
-                                        if (ownFields != null) {
-                                            for (name in ownFields) {
-                                                exprs.unshift(macro {
-                                                    var toRestore = this.$name;
-                                                    if (toRestore != null) {
-                                                        toRestore.restore();
                                                     }
                                                 });
                                             }

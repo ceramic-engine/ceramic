@@ -71,6 +71,8 @@ class Asset extends Entity implements Observable {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (owner != null) {
             owner.removeAsset(this);
             owner = null;

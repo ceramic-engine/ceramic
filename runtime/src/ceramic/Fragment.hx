@@ -395,6 +395,8 @@ class Fragment extends Quad {
 
     override function destroy() {
 
+        super.destroy();
+
         removeAllItems();
 
     } //destroy

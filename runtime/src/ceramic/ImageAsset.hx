@@ -135,6 +135,8 @@ class ImageAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (texture != null) {
             texture.destroy();
             texture = null;

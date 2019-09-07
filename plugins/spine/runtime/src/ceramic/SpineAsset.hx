@@ -276,6 +276,8 @@ class SpineAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (spineData != null) {
             spineData.destroy();
             spineData = null;

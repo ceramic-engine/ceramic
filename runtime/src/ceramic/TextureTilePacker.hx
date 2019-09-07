@@ -76,6 +76,8 @@ class TextureTilePacker extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         if (nextPacker != null) {
             nextPacker.destroy();
             nextPacker = null;

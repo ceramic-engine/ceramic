@@ -118,6 +118,8 @@ class ShaderAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (shader != null) {
             shader.destroy();
             shader = null;

@@ -38,6 +38,8 @@ class Assets extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         for (asset in [].concat(addedAssets)) {
             asset.offDestroy(assetDestroyed);
             asset.destroy();

@@ -38,6 +38,8 @@ class TilesetImage extends Entity {
 
     override function destroy() {
 
+        super.destroy();
+
         // Will update texture asset retain count accordingly
         texture = null;
 

@@ -591,6 +591,8 @@ class Visual extends Entity {
 
     override public function destroy() {
 
+        super.destroy();
+
         if (ceramic.App.app.screen.focusedVisual == this) {
             ceramic.App.app.screen.focusedVisual = null;
         }

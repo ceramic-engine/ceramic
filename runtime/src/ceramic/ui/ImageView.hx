@@ -110,6 +110,8 @@ class ImageView extends View implements Observable {
 
     override function destroy() {
 
+        super.destroy();
+
         if (imageQuad.texture != null && imageQuad.texture == loadedTexture) {
             imageQuad.texture.destroy();
             imageQuad.texture = null;

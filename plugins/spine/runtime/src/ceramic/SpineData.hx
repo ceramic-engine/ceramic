@@ -62,6 +62,8 @@ class SpineData extends Entity {
 
     override public function destroy():Void {
 
+        super.destroy();
+
         if (asset != null) asset.destroy();
 
         atlas.dispose();

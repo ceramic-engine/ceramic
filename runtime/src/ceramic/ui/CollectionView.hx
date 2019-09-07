@@ -37,6 +37,8 @@ class CollectionView extends ScrollView {
 
     override function destroy() {
 
+        super.destroy();
+
         dataSource = null;
         for (i in 0...reusableViews.length) {
             var view = reusableViews.unsafeGet(i);

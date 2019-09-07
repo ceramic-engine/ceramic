@@ -241,6 +241,8 @@ class TilemapAsset extends Asset {
 
     override function destroy():Void {
 
+        super.destroy();
+
         if (tilemapData != null) {
             tilemapData.destroy();
             tilemapData = null;

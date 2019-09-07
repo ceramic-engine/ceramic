@@ -19,15 +19,15 @@ class Entity implements Events implements Lazy {
 
     public var id:String = null;
 
+    /** Internal flag to keep track of current entity state:
+     - 0: Entity is not destroyed, can be used normally
+     - 1: Entity is marked destroyed still allowing calls to super.destroy()
+     - 2: Entity is marked destroyed and additional calls to destroy() are now ignored
+     */
     var _lifecycleState:Int = 0;
 
     public var destroyed(get,never):Bool;
     inline function get_destroyed():Bool {
-        return _lifecycleState >= 2;
-    }
-
-    public var disposed(get,never):Bool;
-    inline function get_disposed():Bool {
         return _lifecycleState >= 1;
     }
 
@@ -35,39 +35,12 @@ class Entity implements Events implements Lazy {
 
     @event function destroy();
 
-    @event function dispose();
-
-    @event function restore();
-
 /// Lifecycle
-
-    /** Allow to dispose an entity. Default implementation doing nothing except firing a `dispose` event,
-        but subclasses can override it to implement recycling, fade-out transitions before destroying... */
-    public function dispose():Void {
-
-        if (_lifecycleState >= 1) return; // if disposed or destroyed
-        _lifecycleState = 1; // disposed = true
-
-        emitDispose();
-
-    } //dispose
-
-    /** Restore a previously disposed entity. Doesn't work on destroyed objects. */
-    public function restore():Void {
-
-        Assert.assert(destroyed == false, 'Cannot restore a destroyed entity');
-
-        if (_lifecycleState != 1) return; // if destroyed or not disposed
-        _lifecycleState = 0; // disposed = false
-
-        emitRestore();
-
-    } //restore
 
     public function destroy():Void {
 
-        if (destroyed) return;
-        _lifecycleState = 2; // destroyed = true
+        if (_lifecycleState >= 2) return;
+        _lifecycleState = 2; // `Entity.destroy() called` = true
 
         emitDestroy();
 

@@ -463,6 +463,8 @@ class View extends Quad {
 
     override function destroy() {
 
+        super.destroy();
+
         // Remove view from global list
         _allViews.splice(_allViews.indexOf(this), 1);
 

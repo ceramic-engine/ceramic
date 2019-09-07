@@ -214,6 +214,9 @@ class Filter extends Quad {
     }
 
     override function destroy() {
+
+        super.destroy();
+        
         texture = null;
         if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
             renderTexture.destroy();

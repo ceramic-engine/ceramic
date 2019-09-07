@@ -130,6 +130,8 @@ class Quad extends Visual {
 
     override function destroy() {
 
+        super.destroy();
+
         // Will update texture asset retain count accordingly
         texture = null;
 

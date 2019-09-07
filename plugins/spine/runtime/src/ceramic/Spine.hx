@@ -806,6 +806,8 @@ class Spine extends Visual {
 
     override function destroy() {
 
+        super.destroy();
+
         // Will update reference counting
         spineData = null;
 
