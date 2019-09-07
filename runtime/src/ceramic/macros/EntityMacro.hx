@@ -7,11 +7,13 @@ using haxe.macro.ExprTools;
 
 class EntityMacro {
 
-    static var onReused = false;
+    static var onReused:Bool = false;
 
-    static var processed = new Map<String,Bool>();
+    static var processed:Map<String,Bool> = new Map();
 
-    static var specialFields = [
+    static var hasSuperDestroy:Bool = false;
+
+    static var specialFields:Map<String,Bool> = [
         'destroy' => true,
         'dispose' => true,
         'restore' => true
@@ -179,29 +181,23 @@ class EntityMacro {
 
                         switch(field.kind) {
                             case FieldType.FFun(fn):
-                                var printer = new haxe.macro.Printer();
-                                var lines = printer.printExpr(fn.expr).split("\n");
 
-                                // Check there is no explicit super.destroy() call
-                                var foundIt = false;
-                                for (line in lines) {
-                                    if (line.indexOf('super.destroy();') != -1) {
-                                        foundIt = true;
-                                        break;
-                                    }
-                                }
-                                if (!foundIt) {
-                                    Context.error("Call to super.destroy() is required", field.pos);
-                                }
+                                // Ensure expr is surrounded with a block and tranform super.destroy() calls.
+                                // Check that super.destroy() call exists at the same time
+                                hasSuperDestroy = false;
 
-                                // Ensure expr is surrounded with a block
                                 switch (fn.expr.expr) {
                                     case EBlock(exprs):
+                                        fn.expr = transformSuperDestroy(fn.expr);
                                     default:
                                         fn.expr.expr = EBlock([{
                                             pos: fn.expr.pos,
-                                            expr: fn.expr.expr
+                                            expr: transformSuperDestroy(fn.expr).expr
                                         }]);
+                                }
+
+                                if (!hasSuperDestroy) {
+                                    Context.error("Call to super.destroy() is required", field.pos);
                                 }
 
                                 switch (fn.expr.expr) {
@@ -211,8 +207,8 @@ class EntityMacro {
                                         // if the entity is not destroyed already
                                         // Mark destroyed, but still allow call to super.destroy()
                                         exprs.unshift(macro {
-                                            if (_lifecycleState >= 2) return;
-                                            _lifecycleState = 1;
+                                            if (_lifecycleState <= -2) return;
+                                            _lifecycleState = -2;
                                         });
 
                                         // Destroy owned entities as well
@@ -245,6 +241,25 @@ class EntityMacro {
         return newFields;
 
     } //build
+
+    /** Replace `super.destroy();`
+        with `{ _lifecycleState = -1; super.destroy(); }`
+        */
+    static function transformSuperDestroy(e:Expr):Expr {
+
+        // This super.destroy() call patch ensures
+        // the parent destroy() method will not ignore our call as it would normally do
+        // when the object is marked destroyed.
+
+        switch (e.expr) {
+            case ECall({expr: EField({expr: EConst(CIdent('super')), pos: _}, 'destroy'), pos: _}, _):
+                hasSuperDestroy = true;
+                return macro { _lifecycleState = -1; ${e}; };
+            default:
+                return ExprTools.map(e, transformSuperDestroy);
+        }
+
+    } //transformSuperDestroy
 
     static function hasOwnerOrComponentMeta(field:Field):Int {
 

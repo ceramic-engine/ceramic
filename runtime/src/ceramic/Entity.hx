@@ -21,14 +21,15 @@ class Entity implements Events implements Lazy {
 
     /** Internal flag to keep track of current entity state:
      - 0: Entity is not destroyed, can be used normally
-     - 1: Entity is marked destroyed still allowing calls to super.destroy()
-     - 2: Entity is marked destroyed and additional calls to destroy() are now ignored
+     - -1: Entity is marked destroyed still allowing calls to super.destroy()
+     - -2: Entity is marked destroyed and additional calls to destroy() are ignored
+     - -3: Entity root is destroyed (Entity.destroy() was called). Additional calls to destroy() are ignored
      */
     var _lifecycleState:Int = 0;
 
     public var destroyed(get,never):Bool;
     inline function get_destroyed():Bool {
-        return _lifecycleState >= 1;
+        return _lifecycleState < 0;
     }
 
 /// Events
@@ -37,10 +38,15 @@ class Entity implements Events implements Lazy {
 
 /// Lifecycle
 
+    /** Destroy this entity. This method is automatically protected from duplicate calls. That means
+        calling multiple times an entity's `destroy()` method will run the destroy code only one time.
+        As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
+        method on a subclass (a macro is inserting a code to marke the object
+        as destroyed at the beginning of every `destroy()` override function. */
     public function destroy():Void {
 
-        if (_lifecycleState >= 2) return;
-        _lifecycleState = 2; // `Entity.destroy() called` = true
+        if (_lifecycleState <= -2) return;
+        _lifecycleState = -3; // `Entity.destroy() called` = true
 
         emitDestroy();
 
