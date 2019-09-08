@@ -418,6 +418,8 @@ class StateMachineMacro {
                 ret: macro :Void,
                 expr: macro {
 
+                    var state = this.state;
+
                     if (paused || state == null) return;
                     
                     // Call hook method from state (if any)
