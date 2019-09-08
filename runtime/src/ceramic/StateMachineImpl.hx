@@ -10,6 +10,9 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         this will be set to the next incoming state */
     public var nextState(default,null):T = null;
 
+    /** When set to `true`, the state machine will stop calling `update()` on current state and related. */
+    public var paused:Bool = false;
+
     var stateInstances:Map<String, State> = null;
 
     var currentStateInstance:State = null;
@@ -20,19 +23,17 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         // Assign next state value
         nextState = state;
 
-        // Exit previous state object (if any)
-        if (currentStateInstance != null) {
-            currentStateInstance.exit();
-            currentStateInstance = null;
+        // Exit previous state
+        if (this.state != null) {
+            _exitState();
         }
 
         // Update state value
         this.state = state;
 
-        // Enter new state object (if any)
-        currentStateInstance = get(state);
-        if (currentStateInstance != null) {
-            currentStateInstance.enter();
+        // Enter new state
+        if (this.state != null) {
+            _enterState();
         }
 
         // Remove next state value
@@ -101,17 +102,39 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         super();
 
-        ceramic.App.app.onUpdate(this, update);
+        ceramic.App.app.onUpdate(this, _updateState);
 
     } //new
 
-    function update(delta:Float):Void {
+    function _enterState():Void {
+
+        // Enter new state object (if any)
+        currentStateInstance = get(state);
+        if (currentStateInstance != null) {
+            currentStateInstance.enter();
+        }
+        
+    } //enterState
+
+    function _updateState(delta:Float):Void {
+
+        if (paused || state == null) return;
 
         if (currentStateInstance != null) {
             currentStateInstance.update(delta);
         }
 
     } //update
+
+    function _exitState():Void {
+
+        // Exit previous state object (if any)
+        if (currentStateInstance != null) {
+            currentStateInstance.exit();
+            currentStateInstance = null;
+        }
+        
+    } //exitState
 
     function bindAsComponent():Void {
 
