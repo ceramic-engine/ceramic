@@ -46,6 +46,7 @@ class Setup extends tools.Task {
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
         var flowPath = Path.join([targetPath, 'project.flow']);
+        var hxmlPath = Path.join([targetPath, 'project.hxml']);
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
 
@@ -82,7 +83,8 @@ class Setup extends tools.Task {
             }
         }
 
-        var libs = ['"luxe": "*"'];
+        var libsFlow = ['"luxe": "*"'];
+        var libsHxml = ['-lib luxe'];
 
         var appLibs:Array<Dynamic> = project.app.libs;
         for (lib in appLibs) {
@@ -97,10 +99,17 @@ class Setup extends tools.Task {
                     break;
                 }
             }
-            libs.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
+            libsFlow.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
+            if (libVersion == '*') {
+                libsHxml.push('-lib $libName');
+            }
+            else {
+                libsHxml.push('-lib $libName:$libVersion');
+            }
         }
 
-        var haxeflags = [];
+        var haxeflagsFlow = [];
+        var haxeflagsHxml = [];
 
         if (project.app.hxml != null) {
             var parsedHxml = tools.Hxml.parse(project.app.hxml);
@@ -115,14 +124,16 @@ class Setup extends tools.Task {
                         }
                         else {
                             if (flagParts.length > 0) {
-                                haxeflags.push(Json.stringify(flagParts.join(' ')));
+                                haxeflagsFlow.push(Json.stringify(flagParts.join(' ')));
+                                haxeflagsHxml.push(flagParts.join(' '));
                             }
                             flagParts = [flag];
                         }
                     }
                 }
                 if (flagParts.length > 0) {
-                    haxeflags.push(Json.stringify(flagParts.join(' ')));
+                    haxeflagsFlow.push(Json.stringify(flagParts.join(' ')));
+                    haxeflagsHxml.push(flagParts.join(' '));
                 }
             }
         }
@@ -130,33 +141,97 @@ class Setup extends tools.Task {
         for (key in Reflect.fields(project.app.defines)) {
             var val = Reflect.field(project.app.defines, key);
             if (val == true) {
-                haxeflags.push(Json.stringify('-D $key'));
+                haxeflagsFlow.push(Json.stringify('-D $key'));
+                haxeflagsHxml.push('-D $key');
             } else {
-                haxeflags.push(Json.stringify('-D $key=$val'));
+                haxeflagsFlow.push(Json.stringify('-D $key=$val'));
+                haxeflagsHxml.push('-D $key=$val');
             }
         }
 
         // Disable luxe debug console
-        haxeflags.push(Json.stringify('-D luxe_noprofile'));
-        haxeflags.push(Json.stringify('-D luxe_no_main'));
-        haxeflags.push(Json.stringify('-D no_debug_console'));
+        haxeflagsFlow.push(Json.stringify('-D luxe_noprofile'));
+        haxeflagsFlow.push(Json.stringify('-D luxe_no_main'));
+        haxeflagsFlow.push(Json.stringify('-D no_debug_console'));
 
-        var classPaths = '';
+        haxeflagsHxml.push('-D luxe_noprofile');
+        haxeflagsHxml.push('-D luxe_no_main');
+        haxeflagsHxml.push('-D no_debug_console');
+
+        var classPathsFlow = '';
+        var classPathsHxml = '';
         for (entry in (project.app.paths:Array<String>)) {
             if (Path.isAbsolute(entry)) {
                 var relativePath = getRelativePath(entry, targetPath);
-                classPaths += Json.stringify(relativePath) + ',\n        ';
+                classPathsFlow += Json.stringify(relativePath) + ',\n        ';
+                classPathsHxml += '-cp ' + relativePath + '\n';
             }
             else {
                 var relativePath = getRelativePath(Path.join([cwd, entry]), targetPath);
-                classPaths += Json.stringify(relativePath) + ',\n        ';
+                classPathsFlow += Json.stringify(relativePath) + ',\n        ';
+                classPathsHxml += '-cp ' + relativePath + '\n';
             }
         }
 
         var hooks = '';
         var hookPre = null;
+
+        var targetFlags:String;
+        if (target.name == 'web') {
+            targetFlags = '-js ${project.app.name}.js';
+            targetFlags += '\n' + '-D target-js';
+            targetFlags += '\n' + '-D arch-web';
+            targetFlags += '\n' + '-D luxe_web';
+            targetFlags += '\n' + '-D snow_web';
+            targetFlags += '\n' + '--macro snow.Set.assets("snow.core.web.assets.Assets")';
+            targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.webaudio.Audio")';
+            targetFlags += '\n' + '--macro snow.Set.runtime("snow.core.web.Runtime")';
+            targetFlags += '\n' + '--macro snow.Set.io("snow.core.web.io.IO")';
+        }
+        else {
+            targetFlags = '-cpp cpp';
+            targetFlags += '\n' + '-D target-cpp';
+            targetFlags += '\n' + '-D hxcpp_static_std';
+            targetFlags += '\n' + '-D luxe_native';
+            targetFlags += '\n' + '-D snow_native';
+            if (target.name == 'ios' || target.name == 'android') {
+                targetFlags += '\n' + '-D linc_opengl_GLES';
+            }
+            targetFlags += '\n' + '--macro snow.Set.assets("snow.core.native.assets.Assets")';
+            targetFlags += '\n' + '--macro snow.Set.runtime("snow.modules.sdl.Runtime")';
+            targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.openal.Audio")';
+            targetFlags += '\n' + '--macro snow.Set.io("snow.modules.sdl.IO")';
+            if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
+                targetFlags += '\n' + '-D arch-64';
+                targetFlags += '\n' + '-D desktop';
+            }
+        }
+
+        var hxmlFileContent = ('
+-main Main
+$targetFlags
+-D ${target.name}
+-D snow_no_main
+-D no_default_font
+--macro snow.Set.main("luxe.Engine")
+--macro snow.Set.ident(' + Json.stringify(project.app.name) + ')
+--macro snow.Set.config("config.json")
+' + classPathsHxml + '-cp ' + Path.join([runtimePathRelative, 'src']) + '
+-cp ' + Path.join([backendRuntimePathRelative, 'src']) + '
+-cp ' + '../../../src' + '
+${libsHxml.join('\n')}
+-lib linc_opengl
+-lib linc_sdl
+-lib linc_ogg
+-lib linc_stb
+-lib linc_timestamp
+-lib linc_openal
+-lib snow
+-lib luxe
+${haxeflagsHxml.join('\n')}
+').ltrim();
     
-        var content = ('
+        var flowFileContent = ('
 {
 
   project: {
@@ -168,7 +243,7 @@ class Setup extends tools.Task {
       name: ' + Json.stringify(project.app.name) + ',
       package: ' + Json.stringify(Reflect.field(project.app, 'package')) + ',
       codepaths: [
-        ' + classPaths + Json.stringify(Path.join([runtimePathRelative, 'src'])) + ',
+        ' + classPathsFlow + Json.stringify(Path.join([runtimePathRelative, 'src'])) + ',
         ' + Json.stringify(Path.join([backendRuntimePathRelative, 'src'])) + ',
         ' + Json.stringify('../../../src') + '
       ],
@@ -177,10 +252,10 @@ class Setup extends tools.Task {
 
     build : {
       dependencies : {
-        ${libs.join(',\n        ')}
+        ${libsFlow.join(',\n        ')}
       },
       flags: [
-        ${haxeflags.join(',\n        ')}
+        ${haxeflagsFlow.join(',\n        ')}
       ]$hooks
     },
 
@@ -193,8 +268,11 @@ class Setup extends tools.Task {
 }
 ').ltrim();
 
+        // Save hxml file
+        File.saveContent(hxmlPath, hxmlFileContent); // TODO just testing
+
         // Save flow file
-        File.saveContent(flowPath, content);
+        File.saveContent(flowPath, flowFileContent);
         Files.setToSameLastModified(projectPath, flowPath);
         print('Updated luxe project at: $flowPath');
 
