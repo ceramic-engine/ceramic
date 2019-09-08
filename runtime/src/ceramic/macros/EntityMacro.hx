@@ -15,12 +15,6 @@ class EntityMacro {
 
     static var hasSuperDestroy:Bool = false;
 
-    static var specialFields:Map<String,Bool> = [
-        'destroy' => true,
-        'dispose' => true,
-        'restore' => true
-    ];
-
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -178,59 +172,57 @@ class EntityMacro {
             processed.set(classPath, true);
 
             for (field in newFields) {
-                if (specialFields.exists(field.name)) {
-                    if (field.name == 'destroy') {
+                if (field.name == 'destroy') {
 
-                        switch(field.kind) {
-                            case FieldType.FFun(fn):
+                    switch(field.kind) {
+                        case FieldType.FFun(fn):
 
-                                // Ensure expr is surrounded with a block and tranform super.destroy() calls.
-                                // Check that super.destroy() call exists at the same time
-                                hasSuperDestroy = false;
+                            // Ensure expr is surrounded with a block and tranform super.destroy() calls.
+                            // Check that super.destroy() call exists at the same time
+                            hasSuperDestroy = false;
 
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
-                                        fn.expr = transformSuperDestroy(fn.expr);
-                                    default:
-                                        fn.expr.expr = EBlock([{
-                                            pos: fn.expr.pos,
-                                            expr: transformSuperDestroy(fn.expr).expr
-                                        }]);
-                                }
+                            switch (fn.expr.expr) {
+                                case EBlock(exprs):
+                                    fn.expr = transformSuperDestroy(fn.expr);
+                                default:
+                                    fn.expr.expr = EBlock([{
+                                        pos: fn.expr.pos,
+                                        expr: transformSuperDestroy(fn.expr).expr
+                                    }]);
+                            }
 
-                                if (!hasSuperDestroy) {
-                                    Context.error("Call to super.destroy() is required", field.pos);
-                                }
+                            if (!hasSuperDestroy) {
+                                Context.error("Call to super.destroy() is required", field.pos);
+                            }
 
-                                switch (fn.expr.expr) {
-                                    case EBlock(exprs):
+                            switch (fn.expr.expr) {
+                                case EBlock(exprs):
 
-                                        // Check lifecycle state first and continue only
-                                        // if the entity is not destroyed already
-                                        // Mark destroyed, but still allow call to super.destroy()
-                                        exprs.unshift(macro {
-                                            if (_lifecycleState <= -2) return;
-                                            _lifecycleState = -2;
-                                        });
+                                    // Check lifecycle state first and continue only
+                                    // if the entity is not destroyed already
+                                    // Mark destroyed, but still allow call to super.destroy()
+                                    exprs.unshift(macro {
+                                        if (_lifecycleState <= -2) return;
+                                        _lifecycleState = -2;
+                                    });
 
-                                        // Destroy owned entities as well
-                                        if (ownFields != null) {
-                                            for (name in ownFields) {
-                                                exprs.unshift(macro {
-                                                    var toDestroy = this.$name;
-                                                    if (toDestroy != null) {
-                                                        toDestroy.destroy();
-                                                        this.$name = null;
-                                                    }
-                                                });
-                                            }
+                                    // Destroy owned entities as well
+                                    if (ownFields != null) {
+                                        for (name in ownFields) {
+                                            exprs.unshift(macro {
+                                                var toDestroy = this.$name;
+                                                if (toDestroy != null) {
+                                                    toDestroy.destroy();
+                                                    this.$name = null;
+                                                }
+                                            });
                                         }
+                                    }
 
-                                    default:
-                                }
+                                default:
+                            }
 
-                            default:
-                        }
+                        default:
                     }
                 }
             }
