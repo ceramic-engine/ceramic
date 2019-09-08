@@ -191,7 +191,7 @@ class Main extends luxe.Game {
                         if (lastResizeTime != -1) {
                             appEl.style.visibility = 'hidden';
                         }
-                        ceramic.Timer.delay(0.1, function() {
+                        ceramic.Timer.delay(null, 0.1, function() {
                             resizing--;
                             if (resizing == 0) {
                                 appEl.style.visibility = 'visible';
