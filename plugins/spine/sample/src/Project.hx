@@ -18,7 +18,7 @@ class Project extends Entity {
         settings.scaling = FILL;
         settings.resizable = false;
 
-        app.onceReady(ready);
+        app.onceReady(this, ready);
 
     } //new
 

@@ -16,7 +16,7 @@ class Project extends Entity {
         settings.targetHeight = 480;
         settings.scaling = FILL;
 
-        app.onceReady(ready);
+        app.onceReady(this, ready);
 
     } //new
 

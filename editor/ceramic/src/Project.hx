@@ -11,7 +11,7 @@ class Project {
 #if editor
 
         new editor.Editor(settings);
-        app.onceReady(editor.start);
+        app.onceReady(null, editor.start);
         
 #end
 
