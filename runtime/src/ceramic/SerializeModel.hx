@@ -31,7 +31,7 @@ class SerializeModel extends Entity implements Component {
 
 /// Lifecycle
 
-    public function bindAsComponent() {
+    function bindAsComponent() {
 
         // Synchronize with real data at regular interval
         Timer.interval(this, checkInterval, synchronize);

@@ -21,6 +21,6 @@ interface Component /* extends Entity (enforced by ComponentMacro) */ {
         should be assigned and work properly. Use this method to run initialization code once
         the component has been plugged to a target entity.
         When the target entity is destroyed, our instance (the component) will be unbound and destroyed as well. */
-    function bindAsComponent():Void;
+    private function bindAsComponent():Void;
 
 } //Component
