@@ -62,7 +62,8 @@ class ComponentMacro {
             numParents++;
         }
         if (!inheritsFromEntity) {
-            throw new Error("Classes implementing Component interface must inherit (directly or indirectly) from ceramic.Entity", Context.currentPos());
+            Context.error("Class " + classPath + " implements ceramic.Component interface thus must inherit (directly or indirectly) from ceramic.Entity", Context.currentPos());
+            return fields;
         }
 
         var hasEntityField = false;
@@ -73,16 +74,19 @@ class ComponentMacro {
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
                         if (field.access.indexOf(AStatic) != -1) {
-                            throw new Error("Entity property cannot be static", field.pos);
+                            Context.error("Entity property cannot be static", field.pos);
+                            return fields;
                         }
                         if (field.access.indexOf(APrivate) != -1) {
-                            throw new Error("Entity property cannot be private", field.pos);
+                            Context.error("Entity property cannot be private", field.pos);
+                            return fields;
                         }
                         if (field.access.indexOf(APublic) == -1) {
                             field.access.push(APublic);
                         }
                     default:
-                        throw new Error("Invalid entity property", field.pos);
+                        Context.error("Invalid entity property", field.pos);
+                        return fields;
                 }
                 if (hasInitializerNameField) break;
             }
