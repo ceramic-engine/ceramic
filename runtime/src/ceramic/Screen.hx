@@ -155,6 +155,8 @@ class Screen extends Entity implements Observable {
 
     function new() {
 
+        super();
+
     } //new
 
     function backendReady():Void {

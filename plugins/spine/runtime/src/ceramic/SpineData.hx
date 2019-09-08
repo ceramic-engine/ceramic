@@ -26,6 +26,8 @@ class SpineData extends Entity {
         scale:Float = 1.0
     ) {
 
+        super();
+
         this.atlas = atlas;
 
         var spineJson:SkeletonJson = new SkeletonJson(

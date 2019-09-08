@@ -32,6 +32,8 @@ class Tween extends Entity {
 
     private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
 
+        super();
+
         if (duration == 0.0) {
             App.app.onceImmediate(function() {
                 emitUpdate(toValue, 0);

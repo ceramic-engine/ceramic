@@ -58,7 +58,7 @@ class Renderer extends Entity {
 
     public function new() {
 
-        //
+        super();
 
     } //new
 

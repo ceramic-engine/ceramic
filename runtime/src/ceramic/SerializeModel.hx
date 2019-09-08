@@ -4,7 +4,7 @@ import ceramic.Assert.*;
 import ceramic.Shortcuts.*;
 
 /** Utility to serialize a model object (and its children) continuously and efficiently */
-class SerializeModel extends Component {
+class SerializeModel extends Entity implements Component {
 
 /// Events
 
@@ -31,7 +31,7 @@ class SerializeModel extends Component {
 
 /// Lifecycle
 
-    function init() {
+    public function bindAsComponent() {
 
         // Synchronize with real data at regular interval
         Timer.interval(this, checkInterval, synchronize);
@@ -45,7 +45,7 @@ class SerializeModel extends Component {
         // Perform first compaction to get initial data
         compact();
 
-    } //init
+    } //bindAsComponent
 
 /// Public API
 

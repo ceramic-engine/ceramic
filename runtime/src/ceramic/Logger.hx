@@ -22,6 +22,9 @@ class Logger extends Entity {
 #end
 
     function new() {
+
+        super();
+        
 #if unity
         haxe.Log.trace = function(v:Dynamic, ?infos:haxe.PosInfos):Void {
             untyped __cs__('UnityEngine.Debug.Log({0})', v);

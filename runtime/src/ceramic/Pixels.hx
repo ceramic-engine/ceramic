@@ -20,6 +20,8 @@ class Pixels extends Entity {
 
     public function new() {
 
+        super();
+
     } //new
 
     override function destroy() {

@@ -24,6 +24,8 @@ class BackgroundQueue extends Entity {
 
     public function new(checkInterval:Float = 0.1) {
 
+        super();
+
         this.checkInterval = 0.1;
         
         #if cpp

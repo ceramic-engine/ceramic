@@ -53,6 +53,8 @@ class Asset extends Entity implements Observable {
 
     public function new(kind:String, name:String, ?options:AssetOptions) {
 
+        super();
+
         this.kind = kind;
         this.options = options != null ? options : {};
         this.name = name;

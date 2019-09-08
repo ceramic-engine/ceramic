@@ -31,6 +31,8 @@ class Model extends Entity implements Observable implements Serializable {
 
     public function new() {
 
+        super();
+
     } //new
 
 /// Print

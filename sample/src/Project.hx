@@ -22,6 +22,8 @@ class Project extends Entity {
 
     function new(settings:InitSettings) {
 
+        super();
+
 #if editor
 
         new editor.Editor(settings);

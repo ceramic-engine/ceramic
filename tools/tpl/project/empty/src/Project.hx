@@ -10,6 +10,8 @@ class Project extends Entity {
 
     function new(settings:InitSettings) {
 
+        super();
+
         settings.antialiasing = 4;
         settings.background = Color.GRAY;
         settings.targetWidth = 640;

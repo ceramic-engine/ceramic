@@ -49,6 +49,8 @@ class Texture extends Entity {
 
     public function new(backendItem:backend.Texture, density:Float = -1) {
 
+        super();
+
         if (density == -1) density = screen.texturesDensity;
 
         this.backendItem = backendItem;

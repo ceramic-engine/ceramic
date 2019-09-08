@@ -28,6 +28,8 @@ class Autorun extends Entity {
 
     public function new(onRun:Void->Void) {
 
+        super();
+
         this.onRun = onRun;
 
         // Run once to create initial binding and execute callback

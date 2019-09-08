@@ -580,6 +580,8 @@ class Visual extends Entity {
 
     public function new() {
 
+        super();
+
         ceramic.App.app.visuals.push(this);
         ceramic.App.app.hierarchyDirty = true;
 

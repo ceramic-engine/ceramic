@@ -315,6 +315,8 @@ class App extends Entity {
 /// Lifecycle
 
     function new() {
+
+        super();
         
 #if hxtelemetry
         var cfg = new hxtelemetry.HxTelemetry.Config();

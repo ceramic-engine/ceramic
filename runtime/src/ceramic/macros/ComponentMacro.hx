@@ -5,7 +5,9 @@ import haxe.macro.Expr;
 
 class ComponentMacro {
 
-    static var onReused = false;
+    #if (haxe_ver < 4)
+    static var onReused:Bool = false;
+    #end
 
     static var processed = new Map<String,Bool>();
 
@@ -15,81 +17,58 @@ class ComponentMacro {
         trace(Context.getLocalClass() + ' -> BEGIN ComponentMacro.build()');
         #end
 
+        #if (haxe_ver < 4)
         if (!onReused) {
             onReused = true;
-            /*
             Context.onMacroContextReused(function() {
                 processed = new Map();
                 return true;
             });
-            */
         }
+        #end
 
         var fields = Context.getBuildFields();
+        var localClass = Context.getLocalClass().get();
         var classPath = Context.getLocalClass().toString();
 
-        for (field in fields) {
-            if (field.name == 'new') {
-                if (field.access.indexOf(APrivate) == -1 && field.access.indexOf(APublic) == -1) {
-                    field.access.push(APublic);
-                }
-            }
-            else if (field.name == 'init') {
-
-                if (field.access.indexOf(AOverride) == -1) {
-                    field.access.push(AOverride);
-                }
-
-                var isProcessed = processed.exists(classPath+'.init');
-                if (!isProcessed) {
-                    processed.set(classPath+'.init', true);
-                    switch(field.kind) {
-                        case FieldType.FFun(fn):
-                            var printer = new haxe.macro.Printer();
-                            var lines = printer.printExpr(fn.expr).split("\n");
-
-                            // Check there is no explicit super.init() call
-                            for (line in lines) {
-                                if (line.indexOf('super.init();') != -1) {
-                                    throw new Error("Explicit call to super.init() is not allowed. This is done automatically", field.pos);
-                                }
-                            }
-                            
-                            // Ensure expr is surrounded with a block
-                            switch (fn.expr.expr) {
-                                case EBlock(exprs):
-                                default:
-                                    fn.expr.expr = EBlock([{
-                                        pos: fn.expr.pos,
-                                        expr: fn.expr.expr
-                                    }]);
-                            }
-
-                            switch (fn.expr.expr) {
-                                case EBlock(exprs):
-
-                                    // Add super.init(); at the top
-                                    exprs.unshift(macro {
-                                        super.init();
-                                    });
-
-                                default:
-                            }
-
-                        default:
-                    }
-                }
+        // Only transform fields on classes that directly implement Component interface
+        var interfaces = localClass.interfaces;
+        var directlyImplementsComponent = false;
+        for (anInterface in interfaces) {
+            if (anInterface.t.toString() == 'ceramic.Component') {
+                directlyImplementsComponent = true;
+                break;
             }
         }
-
-        if (Context.getLocalClass().get().superClass.t.toString() != 'ceramic.Component') {
-            // Not a direct descendant, keep fields as is
+        if (!directlyImplementsComponent) {
+            // Not a direct interface implementation, keep fields as is
             return fields;
         }
 
+        // Ensure that we inherit from ceramic.Entity
+        var inheritsFromEntity = false;
+        var parentHold = localClass.superClass;
+        var parent = parentHold != null ? parentHold.t : null;
+        var numParents = 0;
+        while (parent != null) {
+
+            if (parentHold.t.toString() == 'ceramic.Entity') {
+                inheritsFromEntity = true;
+                break;
+            }
+
+            parentHold = parent.get().superClass;
+            parent = parentHold != null ? parentHold.t : null;
+            numParents++;
+        }
+        if (!inheritsFromEntity) {
+            throw new Error("Classes implementing Component interface must inherit (directly or indirectly) from ceramic.Entity", Context.currentPos());
+        }
+
         var hasEntityField = false;
+        var hasInitializerNameField = false;
         for (field in fields) {
-            if (field.name == 'entity') {
+            if (!hasEntityField && field.name == 'entity') {
                 hasEntityField = true;
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -105,7 +84,11 @@ class ComponentMacro {
                     default:
                         throw new Error("Invalid entity property", field.pos);
                 }
-                break;
+                if (hasInitializerNameField) break;
+            }
+            else if (!hasInitializerNameField && field.name == 'initializerName') {
+                hasInitializerNameField = true;
+                if (hasEntityField) break;
             }
         }
 
@@ -115,6 +98,19 @@ class ComponentMacro {
                 pos: Context.currentPos(),
                 name: 'entity',
                 kind: FVar(TPath({pack: ['ceramic'], name: 'Entity'})),
+                access: [APublic],
+                doc: '',
+                meta: []
+            };
+            fields.push(field);
+        }
+
+        if (!hasInitializerNameField) {
+
+            var field = {
+                pos: Context.currentPos(),
+                name: 'initializerName',
+                kind: FProp('default', 'null', TPath({pack: [], name: 'String'}), macro null),
                 access: [APublic],
                 doc: '',
                 meta: []

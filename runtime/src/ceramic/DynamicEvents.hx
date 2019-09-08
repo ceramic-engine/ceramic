@@ -12,6 +12,8 @@ class DynamicEvents<T> extends Entity {
 
     public function new() {
 
+        super();
+
         dispatcher = new EventDispatcher();
         mapping = new Map();
 

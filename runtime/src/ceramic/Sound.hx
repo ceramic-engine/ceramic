@@ -13,6 +13,8 @@ class Sound extends Entity {
 
     public function new(backendItem:backend.AudioResource) {
 
+        super();
+
         this.backendItem = backendItem;
 
     } //new

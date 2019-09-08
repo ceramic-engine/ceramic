@@ -38,6 +38,13 @@ class Entity implements Events implements Lazy {
 
 /// Lifecycle
 
+    /** Create a new entity */
+    public function new() {
+
+        // Default implementation
+
+    } //new
+
     /** Destroy this entity. This method is automatically protected from duplicate calls. That means
         calling multiple times an entity's `destroy()` method will run the destroy code only one time.
         As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
@@ -195,12 +202,14 @@ class Entity implements Events implements Lazy {
             else {
                 var existing = _components.get(name);
                 if (existing != null) {
-                    existing.destroy();
+                    var existingAsEntity:Entity = cast existing;
+                    existingAsEntity.destroy();
                 }
             }
             _components.set(name, component);
             component.setProperty('entity', this);
-            component.onceDestroy(this, function() {
+            var componentAsEntity:Entity = cast component;
+            componentAsEntity.onceDestroy(this, function() {
                 // Remove entity reference from component
                 if (component.getProperty('entity') == this) {
                     component.setProperty('entity', null);
@@ -213,7 +222,7 @@ class Entity implements Events implements Lazy {
                     }
                 }
             });
-            @:privateAccess component.init();
+            @:privateAccess component.bindAsComponent();
             return component;
 
         } else {
@@ -234,7 +243,8 @@ class Entity implements Events implements Lazy {
         var existing = _components.get(name);
         if (existing != null) {
             _components.remove(name);
-            existing.destroy();
+            var existingAsEntity:Entity = cast existing;
+            existingAsEntity.destroy();
         }
 
     } //removeComponent

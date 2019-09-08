@@ -7,7 +7,9 @@ using haxe.macro.ExprTools;
 
 class EntityMacro {
 
+    #if (haxe_ver < 4)
     static var onReused:Bool = false;
+    #end
 
     static var processed:Map<String,Bool> = new Map();
 

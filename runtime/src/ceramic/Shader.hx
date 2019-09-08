@@ -38,6 +38,8 @@ class Shader extends Entity {
 
     public function new(backendItem:backend.Shader, ?customAttributes:ImmutableArray<ShaderAttribute>) {
 
+        super();
+
         this.backendItem = backendItem;
 
         var attributes:Array<ShaderAttribute> = [

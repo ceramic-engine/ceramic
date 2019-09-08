@@ -27,6 +27,8 @@ class TextureTilePacker extends Entity {
 
     public function new(autoRender:Bool, maxPixelTextureWidth:Int = -1, maxPixelTextureHeight:Int = -1, padWidth:Int = 16, padHeight:Int = 16, margin:Int = 1) {
 
+        super();
+
         this.padWidth = padWidth;
         this.padHeight = padHeight;
         this.margin = margin;

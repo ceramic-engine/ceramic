@@ -61,6 +61,8 @@ class BitmapFont extends Entity {
 
     public function new(fontData:BitmapFontData, pages:Map<String,Texture>) {
 
+        super();
+
         this.fontData = fontData;
 
         if (fontData == null) {

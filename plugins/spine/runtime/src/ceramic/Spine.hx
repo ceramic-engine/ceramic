@@ -2015,6 +2015,4 @@ private class DispatchSlotInfo extends Entity {
 
     @event function dispatch(info:SlotInfo);
 
-    public function new() {}
-
 } //DispatchSlotInfo
