@@ -751,7 +751,7 @@ class EventsMacro {
                                 {
                                     name: 'owner',
                                     type: macro :ceramic.Entity,
-                                    opt: true
+                                    opt: #if ceramic_optional_owner true #else false #end
                                 },
                                 {
                                     name: handlerName,
@@ -821,7 +821,7 @@ class EventsMacro {
                                 {
                                     name: 'owner',
                                     type: macro :ceramic.Entity,
-                                    opt: true
+                                    opt: #if ceramic_optional_owner true #else false #end
                                 },
                                 {
                                     name: handlerName,

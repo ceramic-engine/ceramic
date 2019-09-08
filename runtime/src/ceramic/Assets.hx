@@ -300,7 +300,7 @@ class Assets extends Entity {
         }
         else if (asset.status == LOADING || asset.status == NONE) {
             // Wait until asset is loaded
-            asset.onceComplete(function(success) {
+            asset.onceComplete(null, function(success) {
                 if (success) {
                     done(asset);
                 }

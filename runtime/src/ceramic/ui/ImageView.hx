@@ -65,7 +65,7 @@ class ImageView extends View implements Observable {
             var assets = new Assets();
             assets.addImage(image);
             
-            assets.onceComplete(function(isSuccess:Bool) {
+            assets.onceComplete(this, function(isSuccess:Bool) {
                 
                 if (!isSuccess || image != this.image) {
                     assets.destroy();

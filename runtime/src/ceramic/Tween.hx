@@ -8,7 +8,7 @@ class Tween extends Entity {
 
         var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue);
         
-        instance.onUpdate(handleValueTime);
+        instance.onUpdate(null, handleValueTime);
 
         return instance;
 
