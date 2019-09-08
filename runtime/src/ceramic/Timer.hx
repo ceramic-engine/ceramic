@@ -68,7 +68,7 @@ class Timer {
 
     /** Execute a callback after the given delay in seconds.
         @return a function to cancel this timer delay */
-    inline public static function delay(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    inline public static function delay(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, seconds:Float, callback:Void->Void):Void->Void {
 
         return schedule(owner, seconds, callback, -1);
 
@@ -76,7 +76,7 @@ class Timer {
 
     /** Execute a callback periodically at the given interval in seconds.
         @return a function to cancel this timer interval */
-    inline public static function interval(?owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    inline public static function interval(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, seconds:Float, callback:Void->Void):Void->Void {
         
         return schedule(owner, seconds, callback, seconds);
 

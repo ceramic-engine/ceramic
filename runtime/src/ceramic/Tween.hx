@@ -4,7 +4,7 @@ class Tween extends Entity {
 
 /// Static helpers
 
-    public static function start(?owner:Entity, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void):Tween {
 
         var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue);
         
@@ -30,7 +30,7 @@ class Tween extends Entity {
 
 /// Lifecycle
 
-    private function new(?owner:Entity, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
+    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
 
         if (duration == 0.0) {
             App.app.onceImmediate(function() {

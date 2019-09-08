@@ -194,7 +194,7 @@ class EventDispatcher {
 
         var wrapped:Dynamic = item.wrappedOn;
         if (wrapped == null) {
-            wrapped = function(?owner:Dynamic, ?cb:Dynamic) {
+            wrapped = function(#if ceramic_optional_owner ?owner:Dynamic #else owner:Dynamic #end, ?cb:Dynamic) {
                 // On some targets (lua), args could be offset
                 // by one if owner was not provided
                 if (cb != null) {
@@ -212,7 +212,7 @@ class EventDispatcher {
 
     } //wrapOn
 
-    public function on(index:Int, ?owner:Entity, cb:Dynamic):Void {
+    public function on(index:Int, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
         var item = items[index];
         if (item == null) {
@@ -262,7 +262,7 @@ class EventDispatcher {
 
         var wrapped:Dynamic = item.wrappedOnce;
         if (wrapped == null) {
-            wrapped = function(?owner:Dynamic, ?cb:Dynamic) {
+            wrapped = function(#if ceramic_optional_owner ?owner:Dynamic #else owner:Dynamic #end, ?cb:Dynamic) {
                 // On some targets (lua), args could be offset
                 // by one if owner was not provided
                 if (cb != null) {
@@ -280,7 +280,7 @@ class EventDispatcher {
 
     } //wrapOnce
 
-    public function once(index:Int, ?owner:Entity, cb:Dynamic):Void {
+    public function once(index:Int, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
         var item = items[index];
         if (item == null) {
