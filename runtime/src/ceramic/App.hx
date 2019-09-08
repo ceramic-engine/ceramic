@@ -272,7 +272,7 @@ class App extends Entity {
 
 #if ceramic_arcade_physics
 
-    public var physics:ArcadePhysics = null;
+    public var arcadePhysics:ArcadePhysics = null;
 
 #end
 
@@ -368,7 +368,7 @@ class App extends Entity {
         initCollections();
 
 #if ceramic_arcade_physics
-        physics = new ArcadePhysics();
+        arcadePhysics = new ArcadePhysics();
 #end
 
         // Load default assets
@@ -564,7 +564,7 @@ class App extends Entity {
 
             // Pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-            if (_delta > 0) physics.preUpdate(_delta);
+            if (_delta > 0) arcadePhysics.preUpdate(_delta);
 #end
 
             // Flush immediate callbacks
@@ -589,7 +589,7 @@ class App extends Entity {
 
             // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-            if (_delta > 0) physics.postUpdate(_delta);
+            if (_delta > 0) arcadePhysics.postUpdate(_delta);
 #end
 
             // Flush immediate callbacks

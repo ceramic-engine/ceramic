@@ -31,32 +31,41 @@ class Visual extends Entity {
 
 /// Physics
 
+    #if ceramic_shortcuts_arcade
+
     /** The arcade physics body bound to this visual. */
-    public var body(default,set):arcade.Body = null;
-    function set_body(body:arcade.Body):arcade.Body {
-        if (this.body == body) return body;
-        if (this.body != null && this.body.visual == this) {
-            this.body.visual = null;
+    public var body(get,set):arcade.Body;
+    inline function get_body():arcade.Body return arcadeBody;
+    inline function set_body(body:arcade.Body):arcade.Body return this.arcadeBody = body;
+
+    #end
+
+    /** The arcade physics body bound to this visual. */
+    #if ceramic_shortcuts_arcade @:noCompletion #end public var arcadeBody(default,set):arcade.Body = null;
+    function set_arcadeBody(arcadeBody:arcade.Body):arcade.Body {
+        if (this.arcadeBody == arcadeBody) return arcadeBody;
+        if (this.arcadeBody != null && this.body.visual == this) {
+            this.arcadeBody.visual = null;
         }
-        this.body = body;
-        if (body != null) {
-            body.visual = this;
+        this.arcadeBody = arcadeBody;
+        if (arcadeBody != null) {
+            arcadeBody.visual = this;
         }
-        return body;
+        return arcadeBody;
     }
 
     /** Init arcade physics body bound to this visual. */
-    public function initBody():arcade.Body {
+    public function initArcadeBody():arcade.Body {
 
-        if (body != null) {
-            body.destroy();
-            body = null;
+        if (arcadeBody != null) {
+            arcadeBody.destroy();
+            arcadeBody = null;
         }
 
         var w = width * scaleX;
         var h = height * scaleY;
 
-        body = new arcade.Body(
+        arcadeBody = new arcade.Body(
             x - w * anchorX,
             y - h * anchorY,
             w,
@@ -64,9 +73,9 @@ class Visual extends Entity {
             rotation
         );
 
-        return body;
+        return arcadeBody;
 
-    } //initBody
+    } //initArcadeBody
 
 #end
 
@@ -606,9 +615,9 @@ class Visual extends Entity {
         if (transform != null) transform = null;
 
 #if ceramic_arcade_physics
-        if (body != null) {
-            body.destroy();
-            body = null;
+        if (arcadeBody != null) {
+            arcadeBody.destroy();
+            arcadeBody = null;
         }
 #end
 
