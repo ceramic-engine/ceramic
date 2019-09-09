@@ -38,17 +38,18 @@ class Web extends tools.Task {
 
         // Copy built files and assets
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', 'web' + (context.variant != 'standard' ? '-' + context.variant : '')]);
-        var flowWebHtmlPath = Path.join([flowProjectPath, 'bin/web']);
+        //var flowWebHtmlPath = Path.join([flowProjectPath, 'bin/web']);
 
         // Copy assets
-        Files.copyDirectory(Path.join([flowWebHtmlPath, 'assets']), Path.join([cwd, 'project/web/assets']));
+        //Files.copyDirectory(Path.join([flowWebHtmlPath, 'assets']), Path.join([cwd, 'project/web/assets']));
 
         // Copy javascript files
         var jsName = project.app.name;
+        /*
         if (FileSystem.exists(Path.join([flowWebHtmlPath, jsName + '.js.map']))) {
             File.copy(Path.join([flowWebHtmlPath, jsName + '.js.map']), Path.join([cwd, 'project/web', jsName + '.js.map']));
         }
-        File.copy(Path.join([flowWebHtmlPath, jsName + '.js']), Path.join([cwd, 'project/web', jsName + '.js']));
+        File.copy(Path.join([flowWebHtmlPath, jsName + '.js']), Path.join([cwd, 'project/web', jsName + '.js']));*/
 
         // Stop if not running
         if (!doRun) return;

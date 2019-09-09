@@ -131,23 +131,30 @@ class Build extends tools.Task {
         }
         
         // Use flow command
-        var cmdArgs = ['run', 'flow', cmdAction, target.name];
+        /*var cmdArgs = ['run', 'flow', cmdAction, target.name];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
         if (archs != null && archs.trim() != '') {
             cmdArgs.push('--archs');
             cmdArgs.push(archs);
-        }
+        }*/
+
+        var cmdArgs = ['project.hxml'];
+
+        var debug = extractArgFlag(args, 'debug');
+        if (debug) cmdArgs.push('-debug');
 
         var status = 0;
         var hasErrorLog = false;
 
+        print('Run haxe compiler...');
+
         Sync.run(function(done) {
 
-            var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
+            var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
 
             var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, haxelib]),
+                Path.join([context.ceramicToolsPath, haxe]),
                 cmdArgs,
                 { cwd: flowProjectPath }
             );

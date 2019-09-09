@@ -180,7 +180,7 @@ class Setup extends tools.Task {
 
         var targetFlags:String;
         if (target.name == 'web') {
-            targetFlags = '-js ${project.app.name}.js';
+            targetFlags = '-js ${Path.join([cwd, 'project', 'web', project.app.name + '.js'])}';
             targetFlags += '\n' + '-D target-js';
             targetFlags += '\n' + '-D arch-web';
             targetFlags += '\n' + '-D luxe_web';
@@ -274,7 +274,7 @@ ${haxeflagsHxml.join('\n')}
         // Save hxml file
         File.saveContent(hxmlPath, hxmlFileContent); // TODO just testing
         Files.setToSameLastModified(projectPath, hxmlPath);
-        print('Updated luxe hxml at: $flowPath');
+        print('Updated luxe hxml at: $hxmlPath');
 
         // Save flow file
         //File.saveContent(flowPath, flowFileContent);

@@ -217,8 +217,14 @@ class BackendTools implements tools.spec.BackendTools {
         var newAssets:Array<tools.Asset> = [];
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var validDstPaths:Map<String,Bool> = new Map();
+
         if (dstAssetsPath == null) {
-            dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+            if (target.name == 'web') {
+                dstAssetsPath = Path.join([cwd, 'project', 'web', 'assets']);
+            }
+            else {
+                dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+            }
         }
 
         // Add/update missing assets
@@ -270,11 +276,11 @@ class BackendTools implements tools.spec.BackendTools {
             tools.Files.removeEmptyDirectories(dstAssetsPath);
         }
 
-        // Copy rtti data (if any)
+        /*// Copy rtti data (if any)
         var rttiPath = Path.join([flowProjectPath, '.cache', 'rtti']);
         if (FileSystem.exists(rttiPath)) {
             tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
-        }
+        }*/
 
         return newAssets;
 
