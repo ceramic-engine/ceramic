@@ -57,6 +57,11 @@ class Hxml extends tools.Task {
         var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
         var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
 
+        // Check hxml validity
+        if (rawHxml == null) {
+            fail('Failed to get hxml for ${target.name}. Did you run setup on this target?');
+        }
+
         // Add completion flags
         rawHxml += "\n" + '-D completion -D display';
 
