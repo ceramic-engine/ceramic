@@ -190,6 +190,7 @@ class Setup extends tools.Task {
         }
         else {
             targetFlags = '-cpp cpp';
+            targetFlags += '\n' + '-lib hxcpp';
             targetFlags += '\n' + '-D target-cpp';
             targetFlags += '\n' + '-D hxcpp_static_std';
             targetFlags += '\n' + '-D luxe_native';
@@ -270,27 +271,29 @@ ${haxeflagsHxml.join('\n')}
 
         // Save hxml file
         File.saveContent(hxmlPath, hxmlFileContent); // TODO just testing
+        Files.setToSameLastModified(projectPath, hxmlPath);
+        print('Updated luxe hxml at: $flowPath');
 
         // Save flow file
-        File.saveContent(flowPath, flowFileContent);
-        Files.setToSameLastModified(projectPath, flowPath);
-        print('Updated luxe project at: $flowPath');
+        //File.saveContent(flowPath, flowFileContent);
+        //Files.setToSameLastModified(projectPath, flowPath);
+        //print('Updated luxe project at: $flowPath');
 
         // Create pre-hook if any
-        if (hookPre != null) {
+        /*if (hookPre != null) {
             var hookPrePath = Path.join([Path.directory(flowPath), 'hooks/pre.js']);
             if (!FileSystem.exists(Path.directory(hookPrePath))) {
                 FileSystem.createDirectory(Path.directory(hookPrePath));
             }
             File.saveContent(hookPrePath, hookPre);
-        }
+        }*/
 
         var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);
         if (targetName == 'default') targetName = 'web';
 
         // Generate files with flow
-        haxelib(['run', 'flow', 'files', targetName], { cwd: targetPath });
+        //haxelib(['run', 'flow', 'files', targetName], { cwd: targetPath });
 
         // Run initial project setup if needed
         runInitialProjectSetupIfNeeded(cwd, args);
