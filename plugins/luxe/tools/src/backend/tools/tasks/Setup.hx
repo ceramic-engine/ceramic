@@ -207,6 +207,7 @@ class Setup extends tools.Task {
             if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
                 targetFlags += '\n' + '-D arch-64';
                 targetFlags += '\n' + '-D desktop';
+                targetFlags += '\n' + '-D snow_use_glew';
             }
         }
 
