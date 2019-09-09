@@ -12,7 +12,7 @@
 	branch = master
 [submodule "git/linc_ogg"]
 	path = git/linc_ogg
-	url = https://github.com/snowkit/linc_ogg.git
+	url = https://github.com/ceramic-engine/linc_ogg.git
 	branch = master
 [submodule "git/linc_sdl"]
 	path = git/linc_sdl
