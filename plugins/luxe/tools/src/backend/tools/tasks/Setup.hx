@@ -33,6 +33,8 @@ class Setup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        // TODO tidy! (we'll do that once we removed flow usage completely)
+
         var updateFramework = args.indexOf('--update-framework') != -1;
         checkFrameworkSetup(updateFramework);
 
