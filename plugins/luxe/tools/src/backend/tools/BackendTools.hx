@@ -6,6 +6,7 @@ import tools.Files;
 import haxe.io.Path;
 
 import sys.FileSystem;
+import sys.io.File;
 
 using StringTools;
 
@@ -100,7 +101,9 @@ class BackendTools implements tools.spec.BackendTools {
     public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlPath = Path.join([flowProjectPath, 'project.hxml']);
         
+        /*
         var cmdArgs = ['run', 'flow', 'info', target.name, '--hxml'];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
@@ -113,6 +116,13 @@ class BackendTools implements tools.spec.BackendTools {
 
         var output = res.stdout;
         return output;
+        */
+
+        if (!FileSystem.exists(hxmlPath)) {
+            return null;
+        }
+
+        return File.getContent(hxmlPath);
         
         /*if (output == null) return null;
 
