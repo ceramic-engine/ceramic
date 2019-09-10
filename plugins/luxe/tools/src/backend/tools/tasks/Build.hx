@@ -241,7 +241,26 @@ class Build extends tools.Task {
             }
         }
 
-        if (action == 'run' && target.name == 'ios') {
+        var projectDir = Path.join([cwd, 'project', target.name]);
+
+        if ((action == 'run' || action == 'build') && target.name == 'mac') {
+            // Copy mac binary to project path
+            if (!FileSystem.exists(projectDir)) {
+                FileSystem.createDirectory(projectDir);
+            }
+            File.copy(
+                Path.join([flowProjectPath, 'cpp', 'Main']),
+                Path.join([projectDir, project.app.name])
+            );
+        }
+
+        if (action == 'run' && target.name == 'mac') {
+            // Run mac app
+            // TODO process logs to make proper formatting
+            command(Path.join([projectDir, project.app.name]));
+            runHooks(cwd, args, project.app.hooks, 'end run');
+        }
+        else if (action == 'run' && target.name == 'ios') {
             // Needs iOS plugin
             var task = context.tasks.get('ios xcode');
             if (task == null) {
