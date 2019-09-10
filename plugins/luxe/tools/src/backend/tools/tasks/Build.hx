@@ -144,60 +144,12 @@ class Build extends tools.Task {
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('-debug');
 
-        var status = 0;
-        var hasErrorLog = false;
-
         print('Run haxe compiler...');
 
-        Sync.run(function(done) {
-
-            var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
-
-            var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, haxe]),
-                cmdArgs,
-                { cwd: flowProjectPath }
-            );
-
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.pipe(untyped out);
-            proc.on('close', function(code:Int) {
-                status = code;
-            });
-            out.encoding = 'utf8';
-            out.on('token', function(token:String) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(flowProjectPath, token);
-                stdoutWrite(token + "\n");
-            });
-            out.on('done', function() {
-                done();
-            });
-            out.on('error', function(err) {
-                warning(''+err);
-            });
-
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.pipe(untyped err);
-            err.encoding = 'utf8';
-            err.on('token', function(token:String) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(flowProjectPath, token);
-                stderrWrite(token + "\n");
-            });
-            err.on('error', function(err) {
-                warning(''+err);
-            });
-
-        });
-
-        if (status == 0 && hasErrorLog) {
-            status = 1;
-        }
+        var status = haxeWithChecksAndLogs(
+            cmdArgs,
+            { cwd: flowProjectPath }
+        );
 
         function buildWeb() {
             var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
@@ -216,8 +168,8 @@ class Build extends tools.Task {
         }
         
         if (status != 0) {
-            if (!hasErrorLog) fail('Error when running luxe $action.');
-            else js.Node.process.exit(status);
+            error('Error when running luxe $action. (status = $status)');
+            js.Node.process.exit(status);
         }
         else {
 
@@ -256,8 +208,11 @@ class Build extends tools.Task {
 
         if (action == 'run' && target.name == 'mac') {
             // Run mac app
-            // TODO process logs to make proper formatting
-            command(Path.join([projectDir, project.app.name]));
+            var status = commandWithChecksAndLogs(
+                Path.join([projectDir, project.app.name]),
+                [],
+                { cwd: projectDir, logCwd: flowProjectPath }
+            );
             runHooks(cwd, args, project.app.hooks, 'end run');
         }
         else if (action == 'run' && target.name == 'ios') {

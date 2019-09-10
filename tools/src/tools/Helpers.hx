@@ -6,8 +6,10 @@ import sys.FileSystem;
 import sys.io.File;
 import js.node.ChildProcess;
 import tools.Project;
+
 import npm.Yaml;
 import npm.StripAnsi;
+import npm.StreamSplitter;
 
 using StringTools;
 using tools.Colors;
@@ -280,6 +282,13 @@ class Helpers {
 
     } //haxe
 
+    public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }) {
+        
+        var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
+        return commandWithChecksAndLogs(Path.join([context.ceramicToolsPath, haxe]), args, options);
+
+    } //haxe
+
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
@@ -298,6 +307,81 @@ class Helpers {
         return npm.CommandExists.existsSync(name);
 
     } //commandExists
+
+    /** Like `command()`, but will perform additional checks and log formatting,
+        compared to a regular `command()` call. Use it to run compilers and run apps.
+        @return status code */
+    public static function commandWithChecksAndLogs(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }):Int {
+
+        if (options == null) {
+            options = { cwd: null, logCwd: null };
+        }
+        if (options.cwd == null) options.cwd = context.cwd;
+        if (options.logCwd == null) options.logCwd = options.cwd;
+
+        var status = 0;
+        var hasErrorLog = false;
+
+        var cwd = options.cwd;
+        var logCwd = options.logCwd;
+
+        Sync.run(function(done) {
+
+            var proc = null;
+            if (args == null) {
+                proc = ChildProcess.spawn(name, { cwd: cwd });
+            } else {
+                proc = ChildProcess.spawn(name, args, { cwd: cwd });
+            }
+
+            var out = StreamSplitter.splitter("\n");
+            proc.stdout.pipe(untyped out);
+            proc.on('close', function(code:Int) {
+                // TODO there is something wrong going on here. 'close' event is not fired.
+                // Probably because we are using StreamSplitter in between.
+                // Need to fix that eventually, and remove our log analysis workaround
+                status = code;
+            });
+            out.encoding = 'utf8';
+            out.on('token', function(token:String) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
+                token = formatLineOutput(logCwd, token);
+                stdoutWrite(token + "\n");
+            });
+            out.on('done', function() {
+                done();
+            });
+            out.on('error', function(err) {
+                warning(''+err);
+            });
+
+            var err = StreamSplitter.splitter("\n");
+            proc.stderr.pipe(untyped err);
+            err.encoding = 'utf8';
+            err.on('token', function(token:String) {
+                if (isErrorOutput(token)) {
+                    hasErrorLog = true;
+                }
+                token = formatLineOutput(logCwd, token);
+                stderrWrite(token + "\n");
+            });
+            err.on('error', function(err) {
+                warning(''+err);
+            });
+
+        });
+
+        trace('---- hasErrorLog=$hasErrorLog status=$status');
+
+        if (status == 0 && hasErrorLog) {
+            status = 1;
+        }
+
+        return status;
+
+    } //commandWithChecksAndLogs
 
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
