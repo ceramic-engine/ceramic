@@ -235,6 +235,7 @@ class BackendTools implements tools.spec.BackendTools {
             var dstPath = Path.join([dstAssetsPath, asset.name]);
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
+
                 // Copy and set to same date
                 if (sys.FileSystem.exists(dstPath)) {
                     sys.FileSystem.deleteFile(dstPath);
@@ -384,6 +385,9 @@ class BackendTools implements tools.spec.BackendTools {
                     // Create ico
                     Images.createIco(appIcon, entry.path, entry.width, entry.height);
                 }
+
+                // Set to same last modified
+                Files.setToSameLastModified(appIcon, entry.path);
             }
         }
 
