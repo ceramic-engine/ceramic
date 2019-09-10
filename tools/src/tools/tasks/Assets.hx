@@ -190,9 +190,6 @@ class Assets extends tools.Task {
             }
         }
 
-
-        print('Updated project assets.');
-
     } //run
 
 }

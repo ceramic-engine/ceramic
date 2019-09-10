@@ -72,8 +72,6 @@ class Icons extends tools.Task {
 
         context.backend.transformIcons(cwd, appIcon, target, context.variant);
 
-        print('Updated project icons.');
-
     } //run
 
 }
