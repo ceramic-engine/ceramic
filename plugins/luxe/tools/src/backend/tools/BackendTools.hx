@@ -220,7 +220,9 @@ class BackendTools implements tools.spec.BackendTools {
 
         if (dstAssetsPath == null) {
             switch (target.name) {
-                case 'mac' | 'windows' | 'linux' | 'web':
+                case 'mac':
+                    dstAssetsPath = Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+                case 'windows' | 'linux' | 'web':
                     dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
                 default:
                     dstAssetsPath = Path.join([flowProjectPath, 'assets']);

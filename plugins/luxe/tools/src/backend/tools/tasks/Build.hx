@@ -195,7 +195,7 @@ class Build extends tools.Task {
 
         var projectDir = Path.join([cwd, 'project', target.name]);
 
-        if ((action == 'run' || action == 'build') && target.name == 'mac') {
+        /*if ((action == 'run' || action == 'build') && target.name == 'mac') {
             // Copy mac binary to project path
             if (!FileSystem.exists(projectDir)) {
                 FileSystem.createDirectory(projectDir);
@@ -204,16 +204,26 @@ class Build extends tools.Task {
                 Path.join([flowProjectPath, 'cpp', 'Main']),
                 Path.join([projectDir, project.app.name])
             );
-        }
+        }*/
 
-        if (action == 'run' && target.name == 'mac') {
-            // Run mac app
-            var status = commandWithChecksAndLogs(
-                Path.join([projectDir, project.app.name]),
-                [],
-                { cwd: projectDir, logCwd: flowProjectPath }
-            );
-            runHooks(cwd, args, project.app.hooks, 'end run');
+        if ((action == 'run' || action == 'build') && target.name == 'mac') {
+            // Needs Mac plugin
+            var task = context.tasks.get('mac app');
+            if (task == null) {
+                warning('Cannot create mac app because `ceramic mac app` command doesn\'t exist.');
+                warning('Did you enable ceramic\'s mac plugin?');
+            }
+            else {
+                // Copy binary and optionally run mac app
+                var taskArgs = ['mac', 'app', '--variant', context.variant];
+                if (action == 'run') taskArgs.push('--run');
+                if (debug) taskArgs.push('--debug');
+                task.run(cwd, taskArgs);
+
+                if (action == 'run') {
+                    runHooks(cwd, args, project.app.hooks, 'end run');
+                }
+            }
         }
         else if (action == 'run' && target.name == 'ios') {
             // Needs iOS plugin
