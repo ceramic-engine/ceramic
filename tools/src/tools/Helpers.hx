@@ -373,8 +373,6 @@ class Helpers {
 
         });
 
-        trace('---- hasErrorLog=$hasErrorLog status=$status');
-
         if (status == 0 && hasErrorLog) {
             status = 1;
         }
