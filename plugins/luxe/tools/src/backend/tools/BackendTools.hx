@@ -219,11 +219,11 @@ class BackendTools implements tools.spec.BackendTools {
         var validDstPaths:Map<String,Bool> = new Map();
 
         if (dstAssetsPath == null) {
-            if (target.name == 'web') {
-                dstAssetsPath = Path.join([cwd, 'project', 'web', 'assets']);
-            }
-            else {
-                dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+            switch (target.name) {
+                case 'mac' | 'windows' | 'linux' | 'web':
+                    dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
+                default:
+                    dstAssetsPath = Path.join([flowProjectPath, 'assets']);
             }
         }
 
