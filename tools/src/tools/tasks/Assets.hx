@@ -125,6 +125,8 @@ class Assets extends tools.Task {
             }
         }
 
+        print('Update project assets...');
+
         // Transform/copy assets
         var transformedAssets = context.backend.transformAssets(
             cwd,

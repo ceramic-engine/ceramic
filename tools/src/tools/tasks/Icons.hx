@@ -68,6 +68,8 @@ class Icons extends tools.Task {
             fail('Invalid icon: $appIcon');
         }
 
+        print('Update project icons...');
+
         context.backend.transformIcons(cwd, appIcon, target, context.variant);
 
         print('Updated project icons.');
