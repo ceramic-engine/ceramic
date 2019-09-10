@@ -20,7 +20,7 @@ class Files {
         var time1 = Fs.statSync(filePath1).mtime.getTime();
         var time2 = Fs.statSync(filePath2).mtime.getTime();
 
-        return time1 == time2;
+        return Math.abs(time1 - time2) < 1000; // 1 second tolerance
 
     } //haveSameLastModified
 
