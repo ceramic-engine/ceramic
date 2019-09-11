@@ -55,7 +55,7 @@ class Web extends tools.Task {
         if (!doRun) return;
 
         // Run project through electron/ceramic-runner
-        print('Start ceramic runner...');
+        print('Start ceramic runner');
         var webAppFilesPath = Path.join([cwd, 'project/web']);
 
         var status = 0;

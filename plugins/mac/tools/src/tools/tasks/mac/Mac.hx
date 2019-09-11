@@ -46,7 +46,7 @@ class Mac extends tools.Task {
         if (!doRun) return;
 
         // Run project through electron/ceramic-runner
-        print('Start app...');
+        print('Start app');
 
         var status = commandWithChecksAndLogs(
             project.app.name + '.app/Contents/MacOS/' + project.app.name,
