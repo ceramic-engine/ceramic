@@ -56,7 +56,6 @@ class Build extends tools.Task {
 		var outPath = Path.join([cwd, 'out']);
 		var action = null;
 		var debug = extractArgFlag(args, 'debug');
-
 		var archs = extractArgValue(args, 'archs');
 
 		switch (config) {
@@ -131,11 +130,6 @@ class Build extends tools.Task {
 			// iOS/Android case
 			var cmdAction = action;
 			if (target.name == 'ios' || target.name == 'android') {
-				if (archs == null || archs.trim() == '') {
-					// TODO -D no-compilation
-				} else {
-					// TODO proper HXCPP flag
-				}
 
 				// Android OpenAL built separately (because of LGPL license, we want to build
 				// it separately and link it dynamically at runtime)
@@ -201,6 +195,11 @@ class Build extends tools.Task {
 
 			if (debug)
 				cmdArgs.push('-debug');
+            
+            if (target.name == 'ios' || target.name == 'android') {
+				cmdArgs.push('-D');
+                cmdArgs.push('no-compilation');
+            }
 
 			print('Run haxe compiler');
 
@@ -220,6 +219,38 @@ class Build extends tools.Task {
 
 			runHooks(cwd, args, project.app.hooks, 'end build');
 		}
+
+        // Compile target-specific c++ on a specific target
+        if (target.name == 'ios') {
+			if (archs != null && archs.trim() != '') {
+                var archList = archs.split(',');
+                for (arch in archList) {
+                    arch = arch.trim();
+                    var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dios', '-DHXCPP_CPP11', '-DHXCPP_CLANG'];
+                    if (!context.colors) {
+                        hxcppArgs.push('-DHXCPP_NO_COLOR');
+                    }
+                    switch (arch) {
+                        case 'armv7':
+                            hxcppArgs.push('-DHXCPP_ARMV7');
+                        case 'arm64':
+                            hxcppArgs.push('-DHXCPP_ARM64');
+                        case 'x86' | 'i386':
+                            hxcppArgs.push('-Dsimulator');
+                        case 'x86_64':
+                            hxcppArgs.push('-Dsimulator');
+                            hxcppArgs.push('-DHXCPP_M64');
+                        default:
+                            warning('Unsupported ios arch: $arch');
+                            continue;
+                    }
+
+                    print('Compile C++ for arch $arch');
+
+                    haxelib(hxcppArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
+                }
+            }
+        }
 
 		// Hook
 		if (action == 'run') {
