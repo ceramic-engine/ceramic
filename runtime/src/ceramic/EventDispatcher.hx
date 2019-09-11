@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.Entity;
+import ceramic.Shortcuts.*;
 
 /** Event dispatcher used by DynamicEvents and Events macro as an alternative implementation
     that doesn't require to add a lot of methods on classes with events.
@@ -224,6 +225,7 @@ class EventDispatcher {
         // Map owner to handler
         if (owner != null) {
             if (owner.destroyed) {
+                warning('Failed to bind dynamic event because owner is destroyed!');
                 return;
             }
             var destroyCb = function() {
@@ -292,6 +294,7 @@ class EventDispatcher {
         // Map owner to handler
         if (owner != null) {
             if (owner.destroyed) {
+                warning('Failed to bind dynamic event because owner is destroyed!');
                 return;
             }
             var destroyCb = function() {

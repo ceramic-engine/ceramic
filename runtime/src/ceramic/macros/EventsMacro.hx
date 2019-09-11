@@ -771,6 +771,7 @@ class EventsMacro {
                                 // Map owner to handler
                                 if (owner != null) {
                                     if (owner.destroyed) {
+                                        ceramic.Shortcuts.warning('Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!');
                                         return;
                                     }
                                     var destroyCb = function() {
@@ -841,6 +842,7 @@ class EventsMacro {
                                 // Map owner to handler
                                 if (owner != null) {
                                     if (owner.destroyed) {
+                                        ceramic.Shortcuts.warning('Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!');
                                         return;
                                     }
                                     var destroyCb = function() {
