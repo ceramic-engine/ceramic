@@ -217,6 +217,7 @@ class BackendTools implements tools.spec.BackendTools {
         var newAssets:Array<tools.Asset> = [];
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var validDstPaths:Map<String,Bool> = new Map();
+        var assetsChanged = false;
 
         if (dstAssetsPath == null) {
             switch (target.name) {
@@ -237,6 +238,9 @@ class BackendTools implements tools.spec.BackendTools {
             var dstPath = Path.join([dstAssetsPath, asset.name]);
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
+
+                // Assets did change
+                assetsChanged = true;
 
                 // Copy and set to same date
                 if (sys.FileSystem.exists(dstPath)) {
@@ -271,12 +275,22 @@ class BackendTools implements tools.spec.BackendTools {
             // Remove outdated assets
             //
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
-                var dstPath = Path.join([dstAssetsPath, name]);
-                if (!validDstPaths.exists(dstPath)) {
-                    tools.Files.deleteRecursive(dstPath);
+                if (name != '_assets.json') {
+                    var dstPath = Path.join([dstAssetsPath, name]);
+                    if (!validDstPaths.exists(dstPath)) {
+
+                        // Assets did change
+                        assetsChanged = true;
+
+                        tools.Files.deleteRecursive(dstPath);
+                    }
                 }
             }
             tools.Files.removeEmptyDirectories(dstAssetsPath);
+        }
+
+        if (assetsChanged) {
+            context.assetsChanged = true;
         }
 
         /*// Copy rtti data (if any)
@@ -293,6 +307,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         var toTransform:Array<TargetImage> = [];
         var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var iconsChanged = false;
 
         switch (target.name) {
             case 'mac':
@@ -377,6 +392,10 @@ class BackendTools implements tools.spec.BackendTools {
 
             // Compare with original
             if (!Files.haveSameLastModified(appIcon, entry.path)) {
+
+                // Icons did change
+                iconsChanged = true;
+
                 if (entry.path.endsWith('.png')) {
 
                     // Resize
@@ -391,6 +410,10 @@ class BackendTools implements tools.spec.BackendTools {
                 // Set to same last modified
                 Files.setToSameLastModified(appIcon, entry.path);
             }
+        }
+
+        if (iconsChanged) {
+            context.iconsChanged = true;
         }
 
     } //transformIcons

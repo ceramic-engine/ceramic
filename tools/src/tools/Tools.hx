@@ -62,7 +62,9 @@ class Tools {
             plugin: null,
             rootTask: null,
             isEmbeddedInElectron: false,
-            ceramicVersion: null
+            ceramicVersion: null,
+            assetsChanged: false,
+            iconsChanged: false
         };
 
         // Check if we are embedded in electron

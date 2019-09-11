@@ -125,7 +125,7 @@ class Assets extends tools.Task {
             }
         }
 
-        print('Update project assets...');
+        print('Update project assets');
 
         // Transform/copy assets
         var transformedAssets = context.backend.transformAssets(
@@ -187,6 +187,20 @@ class Assets extends tools.Task {
             if (processIcons) {
                 var task = new Icons();
                 task.run(cwd, ['icons', target.name, '--variant', context.variant]);
+            }
+        }
+
+        if (context.assetsChanged || context.iconsChanged) {
+            // Invalidate project files last modified times because assets or icons have changed
+            // in order to ensure build will be reprocessed again
+            var outPath = Path.join([cwd, 'out', context.backend.name, target.name + (context.variant != 'standard' ? '-' + context.variant : '')]);
+            var lastModifiedListFile = Path.join([outPath, 'lastModifiedList.json']);
+            if (FileSystem.exists(lastModifiedListFile)) {
+                FileSystem.deleteFile(lastModifiedListFile);
+            }
+            var lastModifiedListFileDebug = Path.join([outPath, 'lastModifiedList-debug.json']);
+            if (FileSystem.exists(lastModifiedListFileDebug)) {
+                FileSystem.deleteFile(lastModifiedListFileDebug);
             }
         }
 

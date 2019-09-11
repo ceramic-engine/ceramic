@@ -78,4 +78,10 @@ typedef Context = {
     /** Current ceramic version */
     var ceramicVersion:String;
 
+    /** A flag to tell whether one asset or more have changed since last asset pass */
+    var assetsChanged:Bool;
+
+    /** A flag to tell whether one icon or more have changed since last icon pass */
+    var iconsChanged:Bool;
+
 } //Context

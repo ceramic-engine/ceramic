@@ -2,6 +2,7 @@ package tools;
 
 import sys.FileSystem;
 import haxe.io.Path;
+import haxe.DynamicAccess;
 import js.node.Fs;
 import js.node.ChildProcess;
 
@@ -197,5 +198,60 @@ class Files {
         }
 
     } //copyDirectory
+
+    /** Scan a directory and return a mapping of file paths and their last modified time. */
+    public static function getDirectoryLastModifiedList(dir:String, fileSuffix:String, ?output:DynamicAccess<Float>):DynamicAccess<Float> {
+
+        if (output == null) {
+            output = {};
+        }
+
+        if (!FileSystem.exists(dir)) {
+            return output;
+        }
+
+        for (name in FileSystem.readDirectory(dir)) {
+
+            var filePath = Path.join([dir, name]);
+
+            if (FileSystem.isDirectory(filePath)) {
+                getDirectoryLastModifiedList(filePath, fileSuffix, output);
+            }
+            else if (fileSuffix == null || filePath.endsWith(fileSuffix)) {
+                output.set(filePath, getLastModified(filePath));
+            }
+            
+        }
+
+        return output;
+
+    } //getDirectoryLastModifiedList
+
+    public static function hasDirectoryChanged(lastModifiedListBefore:DynamicAccess<Float>, lastModifiedListAfter:DynamicAccess<Float>):Bool {
+
+        // Check if any previous file has changed
+        for (key in lastModifiedListBefore.keys()) {
+            if (!lastModifiedListAfter.exists(key)) {
+                // File was removed
+                return true;
+            }
+            if (Math.abs(lastModifiedListAfter.get(key) - lastModifiedListBefore.get(key)) >= 1.0) {
+                // File has changed
+                return true;
+            }
+        }
+
+        // Check if any new file was added
+        for (key in lastModifiedListAfter.keys()) {
+            if (!lastModifiedListAfter.exists(key)) {
+                // This is a new file
+                return true;
+            }
+        }
+
+        // Nothing changed
+        return false;
+
+    } //hasDirectoryChanged
 
 } //Files
