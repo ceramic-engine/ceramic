@@ -40,8 +40,6 @@ class Build extends tools.Task {
 	override function run(cwd:String, args:Array<String>):Void {
 		var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
-		trace('----- ARGS $args');
-
 		// Load project file
 		var project = new tools.Project();
 		var projectPath = Path.join([cwd, 'ceramic.yml']);
@@ -58,7 +56,7 @@ class Build extends tools.Task {
 		var outPath = Path.join([cwd, 'out']);
 		var action = null;
 		var debug = context.debug;
-		trace('----- DEBUG: $debug');
+		var noSkip = extractArgFlag(args, 'no-skip');
 		var archs = extractArgValue(args, 'archs');
 
 		switch (config) {
@@ -81,9 +79,8 @@ class Build extends tools.Task {
 		var saveLastModifiedListCallback:Void->Void = null;
 
 		// Check if we could skip build
-		// (skip if files didn't changed and we are not running explicit build command (e.g. run))
 		var skipBuild = false;
-		if (action == 'run') {
+		if (action == 'run' || action == 'build') {
 			var lastModifiedListFile = Path.join([flowProjectPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
 			var lastModifiedListBefore:DynamicAccess<Float> = null;
 
@@ -109,7 +106,7 @@ class Build extends tools.Task {
 				lastModifiedListBefore = Json.parse(File.getContent(lastModifiedListFile));
 			}
 
-			if (lastModifiedListBefore != null) {
+			if (!noSkip && lastModifiedListBefore != null) {
 				if (!Files.hasDirectoryChanged(lastModifiedListBefore, lastModifiedListAfter)) {
 					skipBuild = true;
 				}
