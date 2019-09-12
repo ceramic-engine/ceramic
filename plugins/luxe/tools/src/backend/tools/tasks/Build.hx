@@ -127,39 +127,35 @@ class Build extends tools.Task {
 		if (!skipBuild && (action == 'build' || action == 'run')) {
 			runHooks(cwd, args, project.app.hooks, 'begin build');
 
-			// iOS/Android case
-			var cmdAction = action;
-			if (target.name == 'ios' || target.name == 'android') {
-
-				// Android OpenAL built separately (because of LGPL license, we want to build
-				// it separately and link it dynamically at runtime)
-				// TODO move this into android plugin?
-				if (target.name == 'android') {
-					haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
-						{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-					haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
-						{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-					for (arch in ['armeabi-v7a', 'x86']) {
-						if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
-							FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
-						}
+			// Android OpenAL built separately (because of LGPL license, we want to build
+			// it separately and link it dynamically at runtime)
+			// TODO move this into android plugin?
+			if (target.name == 'android') {
+				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
+					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
+					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+				for (arch in ['armeabi-v7a', 'x86']) {
+					if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
+						FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
 					}
-					File.copy(Path.join([
-						context.ceramicGitDepsPath,
-						'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so'
-					]), Path.join([
-							context.ceramicGitDepsPath,
-							'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
-						]));
-					File.copy(Path.join([
-						context.ceramicGitDepsPath,
-						'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
-					]), Path.join([
-							context.ceramicGitDepsPath,
-							'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
-						]));
 				}
+				File.copy(Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so'
+				]), Path.join([
+						context.ceramicGitDepsPath,
+						'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
+					]));
+				File.copy(Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
+				]), Path.join([
+						context.ceramicGitDepsPath,
+						'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
+					]));
 			}
+
 			// // Web case
 			// else if (target.name == 'web') {
 
@@ -221,7 +217,7 @@ class Build extends tools.Task {
 			runHooks(cwd, args, project.app.hooks, 'end build');
 		}
 
-        // Compile target-specific c++ on a specific target
+        // Compile c++ for iOS on requested architectures
 		// We might want to move this into iOS plugin later
         if (target.name == 'ios') {
 			if (archs != null && archs.trim() != '') {
@@ -285,6 +281,41 @@ class Build extends tools.Task {
 				command('xcrun', lipoArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
             }
         }
+
+        // Compile c++ for Android on requested architectures
+		// We might want to move this into Android plugin later
+		if (target.name == 'android') {
+			if (archs != null && archs.trim() != '') {
+                var archList = archs.split(',');
+                for (arch in archList) {
+                    arch = arch.trim();
+                    var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid'];
+					if (debug) {
+						hxcppArgs.push('-Ddebug');
+					}
+                    if (!context.colors) {
+                        hxcppArgs.push('-DHXCPP_NO_COLOR');
+                    }
+                    switch (arch) {
+                        case 'armv7':
+                            hxcppArgs.push('-DHXCPP_ARMV7');
+                        case 'arm64':
+                            hxcppArgs.push('-DHXCPP_ARM64');
+                        case 'x86' | 'i386':
+                            hxcppArgs.push('-DHXCPP_X86');
+                        case 'x86_64':
+                            hxcppArgs.push('-DHXCPP_X86_64');
+                        default:
+                            warning('Unsupported android arch: $arch');
+                            continue;
+                    }
+
+                    print('Compile C++ for arch $arch');
+
+                    haxelib(hxcppArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
+                }
+            }
+		}
 
 		// Hook
 		if (action == 'run') {
