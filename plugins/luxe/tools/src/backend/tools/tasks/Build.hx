@@ -135,7 +135,9 @@ class Build extends tools.Task {
 					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
 				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
 					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-				for (arch in ['armeabi-v7a', 'x86']) {
+				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
+					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+				for (arch in ['armeabi-v7a', 'x86', 'arm64-v8a']) {
 					if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
 						FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
 					}
@@ -147,12 +149,21 @@ class Build extends tools.Task {
 						context.ceramicGitDepsPath,
 						'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
 					]));
+					
 				File.copy(Path.join([
 					context.ceramicGitDepsPath,
 					'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
 				]), Path.join([
 						context.ceramicGitDepsPath,
 						'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
+					]));
+					
+				File.copy(Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/libopenal-64.so'
+				]), Path.join([
+						context.ceramicGitDepsPath,
+						'linc_openal/lib/openal-android/lib/Android/arm64-v8a/libopenal.so'
 					]));
 			}
 
