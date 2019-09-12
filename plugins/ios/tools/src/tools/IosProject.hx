@@ -70,11 +70,11 @@ class IosProject {
             Templates.replaceInContents(iosProjectPath, replacementsInContents);
 
             // Put assets back
-            if (FileSystem.exists(iosProjectAssetsPath)) {
+            if (FileSystem.exists(tmpProjectAssetsPath)) {
                 if (FileSystem.exists(iosProjectAssetsPath)) {
                     Files.deleteRecursive(iosProjectAssetsPath);
                 }
-                FileSystem.rename(iosProjectAssetsPath, iosProjectAssetsPath);
+                FileSystem.rename(tmpProjectAssetsPath, iosProjectAssetsPath);
             }
         }
 
