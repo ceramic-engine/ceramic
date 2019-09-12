@@ -225,6 +225,8 @@ class BackendTools implements tools.spec.BackendTools {
                     dstAssetsPath = Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
                 case 'ios':
                     dstAssetsPath = Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
+                case 'android':
+                    dstAssetsPath = Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
                 case 'windows' | 'linux' | 'web':
                     dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
                 default:
