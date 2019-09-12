@@ -20,9 +20,21 @@ class IosProject {
         var iosProjectName = project.app.name;
         var iosProjectPath = Path.join([cwd, 'project', 'ios']);
         var iosProjectFile = Path.join([iosProjectPath, iosProjectName + '.xcodeproj']);
+        var iosProjectAssetsPath = Path.join([iosProjectPath, 'project', 'assets', 'assets']);
+        var tmpProjectAssetsPath = Path.join([cwd, 'project', 'ios-tmp-assets']);
 
         // Copy template project (only if not existing already)
         if (!FileSystem.exists(iosProjectFile)) {
+
+            // We are expecting assets to be in destination directory already.
+            // Move them to a temporary place, process template files,
+            // then put them back where they were.
+            if (FileSystem.exists(iosProjectAssetsPath)) {
+                if (FileSystem.exists(tmpProjectAssetsPath)) {
+                    Files.deleteRecursive(tmpProjectAssetsPath);
+                }
+                FileSystem.rename(iosProjectAssetsPath, tmpProjectAssetsPath);
+            }
 
             // Plugin path
             var pluginPath = context.plugins.get('iOS').path;
@@ -56,6 +68,14 @@ class IosProject {
             replacementsInContents['MyApp'] = project.app.name;
             replacementsInContents['My App'] = project.app.displayName;
             Templates.replaceInContents(iosProjectPath, replacementsInContents);
+
+            // Put assets back
+            if (FileSystem.exists(iosProjectAssetsPath)) {
+                if (FileSystem.exists(iosProjectAssetsPath)) {
+                    Files.deleteRecursive(iosProjectAssetsPath);
+                }
+                FileSystem.rename(iosProjectAssetsPath, iosProjectAssetsPath);
+            }
         }
 
     } //createIosProjectIfNeeded

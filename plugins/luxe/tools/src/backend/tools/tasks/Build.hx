@@ -40,6 +40,8 @@ class Build extends tools.Task {
 	override function run(cwd:String, args:Array<String>):Void {
 		var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
+		trace('----- ARGS $args');
+
 		// Load project file
 		var project = new tools.Project();
 		var projectPath = Path.join([cwd, 'ceramic.yml']);
@@ -55,7 +57,8 @@ class Build extends tools.Task {
 
 		var outPath = Path.join([cwd, 'out']);
 		var action = null;
-		var debug = extractArgFlag(args, 'debug');
+		var debug = context.debug;
+		trace('----- DEBUG: $debug');
 		var archs = extractArgValue(args, 'archs');
 
 		switch (config) {
@@ -193,8 +196,9 @@ class Build extends tools.Task {
 			//
 			var cmdArgs = ['project.hxml'];
 
-			if (debug)
+			if (debug) {
 				cmdArgs.push('-debug');
+			}
             
             if (target.name == 'ios' || target.name == 'android') {
 				cmdArgs.push('-D');
@@ -221,12 +225,16 @@ class Build extends tools.Task {
 		}
 
         // Compile target-specific c++ on a specific target
+		// We might want to move this into iOS plugin later
         if (target.name == 'ios') {
 			if (archs != null && archs.trim() != '') {
                 var archList = archs.split(',');
                 for (arch in archList) {
                     arch = arch.trim();
                     var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dios', '-DHXCPP_CPP11', '-DHXCPP_CLANG'];
+					if (debug) {
+						hxcppArgs.push('-Ddebug');
+					}
                     if (!context.colors) {
                         hxcppArgs.push('-DHXCPP_NO_COLOR');
                     }
@@ -249,6 +257,35 @@ class Build extends tools.Task {
 
                     haxelib(hxcppArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
                 }
+
+				// Combine binaries
+				//
+				var allBinaries = debug ? [
+					'libMain-debug.iphoneos-v7.a',
+					'libMain-debug.iphoneos-64.a',
+					'libMain-debug.iphonesim.a',
+					'libMain-debug.iphonesim-64.a'
+				] : [
+					'libMain.iphoneos-v7.a',
+					'libMain.iphoneos-64.a',
+					'libMain.iphonesim.a',
+					'libMain.iphonesim-64.a'
+				];
+
+				// Combine
+				var lipoArgs = [
+					'-sdk','iphoneos', 'lipo',
+                    '-output', Path.join([flowProjectPath, 'cpp', 'lib' + project.app.name + '.a']),
+                    '-create'
+				];
+				for (binary in allBinaries) {
+					var binaryPath = Path.join([flowProjectPath, 'cpp', binary]);
+					if (FileSystem.exists(binaryPath)) {
+						lipoArgs.push(binaryPath);
+					}
+				}
+				print('Combine binaries');
+				command('xcrun', lipoArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
             }
         }
 
