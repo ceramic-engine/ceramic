@@ -199,6 +199,7 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-D snow_native';
             if (target.name == 'ios' || target.name == 'android') {
                 targetFlags += '\n' + '-D linc_opengl_GLES';
+                targetFlags += '\n' + '-D mobile';
             }
             targetFlags += '\n' + '--macro snow.Set.assets("snow.core.native.assets.Assets")';
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.modules.sdl.Runtime")';
