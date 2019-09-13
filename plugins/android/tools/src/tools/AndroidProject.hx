@@ -132,6 +132,15 @@ class AndroidProject {
                 Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so'])
             );
         }
+        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a']))) {
+            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a']));
+        }
+        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']))) {
+            File.copy(
+                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']),
+                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so'])
+            );
+        }
 
     } //copyOpenALBinariesIfNeeded
 

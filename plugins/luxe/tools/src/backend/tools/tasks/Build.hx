@@ -127,46 +127,6 @@ class Build extends tools.Task {
 		if (!skipBuild && (action == 'build' || action == 'run')) {
 			runHooks(cwd, args, project.app.hooks, 'begin build');
 
-			// Android OpenAL built separately (because of LGPL license, we want to build
-			// it separately and link it dynamically at runtime)
-			// TODO move this into android plugin?
-			if (target.name == 'android') {
-				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
-					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
-					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-				haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
-					{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-				for (arch in ['armeabi-v7a', 'x86', 'arm64-v8a']) {
-					if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
-						FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
-					}
-				}
-				File.copy(Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so'
-				]), Path.join([
-						context.ceramicGitDepsPath,
-						'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
-					]));
-					
-				File.copy(Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
-				]), Path.join([
-						context.ceramicGitDepsPath,
-						'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
-					]));
-					
-				File.copy(Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/libopenal-64.so'
-				]), Path.join([
-						context.ceramicGitDepsPath,
-						'linc_openal/lib/openal-android/lib/Android/arm64-v8a/libopenal.so'
-					]));
-			}
-
 			// // Web case
 			// else if (target.name == 'web') {
 
@@ -296,6 +256,45 @@ class Build extends tools.Task {
         // Compile c++ for Android on requested architectures
 		// We might want to move this into Android plugin later
 		if (target.name == 'android') {
+
+			// Android OpenAL built separately (because of LGPL license, we want to build
+			// it separately and link it dynamically at runtime)
+			// TODO move this into android plugin?
+			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
+				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
+				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
+				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+			/*for (arch in ['armeabi-v7a', 'x86', 'arm64-v8a']) {
+				if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
+					FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
+				}
+			}
+			File.copy(Path.join([
+				context.ceramicGitDepsPath,
+				'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so'
+			]), Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
+				]));
+				
+			File.copy(Path.join([
+				context.ceramicGitDepsPath,
+				'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
+			]), Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
+				]));
+				
+			File.copy(Path.join([
+				context.ceramicGitDepsPath,
+				'linc_openal/lib/openal-android/lib/Android/libopenal-64.so'
+			]), Path.join([
+					context.ceramicGitDepsPath,
+					'linc_openal/lib/openal-android/lib/Android/arm64-v8a/libopenal.so'
+				]));*/
+
 			if (archs != null && archs.trim() != '') {
                 var archList = archs.split(',');
                 for (arch in archList) {
