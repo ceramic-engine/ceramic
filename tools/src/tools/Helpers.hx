@@ -477,6 +477,40 @@ class Helpers {
 
     } //command
 
+    public static function runTask(taskCommand, ?args:Array<String>, addContextArgs:Bool = true, allowMissingTask:Bool = false):Bool {
+
+        var task = context.tasks.get(taskCommand);
+        if (task == null) {
+            var err = 'Cannot run task because `ceramic $taskCommand` command doesn\'t exist.';
+            if (allowMissingTask) {
+                warning(err);
+            }
+            else {
+                fail(err);
+            }
+            return false;
+        }
+
+        // Run with electron runner
+        var taskArgs = [];
+        if (args != null) {
+            taskArgs = [].concat(args);
+        }
+        taskArgs.push('--cwd');
+        taskArgs.push(context.cwd);
+        if (context.debug) {
+            taskArgs.push('--debug');
+        }
+        if (context.variant != 'standard') {
+            taskArgs.push('--variant');
+            taskArgs.push(context.variant);
+        }
+        task.run(context.cwd, taskArgs);
+
+        return true;
+
+    } //runTask
+
     public static function extractArgValue(args:Array<String>, name:String, remove:Bool = false):String {
 
         var index = args.indexOf('--$name');
