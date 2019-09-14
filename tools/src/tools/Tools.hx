@@ -171,6 +171,7 @@ class Tools {
                 fail('Provided cwd path exists but is not a directory.');
             }
             cwd = newCwd;
+            context.cwd = cwd;
             args.splice(index, 2);
         }
 
