@@ -38,15 +38,13 @@ class Build extends tools.Task {
 	} //new
 
 	override function run(cwd:String, args:Array<String>):Void {
-		var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+		var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
-		// Load project file
-		var project = new tools.Project();
-		var projectPath = Path.join([cwd, 'ceramic.yml']);
-		project.loadAppFile(projectPath);
+		// Get project file
+		var project = context.project;
 
 		// Ensure flow project exist
-		if (!FileSystem.exists(flowProjectPath)) {
+		if (!FileSystem.exists(outTargetPath)) {
 			fail('Missing flow/luxe project file. Did you setup this target?');
 		}
 
@@ -71,7 +69,7 @@ class Build extends tools.Task {
 		if (action == 'clean') {
 			// Simply remove all generated file if cleaning
 			runHooks(cwd, args, project.app.hooks, 'begin clean');
-			tools.Files.deleteRecursive(flowProjectPath);
+			tools.Files.deleteRecursive(outTargetPath);
 			runHooks(cwd, args, project.app.hooks, 'end clean');
 		}
 
@@ -81,7 +79,7 @@ class Build extends tools.Task {
 		// Check if we could skip build
 		var skipBuild = false;
 		if (action == 'run' || action == 'build') {
-			var lastModifiedListFile = Path.join([flowProjectPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
+			var lastModifiedListFile = Path.join([outTargetPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
 			var lastModifiedListBefore:DynamicAccess<Float> = null;
 
 			var pathsToScan = [Path.join([cwd, 'src'])];
@@ -171,7 +169,7 @@ class Build extends tools.Task {
 
 			print('Run haxe compiler');
 
-			status = haxeWithChecksAndLogs(cmdArgs, {cwd: flowProjectPath});
+			status = haxeWithChecksAndLogs(cmdArgs, {cwd: outTargetPath});
 
 			if (status == 0) {
 				// We can now save last modified list, as build seems ok
@@ -189,67 +187,9 @@ class Build extends tools.Task {
 		}
 
         // Compile c++ for iOS on requested architectures
-		// We might want to move this into iOS plugin later
         if (target.name == 'ios') {
 			if (archs != null && archs.trim() != '') {
-                var archList = archs.split(',');
-                for (arch in archList) {
-                    arch = arch.trim();
-                    var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dios', '-DHXCPP_CPP11', '-DHXCPP_CLANG'];
-					if (debug) {
-						hxcppArgs.push('-Ddebug');
-					}
-                    if (!context.colors) {
-                        hxcppArgs.push('-DHXCPP_NO_COLOR');
-                    }
-                    switch (arch) {
-                        case 'armv7':
-                            hxcppArgs.push('-DHXCPP_ARMV7');
-                        case 'arm64':
-                            hxcppArgs.push('-DHXCPP_ARM64');
-                        case 'x86' | 'i386':
-                            hxcppArgs.push('-Dsimulator');
-                        case 'x86_64':
-                            hxcppArgs.push('-Dsimulator');
-                            hxcppArgs.push('-DHXCPP_M64');
-                        default:
-                            warning('Unsupported ios arch: $arch');
-                            continue;
-                    }
-
-                    print('Compile C++ for arch $arch');
-
-                    haxelib(hxcppArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
-                }
-
-				// Combine binaries
-				//
-				var allBinaries = debug ? [
-					'libMain-debug.iphoneos-v7.a',
-					'libMain-debug.iphoneos-64.a',
-					'libMain-debug.iphonesim.a',
-					'libMain-debug.iphonesim-64.a'
-				] : [
-					'libMain.iphoneos-v7.a',
-					'libMain.iphoneos-64.a',
-					'libMain.iphonesim.a',
-					'libMain.iphonesim-64.a'
-				];
-
-				// Combine
-				var lipoArgs = [
-					'-sdk','iphoneos', 'lipo',
-                    '-output', Path.join([flowProjectPath, 'cpp', 'lib' + project.app.name + '.a']),
-                    '-create'
-				];
-				for (binary in allBinaries) {
-					var binaryPath = Path.join([flowProjectPath, 'cpp', binary]);
-					if (FileSystem.exists(binaryPath)) {
-						lipoArgs.push(binaryPath);
-					}
-				}
-				print('Combine binaries');
-				command('xcrun', lipoArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
+				runTask('ios compile', ['--archs', archs.trim()]);
             }
         }
 
@@ -322,7 +262,7 @@ class Build extends tools.Task {
 
                     print('Compile C++ for arch $arch');
 
-                    haxelib(hxcppArgs, { cwd: Path.join([flowProjectPath, 'cpp']) });
+                    haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
                 }
             }
 		}
