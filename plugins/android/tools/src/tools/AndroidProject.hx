@@ -115,7 +115,7 @@ class AndroidProject {
 
         var srcJni = Path.join([context.cwd, 'out/luxe/android/cpp']);
         var dstJni = Path.join([context.cwd, 'project/android/app/src/main/jniLibs']);
-        var jniLibName = project.app.name + '.so';
+        var jniLibName = 'lib' + project.app.name + '.so';
         var libPrefix = context.debug ? 'libMain-debug' : 'libMain';
         var builtFile:String;
         var targetFile:String;
