@@ -80,7 +80,7 @@ class Setup extends tools.Task {
             }
 
             // Install required dependencies
-            haxelib(['install', 'hxcpp', '4.0.8', '--always']);
+            haxelib(['install', 'hxcpp', '4.0.52', '--always']);
             haxelib(['install', 'bind', '0.4.2', '--always']);
             haxelib(['install', 'format', '3.4.2', '--always']);
             haxelib(['install', 'unifill', '0.4.1', '--always']);

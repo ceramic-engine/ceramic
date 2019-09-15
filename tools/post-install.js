@@ -17,7 +17,7 @@ function postInstall() {
 
     // Install dependencies
     spawnSync(haxelib, ['install', 'hxnodejs', '4.0.9', '--always'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcpp', '4.0.8', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcpp', '4.0.52', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'bind', '0.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'format', '3.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'unifill', '0.4.1', '--always'], { stdio: "inherit", cwd: __dirname });
