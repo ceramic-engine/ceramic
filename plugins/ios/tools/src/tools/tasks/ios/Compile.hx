@@ -52,7 +52,7 @@ class Compile extends tools.Task {
                     continue;
             }
 
-            print('Compile C++ for arch $arch cwd=${Path.join([outTargetPath, 'cpp'])}');
+            print('Compile C++ for arch $arch');
 
             haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
         }

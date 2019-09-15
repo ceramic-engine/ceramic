@@ -306,18 +306,7 @@ class Build extends tools.Task {
 		}
 		// Run for iOS
 		else if (action == 'run' && target.name == 'ios') {
-			// Needs iOS plugin
-			var task = context.tasks.get('ios xcode');
-			if (task == null) {
-				warning('Cannot run iOS project because `ceramic ios xcode` command doesn\'t exist.');
-				warning('Did you enable ceramic\'s ios plugin?');
-			} else {
-				var taskArgs = ['ios', 'xcode', '--open', '--variant', context.variant];
-				if (debug)
-					taskArgs.push('--debug');
-				task.run(cwd, taskArgs);
-			}
-
+			runTask('ios xcode', ['--open']);
 			runHooks(cwd, args, project.app.hooks, 'end run');
 		}
 		// Run for Android
