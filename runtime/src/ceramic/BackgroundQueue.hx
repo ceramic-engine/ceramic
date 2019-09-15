@@ -1,7 +1,11 @@
 package ceramic;
 
 #if cpp
+#if (haxe_ver < 4)
 import cpp.vm.Mutex;
+#else
+import sys.thread.Mutex;
+#end
 #end
 
 /** An utility to enqueue functions and execute them in bbackground, in a serialized way,

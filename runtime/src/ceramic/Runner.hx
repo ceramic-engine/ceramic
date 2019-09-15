@@ -3,12 +3,17 @@ package ceramic;
 // Original source: https://gist.github.com/underscorediscovery/e66e72ec702bdcedf5af45f8f4712109
 
 #if cpp
+#if (haxe_ver < 4)
     import cpp.vm.Thread;
     import cpp.vm.Deque;
+#else
+    import sys.thread.Thread;
+    import sys.thread.Deque;
+#end
 #end
 
 import ceramic.Shortcuts.*;
-  
+
 /** 
 A simple Haxe class for easily running threads and calling functions on the primary thread.
 from https://github.com/underscorediscovery/
