@@ -76,8 +76,8 @@ class Build extends tools.Task {
 		// Save last modified list callback
 		var saveLastModifiedListCallback:Void->Void = null;
 
-		// Check if we could skip build
-		var skipBuild = false;
+		// Check if we could skip haxe compilation
+		var skipHaxeCompilation = false;
 		if (action == 'run' || action == 'build') {
 			var lastModifiedListFile = Path.join([outTargetPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
 			var lastModifiedListBefore:DynamicAccess<Float> = null;
@@ -106,23 +106,23 @@ class Build extends tools.Task {
 
 			if (!noSkip && lastModifiedListBefore != null) {
 				if (!Files.hasDirectoryChanged(lastModifiedListBefore, lastModifiedListAfter)) {
-					skipBuild = true;
+					skipHaxeCompilation = true;
 				}
 			}
 
-			if (!skipBuild) {
+			if (!skipHaxeCompilation) {
 				saveLastModifiedListCallback = function() {
 					// Save new last modified list
 					File.saveContent(lastModifiedListFile, Json.stringify(lastModifiedListAfter));
 				};
 			} else {
-				print('Skip build');
+				print('Skip haxe compilation');
 			}
 		}
 
-		// Build
+		// Build haxe
 		var status = 0;
-		if (!skipBuild && (action == 'build' || action == 'run')) {
+		if (!skipHaxeCompilation && (action == 'build' || action == 'run')) {
 			runHooks(cwd, args, project.app.hooks, 'begin build');
 
 			// // Web case
@@ -162,6 +162,8 @@ class Build extends tools.Task {
 				cmdArgs.push('-debug');
 			}
             
+			// Disable c++ compilation from haxe compiler when targetting ios or android,
+			// because we will do it with hxcpp directly
             if (target.name == 'ios' || target.name == 'android') {
 				cmdArgs.push('-D');
                 cmdArgs.push('no-compilation');
@@ -194,76 +196,9 @@ class Build extends tools.Task {
         }
 
         // Compile c++ for Android on requested architectures
-		// We might want to move this into Android plugin later
 		if (target.name == 'android') {
-
-			// Android OpenAL built separately (because of LGPL license, we want to build
-			// it separately and link it dynamically at runtime)
-			// TODO move this into android plugin?
-			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
-				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
-				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-			haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
-				{cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
-			/*for (arch in ['armeabi-v7a', 'x86', 'arm64-v8a']) {
-				if (!FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']))) {
-					FileSystem.createDirectory(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/$arch']));
-				}
-			}
-			File.copy(Path.join([
-				context.ceramicGitDepsPath,
-				'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so'
-			]), Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/armeabi-v7a/libopenal.so'
-				]));
-				
-			File.copy(Path.join([
-				context.ceramicGitDepsPath,
-				'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so'
-			]), Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/x86/libopenal.so'
-				]));
-				
-			File.copy(Path.join([
-				context.ceramicGitDepsPath,
-				'linc_openal/lib/openal-android/lib/Android/libopenal-64.so'
-			]), Path.join([
-					context.ceramicGitDepsPath,
-					'linc_openal/lib/openal-android/lib/Android/arm64-v8a/libopenal.so'
-				]));*/
-
 			if (archs != null && archs.trim() != '') {
-                var archList = archs.split(',');
-                for (arch in archList) {
-                    arch = arch.trim();
-                    var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid'];
-					if (debug) {
-						hxcppArgs.push('-Ddebug');
-					}
-                    if (!context.colors) {
-                        hxcppArgs.push('-DHXCPP_NO_COLOR');
-                    }
-                    switch (arch) {
-                        case 'armv7':
-                            hxcppArgs.push('-DHXCPP_ARMV7');
-                        case 'arm64':
-                            hxcppArgs.push('-DHXCPP_ARM64');
-                        case 'x86' | 'i386':
-                            hxcppArgs.push('-DHXCPP_X86');
-                        case 'x86_64':
-                            hxcppArgs.push('-DHXCPP_X86_64');
-                        default:
-                            warning('Unsupported android arch: $arch');
-                            continue;
-                    }
-
-                    print('Compile C++ for arch $arch');
-
-                    haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
-                }
+				runTask('android compile', ['--archs', archs.trim()]);
             }
 		}
 
@@ -272,36 +207,13 @@ class Build extends tools.Task {
 			runHooks(cwd, args, project.app.hooks, 'begin run');
 		}
 
-		// Use flow command
-		/*var cmdArgs = ['run', 'flow', cmdAction, target.name];
-			var debug = extractArgFlag(args, 'debug');
-			if (debug) cmdArgs.push('--debug');
-			if (archs != null && archs.trim() != '') {
-				cmdArgs.push('--archs');
-				cmdArgs.push(archs);
-		}*/
-
 		var projectDir = Path.join([cwd, 'project', target.name]);
 
 		// Run for mac
 		if ((action == 'run' || action == 'build') && target.name == 'mac') {
-			// Needs Mac plugin
-			var task = context.tasks.get('mac app');
-			if (task == null) {
-				warning('Cannot create mac app because `ceramic mac app` command doesn\'t exist.');
-				warning('Did you enable ceramic\'s mac plugin?');
-			} else {
-				// Copy binary and optionally run mac app
-				var taskArgs = ['mac', 'app', '--variant', context.variant];
-				if (action == 'run')
-					taskArgs.push('--run');
-				if (debug)
-					taskArgs.push('--debug');
-				task.run(cwd, taskArgs);
-
-				if (action == 'run') {
-					runHooks(cwd, args, project.app.hooks, 'end run');
-				}
+			runTask('mac app', action == 'run' ? ['--run'] : []);
+			if (action == 'run') {
+				runHooks(cwd, args, project.app.hooks, 'end run');
 			}
 		}
 		// Run for iOS
@@ -311,18 +223,7 @@ class Build extends tools.Task {
 		}
 		// Run for Android
 		else if (action == 'run' && target.name == 'android') {
-			// Needs Android plugin
-			var task = context.tasks.get('android studio');
-			if (task == null) {
-				warning('Cannot run Android project because `ceramic android studio` command doesn\'t exist.');
-				warning('Did you enable ceramic\'s android plugin?');
-			} else {
-				var taskArgs = ['android', 'studio', '--open', '--variant', context.variant];
-				if (debug)
-					taskArgs.push('--debug');
-				task.run(cwd, taskArgs);
-			}
-
+			runTask('android studio', ['--open']);
 			runHooks(cwd, args, project.app.hooks, 'end run');
 		}
 		// Run for web

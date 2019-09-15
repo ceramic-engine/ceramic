@@ -33,9 +33,6 @@ class ExportAPK extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
-        // Copy OpenAL binaries if needed
-        AndroidProject.copyOpenALBinariesIfNeeded(cwd, project);
-
         // Update build number
         AndroidProject.updateBuildNumber(cwd, project);
 

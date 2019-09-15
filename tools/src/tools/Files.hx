@@ -173,6 +173,23 @@ class Files {
 
     } //getRelativePath
 
+    /** Copy a file from `srcFile` to `dstPath`, only if target is different than source.
+        After copy, sets target to the same last modified time than source. */
+    public static function copyIfNeeded(srcFile:String, dstFile:String, createDirectory:Bool = true):Void {
+
+        if (createDirectory && !FileSystem.exists(Path.directory(dstFile))) {
+            FileSystem.createDirectory(Path.directory(dstFile));
+        }
+        if (FileSystem.exists(srcFile) && !Files.haveSameLastModified(srcFile, dstFile)) {
+            sys.io.File.copy(
+                srcFile,
+                dstFile
+            );
+            Files.setToSameLastModified(srcFile, dstFile);
+        }
+
+    } //copyIfNeeded
+
     public static function copyDirectory(srcDir:String, dstDir:String, removeExisting:Bool = false):Void {
 
         if (FileSystem.exists(dstDir) && (removeExisting || !FileSystem.isDirectory(dstDir))) {

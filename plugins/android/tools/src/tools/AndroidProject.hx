@@ -111,36 +111,51 @@ class AndroidProject {
 
     } //updateBuildNumber
 
+    public static function copyMainBinariesIfNeeded(cwd:String, project:Project) {
+
+        var srcJni = Path.join([context.cwd, 'out/luxe/android/cpp']);
+        var dstJni = Path.join([context.cwd, 'project/android/app/src/main/jniLibs']);
+        var jniLibName = project.app.name + '.so';
+        var libPrefix = context.debug ? 'libMain-debug' : 'libMain';
+        var builtFile:String;
+        var targetFile:String;
+
+        builtFile = Path.join([srcJni, '$libPrefix-v7.so']);
+        targetFile = Path.join([dstJni, 'armeabi-v7a/$jniLibName']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([srcJni, '$libPrefix-x86.so']);
+        targetFile = Path.join([dstJni, 'x86/$jniLibName']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([srcJni, '$libPrefix-64.so']);
+        targetFile = Path.join([dstJni, 'arm64-v8a/$jniLibName']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        // TODO x86_64
+
+    } //copyMainBinariesIfNeeded
+
     public static function copyOpenALBinariesIfNeeded(cwd:String, project:Project) {
 
-        // Copy OpenAL binaries
-        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']))) {
-            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a']));
-        }
-        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']))) {
-            File.copy(
-                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']),
-                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so'])
-            );
-        }
-        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86']))) {
-            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86']));
-        }
-        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']))) {
-            File.copy(
-                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']),
-                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so'])
-            );
-        }
-        if (!FileSystem.exists(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a']))) {
-            FileSystem.createDirectory(Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a']));
-        }
-        if (FileSystem.exists(Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']))) {
-            File.copy(
-                Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']),
-                Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so'])
-            );
-        }
+        // Copy OpenAL binaries if they have changed or weren't copied before
+
+        var builtFile:String;
+        var targetFile:String;
+
+        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']);
+        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']);
+        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']);
+        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so']);
+        Files.copyIfNeeded(builtFile, targetFile);
+
+        // TODO x86_64
 
     } //copyOpenALBinariesIfNeeded
 

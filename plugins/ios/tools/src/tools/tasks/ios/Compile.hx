@@ -22,9 +22,12 @@ class Compile extends tools.Task {
         }
 
         var archs = extractArgValue(args, 'archs');
+        if (archs == null || archs.trim() == '') {
+            fail('Missing argument --archs (usage: --archs armv7,arm64)');
+        }
         var debug = context.debug;
         var variant = context.variant;
-        var project = context.project;
+        var project = ensureCeramicProject(cwd, args, App);
         var outTargetPath = Path.join([cwd, 'out', 'luxe', 'ios' + (variant != 'standard' ? '-' + variant : '')]);
 
         var archList = archs.split(',');

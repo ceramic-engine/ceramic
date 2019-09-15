@@ -38,9 +38,6 @@ class AndroidStudio extends tools.Task {
         // Copy java files if needed
         AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
-        // Copy OpenAL binaries if needed
-        AndroidProject.copyOpenALBinariesIfNeeded(cwd, project);
-
         var os = Sys.systemName();
 
         if (os == 'Mac' && FileSystem.exists(androidProjectFile)) {
