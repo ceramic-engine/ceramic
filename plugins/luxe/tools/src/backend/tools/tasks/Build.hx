@@ -41,7 +41,7 @@ class Build extends tools.Task {
 		var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
 		// Get project file
-		var project = context.project;
+		var project = ensureCeramicProject(cwd, args, App);
 
 		// Ensure flow project exist
 		if (!FileSystem.exists(outTargetPath)) {
