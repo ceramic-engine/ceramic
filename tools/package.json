@@ -34,7 +34,7 @@
     "fs-extra": "^5.0.0",
     "glob": "^7.1.1",
     "handlebars": "^4.1.2",
-    "haxe": "^5.0.10",
+    "haxe": "^5.2.1",
     "ip": "^1.1.4",
     "istextorbinary": "^2.1.0",
     "lockfile": "^1.0.2",
@@ -55,7 +55,7 @@
     "yamljs": "^0.2.9"
   },
   "haxeDependencies": {
-    "haxe": "3.4.7",
+    "haxe": "4.0.0-rc.5",
     "haxelib": "3.3.0",
     "neko": "2.2.0"
   }
