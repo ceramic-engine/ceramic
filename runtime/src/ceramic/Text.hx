@@ -4,7 +4,10 @@ import ceramic.BitmapFont;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
+#if (haxe_ver < 4)
 using unifill.Unifill;
+#end
+
 using ceramic.Extensions;
 using StringTools;
 
@@ -257,15 +260,24 @@ class Text extends Visual {
             addTrailingSpace = true;
             content += ' ';
         }
+        #if (haxe_ver >= 4)
+        var len = content.length;
+        #else
         var len = content.uLength();
+        #end
         
         while (i < len) {
 
             prevChar = char;
             prevCode = code;
             
+            #if (haxe_ver >= 4)
+            char = content.charAt(i);   
+            code = char.charCodeAt(0);
+            #else
             char = content.uCharAt(i);
             code = char.uCharCodeAt(0);
+            #end
 
             isLineBreak = (char == "\n");
             isWhiteSpace = (char == ' ');
@@ -278,11 +290,21 @@ class Text extends Visual {
                     // Rewind last word because it doesn't fit
                     while (i > 0) {
                         i--;
+                        #if (haxe_ver >= 4)
+                        char = content.charAt(i);
+                        code = char.charCodeAt(0);
+                        #else
                         char = content.uCharAt(i);
                         code = char.uCharCodeAt(0);
+                        #end
                         if (i > 0) {
+                            #if (haxe_ver >= 4)
+                            prevChar = content.charAt(i - 1);
+                            prevCode = prevChar.charCodeAt(0);
+                            #else
                             prevChar = content.uCharAt(i - 1);
                             prevCode = prevChar.uCharCodeAt(0);
+                            #end
                             glyph = font.chars.get(prevCode);
                         } else {
                             prevChar = null;
@@ -299,7 +321,11 @@ class Text extends Visual {
                         }
                         if (char == ' ') {
                             char = "\n";
+                            #if (haxe_ver >= 4)
+                            code = char.charCodeAt(0);
+                            #else
                             code = char.uCharCodeAt(0);
+                            #end
                             isLineBreak = true;
                             isWhiteSpace = false;
                             break;
@@ -534,7 +560,11 @@ class Text extends Visual {
             }
         }
 
+        #if (haxe_ver >= 4)
+        return content.length;
+        #else
         return content.uLength();
+        #end
 
     } //indexForPosInLine
 

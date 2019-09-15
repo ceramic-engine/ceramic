@@ -2,6 +2,7 @@ package tools.tasks.ios;
 
 import tools.Helpers.*;
 import haxe.io.Path;
+import haxe.SysTools;
 import sys.FileSystem;
 import sys.io.File;
 import tools.IosProject;
@@ -123,7 +124,7 @@ class ExportIPA extends tools.Task {
             if (!Path.isAbsolute(provisioningProfilePath)) provisioningProfilePath = Path.join([cwd, provisioningProfilePath]);
 
             // Extract provisioning profile UUID
-            var provisioningUUID = ('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< $(security cms -D -i " + provisioningProfilePath.quoteUnixArg() + ")")).trim();
+            var provisioningUUID = ('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< $(security cms -D -i " + SysTools.quoteUnixArg(provisioningProfilePath) + ")")).trim();
 
             // Create ~/Library/MobileDevice/Provisioning Profiles/ folders if it doesn't exist
             var profilesPath = '$userDir/Library/MobileDevice/Provisioning Profiles';

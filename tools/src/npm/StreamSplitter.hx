@@ -11,4 +11,6 @@ extern class StreamSplitter {
 
     function on(event:String, callback:Dynamic):Void;
 
+    function write(data:Dynamic, ?callback:Dynamic):Void;
+
 } //StreamSplitter

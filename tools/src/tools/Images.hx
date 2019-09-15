@@ -1,6 +1,6 @@
 package tools;
 
-import js.html.Uint8Array;
+import js.lib.Uint8Array;
 import haxe.Json;
 import haxe.io.Path;
 import npm.Sharp.sharp;

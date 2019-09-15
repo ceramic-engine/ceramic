@@ -16,7 +16,7 @@ class BackgroundQueue extends Entity {
 
     var stop:Bool = false;
 
-    var pending:Array<Void->Void> = [];
+    var pending:Array<Void->Void> = []; 
 
     #if cpp
     var mutex:Mutex;

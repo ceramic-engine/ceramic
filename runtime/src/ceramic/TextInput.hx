@@ -3,7 +3,10 @@ package ceramic;
 import ceramic.Shortcuts.*;
 
 using StringTools;
+
+#if (haxe_ver < 4)
 using unifill.Unifill;
+#end
 
 @:allow(ceramic.App)
 class TextInput implements Events {
@@ -75,7 +78,11 @@ class TextInput implements Events {
         explicitPosLine = 0;
         invertedSelection = false;
         
+        #if (haxe_ver >= 4)
+        if (selectionStart < 0) selectionStart = text.length;
+        #else
         if (selectionStart < 0) selectionStart = text.uLength();
+        #end
         if (selectionEnd < selectionStart) selectionEnd = selectionStart;
         this.selectionStart = selectionStart;
         this.selectionEnd = selectionEnd;
@@ -118,12 +125,24 @@ class TextInput implements Events {
 
         var newText = '';
         if (selectionStart > 0) {
+            #if (haxe_ver >= 4)
+            newText += this.text.substring(0, selectionStart);
+            #else
             newText += this.text.uSubstring(0, selectionStart);
+            #end
         }
         newText += text;
+        #if (haxe_ver >= 4)
+        newText += this.text.substring(selectionEnd);
+        #else
         newText += this.text.uSubstring(selectionEnd);
+        #end
 
+        #if (haxe_ver >= 4)
+        selectionStart += text.length;
+        #else
         selectionStart += text.uLength();
+        #end
         selectionEnd = selectionStart;
         invertedSelection = false;
         this.text = newText;
@@ -144,9 +163,17 @@ class TextInput implements Events {
 
         var newText = '';
         if (selectionStart > 1) {
+            #if (haxe_ver >= 4)
+            newText += this.text.substring(0, eraseSelection ? selectionStart : selectionStart - 1);
+            #else
             newText += this.text.uSubstring(0, eraseSelection ? selectionStart : selectionStart - 1);
+            #end
         }
+        #if (haxe_ver >= 4)
+        newText += this.text.substring(selectionEnd);
+        #else
         newText += this.text.uSubstring(selectionEnd);
+        #end
 
         if (selectionStart > 0 && !eraseSelection) selectionStart--;
         selectionEnd = selectionStart;
@@ -219,7 +246,11 @@ class TextInput implements Events {
         if (!allowMovingCursor) return;
 
         if (shiftPressed) {
+            #if (haxe_ver >= 4)
+            var textLength = text.length;
+            #else
             var textLength = text.uLength();
+            #end
 
             if (selectionStart == selectionEnd) {
                 invertedSelection = false;
@@ -258,7 +289,7 @@ class TextInput implements Events {
                 selectionStart = selectionEnd;
                 emitSelection(selectionStart, selectionEnd);
             }
-            else if (selectionStart < text.uLength()) {
+            else if (selectionStart < #if (haxe_ver >= 4) text.length #else text.uLength() #end) {
                 // Move the cursor by one character to the right
                 selectionStart++;
                 selectionEnd = selectionStart;
@@ -335,7 +366,11 @@ class TextInput implements Events {
 
         if (!allowMovingCursor) return;
 
+        #if (haxe_ver >= 4)
+        var textLength = text.length;
+        #else
         var textLength = text.uLength();
+        #end
 
         if (shiftPressed) {
             var startLine = lineForPos(selectionStart);
@@ -465,7 +500,11 @@ class TextInput implements Events {
 
         var posInLine = 0;
         while (globalPos > 0) {
+            #if (haxe_ver >= 4)
+            var char = text.charAt(globalPos);
+            #else
             var char = text.uCharAt(globalPos);
+            #end
             if (char == "\n" && posInLine > 0) {
                 posInLine--;
                 break;
@@ -488,7 +527,11 @@ class TextInput implements Events {
         var lineNumber = 0;
         var i = 0;
         while (i < globalPos) {
+            #if (haxe_ver >= 4)
+            var char = text.charAt(i);
+            #else
             var char = text.uCharAt(i);
+            #end
             if (char == "\n") lineNumber++;
             i++;
         }
@@ -511,10 +554,18 @@ class TextInput implements Events {
 
         var text = this.text;
         var i = 0;
+        #if (haxe_ver >= 4)
+        var numChars = text.length;
+        #else
         var numChars = text.uLength();
+        #end
         var currentLine = 0;
         while (i < numChars) {
+            #if (haxe_ver >= 4)
+            var c = text.charAt(i);
+            #else
             var c = text.uCharAt(i);
+            #end
             if (currentLine == lineNumber) {
                 if (lineOffset > 0) {
                     if (c == "\n") break;
@@ -539,7 +590,11 @@ class TextInput implements Events {
         if (this.text == text) return text;
         this.text = text;
 
+        #if (haxe_ver >= 4)
+        var len = text.length;
+        #else
         var len = text.uLength();
+        #end
 
         var selectionStart = this.selectionStart;
         var selectionEnd = this.selectionEnd;

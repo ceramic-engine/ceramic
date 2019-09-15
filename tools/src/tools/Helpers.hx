@@ -320,7 +320,6 @@ class Helpers {
         if (options.logCwd == null) options.logCwd = options.cwd;
 
         var status = 0;
-        var hasErrorLog = false;
 
         var cwd = options.cwd;
         var logCwd = options.logCwd;
@@ -335,47 +334,48 @@ class Helpers {
             }
 
             var out = StreamSplitter.splitter("\n");
-            proc.stdout.pipe(untyped out);
-            proc.on('close', function(code:Int) {
-                // TODO there is something wrong going on here. 'close' event is not fired.
-                // Probably because we are using StreamSplitter in between.
-                // Need to fix that eventually, and remove our log analysis workaround
+            proc.stdout.on('data', function(data:Dynamic) {
+                out.write(data);
+            });
+            proc.on('exit', function(code:Int) {
                 status = code;
+                if (done != null) {
+                    var _done = done;
+                    done = null;
+                    _done();
+                }
+            });
+            proc.on('close', function(code:Int) {
+                status = code;
+                if (done != null) {
+                    var _done = done;
+                    done = null;
+                    _done();
+                }
             });
             out.encoding = 'utf8';
             out.on('token', function(token:String) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
                 token = formatLineOutput(logCwd, token);
                 stdoutWrite(token + "\n");
             });
             out.on('done', function() {
-                done();
             });
             out.on('error', function(err) {
-                warning(''+err);
             });
 
             var err = StreamSplitter.splitter("\n");
-            proc.stderr.pipe(untyped err);
+            proc.stderr.on('data', function(data:Dynamic) {
+                err.write(data);
+            });
             err.encoding = 'utf8';
             err.on('token', function(token:String) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
                 token = formatLineOutput(logCwd, token);
                 stderrWrite(token + "\n");
             });
             err.on('error', function(err) {
-                warning(''+err);
             });
 
         });
-
-        if (status == 0 && hasErrorLog) {
-            status = 1;
-        }
 
         return status;
 
@@ -639,10 +639,8 @@ class Helpers {
             var lineNumber = RE_HAXE_ERROR.matched(2);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
             if (context.vscode) {
-                // We need to add 1 to character indexes for vscode to interpret them correctly
-                // TODO remove this when using Haxe 4
                 var charsBefore = 'characters ' + RE_HAXE_ERROR.matched(4) + '-' + RE_HAXE_ERROR.matched(5);
-                var charsAfter = 'characters ' + (Std.parseInt(RE_HAXE_ERROR.matched(4)) + 1) + '-' + (Std.parseInt(RE_HAXE_ERROR.matched(5)) + 1);
+                var charsAfter = 'characters ' + (Std.parseInt(RE_HAXE_ERROR.matched(4))#if (haxe_ver < 4) + 1 #end) + '-' + (Std.parseInt(RE_HAXE_ERROR.matched(5))#if (haxe_ver < 4) + 1 #end);
                 input = input.replace(charsBefore, charsAfter);
             }
             input = input.replace(relativePath, absolutePath);

@@ -2,6 +2,7 @@ package tools.tasks.ios;
 
 import tools.Helpers.*;
 import haxe.io.Path;
+import haxe.SysTools;
 import sys.FileSystem;
 import sys.io.File;
 import tools.IosProject;
@@ -31,7 +32,7 @@ class ProfileUUID extends tools.Task {
         }
 
         // Extract provisioning profile UUID
-        var provisioningUUID = ('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< $(security cms -D -i " + provisioningProfilePath.quoteUnixArg() + ")")).trim();
+        var provisioningUUID = ('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< $(security cms -D -i " + SysTools.quoteUnixArg(provisioningProfilePath) + ")")).trim();
 
         // Check result
         if (provisioningUUID == null || provisioningUUID.trim() == '') {
