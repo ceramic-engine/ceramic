@@ -10,10 +10,6 @@
 /tools/sample/completion.hxml
 /tools/sample/.vscode
 /tools/.vscode/tasks.json
-/tools/vendor/mac/haxe
-/tools/vendor/mac/neko
-/tools/vendor/windows/haxe
-/tools/vendor/windows/neko
 
 /editor/node_modules
 /editor/coverage
