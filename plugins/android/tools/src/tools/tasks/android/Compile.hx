@@ -43,19 +43,33 @@ class Compile extends tools.Task {
 
 			// Android OpenAL built separately (because of LGPL license, we want to build
 			// it separately and link it dynamically at runtime)
+            var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
             switch (arch) {
                 case 'armv7':
                     haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
-                        {cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+                        {cwd: openALAndroidPath});
+                    Files.copyIfNeeded(
+                        Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
+                        Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
+                    );
                 case 'arm64':
                     haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
-                        {cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+                        {cwd: openALAndroidPath});
+                    Files.copyIfNeeded(
+                        Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
+                        Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
+                    );
                 case 'x86' | 'i386':
                     haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
-                        {cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+                        {cwd: openALAndroidPath});
+                    Files.copyIfNeeded(
+                        Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
+                        Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
+                    );
                 case 'x86_64':
                     haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'],
-                        {cwd: Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android'])});
+                        {cwd: openALAndroidPath});
+                    // TODO copy
                 default:
             }
 
