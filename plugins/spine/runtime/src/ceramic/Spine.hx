@@ -456,16 +456,27 @@ class Spine extends Visual {
     /** Stores mix (crossfade) durations to be applied when animations are changed. */
     public var stateData(default, null):AnimationStateData;
 
+    /** Set to `false` if you want to disable auto update on this spine object.
+        If auto update is disabled, you become responsible to explicitly call
+        `update(delta)` at every frame yourself. Use this if you want to have control over
+        when the animation update is actually happening. Don't use it to pause animation.
+        (animation can be paused with `paused` property instead) */
+    public var autoUpdate(default, null):Bool = true;
+    function set_autoUpdate(autoUpdate:Bool):Bool {
+        if (this.autoUpdate == autoUpdate) return autoUpdate;
+
+        this.autoUpdate = autoUpdate;
+        bindOrUnbindUpdateIfNeeded();
+
+        return autoUpdate;
+    }
+
     public var pausedOrFrozen(default, set):Bool = false;
     function set_pausedOrFrozen(pausedOrFrozen:Bool):Bool {
         if (this.pausedOrFrozen == pausedOrFrozen) return pausedOrFrozen;
 
         this.pausedOrFrozen = pausedOrFrozen;
-        if (pausedOrFrozen) {
-            ceramic.App.app.offUpdate(update);
-        } else {
-            ceramic.App.app.onUpdate(this, update);
-        }
+        bindOrUnbindUpdateIfNeeded();
 
         return pausedOrFrozen;
     }
@@ -525,7 +536,7 @@ class Spine extends Visual {
 
         if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(Shaders.TINT_BLACK);
 
-        if (!pausedOrFrozen) ceramic.App.app.onUpdate(this, update);
+        bindOrUnbindUpdateIfNeeded();
 
 #if editor
 
@@ -891,6 +902,18 @@ class Spine extends Visual {
     } //canFreeze
 
 /// Internal
+
+    /** Internal function to bind or update to app
+        update event depending on current settings */
+    inline function bindOrUnbindUpdateIfNeeded():Void {
+
+        ceramic.App.app.offUpdate(update);
+
+        if (!pausedOrFrozen && autoUpdate) {
+            ceramic.App.app.onUpdate(this, update);
+        }
+
+    } //bindOrUnbindUpdateIfNeeded
 
     /** Update skeleton with the given delta time. */
     function updateSkeleton(delta:Float):Void {
