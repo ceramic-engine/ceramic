@@ -40,4 +40,8 @@ enum TweenEasing {
     SINE_EASE_IN_OUT;
     SINE_EASE_OUT;
 
+    BEZIER(x1:Float, y1:Float, x2:Float, y2:Float);
+
+    CUSTOM(easing:Float->Float);
+
 } //TweenEasing

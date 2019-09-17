@@ -134,6 +134,10 @@ class Tween extends Entity {
             case SINE_EASE_IN_OUT: motion.easing.Sine.easeInOut;
             case SINE_EASE_OUT: motion.easing.Sine.easeOut;
 
+            case BEZIER(x1, y1, x2, y2): new ActuateCustomEasing(new BezierEasing(x1, y1, x2, y2).ease);
+
+            case CUSTOM(easing): new ActuateCustomEasing(easing);
+
         }
 
     } //actuateEasing
@@ -158,3 +162,23 @@ private class UpdateFloat {
     } //new
     
 } //UpdateFloat
+
+class ActuateCustomEasing implements motion.easing.IEasing {
+
+    var customEasing:Float->Float;
+
+	public function new(customEasing:Float->Float) {
+
+        this.customEasing = customEasing;
+		
+	} //new
+
+	public function calculate(k:Float):Float {
+		return customEasing(k);
+	}
+
+	public function ease(t:Float, b:Float, c:Float, d:Float):Float {
+		return c * t / d + b;
+	}
+
+} //ActuateCustomEasing
