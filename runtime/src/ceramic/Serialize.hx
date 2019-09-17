@@ -98,6 +98,9 @@ class Serialize {
 
             _serializedMap.set(id, result);
 
+            var serializableInstance:Serializable = cast value;
+            @:privateAccess serializableInstance.willSerialize();
+
             var fieldsMeta = Meta.getFields(clazz);
             var prefixLen = 'unobserved'.length;
             for (fieldRealName in Reflect.fields(fieldsMeta)) {
@@ -207,8 +210,6 @@ class Serialize {
                 instance._serializeId = value.id;
                 _deserializedMap.set(value.id, instance);
 
-                
-
                 // Iterate over each serializable field and either put a default value
                 // or the one provided by serialized data.
                 //
@@ -240,6 +241,8 @@ class Serialize {
                         Extensions.setProperty(instance, fieldRealName, val);
                     }
                 }
+
+                @:privateAccess instance.didDeserialize();
 
                 return instance;
 

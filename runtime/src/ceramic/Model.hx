@@ -35,6 +35,17 @@ class Model extends Entity implements Observable implements Serializable {
 
     } //new
 
+    /** Called right before the object will be serialized. */
+    function willSerialize():Void {
+
+    } //willSerialize
+
+    /** Called right after the object has been deserialized. Could be useful to override it to check data integrity
+        when running a newer model version etc... */
+    function didDeserialize():Void {
+
+    } //didDeserialize
+
 /// Print
 
     override function toString():String {
