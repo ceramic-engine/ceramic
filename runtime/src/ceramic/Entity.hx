@@ -32,6 +32,14 @@ class Entity implements Events implements Lazy {
         return _lifecycleState < 0;
     }
 
+    #if ceramic_debug_entity_allocs
+    static var debugEntityAllocsInitialized = false;
+    static var numEntityAliveInMemoryByClass = new Map<String,Int>();
+    #if cpp
+    static var numEntityDestroyedButInMemoryByClass = new Map<String,Int>();
+    #end
+    #end
+
 /// Events
 
     @event function destroy();
@@ -43,7 +51,83 @@ class Entity implements Events implements Lazy {
 
         // Default implementation
 
+        #if ceramic_debug_entity_allocs
+
+        if (!debugEntityAllocsInitialized) {
+            debugEntityAllocsInitialized = true;
+            Timer.interval(null, 5.0, function() {
+                var allClasses:Array<String> = [];
+                var usedKeys = new Map<String, Int>();
+                if (numEntityAliveInMemoryByClass != null) {
+                    for (key in numEntityAliveInMemoryByClass.keys()) {
+                        if (!usedKeys.exists(key)) {
+                            allClasses.push(key);
+                            usedKeys.set(key, numEntityAliveInMemoryByClass.get(key));
+                        }
+                        else {
+                            usedKeys.set(key, usedKeys.get(key) + numEntityAliveInMemoryByClass.get(key));
+                        }
+                    }
+                }
+                if (numEntityDestroyedButInMemoryByClass != null) {
+                    for (key in numEntityDestroyedButInMemoryByClass.keys()) {
+                        if (!usedKeys.exists(key)) {
+                            allClasses.push(key);
+                            usedKeys.set(key, numEntityDestroyedButInMemoryByClass.get(key));
+                        }
+                        else {
+                            usedKeys.set(key, usedKeys.get(key) + numEntityDestroyedButInMemoryByClass.get(key));
+                        }
+                    }
+                }
+                allClasses.sort(function(a:String, b:String) {
+                    var numA = 0;
+                    if (numEntityAliveInMemoryByClass.exists(a)) {
+                        numA = numEntityAliveInMemoryByClass.get(a);
+                    }
+                    var numB = 0;
+                    if (numEntityAliveInMemoryByClass.exists(b)) {
+                        numB = numEntityAliveInMemoryByClass.get(b);
+                    }
+                    return numA - numB;
+                });
+                ceramic.Shortcuts.log(' - entities in memory -');
+                for (clazz in allClasses) {
+                    ceramic.Shortcuts.log('    $clazz / ${usedKeys.get(clazz)} / alive=${numEntityAliveInMemoryByClass.get(clazz)} destroyed=${numEntityDestroyedButInMemoryByClass.get(clazz)}');
+                }
+            });
+        }
+
+        var clazz = '' + Type.getClass(this);
+
+        #if cpp
+        if (numEntityAliveInMemoryByClass.exists(clazz)) {
+            numEntityAliveInMemoryByClass.set(clazz, numEntityAliveInMemoryByClass.get(clazz) + 1);
+        }
+        else {
+            numEntityAliveInMemoryByClass.set(clazz, 1);
+        }
+
+        cpp.vm.Gc.setFinalizer(this, cpp.Function.fromStaticFunction(__finalizeEntity));
+        #end
+
+        #end
+
     } //new
+
+    #if (cpp && ceramic_debug_entity_allocs)
+    @:void public static function __finalizeEntity(o:Entity):Void {
+
+        var clazz = '' + Type.getClass(o);
+        if (o._lifecycleState == -3) {
+            numEntityDestroyedButInMemoryByClass.set(clazz, numEntityDestroyedButInMemoryByClass.get(clazz) - 1);
+        }
+        else {
+            numEntityAliveInMemoryByClass.set(clazz, numEntityAliveInMemoryByClass.get(clazz) - 1);
+        }
+
+    }
+    #end
 
     /** Destroy this entity. This method is automatically protected from duplicate calls. That means
         calling multiple times an entity's `destroy()` method will run the destroy code only one time.
@@ -54,6 +138,17 @@ class Entity implements Events implements Lazy {
 
         if (_lifecycleState <= -2) return;
         _lifecycleState = -3; // `Entity.destroy() called` = true
+
+        #if ceramic_debug_entity_allocs
+        var clazz = '' + Type.getClass(this);
+        numEntityAliveInMemoryByClass.set(clazz, numEntityAliveInMemoryByClass.get(clazz) - 1);
+        if (numEntityDestroyedButInMemoryByClass.exists(clazz)) {
+            numEntityDestroyedButInMemoryByClass.set(clazz, numEntityDestroyedButInMemoryByClass.get(clazz) + 1);
+        }
+        else {
+            numEntityDestroyedButInMemoryByClass.set(clazz, 1);
+        }
+        #end
 
         emitDestroy();
 
