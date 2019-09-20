@@ -175,7 +175,11 @@ class Filter extends Quad {
 
         app.requestFullUpdateAndDrawInFrame();
 
-        app.onceUpdate(this, function(_) {
+        app.onceUpdate(null, function(_) {
+            if (destroyed) {
+                done = null;
+                return;
+            }
 
             if (contentDirty) {
                 computeContent();
@@ -183,11 +187,18 @@ class Filter extends Quad {
 
             renderTexture.renderDirty = true;
 
-            app.onceFinishDraw(this, function() {
+            app.onceFinishDraw(null, function() {
+                if (destroyed) {
+                    done = null;
+                    return;
+                }
 
                 content.active = false;
 
-                if (done != null) done();
+                if (done != null) {
+                    done();
+                    done = null;
+                }
 
             });
         });
