@@ -225,18 +225,21 @@ class EventDispatcher {
         // Map owner to handler
         if (owner != null) {
             if (owner.destroyed) {
-                warning('Failed to bind dynamic event because owner is destroyed!');
-                return;
+                throw 'Failed to bind dynamic event because owner is destroyed!';
             }
             var destroyCb = function() {
                 off(index, cb);
+                owner = null;
             };
             owner.onceDestroy(null, destroyCb);
             if (item.cbOnOwnerUnbindArray == null) {
                 item.cbOnOwnerUnbindArray = [];
             }
             item.cbOnOwnerUnbindArray.push(function() {
-                owner.offDestroy(destroyCb);
+                if (owner != null) {
+                    owner.offDestroy(destroyCb);
+                    owner = null;
+                }
             });
         } else {
             if (item.cbOnOwnerUnbindArray == null) {
@@ -294,18 +297,21 @@ class EventDispatcher {
         // Map owner to handler
         if (owner != null) {
             if (owner.destroyed) {
-                warning('Failed to bind dynamic event because owner is destroyed!');
-                return;
+                throw 'Failed to bind dynamic event because owner is destroyed!';
             }
             var destroyCb = function() {
                 off(index, cb);
+                owner = null;
             };
             owner.onceDestroy(null, destroyCb);
             if (item.cbOnceOwnerUnbindArray == null) {
                 item.cbOnceOwnerUnbindArray = [];
             }
             item.cbOnceOwnerUnbindArray.push(function() {
-                owner.offDestroy(destroyCb);
+                if (owner != null) {
+                    owner.offDestroy(destroyCb);
+                    owner = null;
+                }
             });
         } else {
             if (item.cbOnceOwnerUnbindArray == null) {
