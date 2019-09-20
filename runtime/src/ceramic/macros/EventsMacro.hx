@@ -781,19 +781,26 @@ class EventsMacro {
                                     if (owner.destroyed) {
                                         throw 'Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!';
                                     }
-                                    var destroyCb = function() {
-                                        this.$offName($i{handlerName});
+                                    var destroyCb:Void->Void;
+                                    destroyCb = function() {
+                                        if ($i{handlerName} != null) {
+                                            this.$offName($i{handlerName});
+                                            $i{handlerName} = null;
+                                        }
                                         owner = null;
+                                        destroyCb = null;
                                     };
                                     owner.onceDestroy(null, destroyCb);
                                     if (this.$cbOnOwnerUnbindArray == null) {
                                         this.$cbOnOwnerUnbindArray = [];
                                     }
                                     this.$cbOnOwnerUnbindArray.push(function() {
-                                        if (owner != null) {
+                                        if (owner != null && destroyCb != null) {
                                             owner.offDestroy(destroyCb);
-                                            owner = null;
                                         }
+                                        owner = null;
+                                        destroyCb = null;
+                                        $i{handlerName} = null;
                                     });
                                 } else {
                                     if (this.$cbOnOwnerUnbindArray == null) {
@@ -855,19 +862,26 @@ class EventsMacro {
                                     if (owner.destroyed) {
                                         throw 'Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!';
                                     }
-                                    var destroyCb = function() {
-                                        this.$offName($i{handlerName});
+                                    var destroyCb:Void->Void;
+                                    destroyCb = function() {
+                                        if ($i{handlerName} != null) {
+                                            this.$offName($i{handlerName});
+                                            $i{handlerName} = null;
+                                        }
                                         owner = null;
+                                        destroyCb = null;
                                     };
                                     owner.onceDestroy(null, destroyCb);
                                     if (this.$cbOnceOwnerUnbindArray == null) {
                                         this.$cbOnceOwnerUnbindArray = [];
                                     }
                                     this.$cbOnceOwnerUnbindArray.push(function() {
-                                        if (owner != null) {
+                                        if (owner != null && destroyCb != null) {
                                             owner.offDestroy(destroyCb);
-                                            owner = null;
                                         }
+                                        owner = null;
+                                        destroyCb = null;
+                                        $i{handlerName} = null;
                                     });
                                 } else {
                                     if (this.$cbOnceOwnerUnbindArray == null) {

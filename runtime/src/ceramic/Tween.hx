@@ -1,5 +1,7 @@
 package ceramic;
 
+// TODO stop depending on actuate library
+
 class Tween extends Entity {
 
 /// Static helpers
@@ -8,7 +10,7 @@ class Tween extends Entity {
 
         var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
         
-        instance.onUpdate(null, handleValueTime);
+        instance.onUpdate(owner, handleValueTime);
 
         return instance;
 
@@ -112,7 +114,17 @@ class Tween extends Entity {
         if (target != null) {
             motion.Actuate.stop(target);
         }
-        
+
+        if (actuator != null) {
+            @:privateAccess actuator._onComplete = null;
+            @:privateAccess actuator._onUpdate = null;
+            @:privateAccess actuator.target = null;
+            @:privateAccess actuator.properties = null;
+        }
+
+        offComplete();
+        offUpdate();
+
         actuator = null;
         target = null;
 

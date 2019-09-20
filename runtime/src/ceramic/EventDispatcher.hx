@@ -227,19 +227,26 @@ class EventDispatcher {
             if (owner.destroyed) {
                 throw 'Failed to bind dynamic event because owner is destroyed!';
             }
-            var destroyCb = function() {
-                off(index, cb);
+            var destroyCb:Void->Void;
+            destroyCb = function() {
+                if (cb != null) {
+                    off(index, cb);
+                }
+                cb = null;
                 owner = null;
+                destroyCb = null;
             };
             owner.onceDestroy(null, destroyCb);
             if (item.cbOnOwnerUnbindArray == null) {
                 item.cbOnOwnerUnbindArray = [];
             }
             item.cbOnOwnerUnbindArray.push(function() {
-                if (owner != null) {
+                if (owner != null && destroyCb != null) {
                     owner.offDestroy(destroyCb);
-                    owner = null;
                 }
+                owner = null;
+                destroyCb = null;
+                cb = null;
             });
         } else {
             if (item.cbOnOwnerUnbindArray == null) {
