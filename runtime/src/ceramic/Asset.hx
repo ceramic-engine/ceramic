@@ -51,9 +51,9 @@ class Asset extends Entity implements Observable {
 
 /// Lifecycle
 
-    public function new(kind:String, name:String, ?options:AssetOptions) {
+    public function new(kind:String, name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         this.kind = kind;
         this.options = options != null ? options : {};

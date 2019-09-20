@@ -18,7 +18,9 @@ class Autorun extends Entity {
 
 /// Properties
 
-    var onRun:Void->Void;
+    var onRun:Void->Void = null;
+
+    @:noCompletion public var afterRun:Void->Void;
 
     var boundAutorunArrays:Array<Array<Autorun>> = null;
 
@@ -26,9 +28,9 @@ class Autorun extends Entity {
 
 /// Lifecycle
 
-    public function new(onRun:Void->Void) {
+    public function new(onRun:Void->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         this.onRun = onRun;
 
@@ -44,6 +46,7 @@ class Autorun extends Entity {
 
         // Remove any callback as we won't use it anymore
         onRun = null;
+        afterRun = null;
 
         // Destroy
         super.destroy();
@@ -74,6 +77,9 @@ class Autorun extends Entity {
 
         // Run (and bind) again
         onRun();
+        if (afterRun != null) {
+            afterRun();
+        }
 
         // Restore previous current autorun
         while (numPrevCurrent < prevCurrent.length) prevCurrent.pop();

@@ -27,15 +27,19 @@ class CollectionView extends ScrollView {
 
     var reusableViews:Array<View> = [];
 
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         scroller.scrollTransform.onChange(this, computeVisibleItems);
 
     } //new
 
     override function destroy() {
+
+        if (id == 'ROOM_COLLECTION') {
+            error('DESTROY COLLECTION VIEW INSIDE');
+        }
 
         super.destroy();
 

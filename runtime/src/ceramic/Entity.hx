@@ -33,10 +33,13 @@ class Entity implements Events implements Lazy {
     }
 
     #if ceramic_debug_entity_allocs
+    var posInfos:haxe.PosInfos;
+
     static var debugEntityAllocsInitialized = false;
     static var numEntityAliveInMemoryByClass = new Map<String,Int>();
     #if cpp
     static var numEntityDestroyedButInMemoryByClass = new Map<String,Int>();
+    static var destroyedWeakRefs = new Map<String,Array<cpp.vm.WeakRef<Entity>>>();
     #end
     #end
 
@@ -47,15 +50,20 @@ class Entity implements Events implements Lazy {
 /// Lifecycle
 
     /** Create a new entity */
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         // Default implementation
 
         #if ceramic_debug_entity_allocs
+        this.posInfos = pos;
 
         if (!debugEntityAllocsInitialized) {
             debugEntityAllocsInitialized = true;
             Timer.interval(null, 5.0, function() {
+                #if cpp
+                cpp.vm.Gc.run(true);
+                #end
+
                 var allClasses:Array<String> = [];
                 var usedKeys = new Map<String, Int>();
                 if (numEntityAliveInMemoryByClass != null) {
@@ -82,18 +90,79 @@ class Entity implements Events implements Lazy {
                 }
                 allClasses.sort(function(a:String, b:String) {
                     var numA = 0;
-                    if (numEntityAliveInMemoryByClass.exists(a)) {
-                        numA = numEntityAliveInMemoryByClass.get(a);
+                    if (numEntityDestroyedButInMemoryByClass.exists(a)) {
+                        numA = numEntityDestroyedButInMemoryByClass.get(a);
                     }
                     var numB = 0;
-                    if (numEntityAliveInMemoryByClass.exists(b)) {
-                        numB = numEntityAliveInMemoryByClass.get(b);
+                    if (numEntityDestroyedButInMemoryByClass.exists(b)) {
+                        numB = numEntityDestroyedButInMemoryByClass.get(b);
                     }
                     return numA - numB;
                 });
                 ceramic.Shortcuts.log(' - entities in memory -');
                 for (clazz in allClasses) {
                     ceramic.Shortcuts.log('    $clazz / ${usedKeys.get(clazz)} / alive=${numEntityAliveInMemoryByClass.get(clazz)} destroyed=${numEntityDestroyedButInMemoryByClass.get(clazz)}');
+
+                    var weakRefs = destroyedWeakRefs.get(clazz);
+                    if (weakRefs != null) {
+                        var hasRefs = false;
+                        var pathStats = new Map<String,Int>();
+                        var newRefs = [];
+                        var allPaths:Array<String> = [];
+                        for (weakRef in weakRefs) {
+                            var entity:Entity = weakRef.get();
+                            if (entity != null) {
+                                if (Std.is(entity, ceramic.Autorun)) {
+                                    var autor:ceramic.Autorun = cast entity;
+                                    if (@:privateAccess autor.onRun != null) {
+                                        throw "AUTORUN onRun is not null!!!!";
+                                    }
+                                }
+                                newRefs.push(weakRef);
+                                var posInfos = entity.posInfos;
+                                if (posInfos != null) {
+                                    var path = posInfos.fileName + ':' + posInfos.lineNumber;
+                                    if (pathStats.exists(path)) {
+                                        pathStats.set(path, pathStats.get(path) + 1);
+                                    }
+                                    else {
+                                        pathStats.set(path, 1);
+                                        allPaths.push(path);
+                                    }
+                                }
+                            }
+                            else {
+                                numEntityDestroyedButInMemoryByClass.set(clazz, numEntityDestroyedButInMemoryByClass.get(clazz) - 1);
+                            }
+                        }
+                        weakRefs.splice(0, weakRefs.length);
+                        for (weakRef in newRefs) {
+                            weakRefs.push(weakRef);
+                        }
+                        allPaths.sort(function(a, b) {
+                            return pathStats.get(a) - pathStats.get(b);
+                        });
+                        if (allPaths.length > 0) {
+                            var limit = 8;
+                            var i = allPaths.length - 1;
+                            var numLogged = 0;
+                            while (limit > 0 && i >= 0) {
+                                var path = allPaths[i];
+                                var num = pathStats.get(path);
+                                numLogged += num;
+                                ceramic.Shortcuts.log('        leak ${num} x $path');
+                                i--;
+                                limit--;
+                            }
+                            if (i > 0) {
+                                var total = 0;
+                                for (path in allPaths) {
+                                    total += pathStats.get(path);
+                                }
+                                ceramic.Shortcuts.log('        leak ${total - numLogged} x ...');
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -108,7 +177,7 @@ class Entity implements Events implements Lazy {
             numEntityAliveInMemoryByClass.set(clazz, 1);
         }
 
-        cpp.vm.Gc.setFinalizer(this, cpp.Function.fromStaticFunction(__finalizeEntity));
+        //cpp.vm.Gc.setFinalizer(this, cpp.Function.fromStaticFunction(__finalizeEntity));
         #end
 
         #end
@@ -148,7 +217,27 @@ class Entity implements Events implements Lazy {
         else {
             numEntityDestroyedButInMemoryByClass.set(clazz, 1);
         }
+
+        #if cpp
+        var weakRef = new cpp.vm.WeakRef(this);
+        if (destroyedWeakRefs.exists(clazz)) {
+            destroyedWeakRefs.get(clazz).push(weakRef);
+        }
+        else {
+            destroyedWeakRefs.set(clazz, [weakRef]);
+        }
         #end
+        #end
+
+        if (autoruns != null) {
+            for (i in 0...autoruns.length) {
+                var _autorun = autoruns[i];
+                if (_autorun != null) {
+                    autoruns[i] = null;
+                    _autorun.destroy();
+                }
+            }
+        }
 
         emitDestroy();
 
@@ -158,11 +247,13 @@ class Entity implements Events implements Lazy {
 
 /// Autorun
 
+    public var autoruns(default, null):Array<Autorun> = null;
+
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
         @param run The run callback
         @return The autorun instance */
-    public function autorun(run:Void->Void #if ceramic_debug_autorun , ?pos:haxe.PosInfos #end):Autorun {
-
+    public function autorun(run:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
+        /*
         if (destroyed) return null;
 
 #if ceramic_debug_autorun
@@ -179,21 +270,72 @@ class Entity implements Events implements Lazy {
 
         var _selfDestroy = function() {
             _autorun.destroy();
+            //_autorun = null;
         };
         onceDestroy(this, _selfDestroy);
         _autorun.onceDestroy(this, function() {
             offDestroy(_selfDestroy);
+            //_autorun = null;
         });
 
         return _autorun;
+        //*/
+        //*
+        if (destroyed) return null;
+
+#if ceramic_debug_autorun
+        if (pos != null) {
+            var _run = run;
+            run = function() {
+                haxe.Log.trace('autorun', pos);
+                _run();
+            };
+        }
+#end
+
+        var _autorun = new Autorun(run #if ceramic_debug_entity_allocs , pos #end);
+        run = null;
+
+        if (autoruns == null) {
+            autoruns = [_autorun];
+        }
+        else {
+            var didAdd = false;
+            for (i in 0...autoruns.length) {
+                var existing = autoruns[i];
+                if (existing == null) {
+                    autoruns[i] = _autorun;
+                    didAdd = true;
+                    break;
+                }
+            }
+            if (!didAdd) {
+                autoruns.push(_autorun);
+            }
+        }
+        _autorun.onDestroy(this, checkAutoruns);
+
+        return _autorun;
+        //*/
 
     } //autorun
 
+    function checkAutoruns():Void {
+
+        for (i in 0...autoruns.length) {
+            var _autorun = autoruns[i];
+            if (_autorun != null && _autorun.destroyed) {
+                autoruns[i] = null;
+            }
+        }
+
+    } //checkAutoruns
+
 /// Tween
 
-    public function tween(?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void):Tween {
+    public function tween(?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-        return Tween.start(this, id, easing, duration, fromValue, toValue, update);
+        return Tween.start(this, id, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
 
     } //tween
 

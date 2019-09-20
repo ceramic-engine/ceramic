@@ -530,9 +530,9 @@ class Spine extends Visual {
 
 /// Lifecycle
 
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(Shaders.TINT_BLACK);
 

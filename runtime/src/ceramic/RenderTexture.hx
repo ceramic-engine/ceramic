@@ -17,7 +17,7 @@ class RenderTexture extends Texture {
 
 /// Lifecycle
 
-    public function new(width:Int, height:Int, density:Float = -1) {
+    public function new(width:Int, height:Int, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         if (density == -1) density = screen.texturesDensity;
 
@@ -26,7 +26,7 @@ class RenderTexture extends Texture {
             Math.round(height * density)
         );
 
-        super(backendItem, density);
+        super(backendItem, density #if ceramic_debug_entity_allocs , pos #end);
 
         isRenderTexture = true;
 
@@ -75,9 +75,15 @@ class RenderTexture extends Texture {
                 // Restore visual state
                 visual.visible = visualVisible;
                 visual.renderTarget = visualRenderTarget;
-                if (visualParent != null) visualParent.add(visual);
+                if (visualParent != null) {
+                    visualParent.add(visual);
+                    visualParent = null;
+                }
+                visual = null;
+                visualRenderTarget = null;
 
                 done();
+                done = null;
 
             });
         });

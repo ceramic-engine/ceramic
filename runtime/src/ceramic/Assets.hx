@@ -62,7 +62,7 @@ class Assets extends Entity {
 
 /// Add assets to load
 
-    public function add(id:AssetId<Dynamic>, ?options:AssetOptions):Void {
+    public function add(id:AssetId<Dynamic>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         var value:String = Std.is(id, String) ? cast id : cast Reflect.field(id, '_id');
         var colonIndex = value.indexOf(':');
@@ -75,12 +75,12 @@ class Assets extends Entity {
         var name = value.substr(colonIndex + 1);
 
         switch (kind) {
-            case 'image': addImage(name, options);
-            case 'text': addText(name, options);
-            case 'sound': addSound(name, options);
-            case 'database': addDatabase(name, options);
-            case 'font': addFont(name, options);
-            case 'shader': addShader(name, options);
+            case 'image': addImage(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'text': addText(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'sound': addSound(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'database': addDatabase(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'font': addFont(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'shader': addShader(name, options #if ceramic_debug_entity_allocs , pos #end);
             default:
                 if (customAssetKinds.exists(kind)) {
                     customAssetKinds.get(kind).add(this, name, options);
@@ -91,45 +91,45 @@ class Assets extends Entity {
 
     } //add
 
-    public function addImage(name:String, ?options:AssetOptions):Void {
+    public function addImage(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('image:')) name = name.substr(6);
-        addAsset(new ImageAsset(name, options));
+        addAsset(new ImageAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addImage
 
-    public function addFont(name:String, ?options:AssetOptions):Void {
+    public function addFont(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('font:')) name = name.substr(5);
-        addAsset(new FontAsset(name, options));
+        addAsset(new FontAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addFont
 
-    public function addText(name:String, ?options:AssetOptions):Void {
+    public function addText(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('text:')) name = name.substr(5);
-        addAsset(new TextAsset(name, options));
+        addAsset(new TextAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addText
 
-    public function addSound(name:String, ?options:AssetOptions):Void {
+    public function addSound(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('sound:')) name = name.substr(6);
-        addAsset(new SoundAsset(name, options));
+        addAsset(new SoundAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addSound
 
-    public function addDatabase(name:String, ?options:AssetOptions):Void {
+    public function addDatabase(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('database:')) name = name.substr(9);
-        addAsset(new DatabaseAsset(name, options));
+        addAsset(new DatabaseAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addDatabase
 
-    public function addShader(name:String, ?options:AssetOptions):Void {
+    public function addShader(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('shader:')) name = name.substr(7);
-        addAsset(new ShaderAsset(name, options));
+        addAsset(new ShaderAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     } //addShader
 

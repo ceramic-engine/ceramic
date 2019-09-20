@@ -414,14 +414,28 @@ class View extends Quad {
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
         @param run The run callback
         @return The autorun instance */
-    override function autorun(run:Void->Void #if ceramic_debug_autorun , ?pos:haxe.PosInfos #end):Autorun {
+    override function autorun(run:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
 
+        /*
         return super.autorun(function() {
             run();
             app.onceImmediate(_autorunLayout);
-        } #if ceramic_debug_autorun , pos #end);
+        } #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , pos #end);
+        //*/
+        //*
+        var _autorun = super.autorun(run #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , pos #end);
+        _autorun.afterRun = _immediateAutorunLayout;
+
+        return _autorun;
+        //*/
 
     } //autorun
+
+    function _immediateAutorunLayout() {
+
+        app.onceImmediate(_autorunLayout);
+
+    } //_immediateAutorunLayout
 
     function _autorunLayout() {
 
@@ -432,9 +446,9 @@ class View extends Quad {
 
 /// Lifecycle
 
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         depthRange = 1;
         canLayout = false;

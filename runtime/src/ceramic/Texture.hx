@@ -47,9 +47,9 @@ class Texture extends Entity {
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Texture, density:Float = -1) {
+    public function new(backendItem:backend.Texture, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         if (density == -1) density = screen.texturesDensity;
 

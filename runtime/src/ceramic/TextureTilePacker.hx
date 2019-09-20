@@ -262,8 +262,12 @@ class TextureTilePacker extends Entity {
                 prevParent.add(visual);
             }
             stampVisual.destroy();
+            stampVisual = null;
+
+            visual = null;
 
             done();
+            done = null;
 
         });
 

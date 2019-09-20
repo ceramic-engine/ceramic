@@ -8,9 +8,9 @@ class DatabaseAsset extends Asset {
 
     public var database:Array<DynamicAccess<String>> = null;
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('database', name, options);
+        super('database', name, options #if ceramic_debug_entity_allocs , pos #end);
 
     } //new
 

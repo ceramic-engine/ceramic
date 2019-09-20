@@ -4,9 +4,9 @@ class Tween extends Entity {
 
 /// Static helpers
 
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue);
+        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
         
         instance.onUpdate(null, handleValueTime);
 
@@ -28,65 +28,98 @@ class Tween extends Entity {
 
     var startTime:Float;
 
+    var owner:Entity;
+
+    var easing:TweenEasing;
+
+    var duration:Float;
+
+    var fromValue:Float;
+
+    var toValue:Float;
+
 /// Lifecycle
 
-    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float) {
+    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
-        if (duration == 0.0) {
-            App.app.onceImmediate(function() {
-                emitUpdate(toValue, 0);
-                emitComplete();
-                destroy();
-            });
-            return;
-        }
-        
-        var _owner = owner;
+        this.owner = owner;
+        this.easing = easing;
+        this.duration = duration;
+        this.fromValue = fromValue;
+        this.toValue = toValue;
 
-        var actuateEasing = Tween.actuateEasing(easing);
-
-        var actuateDuration = duration;
-        
-        startTime = Timer.now;
-        target = new UpdateFloat(fromValue);
-        actuator = motion.Actuate.tween(target, actuateDuration, { value: toValue }, false);
-
-        actuator.onComplete(function() {
-            if (destroyed) return;
-            if (_owner != null && _owner.destroyed) {
-                destroy();
-                return;
-            }
-            emitComplete();
-            destroy();
-        });
-
-        actuator.onUpdate(function() {
-            if (destroyed) return;
-            if (_owner != null && _owner.destroyed) {
-                destroy();
-                return;
-            }
-            var time = Timer.now - startTime;
-            var value = target.value;
-            emitUpdate(value, time);
-        });
-
-        actuator.ease(actuateEasing);
+        init();
 
     } //new
 
-    override function destroy() {
+    function init() {
 
-        super.destroy();
+        if (duration == 0.0) {
+            App.app.onceImmediate(immediateComplete);
+            return;
+        }
+
+        var actuateEasing = Tween.actuateEasing(easing);
+        
+        startTime = Timer.now;
+        target = new UpdateFloat(fromValue);
+        actuator = motion.Actuate.tween(target, duration, { value: toValue }, false);
+
+        actuator.onComplete(handleActuateComplete);
+        actuator.onUpdate(handleActuateUpdate);
+
+        actuator.ease(actuateEasing);
+
+    } //init
+
+    function immediateComplete() {
+
+        emitUpdate(toValue, 0);
+        emitComplete();
+        destroy();
+
+    } //immediateComplete
+
+    function handleActuateComplete() {
+
+        if (destroyed) return;
+        if (owner != null && owner.destroyed) {
+            destroy();
+            return;
+        }
+        emitComplete();
+        destroy();
+
+    } //handleActuateComplete
+
+    function handleActuateUpdate() {
+
+        if (destroyed) return;
+        if (owner != null && owner.destroyed) {
+            destroy();
+            return;
+        }
+        var time = Timer.now - startTime;
+        var value = target.value;
+        emitUpdate(value, time);
+
+    } //handleActuateUpdate
+
+    override function destroy() {
 
         if (target != null) {
             motion.Actuate.stop(target);
-            actuator = null;
-            target = null;
         }
+        
+        actuator = null;
+        target = null;
+
+        easing = null;
+        owner = null;
+
+        super.destroy();
 
     } //destroy
 

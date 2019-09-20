@@ -83,9 +83,9 @@ class Filter extends Quad {
 
 /// Lifecycle
 
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         content = new Quad();
         content.transparent = true;
@@ -214,8 +214,6 @@ class Filter extends Quad {
     }
 
     override function destroy() {
-
-        super.destroy();
         
         texture = null;
         if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
@@ -224,6 +222,10 @@ class Filter extends Quad {
         }
         textureTilePacker = null;
         renderTexture = null;
+
+        content = null;
+
+        super.destroy();
     }
 
 } //Filter

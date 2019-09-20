@@ -488,6 +488,37 @@ class App extends Entity {
 
         emitReady();
 
+        #if ceramic_debug_num_visuals
+        Timer.interval(this, 5.0, function() {
+            var numVisualsByClass = new Map<String,Int>();
+            var usedClasses:Array<String> = [];
+            for (i in 0...visuals.length) {
+                var visual = visuals[i];
+                var clazz = '' + Type.getClass(visual);
+                if (numVisualsByClass.exists(clazz)) {
+                    numVisualsByClass.set(clazz, numVisualsByClass.get(clazz) + 1);
+                }
+                else {
+                    usedClasses.push(clazz);
+                    numVisualsByClass.set(clazz, 1);
+                }
+                #if ceramic_debug_entity_allocs
+                /*if (clazz == 'ceramic.Quad') {
+                    var pos = visual.posInfos;
+                    haxe.Log.trace(visual, pos);
+                }*/
+                #end
+            }
+            usedClasses.sort(function(a, b) {
+                return numVisualsByClass.get(a) - numVisualsByClass.get(b);
+            });
+            success(' - num visuals: ${visuals.length} - ');
+            for (clazz in usedClasses) {
+                success('    $clazz / ${numVisualsByClass.get(clazz)}');
+            }
+        });
+        #end
+
         screen.resize();
 
         backend.onUpdate(this, update);
@@ -707,6 +738,12 @@ class App extends Entity {
 
             // Compute visuals depth
             for (visual in visuals) {
+
+                #if ceramic_debug_num_visuals
+                if (visual.destroyed) {
+                    throw 'Visual is destroyed but in hierarchy: $visual';
+                }
+                #end
 
                 if (visual.parent == null) {
                     visual.computedDepth = visual.depth;

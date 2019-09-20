@@ -98,9 +98,9 @@ class Scroller extends Visual {
 
 /// Lifecycle
 
-    public function new(?content:Visual) {
+    public function new(?content:Visual #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         if (content == null) {
             content = new Visual();

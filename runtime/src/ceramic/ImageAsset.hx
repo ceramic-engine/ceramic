@@ -16,9 +16,9 @@ class ImageAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('image', name, options);
+        super('image', name, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
     } //name

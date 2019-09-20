@@ -8,9 +8,9 @@ class SoundAsset extends Asset {
 
     public var sound:Sound = null;
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('sound', name, options);
+        super('sound', name, options #if ceramic_debug_entity_allocs , pos #end);
 
     } //name
 

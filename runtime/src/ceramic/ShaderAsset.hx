@@ -10,9 +10,9 @@ class ShaderAsset extends Asset {
 
     public var shader:Shader = null;
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('shader', name, options);
+        super('shader', name, options #if ceramic_debug_entity_allocs , pos #end);
 
     } //name
 
