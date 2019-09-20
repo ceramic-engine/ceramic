@@ -102,7 +102,7 @@ class Mesh extends Visual {
 
 /// Texture destroyed
 
-    function textureDestroyed() {
+    function textureDestroyed(_) {
 
         // Remove texture because it has been destroyed
         this.texture = null;

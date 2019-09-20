@@ -74,7 +74,7 @@ class ImageView extends View implements Observable {
                 }
 
                 var texture = assets.texture(image);
-                texture.onDestroy(assets, function() {
+                texture.onDestroy(assets, function(_) {
                     assets.destroy();
                     assets = null;
                 });

@@ -121,7 +121,7 @@ class TilemapParser {
                 var tileset = new Tileset();
 
                 // Need to cleanup tileset when destroying related tilemap
-                tilemapData.onDestroy(tileset, function() {
+                tilemapData.onDestroy(tileset, function(_) {
                     tileset.destroy();
                 });
 
@@ -163,7 +163,7 @@ class TilemapParser {
                     var image = new TilesetImage();
 
                     // Need to cleanup images when destroying related tileset
-                    tileset.onDestroy(image, function() image.destroy());
+                    tileset.onDestroy(image, function(_) image.destroy());
 
                     if (tmxImage.width != null) {
                         image.width = tmxImage.width;

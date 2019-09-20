@@ -781,8 +781,8 @@ class EventsMacro {
                                     if (owner.destroyed) {
                                         throw 'Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!';
                                     }
-                                    var destroyCb:Void->Void;
-                                    destroyCb = function() {
+                                    var destroyCb:ceramic.Entity->Void;
+                                    destroyCb = function(_) {
                                         if ($i{handlerName} != null) {
                                             this.$offName($i{handlerName});
                                             $i{handlerName} = null;
@@ -862,8 +862,8 @@ class EventsMacro {
                                     if (owner.destroyed) {
                                         throw 'Failed to bind event ' + $v{sanitizedName} + ' because owner is destroyed!';
                                     }
-                                    var destroyCb:Void->Void;
-                                    destroyCb = function() {
+                                    var destroyCb:ceramic.Entity->Void;
+                                    destroyCb = function(_) {
                                         if ($i{handlerName} != null) {
                                             this.$offName($i{handlerName});
                                             $i{handlerName} = null;

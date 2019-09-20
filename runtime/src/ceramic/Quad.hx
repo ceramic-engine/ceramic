@@ -171,7 +171,7 @@ class Quad extends Visual {
 
 /// Texture destroyed
 
-    function textureDestroyed() {
+    function textureDestroyed(_) {
 
         // Remove texture (and/or tile) because it has been destroyed
         this.texture = null;

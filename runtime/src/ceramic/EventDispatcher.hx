@@ -227,8 +227,8 @@ class EventDispatcher {
             if (owner.destroyed) {
                 throw 'Failed to bind dynamic event because owner is destroyed!';
             }
-            var destroyCb:Void->Void;
-            destroyCb = function() {
+            var destroyCb:ceramic.Entity->Void;
+            destroyCb = function(_) {
                 if (cb != null) {
                     off(index, cb);
                 }
@@ -306,19 +306,26 @@ class EventDispatcher {
             if (owner.destroyed) {
                 throw 'Failed to bind dynamic event because owner is destroyed!';
             }
-            var destroyCb = function() {
-                off(index, cb);
+            var destroyCb:ceramic.Entity->Void;
+            destroyCb = function(_) {
+                if (cb != null) {
+                    off(index, cb);
+                }
+                cb = null;
                 owner = null;
+                destroyCb = null;
             };
             owner.onceDestroy(null, destroyCb);
             if (item.cbOnceOwnerUnbindArray == null) {
                 item.cbOnceOwnerUnbindArray = [];
             }
             item.cbOnceOwnerUnbindArray.push(function() {
-                if (owner != null) {
+                if (owner != null && destroyCb != null) {
                     owner.offDestroy(destroyCb);
-                    owner = null;
                 }
+                owner = null;
+                destroyCb = null;
+                cb = null;
             });
         } else {
             if (item.cbOnceOwnerUnbindArray == null) {

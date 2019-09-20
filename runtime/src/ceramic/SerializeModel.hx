@@ -125,7 +125,7 @@ class SerializeModel extends Entity implements Component {
 
     } //untrack
 
-    function trackedModelDestroyed() {
+    function trackedModelDestroyed(_) {
 
         if (willCleanDestroyedTrackedModels) return;
         willCleanDestroyedTrackedModels = true;

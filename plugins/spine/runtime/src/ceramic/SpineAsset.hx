@@ -223,7 +223,7 @@ class SpineAsset extends Asset {
         var asset = new ImageAsset(pathInfo.name);
         asset.handleTexturesDensityChange = false;
         asset.path = pathInfo.path;
-        asset.onDestroy(this, function() {
+        asset.onDestroy(this, function(_) {
             if (pages.get(page) == asset) {
                 pages.remove(page);
             }

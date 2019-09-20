@@ -813,7 +813,7 @@ class Scroller extends Visual {
                 animating = false;
                 status = IDLE;
             });
-            tweenX.onDestroy(this, function() {
+            tweenX.onDestroy(this, function(_) {
                 if (this.tweenX == tweenX) {
                     this.tweenX = null;
                 }
@@ -829,7 +829,7 @@ class Scroller extends Visual {
                 animating = false;
                 status = IDLE;
             });
-            tweenY.onDestroy(this, function() {
+            tweenY.onDestroy(this, function(_) {
                 if (this.tweenY == tweenY) {
                     this.tweenY = null;
                 }
@@ -961,7 +961,7 @@ class Scroller extends Visual {
 
     } //handleTweenYNoMomentum
 
-    function handleTweenYDestroy():Void {
+    function handleTweenYDestroy(_):Void {
 
         this.tweenY = null;
 
@@ -987,7 +987,7 @@ class Scroller extends Visual {
 
     } //handleTweenXNoMomentum
 
-    function handleTweenXDestroy():Void {
+    function handleTweenXDestroy(_):Void {
 
         this.tweenX = null;
 

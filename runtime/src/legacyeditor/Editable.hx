@@ -70,7 +70,7 @@ class Editable extends Component {
             highlight.destroy();
         }
         highlight = new Highlight();
-        highlight.onceDestroy(function() {
+        highlight.onceDestroy(function(_) {
 
             highlight.offCornerDown(handleCornerDown);
             highlight.offCornerOver(handleCornerOver);

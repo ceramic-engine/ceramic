@@ -164,7 +164,7 @@ class Assets extends Entity {
 
     } //addAsset
 
-    function assetDestroyed() {
+    function assetDestroyed(_) {
 
         var toDestroy:Array<Asset> = null;
         for (asset in addedAssets) {

@@ -45,7 +45,7 @@ class Entity implements Events implements Lazy {
 
 /// Events
 
-    @event function destroy();
+    @event function destroy(entity:ceramic.Entity);
 
 /// Lifecycle
 
@@ -239,7 +239,7 @@ class Entity implements Events implements Lazy {
             }
         }
 
-        emitDestroy();
+        emitDestroy(this);
 
         clearComponents();
 
@@ -320,7 +320,7 @@ class Entity implements Events implements Lazy {
 
     } //autorun
 
-    function checkAutoruns():Void {
+    function checkAutoruns(_):Void {
 
         for (i in 0...autoruns.length) {
             var _autorun = autoruns[i];
@@ -446,7 +446,7 @@ class Entity implements Events implements Lazy {
             _components.set(name, component);
             component.setProperty('entity', this);
             var componentAsEntity:Entity = cast component;
-            componentAsEntity.onceDestroy(this, function() {
+            componentAsEntity.onceDestroy(this, function(_) {
                 // Remove entity reference from component
                 if (component.getProperty('entity') == this) {
                     component.setProperty('entity', null);

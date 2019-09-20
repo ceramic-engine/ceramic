@@ -676,7 +676,7 @@ class Text extends Visual {
 
 /// Font destroyed
 
-    function fontDestroyed() {
+    function fontDestroyed(_) {
 
         // Remove font (and set default one) because it has been destroyed
         this.font = app.defaultFont;

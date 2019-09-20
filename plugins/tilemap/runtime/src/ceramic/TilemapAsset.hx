@@ -196,7 +196,7 @@ class TilemapAsset extends Asset {
             var pathInfo = Assets.decodePath(path);
             var asset = new ImageAsset(pathInfo.name);
             asset.handleTexturesDensityChange = true;
-            asset.onDestroy(this, function() {
+            asset.onDestroy(this, function(_) {
                 // Should we do some cleanup here?
             });
             assets.addAsset(asset);
