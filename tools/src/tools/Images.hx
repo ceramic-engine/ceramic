@@ -1,6 +1,10 @@
 package tools;
 
+#if (haxe_ver < 4)
+import js.html.Uint8Array;
+#else
 import js.lib.Uint8Array;
+#end
 import haxe.Json;
 import haxe.io.Path;
 import npm.Sharp.sharp;

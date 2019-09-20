@@ -112,7 +112,11 @@ class Files {
 
         // Use shell if available
         if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
+            #if (haxe_ver < 4)
+            ChildProcess.execSync('rm -rf ' + StringTools.quoteUnixArg(toDelete));
+            #else
             ChildProcess.execSync('rm -rf ' + haxe.SysTools.quoteUnixArg(toDelete));
+            #end
             return;
         }
 

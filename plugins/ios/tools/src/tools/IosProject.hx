@@ -6,7 +6,9 @@ import tools.Templates;
 import tools.Sync;
 import tools.Files;
 import haxe.io.Path;
+#if (haxe_ver >= 4)
 import haxe.SysTools;
+#end
 import sys.io.File;
 import sys.FileSystem;
 
@@ -94,14 +96,22 @@ class IosProject {
             // Compute target build number from current time
             var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M').substr(2));
             // Extract current build number
+            #if (haxe_ver < 4)
+            var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + StringTools.quoteUnixArg(iosProjectInfoPlistFile))).trim());
+            #else
             var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + SysTools.quoteUnixArg(iosProjectInfoPlistFile))).trim());
+            #end
             // Increment if needed
             if (currentBuildNumber == targetBuildNumber) {
                 targetBuildNumber++;
             }
             print('Update build number to $targetBuildNumber');
             // Saved updated build number
+            #if (haxe_ver < 4)
+            ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion " + targetBuildNumber + "' " + StringTools.quoteUnixArg(iosProjectInfoPlistFile));
+            #else
             ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion " + targetBuildNumber + "' " + SysTools.quoteUnixArg(iosProjectInfoPlistFile));
+            #end
         }
 
     } //updateBuildNumber
