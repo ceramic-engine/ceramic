@@ -492,7 +492,7 @@ class Http implements spec.Http {
         #if (mac || linux)
         // Use built-in curl on mac & linux, that's the easiest!
         Runner.runInBackground(function() {
-            Sys.command('curl', ['-sS', url, '--output', tmpTargetPath]);
+            Sys.command('curl', ['-sS', '-L', url, '--output', tmpTargetPath]);
             Runner.runInMain(finishDownload);
         });
         return;
@@ -500,7 +500,7 @@ class Http implements spec.Http {
         // Use curl through powershell on windows
         Runner.runInBackground(function() {
             var escapedArgs = [];
-            for (arg in ['-sS', url, '--output', tmpTargetPath]) {
+            for (arg in ['-sS', '-L' , url, '--output', tmpTargetPath]) {
                 escapedArgs.push(StringTools.quoteWinArg(arg));
             }
             
