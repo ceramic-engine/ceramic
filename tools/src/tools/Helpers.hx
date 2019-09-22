@@ -49,8 +49,6 @@ class Helpers {
         context.defines.set('ceramic_assets_path', Path.join([context.ceramicToolsPath, 'assets']));
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
-        context.defines.set('actuate_manual_update', '');
-        context.defines.set('actuate_manual_time', '');
 
         if (context.variant != null) {
             context.defines.set('variant', context.variant);

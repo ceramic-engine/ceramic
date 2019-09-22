@@ -294,9 +294,6 @@ class App extends Entity {
         untyped __global__.__hxcpp_set_critical_error_handler(function(message:String) throw message);
 #end
 
-        // Setup actuate time
-        motion.actuators.SimpleActuator.getTime = _actuateGetTime;
-
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
 #end
@@ -305,12 +302,6 @@ class App extends Entity {
         return new InitSettings(app.settings);
         
     } //init
-
-    static function _actuateGetTime():Float {
-
-        return Timer.now;
-
-    } //_actuateGetTime
     
 /// Lifecycle
 
@@ -602,8 +593,9 @@ class App extends Entity {
             flushImmediate();
 
             if (_delta > 0) {
-                // Update actuate stuff at the correct time
-                @:privateAccess motion.actuators.SimpleActuator.stage_onEnterFrame(_delta);
+
+                // Update tweens
+                Tween.tick(delta);
 
                 // Flush immediate callbacks
                 flushImmediate();

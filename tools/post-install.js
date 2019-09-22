@@ -26,7 +26,6 @@ function postInstall() {
     spawnSync(haxelib, ['dev', 'spine-hx', '../git/spine-hx'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'polyline', '../git/polyline'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'earcut', '../git/earcut'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'actuate', '../git/actuate'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'format-tiled', '../git/format-tiled'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });

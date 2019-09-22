@@ -41,7 +41,6 @@ class Project {
     public static var runtimeLibraries:Array<Dynamic> = [
         { 'unifill': '0.4.1' },
         { 'format': '3.4.2' },
-        { 'actuate': 'github:ceramic-engine/actuate' },
         { 'polyline': 'github:jeremyfa/polyline' },
         { 'bind': 'github:jeremyfa/polyline' },
         { 'earcut': 'github:ceramic-engine/earcut' },

@@ -1,20 +1,9 @@
 package ceramic;
 
-// TODO stop depending on actuate library
+using ceramic.Extensions;
 
+@:allow(ceramic.App)
 class Tween extends Entity {
-
-/// Static helpers
-
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
-
-        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
-        
-        instance.onUpdate(owner, handleValueTime);
-
-        return instance;
-
-    } //start
 
 /// Events
 
@@ -24,21 +13,21 @@ class Tween extends Entity {
 
 /// Properties
 
-    var actuator:motion.actuators.GenericActuator<UpdateFloat>;
-
-    var target:UpdateFloat;
-
-    var startTime:Float;
-
     var owner:Entity;
 
     var easing:TweenEasing;
 
     var duration:Float;
 
+    var remaining:Float;
+
     var fromValue:Float;
 
     var toValue:Float;
+
+    var computedEasing:Void->Void;
+
+    var customEasing:Float->Float = null;
 
 /// Lifecycle
 
@@ -58,23 +47,49 @@ class Tween extends Entity {
 
     function init() {
 
-        if (duration == 0.0) {
+        if (duration <= 0.0) {
             App.app.onceImmediate(immediateComplete);
             return;
         }
 
-        var actuateEasing = Tween.actuateEasing(easing);
+        computeEasing(easing);
+        computedEasing = _computedEasingFunction;
+        customEasing = _computedCustomEasing;
+        _computedEasingFunction = null;
+        _computedCustomEasing = null;
+
+        _tweens.push(this);
         
-        startTime = Timer.now;
-        target = new UpdateFloat(fromValue);
-        actuator = motion.Actuate.tween(target, duration, { value: toValue }, false);
+        remaining = duration;
 
-        actuator.onComplete(handleActuateComplete);
-        actuator.onUpdate(handleActuateUpdate);
-
-        actuator.ease(actuateEasing);
+        App.app.onceImmediate(immediateStart);
 
     } //init
+
+    inline function updateFromTick(delta:Float):Void {
+        
+        if (owner != null && owner.destroyed) {
+            destroy();
+        }
+        else {
+            remaining -= delta;
+            if (remaining <= 0) {
+                emitUpdate(toValue, duration);
+                emitComplete();
+                destroy();
+            }
+            else {
+                var elapsed = (duration - remaining);
+                TweenEasingFunction.k = elapsed / duration;
+                var k = TweenEasingFunction.k;
+                TweenEasingFunction.customEasing = customEasing;
+                computedEasing();
+                TweenEasingFunction.customEasing = null;
+                emitUpdate(fromValue + (toValue - fromValue) * TweenEasingFunction.k, elapsed);
+            }
+        }
+
+    } //updateFromTick
 
     function immediateComplete() {
 
@@ -84,146 +99,383 @@ class Tween extends Entity {
 
     } //immediateComplete
 
-    function handleActuateComplete() {
+    function immediateStart() {
 
-        if (destroyed) return;
-        if (owner != null && owner.destroyed) {
-            destroy();
-            return;
-        }
-        emitComplete();
-        destroy();
+        emitUpdate(fromValue, 0);
 
-    } //handleActuateComplete
-
-    function handleActuateUpdate() {
-
-        if (destroyed) return;
-        if (owner != null && owner.destroyed) {
-            destroy();
-            return;
-        }
-        var time = Timer.now - startTime;
-        var value = target.value;
-        emitUpdate(value, time);
-
-    } //handleActuateUpdate
+    } //immediateStar
 
     override function destroy() {
 
-        if (target != null) {
-            motion.Actuate.stop(target);
-        }
-
-        if (actuator != null) {
-            @:privateAccess actuator._onComplete = null;
-            @:privateAccess actuator._onUpdate = null;
-            @:privateAccess actuator.target = null;
-            @:privateAccess actuator.properties = null;
-        }
-
-        offComplete();
-        offUpdate();
-
-        actuator = null;
-        target = null;
-
         easing = null;
         owner = null;
+        computedEasing = null;
+        customEasing = null;
+
+        _tweens.remove(this);
 
         super.destroy();
 
     } //destroy
 
-/// Helpers
+/// Static helpers
 
-    public static function actuateEasing(easing:TweenEasing) {
+    static var _tweens:Array<Tween> = [];
+    static var _iteratedTweens:Array<Tween> = [];
 
-        return switch (easing) {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-            case LINEAR: motion.easing.Linear.easeNone;
+        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
+        
+        instance.onUpdate(owner, handleValueTime);
 
-            case BACK_EASE_IN: motion.easing.Back.easeIn;
-            case BACK_EASE_IN_OUT: motion.easing.Back.easeInOut;
-            case BACK_EASE_OUT: motion.easing.Back.easeOut;
+        return instance;
 
-            case QUAD_EASE_IN: motion.easing.Quad.easeIn;
-            case QUAD_EASE_IN_OUT: motion.easing.Quad.easeInOut;
-            case QUAD_EASE_OUT: motion.easing.Quad.easeOut;
+    } //start
 
-            case BOUNCE_EASE_IN: motion.easing.Bounce.easeIn;
-            case BOUNCE_EASE_IN_OUT: motion.easing.Bounce.easeInOut;
-            case BOUNCE_EASE_OUT: motion.easing.Bounce.easeOut;
+    static function tick(delta:Float):Void {
 
-            case CUBIC_EASE_IN: motion.easing.Cubic.easeIn;
-            case CUBIC_EASE_IN_OUT: motion.easing.Cubic.easeInOut;
-            case CUBIC_EASE_OUT: motion.easing.Cubic.easeOut;
+        // Iterate over tweens to update them.
+        // We use a dedicated array for iteration to allow
+        // active particles array to be updated while iterating
+        var len = _tweens.length;
+        for (i in 0...len) {
+            var tween = _tweens.unsafeGet(i);
+            _iteratedTweens[i] = tween;
+        }
+        for (i in 0...len) {
+            var tween = _iteratedTweens.unsafeGet(i);
+            _iteratedTweens.unsafeSet(i, null);
+            tween.updateFromTick(delta);
+        }
 
-            case ELASTIC_EASE_IN: motion.easing.Elastic.easeIn;
-            case ELASTIC_EASE_IN_OUT: motion.easing.Elastic.easeInOut;
-            case ELASTIC_EASE_OUT: motion.easing.Elastic.easeOut;
+    } //tick
 
-            case EXPO_EASE_IN: motion.easing.Expo.easeIn;
-            case EXPO_EASE_IN_OUT: motion.easing.Expo.easeInOut;
-            case EXPO_EASE_OUT: motion.easing.Expo.easeOut;
+    static var _computedEasingFunction:Void->Void = null;
+    static var _computedCustomEasing:Float->Float = null;
 
-            case QUART_EASE_IN: motion.easing.Quart.easeIn;
-            case QUART_EASE_IN_OUT: motion.easing.Quart.easeInOut;
-            case QUART_EASE_OUT: motion.easing.Quart.easeOut;
+    static function computeEasing(easing:TweenEasing):Void {
 
-            case QUINT_EASE_IN: motion.easing.Quint.easeIn;
-            case QUINT_EASE_IN_OUT: motion.easing.Quint.easeInOut;
-            case QUINT_EASE_OUT: motion.easing.Quint.easeOut;
+        switch (easing) {
 
-            case SINE_EASE_IN: motion.easing.Sine.easeIn;
-            case SINE_EASE_IN_OUT: motion.easing.Sine.easeInOut;
-            case SINE_EASE_OUT: motion.easing.Sine.easeOut;
+            case LINEAR:
+                _computedEasingFunction = TweenEasingFunction.linear;
 
-            case BEZIER(x1, y1, x2, y2): new ActuateCustomEasing(new BezierEasing(x1, y1, x2, y2).ease);
+            case BACK_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.backEaseIn;
+            case BACK_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.backEaseInOut;
+            case BACK_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.backEaseOut;
 
-            case CUSTOM(easing): new ActuateCustomEasing(easing);
+            case QUAD_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.quadEaseIn;
+            case QUAD_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.quadEaseInOut;
+            case QUAD_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.quadEaseOut;
+
+            case CUBIC_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.cubicEaseIn;
+            case CUBIC_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.cubicEaseInOut;
+            case CUBIC_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.cubicEaseOut;
+
+            case QUART_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.quartEaseIn;
+            case QUART_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.quartEaseInOut;
+            case QUART_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.quartEaseOut;
+
+            case QUINT_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.quintEaseIn;
+            case QUINT_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.quintEaseInOut;
+            case QUINT_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.quintEaseOut;
+
+            case BOUNCE_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.bounceEaseIn;
+            case BOUNCE_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.bounceEaseInOut;
+            case BOUNCE_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.bounceEaseOut;
+
+            case ELASTIC_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.elasticEaseIn;
+            case ELASTIC_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.elasticEaseInOut;
+            case ELASTIC_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.elasticEaseOut;
+
+            case EXPO_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.expoEaseIn;
+            case EXPO_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.expoEaseInOut;
+            case EXPO_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.expoEaseOut;
+
+            case SINE_EASE_IN:
+                _computedEasingFunction = TweenEasingFunction.sineEaseIn;
+            case SINE_EASE_IN_OUT:
+                _computedEasingFunction = TweenEasingFunction.sineEaseInOut;
+            case SINE_EASE_OUT:
+                _computedEasingFunction = TweenEasingFunction.sineEaseOut;
+
+            case BEZIER(x1, y1, x2, y2):
+                _computedEasingFunction = TweenEasingFunction.custom;
+                _computedCustomEasing = new BezierEasing(x1, y1, x2, y2).ease;
+
+            case CUSTOM(easing):
+                _computedEasingFunction = TweenEasingFunction.custom;
+                _computedCustomEasing = easing;
 
         }
 
-    } //actuateEasing
+    } //computeEasing
 
+    /** Get a tween easing function as a plain Float->Float function. */
     public static function easingFunction(easing:TweenEasing):Float->Float {
 
-        return actuateEasing(easing).calculate;
+        computeEasing(easing);
+        var computedEasing = _computedEasingFunction;
+        var customEasing = _computedCustomEasing;
+
+        return function(value:Float):Float {
+            TweenEasingFunction.k = value;
+            TweenEasingFunction.customEasing = customEasing;
+            computedEasing();
+            TweenEasingFunction.customEasing = null;
+            return TweenEasingFunction.k;
+        };
 
     } //easingFunction
 
 } //Tween
 
 @:allow(ceramic.Tween)
-private class UpdateFloat {
+private class TweenEasingFunction {
 
-    public var value:Float = 0;
+    /** Using `k` as static variable allows us to call easing function dynamically
+        without needing boxing of float type on c++ target when it is passed as arg.
+        (boxing of primitive types on c++ creates trash object references that give pressure to GC.
+        When we can, we try to avoid it.) */
+    public static var k:Float = 0;
 
-    public function new(value:Float) {
+    public static var customEasing:Float->Float = null;
 
-        this.value = value;
+/// Custom
 
-    } //new
-    
-} //UpdateFloat
+    public static function custom():Void {
+        k = customEasing(k);
+    }
 
-class ActuateCustomEasing implements motion.easing.IEasing {
+/// Linear
 
-    var customEasing:Float->Float;
+    public static function linear():Void {
+        // k = k
+    }
 
-	public function new(customEasing:Float->Float) {
+/// Back
 
-        this.customEasing = customEasing;
+    public static function backEaseIn():Void {
+        k = k * k * ((1.70158 + 1) * k - 1.70158);
+    }
+
+    public static function backEaseInOut():Void {
+        var s:Float = 1.70158;
+		if ((k *= 2) < 1) k = 0.5 * (k * k * (((s *= (1.525)) + 1) * k - s));
+		else k = 0.5 * ((k -= 2) * k * (((s *= (1.525)) + 1) * k + s) + 2);
+    }
+
+    public static function backEaseOut():Void {
+		k = ((k = k - 1) * k * ((1.70158 + 1) * k + 1.70158) + 1);
+    }
+
+/// Quad
+
+    public static function quadEaseIn():Void {
+        k = k * k;
+    }
+
+    public static function quadEaseInOut():Void {
+		if ((k *= 2) < 1) {
+			k = 1 / 2 * k * k;
+		}
+		else k = -1 / 2 * ((k - 1) * (k - 3) - 1);
+    }
+
+    public static function quadEaseOut():Void {
+		k = -k * (k - 2);
+    }
+
+/// Cubic
+
+    public static function cubicEaseIn():Void {
+        k = k * k * k;
+    }
+
+    public static function cubicEaseInOut():Void {
+		k = ((k /= 1 / 2) < 1) ? 0.5 * k * k * k : 0.5 * ((k -= 2) * k * k + 2);
+    }
+
+    public static function cubicEaseOut():Void {
+		k = --k * k * k + 1;
+    }
+
+/// Quart
+
+    public static function quartEaseIn():Void {
+        k = k * k * k * k;
+    }
+
+    public static function quartEaseInOut():Void {
+		if ((k *= 2) < 1) k = 0.5 * k * k * k * k;
+		else k = -0.5 * ((k -= 2) * k * k * k - 2);
+    }
+
+    public static function quartEaseOut():Void {
+		k = -(--k * k * k * k - 1);
+    }
+
+/// Quint
+
+    public static function quintEaseIn():Void {
+        k = k * k * k * k * k;
+    }
+
+    public static function quintEaseInOut():Void {
+		if ((k *= 2) < 1) k = 0.5 * k * k * k * k * k;
+		else k = 0.5 * ((k -= 2) * k * k * k * k + 2);
+    }
+
+    public static function quintEaseOut():Void {
+		k = --k * k * k * k * k + 1;
+    }
+
+/// Bounce
+
+    public static function bounceEaseIn():Void {
+        k = _bounceEaseIn(k, 0, 1, 1);
+    }
+
+    public static function bounceEaseInOut():Void {
+		if (k < .5) {
+			k = _bounceEaseIn(k * 2, 0, 1, 1) * 0.5;
+		} else {
+			k = _bounceEaseOut(k * 2 - 1, 0, 1, 1) * 0.5 + 1 * 0.5; 
+		}
+    }
+
+    public static function bounceEaseOut():Void {
+		k = _bounceEaseOut(k, 0, 1, 1);
+    }
+
+    inline static function _bounceEaseIn(t:Float, b:Float, c:Float, d:Float):Float {
+        return c - _bounceEaseOut(d-t, 0, c, d) + b;
+    }
+
+    inline static function _bounceEaseOut(t:Float, b:Float, c:Float, d:Float):Float {
+        var result:Float;
+		if ((t/=d) < (1/2.75)) {
+			result = c * (7.5625 * t * t) + b;
+		}
+        else if (t < (2/2.75)) {
+			result = c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+		}
+        else if (t < (2.5/2.75)) {
+			result = c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+		}
+        else {
+			result = c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+		}
+        return result;
+    }
+
+/// Elastic
+
+    public static function elasticEaseIn():Void {
+		if (k == 0) return;
+        if (k == 1) return;
+        var a:Float = 0.1;
+        var p:Float = 0.4;
+		var s:Float;
+		if (a < 1) {
+            a = 1;
+            s = p / 4;
+        }
+		else {
+            s = p / (2 * Math.PI) * Math.asin (1 / a);
+        }
+		k = -(a * Math.exp(6.931471805599453 * (k -= 1)) * Math.sin( (k - s) * (2 * Math.PI) / p ));
+    }
+
+    public static function elasticEaseInOut():Void {
+		if (k == 0) return;
+		if ((k *= 2) == 2) {
+            k = 1;
+			return;
+		}
 		
-	} //new
+		var p:Float = (0.3 * 1.5);
+		var s:Float = p / 4;
+		
+		if (k < 1) {
+			k = -0.5 * (Math.exp(6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+		}
+		else k = Math.exp(-6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+    }
 
-	public function calculate(k:Float):Float {
-		return customEasing(k);
-	}
+    public static function elasticEaseOut():Void {
+		if (k == 0) return;
+        if (k == 1) return;
+        var a:Float = 0.1;
+        var p:Float = 0.4;
+		var s:Float;
+		if (a < 1) {
+            a = 1;
+            s = p / 4;
+        }
+		else {
+            s = p / (2 * Math.PI) * Math.asin (1 / a);
+        }
+		k = (a * Math.exp(-6.931471805599453 * k) * Math.sin((k - s) * (2 * Math.PI) / p ) + 1);
+    }
 
-	public function ease(t:Float, b:Float, c:Float, d:Float):Float {
-		return c * t / d + b;
-	}
+/// Expo
 
-} //ActuateCustomEasing
+    public static function expoEaseIn():Void {
+        k = (k == 0 ? 0 : Math.exp(6.931471805599453 * (k - 1)));
+    }
+
+    public static function expoEaseInOut():Void {
+		if (k == 0) return;
+		if (k == 1) return;
+		if ((k /= 1 / 2.0) < 1.0) {
+			k = 0.5 * Math.exp(6.931471805599453 * (k - 1));
+		}
+		else k = 0.5 * (2 - Math.exp(-6.931471805599453 * --k));
+    }
+
+    public static function expoEaseOut():Void {
+		k = (k == 1 ? 1 : (1 - Math.exp(-6.931471805599453 * k)));
+    }
+
+/// Sine
+
+    public static function sineEaseIn():Void {
+        k = 1 - Math.cos(k * (Math.PI / 2));
+    }
+
+    public static function sineEaseInOut():Void {
+		k = -(Math.cos(Math.PI * k) - 1) / 2;
+    }
+
+    public static function sineEaseOut():Void {
+		k = Math.sin(k * (Math.PI / 2));
+    }
+
+} //TweenEasingFunction
+
