@@ -1078,8 +1078,8 @@ class EventsMacro {
                             default:
                         }
                     }
-                }
 #end
+                }
 
             default:
                 throw new Error("Invalid event syntax", field.pos);
