@@ -38,10 +38,15 @@ class ObservableMacro {
         #end
 
         // Also check parent fields
+        var inheritsFromEntity = (classPath == 'ceramic.Entity');
         var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
         var numParents = 0;
         while (parent != null) {
+
+            if (!inheritsFromEntity && parentHold.t.toString() == 'ceramic.Entity') {
+                inheritsFromEntity = true;
+            }
 
             for (field in parent.get().fields.get()) {
                 fieldsByName.set(field.name, true);
@@ -103,7 +108,7 @@ class ObservableMacro {
             };
 
             // Add event
-            nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
 
             // Create observedDirty var
             newFields.push({
@@ -372,7 +377,7 @@ class ObservableMacro {
                 };
 
                 // Add related events
-                nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
+                nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
             }
             else {
                 unchangedFields.push(field);

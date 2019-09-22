@@ -26,6 +26,21 @@ class EventsMacro {
         var classPath = localClass.pack != null && localClass.pack.length > 0 ? localClass.pack.join('.') + '.' + localClass.name : localClass.name;
         var nextEventIndex = _nextEventIndexes.exists(classPath) ? _nextEventIndexes.get(classPath) : 1;
 
+        // Check if we inherit from ceramic.Entity
+        var inheritsFromEntity = (classPath == 'ceramic.Entity');
+        var parentHold = localClass.superClass;
+        var parent = parentHold != null ? parentHold.t : null;
+        while (parent != null) {
+
+            if (!inheritsFromEntity && parentHold.t.toString() == 'ceramic.Entity') {
+                inheritsFromEntity = true;
+                break;
+            }
+
+            parentHold = parent.get().superClass;
+            parent = parentHold != null ? parentHold.t : null;
+        }
+
         // Check if events should be dispatched dynamically by default on this class
         #if (!completion && !display)
         var dynamicDispatch = hasDynamicEventsMeta(localClass.meta.get());
@@ -78,7 +93,7 @@ class EventsMacro {
 
         for (field in fields) {
             if (hasEventMeta(field)) {
-                nextEventIndex = createEventFields(field, newFields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
+                nextEventIndex = createEventFields(field, newFields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
             }
             else {
                 // Keep field
@@ -141,7 +156,7 @@ class EventsMacro {
 
     @:allow(ceramic.macros.ObservableMacro)
     @:allow(ceramic.macros.SerializableMacro)
-    static function createEventFields(field:Field, newFields:Array<Field>, fieldsByName:Map<String,Bool>, dynamicDispatch:Bool, eventIndex:Int, dispatcherName:String):Int {
+    static function createEventFields(field:Field, newFields:Array<Field>, existingFields:Array<Field>, fieldsByName:Map<String,Bool>, dynamicDispatch:Bool, eventIndex:Int, dispatcherName:String, inheritsFromEntity:Bool):Int {
 
         // Still allow a field to be generated with static dispatch, even
         // if default is to generate dynamic dispatch
@@ -1004,7 +1019,64 @@ class EventsMacro {
                         meta: []
                     };
                     newFields.push(listensField);
+
+#if !(display || completion)
+                    // Add or patch unbindEvents() method
+                    
+                    var unbindEventsField:Field = null;
+                    for (aField in existingFields) {
+                        if (aField.name == 'unbindEvents') {
+                            unbindEventsField = aField;
+                            break;
+                        }
+                    }
+
+                    if (unbindEventsField == null) {
+                        // Create unbindEvents() method
+                        unbindEventsField = {
+                            pos: field.pos,
+                            name: 'unbindEvents',
+                            kind: FFun({
+                                args: [],
+                                ret: macro :Void,
+                                expr: macro {
+                                    super.unbindEvents();
+                                    this.$offName();
+                                }
+                            }),
+                            access: [AOverride],
+                            doc: '',
+                            meta: []
+                        }
+                        existingFields.push(unbindEventsField);
+                    }
+                    else {
+                        // Inject code in existing method
+                        switch (unbindEventsField.kind) {
+                            case FFun(fn):
+                                // Ensure expr is surrounded with a block
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+                                    default:
+                                        fn.expr.expr = EBlock([{
+                                            pos: fn.expr.pos,
+                                            expr: fn.expr.expr
+                                        }]);
+                                }
+                                
+                                switch (fn.expr.expr) {
+                                    case EBlock(exprs):
+
+                                        exprs.push(macro this.$offName());
+
+                                    default:
+                                        throw new Error("Invalid unbindEvents body", unbindEventsField.pos);
+                                }
+                            default:
+                        }
+                    }
                 }
+#end
 
             default:
                 throw new Error("Invalid event syntax", field.pos);

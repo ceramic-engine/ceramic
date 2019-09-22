@@ -35,10 +35,15 @@ class SerializableMacro {
         }
 
         // Also check parent fields
+        var inheritsFromEntity = (classPath == 'ceramic.Entity');
         var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
         var numParents = 0;
         while (parent != null) {
+
+            if (!inheritsFromEntity && parentHold.t.toString() == 'ceramic.Entity') {
+                inheritsFromEntity = true;
+            }
 
             for (field in parent.get().fields.get()) {
                 fieldsByName.set(field.name, true);
@@ -136,7 +141,7 @@ class SerializableMacro {
                 doc: 'Event when this object gets serialized.',
                 meta: []
             };
-            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
 
             eventField = {
                 pos: pos,
@@ -150,7 +155,7 @@ class SerializableMacro {
                 doc: 'Event when this object gets deserialized.',
                 meta: []
             };
-            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName);
+            nextEventIndex = EventsMacro.createEventFields(eventField, fields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
         }
 
         // Store next event index for this class path

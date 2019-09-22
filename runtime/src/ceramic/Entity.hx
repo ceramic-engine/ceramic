@@ -242,8 +242,17 @@ class Entity implements Events implements Lazy {
         emitDestroy(this);
 
         clearComponents();
+        unbindEvents();
 
     } //destroy
+
+    /** Remove all events handlers from this entity. */
+    public function unbindEvents():Void {
+
+        // Events macro will automatically fill this method
+        // and create overrides in subclasses to unbind any event
+
+    } //unbindEvents
 
 /// Autorun
 

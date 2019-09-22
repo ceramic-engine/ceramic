@@ -46,13 +46,13 @@ class ComponentMacro {
         }
 
         // Ensure that we inherit from ceramic.Entity
-        var inheritsFromEntity = false;
+        var inheritsFromEntity = (classPath == 'ceramic.Entity');
         var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
         var numParents = 0;
         while (parent != null) {
 
-            if (parentHold.t.toString() == 'ceramic.Entity') {
+            if (!inheritsFromEntity && parentHold.t.toString() == 'ceramic.Entity') {
                 inheritsFromEntity = true;
                 break;
             }
