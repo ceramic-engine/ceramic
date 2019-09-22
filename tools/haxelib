@@ -1,3 +1,7 @@
 #!/bin/bash
 export PATH=${0%/*}':'$PATH
-"${0%/*}"/node "${0%/*}"/node_modules/.bin/haxelib "$@"
+if [ "$(uname)" == "Darwin" ]; then
+    "${0%/*}"/../git/haxe-binary/mac/haxe/haxelib "$@"
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    "${0%/*}"/../git/haxe-binary/linux/haxe/haxelib "$@"
+fi

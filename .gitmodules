@@ -57,3 +57,7 @@
 	path = git/arcade
 	url = https://github.com/jeremyfa/arcade.git
 	branch = master
+[submodule "git/haxe-binary"]
+	path = git/haxe-binary
+	url = https://github.com/ceramic-engine/haxe-binary.git
+	branch = master
