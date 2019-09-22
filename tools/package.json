@@ -34,7 +34,6 @@
     "fs-extra": "^5.0.0",
     "glob": "^7.1.4",
     "handlebars": "^4.2.0",
-    "haxe": "^5.2.1",
     "ip": "^1.1.4",
     "istextorbinary": "^2.5.1",
     "lockfile": "^1.0.4",
@@ -53,10 +52,5 @@
     "ws": "^5.2.2",
     "xcode": "^1.1.0",
     "yamljs": "^0.2.9"
-  },
-  "haxeDependencies": {
-    "haxe": "4.0.0-rc.5",
-    "haxelib": "3.3.0",
-    "neko": "2.2.0"
   }
 }
