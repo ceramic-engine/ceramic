@@ -1,3 +1,11 @@
 #!/bin/bash
 export PATH=${0%/*}':'$PATH
-"${0%/*}"/node "${0%/*}"/node_modules/.bin/neko "$@"
+if [ "$(uname)" == "Darwin" ]; then
+    export PATH=${0%/*}/git/haxe-binary/mac/neko':'$PATH
+    export PATH=${0%/*}/git/haxe-binary/mac/haxe':'$PATH
+    "${0%/*}"/../git/haxe-binary/mac/neko/neko "$@"
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    export PATH=${0%/*}/git/haxe-binary/linux/neko':'$PATH
+    export PATH=${0%/*}/git/haxe-binary/linux/haxe':'$PATH
+    "${0%/*}"/../git/haxe-binary/linux/neko/neko "$@"
+fi

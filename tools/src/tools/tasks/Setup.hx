@@ -21,9 +21,11 @@ class Setup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        if (context.backend != null) {
+        var project = ensureCeramicProject(cwd, args, App);
 
-            ensureCeramicProject(cwd, args, App);
+        checkProjectHaxelibSetup(cwd, args);
+
+        if (context.backend != null) {
 
             var availableTargets = context.backend.getBuildTargets();
             var targetName = getTargetName(args, availableTargets);
@@ -60,7 +62,7 @@ class Setup extends tools.Task {
             context.backend.runSetup(cwd, args, target, context.variant);
 
         }
-        else {
+        /*else {
 
             // Check global/local haxelib repository
             var globalHaxelibRepo = (''+haxelibGlobal(['config'], { mute: true }).stdout).trim();
@@ -80,12 +82,8 @@ class Setup extends tools.Task {
             }
 
             // Install required dependencies
-            haxelib(['install', 'hxcpp', '4.0.52', '--always']);
-            haxelib(['install', 'bind', '0.4.2', '--always']);
-            haxelib(['install', 'format', '3.4.2', '--always']);
-            haxelib(['install', 'unifill', '0.4.1', '--always']);
-            haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
-        }
+            //haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
+        }*/
 
     } //run
 

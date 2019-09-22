@@ -19,10 +19,10 @@ class Unlink extends tools.Task {
         }
         else if (Sys.systemName() == 'Windows') {
             var haxePath = js.Node.process.env['HAXEPATH'];
-            if (haxePath == null || !FileSystem.exists(Path.join([haxePath, 'ceramic.bat']))) {
+            if (haxePath == null || !FileSystem.exists(Path.join([haxePath, 'ceramic.cmd']))) {
                 fail('There is nothing to unlink.');
             }
-            FileSystem.deleteFile(Path.join([haxePath, 'ceramic.bat']));
+            FileSystem.deleteFile(Path.join([haxePath, 'ceramic.cmd']));
         }
 
     } //run

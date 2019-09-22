@@ -179,7 +179,7 @@ class Helpers {
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
         if (Sys.systemName() == 'Windows') {
-            return command(Path.join([context.ceramicToolsPath, 'ceramic.bat']), args, { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), args, { cwd: cwd, mute: mute });
         } else {
             return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(args), { cwd: cwd, mute: mute });
         }
@@ -305,6 +305,28 @@ class Helpers {
         return npm.CommandExists.existsSync(name);
 
     } //commandExists
+
+    public static function checkProjectHaxelibSetup(cwd:String, args:Array<String>) {
+
+        var haxelibRepoPath = Path.join([cwd, '.haxelib']);
+        if (!FileSystem.exists(haxelibRepoPath)) {
+            haxelib(['newrepo'], {cwd: cwd});
+            haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
+            haxelib(['install', 'bind', '0.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'unifill', '0.4.1', '--always'], {cwd: cwd});
+            haxelib(['install', 'bind', '0.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'akifox-asynchttp', '0.4.7', '--always'], {cwd: cwd});
+            haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'polyline', Path.join([context.ceramicGitDepsPath, 'polyline']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'earcut', Path.join([context.ceramicGitDepsPath, 'earcut']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'generate', Path.join([context.ceramicGitDepsPath, 'generate']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'format-tiled', Path.join([context.ceramicGitDepsPath, 'format-tiled']), '--always'], {cwd: cwd});
+        }
+
+    } //checkProjectHaxelibSetup
 
     /** Like `command()`, but will perform additional checks and log formatting,
         compared to a regular `command()` call. Use it to run compilers and run apps.

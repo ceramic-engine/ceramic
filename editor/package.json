@@ -38,7 +38,7 @@
       "build",
       "vendor",
       "ceramic-proxy.js",
-      "ceramic.bat",
+      "ceramic.cmd",
       "app.js"
     ]
   },

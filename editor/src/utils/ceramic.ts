@@ -109,7 +109,7 @@ class CeramicProxy {
                 args.unshift('ceramic');
                 args.unshift('.');
             } else {
-                let linkedCeramic = normalize('C:/HaxeToolkit/haxe/ceramic.bat');
+                let linkedCeramic = normalize('C:/HaxeToolkit/haxe/ceramic.cmd');
                 if (fs.existsSync(linkedCeramic)) {
                     cmd = linkedCeramic;
                 }

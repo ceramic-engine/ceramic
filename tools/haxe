@@ -1,7 +1,11 @@
 #!/bin/bash
 export PATH=${0%/*}':'$PATH
 if [ "$(uname)" == "Darwin" ]; then
+    export PATH=${0%/*}/git/haxe-binary/mac/neko':'$PATH
+    export PATH=${0%/*}/git/haxe-binary/mac/haxe':'$PATH
     "${0%/*}"/../git/haxe-binary/mac/haxe/haxe "$@"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    export PATH=${0%/*}/git/haxe-binary/linux/neko':'$PATH
+    export PATH=${0%/*}/git/haxe-binary/linux/haxe':'$PATH
     "${0%/*}"/../git/haxe-binary/linux/haxe/haxe "$@"
 fi

@@ -33,7 +33,7 @@ ${Path.join([context.ceramicToolsPath, 'node_modules/.bin/node'])} ${Path.join([
                 fail('Haxe must be installed on this machine in order to link ceramic command.');
             }
             File.saveContent(
-                Path.join([haxePath, 'ceramic.bat']),
+                Path.join([haxePath, 'ceramic.cmd']),
                 "@echo off\r\n" + Path.join([context.ceramicToolsPath, isElectron() ? 'ceramic-electron' : 'ceramic']) + " %*"
             );
         }
