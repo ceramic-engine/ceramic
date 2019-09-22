@@ -16,7 +16,11 @@ function postInstall() {
     require('./ceramic-env');
 
     // Install dependencies
-    spawnSync(haxelib, ['newrepo'], { stdio: "inherit", cwd: __dirname });
+    var haxelibRepoPath = path.join(__dirname, '..', '.haxelib');
+    if (!fs.existsSync(haxelibRepoPath)) {
+        fs.mkdirSync(haxelibRepoPath);
+    }
+    //spawnSync(haxelib, ['newrepo'], { stdio: "inherit", cwd: path.join(__dirname, '..') });
     //spawnSync(haxelib, ['install', 'hxnodejs', '4.0.9', '--always'], { stdio: "inherit", cwd: __dirname });
     //spawnSync(haxelib, ['install', 'hxcpp', '4.0.52', '--always'], { stdio: "inherit", cwd: __dirname });
     //spawnSync(haxelib, ['install', 'bind', '0.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
