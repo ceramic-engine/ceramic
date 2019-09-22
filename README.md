@@ -64,6 +64,7 @@ This will initialize a project with `luxe` backend and add _Visual Studio Code_ 
 You can quickly test your app using the `web` target:
 
 ```bash
+cd hello
 ceramic luxe run web
 ```
 
