@@ -13,7 +13,7 @@
 
 Ceramic is made with very simple goals in mind:
 
-* Provide a high level cross-platform API to make 2D games and animations.
+* Provide a high level cross-platform API to make 2D games, animations and creative coding.
 * Have a clear separation of ceramic API and its backend API.
 * Ensure adding new backends is as easy as possible by keeping the API clean and minimal.
 * Leverage as much as possible existing frameworks instead of reinventing the wheel.
@@ -29,47 +29,13 @@ The **ceramic** command line tools are also written in Haxe language but run wit
 
 ## Setup / How to use
 
-At the moment, **ceramic** tool is only supported on Mac OS X but it is designed from the ground up to be usable on Windows and Linux in the future, thanks to using [Node.js](https://nodejs.org) and [Haxe](http://haxe.org/) which are two fantastic cross platform tools.
+⚠️ At the moment, **ceramic** tool is only supported on Mac OS X but it is designed from the ground up to be usable on Windows and Linux in the future, thanks to using [Node.js](https://nodejs.org) and [Haxe](http://haxe.org/) which are two fantastic cross platform tools.
 
-### Install Node.js
+### Install ceramic command
 
-Install latest stable version (LTS) of Node.js from [nodejs.org](https://nodejs.org).
+Download ceramic
 
-### Install Haxe
-
-If not already installed, install latest haxe from [haxe.org](http://haxe.org/).
-
-`ceramic` is already bundled with its own `haxe` binary (3.4.7) but installing haxe globally on your machine is required to ensure Visual Studio Code will work correctly. You global haxe version must be equal to or higher than `3.4.7` (installing haxe 4+ is fine).
-
-### Install Xcode (mac)
-
-Xcode (with its command line tools) is required on Mac in order to compile C++ files. You can [install Xcode from the Mac App Store](https://itunes.apple.com/fr/app/xcode/id497799835?mt=12).
-
-If you only want to test ceramic on its **web** target, you can skip this step.
-
-### Install Visual C++ (windows)
-
-Visual C++ Desktop is required on Windows in order to compile C++ files. Any version of Visual C++ compatible with [HXCPP](https://github.com/HaxeFoundation/hxcpp) should work, but at the moment we recommend to install [Visual Studio Express 2015](https://www.visualstudio.com/fr/post-download-vs/?sku=xdesk&clcid=0x409&telem=ga).
-
-If you only want to test ceramic on its **web** target, you can skip this step.
-
-### Install git (windows)
-
-**ceramic** relies on **git** command line tools to perform some of its tasks. It is included with Xcode command line tools on Mac but needs to be installed on windows: download and install it from https://git-scm.com/ (keep default settings unless you know what you are doing).
-
-### Install ceramic
-
-While some of **ceramic** dependencies are haxe libraries, **ceramic** itself is a Node.js tool installed from Git.
-
-```
-git clone --recursive https://github.com/ceramic-engine/ceramic.git
-cd ceramic/tools
-npm install
-sudo ./ceramic link
-ceramic setup
-```
-
-⚠️ For now, global **haxelib** should use the same haxelib repository than **ceramic**'s. `ceramic setup` will make your global `haxelib` repository point to `/path/to/ceramic/tools/node_modules/haxe/.haxelib`. If you want to restore your previous haxelib repository, you will need to use `haxelib setup` command. This is temporary, until we ensure **ceramic** is able to work with any global haxelib configuration.
+* Mac: http://path.to.ceramic.zip
 
 You can now run **ceramic** globally from terminal:
 
