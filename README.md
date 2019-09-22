@@ -1,6 +1,6 @@
 # Ceramic
 
-| ![Ceramic Logo](editor/public/icons/128x128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
+| ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
 | - | - |
 
 ## ⚠️ ACTIVE DEVELOPMENT / DON'T USE IT YET! ⚠️
@@ -27,13 +27,9 @@ Depending on the platform, it tries to use the best tools available using multip
 
 The **ceramic** command line tools are also written in Haxe language but run with Node.js.
 
-## Setup / How to use
+## Getting started
 
 ⚠️ At the moment, **ceramic** tool is only supported on Mac OS X but it is designed from the ground up to be usable on Windows and Linux in the future, thanks to using [Node.js](https://nodejs.org) and [Haxe](http://haxe.org/) which are two fantastic cross platform tools.
-
-### Install ceramic command
-
-#### Mac
 
 Open a **Terminal** and type:
 
@@ -57,7 +53,7 @@ ceramic
 
 Almost everything in ceramic can be done with command line.
 
-### Create a ceramic app from Terminal
+#### Create a ceramic app from Terminal
 
 ```bash
 ceramic init --name hello --vscode --backend luxe
@@ -79,7 +75,7 @@ The code editor of choice for **ceramic** projects is **Visual Studio Code**.
 
 Download and install [Visual Studio Code](https://code.visualstudio.com/) on your computer.
 
-##### Install required VS Code extensions
+#### Install required VS Code extensions
 
 You need to install [Haxe](https://marketplace.visualstudio.com/items?itemName=nadako.vshaxe) and [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extensions.
 
@@ -97,7 +93,7 @@ ext install tasks-chooser
 
 You can also install these by browsing the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-gallery) within VS Code.
 
-### Open the project you created from Terminal
+#### Open the project you created from Terminal
 
 Drag you `hello` app onto _Visual Studio Code_ icon or type:
 
