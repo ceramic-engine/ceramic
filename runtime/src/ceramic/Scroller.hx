@@ -4,8 +4,6 @@ import ceramic.ScrollDirection;
 import ceramic.ScrollerStatus;
 import ceramic.Shortcuts.*;
 
-import motion.Actuate;
-
 @:keep
 class Scroller extends Visual {
 
@@ -404,8 +402,14 @@ class Scroller extends Visual {
             snapping = false;
 
             // Stop any tween
-            if (tweenX != null) tweenX.destroy();
-            if (tweenY != null) tweenY.destroy();
+            if (tweenX != null) {
+                tweenX.destroy();
+                tweenX = null;
+            }
+            if (tweenY != null) {
+                tweenY.destroy();
+                tweenY = null;
+            }
 
             // Are we stopping some previous scroll?
             if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
@@ -779,8 +783,14 @@ class Scroller extends Visual {
 
     inline public function stopTweens():Void {
 
-        if (tweenX != null) tweenX.destroy();
-        if (tweenY != null) tweenY.destroy();
+        if (tweenX != null) {
+            tweenX.destroy();
+            tweenX = null;
+        }
+        if (tweenY != null) {
+            tweenY.destroy();
+            tweenY = null;
+        }
 
     } //stop
 
@@ -805,35 +815,15 @@ class Scroller extends Visual {
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
-            var tweenX = tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
-                this.scrollX = scrollX;
-            });
-            this.tweenX = tweenX;
-            tweenX.onceComplete(this, function() {
-                animating = false;
-                status = IDLE;
-            });
-            tweenX.onDestroy(this, function(_) {
-                if (this.tweenX == tweenX) {
-                    this.tweenX = null;
-                }
-            });
+            this.tweenX = tween(0, easing, duration, this.scrollX, scrollX, handleTweenXSimple);
+            this.tweenX.onceComplete(this, handleTweenComplete);
+            this.tweenX.onDestroy(this, handleTweenXDestroy);
         }
 
         if (scrollY != this.scrollY) {
-            var tweenY = tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
-                this.scrollY = scrollY;
-            });
-            this.tweenY = tweenY;
-            tweenY.onceComplete(this, function() {
-                animating = false;
-                status = IDLE;
-            });
-            tweenY.onDestroy(this, function(_) {
-                if (this.tweenY == tweenY) {
-                    this.tweenY = null;
-                }
-            });
+            this.tweenY = tween(1, easing, duration, this.scrollY, scrollY, handleTweenYSimple);
+            this.tweenY.onceComplete(this, handleTweenComplete);
+            this.tweenY.onDestroy(this, handleTweenYDestroy);
         }
 
     } //smoothScrollTo
@@ -955,6 +945,12 @@ class Scroller extends Visual {
 
     } //handleTweenY
 
+    function handleTweenYSimple(v:Float, t:Float):Void {
+
+        scrollX = v;
+
+    } //handleTweenYSimple
+
     function handleTweenYNoMomentum(v:Float, t:Float):Void {
 
         scrollY = v;
@@ -980,6 +976,12 @@ class Scroller extends Visual {
         scrollX = tweenToX + value;
 
     } //handleTweenX
+
+    function handleTweenXSimple(v:Float, t:Float):Void {
+
+        scrollX = v;
+
+    } //handleTweenXSimple
 
     function handleTweenXNoMomentum(v:Float, t:Float):Void {
 
