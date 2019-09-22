@@ -192,7 +192,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         haxelib(['run', 'snowfall', 'update', 'luxe']);*/
 
-        for (lib in ['flow', 'snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
+        for (lib in ['snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
             haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
         }
 

@@ -26,10 +26,6 @@
 	path = git/snow
 	url = https://github.com/ceramic-engine/snow.git
 	branch = master
-[submodule "git/flow"]
-	path = git/flow
-	url = https://github.com/ceramic-engine/flow.git
-	branch = master
 [submodule "git/luxe"]
 	path = git/luxe
 	url = https://github.com/ceramic-engine/luxe.git

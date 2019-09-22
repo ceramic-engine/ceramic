@@ -45,7 +45,7 @@ class Build extends tools.Task {
 
 		// Ensure flow project exist
 		if (!FileSystem.exists(outTargetPath)) {
-			fail('Missing flow/luxe project file. Did you setup this target?');
+			fail('Missing luxe project file. Did you setup this target?');
 		}
 
 		var backendName = 'luxe';

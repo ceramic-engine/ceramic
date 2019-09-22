@@ -47,7 +47,6 @@ class Setup extends tools.Task {
 
         var outPath = Path.join([cwd, 'out']);
         var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
-        var flowPath = Path.join([targetPath, 'project.flow']);
         var hxmlPath = Path.join([targetPath, 'project.hxml']);
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
@@ -345,7 +344,7 @@ ${haxeflagsHxml.join('\n')}
 
         haxelib(['run', 'snowfall', 'update', 'luxe']);*/
 
-        for (lib in ['flow', 'snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
+        for (lib in ['snow', 'luxe', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp']) {
             haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
         }
 
