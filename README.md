@@ -33,29 +33,53 @@ The **ceramic** command line tools are also written in Haxe language but run wit
 
 ### Install ceramic command
 
-Download ceramic
+#### Mac
 
-* Mac: http://path.to.ceramic.zip
+Open a **Terminal** and type:
 
-You can now run **ceramic** globally from terminal:
-
-```
-ceramic help
-```
-
-Or run it locally:
-
-```
-/path/to/ceramic/ceramic help
+```bash
+curl -L https://github.com/ceramic-engine/ceramic/releases/download/dev01/ceramic.zip -o ceramic.zip
+unzip ceramic.zip
+rm ceramic.zip
+cd ceramic/tools
+./ceramic link
+cd ../..
+ceramic
 ```
 
-### Install Visual Studio Code
+You should now be able to run **ceramic** from any directory in **Terminal**:
+
+```
+ceramic
+```
+
+### Your first ceramic project
+
+Almost everything in ceramic can be done with command line.
+
+### Create a ceramic app from Terminal
+
+```bash
+ceramic init --name hello --vscode --backend luxe
+```
+
+This will initialize a project with `luxe` backend and add _Visual Studio Code_ configuration.
+
+You can quickly test your app using the `web` target:
+
+```bash
+ceramic luxe run web
+```
+
+#### Install Visual Studio Code
+
+The code editor of choice for **ceramic** projects is **Visual Studio Code**.
 
 [Visual Studio Code](https://code.visualstudio.com/) is a cross-platform code editor that supports the [Haxe](http://haxe.org) programming language thanks to its [Haxe extension](https://marketplace.visualstudio.com/items?itemName=nadako.vshaxe).
 
 Download and install [Visual Studio Code](https://code.visualstudio.com/) on your computer.
 
-### Install required VS Code extensions
+##### Install required VS Code extensions
 
 You need to install [Haxe](https://marketplace.visualstudio.com/items?itemName=nadako.vshaxe) and [Tasks chooser](https://marketplace.visualstudio.com/items?itemName=jeremyfa.tasks-chooser) extensions.
 
@@ -71,19 +95,17 @@ Then launch VS Code Quick Open again an type:
 ext install tasks-chooser
 ```
 
-You can also install them by browsing the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-gallery) within VS Code.
+You can also install these by browsing the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-gallery) within VS Code.
 
-### Create a new project
+### Open the project you created from Terminal
 
-Create a new project named `MyProject` by running:
+Drag you `hello` app onto _Visual Studio Code_ icon or type:
 
+```bash
+code hello
 ```
-ceramic init --path MyProject --name MyProject --vscode --backend luxe
-```
 
-A new ceramic project is now created inside a `MyProject` directory, using the `luxe` backend and providing Visual Studio Code project files.
-
-Open the `MyProject` directory with Visual Studio Code (you can do so by dragging the folder onto your VS Code icon).
+You should now have you project ready to be worked on through _Visual Studio Code_
 
 Press (CMD+Shift+B / CTRL+Shift+B) to compile and run the project. **It should work!**
 
@@ -91,7 +113,7 @@ Thanks to the [Tasks chooser](https://marketplace.visualstudio.com/items?itemNam
 
 ## Available backends
 
-At the moment, the only available backend is `luxe` (based on alpha version of [luxe engine](https://luxeengine.com/alpha/) written in `Haxe`).
+At the moment, the only available backend is `luxe` (a stripped-down version of [luxe engine alpha](https://luxeengine.com/alpha/) written in `Haxe`, specifically edited for ceramic).
 
 It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL).
 
