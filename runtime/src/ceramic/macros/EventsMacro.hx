@@ -1022,7 +1022,7 @@ class EventsMacro {
 
 #if !(display || completion)
                     // Add or patch unbindEvents() method
-                    
+
                     var unbindEventsField:Field = null;
                     for (aField in existingFields) {
                         if (aField.name == 'unbindEvents') {
@@ -1033,18 +1033,21 @@ class EventsMacro {
 
                     if (unbindEventsField == null) {
                         // Create unbindEvents() method
+                        var isOverriding = fieldsByName.exists('unbindEvents');
                         unbindEventsField = {
                             pos: field.pos,
                             name: 'unbindEvents',
                             kind: FFun({
                                 args: [],
                                 ret: macro :Void,
-                                expr: macro {
+                                expr: isOverriding ? (macro {
                                     super.unbindEvents();
                                     this.$offName();
-                                }
+                                }) : (macro {
+                                    this.$offName();
+                                })
                             }),
-                            access: [AOverride],
+                            access: isOverriding ? [AOverride] : [],
                             doc: '',
                             meta: []
                         }
