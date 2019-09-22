@@ -106,17 +106,52 @@ class Files {
 
     } //isEmptyDirectory
 
+    public static function deleteAnyFileNamed(toDeleteName:String, inDirectory:String):Void {
+
+        if (FileSystem.isDirectory(inDirectory)) {
+
+            for (name in FileSystem.readDirectory(inDirectory)) {
+
+                var path = Path.join([inDirectory, name]);
+                if (name == toDeleteName) {
+                    if (FileSystem.isDirectory(path)) {
+                        deleteRecursive(path);
+                    } else {
+                        FileSystem.deleteFile(path);
+                    }
+                }
+                else if (FileSystem.isDirectory(path)) {
+                    deleteAnyFileNamed(toDeleteName, path);
+                }
+            }
+
+        }
+        else {
+            throw '$inDirectory is not a directory!';
+        }
+
+    } //deleteAnyFileNamed
+
+    public static function zipDirectory(srcDirectory:String, dstZip:String):Void {
+
+        var os = Sys.systemName();
+        if (os == 'Mac' || os == 'Linux') {
+            tools.Helpers.command('zip', ['-9', '-r', '-q', '-y', dstZip, Path.withoutDirectory(srcDirectory)], { cwd: Path.directory(srcDirectory) });
+        }
+        else {
+            throw 'Zip not supported on $os';
+        }
+
+    } //zipDirectory
+
     public static function deleteRecursive(toDelete:String):Void {
         
         if (!FileSystem.exists(toDelete)) return;
 
         // Use shell if available
-        if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
-            #if (haxe_ver < 4)
-            ChildProcess.execSync('rm -rf ' + StringTools.quoteUnixArg(toDelete));
-            #else
-            ChildProcess.execSync('rm -rf ' + haxe.SysTools.quoteUnixArg(toDelete));
-            #end
+        var os = Sys.systemName();
+        if (os == 'Mac' || os == 'Linux') {
+            tools.Helpers.command('rm', ['-rf', toDelete]);
             return;
         }
 

@@ -310,7 +310,7 @@ class Helpers {
 
         var haxelibRepoPath = Path.join([cwd, '.haxelib']);
         if (!FileSystem.exists(haxelibRepoPath)) {
-            haxelib(['newrepo'], {cwd: cwd});
+            FileSystem.createDirectory(haxelibRepoPath);
             haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
             haxelib(['install', 'bind', '0.4.2', '--always'], {cwd: cwd});
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});

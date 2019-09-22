@@ -43,6 +43,7 @@ class Tools {
             debug: (args.indexOf('--debug') != -1),
             defines: new Map(),
             ceramicToolsPath: ceramicPath,
+            ceramicRootPath: Path.normalize(Path.join([ceramicPath, '..'])),
             ceramicRuntimePath: Path.normalize(Path.join([ceramicPath, '../runtime'])),
             ceramicRunnerPath: Path.normalize(Path.join([ceramicPath, '../runner'])),
             ceramicGitDepsPath: Path.normalize(Path.join([ceramicPath, '../git'])),
@@ -118,6 +119,8 @@ class Tools {
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
         context.tasks.set('module', new tools.tasks.Module());
+
+        context.tasks.set('tools zip', new tools.tasks.ZipTools());
 
         context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
