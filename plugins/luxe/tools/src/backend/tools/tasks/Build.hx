@@ -286,11 +286,15 @@ class Build extends tools.Task {
 				// }
 
 				// Run with electron runner
+        		var electronErrors = extractArgFlag(args, 'electron-errors');
 				var taskArgs = ['web', 'project', '--variant', context.variant];
 				if (action == 'run')
 					taskArgs.push('--run');
 				if (debug)
 					taskArgs.push('--debug');
+				if (electronErrors) {
+					taskArgs.push('--electron-errors');
+				}
 				// if (watch) taskArgs.push('--watch');
 				task.run(cwd, taskArgs);
 			}

@@ -76,6 +76,9 @@ class Main extends luxe.Game {
         // Are we running from ceramic/electron runner
         if (electronRunner != null) {
 
+            // Add css class in html tag to let page change its style as needed
+            untyped __js__("document.getElementsByTagName('html')[0].className += ' in-electron-runner';");
+
             // Patch ceramic logger
             @:privateAccess ceramic.Logger._hasElectronRunner = true;
 

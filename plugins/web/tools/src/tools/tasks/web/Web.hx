@@ -32,6 +32,7 @@ class Web extends tools.Task {
 
         var doRun = extractArgFlag(args, 'run');
         var doWatch = extractArgFlag(args, 'watch');
+        var electronErrors = extractArgFlag(args, 'electron-errors');
 
         // Create web project if needed
         WebProject.createWebProjectIfNeeded(cwd, project);
@@ -73,7 +74,7 @@ class Web extends tools.Task {
                 cmdArgs.push(jsName + '.js');
             }
 
-            cmdArgs = ['.'].concat(cmdArgs);
+            cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
 
             var proc = null;
             
@@ -122,8 +123,10 @@ class Web extends tools.Task {
             proc.stderr.pipe(untyped err);
             err.encoding = 'utf8';
             err.on('token', function(token) {
-                token = formatLineOutput(flowProjectPath, token);
-                stderrWrite(token + "\n");
+                if (electronErrors) {
+                    token = formatLineOutput(flowProjectPath, token);
+                    stderrWrite(token + "\n");
+                }
             });
             err.on('error', function(err) {
                 warning(''+err);
