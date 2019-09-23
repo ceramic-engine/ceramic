@@ -62,7 +62,7 @@ class Web extends tools.Task {
 
         Sync.run(function(done) {
 
-            var cmdArgs = ['--app-files', webAppFilesPath];
+            var cmdArgs = ['--app-files', webAppFilesPath, '--truc-bidule', '' + Math.random()];
 
             if (context.debug) {
                 cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
@@ -81,13 +81,24 @@ class Web extends tools.Task {
                 proc = ChildProcess.spawn(
                     Path.join([context.ceramicRunnerPath, 'electron.cmd']),
                     cmdArgs,
-                    { cwd: context.ceramicRunnerPath }
+                    {
+                        cwd: context.ceramicRunnerPath/*,
+                        env: {
+                            ELECTRON_ENABLE_LOGGING: '1'
+                        }*/
+                    }
                 );
             } else {
+                trace('ARGS: ' + ['node_modules/.bin/' + 'electron'].concat(cmdArgs));
                 proc = ChildProcess.spawn(
                     Path.join([context.ceramicToolsPath, 'node']),
                     ['node_modules/.bin/' + 'electron'].concat(cmdArgs),
-                    { cwd: context.ceramicRunnerPath }
+                    {
+                        cwd: context.ceramicRunnerPath/*,
+                        env: {
+                            ELECTRON_ENABLE_LOGGING: '1'
+                        }*/
+                    }
                 );
             }
 

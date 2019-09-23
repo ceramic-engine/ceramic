@@ -82,7 +82,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 768,
-        show: false,
+        show: true,
         minWidth: 64,
         minHeight: 64,
         resizable: false,
@@ -90,9 +90,13 @@ function createWindow() {
         nodeIntegration: true,
         title: appName,
         backgroundColor: '#000000',
+        enableRemoteModule: true,
         icon: path.join(__dirname, 'resources/AppIcon.png'),
         // We don't want to bother with access control policy, other targets don't anyway
-        webPreferences: { webSecurity: false }
+        webPreferences: {
+            webSecurity: false,
+            nodeIntegration: true
+        }
     });
     exports.mainWindow = mainWindow;
 
@@ -142,6 +146,12 @@ app.on('activate', function() {
 // Handle ceramic app settings and events
 //
 exports.ceramicSettings = function(settings) {
+
+    settings.trace('settings.targetWidth=' + settings.targetWidth);
+    settings.trace('settings.targetHeight=' + settings.targetHeight);
+    settings.trace('settings.title=' + settings.title);
+    settings.trace('settings.resizable=' + settings.resizable);
+
     mainWindow.setTitle(settings.title);
     mainWindow.setResizable(settings.resizable);
 
