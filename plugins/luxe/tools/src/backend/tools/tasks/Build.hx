@@ -161,6 +161,13 @@ class Build extends tools.Task {
 			if (debug) {
 				cmdArgs.push('-debug');
 			}
+
+			// Detect if a haxe compilation server is running
+        	var haxeServerPort = runningHaxeServerPort();
+			if (haxeServerPort != -1) {
+				cmdArgs.push('--connect');
+				cmdArgs.push('' + haxeServerPort);
+			}
             
 			// Disable c++ compilation from haxe compiler when targetting ios or android,
 			// because we will do it with hxcpp directly
@@ -169,7 +176,12 @@ class Build extends tools.Task {
                 cmdArgs.push('no-compilation');
             }
 
-			print('Run haxe compiler');
+			if (haxeServerPort != -1) {
+				print('Run haxe compiler (server on port $haxeServerPort)');
+			}
+			else {
+				print('Run haxe compiler');
+			}
 
 			status = haxeWithChecksAndLogs(cmdArgs, {cwd: outTargetPath});
 

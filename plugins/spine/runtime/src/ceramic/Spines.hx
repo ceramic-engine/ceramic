@@ -5,7 +5,7 @@ import ceramic.AssetId;
 #if !macro
 @:build(ceramic.macros.SpineMacros.buildNames())
 #end
-class Spines {
+@:keep class Spines {
 
     static var _clazz:Class<Dynamic>;
 

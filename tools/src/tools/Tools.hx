@@ -122,6 +122,8 @@ class Tools {
 
         context.tasks.set('tools zip', new tools.tasks.ZipTools());
 
+        context.tasks.set('haxe server', new tools.tasks.HaxeServer());
+
         context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
         context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());

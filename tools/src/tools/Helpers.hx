@@ -273,6 +273,22 @@ class Helpers {
 
     } //fail
 
+    public static function runningHaxeServerPort():Int {
+
+        var homedir:String = untyped __js__("require('os').homedir()");
+        var infoPath = Path.join([homedir, '.ceramic-haxe-server']);
+        var mtime = Files.getLastModified(infoPath);
+        var currentTime = Date.now().getTime() / 1000;
+        var timeGap = Math.abs(currentTime - mtime);
+        if (timeGap < 2.0) {
+            return Std.parseInt(StringTools.trim(File.getContent(infoPath)));
+        }
+        else {
+            return -1;
+        }
+
+    } //runningHaxeServerPort
+
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';

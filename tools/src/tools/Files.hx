@@ -45,6 +45,19 @@ class Files {
         return Math.round(Fs.statSync(filePath).mtime.getTime() / 1000.0);
 
     } //getLastModified
+
+    public static function touch(filePath:String):Void {
+
+        if (!FileSystem.exists(filePath)) {
+            if (!FileSystem.exists(Path.directory(filePath))) {
+                FileSystem.createDirectory(Path.directory(filePath));
+            }
+            sys.io.File.saveContent(filePath, '');
+        }
+        var utime = Date.now().getTime() / 1000.0;
+        Fs.utimesSync(filePath, cast utime, cast utime);
+
+    } //touch
     
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
