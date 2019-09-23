@@ -206,13 +206,14 @@ class Main extends luxe.Game {
         }
 
         // Are we running from ceramic/electron runner
-        trace('HAS ELECTRON RUNNER: ' + (electronRunner != null));
         if (electronRunner != null) {
 
             // Configure electron window
             electronRunner.ceramicSettings({
                 'trace': function(str:String) {
+                    #if debug
                     trace('app.js: ' + str);
+                    #end
                 },
                 title: app.settings.title,
                 resizable: app.settings.resizable,

@@ -155,14 +155,22 @@ exports.ceramicSettings = function(settings) {
     mainWindow.setTitle(settings.title);
     mainWindow.setResizable(settings.resizable);
 
-    var prevPos = mainWindow.getPosition();
-    var prevSize = mainWindow.getContentSize();
-    mainWindow.setContentSize(settings.targetWidth, settings.targetHeight, false);
-    mainWindow.setPosition(
-        Math.round(prevPos[0] + (prevSize[0] - settings.targetWidth) / 2),
-        Math.round(prevPos[1] + (prevSize[1] - settings.targetHeight) / 2),
-        false
-    );
+    var targetWidth = settings.targetWidth;
+    var targetHeight = settings.targetHeight;
+    if (process.platform == 'win32') {
+        // Somehow, setContentSize() is not working as expected on windows,
+        // so we are doing some hacky hardcoded magic instead :(
+        targetWidth += 8;
+        targetHeight += 93;
+        mainWindow.setSize(targetWidth, targetHeight, false);
+    }
+    else {
+        mainWindow.setContentSize(targetWidth, targetHeight, false);
+    }
+
+    //var prevPos = mainWindow.getPosition();
+    //var prevSize = mainWindow.getContentSize();
+    mainWindow.center();
 };
 
 exports.ceramicReady = function() {
