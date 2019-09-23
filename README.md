@@ -29,7 +29,7 @@ The **ceramic** command line tools are also written in Haxe language but run wit
 
 ## Getting started
 
-**Visit the [Ceramic Wiki](https://github.com/ceramic-engine/ceramic/wiki) to get started.**
+**Start with the [Setup guide](https://github.com/ceramic-engine/ceramic/wiki/Setup).**
 
 ## Available backends
 
