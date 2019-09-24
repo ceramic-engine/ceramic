@@ -127,6 +127,8 @@ class ObservableMacro {
         for (field in fields) {
 
             var metasCase = hasObserveOrSerializeMeta(field);
+            var hasKeepMeta = metasCase >= 10;
+            if (metasCase >= 10) metasCase -= 10;
 
             if (metasCase != 0) {
 
@@ -204,7 +206,11 @@ class ObservableMacro {
                     kind: FProp('get', 'set', type),
                     access: field.access,
                     doc: field.doc,
-                    meta: []
+                    meta: hasKeepMeta ? [{
+                        name: ':keep',
+                        params: [],
+                        pos: Context.currentPos()
+                    }] : []
                 };
                 newFields.push(propField);
 
@@ -246,7 +252,11 @@ class ObservableMacro {
                     }),
                     access: [APrivate],
                     doc: '',
-                    meta: []
+                    meta: hasKeepMeta ? [{
+                        name: ':keep',
+                        params: [],
+                        pos: Context.currentPos()
+                    }] : []
                 }
                 newFields.push(getField);
 
@@ -289,7 +299,11 @@ class ObservableMacro {
                     }),
                     access: [APrivate, AInline],
                     doc: '',
-                    meta: []
+                    meta: hasKeepMeta ? [{
+                        name: ':keep',
+                        params: [],
+                        pos: Context.currentPos()
+                    }] : []
                 }
                 newFields.push(setField);
 
@@ -320,7 +334,11 @@ class ObservableMacro {
                     }),
                     access: [APublic, AInline],
                     doc: '',
-                    meta: []
+                    meta: hasKeepMeta ? [{
+                        name: ':keep',
+                        params: [],
+                        pos: Context.currentPos()
+                    }] : []
                 }
                 newFields.push(invalidateField);
 
@@ -475,6 +493,7 @@ class ObservableMacro {
 
         var hasObserveMeta = false;
         var hasSerializeMeta = false;
+        var hasKeepMeta = false;
 
         for (meta in field.meta) {
             if (meta.name == 'observe') {
@@ -483,18 +502,21 @@ class ObservableMacro {
             else if (meta.name == 'serialize') {
                 hasSerializeMeta = true;
             }
+            else if (meta.name == ':keep') {
+                hasKeepMeta = true;
+            }
         }
 
         if (hasObserveMeta && hasSerializeMeta) {
-            return 3;
+            return hasKeepMeta ? 13 : 3;
         }
         else if (hasSerializeMeta) {
-            return 2;
+            return hasKeepMeta ? 12 : 2;
         }
         else if (hasObserveMeta) {
-            return 1;
+            return hasKeepMeta ? 11 : 1;
         }
-        return 0;
+        return hasKeepMeta ? 10 : 0;
 
     } //hasComponentMeta
 

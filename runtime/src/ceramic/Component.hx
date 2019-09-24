@@ -6,6 +6,8 @@ package ceramic;
 #if !macro
 @:autoBuild(ceramic.macros.ComponentMacro.build())
 #end
+@:keep
+@:keepSub
 interface Component /* extends Entity (enforced by ComponentMacro) */ {
 
     /** If this component was created from an initializer,

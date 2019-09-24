@@ -3,6 +3,8 @@ package ceramic;
 #if !macro
 @:autoBuild(ceramic.macros.SerializableMacro.build())
 #end
+@:keep
+@:keepSub
 interface Serializable {
 
     @:noCompletion

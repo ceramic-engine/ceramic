@@ -7,6 +7,8 @@ using StringTools;
 
 @:rtti
 @:structInit
+@:keep
+@:keepSub
 class CollectionEntry {
 
     static var _nextId:Int = 1;

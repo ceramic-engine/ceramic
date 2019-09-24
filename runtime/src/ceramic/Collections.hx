@@ -7,6 +7,8 @@ import haxe.rtti.Meta;
 using ceramic.Extensions;
 
 @:build(ceramic.macros.CollectionsMacro.build())
+@:keep
+@:keepSub
 class Collections {
 
     static var combinedCollections:Map<String,Dynamic> = new Map();

@@ -88,6 +88,23 @@ class ComponentMacro {
                         Context.error("Invalid entity property", field.pos);
                         return fields;
                 }
+                var hasKeepMeta = false;
+                if (field.meta != null) {
+                    for (aMeta in field.meta) {
+                        if (aMeta.name == ':keep') {
+                            hasKeepMeta = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasKeepMeta) {
+                    if (field.meta == null) field.meta = [];
+                    field.meta.push({
+                        name: ':keep',
+                        params: [],
+                        pos: field.pos
+                    });
+                }
                 if (hasInitializerNameField) break;
             }
             else if (!hasInitializerNameField && field.name == 'initializerName') {
@@ -104,7 +121,11 @@ class ComponentMacro {
                 kind: FVar(TPath({pack: ['ceramic'], name: 'Entity'})),
                 access: [APublic],
                 doc: '',
-                meta: []
+                meta: [{
+                    name: ':keep',
+                    params: [],
+                    pos: Context.currentPos()
+                }]
             };
             fields.push(field);
         }

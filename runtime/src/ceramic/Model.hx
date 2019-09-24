@@ -4,6 +4,8 @@ import ceramic.Autorun;
 
 using StringTools;
 
+@:keep
+@:keepSub
 class Model extends Entity implements Observable implements Serializable {
 
 /// Events
