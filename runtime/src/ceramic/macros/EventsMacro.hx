@@ -424,7 +424,7 @@ class EventsMacro {
 #end
                             }
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [APrivate],
 #else
                         access: [AInline, APrivate],
@@ -467,7 +467,7 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOn($v{eventIndex});
                             }
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [APrivate],
 #else
                         access: [AInline, APrivate],
@@ -510,7 +510,7 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOnce($v{eventIndex});
                             }
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [APrivate],
 #else
                         access: [AInline, APrivate],
@@ -551,7 +551,7 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapOff($v{eventIndex});
                             }
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [APrivate],
 #else
                         access: [AInline, APrivate],
@@ -588,7 +588,7 @@ class EventsMacro {
                                 return this.$dispatcherName.wrapListens($v{eventIndex});
                             }
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [APrivate],
 #else
                         access: [AInline, APrivate],
@@ -1010,7 +1010,7 @@ class EventsMacro {
                             }
 #end
                         }),
-#if telemetry
+#if (haxe_server || telemetry)
                         access: [hasPrivateModifier ? APrivate : APublic],
 #else
                         access: [hasPrivateModifier ? APrivate : APublic, AInline],

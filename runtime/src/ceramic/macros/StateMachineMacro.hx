@@ -109,7 +109,7 @@ class StateMachineMacro {
                                     return enumValue == null ? -1 : ${enumReturnSwitchExpr};
                                 }
                             }),
-                            access: [APrivate, AInline],
+                            access: [APrivate #if !haxe_server , AInline #end],
                             doc: '',
                             meta: []
                         }, {

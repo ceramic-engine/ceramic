@@ -167,6 +167,8 @@ class Build extends tools.Task {
 			if (haxeServerPort != -1) {
 				cmdArgs.push('--connect');
 				cmdArgs.push('' + haxeServerPort);
+				cmdArgs.push('-D');
+				cmdArgs.push('haxe_server=$haxeServerPort');
 			}
             
 			// Disable c++ compilation from haxe compiler when targetting ios or android,

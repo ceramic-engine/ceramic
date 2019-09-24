@@ -28,7 +28,7 @@ class Entity implements Events implements Lazy {
     var _lifecycleState:Int = 0;
 
     public var destroyed(get,never):Bool;
-    inline function get_destroyed():Bool {
+    #if !haxe_server inline #end function get_destroyed():Bool {
         return _lifecycleState < 0;
     }
 
@@ -373,7 +373,7 @@ class Entity implements Events implements Lazy {
 
 /// Components
 
-    inline public function clearComponents() {
+    #if !haxe_server inline #end public function clearComponents() {
 
         // Destroy each linked component
         if (components != null) {
@@ -395,7 +395,7 @@ class Entity implements Events implements Lazy {
         created separately with `component()` or macro-based components as well. */
     @editable
     public var components(get,set):ImmutableMap<String,Component>;
-    inline function get_components():ImmutableMap<String,Component> {
+    #if !haxe_server inline #end function get_components():ImmutableMap<String,Component> {
         return _components;
     }
     function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {

@@ -3,8 +3,8 @@ package ceramic;
 import ceramic.Assert.*;
 
 @:forward
-@:keepSub
 @:keep
+@:keepSub
 abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
     inline public function new() {
