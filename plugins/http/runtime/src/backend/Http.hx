@@ -501,7 +501,7 @@ class Http implements spec.Http {
         Runner.runInBackground(function() {
             var escapedArgs = [];
             for (arg in ['-sS', '-L' , url, '--output', tmpTargetPath]) {
-                escapedArgs.push(StringTools.quoteWinArg(arg));
+                escapedArgs.push(haxe.SysTools.quoteWinArg(arg, true));
             }
             
             Sys.command('powershell', ['-command', escapedArgs.join(' ')]);
