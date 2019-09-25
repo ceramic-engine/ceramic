@@ -333,6 +333,7 @@ class Helpers {
             haxelib(['install', 'unifill', '0.4.1', '--always'], {cwd: cwd});
             haxelib(['install', 'bind', '0.4.2', '--always'], {cwd: cwd});
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
             haxelib(['install', 'akifox-asynchttp', '0.4.7', '--always'], {cwd: cwd});
             haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
             haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always'], {cwd: cwd});

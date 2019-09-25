@@ -20,18 +20,6 @@ function postInstall() {
     if (!fs.existsSync(haxelibRepoPath)) {
         fs.mkdirSync(haxelibRepoPath);
     }
-    //spawnSync(haxelib, ['newrepo'], { stdio: "inherit", cwd: path.join(__dirname, '..') });
-    //spawnSync(haxelib, ['install', 'hxnodejs', '4.0.9', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['install', 'hxcpp', '4.0.52', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['install', 'bind', '0.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['install', 'format', '3.4.2', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['install', 'unifill', '0.4.1', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['install', 'akifox-asynchttp', '0.4.7', '--always'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['dev', 'arcade', '../git/arcade'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['dev', 'spine-hx', '../git/spine-hx'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['dev', 'polyline', '../git/polyline'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['dev', 'earcut', '../git/earcut'], { stdio: "inherit", cwd: __dirname });
-    //spawnSync(haxelib, ['dev', 'format-tiled', '../git/format-tiled'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 

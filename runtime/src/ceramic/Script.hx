@@ -2,13 +2,12 @@ package ceramic;
 
 class Script extends Entity {
 
-/// Events
-
+    /// Events
     @event function done();
 
     @event function fail(reason:String);
 
-/// Helpers
+    /// Helpers
 
     public function done():Void {
 
@@ -22,9 +21,7 @@ class Script extends Entity {
 
     } //done
 
-/// Lifecycle
-
-    public function new() {}
+    /// Lifecycle
 
     public function run():Void {
 
