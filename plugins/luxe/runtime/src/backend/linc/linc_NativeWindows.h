@@ -1,10 +1,11 @@
+#pragma once
 
-// Link with SetupAPI.Lib.
-#pragma comment (lib, "setupapi.lib")
+#ifndef HXCPP_H
+#include <hxcpp.h>
+#endif
 
 namespace backend {
 
     void NativeWindows_init();
 
 }
-
