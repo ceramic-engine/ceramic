@@ -171,9 +171,9 @@ class Build extends tools.Task {
 				cmdArgs.push('haxe_server=$haxeServerPort');
 			}
             
-			// Disable c++ compilation from haxe compiler when targetting ios or android,
+			// Disable c++ compilation from haxe compiler when targetting these platforms,
 			// because we will do it with hxcpp directly
-            if (target.name == 'ios' || target.name == 'android') {
+            if (target.name == 'ios' || target.name == 'android' || target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
 				cmdArgs.push('-D');
                 cmdArgs.push('no-compilation');
             }
@@ -209,6 +209,21 @@ class Build extends tools.Task {
             }
         }
 
+        // Compile c++ for host platform on default architecture (expecting 64bit)
+        if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
+			// Could move that to some plugin later, maybe
+            var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
+            if (debug) {
+                hxcppArgs.push('-Ddebug');
+            }
+            if (!context.colors) {
+                hxcppArgs.push('-DHXCPP_NO_COLOR');
+            }
+            print('Compile C++');
+
+            haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
+        }
+
         // Compile c++ for Android on requested architectures
 		if (target.name == 'android') {
 			if (archs != null && archs.trim() != '') {
@@ -223,24 +238,31 @@ class Build extends tools.Task {
 
 		var projectDir = Path.join([cwd, 'project', target.name]);
 
-		// Run for mac
+		// Mac
 		if ((action == 'run' || action == 'build') && target.name == 'mac') {
 			runTask('mac app', action == 'run' ? ['--run'] : []);
 			if (action == 'run') {
 				runHooks(cwd, args, project.app.hooks, 'end run');
 			}
 		}
-		// Run for iOS
+		// Windows
+		if ((action == 'run' || action == 'build') && target.name == 'windows') {
+			runTask('windows app', action == 'run' ? ['--run'] : []);
+			if (action == 'run') {
+				runHooks(cwd, args, project.app.hooks, 'end run');
+			}
+		}
+		// iOS
 		else if (action == 'run' && target.name == 'ios') {
 			runTask('ios xcode', ['--open']);
 			runHooks(cwd, args, project.app.hooks, 'end run');
 		}
-		// Run for Android
+		// Android
 		else if (action == 'run' && target.name == 'android') {
 			runTask('android studio', ['--open']);
 			runHooks(cwd, args, project.app.hooks, 'end run');
 		}
-		// Run for web
+		// Web
 		else if ((action == 'run' || action == 'build') && target.name == 'web') {
 			// Needs Web plugin
 			var task = context.tasks.get('web project');
@@ -248,56 +270,6 @@ class Build extends tools.Task {
 				warning('Cannot run Web project because `ceramic web project` command doesn\'t exist.');
 				warning('Did you enable ceramic\'s web plugin?');
 			} else {
-				// // Watch?
-				// var watch = extractArgFlag(args, 'watch') && action == 'run';
-				// if (watch) {
-				//     Fiber.fiber(function() {
-
-				//         var watcher = Chokidar.watch('**/*.hx', { cwd: Path.join([cwd, 'src']) });
-				//         var lastFileUpdate:Float = -1;
-				//         var dirty = false;
-				//         var building = false;
-
-				//         function rebuild() {
-				//             building = true;
-				//             Fiber.fiber(function() {
-				//                 // Rebuild
-				//                 /*var task = context.tasks.get('luxe build');
-				//                 var taskArgs = ['luxe', 'build', 'web', '--variant', context.variant];
-				//                 if (debug) taskArgs.push('--debug');
-				//                 task.run(cwd, taskArgs);*/
-				//                 var result = buildWeb();
-				//                 if (result.status != 0) {
-				//                     fail('Failed to rebuild, exited with status ' + result.status);
-				//                 }
-				//                 // Refresh electron runner
-				//                 var taskArgs = ['web', 'project', '--variant', context.variant];
-				//                 if (debug) taskArgs.push('--debug');
-				//                 task.run(cwd, taskArgs);
-				//                 building = false;
-				//             }).run();
-				//         }
-
-				//         js.Node.setInterval(function() {
-				//             if (dirty && !building) {
-				//                 var time:Float = untyped __js__('new Date().getTime()');
-				//                 if (time - lastFileUpdate > 250) {
-				//                     dirty = false;
-				//                     rebuild();
-				//                 }
-				//             }
-				//         }, 100);
-
-				//         function handleFileChange(path:String) {
-				//             lastFileUpdate = untyped __js__('new Date().getTime()');
-				//             dirty = true;
-				//             print(('Changed: ' + path).magenta());
-				//         }
-
-				//         watcher.on('change', handleFileChange);
-
-				//     }).run();
-				// }
 
 				// Run with electron runner
         		var electronErrors = extractArgFlag(args, 'electron-errors');

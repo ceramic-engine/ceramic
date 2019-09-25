@@ -1,4 +1,4 @@
-package tools.tasks.mac;
+package tools.tasks.windows;
 
 import tools.Helpers.*;
 import tools.Project;
@@ -15,11 +15,11 @@ import npm.StreamSplitter;
 
 using StringTools;
 
-class Mac extends tools.Task {
+class Windows extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Generate or update Mac app to run or debug it";
+        return "Generate or update Windows app to run or debug it";
 
     } //info
 
@@ -27,20 +27,19 @@ class Mac extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
-        var macProjectPath = Path.join([cwd, 'project/mac']);
-        var macAppPath = Path.join([macProjectPath, project.app.name + '.app']);
-        var macAppBinaryFile = Path.join([macAppPath, 'Contents', 'MacOS', project.app.name]);
+        var windowsProjectPath = Path.join([cwd, 'project/windows']);
+        var windowsAppExe = Path.join([windowsProjectPath, project.app.name + '.exe']);
 
         var doRun = extractArgFlag(args, 'run');
 
         // Create mac app package if needed
-        MacApp.createMacAppIfNeeded(cwd, project);
+        WindowsApp.createWindowsAppIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'mac' + (context.variant != 'standard' ? '-' + context.variant : '')]);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'windows' + (context.variant != 'standard' ? '-' + context.variant : '')]);
 
         // Copy binary file
-        File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug' : 'Main']), macAppBinaryFile);
+        File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
 
         // Stop if not running
         if (!doRun) return;
@@ -49,9 +48,9 @@ class Mac extends tools.Task {
         print('Start app');
 
         var status = commandWithChecksAndLogs(
-            project.app.name + '.app/Contents/MacOS/' + project.app.name,
+            windowsAppExe,
             [],
-            { cwd: macProjectPath, logCwd: outTargetPath }
+            { cwd: windowsProjectPath, logCwd: outTargetPath }
         );
 
         if (status != 0) {
@@ -60,4 +59,4 @@ class Mac extends tools.Task {
 
     } //run
 
-} //Mac
+} //Windows

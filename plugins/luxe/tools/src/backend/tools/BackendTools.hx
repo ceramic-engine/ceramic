@@ -100,15 +100,15 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
-        var hxmlPath = Path.join([flowProjectPath, 'project.hxml']);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlPath = Path.join([outTargetPath, 'project.hxml']);
         
         /*
         var cmdArgs = ['run', 'flow', 'info', target.name, '--hxml'];
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('--debug');
 
-        var res = haxelib(cmdArgs, { mute: true, cwd: flowProjectPath });
+        var res = haxelib(cmdArgs, { mute: true, cwd: outTargetPath });
         
         if (res.status != 0) {
             fail('Error when getting project hxml.');
@@ -138,9 +138,9 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
 
-        return flowProjectPath;
+        return outTargetPath;
 
     } //getHxmlCwd
 
@@ -151,9 +151,9 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set('target', target.name);
         defines.set(target.name, '');
 
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
-        defines.set('target_path', flowProjectPath);
-        defines.set('target_assets_path', Path.join([flowProjectPath, 'assets']));
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        defines.set('target_path', outTargetPath);
+        defines.set('target_assets_path', Path.join([outTargetPath, 'assets']));
 
         return defines;
 
@@ -215,7 +215,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var validDstPaths:Map<String,Bool> = new Map();
         var assetsChanged = false;
 
@@ -230,7 +230,7 @@ class BackendTools implements tools.spec.BackendTools {
                 case 'windows' | 'linux' | 'web':
                     dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
                 default:
-                    dstAssetsPath = Path.join([flowProjectPath, 'assets']);
+                    dstAssetsPath = Path.join([outTargetPath, 'assets']);
             }
         }
 
@@ -298,7 +298,7 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         /*// Copy rtti data (if any)
-        var rttiPath = Path.join([flowProjectPath, '.cache', 'rtti']);
+        var rttiPath = Path.join([outTargetPath, '.cache', 'rtti']);
         if (FileSystem.exists(rttiPath)) {
             tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
         }*/
@@ -310,7 +310,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
 
         var toTransform:Array<TargetImage> = [];
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
         var iconsChanged = false;
 
         switch (target.name) {
@@ -392,7 +392,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         // Create full paths
         for (entry in toTransform) {
-            entry.path = Path.join([flowProjectPath, 'icons', entry.path]);
+            entry.path = Path.join([outTargetPath, 'icons', entry.path]);
 
             // Compare with original
             if (!Files.haveSameLastModified(appIcon, entry.path)) {

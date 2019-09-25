@@ -38,8 +38,8 @@ class Web extends tools.Task {
         WebProject.createWebProjectIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var flowProjectPath = Path.join([cwd, 'out', 'luxe', 'web' + (context.variant != 'standard' ? '-' + context.variant : '')]);
-        //var flowWebHtmlPath = Path.join([flowProjectPath, 'bin/web']);
+        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'web' + (context.variant != 'standard' ? '-' + context.variant : '')]);
+        //var flowWebHtmlPath = Path.join([outTargetPath, 'bin/web']);
 
         // Copy assets
         //Files.copyDirectory(Path.join([flowWebHtmlPath, 'assets']), Path.join([cwd, 'project/web/assets']));
@@ -109,7 +109,7 @@ class Web extends tools.Task {
             });
             out.encoding = 'utf8';
             out.on('token', function(token) {
-                token = formatLineOutput(flowProjectPath, token);
+                token = formatLineOutput(outTargetPath, token);
                 stdoutWrite(token + "\n");
             });
             out.on('done', function() {
@@ -124,7 +124,7 @@ class Web extends tools.Task {
             err.encoding = 'utf8';
             err.on('token', function(token) {
                 if (electronErrors) {
-                    token = formatLineOutput(flowProjectPath, token);
+                    token = formatLineOutput(outTargetPath, token);
                     stderrWrite(token + "\n");
                 }
             });
