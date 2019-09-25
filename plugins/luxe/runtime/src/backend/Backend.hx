@@ -3,6 +3,9 @@ package backend;
 #if mac
 import backend.NativeMac;
 #end
+#if windows
+import backend.NativeWindows;
+#end
 
 @:allow(backend.Textures)
 @:allow(backend.Draw)
@@ -38,6 +41,10 @@ class Backend implements ceramic.Events implements spec.Backend {
 
 #if mac
         NativeMac.setAppleMomentumScrollSupported(false);
+#end
+
+#if windows
+        NativeWindows.init();
 #end
 
     } //init
