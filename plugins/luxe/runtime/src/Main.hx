@@ -49,6 +49,8 @@ class Main extends luxe.Game {
 
     static var instance:Main;
 
+    static var muteResizeEvent:Bool = false;
+
     override function config(config:luxe.GameConfig) {
 
         Luxe.core.auto_render = false;
@@ -154,7 +156,9 @@ class Main extends luxe.Game {
 
             var containerWidth:Int = 0;
             var containerHeight:Int = 0;
+            var containerPixelRatio:Float = 0;
             var resizing = 0;
+            var shouldFixSize = false;
             
             app.onUpdate(null, function(delta) {
                 var containerEl = document.getElementById(containerElId);
@@ -177,16 +181,24 @@ class Main extends luxe.Game {
 
                     if (lastResizeTime != -1 && ceramic.Timer.now - lastResizeTime < 0.1) return;
 
-                    if (width != containerWidth || height != containerHeight) {
+                    if (width != containerWidth || height != containerHeight || window.devicePixelRatio != containerPixelRatio) {
+                        var onlyDensityChanged = (width == containerWidth && height == containerHeight);
+                        var pixelRatioUndefined = containerPixelRatio == 0;
+                        shouldFixSize = onlyDensityChanged || pixelRatioUndefined;
                         containerWidth = width;
                         containerHeight = height;
+                        containerPixelRatio = window.devicePixelRatio;
 
+                        // Super hacky stuff part I: we subtract one pixel in width if only density changed
+                        // This ensure proper resize events are fired and make things work. Yup.
+                        // Real size is provided at next frame
                         var appEl:js.html.CanvasElement = cast document.getElementById('app');
                         appEl.style.margin = '0 0 0 0';
-                        appEl.style.width = containerWidth + 'px';
+                        appEl.style.width = (containerWidth - (shouldFixSize ? 1 : 0)) + 'px';
                         appEl.style.height = containerHeight + 'px';
-                        appEl.width = Math.round(containerWidth * window.devicePixelRatio);
+                        appEl.width = Math.round((containerWidth - (shouldFixSize ? 1 : 0)) * window.devicePixelRatio);
                         appEl.height = Math.round(containerHeight * window.devicePixelRatio);
+                        muteResizeEvent = shouldFixSize;
 
                         // Hide weird intermediate state behind a black overlay.
                         // That's not the best option but let's get away with this for now.
@@ -202,6 +214,13 @@ class Main extends luxe.Game {
                         });
 
                         lastResizeTime = ceramic.Timer.now;
+                    }
+                    else if (shouldFixSize) {
+                        // Hacky resize stuff part II
+                        shouldFixSize = false;
+                        muteResizeEvent = false;
+                        appEl.style.width = containerWidth + 'px';
+                        appEl.width = Math.round(containerWidth * window.devicePixelRatio);
                     }
                 }
             });
@@ -238,6 +257,8 @@ class Main extends luxe.Game {
         lastWidth = Luxe.screen.width;
         lastHeight = Luxe.screen.height;
         ceramic.App.app.backend.screen.density = lastDevicePixelRatio;
+        ceramic.App.app.backend.screen.width = Std.int(lastWidth);
+        ceramic.App.app.backend.screen.height = Std.int(lastHeight);
 
         // Background color
         Luxe.renderer.clear_color.rgb(ceramic.App.app.settings.background);
@@ -537,12 +558,20 @@ class Main extends luxe.Game {
         if (   nativeDensity == lastDevicePixelRatio
             && Luxe.screen.width == lastWidth
             && Luxe.screen.height == lastHeight) return;
+        
+        if (muteResizeEvent) return;
+
+        #if web
+        @:privateAccess Luxe.snow.runtime.update_window_bounds();
+        #end
 
         // Update values for next compare
         lastDevicePixelRatio = nativeDensity;
         lastWidth = Luxe.screen.width;
         lastHeight = Luxe.screen.height;
         ceramic.App.app.backend.screen.density = lastDevicePixelRatio;
+        ceramic.App.app.backend.screen.width = Std.int(lastWidth);
+        ceramic.App.app.backend.screen.height = Std.int(lastHeight);
 
         // Emit resize
         ceramic.App.app.backend.screen.emitResize();

@@ -17,21 +17,23 @@ class Screen implements ceramic.Events implements spec.Screen {
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
+    private var density:Float = -1;
+    private var width:Int = 0;
+    private var height:Int = 0;
+
 /// Public API
 
     inline public function getWidth():Int {
 
-        return Luxe.screen.w;
+        return width;
 
     } //getPixelWidth
 
     inline public function getHeight():Int {
 
-        return Luxe.screen.h;
+        return height;
 
     } //getPixelHeight
-
-    private var density:Float = -1;
 
     inline public function getDensity():Float {
 
