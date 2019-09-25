@@ -532,13 +532,14 @@ class Main extends luxe.Game {
 
     function triggerResizeIfNeeded():Void {
 
+        var nativeDensity = #if web window.devicePixelRatio #else Luxe.screen.device_pixel_ratio #end;
         // Ensure screen data has changed since last time we emit event
-        if (   Luxe.screen.device_pixel_ratio == lastDevicePixelRatio
+        if (   nativeDensity == lastDevicePixelRatio
             && Luxe.screen.width == lastWidth
             && Luxe.screen.height == lastHeight) return;
 
         // Update values for next compare
-        lastDevicePixelRatio = Luxe.screen.device_pixel_ratio;
+        lastDevicePixelRatio = nativeDensity;
         lastWidth = Luxe.screen.width;
         lastHeight = Luxe.screen.height;
         ceramic.App.app.backend.screen.density = lastDevicePixelRatio;
@@ -547,7 +548,7 @@ class Main extends luxe.Game {
         ceramic.App.app.backend.screen.emitResize();
 
         // Update camera size
-        Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
+        Luxe.camera.size = new luxe.Vector(Luxe.screen.width * nativeDensity, Luxe.screen.height * nativeDensity);
 
     }
 
