@@ -11,6 +11,8 @@ package ceramic;
 @:allow(ceramic.TransformPool)
 class Transform implements Events {
 
+    static var _decomposed:DecomposedTransform = new DecomposedTransform();
+
 /// Events
 
     @event public function change();
@@ -353,7 +355,8 @@ class Transform implements Events {
 
     public function toString():String {
 
-        return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + ")";
+        decompose(_decomposed);
+        return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + " " + _decomposed + ")";
 
     } //toString
 

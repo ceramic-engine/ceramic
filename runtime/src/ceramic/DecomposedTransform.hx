@@ -25,4 +25,8 @@ class DecomposedTransform {
 
     public var skewY:Float = 0;
 
-}
+    function toString():String {
+        return '(pos=$x,$y pivot=$pivotX,$pivotY rotation=$rotation scale=${(scaleX == scaleY ? '' + scaleX : scaleX + ',' + scaleY)} skew=$skewX,$skewY)';
+    }
+
+} //DecomposedTransform
