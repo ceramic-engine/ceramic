@@ -1047,7 +1047,7 @@ class EventsMacro {
                                     this.$offName();
                                 })
                             }),
-                            access: isOverriding ? [AOverride] : [],
+                            access: isOverriding ? [APublic, AOverride] : [APublic],
                             doc: '',
                             meta: []
                         }
