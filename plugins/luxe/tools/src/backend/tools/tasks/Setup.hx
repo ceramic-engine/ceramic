@@ -216,6 +216,7 @@ class Setup extends tools.Task {
 $targetFlags
 -D ${target.name}
 -D snow_no_main
+-D snow_no_user_config
 -D no_default_font
 -D luxe_no_default_shaders
 -D no-console
