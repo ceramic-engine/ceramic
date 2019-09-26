@@ -110,7 +110,7 @@ class Csv {
 
                 key = keys[keyIndex++];
                 if (key != null) {
-                    Reflect.setField(entry, key, val);
+                    Reflect.setField(entry, key, val.replace("\r",""));
                     entryHasFields = true;
                 } else if (tooManyColumnsAt == -1) {
                     tooManyColumnsAt = result.length;
@@ -130,7 +130,7 @@ class Csv {
             else if (c == sep) {
                 key = keys[keyIndex++];
                 if (key != null) {
-                    Reflect.setField(entry, key, val);
+                    Reflect.setField(entry, key, val.replace("\r",""));
                     entryHasFields = true;
                 } else if (tooManyColumnsAt == -1) {
                     tooManyColumnsAt = result.length;
@@ -146,7 +146,7 @@ class Csv {
 
         key = keys[keyIndex++];
         if (key != null) {
-            Reflect.setField(entry, key, val);
+            Reflect.setField(entry, key, val.replace("\r",""));
             entryHasFields = true;
         } else if (tooManyColumnsAt == -1) {
             warning(entry);
