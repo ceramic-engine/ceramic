@@ -1020,7 +1020,6 @@ class EventsMacro {
                     };
                     newFields.push(listensField);
 
-#if !(display || completion)
                     // Add or patch unbindEvents() method
 
                     var unbindEventsField:Field = null;
@@ -1078,7 +1077,6 @@ class EventsMacro {
                             default:
                         }
                     }
-#end
                 }
 
             default:
