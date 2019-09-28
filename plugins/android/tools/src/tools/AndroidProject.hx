@@ -124,13 +124,15 @@ class AndroidProject {
         targetFile = Path.join([dstJni, 'armeabi-v7a/$jniLibName']);
         Files.copyIfNeeded(builtFile, targetFile);
 
-        builtFile = Path.join([srcJni, '$libPrefix-x86.so']);
-        targetFile = Path.join([dstJni, 'x86/$jniLibName']);
-        Files.copyIfNeeded(builtFile, targetFile);
-
         builtFile = Path.join([srcJni, '$libPrefix-64.so']);
         targetFile = Path.join([dstJni, 'arm64-v8a/$jniLibName']);
         Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([srcJni, '$libPrefix-x86.so']);
+        if (FileSystem.exists(builtFile)) {
+            targetFile = Path.join([dstJni, 'x86/$jniLibName']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
 
         // TODO x86_64
 
@@ -147,13 +149,15 @@ class AndroidProject {
         targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so']);
         Files.copyIfNeeded(builtFile, targetFile);
 
-        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']);
-        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
-        Files.copyIfNeeded(builtFile, targetFile);
-
         builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']);
         targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so']);
         Files.copyIfNeeded(builtFile, targetFile);
+
+        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']);
+        if (FileSystem.exists(builtFile)) {
+            targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
 
         // TODO x86_64
 
