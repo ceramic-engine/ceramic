@@ -7,6 +7,8 @@ import ceramic.Path;
 
 #if cpp
 import opengl.GL;
+#else
+import snow.modules.opengl.GL;
 #end
 
 using StringTools;
@@ -198,6 +200,8 @@ class Textures implements spec.Textures {
 
     } //setTextureFilter
 
+    static var _maxTexturesByBatch:Int = -1;
+
     #if cpp
 
     static var _maxTextureWidth:Int = -1;
@@ -243,6 +247,28 @@ class Textures implements spec.Textures {
         #end
 
     } //maxTextureHeight
+
+    inline function computeMaxTexturesByBatchIfNeeded() {
+
+        if (_maxTexturesByBatch == -1) {
+            #if cpp
+            var maxUnits:Array<Int> = [0];
+            GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, maxUnits);
+            _maxTexturesByBatch = maxUnits[0];
+            #else
+            _maxTexturesByBatch = GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS);
+            #end
+        }
+
+    } //computeMaxTexturesByBatchIfNeeded
+
+    /** If this returns a value above 1, that means this backend supports multi-texture batching. */
+    public function maxTexturesByBatch():Int {
+
+        computeMaxTexturesByBatchIfNeeded();
+        return _maxTexturesByBatch;
+
+    } //maxTexturesByBatch
 
 /// Internal
 
