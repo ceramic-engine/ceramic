@@ -167,9 +167,13 @@ class Draw implements spec.Draw {
 
     } //maxPosFloats
 
+    /** Number of floats in a single position. 3 = vec3, 4 = vec4 */
+    inline static var numFloatsInPos:Int = 3;
+
     inline public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {
 
-        var vertexSize:Int = 4;
+        // vertexSize = number of bytes in a single vertex vertexSize = 4 = 4 times 1 byte = 4 bytes
+        var vertexSize:Int = numFloatsInPos;
         if (activeShader != null) {
             var allAttrs = activeShader.customAttributes;
             if (allAttrs != null) {
@@ -192,7 +196,7 @@ class Draw implements spec.Draw {
         var tb = GL.createBuffer();
 
         GL.bindBuffer(GL.ARRAY_BUFFER, pb);
-        GL.vertexAttribPointer(posAttribute, 4, GL.FLOAT, false, vertexSize * 4, 0);
+        GL.vertexAttribPointer(posAttribute, numFloatsInPos, GL.FLOAT, false, vertexSize * 4, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
 
         GL.bindBuffer(GL.ARRAY_BUFFER, tb);
@@ -207,7 +211,7 @@ class Draw implements spec.Draw {
         if (activeShader != null && activeShader.customAttributes != null) {
 
             var n = colorAttribute + 1;
-            var offset = 4;
+            var offset = numFloatsInPos;
             var allAttrs = activeShader.customAttributes;
             customGLBuffersLen = allAttrs.length;
             for (ii in 0...customGLBuffersLen) {

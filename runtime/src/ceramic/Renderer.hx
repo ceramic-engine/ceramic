@@ -10,9 +10,6 @@ class Renderer extends Entity {
 
     public var maxVerts:Int = 16384;
 
-    public var drawnQuads(default,null):Int = 0;
-    public var drawnMeshes(default,null):Int = 0;
-
     var posFloats:Int = 0;
     var uvFloats:Int = 0;
     var colorFloats:Int = 0;
@@ -32,6 +29,7 @@ class Renderer extends Entity {
     var lastRenderTarget:ceramic.RenderTexture = null;
     var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
+    var lastClip:ceramic.Visual = null;
 
     var texWidth:Int = 0;
     var texHeight:Int = 0;
@@ -51,9 +49,12 @@ class Renderer extends Entity {
     var z:Float = 0;
 
 #if ceramic_debug_draw
-    var debugDraw:Int = false;
-    var drawnQuad:Int = 0;
+    var lastDebugTime:Float = -1;
+    var debugDraw:Bool = false;
+    var drawnQuads:Int = 0;
     var drawnMeshes:Int = 0;
+    var flushedQuads:Int = 0;
+    var flushedMeshes:Int = 0;
 #end
 
     public function new() {
@@ -79,6 +80,8 @@ class Renderer extends Entity {
             }
             drawnQuads = 0;
             drawnMeshes = 0;
+            flushedQuads = 0;
+            flushedMeshes = 0;
         } else {
             debugDraw = false;
         }
@@ -104,6 +107,7 @@ class Renderer extends Entity {
         lastRenderTarget = null;
         lastBlending = ceramic.Blending.NORMAL;
         lastComputedBlending = ceramic.Blending.NORMAL;
+        lastClip = null;
 
         texWidth = 0;
         texHeight = 0;
@@ -152,8 +156,6 @@ class Renderer extends Entity {
         // For each ceramic visual in the list
         //
         if (ceramicVisuals != null) {
-
-            var lastClip:ceramic.Visual = null;
 
             for (ii in 0...ceramicVisuals.length) {
                 var visual = ceramicVisuals.unsafeGet(ii);
@@ -235,6 +237,12 @@ class Renderer extends Entity {
 
             flush(draw);
         }
+
+#if ceramic_debug_draw
+        if (debugDraw) {
+            success(' -- $drawCalls draw calls / $drawnQuads quads / $drawnMeshes meshes');
+        }
+#end
 
     } //render
 
@@ -358,18 +366,12 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
-#if ceramic_debug_draw
-                if (debugDraw) trace('-- flush --');
-#end
                 flush(draw);
 
                 // Update texture
                 if (quad.texture != lastTexture) {
                     if (quad.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
-#end
                             lastTexture = quad.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
@@ -381,9 +383,6 @@ class Renderer extends Entity {
                         }
                     } else {
                         if (quad.texture != null) {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
-#end
                             if (lastShader == null && quad.shader == null) {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
@@ -397,9 +396,6 @@ class Renderer extends Entity {
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
                         } else {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + quad.texture);
-#end
                             if (lastShader == null && quad.shader == null) {
                                 // Default plain shader fallback
                                 useShader(draw, defaultPlainShader);
@@ -414,9 +410,6 @@ class Renderer extends Entity {
 
                 // Update shader
                 if (quad.shader != lastShader) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- shader ' + lastShader + ' -> ' + quad.shader);
-#end
                     lastShader = quad.shader;
 
                     if (lastShader != null) {
@@ -442,9 +435,6 @@ class Renderer extends Entity {
                     newComputedBlending = ceramic.Blending.NORMAL;
                 }
                 if (newComputedBlending != lastComputedBlending) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
-#end
                     lastComputedBlending = newComputedBlending;
                     useBlending(draw, lastComputedBlending);
                 }
@@ -456,9 +446,6 @@ class Renderer extends Entity {
 
                 // Update render target
                 if (quad.computedRenderTarget != lastRenderTarget) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + quad.computedRenderTarget);
-#end
                     lastRenderTarget = quad.computedRenderTarget;
                     useRenderTarget(draw, lastRenderTarget);
                 }
@@ -510,12 +497,12 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX);
             draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             //tr
             draw.putInPosList(posFloats++, matTX + matA * w);
             draw.putInPosList(posFloats++, matTY + matB * w);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
 
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
@@ -524,22 +511,22 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             //bl
             draw.putInPosList(posFloats++, matTX + matC * h);
             draw.putInPosList(posFloats++, matTY + matD * h);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             //tl2
             draw.putInPosList(posFloats++, matTX);
             draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             //br2
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
         }
         else {
 
@@ -547,7 +534,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX);
             draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -555,7 +542,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX + matA * w);
             draw.putInPosList(posFloats++, matTY + matB * w);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -567,7 +554,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -575,7 +562,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX + matC * h);
             draw.putInPosList(posFloats++, matTY + matD * h);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -583,7 +570,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX);
             draw.putInPosList(posFloats++, matTY);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -591,7 +578,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, n8);
             draw.putInPosList(posFloats++, n9);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
             for (l in 0...customFloatAttributesSize) {
                 draw.putInPosList(posFloats++, 0.0);
             }
@@ -771,18 +758,12 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
-#if ceramic_debug_draw
-                if (debugDraw) trace('-- flush --');
-#end
                 flush(draw);
 
                 // Update texture
                 if (mesh.texture != lastTexture) {
                     if (mesh.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
-#end
                             lastTexture = mesh.texture;
                             lastTextureId = draw.getTextureId(lastTexture.backendItem);
                             lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
@@ -794,9 +775,6 @@ class Renderer extends Entity {
                         }
                     } else {
                         if (mesh.texture != null) {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
-#end
                             if (lastShader == null && mesh.shader == null) {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
@@ -810,9 +788,6 @@ class Renderer extends Entity {
                             texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
                             draw.bindTexture(lastTexture.backendItem);
                         } else {
-#if ceramic_debug_draw
-                            if (debugDraw) trace('- texture ' + lastTexture + ' -> ' + mesh.texture);
-#end
                             if (lastShader == null && mesh.shader == null) {
                                 // Default plain shader fallback
                                 useShader(draw, defaultPlainShader);
@@ -827,9 +802,6 @@ class Renderer extends Entity {
 
                 // Update shader
                 if (mesh.shader != lastShader) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- shader ' + lastShader + ' -> ' + mesh.shader);
-#end
                     lastShader = mesh.shader;
 
                     if (lastShader != null) {
@@ -855,9 +827,6 @@ class Renderer extends Entity {
                     newComputedBlending = ceramic.Blending.NORMAL;
                 }
                 if (newComputedBlending != lastComputedBlending) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- blending ' + lastComputedBlending + ' -> ' + newComputedBlending);
-#end
                     lastComputedBlending = newComputedBlending;
                     useBlending(draw, lastComputedBlending);
                 }
@@ -869,9 +838,6 @@ class Renderer extends Entity {
 
                 // Update render target
                 if (mesh.computedRenderTarget != lastRenderTarget) {
-#if ceramic_debug_draw
-                    if (debugDraw) trace('- render target ' + lastRenderTarget + ' -> ' + mesh.computedRenderTarget);
-#end
                     lastRenderTarget = mesh.computedRenderTarget;
                     useRenderTarget(draw, lastRenderTarget);
                 }
@@ -960,7 +926,7 @@ class Renderer extends Entity {
             draw.putInPosList(posFloats++, matTX + matA * x + matC * y);
             draw.putInPosList(posFloats++, matTY + matB * x + matD * y);
             draw.putInPosList(posFloats++, z);
-            draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posFloats++, 0);
 
             // Custom (float) attributes
             //
@@ -1078,6 +1044,16 @@ class Renderer extends Entity {
         this.posFloats = 0;
         this.uvFloats = 0;
         this.colorFloats = 0;
+
+#if ceramic_debug_draw
+        var flushingQuadsNow = drawnQuads - flushedQuads;
+        var flushingMeshesNow = drawnMeshes - flushedMeshes;
+        if (debugDraw) {
+            log('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}) / $lastTexture / $lastShader / $lastRenderTarget / $lastBlending / $lastClip');
+        }
+        flushedQuads = drawnQuads;
+        flushedMeshes = drawnMeshes;
+#end
 
         return true;
 
