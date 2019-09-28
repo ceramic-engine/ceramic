@@ -40,6 +40,9 @@ class Mac extends tools.Task {
         var outTargetPath = Path.join([cwd, 'out', 'luxe', 'mac' + (context.variant != 'standard' ? '-' + context.variant : '')]);
 
         // Copy binary file
+        if (!FileSystem.exists(Path.directory(macAppBinaryFile))) {
+            FileSystem.createDirectory(Path.directory(macAppBinaryFile));
+        }
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug' : 'Main']), macAppBinaryFile);
 
         // Stop if not running
