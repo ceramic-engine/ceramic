@@ -20,6 +20,20 @@ class Shaders implements spec.Shaders {
 
         shader.customAttributes = customAttributes;
 
+        var isMultiTextureTemplate = false;
+        for (line in fragSource.split('\n')) {
+            if (line.trim().replace(' ', '') == '//ceramic:multiTexture') {
+                isMultiTextureTemplate = true;
+                break;
+            }
+        }
+
+        if (isMultiTextureTemplate) {
+            var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
+            var maxIfs = maxIfStatementsByFragmentShader();
+            fragSource = processMultiTextureTemplate(fragSource, maxTextures, maxIfs);
+        }
+
         if (!shader.from_string(vertSource, fragSource)) {
             return null;
         }
@@ -27,6 +41,16 @@ class Shaders implements spec.Shaders {
         return shader;
 
     } //fromSource
+
+    static function processMultiTextureTemplate(fragSource:String, maxTextures:Int, maxIfs:Int):String {
+
+        var maxConditions = Std.int(Math.min(maxTextures, maxIfs));
+
+        // TODO
+
+        return fragSource; // TODO
+        
+    } //processMultiTextureTemplate
 
     inline public function destroy(shader:Shader):Void {
 
@@ -101,11 +125,11 @@ class Shaders implements spec.Shaders {
 
     } //setTexture
 
-    static var _maxIfStatementsByShader:Int = -1;
+    static var _maxIfStatementsByFragmentShader:Int = -1;
 
-    inline static function computeMaxIfStatementsByShaderIfNeeded():Void {
+    inline static function computeMaxIfStatementsByFragmentShaderIfNeeded(maxIfs:Int = 32):Void {
 
-        if (_maxIfStatementsByShader == -1) {
+        if (_maxIfStatementsByFragmentShader == -1) {
             var fragTpl = "
 #ifdef GL_ES
 precision mediump float;
@@ -119,7 +143,6 @@ void main() {
 }
 ".trim();
             var shader = GL.createShader(GL.FRAGMENT_SHADER);
-            var maxIfs = 32;
 
             while (maxIfs > 0) {
                 var frag = fragTpl.replace('{{CONDITIONS}}', generateIfStatements(maxIfs));
@@ -144,7 +167,7 @@ void main() {
                 }
                 else {
                     // It works!
-                    _maxIfStatementsByShader = maxIfs;
+                    _maxIfStatementsByFragmentShader = maxIfs;
                     break;
                 }
             }
@@ -152,7 +175,7 @@ void main() {
             GL.deleteShader(shader);
         }
 
-    } //computeMaxIfStatementsByShaderIfNeeded
+    } //computeMaxIfStatementsByFragmentShaderIfNeeded
 
     static function generateIfStatements(maxIfs:Int):String {
 
@@ -172,12 +195,12 @@ void main() {
 
     } //generateIfStatements
 
-    public function maxIfStatementsByShader():Int {
+    public function maxIfStatementsByFragmentShader():Int {
 
-        computeMaxIfStatementsByShaderIfNeeded();
-        return _maxIfStatementsByShader;
+        computeMaxIfStatementsByFragmentShaderIfNeeded();
+        return _maxIfStatementsByFragmentShader;
 
-    } //maxIfStatementsByShader
+    } //maxIfStatementsByFragmentShader
 
     /*
     TODO

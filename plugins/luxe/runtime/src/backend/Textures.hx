@@ -254,9 +254,9 @@ class Textures implements spec.Textures {
             #if cpp
             var maxUnits:Array<Int> = [0];
             GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, maxUnits);
-            _maxTexturesByBatch = maxUnits[0];
+            _maxTexturesByBatch = Std.int(Math.min(32, maxUnits[0]));
             #else
-            _maxTexturesByBatch = GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS);
+            _maxTexturesByBatch = Std.int(Math.min(32, GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)));
             #end
         }
 
