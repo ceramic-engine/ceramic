@@ -21,6 +21,7 @@ function postInstall() {
         fs.mkdirSync(haxelibRepoPath);
     }
     spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcpp', '4.0.52', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
     // Patch hxcpp toolchain on iOS
