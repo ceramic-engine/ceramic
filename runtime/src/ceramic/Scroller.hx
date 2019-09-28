@@ -94,23 +94,11 @@ class Scroller extends Visual {
     
     var prevPointerY:Float = -999999;
 
-    var tweenFromY:Float;
-
-    var tweenToY:Float;
-
-    var tweenByY:Float;
-
-    var tweenFromX:Float;
-
-    var tweenToX:Float;
-
-    var tweenByX:Float;
-
 /// Lifecycle
 
-    public function new(?content:Visual #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    public function new(?content:Visual) {
 
-        super(#if ceramic_debug_entity_allocs pos #end);
+        super();
 
         if (content == null) {
             content = new Visual();
@@ -402,14 +390,8 @@ class Scroller extends Visual {
             snapping = false;
 
             // Stop any tween
-            if (tweenX != null) {
-                tweenX.destroy();
-                tweenX = null;
-            }
-            if (tweenY != null) {
-                tweenY.destroy();
-                tweenY = null;
-            }
+            if (tweenX != null) tweenX.destroy();
+            if (tweenY != null) tweenY.destroy();
 
             // Are we stopping some previous scroll?
             if (status == SCROLLING && Math.abs(momentum) > maxClickMomentum) {
@@ -783,14 +765,8 @@ class Scroller extends Visual {
 
     inline public function stopTweens():Void {
 
-        if (tweenX != null) {
-            tweenX.destroy();
-            tweenX = null;
-        }
-        if (tweenY != null) {
-            tweenY.destroy();
-            tweenY = null;
-        }
+        if (tweenX != null) tweenX.destroy();
+        if (tweenY != null) tweenY.destroy();
 
     } //stop
 
@@ -815,15 +791,35 @@ class Scroller extends Visual {
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
-            this.tweenX = tween(0, easing, duration, this.scrollX, scrollX, handleTweenXSimple);
-            this.tweenX.onceComplete(this, handleTweenComplete);
-            this.tweenX.onDestroy(this, handleTweenXDestroy);
+            var tweenX = tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
+                this.scrollX = scrollX;
+            });
+            this.tweenX = tweenX;
+            tweenX.onceComplete(this, function() {
+                animating = false;
+                status = IDLE;
+            });
+            tweenX.onDestroy(this, function(_) {
+                if (this.tweenX == tweenX) {
+                    this.tweenX = null;
+                }
+            });
         }
 
         if (scrollY != this.scrollY) {
-            this.tweenY = tween(1, easing, duration, this.scrollY, scrollY, handleTweenYSimple);
-            this.tweenY.onceComplete(this, handleTweenComplete);
-            this.tweenY.onDestroy(this, handleTweenYDestroy);
+            var tweenY = tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
+                this.scrollY = scrollY;
+            });
+            this.tweenY = tweenY;
+            tweenY.onceComplete(this, function() {
+                animating = false;
+                status = IDLE;
+            });
+            tweenY.onDestroy(this, function(_) {
+                if (this.tweenY == tweenY) {
+                    this.tweenY = null;
+                }
+            });
         }
 
     } //smoothScrollTo
@@ -853,153 +849,142 @@ class Scroller extends Visual {
         stopTweens();
 
         if (direction == VERTICAL) {
-            if (this.tweenY != null) {
-                this.tweenY.destroy();
-                this.tweenY = null;
-            }
+            if (tweenY != null) tweenY.destroy();
             if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
                 var easing:TweenEasing = LINEAR;
+                var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
-                    tweenToY = content.height - height;
+                    toY = content.height - height;
                 }
                 else {
-                    tweenToY = 0;
+                    toY = 0;
                 }
-                tweenFromY = scrollY - tweenToY;
-                tweenByY = scrollY + momentum * bounceMomentumFactor - tweenToY;
+                var fromY = scrollY - toY;
+                var byY = scrollY + momentum * bounceMomentumFactor - toY;
                 var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
-                this.tweenY = tween(0, easing, duration, 0, 1, handleTweenY);
-                this.tweenY.onceComplete(this, handleTweenComplete);
-                this.tweenY.onDestroy(this, handleTweenYDestroy);
+                var tweenY = tween(0, easing, duration, 0, 1, function(t, _) {
+
+                    var value:Float;
+
+                    if (t <= 0.5) {
+                        value = (fromY * 2 * (1 - t * 2) + byY * (t * 2)) / 2;
+                    } else {
+                        value = (byY * (1 - (t - 0.5) * 2)) / 2;
+                    }
+
+                    scrollY = toY + value;
+
+                });
+
+                this.tweenY = tweenY;
+                tweenY.onceComplete(this, function() {
+                    animating = false;
+                    status = IDLE;
+                });
+                tweenY.onDestroy(this, function(_) {
+                    if (this.tweenY == tweenY) {
+                        this.tweenY = null;
+                    }
+                });
 
             }
             else {
                 // No momentum
                 var duration = bounceNoMomentumDuration;
                 var easing:TweenEasing = QUAD_EASE_OUT;
-                tweenFromY = scrollY;
+                var fromY = scrollY;
+                var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
-                    tweenToY = content.height - height;
+                    toY = content.height - height;
                 }
                 else {
-                    tweenToY = 0;
+                    toY = 0;
                 }
-                this.tweenY = tween(0, easing, duration * 2, tweenFromY, tweenToY, handleTweenYNoMomentum);
-                this.tweenY.onceComplete(this, handleTweenComplete);
-                this.tweenY.onDestroy(this, handleTweenYDestroy);
+                var tweenY = tween(0, easing, duration * 2, fromY, toY, function(ty, _) {
+                    scrollY = ty;
+                });
+                this.tweenY = tweenY;
+                tweenY.onceComplete(this, function() {
+                    animating = false;
+                    status = IDLE;
+                });
+                tweenY.onDestroy(this, function(_) {
+                    if (this.tweenY == tweenY) {
+                        this.tweenY = null;
+                    }
+                });
             }
         }
         else {
-            if (this.tweenX != null) {
-                this.tweenX.destroy();
-                this.tweenX = null;
-            }
+            if (tweenX != null) tweenX.destroy();
             if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
                 var easing:TweenEasing = LINEAR;
+                var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
-                    tweenToX = content.width - width;
+                    toX = content.width - width;
                 }
                 else {
-                    tweenToX = 0;
+                    toX = 0;
                 }
-                tweenFromX = scrollX - tweenToX;
-                tweenByX = scrollX + momentum * bounceMomentumFactor - tweenToX;
+                var fromX = scrollX - toX;
+                var byX = scrollX + momentum * bounceMomentumFactor - toX;
                 var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
-                this.tweenX = tween(0, easing, duration, 0, 1, handleTweenX);
-                this.tweenX.onceComplete(this, handleTweenComplete);
-                this.tweenX.onDestroy(this, handleTweenXDestroy);
+                var tweenX = tween(0, easing, duration, 0, 1, function(t, _) {
+
+                    var value:Float;
+
+                    if (t <= 0.5) {
+                        value = (fromX * 2 * (1 - t * 2) + byX * (t * 2)) / 2;
+                    } else {
+                        value = (byX * (1 - (t - 0.5) * 2)) / 2;
+                    }
+
+                    scrollX = toX + value;
+
+                });
+
+                this.tweenX = tweenX;
+                tweenX.onceComplete(this, function() {
+                    animating = false;
+                    status = IDLE;
+                });
+                tweenX.onDestroy(this, function(_) {
+                    if (this.tweenX == tweenX) {
+                        this.tweenX = null;
+                    }
+                });
 
             }
             else {
                 // No momentum
                 var duration = bounceNoMomentumDuration;
                 var easing:TweenEasing = QUAD_EASE_OUT;
-                tweenFromX = scrollX;
+                var fromX = scrollX;
+                var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
-                    tweenToX = content.width - width;
+                    toX = content.width - width;
                 }
                 else {
-                    tweenToX = 0;
+                    toX = 0;
                 }
-                this.tweenX = tween(0, easing, duration * 2, tweenFromX, tweenToX, handleTweenXNoMomentum);
-                this.tweenX.onceComplete(this, handleTweenComplete);
-                this.tweenX.onDestroy(this, handleTweenXDestroy);
+                var tweenX = tween(0, easing, duration * 2, fromX, toX, function(tx, _) {
+                    scrollX = tx;
+                });
+                this.tweenX = tweenX;
+                tweenX.onceComplete(this, function() {
+                    animating = false;
+                    status = IDLE;
+                });
+                tweenX.onDestroy(this, function(_) {
+                    if (this.tweenX == tweenX) {
+                        this.tweenX = null;
+                    }
+                });
             }
         }
 
     } //bounce
-
-    function handleTweenY(v:Float, t:Float):Void {
-
-        var value:Float;
-
-        if (t <= 0.5) {
-            value = (tweenFromY * 2 * (1 - t * 2) + tweenByY * (t * 2)) / 2;
-        } else {
-            value = (tweenByY * (1 - (t - 0.5) * 2)) / 2;
-        }
-
-        scrollY = tweenToY + value;
-
-    } //handleTweenY
-
-    function handleTweenYSimple(v:Float, t:Float):Void {
-
-        scrollX = v;
-
-    } //handleTweenYSimple
-
-    function handleTweenYNoMomentum(v:Float, t:Float):Void {
-
-        scrollY = v;
-
-    } //handleTweenYNoMomentum
-
-    function handleTweenYDestroy(_):Void {
-
-        this.tweenY = null;
-
-    } //handleTweenYDestroy
-
-    function handleTweenX(v:Float, t:Float):Void {
-
-        var value:Float;
-
-        if (t <= 0.5) {
-            value = (tweenFromX * 2 * (1 - t * 2) + tweenByX * (t * 2)) / 2;
-        } else {
-            value = (tweenByX * (1 - (t - 0.5) * 2)) / 2;
-        }
-
-        scrollX = tweenToX + value;
-
-    } //handleTweenX
-
-    function handleTweenXSimple(v:Float, t:Float):Void {
-
-        scrollX = v;
-
-    } //handleTweenXSimple
-
-    function handleTweenXNoMomentum(v:Float, t:Float):Void {
-
-        scrollX = v;
-
-    } //handleTweenXNoMomentum
-
-    function handleTweenXDestroy(_):Void {
-
-        this.tweenX = null;
-
-    } //handleTweenXDestroy
-
-    function handleTweenComplete():Void {
-
-        animating = false;
-        status = IDLE;
-
-    } //handleTweenComplete
 
 } //Scroller
