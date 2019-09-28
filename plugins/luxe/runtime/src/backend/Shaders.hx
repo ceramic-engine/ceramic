@@ -2,6 +2,7 @@ package backend;
 
 import luxe.Resources;
 import ceramic.Path;
+import snow.modules.opengl.GL;
 
 using StringTools;
 
@@ -99,6 +100,84 @@ class Shaders implements spec.Shaders {
         (shader:phoenix.Shader).set_texture(name, texture);
 
     } //setTexture
+
+    static var _maxIfStatementsByShader:Int = -1;
+
+    inline static function computeMaxIfStatementsByShaderIfNeeded():Void {
+
+        if (_maxIfStatementsByShader == -1) {
+            var fragTpl = "
+#ifdef GL_ES
+precision mediump float;
+#else
+#define mediump
+#endif
+varying float test;
+void main() {
+    {{CONDITIONS}}
+    gl_FragColor = vec4(0.0);
+}
+".trim();
+            var shader = GL.createShader(GL.FRAGMENT_SHADER);
+            var maxIfs = 32;
+
+            while (maxIfs > 0) {
+                var frag = fragTpl.replace('{{CONDITIONS}}', generateIfStatements(maxIfs));
+
+                #if ceramic_debug_shader_if_statements
+                trace('COMPILE:');
+                trace(frag);
+                #end
+
+                GL.shaderSource(shader, frag);
+                GL.compileShader(shader);
+                
+                #if ceramic_debug_shader_if_statements
+                trace('LOGS:');
+                var logs = GL.getShaderInfoLog(shader);
+                trace(logs);
+                #end
+
+                if (GL.getShaderParameter(shader, GL.COMPILE_STATUS) == 0) {
+                    // That's too many ifs apparently
+                    maxIfs = Std.int(maxIfs / 2);
+                }
+                else {
+                    // It works!
+                    _maxIfStatementsByShader = maxIfs;
+                    break;
+                }
+            }
+
+            GL.deleteShader(shader);
+        }
+
+    } //computeMaxIfStatementsByShaderIfNeeded
+
+    static function generateIfStatements(maxIfs:Int):String {
+
+        var result = new StringBuf();
+
+        for (i in 0...maxIfs) {
+            if (i > 0) {
+                result.add('\nelse ');
+            }
+
+            if (i < maxIfs - 1) {
+                result.add('if (test == ${i}.0) {}');
+            }
+        }
+
+        return result.toString();
+
+    } //generateIfStatements
+
+    public function maxIfStatementsByShader():Int {
+
+        computeMaxIfStatementsByShaderIfNeeded();
+        return _maxIfStatementsByShader;
+
+    } //maxIfStatementsByShader
 
     /*
     TODO

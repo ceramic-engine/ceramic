@@ -213,7 +213,7 @@ class Textures implements spec.Textures {
         GL.glClear(0);
     } //importGlHeaders
 
-    inline function computeMaxTextureSizeIfNeeded() {
+    inline static function computeMaxTextureSizeIfNeeded() {
 
         if (_maxTextureWidth == -1) {
             var maxSize:Array<Int> = [0];
@@ -248,7 +248,7 @@ class Textures implements spec.Textures {
 
     } //maxTextureHeight
 
-    inline function computeMaxTexturesByBatchIfNeeded() {
+    inline static function computeMaxTexturesByBatchIfNeeded() {
 
         if (_maxTexturesByBatch == -1) {
             #if cpp
