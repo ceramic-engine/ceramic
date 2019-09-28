@@ -436,78 +436,52 @@ class Helpers {
         // Handle Windows, again...
         if (Sys.systemName() == 'Windows') {
             // npm
-            if (name == 'npm') {
+            if (name == 'npm' || name == 'node' || name == 'ceramic' || name == 'haxe' || name == 'haxelib' || name == 'neko') {
                 name = name + '.cmd';
             }
         }
 
-        // Custom commands
-        //
-        // Like: rm -rf {path}
-        if (name == 'rimraf' && args[0] != null) {
-            var rimraf = js.Node.require('rimraf');
-            var path = args[0];
-            if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([options.cwd, path]));
+        var spawnOptions:Dynamic = { cwd: options.cwd };
 
-            rimraf.sync(path);
+        // Needed for haxe/haxelib commands
+        /*var originalPATH:String = untyped process.env.PATH;
+        if (originalPATH != null) {
+            spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
+        }*/
 
-        }
-        // Like: cp -R {source} {dest}
-        else if (name == 'ncp' && args[0] != null && args[1] != null) {
-            var source = args[0];
-            var dest = args[1];
-            if (!Path.isAbsolute(source)) source = Path.normalize(Path.join([options.cwd, source]));
-            if (!Path.isAbsolute(dest)) dest = Path.normalize(Path.join([options.cwd, dest]));
-            
-            // We don't use original ncp because it has an outstanding bug unsolved for a year!
-            // (see: https://github.com/AvianFlu/ncp/issues/111)
-            Files.copyDirectory(source, dest);
+        Sync.run(function(done) {
+            var proc = null;
+            if (args == null) {
+                proc = ChildProcess.spawn(name, spawnOptions);
+            } else {
+                proc = ChildProcess.spawn(name, args, spawnOptions);
+            }
 
-        }
-        else {
-
-            var spawnOptions:Dynamic = { cwd: options.cwd };
-
-            // Needed for haxe/haxelib commands
-            /*var originalPATH:String = untyped process.env.PATH;
-            if (originalPATH != null) {
-                spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
-            }*/
-
-            Sync.run(function(done) {
-                var proc = null;
-                if (args == null) {
-                    proc = ChildProcess.spawn(name, spawnOptions);
-                } else {
-                    proc = ChildProcess.spawn(name, args, spawnOptions);
+            proc.stdout.on('data', function(input) {
+                result.stdout += input.toString();
+                if (!options.mute) {
+                    stdoutWrite(input.toString());
                 }
-
-                proc.stdout.on('data', function(input) {
-                    result.stdout += input.toString();
-                    if (!options.mute) {
-                        stdoutWrite(input.toString());
-                    }
-                });
-
-                proc.stderr.on('data', function(input) {
-                    result.stderr += input.toString();
-                    if (!options.mute) {
-                        stderrWrite(input.toString());
-                    }
-                });
-
-                proc.on('error', function(err) {
-                    error(err + ' (' + options.cwd + ')');
-                    fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
-                });
-
-                proc.on('close', function(code) {
-                    result.status = code;
-                    done();
-                });
-
             });
-        }
+
+            proc.stderr.on('data', function(input) {
+                result.stderr += input.toString();
+                if (!options.mute) {
+                    stderrWrite(input.toString());
+                }
+            });
+
+            proc.on('error', function(err) {
+                error(err + ' (' + options.cwd + ')');
+                fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
+            });
+
+            proc.on('close', function(code) {
+                result.status = code;
+                done();
+            });
+
+        });
 
         return result;
 
