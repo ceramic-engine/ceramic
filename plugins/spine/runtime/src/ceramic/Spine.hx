@@ -157,6 +157,9 @@ class Spine extends Visual {
         return (this.renderDirty = renderDirty);
     }
 
+    /** Is `true` if one slot or more needs tint black to be rendered. */
+    public var hasSlotsWithTintBlack(default,null):Bool = false;
+
 /// Properties
 
     /** Skeleton origin X */
@@ -666,6 +669,18 @@ class Spine extends Visual {
         
         state.addListener(listener);
 
+        // Check if some slots use tint black
+        var slotData = skeletonData.slots;
+        var hasSlotsWithTintBlack = false;
+        for (i in 0...slotData.length) {
+            var slot = slotData.unsafeGet(i);
+            if (slot.darkColor != null) {
+                hasSlotsWithTintBlack = true;
+                break;
+            }
+        }
+        this.hasSlotsWithTintBlack = hasSlotsWithTintBlack;
+
         contentDirty = false;
 
         // Perform setup render to gather required information
@@ -1008,6 +1023,7 @@ class Spine extends Visual {
         var tintBlack:Bool = false;
         var vertices:Array<Float>;
         var firstBoundingBoxSlotIndex = -1;
+        var useTintBlack:Bool = forceTintBlack || hasSlotsWithTintBlack;
 
         var diffX:Float = width * skeletonOriginX;
         var diffY:Float = height * skeletonOriginY;
@@ -1042,7 +1058,7 @@ class Spine extends Visual {
             }
 
             boundSlot = null;
-            tintBlack = slot.data.darkColor != null || forceTintBlack;
+            tintBlack = slot.data.darkColor != null || useTintBlack;
             // /!\ TODO clipping
             vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
             if (tintBlack) vertexSize += 4;
