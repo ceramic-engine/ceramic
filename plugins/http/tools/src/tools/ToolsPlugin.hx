@@ -41,8 +41,8 @@ class ToolsPlugin {
             switch [backend, target] {
                 case [_, 'ios' | 'android' | 'windows' | 'mac' | 'linux']:
                     // Use akifox HTTP
-                    app.libs.push({ 'akifox-asynchttp': '0.4.7' });
-                    app.defines.akifox_asynchttp = '0.4.7';
+                    app.libs.push('akifox-asynchttp');
+                    app.defines.akifox_asynchttp = 'dev';
                 default:
             }
         }

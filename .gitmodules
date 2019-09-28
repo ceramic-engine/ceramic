@@ -57,3 +57,7 @@
 	path = git/haxe-binary
 	url = https://github.com/ceramic-engine/haxe-binary.git
 	branch = master
+[submodule "git/akifox-asynchttp"]
+	path = git/akifox-asynchttp
+	url = https://github.com/ceramic-engine/akifox-asynchttp.git
+	branch = master

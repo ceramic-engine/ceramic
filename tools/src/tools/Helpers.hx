@@ -334,7 +334,7 @@ class Helpers {
             haxelib(['install', 'bind', '0.4.2', '--always'], {cwd: cwd});
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
             haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
-            haxelib(['install', 'akifox-asynchttp', '0.4.7', '--always'], {cwd: cwd});
+            haxelib(['dev', 'akifox-asynchttp', Path.join([context.ceramicGitDepsPath, 'akifox-asynchttp']), '--always'], {cwd: cwd});
             haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
             haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always'], {cwd: cwd});
             haxelib(['dev', 'polyline', Path.join([context.ceramicGitDepsPath, 'polyline']), '--always'], {cwd: cwd});
