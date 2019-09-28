@@ -108,6 +108,7 @@ class ShaderAsset extends Asset {
 
                 this.shader = new Shader(backendItem, customAttributes);
                 this.shader.asset = this;
+                this.shader.id = 'shader:' + path;
                 status = READY;
                 emitComplete(true);
 
