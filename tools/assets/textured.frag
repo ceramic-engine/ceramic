@@ -11,7 +11,6 @@ uniform sampler2D tex0;
 
 varying vec2 tcoord;
 varying vec4 color;
-
 // ceramic: multiTexture/textureId
 
 void main() {

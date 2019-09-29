@@ -174,6 +174,12 @@ class Shaders implements spec.Shaders {
 
 /// Public API
 
+    inline public function canBatchWithMultipleTextures(shader:Shader):Bool {
+        
+        return (shader:backend.impl.CeramicShader).isBatchingMultiTexture;
+
+    } //canBatchWithMultipleTextures
+
     inline public function setInt(shader:Shader, name:String, value:Int):Void {
         
         (shader:phoenix.Shader).set_int(name, value);

@@ -187,6 +187,12 @@ class Textures implements spec.Textures {
 
     } //getTexturePixels
 
+    inline public function getTextureIndex(texture:Texture):Int {
+
+        return (texture:phoenix.Texture).index;
+
+    } //getTextureIndex
+
     inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
         switch (filter) {

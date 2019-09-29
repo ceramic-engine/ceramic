@@ -149,6 +149,8 @@ class Draw implements spec.Draw {
 
     var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
 
+    var activeTextureSlot:Int = 0;
+
     inline static var posAttribute:Int = 0;
     inline static var uvAttribute:Int = 1;
     inline static var colorAttribute:Int = 2;
@@ -170,10 +172,12 @@ class Draw implements spec.Draw {
     /** Number of floats in a single position. 3 = vec3, 4 = vec4 */
     inline static var numFloatsInPos:Int = 3;
 
-    inline public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {
+    #if !ceramic_debug_draw inline #end public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {
+
+        var useTextureIdAttribute = (activeShader != null && ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(activeShader));
 
         // vertexSize = number of bytes in a single vertex vertexSize = 4 = 4 times 1 byte = 4 bytes
-        var vertexSize:Int = numFloatsInPos;
+        var vertexSize:Int = numFloatsInPos + (useTextureIdAttribute ? 1 : 0);
         if (activeShader != null) {
             var allAttrs = activeShader.customAttributes;
             if (allAttrs != null) {
@@ -207,15 +211,34 @@ class Draw implements spec.Draw {
         GL.vertexAttribPointer(colorAttribute, 4, GL.FLOAT, false, 0, 0);
         GL.bufferData(GL.ARRAY_BUFFER, _colors, GL.STREAM_DRAW);
 
+        var offset = numFloatsInPos;
+        var n = colorAttribute + 1;
         var customGLBuffersLen:Int = 0;
+
+        if (useTextureIdAttribute) {
+
+            var b = GL.createBuffer();
+            customGLBuffers[customGLBuffersLen++] = b;
+
+            GL.enableVertexAttribArray(n);
+            GL.bindBuffer(GL.ARRAY_BUFFER, b);
+            GL.vertexAttribPointer(n, 1, GL.FLOAT, false, vertexSize * 4, offset * 4);
+            GL.bufferData(GL.ARRAY_BUFFER, _pos, GL.STREAM_DRAW);
+
+            n++;
+            offset++;
+
+        }
+
         if (activeShader != null && activeShader.customAttributes != null) {
 
-            var n = colorAttribute + 1;
-            var offset = numFloatsInPos;
             var allAttrs = activeShader.customAttributes;
-            customGLBuffersLen = allAttrs.length;
-            for (ii in 0...customGLBuffersLen) {
-                var attr = allAttrs.unsafeGet(ii);
+            var start = customGLBuffersLen;
+            var end = start+allAttrs.length;
+            customGLBuffersLen += allAttrs.length;
+            for (ii in start...end) {
+                var attrIndex = ii - start;
+                var attr = allAttrs.unsafeGet(attrIndex);
 
                 var b = GL.createBuffer();
                 customGLBuffers[ii] = b;
@@ -382,6 +405,7 @@ class Draw implements spec.Draw {
 
     inline public function setActiveTexture(slot:Int):Void {
 
+        activeTextureSlot = slot;
         luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
 
     } //setActiveTexture
@@ -398,11 +422,11 @@ class Draw implements spec.Draw {
 
     } //getTextureId
 
-    inline public function getTextureSlot(backendItem:backend.Texture):Int {
+    /*inline public function getTextureSlot(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).slot;
 
-    } //getTextureSlot
+    } //getTextureSlot*/
 
     inline public function getTextureWidth(backendItem:backend.Texture):Int {
 
@@ -430,7 +454,8 @@ class Draw implements spec.Draw {
 
     inline public function bindTexture(backendItem:backend.Texture):Void {
 
-        return (backendItem : phoenix.Texture).bind();
+        (backendItem : phoenix.Texture).slot = activeTextureSlot;
+        (backendItem : phoenix.Texture).bind();
 
     } //getTextureHeightActual
 

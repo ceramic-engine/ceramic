@@ -3,12 +3,10 @@
 attribute vec3 vertexPosition;
 attribute vec2 vertexTCoord;
 attribute vec4 vertexColor;
-
 // ceramic: multiTexture/vertexTextureId
 
 varying vec2 tcoord;
 varying vec4 color;
-
 // ceramic: multiTexture/textureId
 
 uniform mat4 projectionMatrix;
