@@ -12,17 +12,9 @@ class Shaders implements spec.Shaders {
 
     inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
 
-        var shader = new backend.impl.CeramicShader({
-            id: ceramic.Utils.uniqueId(),
-            vert_id: null,
-            frag_id: null
-        });
-
-        shader.customAttributes = customAttributes;
-
         var isMultiTextureTemplate = false;
         for (line in fragSource.split('\n')) {
-            if (line.trim().replace(' ', '') == '//ceramic:multiTexture') {
+            if (line.trim().replace(' ', '').toLowerCase() == '//ceramic:multitexture') {
                 isMultiTextureTemplate = true;
                 break;
             }
@@ -31,8 +23,18 @@ class Shaders implements spec.Shaders {
         if (isMultiTextureTemplate) {
             var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
             var maxIfs = maxIfStatementsByFragmentShader();
-            fragSource = processMultiTextureTemplate(fragSource, maxTextures, maxIfs);
+            fragSource = processMultiTextureFragTemplate(fragSource, maxTextures, maxIfs);
+            vertSource = processMultiTextureVertTemplate(vertSource, maxTextures, maxIfs);
         }
+
+        var shader = new backend.impl.CeramicShader({
+            id: ceramic.Utils.uniqueId(),
+            vert_id: null,
+            frag_id: null
+        });
+
+        shader.isBatchingMultiTexture = isMultiTextureTemplate;
+        shader.customAttributes = customAttributes;
 
         if (!shader.from_string(vertSource, fragSource)) {
             return null;
@@ -42,15 +44,110 @@ class Shaders implements spec.Shaders {
 
     } //fromSource
 
-    static function processMultiTextureTemplate(fragSource:String, maxTextures:Int, maxIfs:Int):String {
+    static function processMultiTextureVertTemplate(vertSource:String, maxTextures:Int, maxIfs:Int):String {
+
+        var lines = vertSource.split('\n');
+        var newLines:Array<String> = [];
+
+        for (i in 0...lines.length) {
+            var line = lines[i];
+            var cleanedLine = line.trim().replace(' ', '').toLowerCase();
+            if (cleanedLine == '//ceramic:multitexture/vertextextureid') {
+                newLines.push('attribute float vertexTextureId;');
+            }
+            else if (cleanedLine == '//ceramic:multitexture/textureid') {
+                newLines.push('varying float textureId;');
+            }
+            else if (cleanedLine == '//ceramic:multitexture/assigntextureid') {
+                newLines.push('textureId = vertexTextureId;');
+            }
+            else {
+                newLines.push(line);
+            }
+        }
+
+        return newLines.join('\n');
+
+    } //processMultiTextureVertTemplate
+
+    static function processMultiTextureFragTemplate(fragSource:String, maxTextures:Int, maxIfs:Int):String {
 
         var maxConditions = Std.int(Math.min(maxTextures, maxIfs));
 
-        // TODO
+        var lines = fragSource.split('\n');
+        var newLines:Array<String> = [];
 
-        return fragSource; // TODO
+        var nextLineIsTextureUniform = false;
+        var inConditionBody = false;
+        var conditionLines:Array<String> = [];
+
+        for (i in 0...lines.length) {
+            var line = lines[i];
+            var cleanedLine = line.trim().replace(' ', '').toLowerCase();
+            if (nextLineIsTextureUniform) {
+                nextLineIsTextureUniform = false;
+                for (n in 0...maxConditions) {
+                    if (n == 0) {
+                        newLines.push(line);
+                    }
+                    else {
+                        newLines.push(line.replace('tex0', 'tex' + n));
+                    }
+                }
+            }
+            else if (inConditionBody) {
+                if (cleanedLine == '//ceramic:multitexture/endif') {
+                    inConditionBody = false;
+                    if (conditionLines.length > 0) {
+                        for (n in 0...maxConditions) {
+                            var _n = (n + 1) % maxConditions;
+
+                            if (_n == 1) {
+                                newLines.push('if (textureId == 1.0) {');
+                            }
+                            else if (_n == 0) {
+                                newLines.push('else {');
+                            }
+                            else {
+                                newLines.push('else if (textureId == ' + _n + '.0) {');
+                            }
+
+                            for (l in 0...conditionLines.length) {
+                                if (_n == 0) {
+                                    newLines.push(conditionLines[l]);
+                                }
+                                else {
+                                    newLines.push(conditionLines[l].replace('tex0', 'tex' + _n));
+                                }
+                            }
+
+                            newLines.push('}');
+                        }
+                    }
+                }
+                else {
+                    conditionLines.push(line);
+                }
+            }
+            else if (cleanedLine.startsWith('//ceramic:multitexture')) {
+                if (cleanedLine == '//ceramic:multitexture/texture') {
+                    nextLineIsTextureUniform = true;
+                }
+                else if (cleanedLine == '//ceramic:multitexture/textureid') {
+                    newLines.push('varying float textureId;');
+                }
+                else if (cleanedLine == '//ceramic:multitexture/if') {
+                    inConditionBody = true;
+                }
+            }
+            else {
+                newLines.push(line);
+            }
+        }
+
+        return newLines.join('\n');
         
-    } //processMultiTextureTemplate
+    } //processMultiTextureFragTemplate
 
     inline public function destroy(shader:Shader):Void {
 

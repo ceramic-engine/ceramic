@@ -8,24 +8,30 @@ class CeramicShader extends phoenix.Shader {
 
     public var customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute> = null;
 
+    public var isBatchingMultiTexture:Bool = false;
+
     override public function link():Bool {
 
         program = GL.createProgram();
+        var n = 0;
 
         GL.attachShader(program, vert_shader);
         GL.attachShader(program, frag_shader);
 
         // Now we want to ensure that our locations are static
-        GL.bindAttribLocation(program, Batcher.vert_attribute, 'vertexPosition');
-        GL.bindAttribLocation(program, Batcher.tcoord_attribute, 'vertexTCoord');
-        GL.bindAttribLocation(program, Batcher.color_attribute, 'vertexColor');
+        GL.bindAttribLocation(program, n++, 'vertexPosition');
+        GL.bindAttribLocation(program, n++, 'vertexTCoord');
+        GL.bindAttribLocation(program, n++, 'vertexColor');
+
+        // In case this shader has been transformed to handle multi-texture batches
+        if (isBatchingMultiTexture) {
+            GL.bindAttribLocation(program, n++, 'vertexTextureId');
+        }
 
         // Custom attributes from ceramic
         if (customAttributes != null) {
-            var n = Batcher.color_attribute + 1;
             for (attr in customAttributes) {
-                GL.bindAttribLocation(program, n, attr.name);
-                n++;
+                GL.bindAttribLocation(program, n++, attr.name);
             }
         }
 
