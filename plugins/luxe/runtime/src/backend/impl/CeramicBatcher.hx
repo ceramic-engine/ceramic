@@ -13,7 +13,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
     override function batch(persist_immediate:Bool = false) {
 
-        if (ceramic.App.app.defaultColorShader == null) return;
+        if (ceramic.App.app.defaultTexturedShader == null) return;
 
         ceramicRenderer.render(isMainRender, ceramicVisuals);
 
