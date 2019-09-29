@@ -100,6 +100,30 @@ class Shaders implements spec.Shaders {
                     inConditionBody = false;
                     if (conditionLines.length > 0) {
                         for (n in 0...maxConditions) {
+
+                            if (n == 0) {
+                                newLines.push('if (textureId < 0.5) {');
+                            }
+                            else if (n == maxConditions - 1) {
+                                newLines.push('else {');
+                            }
+                            else {
+                                newLines.push('else if (textureId < ' + n + '.5) {');
+                            }
+
+                            for (l in 0...conditionLines.length) {
+                                if (n == 0) {
+                                    newLines.push(conditionLines[l]);
+                                }
+                                else {
+                                    newLines.push(conditionLines[l].replace('tex0', 'tex' + n));
+                                }
+                            }
+
+                            newLines.push('}');
+                        }
+
+                        /*for (n in 0...maxConditions) {
                             var _n = (n + 1) % maxConditions;
 
                             if (_n == 1) {
@@ -122,7 +146,7 @@ class Shaders implements spec.Shaders {
                             }
 
                             newLines.push('}');
-                        }
+                        }*/
                     }
                 }
                 else {

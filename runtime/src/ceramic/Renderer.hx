@@ -147,8 +147,8 @@ class Renderer extends Entity {
         draw.beginRender();
 
         // Initialize default state
-        draw.setActiveTexture(usedTextures);
-        activeTextureSlot = usedTextures;
+        draw.setActiveTexture(0);
+        activeTextureSlot = 0;
         draw.setRenderTarget(null);
         draw.enableBlending();
         useShader(draw, defaultPlainShader);
@@ -219,6 +219,7 @@ class Renderer extends Entity {
 
                                 // Next things to be drawn will be clipped
                                 flush(draw);
+                                unbindUsedTextures(draw);
 
                                 draw.endDrawingInStencilBuffer();
                                 draw.drawWithStencilTest();
@@ -227,6 +228,7 @@ class Renderer extends Entity {
 
                                 // Clipping gets disabled
                                 flush(draw);
+                                unbindUsedTextures(draw);
                                 
                                 draw.drawWithoutStencilTest();
                             }
@@ -248,6 +250,7 @@ class Renderer extends Entity {
             }
 
             flush(draw);
+            unbindUsedTextures(draw);
         }
 
 #if ceramic_debug_draw
@@ -319,6 +322,25 @@ class Renderer extends Entity {
 
     } //useRenderTarget
 
+    inline function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        if (texture != null) {
+            usedTextures = 1;
+            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
+            usedTextureIndexes[0] = textureIndex;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, texture);
+        }
+        else {
+            usedTextures = 0;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, null);
+        }
+
+    } //useFirstTextureInBatch
+
     inline function useTexture(draw:backend.Draw, texture:ceramic.Texture):Void {
 
         if (texture != null) {
@@ -338,12 +360,40 @@ class Renderer extends Entity {
 
     } //useTexture
 
-    inline function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
+    #if !ceramic_debug_draw inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
 
-        var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-        var result = false;
+        var canKeepSameState = false;
 
-        if (activeShaderCanBatchMultipleTextures) {
+        if (usedTextures > 0) {
+            if (activeShaderCanBatchMultipleTextures && texture != null) {
+
+                var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
+
+                for (slot in 0...usedTextures) {
+                    if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
+                        // Texture already used in batch, all good
+                        canKeepSameState = true;
+                        break;
+                    }
+                }
+
+                if (!canKeepSameState && usedTextures < maxUsableTexturesInBatch) {
+                    canKeepSameState = true;
+                }
+            }
+        }
+
+        return canKeepSameState;
+
+    } //canUseTextureInSameBatch
+
+    #if !ceramic_debug_draw inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        var alreadyUsed = false;
+
+        if (activeShaderCanBatchMultipleTextures && texture != null) {
+
+            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
 
             for (slot in 0...usedTextures) {
                 if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
@@ -351,34 +401,32 @@ class Renderer extends Entity {
                     draw.setActiveTexture(slot);
                     activeTextureSlot = slot;
                     useTexture(draw, texture);
-                    result = true;
+                    alreadyUsed = true;
                     break;
                 }
             }
 
-            if (!result && usedTextures < maxUsableTexturesInBatch) {
+            if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
                 var slot = usedTextures++;
                 usedTextureIndexes[slot] = textureIndex;
                 draw.setActiveTexture(slot);
                 activeTextureSlot = slot;
                 useTexture(draw, texture);
-                result = true;
             }
         }
-
-        return result;
 
     } //useTextureInSameBatch
 
     inline function unbindUsedTextures(draw:backend.Draw):Void {
 
         while (usedTextures > 0) {
+            usedTextures--;
             draw.setActiveTexture(usedTextures);
             draw.bindNoTexture();
-            usedTextures--;
         }
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
+        useTexture(draw, null);
 
     } //unbindUsedTextures
 
@@ -398,7 +446,7 @@ class Renderer extends Entity {
             }
 
             unbindUsedTextures(draw);
-            useTexture(draw, null);
+            useFirstTextureInBatch(draw, null);
 
             // Default blending
             draw.setBlendFuncSeparate(
@@ -416,6 +464,7 @@ class Renderer extends Entity {
         }
         else {
             // Check if state is dirty
+            var textureToUseInSameBatch = null;
             if (!stateDirty) {
                 stateDirty =
                     quad.shader != lastShader ||
@@ -434,12 +483,21 @@ class Renderer extends Entity {
                             // Different ceramic textures could use the same backend texture
                             if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
                                 // We could use multiple texture in same batch
-                                if (!useTextureInSameBatch(draw, quad.texture)) {
+                                if (!canUseTextureInSameBatch(draw, quad.texture)) {
                                     stateDirty = true;
+                                }
+                                else {
+                                    textureToUseInSameBatch = quad.texture;
                                 }
                             }
                         } else {
-                            stateDirty = true;
+                            // We could use multiple texture in same batch
+                            if (!canUseTextureInSameBatch(draw, quad.texture)) {
+                                stateDirty = true;
+                            }
+                            else {
+                                textureToUseInSameBatch = quad.texture;
+                            }
                         }
                     }
                 }
@@ -453,7 +511,7 @@ class Renderer extends Entity {
                 if (quad.texture != lastTexture) {
                     if (quad.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
-                            useTexture(draw, quad.texture);
+                            useFirstTextureInBatch(draw, quad.texture);
                         }
                     } else {
                         if (quad.texture != null) {
@@ -461,13 +519,13 @@ class Renderer extends Entity {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
                             }
-                            useTexture(draw, quad.texture);
+                            useFirstTextureInBatch(draw, quad.texture);
                         } else {
                             if (lastShader == null && quad.shader == null) {
                                 // Default plain shader fallback
                                 useShader(draw, defaultPlainShader);
                             }
-                            useTexture(draw, null);
+                            useFirstTextureInBatch(draw, null);
                         }
                     }
                 }
@@ -516,6 +574,11 @@ class Renderer extends Entity {
 
                 stateDirty = false;
             }
+            else {
+                if (textureToUseInSameBatch != null) {
+                    useTextureInSameBatch(draw, textureToUseInSameBatch);
+                }
+            }
         }
 
         // Update num vertices
@@ -525,6 +588,7 @@ class Renderer extends Entity {
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
             flush(draw);
+            unbindUsedTextures(draw);
         }
 
         var w:Float;
@@ -550,6 +614,12 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var posFloats:Int = this.posFloats;
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+
+#if ceramic_debug_draw
+        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+            warning('* drawQuad() slot=$textureSlot texture=${quad.texture}');
+        }
+#end
 
         // Let backend know we will start sending quad data
         draw.beginDrawQuad(quad);
@@ -814,7 +884,7 @@ class Renderer extends Entity {
             }
 
             unbindUsedTextures(draw);
-            useTexture(draw, null);
+            useFirstTextureInBatch(draw, null);
 
             // Default blending
             draw.setBlendFuncSeparate(
@@ -832,6 +902,7 @@ class Renderer extends Entity {
         }
         else {
             // Check if state is dirty
+            var textureToUseInSameBatch = null;
             if (!stateDirty) {
                 stateDirty =
                     mesh.shader != lastShader ||
@@ -850,12 +921,21 @@ class Renderer extends Entity {
                             // Different ceramic textures could use the same backend texture
                             if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
                                 // We could use multiple texture in same batch
-                                if (!useTextureInSameBatch(draw, mesh.texture)) {
+                                if (!canUseTextureInSameBatch(draw, mesh.texture)) {
                                     stateDirty = true;
+                                }
+                                else {
+                                    textureToUseInSameBatch = mesh.texture;
                                 }
                             }
                         } else {
-                            stateDirty = true;
+                            // We could use multiple texture in same batch
+                            if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+                                stateDirty = true;
+                            }
+                            else {
+                                textureToUseInSameBatch = mesh.texture;
+                            }
                         }
                     }
                 }
@@ -869,7 +949,7 @@ class Renderer extends Entity {
                 if (mesh.texture != lastTexture) {
                     if (mesh.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
-                            useTexture(draw, mesh.texture);
+                            useFirstTextureInBatch(draw, mesh.texture);
                         }
                     } else {
                         if (mesh.texture != null) {
@@ -877,13 +957,13 @@ class Renderer extends Entity {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
                             }
-                            useTexture(draw, mesh.texture);
+                            useFirstTextureInBatch(draw, mesh.texture);
                         } else {
                             if (lastShader == null && mesh.shader == null) {
                                 // Default plain shader fallback
                                 useShader(draw, defaultPlainShader);
                             }
-                            useTexture(draw, null);
+                            useFirstTextureInBatch(draw, null);
                         }
                     }
                 }
@@ -932,6 +1012,11 @@ class Renderer extends Entity {
 
                 stateDirty = false;
             }
+            else {
+                if (textureToUseInSameBatch != null) {
+                    useTextureInSameBatch(draw, textureToUseInSameBatch);
+                }
+            }
         }
 
         // Fetch matrix
@@ -944,6 +1029,12 @@ class Renderer extends Entity {
         var matTY:Float = mesh.matTY;
         var z:Float = this.z;
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+
+#if ceramic_debug_draw
+        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+            warning('* drawMesh() slot=$textureSlot texture=${mesh.texture}');
+        }
+#end
 
         // Color
         var meshColors = mesh.colors;
@@ -985,6 +1076,7 @@ class Renderer extends Entity {
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
             flush(draw);
+            unbindUsedTextures(draw);
         }
 
         // Actual texture size may differ from its logical one.
