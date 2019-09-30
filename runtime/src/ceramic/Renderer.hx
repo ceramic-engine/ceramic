@@ -639,6 +639,7 @@ class Renderer extends Entity {
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
         var posFloats:Int = this.posFloats;
+        var posList = draw.getPosList();
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
 #if ceramic_debug_draw
@@ -655,129 +656,183 @@ class Renderer extends Entity {
         if (customFloatAttributesSize == 0) {
 
             //tl
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             //tr
-            draw.putInPosList(posFloats++, matTX + matA * w);
-            draw.putInPosList(posFloats++, matTY + matB * w);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX + matA * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
 
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
             //br
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             //bl
-            draw.putInPosList(posFloats++, matTX + matC * h);
-            draw.putInPosList(posFloats++, matTY + matD * h);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX + matC * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matD * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             //tl2
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             //br2
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
         }
         else {
 
             //tl
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //tr
-            draw.putInPosList(posFloats++, matTX + matA * w);
-            draw.putInPosList(posFloats++, matTY + matB * w);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX + matA * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
 
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
             //br
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //bl
-            draw.putInPosList(posFloats++, matTX + matC * h);
-            draw.putInPosList(posFloats++, matTY + matD * h);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX + matC * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matD * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //tl2
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //br2
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
         }
 
@@ -1102,6 +1157,7 @@ class Renderer extends Entity {
         // Update num vertices
         var visualNumVertices = meshIndices.length;
         var posFloats = this.posFloats;
+        var posList = draw.getPosList();
         var customFloatAttributesSize = this.customFloatAttributesSize;
         var countAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
 
@@ -1138,19 +1194,24 @@ class Renderer extends Entity {
             var x = meshVertices.unsafeGet(l++);
             var y = meshVertices.unsafeGet(l++);
 
-            draw.putInPosList(posFloats++, matTX + matA * x + matC * y);
-            draw.putInPosList(posFloats++, matTY + matB * x + matD * y);
-            draw.putInPosList(posFloats++, z);
+            draw.putInPosList(posList, posFloats, matTX + matA * x + matC * y);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * x + matD * y);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posFloats++, textureSlot);
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
             }
-            //draw.putInPosList(posFloats++, 0);
+            //draw.putInPosList(posList, posFloats, 0);
 
             // Custom (float) attributes
             //
             if (customFloatAttributesSize != 0) {
                 for (n in 0...customFloatAttributesSize) {
-                    draw.putInPosList(posFloats++, meshVertices.unsafeGet(l++));
+                    draw.putInPosList(posList, posFloats, meshVertices.unsafeGet(l++));
+                    posFloats++;
                 }
             }
 

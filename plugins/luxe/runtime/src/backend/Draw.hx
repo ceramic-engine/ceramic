@@ -475,11 +475,35 @@ class Draw implements spec.Draw {
 
     } //renderWireframe
 
-    inline public function putInPosList(index:Int, value:Float):Void {
+    #if cpp
+
+    inline public function getPosList():snow.api.buffers.ArrayBuffer {
+
+        return (posList:snow.api.buffers.ArrayBufferView).buffer;
+
+    } //getPosList
+
+    inline public function putInPosList(buffer:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
+
+        snow.api.buffers.ArrayBufferIO.setFloat32(buffer, (index*Float32Array.BYTES_PER_ELEMENT), value);
+
+    } //putInPosList
+
+    #else
+
+    inline public function getPosList():Float32Array {
+
+        return posList;
+
+    } //getPosList
+
+    inline public function putInPosList(posList:Float32Array, index:Int, value:Float):Void {
 
         posList[index] = value;
 
     } //putInPosList
+
+    #end
 
     inline public function putInUvList(index:Int, value:Float):Void {
 
