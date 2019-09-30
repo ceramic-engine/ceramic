@@ -320,11 +320,10 @@ class Renderer extends Entity {
     inline function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
 
         if (renderTarget != null) {
-            draw.useRenderTarget(renderTarget.backendItem);
-            if (renderTarget.clearOnRender) draw.clear();
+            draw.setRenderTarget(renderTarget);
         }
         else {
-            draw.useRenderTarget(null);
+            draw.setRenderTarget(null);
         }
 
     } //useRenderTarget

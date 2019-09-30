@@ -123,6 +123,8 @@ class Draw implements spec.Draw {
 
     var transparentColor = new phoenix.Color(1.0, 1.0, 1.0, 0.0);
 
+    var blackTransparentColor = new phoenix.Color(0.0, 0.0, 0.0, 0.0);
+
     var view:phoenix.Camera;
 
     var defaultTransformScaleX:Float;
@@ -304,6 +306,7 @@ class Draw implements spec.Draw {
     inline public function setRenderTarget(renderTarget:ceramic.RenderTexture):Void {
 
         if (currentRenderTarget != renderTarget) {
+            currentRenderTarget = renderTarget;
             if (renderTarget != null) {
                 var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
                 luxeRenderer.target = renderTexture;
@@ -311,7 +314,7 @@ class Draw implements spec.Draw {
                 view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                 view.process();
                 GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+                if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);//transparentColor);
             } else {
                 luxeRenderer.target = null;
                 view.transform.scale.x = defaultTransformScaleX;
@@ -322,7 +325,7 @@ class Draw implements spec.Draw {
             }
         }
 
-    } //computeRenderTarget
+    } //setRenderTarget
 
     inline public function useShader(shader:backend.impl.CeramicShader):Void {
 
@@ -353,7 +356,7 @@ class Draw implements spec.Draw {
 
     } //shaderCustomFloatAttributesSize
 
-    inline public function useRenderTarget(renderTarget:backend.Texture):Void {
+    /*inline public function useRenderTarget(renderTarget:backend.Texture):Void {
 
         if (renderTarget != null) {
             var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget;
@@ -372,11 +375,11 @@ class Draw implements spec.Draw {
             luxeRenderer.state.viewport(view.viewport.x, view.viewport.y, view.viewport.w, view.viewport.h);
         }
 
-    } //useRenderTarget
+    } //useRenderTarget*/
 
     inline public function clear():Void {
 
-        Luxe.renderer.clear(transparentColor);
+        Luxe.renderer.clear(blackTransparentColor);
 
     } //clear
 
