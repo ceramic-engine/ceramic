@@ -202,6 +202,7 @@ class Renderer extends Entity {
                                 // Update stencil buffer
                                 flush(draw);
                                 unbindUsedTextures(draw);
+                                stateDirty = true;
 
                                 draw.beginDrawingInStencilBuffer();
 
@@ -223,6 +224,7 @@ class Renderer extends Entity {
                                 // Next things to be drawn will be clipped
                                 flush(draw);
                                 unbindUsedTextures(draw);
+                                stateDirty = true;
 
                                 draw.endDrawingInStencilBuffer();
                                 draw.drawWithStencilTest();
@@ -232,6 +234,7 @@ class Renderer extends Entity {
                                 // Clipping gets disabled
                                 flush(draw);
                                 unbindUsedTextures(draw);
+                                stateDirty = true;
                                 
                                 draw.drawWithoutStencilTest();
                             }
@@ -254,6 +257,7 @@ class Renderer extends Entity {
 
             flush(draw);
             unbindUsedTextures(draw);
+            stateDirty = true;
         }
 
 #if ceramic_debug_draw
@@ -455,7 +459,7 @@ class Renderer extends Entity {
 
             // No texture
             lastShader = null;
-            useShader(draw, lastShader != null ? lastShader.backendItem : null);
+            useShader(draw, null);
             unbindUsedTextures(draw);
             useFirstTextureInBatch(draw, null);
 
@@ -471,6 +475,8 @@ class Renderer extends Entity {
             stateDirty = false;
 
             // No render target when writing to stencil buffer
+            //draw.setRenderTarget(lastRenderTarget);
+            lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
         }
         else {
@@ -916,6 +922,7 @@ class Renderer extends Entity {
             stateDirty = false;
 
             // No render target when writing to stencil buffer
+            lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
         }
         else {
