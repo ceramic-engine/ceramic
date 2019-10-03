@@ -489,6 +489,30 @@ class Draw implements spec.Draw {
 
     } //putInPosList
 
+    inline public function getUvList():snow.api.buffers.ArrayBuffer {
+
+        return (uvList:snow.api.buffers.ArrayBufferView).buffer;
+
+    } //getUvList
+
+    inline public function putInUvList(uvList:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
+
+        snow.api.buffers.ArrayBufferIO.setFloat32(uvList, (index*Float32Array.BYTES_PER_ELEMENT), value);
+
+    } //putInUvList
+
+    inline public function getColorList():snow.api.buffers.ArrayBuffer {
+
+        return (colorList:snow.api.buffers.ArrayBufferView).buffer;
+
+    } //getColorList
+
+    inline public function putInColorList(colorList:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
+
+        snow.api.buffers.ArrayBufferIO.setFloat32(colorList, (index*Float32Array.BYTES_PER_ELEMENT), value);
+
+    } //putInColorList
+
     #else
 
     inline public function getPosList():Float32Array {
@@ -503,19 +527,31 @@ class Draw implements spec.Draw {
 
     } //putInPosList
 
-    #end
+    inline public function getUvList():Float32Array {
 
-    inline public function putInUvList(index:Int, value:Float):Void {
+        return uvList;
+
+    } //getUvList
+
+    inline public function putInUvList(uvList:Float32Array, index:Int, value:Float):Void {
 
         uvList[index] = value;
 
     } //putInUvList
 
-    inline public function putInColorList(index:Int, value:Float):Void {
+    inline public function getColorList():Float32Array {
+
+        return colorList;
+
+    } //getColorList
+
+    inline public function putInColorList(colorList:Float32Array, index:Int, value:Float):Void {
 
         colorList[index] = value;
 
     } //putInColorList
+
+    #end
 
     inline public function beginDrawQuad(quad:ceramic.Quad):Void {
 

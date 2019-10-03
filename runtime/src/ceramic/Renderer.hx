@@ -641,6 +641,7 @@ class Renderer extends Entity {
         var posFloats:Int = this.posFloats;
         var posList = draw.getPosList();
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var customFloatAttributesSize = this.customFloatAttributesSize;
 
 #if ceramic_debug_draw
         if (debugDraw && activeShaderCanBatchMultipleTextures) {
@@ -865,41 +866,69 @@ class Renderer extends Entity {
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
             }
 
+            var uvList = draw.getUvList();
+
             //tl
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //tr
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //br
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //bl
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //tl2
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //br2
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
 
         } else {
+            var uvList = draw.getUvList();
             var i = 0;
             while (i++ < 24) {
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
             }
         }
 
@@ -926,13 +955,18 @@ class Renderer extends Entity {
         }
 
         var colorFloats = this.colorFloats; 
+        var colorList = draw.getColorList();
 
         var i = 0;
         while (i < 24) {
-            draw.putInColorList(colorFloats++, r);
-            draw.putInColorList(colorFloats++, g);
-            draw.putInColorList(colorFloats++, b);
-            draw.putInColorList(colorFloats++, a);
+            draw.putInColorList(colorList, colorFloats, r);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, g);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, b);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, a);
+            colorFloats++;
             i += 4;
         }
 
@@ -1182,6 +1216,9 @@ class Renderer extends Entity {
         var uvFloats = this.uvFloats;
         var colorFloats = this.colorFloats; 
 
+        var uvList = draw.getUvList();
+        var colorList = draw.getColorList();
+
         var i = 0;
         while (i < visualNumVertices) {
 
@@ -1220,10 +1257,14 @@ class Renderer extends Entity {
             if (texture != null) {
                 var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
                 var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                draw.putInUvList(uvFloats++, uvX);
-                draw.putInUvList(uvFloats++, uvY);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, uvX);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, uvY);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
             }
 
             // Color
@@ -1237,26 +1278,35 @@ class Renderer extends Entity {
                 var b = meshAlphaColor.blueFloat * a;
                 if (mesh.blending == ceramic.Blending.ADD) a = 0;
 
-                draw.putInColorList(colorFloats++, r);
-                draw.putInColorList(colorFloats++, g);
-                draw.putInColorList(colorFloats++, b);
-                draw.putInColorList(colorFloats++, a);
+                draw.putInColorList(colorList, colorFloats, r);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, g);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, b);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, a);
+                colorFloats++;
             }
 
             i++;
         }
 
         this.posFloats = posFloats;
+        var uvList = draw.getUvList();
 
         // No texture, all uvs to zero
         //
         if (texture == null) {
             i = 0;
             while (i < visualNumVertices) {
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
                 i++;
             }
         }
@@ -1286,12 +1336,17 @@ class Renderer extends Entity {
                 if (mesh.blending == ceramic.Blending.ADD) a = 0;
             }
 
+            var colorList = draw.getColorList();
             i = 0;
             while (i < visualNumVertices) {
-                draw.putInColorList(colorFloats++, r);
-                draw.putInColorList(colorFloats++, g);
-                draw.putInColorList(colorFloats++, b);
-                draw.putInColorList(colorFloats++, a);
+                draw.putInColorList(colorList, colorFloats, r);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, g);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, b);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, a);
+                colorFloats++;
                 i++;
             }
         }
