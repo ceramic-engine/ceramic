@@ -47,6 +47,7 @@ class HaxeServer extends tools.Task {
         });
 
         print('Start Haxe compilation server on port $port');
+        haxe(['--version']);
 
         // Keep a file updated in home directory to let other ceramic scripts detect
         // that a haxe server is running
