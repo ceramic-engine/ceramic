@@ -152,7 +152,7 @@ class Main extends luxe.Game {
         }
 
         var containerElId:String = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
-        if (app.settings.resizable) {
+        //if (app.settings.resizable) {
 
             var containerWidth:Int = 0;
             var containerHeight:Int = 0;
@@ -225,7 +225,7 @@ class Main extends luxe.Game {
                 }
             });
 
-        }
+        //}
 
         // Are we running from ceramic/electron runner
         if (electronRunner != null) {
