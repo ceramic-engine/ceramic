@@ -607,6 +607,7 @@ class Renderer extends Entity {
         }
 
         // Update num vertices
+        var posFloats = this.posFloats;
         var visualNumVertices = 6;
         var countAfter = posFloats + visualNumVertices * 4;
 
@@ -616,6 +617,7 @@ class Renderer extends Entity {
             flush(draw);
             unbindUsedTextures(draw);
             useFirstTextureInBatch(draw, textureBeforeFlush);
+            posFloats = this.posFloats;
         }
 
         var w:Float;
@@ -639,12 +641,11 @@ class Renderer extends Entity {
         var matTX:Float = quad.matTX;
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
-        var posFloats:Int = this.posFloats;
         var posList = draw.getPosList();
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
         var customFloatAttributesSize = this.customFloatAttributesSize;
 
-#if ceramic_debug_draw
+#if (ceramic_debug_draw && ceramic_debug_multitexture)
         if (debugDraw && activeShaderCanBatchMultipleTextures) {
             warning('* drawQuad() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
@@ -1152,7 +1153,7 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
-#if ceramic_debug_draw
+#if (ceramic_debug_draw && ceramic_debug_multitexture)
         if (debugDraw && activeShaderCanBatchMultipleTextures) {
             warning('* drawMesh() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
@@ -1202,6 +1203,7 @@ class Renderer extends Entity {
             flush(draw);
             unbindUsedTextures(draw);
             useFirstTextureInBatch(draw, textureBeforeFlush);
+            posFloats = this.posFloats;
         }
 
         // Actual texture size may differ from its logical one.
