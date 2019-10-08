@@ -738,7 +738,7 @@ class View extends Quad {
         _layoutRequested = true;
         app.onceImmediate(function() {
             _layoutRequested = false;
-            _updateViewsLayout(0);
+            _updateViewsLayout(0.0);
         });
 
     } //requestLayout
