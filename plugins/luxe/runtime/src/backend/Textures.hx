@@ -187,6 +187,12 @@ class Textures implements spec.Textures {
 
     } //getTexturePixels
 
+    inline public function getTextureIndex(texture:Texture):Int {
+
+        return (texture:phoenix.Texture).index;
+
+    } //getTextureIndex
+
     inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
         switch (filter) {
@@ -213,7 +219,7 @@ class Textures implements spec.Textures {
         GL.glClear(0);
     } //importGlHeaders
 
-    inline function computeMaxTextureSizeIfNeeded() {
+    inline static function computeMaxTextureSizeIfNeeded() {
 
         if (_maxTextureWidth == -1) {
             var maxSize:Array<Int> = [0];
@@ -248,15 +254,15 @@ class Textures implements spec.Textures {
 
     } //maxTextureHeight
 
-    inline function computeMaxTexturesByBatchIfNeeded() {
+    inline static function computeMaxTexturesByBatchIfNeeded() {
 
         if (_maxTexturesByBatch == -1) {
             #if cpp
             var maxUnits:Array<Int> = [0];
             GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, maxUnits);
-            _maxTexturesByBatch = maxUnits[0];
+            _maxTexturesByBatch = Std.int(Math.min(32, maxUnits[0]));
             #else
-            _maxTexturesByBatch = GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS);
+            _maxTexturesByBatch = Std.int(Math.min(32, GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)));
             #end
         }
 

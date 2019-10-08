@@ -24,20 +24,21 @@ class Renderer extends Entity {
 
     var lastTexture:ceramic.Texture = null;
     var lastTextureId:backend.TextureId = backend.TextureId.DEFAULT;
-    var lastTextureSlot:Int = 0;
     var lastShader:ceramic.Shader = null;
     var lastRenderTarget:ceramic.RenderTexture = null;
     var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
     var lastClip:ceramic.Visual = null;
+    var activeTextureSlot:Int = 0;
 
     var texWidth:Int = 0;
     var texHeight:Int = 0;
     var texWidthActual:Int = 0;
     var texHeightActual:Int = 0;
 
-    var defaultPlainShader:backend.Shader = null;
+    //var defaultPlainShader:backend.Shader = null;
     var defaultTexturedShader:backend.Shader = null;
+    var defaultWhiteTexture:ceramic.Texture = null;
 
     var maxVertFloats:Int = 0;
 
@@ -47,6 +48,11 @@ class Renderer extends Entity {
     var stateDirty:Bool = true;
 
     var z:Float = 0;
+
+    var usedTextureIndexes:Array<Int> = [];
+    var usedTextures:Int = 0;
+    var maxUsableTexturesInBatch:Int = -1;
+    var activeShaderCanBatchMultipleTextures:Bool = false;
 
 #if ceramic_debug_draw
     var lastDebugTime:Float = -1;
@@ -67,8 +73,14 @@ class Renderer extends Entity {
 
         var draw = app.backend.draw;
 
-        defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
+        //defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
         defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
+        defaultWhiteTexture = ceramic.App.app.defaultWhiteTexture;
+        
+        maxUsableTexturesInBatch = Std.int(Math.min(
+            app.backend.textures.maxTexturesByBatch(),
+            app.backend.shaders.maxIfStatementsByFragmentShader()
+        ));
 
 #if ceramic_debug_draw
         if (isMainRender) {
@@ -102,12 +114,12 @@ class Renderer extends Entity {
 
         lastTexture = null;
         lastTextureId = backend.TextureId.DEFAULT;
-        lastTextureSlot = 0;
         lastShader = null;
         lastRenderTarget = null;
         lastBlending = ceramic.Blending.NORMAL;
         lastComputedBlending = ceramic.Blending.NORMAL;
         lastClip = null;
+        usedTextures = 0;
 
         texWidth = 0;
         texHeight = 0;
@@ -122,7 +134,7 @@ class Renderer extends Entity {
         z = 0;
         stateDirty = true;
 
-        var defaultPlainShader:backend.Shader = ceramic.App.app.defaultColorShader.backendItem;
+        //var defaultPlainShader:backend.Shader = ceramic.App.app.defaultColorShader.backendItem;
         var defaultTexturedShader:backend.Shader = ceramic.App.app.defaultTexturedShader.backendItem;
 
         // Mark auto-rendering render textures as dirty
@@ -137,10 +149,13 @@ class Renderer extends Entity {
         draw.beginRender();
 
         // Initialize default state
-        draw.setActiveTexture(lastTextureSlot);
+        draw.setActiveTexture(0);
+        activeTextureSlot = 0;
         draw.setRenderTarget(null);
         draw.enableBlending();
-        useShader(draw, defaultPlainShader);
+        activeShader = null;
+        lastShader = null;
+        useShader(draw, null);
 
         // Default blending
         draw.setBlendFuncSeparate(
@@ -187,6 +202,8 @@ class Renderer extends Entity {
                             if (lastClip != null) {
                                 // Update stencil buffer
                                 flush(draw);
+                                unbindUsedTextures(draw);
+                                stateDirty = true;
 
                                 draw.beginDrawingInStencilBuffer();
 
@@ -207,6 +224,8 @@ class Renderer extends Entity {
 
                                 // Next things to be drawn will be clipped
                                 flush(draw);
+                                unbindUsedTextures(draw);
+                                stateDirty = true;
 
                                 draw.endDrawingInStencilBuffer();
                                 draw.drawWithStencilTest();
@@ -215,6 +234,8 @@ class Renderer extends Entity {
 
                                 // Clipping gets disabled
                                 flush(draw);
+                                unbindUsedTextures(draw);
+                                stateDirty = true;
                                 
                                 draw.drawWithoutStencilTest();
                             }
@@ -236,6 +257,8 @@ class Renderer extends Entity {
             }
 
             flush(draw);
+            unbindUsedTextures(draw);
+            stateDirty = true;
         }
 
 #if ceramic_debug_draw
@@ -248,13 +271,15 @@ class Renderer extends Entity {
 
     inline function useShader(draw:backend.Draw, shader:backend.Shader):Void {
 
-        activeShader = shader;
-        draw.useShader(shader);
-        if (shader != null) {
-            customFloatAttributesSize = draw.shaderCustomFloatAttributesSize(shader);
+        if (shader == null) {
+            shader = defaultTexturedShader;
         }
-        else {
-            customFloatAttributesSize = 0;
+
+        if (activeShader != shader) {
+            activeShader = shader;
+            draw.useShader(shader);
+            activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(activeShader);
+            customFloatAttributesSize = draw.shaderCustomFloatAttributesSize(shader);
         }
 
     } //useShader
@@ -296,16 +321,134 @@ class Renderer extends Entity {
     inline function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
 
         if (renderTarget != null) {
-            draw.useRenderTarget(renderTarget.backendItem);
-            if (renderTarget.clearOnRender) draw.clear();
+            draw.setRenderTarget(renderTarget);
         }
         else {
-            draw.useRenderTarget(null);
+            draw.setRenderTarget(null);
         }
 
     } //useRenderTarget
 
-    inline function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
+    inline function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        //if (texture != null) {
+            if (texture == null) {
+                texture = defaultWhiteTexture;
+            }
+            usedTextures = 1;
+            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
+            usedTextureIndexes[0] = textureIndex;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, texture);
+        /*}
+        else {
+            usedTextures = 0;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, null);
+        }*/
+
+    } //useFirstTextureInBatch
+
+    #if !ceramic_debug_draw inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        if (texture != null) {
+            lastTexture = texture;
+            lastTextureId = draw.getTextureId(texture.backendItem);
+            texWidth = draw.getTextureWidth(texture.backendItem);
+            texHeight = draw.getTextureHeight(texture.backendItem);
+            texWidthActual = draw.getTextureWidthActual(texture.backendItem);
+            texHeightActual = draw.getTextureHeightActual(texture.backendItem);
+            draw.bindTexture(texture.backendItem);
+        }
+        else {
+            lastTexture = null;
+            lastTextureId = backend.TextureId.DEFAULT;
+            draw.bindNoTexture();
+        }
+
+    } //useTexture
+
+    #if !ceramic_debug_draw inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
+
+        var canKeepSameState = false;
+
+        if (texture == null) {
+            texture = defaultWhiteTexture;
+        }
+
+        if (usedTextures > 0) {
+            if (activeShaderCanBatchMultipleTextures) {
+
+                var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
+
+                for (slot in 0...usedTextures) {
+                    if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
+                        // Texture already used in batch, all good
+                        canKeepSameState = true;
+                        break;
+                    }
+                }
+
+                if (!canKeepSameState && usedTextures < maxUsableTexturesInBatch) {
+                    canKeepSameState = true;
+                }
+            }
+        }
+
+        return canKeepSameState;
+
+    } //canUseTextureInSameBatch
+
+    #if !ceramic_debug_draw inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        var alreadyUsed = false;
+
+        if (texture == null) {
+            texture = defaultWhiteTexture;
+        }
+
+        if (activeShaderCanBatchMultipleTextures) {
+
+            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
+
+            for (slot in 0...usedTextures) {
+                if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
+                    // Texture already used in batch, all good
+                    draw.setActiveTexture(slot);
+                    activeTextureSlot = slot;
+                    useTexture(draw, texture);
+                    alreadyUsed = true;
+                    break;
+                }
+            }
+
+            if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
+                var slot = usedTextures++;
+                usedTextureIndexes[slot] = textureIndex;
+                draw.setActiveTexture(slot);
+                activeTextureSlot = slot;
+                useTexture(draw, texture);
+            }
+        }
+
+    } //useTextureInSameBatch
+
+    #if !ceramic_debug_draw inline #end function unbindUsedTextures(draw:backend.Draw):Void {
+
+        while (usedTextures > 0) {
+            usedTextures--;
+            draw.setActiveTexture(usedTextures);
+            draw.bindNoTexture();
+        }
+        draw.setActiveTexture(0);
+        activeTextureSlot = 0;
+        useTexture(draw, null);
+
+    } //unbindUsedTextures
+
+    #if !ceramic_debug_draw inline #end function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
 
 #if ceramic_debug_draw
         drawnQuads++;
@@ -315,13 +458,10 @@ class Renderer extends Entity {
             // Special case of drawing into stencil buffer
 
             // No texture
-            if (lastShader == null && quad.shader == null) {
-                // Default plain shader fallback
-                useShader(draw, defaultPlainShader);
-            }
-            lastTexture = null;
-            lastTextureId = backend.TextureId.DEFAULT;
-            draw.setActiveTexture(lastTextureSlot);
+            lastShader = null;
+            useShader(draw, null);
+            unbindUsedTextures(draw);
+            useFirstTextureInBatch(draw, null);
 
             // Default blending
             draw.setBlendFuncSeparate(
@@ -335,51 +475,68 @@ class Renderer extends Entity {
             stateDirty = false;
 
             // No render target when writing to stencil buffer
+            //draw.setRenderTarget(lastRenderTarget);
+            lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
         }
         else {
             // Check if state is dirty
+            var textureToUseInSameBatch = null;
             if (!stateDirty) {
-                if (quad.texture != lastTexture) {
-                    if (quad.texture != null && lastTexture != null) {
-                        // Different ceramic textures could use the same backend texture
-                        if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
-                            stateDirty = true;
-                        }
-                    } else {
-                        stateDirty = true;
-                    }
-                }
-                if (!stateDirty) {
-                    stateDirty =
-                        quad.shader != lastShader ||
-                        (quad.blending != lastBlending &&
-                        (
-                            (quad.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
-                            (quad.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
-                        )) ||
+                stateDirty =
+                    quad.shader != lastShader ||
+                    (quad.blending != lastBlending &&
+                    (
+                        (quad.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                        (quad.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                    )) ||
 #if ceramic_debug_rendering_option
-                        quad.debugRendering != lastDebugRendering ||
+                    quad.debugRendering != lastDebugRendering ||
 #end
-                        quad.computedRenderTarget != lastRenderTarget;
+                    quad.computedRenderTarget != lastRenderTarget;
+                if (!stateDirty) {
+                    if (quad.texture != lastTexture) {
+                        if (quad.texture != null && lastTexture != null) {
+                            // Different ceramic textures could use the same backend texture
+                            if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
+                                // We could use multiple texture in same batch
+                                if (!canUseTextureInSameBatch(draw, quad.texture)) {
+                                    stateDirty = true;
+                                }
+                                else {
+                                    textureToUseInSameBatch = quad.texture;
+                                }
+                            }
+                        } else {
+                            // We could use multiple texture in same batch
+                            if (!canUseTextureInSameBatch(draw, quad.texture)) {
+                                stateDirty = true;
+                            }
+                            else {
+                                textureToUseInSameBatch = quad.texture != null ? quad.texture : defaultWhiteTexture;
+                            }
+                        }
+                    }
                 }
             }
 
             if (stateDirty) {
                 flush(draw);
+                unbindUsedTextures(draw);
 
                 // Update texture
-                if (quad.texture != lastTexture) {
+                lastTexture = quad.texture;
+                useFirstTextureInBatch(draw, lastTexture);
+
+                // Update shader
+                lastShader = quad.shader;
+                useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+                // Update texture
+                /*if (quad.texture != lastTexture) {
                     if (quad.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
-                            lastTexture = quad.texture;
-                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
-                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
-                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
-                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
-                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
-                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
-                            draw.bindTexture(lastTexture.backendItem);
+                            useFirstTextureInBatch(draw, quad.texture);
                         }
                     } else {
                         if (quad.texture != null) {
@@ -387,23 +544,13 @@ class Renderer extends Entity {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
                             }
-                            lastTexture = quad.texture;
-                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
-                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
-                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
-                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
-                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
-                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
-                            draw.bindTexture(lastTexture.backendItem);
+                            useFirstTextureInBatch(draw, quad.texture);
                         } else {
                             if (lastShader == null && quad.shader == null) {
                                 // Default plain shader fallback
-                                useShader(draw, defaultPlainShader);
+                                useShader(draw, defaultTexturedShader);
                             }
-                            lastTexture = null;
-                            lastTextureId = backend.TextureId.DEFAULT;
-                            draw.setActiveTexture(lastTextureSlot);
-                            draw.bindNoTexture();
+                            useFirstTextureInBatch(draw, null);
                         }
                     }
                 }
@@ -422,9 +569,9 @@ class Renderer extends Entity {
                     }
                     else {
                         // Default plain shader fallback
-                        useShader(draw, defaultPlainShader);
+                        useShader(draw, defaultTexturedShader);
                     }
-                }
+                }*/
 
                 // Update blending
                 var newComputedBlending = quad.blending;
@@ -452,15 +599,25 @@ class Renderer extends Entity {
 
                 stateDirty = false;
             }
+            else {
+                if (textureToUseInSameBatch != null) {
+                    useTextureInSameBatch(draw, textureToUseInSameBatch);
+                }
+            }
         }
 
         // Update num vertices
+        var posFloats = this.posFloats;
         var visualNumVertices = 6;
         var countAfter = posFloats + visualNumVertices * 4;
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
+            var textureBeforeFlush = lastTexture;
             flush(draw);
+            unbindUsedTextures(draw);
+            useFirstTextureInBatch(draw, textureBeforeFlush);
+            posFloats = this.posFloats;
         }
 
         var w:Float;
@@ -484,7 +641,15 @@ class Renderer extends Entity {
         var matTX:Float = quad.matTX;
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
-        var posFloats:Int = this.posFloats;
+        var posList = draw.getPosList();
+        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var customFloatAttributesSize = this.customFloatAttributesSize;
+
+#if (ceramic_debug_draw && ceramic_debug_multitexture)
+        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+            warning('* drawQuad() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+        }
+#end
 
         // Let backend know we will start sending quad data
         draw.beginDrawQuad(quad);
@@ -494,93 +659,183 @@ class Renderer extends Entity {
         if (customFloatAttributesSize == 0) {
 
             //tl
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             //tr
-            draw.putInPosList(posFloats++, matTX + matA * w);
-            draw.putInPosList(posFloats++, matTY + matB * w);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX + matA * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
 
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
             //br
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             //bl
-            draw.putInPosList(posFloats++, matTX + matC * h);
-            draw.putInPosList(posFloats++, matTY + matD * h);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX + matC * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matD * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             //tl2
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             //br2
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
         }
         else {
 
             //tl
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //tr
-            draw.putInPosList(posFloats++, matTX + matA * w);
-            draw.putInPosList(posFloats++, matTY + matB * w);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX + matA * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
 
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
             //br
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //bl
-            draw.putInPosList(posFloats++, matTX + matC * h);
-            draw.putInPosList(posFloats++, matTY + matD * h);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX + matC * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matD * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //tl2
-            draw.putInPosList(posFloats++, matTX);
-            draw.putInPosList(posFloats++, matTY);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
             //br2
-            draw.putInPosList(posFloats++, n8);
-            draw.putInPosList(posFloats++, n9);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
             for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posFloats++, 0.0);
+                draw.putInPosList(posList, posFloats, 0.0);
+                posFloats++;
             }
         }
 
@@ -592,7 +847,7 @@ class Renderer extends Entity {
         var uvH:Float = 0;
         var uvFloats = this.uvFloats;
 
-        if (lastTexture != null) {
+        if (quad.texture != null) {
 
             var texWidthActual = this.texWidthActual;
             var texHeightActual = this.texHeightActual;
@@ -613,41 +868,69 @@ class Renderer extends Entity {
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
             }
 
+            var uvList = draw.getUvList();
+
             //tl
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //tr
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //br
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //bl
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //tl2
-            draw.putInUvList(uvFloats++, uvX);
-            draw.putInUvList(uvFloats++, uvY);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
             //br2
-            draw.putInUvList(uvFloats++, uvX + uvW);
-            draw.putInUvList(uvFloats++, uvY + uvH);
-            draw.putInUvList(uvFloats++, 0);
-            draw.putInUvList(uvFloats++, 0);
+            draw.putInUvList(uvList, uvFloats, uvX + uvW);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, uvY + uvH);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
+            draw.putInUvList(uvList, uvFloats, 0);
+            uvFloats++;
 
         } else {
+            var uvList = draw.getUvList();
             var i = 0;
             while (i++ < 24) {
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
             }
         }
 
@@ -674,13 +957,18 @@ class Renderer extends Entity {
         }
 
         var colorFloats = this.colorFloats; 
+        var colorList = draw.getColorList();
 
         var i = 0;
         while (i < 24) {
-            draw.putInColorList(colorFloats++, r);
-            draw.putInColorList(colorFloats++, g);
-            draw.putInColorList(colorFloats++, b);
-            draw.putInColorList(colorFloats++, a);
+            draw.putInColorList(colorList, colorFloats, r);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, g);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, b);
+            colorFloats++;
+            draw.putInColorList(colorList, colorFloats, a);
+            colorFloats++;
             i += 4;
         }
 
@@ -694,7 +982,7 @@ class Renderer extends Entity {
 
     } //drawQuad
 
-    inline function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+    #if !ceramic_debug_draw inline #end function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
 
 #if ceramic_debug_draw
         drawnMeshes++;
@@ -707,13 +995,10 @@ class Renderer extends Entity {
             // Special case of drawing into stencil buffer
 
             // No texture
-            if (lastShader == null && mesh.shader == null) {
-                // Default plain shader fallback
-                useShader(draw, defaultPlainShader);
-            }
-            lastTexture = null;
-            lastTextureId = backend.TextureId.DEFAULT;
-            draw.setActiveTexture(lastTextureSlot);
+            lastShader = null;
+            useShader(draw, null);
+            unbindUsedTextures(draw);
+            useFirstTextureInBatch(draw, null);
 
             // Default blending
             draw.setBlendFuncSeparate(
@@ -727,51 +1012,67 @@ class Renderer extends Entity {
             stateDirty = false;
 
             // No render target when writing to stencil buffer
+            lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
         }
         else {
             // Check if state is dirty
+            var textureToUseInSameBatch = null;
             if (!stateDirty) {
-                if (mesh.texture != lastTexture) {
-                    if (mesh.texture != null && lastTexture != null) {
-                        // Different ceramic textures could use the same backend texture
-                        if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
-                            stateDirty = true;
-                        }
-                    } else {
-                        stateDirty = true;
-                    }
-                }
-                if (!stateDirty) {
-                    stateDirty =
-                        mesh.shader != lastShader ||
-                        (mesh.blending != lastBlending &&
-                        (
-                            (mesh.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
-                            (mesh.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
-                        )) ||
+                stateDirty =
+                    mesh.shader != lastShader ||
+                    (mesh.blending != lastBlending &&
+                    (
+                        (mesh.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
+                        (mesh.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
+                    )) ||
 #if ceramic_debug_rendering_option
-                        mesh.debugRendering != lastDebugRendering ||
+                    mesh.debugRendering != lastDebugRendering ||
 #end
-                        mesh.computedRenderTarget != lastRenderTarget;
+                    mesh.computedRenderTarget != lastRenderTarget;
+                if (!stateDirty) {
+                    if (mesh.texture != lastTexture) {
+                        if (mesh.texture != null && lastTexture != null) {
+                            // Different ceramic textures could use the same backend texture
+                            if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
+                                // We could use multiple texture in same batch
+                                if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+                                    stateDirty = true;
+                                }
+                                else {
+                                    textureToUseInSameBatch = mesh.texture;
+                                }
+                            }
+                        } else {
+                            // We could use multiple texture in same batch
+                            if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+                                stateDirty = true;
+                            }
+                            else {
+                                textureToUseInSameBatch = mesh.texture != null ? mesh.texture : defaultWhiteTexture;
+                            }
+                        }
+                    }
                 }
             }
 
             if (stateDirty) {
                 flush(draw);
+                unbindUsedTextures(draw);
 
                 // Update texture
+                lastTexture = mesh.texture;
+                useFirstTextureInBatch(draw, lastTexture);
+
+                // Update shader
+                lastShader = mesh.shader;
+                useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+                /*
                 if (mesh.texture != lastTexture) {
                     if (mesh.texture != null && lastTexture != null) {
                         if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
-                            lastTexture = mesh.texture;
-                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
-                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
-                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
-                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
-                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
-                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
-                            draw.bindTexture(lastTexture.backendItem);
+                            useFirstTextureInBatch(draw, mesh.texture);
                         }
                     } else {
                         if (mesh.texture != null) {
@@ -779,29 +1080,19 @@ class Renderer extends Entity {
                                 // Default textured shader fallback
                                 useShader(draw, defaultTexturedShader);
                             }
-                            lastTexture = mesh.texture;
-                            lastTextureId = draw.getTextureId(lastTexture.backendItem);
-                            lastTextureSlot = draw.getTextureSlot(lastTexture.backendItem);
-                            texWidth = draw.getTextureWidth(lastTexture.backendItem);
-                            texHeight = draw.getTextureHeight(lastTexture.backendItem);
-                            texWidthActual = draw.getTextureWidthActual(lastTexture.backendItem);
-                            texHeightActual = draw.getTextureHeightActual(lastTexture.backendItem);
-                            draw.bindTexture(lastTexture.backendItem);
+                            useFirstTextureInBatch(draw, mesh.texture);
                         } else {
                             if (lastShader == null && mesh.shader == null) {
                                 // Default plain shader fallback
-                                useShader(draw, defaultPlainShader);
+                                useShader(draw, defaultTexturedShader);
                             }
-                            lastTexture = null;
-                            lastTextureId = backend.TextureId.DEFAULT;
-                            draw.setActiveTexture(lastTextureSlot);
-                            draw.bindNoTexture(); // This was commented out. Why? Try to run uncommented
+                            useFirstTextureInBatch(draw, null);
                         }
                     }
-                }
+                }*/
 
                 // Update shader
-                if (mesh.shader != lastShader) {
+                /*if (mesh.shader != lastShader) {
                     lastShader = mesh.shader;
 
                     if (lastShader != null) {
@@ -814,9 +1105,9 @@ class Renderer extends Entity {
                     }
                     else {
                         // Default plain shader fallback
-                        useShader(draw, defaultPlainShader);
+                        useShader(draw, defaultTexturedShader);
                     }
-                }
+                }*/
 
                 // Update blending
                 var newComputedBlending = mesh.blending;
@@ -844,6 +1135,11 @@ class Renderer extends Entity {
 
                 stateDirty = false;
             }
+            else {
+                if (textureToUseInSameBatch != null) {
+                    useTextureInSameBatch(draw, textureToUseInSameBatch);
+                }
+            }
         }
 
         // Fetch matrix
@@ -855,6 +1151,13 @@ class Renderer extends Entity {
         var matTX:Float = mesh.matTX;
         var matTY:Float = mesh.matTY;
         var z:Float = this.z;
+        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+
+#if (ceramic_debug_draw && ceramic_debug_multitexture)
+        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+            warning('* drawMesh() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+        }
+#end
 
         // Color
         var meshColors = mesh.colors;
@@ -890,17 +1193,22 @@ class Renderer extends Entity {
         // Update num vertices
         var visualNumVertices = meshIndices.length;
         var posFloats = this.posFloats;
+        var posList = draw.getPosList();
         var customFloatAttributesSize = this.customFloatAttributesSize;
         var countAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
+            var textureBeforeFlush = lastTexture;
             flush(draw);
+            unbindUsedTextures(draw);
+            useFirstTextureInBatch(draw, textureBeforeFlush);
+            posFloats = this.posFloats;
         }
 
         // Actual texture size may differ from its logical one.
         // Keep factor values to generate UV mapping that matches the real texture.
-        var texture = this.lastTexture;
+        var texture = mesh.texture;
         var uvFactorX:Float = 0;
         var uvFactorY:Float = 0;
         if (texture != null) {
@@ -910,6 +1218,9 @@ class Renderer extends Entity {
         
         var uvFloats = this.uvFloats;
         var colorFloats = this.colorFloats; 
+
+        var uvList = draw.getUvList();
+        var colorList = draw.getColorList();
 
         var i = 0;
         while (i < visualNumVertices) {
@@ -923,16 +1234,24 @@ class Renderer extends Entity {
             var x = meshVertices.unsafeGet(l++);
             var y = meshVertices.unsafeGet(l++);
 
-            draw.putInPosList(posFloats++, matTX + matA * x + matC * y);
-            draw.putInPosList(posFloats++, matTY + matB * x + matD * y);
-            draw.putInPosList(posFloats++, z);
-            //draw.putInPosList(posFloats++, 0);
+            draw.putInPosList(posList, posFloats, matTX + matA * x + matC * y);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * x + matD * y);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (textureSlot != -1) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            //draw.putInPosList(posList, posFloats, 0);
 
             // Custom (float) attributes
             //
             if (customFloatAttributesSize != 0) {
                 for (n in 0...customFloatAttributesSize) {
-                    draw.putInPosList(posFloats++, meshVertices.unsafeGet(l++));
+                    draw.putInPosList(posList, posFloats, meshVertices.unsafeGet(l++));
+                    posFloats++;
                 }
             }
 
@@ -941,10 +1260,14 @@ class Renderer extends Entity {
             if (texture != null) {
                 var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
                 var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                draw.putInUvList(uvFloats++, uvX);
-                draw.putInUvList(uvFloats++, uvY);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, uvX);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, uvY);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
             }
 
             // Color
@@ -958,26 +1281,35 @@ class Renderer extends Entity {
                 var b = meshAlphaColor.blueFloat * a;
                 if (mesh.blending == ceramic.Blending.ADD) a = 0;
 
-                draw.putInColorList(colorFloats++, r);
-                draw.putInColorList(colorFloats++, g);
-                draw.putInColorList(colorFloats++, b);
-                draw.putInColorList(colorFloats++, a);
+                draw.putInColorList(colorList, colorFloats, r);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, g);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, b);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, a);
+                colorFloats++;
             }
 
             i++;
         }
 
         this.posFloats = posFloats;
+        var uvList = draw.getUvList();
 
         // No texture, all uvs to zero
         //
         if (texture == null) {
             i = 0;
             while (i < visualNumVertices) {
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
-                draw.putInUvList(uvFloats++, 0);
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
+                draw.putInUvList(uvList, uvFloats, 0);
+                uvFloats++;
                 i++;
             }
         }
@@ -1007,12 +1339,17 @@ class Renderer extends Entity {
                 if (mesh.blending == ceramic.Blending.ADD) a = 0;
             }
 
+            var colorList = draw.getColorList();
             i = 0;
             while (i < visualNumVertices) {
-                draw.putInColorList(colorFloats++, r);
-                draw.putInColorList(colorFloats++, g);
-                draw.putInColorList(colorFloats++, b);
-                draw.putInColorList(colorFloats++, a);
+                draw.putInColorList(colorList, colorFloats, r);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, g);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, b);
+                colorFloats++;
+                draw.putInColorList(colorList, colorFloats, a);
+                colorFloats++;
                 i++;
             }
         }

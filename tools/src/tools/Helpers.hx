@@ -840,4 +840,26 @@ class Helpers {
 
     } //isElectronProxy
 
+    static var RE_HXCPP_LINE_MARKER = ~/^(HXLINE|HXDLIN)\([^)]+\)/;
+
+    public static function stripHxcppLineMarkers(cppContent:String):String {
+
+        var cppLines = cppContent.split("\n");
+
+        for (i in 0...cppLines.length) {
+            var line = cppLines[i];
+            if (RE_HXCPP_LINE_MARKER.match(line.ltrim())) {
+                var len = RE_HXCPP_LINE_MARKER.matched(0).length;
+                var space = '';
+                for (n in 0...len) {
+                    space += ' ';
+                }
+                cppLines[i] = line.replace(RE_HXCPP_LINE_MARKER.matched(0), space);
+            }
+        }
+
+        return cppLines.join("\n");
+
+    } //stripHxcppLineMarkers
+
 } //Helpers

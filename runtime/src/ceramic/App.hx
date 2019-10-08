@@ -246,11 +246,11 @@ class App extends Entity {
     /** App level collections */
     public var collections(default,null):Collections = new Collections();
 
-    /** Default color shader **/
-    public var defaultColorShader(default,null):Shader = null;
-
     /** Default textured shader **/
     public var defaultTexturedShader(default,null):Shader = null;
+
+    /** Default white texture **/
+    public var defaultWhiteTexture(default,null):Texture = null;
 
     /** Default font */
     public var defaultFont(default,null):BitmapFont = null;
@@ -368,9 +368,12 @@ class App extends Entity {
         assets.add(Fonts.ARIAL_20);
 
         // Default shaders
-        assets.add(Shaders.COLOR);
+        //assets.add(Shaders.COLOR);
         assets.add(Shaders.TEXTURED);
         //assets.add(Shaders.FXAA);
+
+        // Default textures
+        assets.add(Images.WHITE);
 
         assets.onceComplete(this, function(success) {
 
@@ -378,7 +381,7 @@ class App extends Entity {
 
                 // Get default asset instances now that they are loaded
                 defaultFont = assets.font(Fonts.ARIAL_20);
-                defaultColorShader = assets.shader(Shaders.COLOR);
+                defaultWhiteTexture = assets.texture(Images.WHITE);
                 defaultTexturedShader = assets.shader(Shaders.TEXTURED);
 
                 logger.success('Default assets loaded.');

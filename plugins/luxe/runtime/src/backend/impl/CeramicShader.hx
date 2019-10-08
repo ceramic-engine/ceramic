@@ -8,24 +8,30 @@ class CeramicShader extends phoenix.Shader {
 
     public var customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute> = null;
 
+    public var isBatchingMultiTexture:Bool = false;
+
     override public function link():Bool {
 
         program = GL.createProgram();
+        var n = 0;
 
         GL.attachShader(program, vert_shader);
         GL.attachShader(program, frag_shader);
 
         // Now we want to ensure that our locations are static
-        GL.bindAttribLocation(program, Batcher.vert_attribute, 'vertexPosition');
-        GL.bindAttribLocation(program, Batcher.tcoord_attribute, 'vertexTCoord');
-        GL.bindAttribLocation(program, Batcher.color_attribute, 'vertexColor');
+        GL.bindAttribLocation(program, n++, 'vertexPosition');
+        GL.bindAttribLocation(program, n++, 'vertexTCoord');
+        GL.bindAttribLocation(program, n++, 'vertexColor');
+
+        // In case this shader has been transformed to handle multi-texture batches
+        if (isBatchingMultiTexture) {
+            GL.bindAttribLocation(program, n++, 'vertexTextureId');
+        }
 
         // Custom attributes from ceramic
         if (customAttributes != null) {
-            var n = Batcher.color_attribute + 1;
             for (attr in customAttributes) {
-                GL.bindAttribLocation(program, n, attr.name);
-                n++;
+                GL.bindAttribLocation(program, n++, attr.name);
             }
         }
 
@@ -45,29 +51,17 @@ class CeramicShader extends phoenix.Shader {
             //:todo: this is being refactored for the new
             //way more flexible shaders and rendering :}
 
-                //Matrices
-            if(!no_default_uniforms) {
+            if (!no_default_uniforms) {
 
                 proj_attribute = location('projectionMatrix');
                 view_attribute = location('modelViewMatrix');
 
-                var _tex0_attribute = location( 'tex0' );
-                var _tex1_attribute = location( 'tex1' );
-                var _tex2_attribute = location( 'tex2' );
-                var _tex3_attribute = location( 'tex3' );
-                var _tex4_attribute = location( 'tex4' );
-                var _tex5_attribute = location( 'tex5' );
-                var _tex6_attribute = location( 'tex6' );
-                var _tex7_attribute = location( 'tex7' );
+                var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
 
-                if(_tex0_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex0_attribute, 0 );
-                if(_tex1_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex1_attribute, 1 );
-                if(_tex2_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex2_attribute, 2 );
-                if(_tex3_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex3_attribute, 3 );
-                if(_tex4_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex4_attribute, 4 );
-                if(_tex5_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex5_attribute, 5 );
-                if(_tex6_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex6_attribute, 6 );
-                if(_tex7_attribute != #if snow_web null #else 0 #end) GL.uniform1i( _tex7_attribute, 7 );
+                for (i in 0...maxTextures) {
+                    var attr = location('tex' + i);
+                    if(attr != #if snow_web null #else 0 #end) GL.uniform1i(attr, i);
+                }
 
             }
 

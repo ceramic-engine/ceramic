@@ -199,6 +199,16 @@ class Build extends tools.Task {
 				js.Node.process.exit(status);
 			}
 
+			// Strip line markers on a critical file (Renderer.cpp) when targetting cpp
+			if (!debug) {
+				if (target.name == 'ios' || target.name == 'android' || target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
+					var criticalFilePath = Path.join([outTargetPath, 'cpp', 'src', 'ceramic', 'Renderer.cpp']);
+					var cppContent = File.getContent(criticalFilePath);
+					cppContent = stripHxcppLineMarkers(cppContent);
+					File.saveContent(criticalFilePath, cppContent);
+				}
+			}
+
 			runHooks(cwd, args, project.app.hooks, 'end build');
 		}
 
