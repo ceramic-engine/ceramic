@@ -59,7 +59,7 @@ class SeedRandom {
 
     /** Return an integer between [min, max). */
     public inline function between(min:Int, max:Int):Int {
-        return Math.floor(((max - min) + min) * random());
+        return Math.floor(min + (max - min) * random());
     }
 
     /** Reset the initial value to that of the current seed. */
