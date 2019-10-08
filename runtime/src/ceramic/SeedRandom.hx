@@ -63,8 +63,11 @@ class SeedRandom {
     }
 
     /** Reset the initial value to that of the current seed. */
-    public inline function reset() {
-        seed = initialSeed;
+    public inline function reset(?initialSeed:Float) {
+        if (initialSeed != null) {
+            this.initialSeed = initialSeed;
+        }
+        seed = this.initialSeed;
     }
 
 } //SeedRandom
