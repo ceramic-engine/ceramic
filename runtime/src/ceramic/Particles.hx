@@ -670,6 +670,25 @@ class Particles extends Visual implements Observable {
     public var accelerationEndMaxY:Float = 0;
 
     /**
+     * A random seed used to generated particles.
+     * Provide a custom seed to reproduce same chain of particles.
+     */
+    public var seed(get,set):Float;
+    inline function get_seed():Float {
+        return _seedRandom.seed;
+    }
+    function set_seed(seed:Float):Float {
+        _seedRandom.reset(seed);
+        return seed;
+    }
+
+    /**
+     * Custom particle visual creation. Use this to emit custom visuals as particle. Another option
+     * is to create a subclass of `Particles` and override `getParticleVisual()` method.
+     */
+    public var getCustomParticleVisual:(existingVisual:Visual)->Visual;
+
+    /**
      * The internal quantity we want to emit (when emitting continuously)
      */
     var _quantityToEmit:Int = 0;
@@ -693,6 +712,11 @@ class Particles extends Visual implements Observable {
      * Internal list of particle items when they are being iterated on to be updated
      */
     var _updatingParticles:Array<ParticleItem> = [];
+
+    /**
+     * The seeded random used internally
+     */
+    var _seedRandom:SeedRandom = new SeedRandom(Math.random() * 999999999);
 
     /**
      * Internal point object, handy for reusing for memory management purposes.
@@ -898,6 +922,13 @@ class Particles extends Visual implements Observable {
 
         // Default implementation returns a 5x5 quad
         // This method can be overrided in a subclass to use a different visual as particle
+
+        // particleVisualGetter property can be used as well, but its dynamic nature could make it a less ideal option
+        // on some targets if performance, low pressure on GC is a priority
+
+        if (getCustomParticleVisual != null) {
+            return getCustomParticleVisual(existingVisual);
+        }
 
         if (existingVisual != null) {
             existingVisual.active = true;
@@ -1145,15 +1176,15 @@ class Particles extends Visual implements Observable {
 
     } //degToRad
 
-    inline static function randomBetweenFloats(a:Float, b:Float):Float {
+    inline function randomBetweenFloats(a:Float, b:Float):Float {
 
-        return a + (b - a) * Math.random();
+        return a + (b - a) * _seedRandom.random();
 
     } //randomBetweenFloats
 
-    inline static function randomBetweenColors(a:Color, b:Color):Color {
+    inline function randomBetweenColors(a:Color, b:Color):Color {
 
-        var rnd:Float = Math.random();
+        var rnd:Float = _seedRandom.random();
         return Color.fromRGBFloat(
             a.redFloat + (b.redFloat - a.redFloat) * rnd,
             a.greenFloat + (b.greenFloat - a.greenFloat) * rnd,
