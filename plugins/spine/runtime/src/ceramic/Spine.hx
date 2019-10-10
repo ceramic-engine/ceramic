@@ -118,7 +118,10 @@ class Spine extends Visual {
     function runScheduledRender():Void {
         renderScheduled = false;
         if (renderDirtyBecauseSkinChanged) {
-            if (visible || renderWhenInvisible) {
+            if (!renderWhenInvisible && visibilityDirty) {
+                computeVisibility();
+            }
+            if (computedVisible || renderWhenInvisible) {
                 forceRender();
             }
             else {
@@ -126,7 +129,10 @@ class Spine extends Visual {
             }
         }
         else if (renderDirty) {
-            if (visible || renderWhenInvisible) {
+            if (!renderWhenInvisible && visibilityDirty) {
+                computeVisibility();
+            }
+            if (computedVisible || renderWhenInvisible) {
                 render(0, 0, false);
             }
             else {
@@ -139,20 +145,30 @@ class Spine extends Visual {
     /** Internal flag to know if render became dirty because of a skin change. */
     var renderDirtyBecauseSkinChanged(default,set):Bool = false;
     inline function set_renderDirtyBecauseSkinChanged(renderDirtyBecauseSkinChanged:Bool):Bool {
-        if (renderDirtyBecauseSkinChanged && pausedOrFrozen && !renderScheduled && (visible || renderWhenInvisible)) {
-            renderScheduled = true;
-            if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
-            app.onceImmediate(runScheduledRenderDyn);
+        if (renderDirtyBecauseSkinChanged && pausedOrFrozen && !renderScheduled) {
+            if (!renderWhenInvisible && visibilityDirty) {
+                computeVisibility();
+            }
+            if (computedVisible || renderWhenInvisible) {
+                renderScheduled = true;
+                if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
+                app.onceImmediate(runScheduledRenderDyn);
+            }
         }
         return (this.renderDirtyBecauseSkinChanged = renderDirtyBecauseSkinChanged);
     }
 
     public var renderDirty(default,set):Bool = false;
     inline function set_renderDirty(renderDirty:Bool):Bool {
-        if (renderDirty && pausedOrFrozen && !renderScheduled && (visible || renderWhenInvisible)) {
-            renderScheduled = true;
-            if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
-            app.onceImmediate(runScheduledRenderDyn);
+        if (renderDirty && pausedOrFrozen && !renderScheduled) {
+            if (!renderWhenInvisible && visibilityDirty) {
+                computeVisibility();
+            }
+            if (computedVisible || renderWhenInvisible) {
+                renderScheduled = true;
+                if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
+                app.onceImmediate(runScheduledRenderDyn);
+            }
         }
         return (this.renderDirty = renderDirty);
     }
@@ -275,7 +291,10 @@ class Spine extends Visual {
     function set_renderWhenInvisible(renderWhenInvisible:Bool):Bool {
         if (this.renderWhenInvisible == renderWhenInvisible) return renderWhenInvisible;
         this.renderWhenInvisible = renderWhenInvisible;
-        if (!visible && renderWhenInvisible) {
+        if (visibilityDirty) {
+            computeVisibility();
+        }
+        if (!computedVisible && renderWhenInvisible) {
             renderDirty = true;
         }
         return renderWhenInvisible;
@@ -881,7 +900,10 @@ class Spine extends Visual {
         // Update skeleton
         updateSkeleton(delta);
 
-        if (visible || renderWhenInvisible) {
+        if (!renderWhenInvisible && visibilityDirty) {
+            computeVisibility();
+        }
+        if (computedVisible || renderWhenInvisible) {
             // We are visible and are root spine animation, let's render
             render(delta, 0, false);
         }
@@ -1465,7 +1487,10 @@ class Spine extends Visual {
                         var sub = subSpines.unsafeGet(s);
 
                         // Skip invisible sub spines by default
-                        if (sub.visible || sub.renderWhenInvisible) {
+                        if (!sub.renderWhenInvisible && sub.visibilityDirty) {
+                            sub.computeVisibility();
+                        }
+                        if (sub.computedVisible || sub.renderWhenInvisible) {
 
                             // Parent slot to child slot
                             if (sub.boundParentSlots != null && sub.boundParentSlots.getInline(slotGlobalIndex) != null) {
@@ -1548,6 +1573,9 @@ class Spine extends Visual {
                 var sub = subSpines.unsafeGet(s);
                 
                 // Skip rendering of sub spines if they are not visible, by default
+                if (!sub.renderWhenInvisible && sub.visibilityDirty) {
+                    sub.computeVisibility();
+                }
                 if (sub.visible || sub.renderWhenInvisible) {
                     sub.updateSkeleton(delta);
                     sub.render(delta, z, false);
