@@ -288,14 +288,7 @@ class CollectionView extends ScrollView {
 
 /// Helpers
 
-    public function scrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.START) {
-
-        // TODO handle itemPosition option
-
-        var targetScrollX = scroller.scrollX;
-        var targetScrollY = scroller.scrollY;
-
-        if (frames.length == 0) return;
+    public function getTargetScrollXForItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Float {
 
         if (itemIndex < 0) {
             itemIndex = 0;
@@ -306,21 +299,27 @@ class CollectionView extends ScrollView {
 
         var frame = frames[itemIndex];
 
-        if (direction == VERTICAL) {
-            targetScrollY = frame.y;
-        }
-        else {
-            if (targetScrollX > frame.x) {
+        var targetScrollX = scroller.scrollX;
+
+        switch itemPosition {
+            case START:
                 targetScrollX = frame.x;
-            }
-            else if (targetScrollX < frame.x + frame.width - width) {
-                targetScrollX = frame.x + frame.width - width;
-            }
+            case MIDDLE:
+                targetScrollX = frame.x - width * 0.5 + frame.width * 0.5;
+            case END:
+                targetScrollX = frame.x - width + frame.width;
+            case ENSURE_VISIBLE:
+                if (targetScrollX > frame.x - width + frame.width) {
+                    targetScrollX = frame.x - width + frame.width;
+                }
+                else if (targetScrollX < frame.x) {
+                    targetScrollX = frame.x;
+                }
         }
 
         // Check bounds
         var lastFrame = frames[frames.length - 1];
-        var maxScrollX = lastFrame.x + lastFrame.width - width;
+        var maxScrollX = lastFrame.y + lastFrame.width - width;
         if (targetScrollX > maxScrollX) {
             targetScrollX = maxScrollX;
         }
@@ -328,16 +327,11 @@ class CollectionView extends ScrollView {
             targetScrollX = 0;
         }
 
-        scroller.scrollTo(targetScrollX, targetScrollY);
+        return targetScrollX;
 
-    } //scrollToItem
+    } //getTargetScrollXForItem
 
-    public function smoothScrollToItem(itemIndex:Int) {
-
-        var targetScrollX = scroller.scrollX;
-        var targetScrollY = scroller.scrollY;
-
-        if (frames.length == 0) return;
+    public function getTargetScrollYForItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Float {
 
         if (itemIndex < 0) {
             itemIndex = 0;
@@ -348,20 +342,72 @@ class CollectionView extends ScrollView {
 
         var frame = frames[itemIndex];
 
+        var targetScrollY = scroller.scrollY;
+
+        switch itemPosition {
+            case START:
+                targetScrollY = frame.y;
+            case MIDDLE:
+                targetScrollY = frame.y - height * 0.5 + frame.height * 0.5;
+            case END:
+                targetScrollY = frame.y - height + frame.height;
+            case ENSURE_VISIBLE:
+                if (targetScrollY > frame.y - height + frame.height) {
+                    targetScrollY = frame.y - height + frame.height;
+                }
+                else if (targetScrollY < frame.y) {
+                    targetScrollY = frame.y;
+                }
+        }
+
+        // Check bounds
+        var lastFrame = frames[frames.length - 1];
+        var maxScrollY = lastFrame.y + lastFrame.height - height;
+        if (targetScrollY > maxScrollY) {
+            targetScrollY = maxScrollY;
+        }
+        if (targetScrollY < 0) {
+            targetScrollY = 0;
+        }
+
+        return targetScrollY;
+
+    } //getTargetScrollYForItem
+
+    public function scrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Void {
+
+        var targetScrollX = scroller.scrollX;
+        var targetScrollY = scroller.scrollY;
+
+        if (frames.length == 0) return;
+
         if (direction == VERTICAL) {
-            targetScrollY = frame.y;
+            targetScrollY = getTargetScrollYForItem(itemIndex, itemPosition);
         }
         else {
-            if (targetScrollX > frame.x) {
-                targetScrollX = frame.x;
-            }
-            else if (targetScrollX < frame.x + frame.width - width) {
-                targetScrollX = frame.x + frame.width - width;
-            }
+            targetScrollX = getTargetScrollXForItem(itemIndex, itemPosition);
+        }
+
+        scroller.scrollTo(targetScrollX, targetScrollY);
+
+    } //scrollToItem
+
+    public function smoothScrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE) {
+
+        var targetScrollX = scroller.scrollX;
+        var targetScrollY = scroller.scrollY;
+
+        if (frames.length == 0) return;
+
+        if (direction == VERTICAL) {
+            targetScrollY = getTargetScrollYForItem(itemIndex, itemPosition);
+        }
+        else {
+            targetScrollX = getTargetScrollXForItem(itemIndex, itemPosition);
         }
 
         scroller.smoothScrollTo(targetScrollX, targetScrollY);
 
-    } //smoothScrollTo
+    } //smoothScrollToItem
 
 } //CollectionView
