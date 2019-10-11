@@ -13,12 +13,14 @@ class Shaders implements spec.Shaders {
     inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
 
         var isMultiTextureTemplate = false;
+        #if !ceramic_no_multitexture
         for (line in fragSource.split('\n')) {
             if (line.trim().replace(' ', '').toLowerCase() == '//ceramic:multitexture') {
                 isMultiTextureTemplate = true;
                 break;
             }
         }
+        #end
 
         if (isMultiTextureTemplate) {
             var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
