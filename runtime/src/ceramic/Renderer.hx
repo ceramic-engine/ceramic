@@ -63,6 +63,10 @@ class Renderer extends Entity {
     var flushedMeshes:Int = 0;
 #end
 
+#if ceramic_debug_rendering_option
+    var lastDebugRendering = ceramic.DebugRendering.DEFAULT;
+#end
+
     public function new() {
 
         super();
@@ -118,6 +122,9 @@ class Renderer extends Entity {
         lastRenderTarget = null;
         lastBlending = ceramic.Blending.NORMAL;
         lastComputedBlending = ceramic.Blending.NORMAL;
+#if ceramic_debug_rendering_option
+        lastDebugRendering = ceramic.DebugRendering.DEFAULT;
+#end
         lastClip = null;
         usedTextures = 0;
 
@@ -125,10 +132,6 @@ class Renderer extends Entity {
         texHeight = 0;
         texWidthActual = 0;
         texHeightActual = 0;
-
-#if ceramic_debug_rendering_option
-        var lastDebugRendering:ceramic.DebugRendering = ceramic.DebugRendering.DEFAULT;
-#end
 
         stencilClip = false;
         z = 0;
@@ -1176,7 +1179,7 @@ class Renderer extends Entity {
         // TODO avoid allocating an array
         if (lastDebugRendering == ceramic.DebugRendering.WIREFRAME) {
             meshIndices = [];
-            i = 0;
+            var i = 0;
             while (i < mesh.indices.length) {
                 meshIndices.push(mesh.indices[i]);
                 meshIndices.push(mesh.indices[i+1]);
