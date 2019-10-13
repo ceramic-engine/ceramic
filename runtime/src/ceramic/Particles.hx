@@ -911,6 +911,7 @@ class Particles extends Visual implements Observable {
         }
 
         _activeParticles.push(particle);
+        particle.active = true;
 
         return particle;
 
@@ -946,6 +947,7 @@ class Particles extends Visual implements Observable {
     function recycleParticle(particle:ParticleItem):Void {
 
         _activeParticles.remove(particle);
+        particle.active = false;
 
         recycleParticleVisual(particle.visual);
 

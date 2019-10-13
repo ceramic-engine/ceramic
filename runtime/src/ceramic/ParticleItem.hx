@@ -8,6 +8,8 @@ class ParticleItem {
 
     public var visual:Visual = null;
 
+    public var active:Bool = false;
+
     public var lifespan:Float = 0;
     public var age:Float = 0;
 
