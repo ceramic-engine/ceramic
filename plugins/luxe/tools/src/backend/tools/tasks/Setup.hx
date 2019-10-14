@@ -200,6 +200,9 @@ class Setup extends tools.Task {
                 targetFlags += '\n' + '-D linc_opengl_GLES';
                 targetFlags += '\n' + '-D mobile';
             }
+            if (target.name == 'android') {
+                targetFlags += '\n' + '-D ceramic_avoid_last_texture_slot';
+            }
             targetFlags += '\n' + '--macro snow.Set.assets("snow.core.native.assets.Assets")';
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.modules.sdl.Runtime")';
             targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.openal.Audio")';

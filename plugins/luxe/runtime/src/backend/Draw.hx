@@ -406,6 +406,12 @@ class Draw implements spec.Draw {
 
     } //setBlendFuncSeparate
 
+    inline public function getActiveTexture():Int {
+
+        return activeTextureSlot;
+
+    } //getActiveTexture
+
     inline public function setActiveTexture(slot:Int):Void {
 
         activeTextureSlot = slot;

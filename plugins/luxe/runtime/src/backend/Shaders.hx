@@ -25,6 +25,7 @@ class Shaders implements spec.Shaders {
         if (isMultiTextureTemplate) {
             var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
             var maxIfs = maxIfStatementsByFragmentShader();
+
             fragSource = processMultiTextureFragTemplate(fragSource, maxTextures, maxIfs);
             vertSource = processMultiTextureVertTemplate(vertSource, maxTextures, maxIfs);
         }
@@ -103,36 +104,12 @@ class Shaders implements spec.Shaders {
                     if (conditionLines.length > 0) {
                         for (n in 0...maxConditions) {
 
-                            #if ceramic_multitexture_if_lowerthan
-
-                            // We keep this version for reference, but we don't use it because it was problematic on some GPU on Android.
-                            // The most accurate explanation I had is that some GPU don't care about the `else`
-                            // thus could inacurately group, say `textureId=1.0` and `textureId=2.0` to the same condition branch `if (textureId < 2.5)`,
-                            // which is valid for both values if we ignore the `else`
-
                             if (n == 0) {
                                 newLines.push('if (textureId < 0.5) {');
-                            }
-                            else if (n == maxConditions - 1) {
-                                newLines.push('else {');
                             }
                             else {
                                 newLines.push('else if (textureId < ' + n + '.5) {');
                             }
-
-                            #else
-
-                            if (n == 0) {
-                                newLines.push('if (textureId == 0.0) {');
-                            }
-                            else if (n == maxConditions - 1) {
-                                newLines.push('else {');
-                            }
-                            else {
-                                newLines.push('else if (textureId == ' + n + '.0) {');
-                            }
-
-                            #end
 
                             for (l in 0...conditionLines.length) {
                                 if (n == 0) {
@@ -145,31 +122,6 @@ class Shaders implements spec.Shaders {
 
                             newLines.push('}');
                         }
-
-                        /*for (n in 0...maxConditions) {
-                            var _n = (n + 1) % maxConditions;
-
-                            if (_n == 1) {
-                                newLines.push('if (textureId == 1.0) {');
-                            }
-                            else if (_n == 0) {
-                                newLines.push('else {');
-                            }
-                            else {
-                                newLines.push('else if (textureId == ' + _n + '.0) {');
-                            }
-
-                            for (l in 0...conditionLines.length) {
-                                if (_n == 0) {
-                                    newLines.push(conditionLines[l]);
-                                }
-                                else {
-                                    newLines.push(conditionLines[l].replace('tex0', 'tex' + _n));
-                                }
-                            }
-
-                            newLines.push('}');
-                        }*/
                     }
                 }
                 else {

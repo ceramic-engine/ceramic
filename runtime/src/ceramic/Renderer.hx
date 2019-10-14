@@ -86,6 +86,15 @@ class Renderer extends Entity {
             app.backend.shaders.maxIfStatementsByFragmentShader()
         ));
 
+        #if ceramic_avoid_last_texture_slot
+        if (maxUsableTexturesInBatch > 1) {
+            // On some devices, we have problems if we use the last texture slot.
+            // As a workaround, we avoid using it. I wish I could understand why.
+            // That's sad. Very sad.
+            maxUsableTexturesInBatch--;
+        }
+        #end
+
 #if ceramic_debug_draw
         if (isMainRender) {
             if (ceramic.Timer.now - lastDebugTime > 10) {
@@ -354,16 +363,28 @@ class Renderer extends Entity {
 
     } //useFirstTextureInBatch
 
-    #if !ceramic_debug_draw inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture):Void {
+    #if !ceramic_debug_draw inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
 
         if (texture != null) {
+#if (ceramic_debug_draw && ceramic_debug_multitexture)
+            if (debugDraw && activeShaderCanBatchMultipleTextures) {
+                if (reusing) {
+                    warning('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
+                }
+                else {
+                    warning('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
+                }
+            }
+#end
             lastTexture = texture;
             lastTextureId = draw.getTextureId(texture.backendItem);
             texWidth = draw.getTextureWidth(texture.backendItem);
             texHeight = draw.getTextureHeight(texture.backendItem);
             texWidthActual = draw.getTextureWidthActual(texture.backendItem);
             texHeightActual = draw.getTextureHeightActual(texture.backendItem);
-            draw.bindTexture(texture.backendItem);
+            if (!reusing) {
+                draw.bindTexture(texture.backendItem);
+            }
         }
         else {
             lastTexture = null;
@@ -421,7 +442,7 @@ class Renderer extends Entity {
                     // Texture already used in batch, all good
                     draw.setActiveTexture(slot);
                     activeTextureSlot = slot;
-                    useTexture(draw, texture);
+                    useTexture(draw, texture, true);
                     alreadyUsed = true;
                     break;
                 }
