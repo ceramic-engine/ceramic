@@ -164,7 +164,7 @@ class Filter extends Quad {
 
 /// Public API
 
-    public function render(?done:Void->Void):Void {
+    public function render(requestFullUpdate:Bool = true, ?done:Void->Void):Void {
 
         if (!explicitRender) {
             warning('Explicit render is disabled on this filter. Ignoring render() call.');
@@ -173,7 +173,9 @@ class Filter extends Quad {
 
         content.active = true;
 
-        app.requestFullUpdateAndDrawInFrame();
+        if (requestFullUpdate) {
+            app.requestFullUpdateAndDrawInFrame();
+        }
 
         app.onceUpdate(null, function(_) {
             if (destroyed) {
