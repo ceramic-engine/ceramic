@@ -12,6 +12,8 @@ class ParticleItem {
 
     public var lifespan:Float = 0;
     public var age:Float = 0;
+    public var time:Float = 0;
+    public var random:Float = 0;
 
     public var colorRangeActive:Bool = true;
     public var colorRangeStart:Color = Color.WHITE;
@@ -145,6 +147,7 @@ class ParticleItem {
 
         age = 0;
         lifespan = 0;
+        time = Timer.now;
 
         colorRangeActive = true;
         colorRangeStart = Color.WHITE;

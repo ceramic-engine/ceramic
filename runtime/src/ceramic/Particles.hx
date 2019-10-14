@@ -810,7 +810,7 @@ class Particles extends Visual implements Observable {
     } //emitContinuousParticlesIfNeeded
 
     /** Update a particle (and its visual) from its parameter and elapsed time */
-    inline function updateParticle(particle:ParticleItem, delta:Float):Void {
+    function updateParticle(particle:ParticleItem, delta:Float):Void {
 
         if (particle.age < particle.lifespan) {
             particle.age += delta;
@@ -1027,6 +1027,7 @@ class Particles extends Visual implements Observable {
         var particle:ParticleItem = getParticle();
 
         particle.reset();
+        particle.random = _seedRandom.random();
 
         // Particle lifespan settings
         if (lifespanActive)
