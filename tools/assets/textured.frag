@@ -14,8 +14,9 @@ varying vec4 color;
 // ceramic: multiTexture/textureId
 
 void main() {
+    vec4 texColor;
     // ceramic: multiTexture/if
-    vec4 texColor = texture2D(tex0, tcoord);
-    gl_FragColor = color * texColor;
+    texColor = texture2D(tex0, tcoord);
     // ceramic: multiTexture/endif
+    gl_FragColor = color * texColor;
 }
