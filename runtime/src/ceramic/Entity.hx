@@ -342,9 +342,9 @@ class Entity implements Events implements Lazy {
 
 /// Tween
 
-    public function tween(?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public function tween(?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-        return Tween.start(this, id, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
+        return Tween.start(this, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
 
     } //tween
 

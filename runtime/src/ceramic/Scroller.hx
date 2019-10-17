@@ -791,7 +791,7 @@ class Scroller extends Visual {
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
-            var tweenX = tween(0, easing, duration, this.scrollX, scrollX, function(scrollX, _) {
+            var tweenX = tween(easing, duration, this.scrollX, scrollX, function(scrollX, _) {
                 this.scrollX = scrollX;
             });
             this.tweenX = tweenX;
@@ -807,7 +807,7 @@ class Scroller extends Visual {
         }
 
         if (scrollY != this.scrollY) {
-            var tweenY = tween(1, easing, duration, this.scrollY, scrollY, function(scrollY, _) {
+            var tweenY = tween(easing, duration, this.scrollY, scrollY, function(scrollY, _) {
                 this.scrollY = scrollY;
             });
             this.tweenY = tweenY;
@@ -863,7 +863,7 @@ class Scroller extends Visual {
                 var byY = scrollY + momentum * bounceMomentumFactor - toY;
                 var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
-                var tweenY = tween(0, easing, duration, 0, 1, function(t, _) {
+                var tweenY = tween(easing, duration, 0, 1, function(t, _) {
 
                     var value:Float;
 
@@ -901,7 +901,7 @@ class Scroller extends Visual {
                 else {
                     toY = 0;
                 }
-                var tweenY = tween(0, easing, duration * 2, fromY, toY, function(ty, _) {
+                var tweenY = tween(easing, duration * 2, fromY, toY, function(ty, _) {
                     scrollY = ty;
                 });
                 this.tweenY = tweenY;
@@ -931,7 +931,7 @@ class Scroller extends Visual {
                 var byX = scrollX + momentum * bounceMomentumFactor - toX;
                 var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
-                var tweenX = tween(0, easing, duration, 0, 1, function(t, _) {
+                var tweenX = tween(easing, duration, 0, 1, function(t, _) {
 
                     var value:Float;
 
@@ -969,7 +969,7 @@ class Scroller extends Visual {
                 else {
                     toX = 0;
                 }
-                var tweenX = tween(0, easing, duration * 2, fromX, toX, function(tx, _) {
+                var tweenX = tween(easing, duration * 2, fromX, toX, function(tx, _) {
                     scrollX = tx;
                 });
                 this.tweenX = tweenX;

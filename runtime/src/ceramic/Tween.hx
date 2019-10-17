@@ -31,7 +31,7 @@ class Tween extends Entity {
 
 /// Lifecycle
 
-    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
@@ -123,9 +123,9 @@ class Tween extends Entity {
     static var _tweens:Array<Tween> = [];
     static var _iteratedTweens:Array<Tween> = [];
 
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?id:Int, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-        var instance = new Tween(owner, id, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
+        var instance = new Tween(owner, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
         
         instance.onUpdate(owner, handleValueTime);
 
