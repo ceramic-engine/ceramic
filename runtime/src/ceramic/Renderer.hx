@@ -1254,6 +1254,10 @@ class Renderer extends Entity {
         var uvList = draw.getUvList();
         var colorList = draw.getColorList();
 
+        // We may run this code multiple times if the mesh
+        // needs to be splitted into multiple draw calls.
+        // That is why it is inside a `while` block
+        // Exit condition is at the end.
         while (true) {
         
             var uvFloats = this.uvFloats;
@@ -1394,9 +1398,13 @@ class Renderer extends Entity {
             this.colorFloats = colorFloats;
 
             if (endVertices == visualNumVertices) {
+                // No need to submit more data, exit loop
                 break;
             }
             else {
+                
+                // There is still data left that needs to be submitted.
+                // Flush pending buffers and iterate once more.
 
                 var textureBeforeFlush = lastTexture;
                 flush(draw);
