@@ -301,9 +301,9 @@ class Renderer extends Entity {
         if (blending == ceramic.Blending.ADD) {
             draw.setBlendFuncSeparate(
                 backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
                 backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                backend.BlendMode.ONE,
+                backend.BlendMode.ONE
             );
         } else if (blending == ceramic.Blending.SET) {
             draw.setBlendFuncSeparate(
@@ -968,7 +968,7 @@ class Renderer extends Entity {
             r = quad.color.redFloat * a;
             g = quad.color.greenFloat * a;
             b = quad.color.blueFloat * a;
-            if (quad.blending == ceramic.Blending.ADD) a = 0;
+            if (quad.blending == ceramic.Blending.ADD && (quad.texture == null || !quad.texture.isRenderTexture)) a = 0;
         }
 
         var colorFloats = this.colorFloats; 
@@ -1302,7 +1302,7 @@ class Renderer extends Entity {
                     var r = meshAlphaColor.redFloat * a;
                     var g = meshAlphaColor.greenFloat * a;
                     var b = meshAlphaColor.blueFloat * a;
-                    if (mesh.blending == ceramic.Blending.ADD) a = 0;
+                    if (mesh.blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) a = 0;
 
                     draw.putInColorList(colorList, colorFloats, r);
                     colorFloats++;
@@ -1359,7 +1359,7 @@ class Renderer extends Entity {
                     r = meshAlphaColor.redFloat * a;
                     g = meshAlphaColor.greenFloat * a;
                     b = meshAlphaColor.blueFloat * a;
-                    if (mesh.blending == ceramic.Blending.ADD) a = 0;
+                    if (mesh.blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) a = 0;
                 }
 
                 var colorList = draw.getColorList();
@@ -1418,7 +1418,7 @@ class Renderer extends Entity {
         if (blending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
-        else if (blending == ceramic.Blending.ADD) {
+        else if (blending == ceramic.Blending.ADD && (quad.texture == null || !quad.texture.isRenderTexture)) {
             blending = ceramic.Blending.NORMAL;
         }
 
@@ -1433,7 +1433,7 @@ class Renderer extends Entity {
         if (blending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
-        else if (blending == ceramic.Blending.ADD) {
+        else if (blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) {
             blending = ceramic.Blending.NORMAL;
         }
 
