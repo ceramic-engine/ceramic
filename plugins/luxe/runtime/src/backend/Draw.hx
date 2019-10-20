@@ -314,7 +314,7 @@ class Draw implements spec.Draw {
                 view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                 view.process();
                 GL.viewport(0, 0, renderTexture.width, renderTexture.height);
-                if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);//transparentColor);
+                if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
             } else {
                 luxeRenderer.target = null;
                 view.transform.scale.x = defaultTransformScaleX;
@@ -379,7 +379,7 @@ class Draw implements spec.Draw {
 
     inline public function clear():Void {
 
-        Luxe.renderer.clear(blackTransparentColor);
+        Luxe.renderer.clear(transparentColor);
 
     } //clear
 

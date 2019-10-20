@@ -507,13 +507,10 @@ class Renderer extends Entity {
             // Check if state is dirty
             var textureToUseInSameBatch = null;
             if (!stateDirty) {
+                var newComputedBlending = computeQuadBlending(quad);
                 stateDirty =
                     quad.shader != lastShader ||
-                    (quad.blending != lastBlending &&
-                    (
-                        (quad.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
-                        (quad.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
-                    )) ||
+                    newComputedBlending != lastComputedBlending ||
 #if ceramic_debug_rendering_option
                     quad.debugRendering != lastDebugRendering ||
 #end
@@ -598,13 +595,7 @@ class Renderer extends Entity {
                 }*/
 
                 // Update blending
-                var newComputedBlending = quad.blending;
-                if (newComputedBlending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
-                    newComputedBlending = ceramic.Blending.ALPHA;
-                }
-                else if (newComputedBlending == ceramic.Blending.ADD) {
-                    newComputedBlending = ceramic.Blending.NORMAL;
-                }
+                var newComputedBlending = computeQuadBlending(quad);
                 if (newComputedBlending != lastComputedBlending) {
                     lastComputedBlending = newComputedBlending;
                     useBlending(draw, lastComputedBlending);
@@ -1043,13 +1034,10 @@ class Renderer extends Entity {
             // Check if state is dirty
             var textureToUseInSameBatch = null;
             if (!stateDirty) {
+                var newComputedBlending = computeMeshBlending(mesh);
                 stateDirty =
                     mesh.shader != lastShader ||
-                    (mesh.blending != lastBlending &&
-                    (
-                        (mesh.blending != ceramic.Blending.NORMAL || lastBlending != ceramic.Blending.ADD) &&
-                        (mesh.blending != ceramic.Blending.ADD || lastBlending != ceramic.Blending.NORMAL)
-                    )) ||
+                    newComputedBlending != lastComputedBlending ||
 #if ceramic_debug_rendering_option
                     mesh.debugRendering != lastDebugRendering ||
 #end
@@ -1134,13 +1122,7 @@ class Renderer extends Entity {
                 }*/
 
                 // Update blending
-                var newComputedBlending = mesh.blending;
-                if (newComputedBlending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
-                    newComputedBlending = ceramic.Blending.ALPHA;
-                }
-                else if (newComputedBlending == ceramic.Blending.ADD) {
-                    newComputedBlending = ceramic.Blending.NORMAL;
-                }
+                var newComputedBlending = computeMeshBlending(mesh);
                 if (newComputedBlending != lastComputedBlending) {
                     lastComputedBlending = newComputedBlending;
                     useBlending(draw, lastComputedBlending);
@@ -1428,6 +1410,36 @@ class Renderer extends Entity {
         this.z = z + 0.001;
 
     } //drawMesh
+
+    #if !ceramic_debug_draw inline #end function computeQuadBlending(quad:ceramic.Quad):ceramic.Blending {
+
+        var blending = quad.blending;
+
+        if (blending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+            blending = ceramic.Blending.ALPHA;
+        }
+        else if (blending == ceramic.Blending.ADD) {
+            blending = ceramic.Blending.NORMAL;
+        }
+
+        return blending;
+
+    } //computeQuadBlending
+
+    #if !ceramic_debug_draw inline #end function computeMeshBlending(mesh:ceramic.Mesh):ceramic.Blending {
+
+        var blending = mesh.blending;
+
+        if (blending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+            blending = ceramic.Blending.ALPHA;
+        }
+        else if (blending == ceramic.Blending.ADD) {
+            blending = ceramic.Blending.NORMAL;
+        }
+
+        return blending;
+
+    } //computeMeshBlending
 
     #if !ceramic_debug_draw inline #end function flush(draw:backend.Draw):Bool {
 
