@@ -27,6 +27,22 @@ class Extensions<T> {
 #end
     } //unsafeSet
 
+    #if !debug inline #end public static function setArrayLength<T>(array:Array<T>, length:Int):Void {
+        if (array.length != length) {
+#if cpp
+            untyped array.__SetSize(length);
+#else
+            if (array.length > length) {
+                array.splice(length, array.length - length);
+            }
+            else {
+                var dArray:Array<Dynamic> = array;
+                dArray[length - 1] = null;
+            }
+#end
+        }
+    } //setArrayLength
+
     /** Return a random element contained in the given array */
     inline public static function randomElement<T>(array:Array<T>):T {
 
