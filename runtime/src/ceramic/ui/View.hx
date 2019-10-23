@@ -826,6 +826,21 @@ class View extends Quad {
 
     } //layoutParentThenSelf
 
+/// Screen size helpers
+
+    /** Will set this view size to screen size, and update view size each time screen size changes. */
+    public function bindToScreenSize():Void {
+
+        // Bind to screen size
+        screen.onResize(this, function() {
+            size(screen.width, screen.height);
+            View.requestLayout();
+        });
+        size(screen.width, screen.height);
+        View.requestLayout();
+
+    } //bindToScreenSize
+
 /// View size helpers
 
     inline public function percent(value:Float):Float {
