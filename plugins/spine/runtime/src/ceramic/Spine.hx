@@ -117,9 +117,9 @@ class Spine extends Visual {
     // Not sure this is needed, but it may prevent some unnecessary allocation
     function runScheduledRender():Void {
         renderScheduled = false;
-        if (renderDirtyBecauseSkinChanged) {
+        if (renderDirtyAgressive) {
             if (!renderWhenInvisible && visibilityDirty) {
-                computeVisibility();
+                spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 forceRender();
@@ -130,7 +130,7 @@ class Spine extends Visual {
         }
         else if (renderDirty) {
             if (!renderWhenInvisible && visibilityDirty) {
-                computeVisibility();
+                spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 render(0, 0, false);
@@ -143,11 +143,15 @@ class Spine extends Visual {
     var runScheduledRenderDyn:Void->Void = null;
 
     /** Internal flag to know if render became dirty because of a skin change. */
-    var renderDirtyBecauseSkinChanged(default,set):Bool = false;
-    inline function set_renderDirtyBecauseSkinChanged(renderDirtyBecauseSkinChanged:Bool):Bool {
-        if (renderDirtyBecauseSkinChanged && pausedOrFrozen && !renderScheduled) {
+    var renderDirtyAgressive(default,set):Bool = false;
+    function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
+        if (renderDirtyAgressive && parent != null && Std.is(parent, Spine)) {
+            var parentSpine:Spine = cast parent;
+            parentSpine.renderDirty = true;
+        }
+        if (renderDirtyAgressive && pausedOrFrozen && !renderScheduled) {
             if (!renderWhenInvisible && visibilityDirty) {
-                computeVisibility();
+                spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 renderScheduled = true;
@@ -155,14 +159,18 @@ class Spine extends Visual {
                 app.onceImmediate(runScheduledRenderDyn);
             }
         }
-        return (this.renderDirtyBecauseSkinChanged = renderDirtyBecauseSkinChanged);
+        return (this.renderDirtyAgressive = renderDirtyAgressive);
     }
 
     public var renderDirty(default,set):Bool = false;
-    inline function set_renderDirty(renderDirty:Bool):Bool {
+    function set_renderDirty(renderDirty:Bool):Bool {
+        if (renderDirty && parent != null && Std.is(parent, Spine)) {
+            var parentSpine:Spine = cast parent;
+            parentSpine.renderDirty = true;
+        }
         if (renderDirty && pausedOrFrozen && !renderScheduled) {
             if (!renderWhenInvisible && visibilityDirty) {
-                computeVisibility();
+                spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 renderScheduled = true;
@@ -292,7 +300,7 @@ class Spine extends Visual {
         if (this.renderWhenInvisible == renderWhenInvisible) return renderWhenInvisible;
         this.renderWhenInvisible = renderWhenInvisible;
         if (visibilityDirty) {
-            computeVisibility();
+            spineComputeVisibility();
         }
         if (!computedVisible && renderWhenInvisible) {
             renderDirty = true;
@@ -320,7 +328,7 @@ class Spine extends Visual {
         if (this.spineData == spineData) return spineData;
 
         // Render will be updated from skeleton change anyway
-        renderDirtyBecauseSkinChanged = false;
+        renderDirtyAgressive = false;
         
         // Save animation info
         var prevSpineData = this.spineData;
@@ -426,7 +434,7 @@ class Spine extends Visual {
         if (animation != null) {
             // If there is an animation running, render needs to be updated
             // more eagerly to use the new skin. Keep that info in a flag.
-            renderDirtyBecauseSkinChanged = true;
+            renderDirtyAgressive = true;
         }
         return skin;
     }
@@ -444,7 +452,7 @@ class Spine extends Visual {
         this.animation = animation;
 
         // Render will be updated from animation change anyway
-        renderDirtyBecauseSkinChanged = false;
+        renderDirtyAgressive = false;
 
         if (spineData != null) animate(animation, loop, 0);
         return animation;
@@ -797,7 +805,7 @@ class Spine extends Visual {
         if (state == null) return;
 
         // Forced rendering will update skin display anyway
-        renderDirtyBecauseSkinChanged = false;
+        renderDirtyAgressive = false;
 
         var prevPaused = paused;
         var prevFrozen = frozen;
@@ -897,13 +905,14 @@ class Spine extends Visual {
         // No spine data? Then nothing to animate
         if (spineData == null) return;
 
-        // Update skeleton
-        updateSkeleton(delta);
-
         if (!renderWhenInvisible && visibilityDirty) {
-            computeVisibility();
+            spineComputeVisibility();
         }
         if (computedVisible || renderWhenInvisible) {
+
+            // Update skeleton
+            updateSkeleton(delta);
+
             // We are visible and are root spine animation, let's render
             render(delta, 0, false);
         }
@@ -1488,7 +1497,7 @@ class Spine extends Visual {
 
                         // Skip invisible sub spines by default
                         if (!sub.renderWhenInvisible && sub.visibilityDirty) {
-                            sub.computeVisibility();
+                            sub.spineComputeVisibility();
                         }
                         if (sub.computedVisible || sub.renderWhenInvisible) {
 
@@ -1574,9 +1583,9 @@ class Spine extends Visual {
                 
                 // Skip rendering of sub spines if they are not visible, by default
                 if (!sub.renderWhenInvisible && sub.visibilityDirty) {
-                    sub.computeVisibility();
+                    sub.spineComputeVisibility();
                 }
-                if (sub.visible || sub.renderWhenInvisible) {
+                if (sub.computedVisible || sub.renderWhenInvisible) {
                     sub.updateSkeleton(delta);
                     sub.render(delta, z, false);
                 }
@@ -1856,6 +1865,31 @@ class Spine extends Visual {
         return 1.0 * (value & 0xFEFFFFFF);
 
     } //intToFloatColor
+
+/// Visibility
+
+    function spineComputeVisibility():Void {
+
+        super.computeVisibility();
+
+    } //spineComputeVisibility
+
+    override function computeVisibility():Void {
+
+        var wasVisible = computedVisible;
+
+        super.computeVisibility();
+
+        if (computedVisible && !wasVisible && !renderWhenInvisible) {
+            renderDirtyAgressive = true;
+            /*if (!renderScheduled) {
+                renderScheduled = true;
+                if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
+                app.onceImmediate(runScheduledRenderDyn);
+            }*/
+        }
+
+    } //computeVisibility
 
 /// Hit test
 
