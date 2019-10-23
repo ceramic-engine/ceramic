@@ -912,7 +912,7 @@ class Visual extends Entity {
 
 /// Visibility / Alpha
 
-    public function computeVisibility() {
+    function computeVisibility() {
 
         if (parent != null && parent.visibilityDirty) {
             parent.computeVisibility();
