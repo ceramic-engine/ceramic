@@ -2,6 +2,8 @@ package ceramic;
 
 class GlyphQuad extends Quad {
 
+    @event function clear(quad:GlyphQuad);
+
     public var char:String = null;
 
     public var glyph:BitmapFontCharacter = null;
@@ -27,5 +29,13 @@ class GlyphQuad extends Quad {
         return 'GlyphQuad(c=$char,i=$index,l=$line,x=$glyphX,y=$glyphY)';
 
     } //toString
+
+    override function clear() {
+
+        emitClear(this);
+
+        super.clear();
+
+    } //clear
 
 } //GlyphQuad
