@@ -4,44 +4,38 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
-class ArcadePhysics extends Entity {
+class NapePhysics extends Entity {
 
-#if ceramic_arcade_physics
+#if ceramic_nape_physics
 
-    @:allow(ceramic.ArcadePhysicsBody)
-    var _destroyedBodies:Array<ArcadePhysicsBody> = [];
-    @:allow(ceramic.ArcadePhysicsBody)
-    var _createdBodies:Array<ArcadePhysicsBody> = [];
-    @:allow(ceramic.ArcadePhysicsBody)
+    @:allow(ceramic.NapePhysicsBody)
+    var _destroyedBodies:Array<NapePhysicsBody> = [];
+    @:allow(ceramic.NapePhysicsBody)
+    var _createdBodies:Array<NapePhysicsBody> = [];
+    @:allow(ceramic.NapePhysicsBody)
     var _freezeBodies:Bool = false;
 
-    public var bodies:Array<arcade.Body> = [];
+    public var bodies:Array<ceramic.NapePhysicsBody> = [];
 
-    public var world:arcade.World = null;
-
-    public var autoUpdateWorldBounds:Bool = true;
+    public var space:nape.space.Space = null;
 
     public function new() {
 
-        initWorld();
+        space = initSpace();
 
     } //new
 
-    inline function initWorld():Void {
+    public function initSpace(gravityX:Float, gravityY:Float):Void {
 
-        world = new arcade.World(0, 0, screen.width, screen.height);
+        return new Space(new nape.geom.Vec2(gravityX, gravityY));
 
-    } //initWorld
+    } //initSpace
 
-    inline function updateWorld(delta:Float):Void {
+    inline function updateSpace(delta:Float):Void {
 
-        if (autoUpdateWorldBounds) {
-            world.setBounds(0, 0, screen.width, screen.height);
-        }
+        // TODO
 
-        world.elapsed = delta;
-
-    } //updateWorld
+    } //updateSpace
 
     inline function preUpdate(delta:Float):Void {
 
@@ -115,4 +109,4 @@ class ArcadePhysics extends Entity {
 
 #end
 
-} //ArcadePhysics
+} //NapePhysics

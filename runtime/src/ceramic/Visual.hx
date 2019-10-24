@@ -29,7 +29,7 @@ class Visual extends Entity {
 
 #if ceramic_arcade_physics
 
-/// Physics
+/// Arcade physics
 
     #if ceramic_shortcuts_arcade
 
@@ -44,7 +44,7 @@ class Visual extends Entity {
     #if ceramic_shortcuts_arcade @:noCompletion #end public var arcadeBody(default,set):arcade.Body = null;
     function set_arcadeBody(arcadeBody:arcade.Body):arcade.Body {
         if (this.arcadeBody == arcadeBody) return arcadeBody;
-        if (this.arcadeBody != null && this.body.visual == this) {
+        if (this.arcadeBody != null && this.arcadeBody.visual == this) {
             this.arcadeBody.visual = null;
         }
         this.arcadeBody = arcadeBody;
@@ -60,6 +60,58 @@ class Visual extends Entity {
         if (arcadeBody != null) {
             arcadeBody.destroy();
             arcadeBody = null;
+        }
+
+        var w = width * scaleX;
+        var h = height * scaleY;
+
+        arcadeBody = new arcade.Body(
+            x - w * anchorX,
+            y - h * anchorY,
+            w,
+            h,
+            rotation
+        );
+
+        return arcadeBody;
+
+    } //initArcadeBody
+
+#end
+
+#if ceramic_nape_physics
+
+/// Arcade physics
+
+    #if ceramic_shortcuts_nape
+
+    /** The nape physics body bound to this visual. */
+    public var body(get,set):nape.phys.Body;
+    inline function get_body():nape.phys.Body return napeBody;
+    inline function set_body(body:nape.phys.Body):nape.phys.Body return this.napeBody = body;
+
+    #end
+
+    /** The nape physics body bound to this visual. */
+    #if ceramic_shortcuts_nape @:noCompletion #end public var napeBody(default,set):nape.phys.Body = null;
+    function set_napeBody(napeBody:nape.phys.Body):nape.phys.Body {
+        if (this.napeBody == napeBody) return napeBody;
+        if (this.napeBody != null && this.napeBody.visual == this) {
+            this.napeBody.visual = null;
+        }
+        this.napeBody = napeBody;
+        if (napeBody != null) {
+            napeBody.visual = this;
+        }
+        return napeBody;
+    }
+
+    /** Init nape physics body bound to this visual. */
+    public function initNapeBody(type:ceramic.NapePhysicsBodyType):nape.phys.Body {
+
+        if (napeBody != null) {
+            napeBody.destroy();
+            napeBody = null;
         }
 
         var w = width * scaleX;

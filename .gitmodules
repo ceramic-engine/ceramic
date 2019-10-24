@@ -61,3 +61,7 @@
 	path = git/akifox-asynchttp
 	url = https://github.com/ceramic-engine/akifox-asynchttp.git
 	branch = master
+[submodule "git/nape"]
+	path = git/nape
+	url = https://github.com/ceramic-engine/nape.git
+	branch = master
