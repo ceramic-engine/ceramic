@@ -15,7 +15,7 @@ class ArcadePhysics extends Entity {
     @:allow(ceramic.ArcadePhysicsBody)
     var _freezeBodies:Bool = false;
 
-    public var bodies:Array<arcade.Body> = [];
+    public var bodies(default, null):Array<arcade.Body> = [];
 
     public var world:arcade.World = null;
 
@@ -56,16 +56,26 @@ class ArcadePhysics extends Entity {
             var body:arcade.Body = bodies.unsafeGet(i);
             if (!body.destroyed) {
                 var visual = body.visual;
-                var w = visual.width * visual.scaleX;
-                var h = visual.height * visual.scaleY;
-                @:privateAccess body.preUpdate(
-                    world,
-                    visual.x - w * visual.anchorX,
-                    visual.y - h * visual.anchorY,
-                    w,
-                    h,
-                    visual.rotation
-                );
+                if (visual == null) {
+                    warning('Pre updating arcade body with no visual, destroy body!');
+                    body.destroy();
+                }
+                else if (visual.destroyed) {
+                    warning('Pre updating arcade body with destroyed visual, destroy body!');
+                    body.destroy();
+                }
+                else {
+                    var w = visual.width * visual.scaleX;
+                    var h = visual.height * visual.scaleY;
+                    body.preUpdate(
+                        world,
+                        visual.x - w * visual.anchorX,
+                        visual.y - h * visual.anchorY,
+                        w,
+                        h,
+                        visual.rotation
+                    );
+                }
             }
         }
 
@@ -84,7 +94,23 @@ class ArcadePhysics extends Entity {
         for (i in 0...bodies.length) {
             var body:arcade.Body = bodies.unsafeGet(i);
             if (!body.destroyed) {
-                @:privateAccess body.postUpdate(world);
+                var visual = body.visual;
+                if (visual == null) {
+                    warning('Post updating arcade body with no visual, destroy body!');
+                    body.destroy();
+                }
+                else if (visual.destroyed) {
+                    warning('Post updating arcade body with destroyed visual, destroy body!');
+                    body.destroy();
+                }
+                else {
+                    body.postUpdate(world);
+                    visual.x += body.dx;
+                    visual.y += body.dy;
+                    if (body.allowRotation) {
+                        visual.rotation += visual.deltaZ();
+                    }
+                }
             }
         }
 

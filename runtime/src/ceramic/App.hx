@@ -272,13 +272,13 @@ class App extends Entity {
 
 #if ceramic_arcade_physics
 
-    public var arcadePhysics:ArcadePhysics = null;
+    public var arcade:ArcadePhysics = null;
 
 #end
 
 #if ceramic_nape_physics
 
-    public var napePhysics:NapePhysics = null;
+    public var nape:NapePhysics = null;
 
 #end
 
@@ -365,11 +365,11 @@ class App extends Entity {
         initCollections();
 
 #if ceramic_arcade_physics
-        arcadePhysics = new ArcadePhysics();
+        arcade = new ArcadePhysics();
 #end
 
 #if ceramic_nape_physics
-        napePhysics = new NapePhysics();
+        nape = new NapePhysics();
 #end
 
         // Load default assets
@@ -599,10 +599,10 @@ class App extends Entity {
 
             // Pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-            if (_delta > 0) arcadePhysics.preUpdate(_delta);
+            if (_delta > 0) arcade.preUpdate(_delta);
 #end
 #if ceramic_nape_physics
-            if (_delta > 0) napePhysics.preUpdate(_delta);
+            if (_delta > 0) nape.preUpdate(_delta);
 #end
 
             // Flush immediate callbacks
@@ -628,10 +628,10 @@ class App extends Entity {
 
             // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
-            if (_delta > 0) arcadePhysics.postUpdate(_delta);
+            if (_delta > 0) arcade.postUpdate(_delta);
 #end
 #if ceramic_nape_physics
-            if (_delta > 0) napePhysics.postUpdate(_delta);
+            if (_delta > 0) nape.postUpdate(_delta);
 #end
 
             // Flush immediate callbacks

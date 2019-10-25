@@ -15,25 +15,59 @@ class NapePhysics extends Entity {
     @:allow(ceramic.NapePhysicsBody)
     var _freezeBodies:Bool = false;
 
-    public var bodies:Array<ceramic.NapePhysicsBody> = [];
+    public var bodies(default, null):Array<ceramic.NapePhysicsBody> = [];
 
-    public var space:nape.space.Space = null;
+    public var spaces(default, null):Array<nape.space.Space> = [];
 
     public function new() {
 
-        space = initSpace();
+        super();
 
     } //new
 
-    public function initSpace(gravityX:Float, gravityY:Float):Void {
+    public function createSpace(gravityX:Float, gravityY:Float, autoAdd:Bool = true):nape.space.Space {
 
-        return new Space(new nape.geom.Vec2(gravityX, gravityY));
+        var space = new nape.space.Space(new nape.geom.Vec2(gravityX, gravityY));
 
-    } //initSpace
+        if (autoAdd) {
+            addSpace(space);
+        }
 
-    inline function updateSpace(delta:Float):Void {
+        return space;
 
-        // TODO
+    } //createSpace
+
+    public function addSpace(space:nape.space.Space):Void {
+
+        if (spaces.indexOf(space) == -1) {
+            spaces.push(space);
+        }
+        else {
+            warning('Space already added to NapePhysics');
+        }
+
+    } //createSpace
+
+    public function removeSpace(space:nape.space.Space):Void {
+
+        if (!spaces.remove(space)) {
+            warning('Space not removed from NapePhysics because it was not added at the first place');
+        }
+        
+    } //removeSpace
+
+    inline function updateSpaces(delta:Float):Void {
+
+        for (i in 0...spaces.length) {
+            var space = spaces.unsafeGet(i);
+            updateSpace(space, delta);
+        }
+
+    } //updateSpaces
+
+    inline function updateSpace(space:nape.space.Space, delta:Float):Void {
+
+        space.step(delta);
 
     } //updateSpace
 
@@ -41,25 +75,20 @@ class NapePhysics extends Entity {
 
         if (delta <= 0) return;
 
-        updateWorld(delta);
-
         _freezeBodies = true;
 
-        // Run preUpdate()
         for (i in 0...bodies.length) {
             var body:arcade.Body = bodies.unsafeGet(i);
             if (!body.destroyed) {
                 var visual = body.visual;
-                var w = visual.width * visual.scaleX;
-                var h = visual.height * visual.scaleY;
-                @:privateAccess body.preUpdate(
-                    world,
-                    visual.x - w * visual.anchorX,
-                    visual.y - h * visual.anchorY,
-                    w,
-                    h,
-                    visual.rotation
-                );
+                if (visual == null) {
+                    warning('Pre updating arcade body with no visual, destroy body!');
+                    body.destroy();
+                }
+                else if (visual.destroyed) {
+                    warning('Pre updating arcade body with destroyed visual, destroy body!');
+                    body.destroy();
+                }
             }
         }
 
@@ -68,17 +97,35 @@ class NapePhysics extends Entity {
         flushDestroyedBodies();
         flushCreatedBodies();
 
+        updateSpaces(delta);
+
     } //preUpdate
 
     inline function postUpdate(delta:Float):Void {
 
         _freezeBodies = true;
 
-        // Run postUpdate()
         for (i in 0...bodies.length) {
             var body:arcade.Body = bodies.unsafeGet(i);
             if (!body.destroyed) {
-                @:privateAccess body.postUpdate(world);
+                var visual = body.visual;
+                if (visual == null) {
+                    warning('Post updating arcade body with no visual, destroy body!');
+                    body.destroy();
+                }
+                else if (visual.destroyed) {
+                    warning('Post updating arcade body with destroyed visual, destroy body!');
+                    body.destroy();
+                }
+                else {
+                    visual.pos(
+                        body.position.x - visual.width * visual.anchorX,
+                        body.position.y - visual.height * visual.anchorY
+                    );
+                    if (body.allowRotation) {
+                        body.rotation = radToDeg(body.rotation);
+                    }
+                }
             }
         }
 
@@ -106,6 +153,10 @@ class NapePhysics extends Entity {
         }
         
     } //flushCreatedBodies
+
+    inline static function radToDeg(rad:Float):Float {
+        return rad * 57.29577951308232;
+    }
 
 #end
 

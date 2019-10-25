@@ -8,11 +8,11 @@ class ArcadePhysicsBody extends Entity {
 
         super();
 
-        if (ceramic.App.app.arcadePhysics._freezeBodies) {
-            ceramic.App.app.arcadePhysics._createdBodies.push(this);
+        if (ceramic.App.app.arcade._freezeBodies) {
+            ceramic.App.app.arcade._createdBodies.push(this);
         }
         else {
-            ceramic.App.app.arcadePhysics.bodies.push(cast this);
+            ceramic.App.app.arcade.bodies.push(cast this);
         }
 
     } //new
@@ -28,11 +28,11 @@ class ArcadePhysicsBody extends Entity {
             visual = null;
         }
 
-        if (ceramic.App.app.arcadePhysics._freezeBodies) {
-            ceramic.App.app.arcadePhysics._destroyedBodies.push(this);
+        if (ceramic.App.app.arcade._freezeBodies) {
+            ceramic.App.app.arcade._destroyedBodies.push(this);
         }
         else {
-            ceramic.App.app.arcadePhysics.bodies.remove(cast this);
+            ceramic.App.app.arcade.bodies.remove(cast this);
         }
 
     } //destroy

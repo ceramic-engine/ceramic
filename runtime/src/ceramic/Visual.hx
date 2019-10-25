@@ -4,6 +4,10 @@ package ceramic;
 import backend.VisualItem;
 #end
 
+#if ceramic_nape_physics
+import nape.phys.Body as NapeBody;
+#end
+
 import ceramic.Point;
 
 using ceramic.Extensions;
@@ -31,41 +35,32 @@ class Visual extends Entity {
 
 /// Arcade physics
 
-    #if ceramic_shortcuts_arcade
-
     /** The arcade physics body bound to this visual. */
-    public var body(get,set):arcade.Body;
-    inline function get_body():arcade.Body return arcadeBody;
-    inline function set_body(body:arcade.Body):arcade.Body return this.arcadeBody = body;
-
-    #end
-
-    /** The arcade physics body bound to this visual. */
-    #if ceramic_shortcuts_arcade @:noCompletion #end public var arcadeBody(default,set):arcade.Body = null;
-    function set_arcadeBody(arcadeBody:arcade.Body):arcade.Body {
-        if (this.arcadeBody == arcadeBody) return arcadeBody;
-        if (this.arcadeBody != null && this.arcadeBody.visual == this) {
-            this.arcadeBody.visual = null;
+    public var arcade(default,set):arcade.Body = null;
+    function set_arcade(arcade:arcade.Body):arcade.Body {
+        if (this.arcade == arcade) return arcade;
+        if (this.arcade != null && this.arcade.visual == this) {
+            this.arcade.visual = null;
         }
-        this.arcadeBody = arcadeBody;
-        if (arcadeBody != null) {
-            arcadeBody.visual = this;
+        this.arcade = arcade;
+        if (arcade != null) {
+            arcade.visual = this;
         }
-        return arcadeBody;
+        return arcade;
     }
 
-    /** Init arcade physics body bound to this visual. */
-    public function initArcadeBody():arcade.Body {
+    /** Init arcade physics (body) bound to this visual. */
+    public function initArcadePhysics():arcade.Body {
 
-        if (arcadeBody != null) {
-            arcadeBody.destroy();
-            arcadeBody = null;
+        if (arcade != null) {
+            arcade.destroy();
+            arcade = null;
         }
 
         var w = width * scaleX;
         var h = height * scaleY;
 
-        arcadeBody = new arcade.Body(
+        arcade = new arcade.Body(
             x - w * anchorX,
             y - h * anchorY,
             w,
@@ -73,9 +68,9 @@ class Visual extends Entity {
             rotation
         );
 
-        return arcadeBody;
+        return arcade;
 
-    } //initArcadeBody
+    } //initArcadePhysics
 
 #end
 
@@ -83,51 +78,43 @@ class Visual extends Entity {
 
 /// Arcade physics
 
-    #if ceramic_shortcuts_nape
-
-    /** The nape physics body bound to this visual. */
-    public var body(get,set):nape.phys.Body;
-    inline function get_body():nape.phys.Body return napeBody;
-    inline function set_body(body:nape.phys.Body):nape.phys.Body return this.napeBody = body;
-
-    #end
-
-    /** The nape physics body bound to this visual. */
-    #if ceramic_shortcuts_nape @:noCompletion #end public var napeBody(default,set):nape.phys.Body = null;
-    function set_napeBody(napeBody:nape.phys.Body):nape.phys.Body {
-        if (this.napeBody == napeBody) return napeBody;
-        if (this.napeBody != null && this.napeBody.visual == this) {
-            this.napeBody.visual = null;
+    /** The nape physics (body) of this visual. */
+    public var nape(default,set):VisualNapePhysics = null;
+    function set_nape(nape:VisualNapePhysics):VisualNapePhysics {
+        if (this.nape == nape) return nape;
+        if (this.nape != null && this.nape.visual == this) {
+            this.nape.visual = null;
         }
-        this.napeBody = napeBody;
-        if (napeBody != null) {
-            napeBody.visual = this;
+        this.nape = nape;
+        if (nape != null) {
+            nape.visual = this;
         }
-        return napeBody;
+        return nape;
     }
 
     /** Init nape physics body bound to this visual. */
-    public function initNapeBody(type:ceramic.NapePhysicsBodyType):nape.phys.Body {
+    public function initNapePhysics(type:ceramic.NapePhysicsBodyType):VisualNapePhysics {
 
-        if (napeBody != null) {
-            napeBody.destroy();
+        if (nape != null) {
+            nape.destroy();
             napeBody = null;
         }
 
         var w = width * scaleX;
         var h = height * scaleY;
 
-        arcadeBody = new arcade.Body(
-            x - w * anchorX,
+        nape = new VisualNapePhysics(
+            /*x - w * anchorX,
             y - h * anchorY,
             w,
             h,
-            rotation
+            rotation*/
+            // TODO
         );
 
-        return arcadeBody;
+        return nape;
 
-    } //initArcadeBody
+    } //initNapePhysics
 
 #end
 
