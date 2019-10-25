@@ -374,6 +374,7 @@ class Text extends Visual {
             quad.code = code;
             quad.index = i;
             quad.visible = true;
+            quad.transparent = false;
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
             quad.texture = font.pages.get(glyph.page);
