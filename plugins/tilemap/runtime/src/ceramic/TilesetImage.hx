@@ -32,10 +32,6 @@ class TilesetImage extends Entity {
     /** The reference to the tileset image file, if any */
     public var source:String = null;
 
-    public function new() {
-
-    } //new
-
     override function destroy() {
 
         super.destroy();

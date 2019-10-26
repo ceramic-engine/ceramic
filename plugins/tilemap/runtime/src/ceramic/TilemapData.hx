@@ -54,10 +54,6 @@ class TilemapData extends Entity {
 
 /// Lifecycle
 
-    public function new() {
-
-    } //new
-
     override function destroy() {
 
         super.destroy();
