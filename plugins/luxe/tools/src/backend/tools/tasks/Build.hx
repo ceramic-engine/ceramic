@@ -81,6 +81,7 @@ class Build extends tools.Task {
 		if (action == 'run' || action == 'build') {
 			var lastModifiedListFile = Path.join([outTargetPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
 			var lastModifiedListBefore:DynamicAccess<Float> = null;
+			var ceramicYmlPath = Path.join([cwd, 'ceramic.yml']);
 
 			var pathsToScan = [Path.join([cwd, 'src'])];
 			var projectPaths:Array<String> = context.project.app.paths;
@@ -98,6 +99,7 @@ class Build extends tools.Task {
 			for (toScan in pathsToScan) {
 				Files.getDirectoryLastModifiedList(toScan, '.hx', lastModifiedListAfter);
 			}
+			lastModifiedListAfter.set(ceramicYmlPath, Files.getLastModified(ceramicYmlPath));
 
 			// Read previous file
 			if (FileSystem.exists(lastModifiedListFile)) {
