@@ -249,4 +249,12 @@ class Utils {
 
     } //stackItemToString
 
+    inline public static function radToDeg(rad:Float):Float {
+        return rad * 57.29577951308232;
+    }
+
+    inline public static function degToRad(deg:Float):Float {
+        return deg * 0.017453292519943295;
+    }
+
 } //Utils

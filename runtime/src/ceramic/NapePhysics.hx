@@ -8,26 +8,32 @@ class NapePhysics extends Entity {
 
 #if ceramic_nape_physics
 
-    @:allow(ceramic.NapePhysicsBody)
-    var _destroyedBodies:Array<NapePhysicsBody> = [];
-    @:allow(ceramic.NapePhysicsBody)
-    var _createdBodies:Array<NapePhysicsBody> = [];
-    @:allow(ceramic.NapePhysicsBody)
-    var _freezeBodies:Bool = false;
+    @:allow(ceramic.VisualNapePhysics)
+    var _destroyedItems:Array<VisualNapePhysics> = [];
+    @:allow(ceramic.VisualNapePhysics)
+    var _createdItems:Array<VisualNapePhysics> = [];
+    @:allow(ceramic.VisualNapePhysics)
+    var _freezeItems:Bool = false;
 
-    public var bodies(default, null):Array<ceramic.NapePhysicsBody> = [];
+    public var items(default, null):Array<ceramic.VisualNapePhysics> = [];
 
+    /** All spaces used with nape physics */
     public var spaces(default, null):Array<nape.space.Space> = [];
+
+    /** Default space for nape physics */
+    public var space(default, null):nape.space.Space = null;
 
     public function new() {
 
         super();
 
+        this.space = createSpace();
+
     } //new
 
-    public function createSpace(gravityX:Float, gravityY:Float, autoAdd:Bool = true):nape.space.Space {
+    public function createSpace(autoAdd:Bool = true):nape.space.Space {
 
-        var space = new nape.space.Space(new nape.geom.Vec2(gravityX, gravityY));
+        var space = new nape.space.Space(new nape.geom.Vec2(0, 0));
 
         if (autoAdd) {
             addSpace(space);
@@ -46,7 +52,7 @@ class NapePhysics extends Entity {
             warning('Space already added to NapePhysics');
         }
 
-    } //createSpace
+    } //addSpace
 
     public function removeSpace(space:nape.space.Space):Void {
 
@@ -75,27 +81,27 @@ class NapePhysics extends Entity {
 
         if (delta <= 0) return;
 
-        _freezeBodies = true;
+        _freezeItems = true;
 
-        for (i in 0...bodies.length) {
-            var body:arcade.Body = bodies.unsafeGet(i);
-            if (!body.destroyed) {
-                var visual = body.visual;
+        for (i in 0...items.length) {
+            var item = items.unsafeGet(i);
+            if (!item.destroyed) {
+                var visual = item.visual;
                 if (visual == null) {
-                    warning('Pre updating arcade body with no visual, destroy body!');
-                    body.destroy();
+                    warning('Pre updating nape body with no visual, destroy item!');
+                    item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Pre updating arcade body with destroyed visual, destroy body!');
-                    body.destroy();
+                    warning('Pre updating nape body with destroyed visual, destroy item!');
+                    item.destroy();
                 }
             }
         }
 
-        _freezeBodies = false;
+        _freezeItems = false;
 
-        flushDestroyedBodies();
-        flushCreatedBodies();
+        flushDestroyedItems();
+        flushCreatedItems();
 
         updateSpaces(delta);
 
@@ -103,60 +109,57 @@ class NapePhysics extends Entity {
 
     inline function postUpdate(delta:Float):Void {
 
-        _freezeBodies = true;
+        _freezeItems = true;
 
-        for (i in 0...bodies.length) {
-            var body:arcade.Body = bodies.unsafeGet(i);
-            if (!body.destroyed) {
-                var visual = body.visual;
+        for (i in 0...items.length) {
+            var item = items.unsafeGet(i);
+            if (!item.destroyed) {
+                var visual = item.visual;
                 if (visual == null) {
-                    warning('Post updating arcade body with no visual, destroy body!');
-                    body.destroy();
+                    warning('Post updating nape body with no visual, destroy item!');
+                    item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Post updating arcade body with destroyed visual, destroy body!');
-                    body.destroy();
+                    warning('Post updating nape body with destroyed visual, destroy item!');
+                    item.destroy();
                 }
                 else {
+                    var body = item.body;
                     visual.pos(
                         body.position.x - visual.width * visual.anchorX,
                         body.position.y - visual.height * visual.anchorY
                     );
                     if (body.allowRotation) {
-                        body.rotation = radToDeg(body.rotation);
+                        body.rotation = Utils.radToDeg(body.rotation);
                     }
                 }
             }
         }
 
-        _freezeBodies = false;
+        _freezeItems = false;
 
-        flushDestroyedBodies();
-        flushCreatedBodies();
+        flushDestroyedItems();
+        flushCreatedItems();
 
     } //postUpdate
 
-    inline function flushDestroyedBodies():Void {
+    inline function flushDestroyedItems():Void {
 
-        while (_destroyedBodies.length > 0) {
-            var body = _destroyedBodies.pop();
-            bodies.remove(cast body);
+        while (_destroyedItems.length > 0) {
+            var body = _destroyedItems.pop();
+            items.remove(cast body);
         }
         
-    } //flushDestroyedBodies
+    } //flushDestroyedItems
 
-    inline function flushCreatedBodies():Void {
+    inline function flushCreatedItems():Void {
 
-        while (_createdBodies.length > 0) {
-            var body = _createdBodies.pop();
-            bodies.push(cast body);
+        while (_createdItems.length > 0) {
+            var body = _createdItems.pop();
+            items.push(cast body);
         }
         
-    } //flushCreatedBodies
-
-    inline static function radToDeg(rad:Float):Float {
-        return rad * 57.29577951308232;
-    }
+    } //flushCreatedItems
 
 #end
 

@@ -4,10 +4,6 @@ package ceramic;
 import backend.VisualItem;
 #end
 
-#if ceramic_nape_physics
-import nape.phys.Body as NapeBody;
-#end
-
 import ceramic.Point;
 
 using ceramic.Extensions;
@@ -36,8 +32,8 @@ class Visual extends Entity {
 /// Arcade physics
 
     /** The arcade physics body bound to this visual. */
-    public var arcade(default,set):arcade.Body = null;
-    function set_arcade(arcade:arcade.Body):arcade.Body {
+    public var arcade(default,set):VisualArcadePhysics = null;
+    function set_arcade(arcade:VisualArcadePhysics):VisualArcadePhysics {
         if (this.arcade == arcade) return arcade;
         if (this.arcade != null && this.arcade.visual == this) {
             this.arcade.visual = null;
@@ -50,7 +46,7 @@ class Visual extends Entity {
     }
 
     /** Init arcade physics (body) bound to this visual. */
-    public function initArcadePhysics():arcade.Body {
+    public function initArcadePhysics(?world:arcade.World):VisualArcadePhysics {
 
         if (arcade != null) {
             arcade.destroy();
@@ -60,13 +56,18 @@ class Visual extends Entity {
         var w = width * scaleX;
         var h = height * scaleY;
 
-        arcade = new arcade.Body(
+        arcade = new VisualArcadePhysics(
             x - w * anchorX,
             y - h * anchorY,
             w,
             h,
             rotation
         );
+
+        if (world == null) {
+            world = ceramic.App.app.arcade.world;
+        }
+        arcade.world = world;
 
         return arcade;
 
@@ -93,24 +94,36 @@ class Visual extends Entity {
     }
 
     /** Init nape physics body bound to this visual. */
-    public function initNapePhysics(type:ceramic.NapePhysicsBodyType):VisualNapePhysics {
+    public function initNapePhysics(
+        type:ceramic.NapePhysicsBodyType,
+        ?space:nape.space.Space,
+        ?shape:nape.shape.Polygon,
+        ?material:nape.phys.Material
+    ):VisualNapePhysics {
 
         if (nape != null) {
             nape.destroy();
-            napeBody = null;
+            nape = null;
         }
 
         var w = width * scaleX;
         var h = height * scaleY;
 
         nape = new VisualNapePhysics(
-            /*x - w * anchorX,
+            type,
+            shape,
+            material, 
+            x - w * anchorX,
             y - h * anchorY,
             w,
             h,
-            rotation*/
-            // TODO
+            rotation
         );
+
+        if (space == null) {
+            space = ceramic.App.app.nape.space;
+        }
+        nape.body.space = space;
 
         return nape;
 
@@ -654,9 +667,16 @@ class Visual extends Entity {
         if (transform != null) transform = null;
 
 #if ceramic_arcade_physics
-        if (arcadeBody != null) {
-            arcadeBody.destroy();
-            arcadeBody = null;
+        if (arcade != null) {
+            arcade.destroy();
+            arcade = null;
+        }
+#end
+
+#if ceramic_nape_physics
+        if (nape != null) {
+            nape.destroy();
+            nape = null;
         }
 #end
 
