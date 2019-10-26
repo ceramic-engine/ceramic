@@ -73,6 +73,105 @@ class Visual extends Entity {
 
     } //initArcadePhysics
 
+    #if !ceramic_no_arcade_shortcuts
+
+    public var allowRotation(get,set):Bool;
+    inline function get_allowRotation():Bool {
+        return arcade != null ? arcade.body.allowRotation : true;
+    }
+    inline function set_allowRotation(allowRotation:Bool):Bool {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.allowRotation = allowRotation;
+        return allowRotation;
+    }
+
+    public var immovable(get,set):Bool;
+    inline function get_immovable():Bool {
+        return arcade != null ? arcade.body.immovable : true;
+    }
+    inline function set_immovable(immovable:Bool):Bool {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.immovable = immovable;
+        return immovable;
+    }
+
+    public var body(get,never):arcade.Body;
+    inline function get_body():arcade.Body {
+        return arcade != null ? arcade.body : null;
+    }
+
+    public var velocityX(get,set):Float;
+    inline function get_velocityX():Float {
+        return arcade != null ? arcade.body.velocityX : 0;
+    }
+    inline function set_velocityX(velocityX:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.velocityX = velocityX;
+        return velocityX;
+    }
+
+    public var velocityY(get,set):Float;
+    inline function get_velocityY():Float {
+        return arcade != null ? arcade.body.velocityY : 0;
+    }
+    inline function set_velocityY(velocityY:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.velocityY = velocityY;
+        return velocityY;
+    }
+
+    public var bounceX(get,set):Float;
+    inline function get_bounceX():Float {
+        return arcade != null ? arcade.body.bounceX : 0;
+    }
+    inline function set_bounceX(bounceX:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.bounceX = bounceX;
+        return bounceX;
+    }
+
+    public var bounceY(get,set):Float;
+    inline function get_bounceY():Float {
+        return arcade != null ? arcade.body.bounceY : 0;
+    }
+    inline function set_bounceY(bounceY:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.bounceY = bounceY;
+        return bounceY;
+    }
+
+    public var allowGravity(get,set):Bool;
+    inline function get_allowGravity():Bool {
+        return arcade != null ? arcade.body.allowGravity : true;
+    }
+    inline function set_allowGravity(allowGravity:Bool):Bool {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.allowGravity = allowGravity;
+        return allowGravity;
+    }
+
+    public var gravityX(get,set):Float;
+    inline function get_gravityX():Float {
+        return arcade != null ? arcade.body.gravityX : 0;
+    }
+    inline function set_gravityX(gravityX:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.gravityX = gravityX;
+        return gravityX;
+    }
+
+    public var gravityY(get,set):Float;
+    inline function get_gravityY():Float {
+        return arcade != null ? arcade.body.gravityY : 0;
+    }
+    inline function set_gravityY(gravityY:Float):Float {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.gravityY = gravityY;
+        return gravityY;
+    }
+
+    #end
+
 #end
 
 #if ceramic_nape_physics
