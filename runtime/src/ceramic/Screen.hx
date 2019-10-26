@@ -512,7 +512,7 @@ class Screen extends Entity implements Observable {
         while (i >= 0) {
 
             var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y)) {
+            if (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y) && !visual.interceptPointerDown(visual, x, y)) {
 
                 // If a parent intercepts this pointer event, ignore the visual
                 var intercepts = false;
@@ -545,7 +545,7 @@ class Screen extends Entity implements Observable {
         while (i >= 0) {
 
             var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensPointerOver() && visual.hits(x, y)) {
+            if (visual.computedTouchable && visual.listensPointerOver() && visual.hits(x, y) && !visual.interceptPointerOver(visual, x, y)) {
 
                 // If a parent intercepts this pointer event, ignore the visual
                 var intercepts = false;
