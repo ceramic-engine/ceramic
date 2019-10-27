@@ -504,6 +504,126 @@ class Visual extends Entity {
         if (arcade != null) arcade.body.stop;
     }
 
+    /** Dispatched when this visual body collides with another visual's body. */
+    inline public function onCollide(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onCollide(owner, handleVisual1Visual2);
+    }
+
+    /** Dispatched when this visual body collides with another visual's body. */
+    inline public function onceCollide(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onceCollide(owner, handleVisual1Visual2);
+    }
+
+    /** Dispatched when this visual body collides with another visual's body. */
+    inline public function offCollide(?handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade != null) {
+            arcade.offCollide(handleVisual1Visual2);
+        }
+    }
+
+    /** Dispatched when this visual body collides with another visual's body. */
+    inline public function listensCollide():Bool {
+        return arcade != null ? arcade.listensCollide() : false;
+    }
+
+    /** Dispatched when this visual body collides with another body. */
+    inline public function onCollideBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onCollideBody(owner, handleVisualBody);
+    }
+
+    /** Dispatched when this visual body collides with another body. */
+    inline public function onceCollideBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onceCollideBody(owner, handleVisualBody);
+    }
+
+    /** Dispatched when this visual body collides with another body. */
+    inline public function offCollideBody(?handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade != null) {
+            arcade.offCollideBody(handleVisualBody);
+        }
+    }
+
+    /** Dispatched when this visual body collides with another body. */
+    inline public function listensCollideBody():Bool {
+        return arcade != null ? arcade.listensCollideBody() : false;
+    }
+
+    /** Dispatched when this visual body overlaps with another visual's body. */
+    inline public function onOverlap(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onOverlap(owner, handleVisual1Visual2);
+    }
+
+    /** Dispatched when this visual body overlaps with another visual's body. */
+    inline public function onceOverlap(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onceOverlap(owner, handleVisual1Visual2);
+    }
+
+    /** Dispatched when this visual body overlaps with another visual's body. */
+    inline public function offOverlap(?handleVisual1Visual2:Visual->Visual->Void):Void {
+        if (arcade != null) {
+            arcade.offOverlap(handleVisual1Visual2);
+        }
+    }
+
+    /** Dispatched when this visual body overlaps with another visual's body. */
+    inline public function listensOverlap():Bool {
+        return arcade != null ? arcade.listensOverlap() : false;
+    }
+
+    /** Dispatched when this visual body overlaps with another body. */
+    inline public function onOverlapBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onOverlapBody(owner, handleVisualBody);
+    }
+
+    /** Dispatched when this visual body overlaps with another body. */
+    inline public function onceOverlapBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onceOverlapBody(owner, handleVisualBody);
+    }
+
+    /** Dispatched when this visual body overlaps with another body. */
+    inline public function offOverlapBody(?handleVisualBody:Visual->arcade.Body->Void):Void {
+        if (arcade != null) {
+            arcade.offOverlapBody(handleVisualBody);
+        }
+    }
+
+    /** Dispatched when this visual body overlaps with another body. */
+    inline public function listensOverlapBody():Bool {
+        return arcade != null ? arcade.listensOverlapBody() : false;
+    }
+
+    /** Dispatched when this visual body collides with the world bounds. */
+    inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onWorldBounds(owner, handleVisualUpDownLeftRight);
+    }
+
+    /** Dispatched when this visual body collides with the world bounds. */
+    inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+        if (arcade == null) initArcadePhysics();
+        arcade.onceWorldBounds(owner, handleVisualUpDownLeftRight);
+    }
+
+    /** Dispatched when this visual body collides with the world bounds. */
+    inline public function offWorldBounds(?handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+        if (arcade != null) {
+            arcade.offWorldBounds(handleVisualUpDownLeftRight);
+        }
+    }
+
+    /** Dispatched when this visual body collides with the world bounds. */
+    inline public function listensWorldBounds():Bool {
+        return arcade != null ? arcade.listensWorldBounds() : false;
+    }
+
     #end
 
 #end
