@@ -130,7 +130,7 @@ class NapePhysics extends Entity {
                         body.position.y - visual.height * visual.anchorY
                     );
                     if (body.allowRotation) {
-                        body.rotation = Utils.radToDeg(body.rotation);
+                        visual.rotation = Utils.radToDeg(body.rotation);
                     }
                 }
             }
