@@ -40,6 +40,18 @@ class EventDispatcher {
 
     } //setDidEmit
 
+    public function setWillListen(index:Int, cb:Dynamic):Void {
+
+        var item = items[index];
+        if (item == null) {
+            item = new EventDispatcherItem();
+            items[index] = item;
+        }
+
+        item.willListen = cb;
+
+    } //setWillListen
+
 /// Emit
 
     public function wrapEmit(index:Int, numArgs:Int):Dynamic {
@@ -222,6 +234,12 @@ class EventDispatcher {
             items[index] = item;
         }
 
+        if (item.willListen != null) {
+            if (item.cbOnOwnerUnbindArray == null && item.cbOnceOwnerUnbindArray) {
+                item.willListen();
+            }
+        }
+
         // Map owner to handler
         if (owner != null) {
             if (owner.destroyed) {
@@ -299,6 +317,12 @@ class EventDispatcher {
         if (item == null) {
             item = new EventDispatcherItem();
             items[index] = item;
+        }
+
+        if (item.willListen != null) {
+            if (item.cbOnOwnerUnbindArray == null && item.cbOnceOwnerUnbindArray) {
+                item.willListen();
+            }
         }
 
         // Map owner to handler

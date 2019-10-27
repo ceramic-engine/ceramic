@@ -107,7 +107,7 @@ class EventsMacro {
             }
         }
 
-        // Check that {will|did}Emit{EventName} match an existing event
+        // Check that {will|did}Emit{EventName} and willListen{EventName} match an existing event
         for (field in newFields) {
             if (field.name.startsWith('willEmit')) {
                 if (!allEmits.exists(field.name.substring(8))) {
@@ -117,6 +117,11 @@ class EventsMacro {
             else if (field.name.startsWith('didEmit')) {
                 if (!allEmits.exists(field.name.substring(7))) {
                     throw new Error("No event with name `" + field.name.charAt(7).toLowerCase() + field.name.substring(8) + "` will ever be emitted by this class", field.pos);
+                }
+            }
+            else if (field.name.startsWith('willListen')) {
+                if (!allEmits.exists(field.name.substring(10))) {
+                    throw new Error("No event with name `" + field.name.charAt(10).toLowerCase() + field.name.substring(11) + "` will ever be emitted by this class", field.pos);
                 }
             }
         }
@@ -367,10 +372,12 @@ class EventsMacro {
 
                 }
 
-                // Create emit{Name}()
+                // Bind hooks
                 //
+
                 var fnWillEmit = 'willEmit' + capitalName;
                 var fnDidEmit = 'didEmit' + capitalName;
+                var fnWillListen = 'willListen' + capitalName;
 
                 var willEmit = macro null;
                 if (fieldsByName.exists(fnWillEmit)) {
@@ -391,10 +398,26 @@ class EventsMacro {
                         didEmit = macro this.$fnDidEmit($a{handlerCallArgs});
                     }
                 }
+
+                var willListen = macro null;
+                if (fieldsByName.exists(fnWillListen)) {
+                    if (dynamicDispatch) {
+                        willListen = macro this.$dispatcherName.setWillListen($v{eventIndex}, this.$fnWillListen);
+                    }
+                    else {
+                        willListen = macro {
+                            if (this.$cbOnArray == null && this.$cbOnceArray == null) {
+                                this.$fnWillListen();
+                            }
+                        };
+                    }
+                }
 #end
 
                 if (dynamicDispatch) {
 
+                    // Create emit{Name}()
+                    //
                     var emitField = {
                         pos: field.pos,
                         name: emitName,
@@ -464,7 +487,12 @@ class EventsMacro {
                                 handlerType
                             ], macro :Void),
                             expr: macro {
+#if (!display && !completion)
+                                $willListen;
                                 return this.$dispatcherName.wrapOn($v{eventIndex});
+#else
+                                return null;
+#end
                             }
                         }),
 #if (haxe_server || telemetry)
@@ -507,7 +535,12 @@ class EventsMacro {
                                 handlerType
                             ], macro :Void),
                             expr: macro {
+#if (!display && !completion)
+                                $willListen;
                                 return this.$dispatcherName.wrapOnce($v{eventIndex});
+#else
+                                return null;
+#end
                             }
                         }),
 #if (haxe_server || telemetry)
@@ -791,6 +824,7 @@ class EventsMacro {
                             ret: macro :Void,
 #if (!display && !completion)
                             expr: macro {
+                                $willListen;
                                 // Map owner to handler
                                 if (owner != null) {
                                     if (owner.destroyed) {
@@ -872,6 +906,7 @@ class EventsMacro {
                             ret: macro :Void,
 #if (!display && !completion)
                             expr: macro {
+                                $willListen;
                                 // Map owner to handler
                                 if (owner != null) {
                                     if (owner.destroyed) {
