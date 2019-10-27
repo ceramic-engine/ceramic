@@ -236,7 +236,7 @@ class Scroller extends Visual {
 
     var touchIndex:Int = -1;
 
-    public var velocity(default,null):Velocity = null;
+    public var scrollVelocity(default,null):Velocity = null;
     
     public var momentum(default,null):Float = 0;
 
@@ -416,9 +416,9 @@ class Scroller extends Visual {
                 pointerStart = info.x;
             }
 
-            // Start computing velocity
-            velocity = new Velocity();
-            velocity.add(0);
+            // Start computing scrollVelocity
+            scrollVelocity = new Velocity();
+            scrollVelocity.add(0);
 
             // Catch `pointer up` event
             screen.onMultiTouchPointerUp(this, pointerUp);
@@ -456,10 +456,10 @@ class Scroller extends Visual {
                 canClick = false;
             }
 
-            // Get momentum from velocity
-            // and stop computing velocity
-            momentum = velocity.get();
-            velocity = null;
+            // Get momentum from scrollVelocity
+            // and stop computing scrollVelocity
+            momentum = scrollVelocity.get();
+            scrollVelocity = null;
             touchIndex = -1;
 
             // End of drag
@@ -604,13 +604,13 @@ class Scroller extends Visual {
                         scrollTransform.ty = contentStart + pointerY - pointerStart;
 
                         if (isOverScrollingLeft()) {
-                            velocity.reset();
+                            scrollVelocity.reset();
                             var maxY = Math.max(contentStart, 0);
                             pointerStart = contentStart + pointerY - (maxY + (scrollTransform.ty - maxY) * overScrollResistance);
                             scrollTransform.ty = maxY + ((contentStart + pointerY - pointerStart) - maxY) / overScrollResistance;
                         }
                         else if (isOverScrollingRight()) {
-                            velocity.reset();
+                            scrollVelocity.reset();
                             var minY = Math.min(contentStart, height - content.height);
                             pointerStart = contentStart + pointerY - (minY + (scrollTransform.ty - minY) * overScrollResistance);
                             scrollTransform.ty = minY + ((contentStart + pointerY - pointerStart) - minY) / overScrollResistance;
@@ -622,7 +622,7 @@ class Scroller extends Visual {
                         screen.focusedVisual = this;
                     }
 
-                    velocity.add(pointerY - pointerStart, minusDelta);
+                    scrollVelocity.add(pointerY - pointerStart, minusDelta);
                 }
                 else {
 
@@ -633,13 +633,13 @@ class Scroller extends Visual {
                         scrollTransform.tx = contentStart + pointerX - pointerStart;
 
                         if (isOverScrollingLeft()) {
-                            velocity.reset();
+                            scrollVelocity.reset();
                             var maxX = Math.max(contentStart, 0);
                             pointerStart = contentStart + pointerX - (maxX + (scrollTransform.tx - maxX) * overScrollResistance);
                             scrollTransform.tx = maxX + ((contentStart + pointerX - pointerStart) - maxX) / overScrollResistance;
                         }
                         else if (isOverScrollingRight()) {
-                            velocity.reset();
+                            scrollVelocity.reset();
                             var minX = Math.min(contentStart, width - content.width);
                             pointerStart = contentStart + pointerX - (minX + (scrollTransform.tx - minX) * overScrollResistance);
                             scrollTransform.tx = minX + ((contentStart + pointerX - pointerStart) - minX) / overScrollResistance;
@@ -651,7 +651,7 @@ class Scroller extends Visual {
                         screen.focusedVisual = this;
                     }
 
-                    velocity.add(pointerX - pointerStart, minusDelta);
+                    scrollVelocity.add(pointerX - pointerStart, minusDelta);
                 }
             
             case DRAGGING:
@@ -671,7 +671,7 @@ class Scroller extends Visual {
                     }
 
                     scrollTransform.changedDirty = true;
-                    velocity.add(pointerY - pointerStart, minusDelta);
+                    scrollVelocity.add(pointerY - pointerStart, minusDelta);
                 }
                 else {
                     pointerX = pointerStart + (pointerX - pointerStart) * dragFactor;
@@ -689,7 +689,7 @@ class Scroller extends Visual {
                     }
 
                     scrollTransform.changedDirty = true;
-                    velocity.add(pointerX - pointerStart, minusDelta);
+                    scrollVelocity.add(pointerX - pointerStart, minusDelta);
                 }
             
             case SCROLLING:

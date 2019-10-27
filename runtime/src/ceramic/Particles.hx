@@ -397,7 +397,7 @@ class Particles extends Visual implements Observable {
     /**
 	 * Use in conjunction with angularAcceleration for fluid spin speed control.
 	 */
-	public var maxAngular:Float = 10000;
+	public var maxAngularVelocity:Float = 10000;
 
     /**
      * Enable or disable the angular acceleration range of particles launched from this emitter.
@@ -870,7 +870,7 @@ class Particles extends Visual implements Observable {
             // Update motion
             //
 
-            var velocityDelta = computeVelocity(particle.angularVelocity, particle.angularAcceleration, particle.angularDeceleration, maxAngular, delta) - particle.angularVelocity;
+            var velocityDelta = computeVelocity(particle.angularVelocity, particle.angularAcceleration, particle.angularDeceleration, maxAngularVelocity, delta) - particle.angularVelocity;
             particle.angularVelocity += velocityDelta;
             if (particle.angularVelocity != 0) {
                 particle.angle += particle.angularVelocity * delta;
