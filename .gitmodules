@@ -65,3 +65,7 @@
 	path = git/nape
 	url = https://github.com/ceramic-engine/nape.git
 	branch = master
+[submodule "git/differ"]
+	path = git/differ
+	url = https://github.com/ceramic-engine/differ.git
+	branch = master
