@@ -104,10 +104,25 @@ class SpineAsset extends Asset {
         // Remove previous json asset if different
         if (prevAsset != null) prevAsset.destroy();
 
-        assets.onceComplete(this, function(success) {
+        var handleAssetsComplete:Bool->Void = null;
+        handleAssetsComplete = function(success) {
 
             var json = new SpineFile(jsonAsset.path, jsonAsset.text);
             var atlas = atlasAsset.text;
+
+            if (atlas != null && atlas.trim().startsWith('alias:')) {
+                assets.onceComplete(this, handleAssetsComplete);
+
+                var realAtlasInfo = Assets.decodePath(atlas.trim().substring('alias:'.length));
+                log('Atlas ${baseName + '.atlas'} is an alias for: ${realAtlasInfo.name + '.atlas'}');
+                atlasAsset = new TextAsset(realAtlasInfo.name + '.atlas');
+                atlasAsset.handleTexturesDensityChange = false;
+                assets.addAsset(atlasAsset);
+                atlasAsset.computePath(['atlas'], false, runtimeAssets);
+
+                assets.load();
+                return;
+            }
 
             if (json != null && atlas != null) {
 
@@ -118,7 +133,7 @@ class SpineAsset extends Asset {
                 // Create atlas, which will trigger page loads
                 var spineAtlas = new TextureAtlas(
                     atlas,
-                    new SpineTextureLoader(this)
+                    new SpineTextureLoader(this, Path.directory(atlasAsset.path))
                 );
 
                 // Load pages
@@ -138,6 +153,7 @@ class SpineAsset extends Asset {
                         var prevSpineData = spineData;
 
                         // Create final spine data with all info
+                        trace('- new SpineData ($name) -');
                         spineData = new SpineData(
                             spineAtlas,
                             json,
@@ -210,17 +226,21 @@ class SpineAsset extends Asset {
                 emitComplete(false);
             }
 
-        });
+        };
+        assets.onceComplete(this, handleAssetsComplete);
 
         assets.load();
 
     } //load
 
-    function loadPage(page:AtlasPage, path:String):Void {
+    function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
+        
+        log('Load atlas page ${page.name} / $path / $basePath');
 
-        path = Path.join([this.path, path]);
+        path = Path.join([(basePath != null ? basePath : this.path), path]);
         var pathInfo = Assets.decodePath(path);
         var asset = new ImageAsset(pathInfo.name);
+        asset.density = 1;
         asset.handleTexturesDensityChange = false;
         asset.path = pathInfo.path;
         asset.onDestroy(this, function(_) {

@@ -8,15 +8,18 @@ class SpineTextureLoader implements TextureLoader
 {
     private var asset:SpineAsset;
 
-    public function new(asset:SpineAsset) {
+    private var basePath:Null<String>;
+
+    public function new(asset:SpineAsset, ?basePath:String) {
 
         this.asset = asset;
+        this.basePath = basePath;
 
     } //new
 
     public function loadPage(page:AtlasPage, path:String):Void {
 
-        asset.loadPage(page, path);
+        asset.loadPage(page, path, basePath);
 
     } //loadPage
 

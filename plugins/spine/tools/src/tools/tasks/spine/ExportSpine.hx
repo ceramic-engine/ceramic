@@ -150,6 +150,31 @@ class ExportSpine extends tools.Task {
                 entries.push(item);
             }
 
+            // Gather atlas info
+            //
+            var skeletonAtlases = new Map<String,Array<String>>();
+
+            for (groupName in skeletons.keys()) {
+                var groupDirRelative = groupName + '.spine';
+
+                for (name in skeletons.get(groupName)) {
+                    var outName = convertName(name);
+                    var ext = Path.extension(outName);
+                    
+                    if (ext == 'atlas') {
+                        var atlases = skeletonAtlases.get(groupName);
+                        if (atlases == null) {
+                            atlases = [];
+                            skeletonAtlases.set(groupName, atlases);
+                        }
+                        atlases.push(Path.join([groupDirRelative, outName]));
+                    }
+                }
+
+            }
+
+            // Do the actual moving
+            //
             for (groupName in skeletons.keys()) {
                 print('Add assets/' + groupName + '.spine');
 
@@ -173,12 +198,27 @@ class ExportSpine extends tools.Task {
                         atlasContent = convertAtlas(atlasContent);
                         File.saveContent(Path.join([groupDir, outName]), atlasContent);
 
-                    } else {
+                    }
+                    else {
                         // Just copy
                         File.copy(
                             Path.join([tmpPath, 'spine', name]),
                             Path.join([groupDir, outName])
                         );
+                    }
+                }
+
+                // Link to another atlas if needed
+                if (!skeletonAtlases.exists(groupName)) {
+                    for (atlasKey in skeletonAtlases.keys()) {
+                        var atlases = skeletonAtlases.get(atlasKey);
+                        for (atlas in atlases) {
+                            var name = Path.withoutDirectory(atlas);
+                            var suffix = name.substring(atlasKey.length);
+                            File.saveContent(Path.join([groupDir, groupName + suffix]), 'alias:' + atlas);
+                        }
+                        // No need to iterate more
+                        break;
                     }
                 }
             }
