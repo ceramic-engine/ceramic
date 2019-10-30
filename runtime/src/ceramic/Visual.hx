@@ -1279,6 +1279,7 @@ class Visual extends Entity {
     inline function computeTranslatesOnly() {
 
         translatesOnly = (rotation == 0 && scaleX == 1 && scaleY == 1 && skewX == 0 && skewY == 0);
+        translatesOnlyDirty = false;
 
     } //computeTranslatesOnly
 
