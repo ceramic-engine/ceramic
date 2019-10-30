@@ -171,6 +171,14 @@ class Filter extends Quad {
             return;
         }
 
+        if (renderTexture == null) {
+            if (done != null) {
+                done();
+                done = null;
+            }
+            return;
+        }
+
         content.active = true;
 
         if (requestFullUpdate) {
@@ -185,6 +193,15 @@ class Filter extends Quad {
 
             if (contentDirty) {
                 computeContent();
+            }
+
+            if (renderTexture == null) {
+                content.active = false;
+                if (done != null) {
+                    done();
+                    done = null;
+                }
+                return;
             }
 
             renderTexture.renderDirty = true;
