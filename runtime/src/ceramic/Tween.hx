@@ -15,7 +15,7 @@ class Tween extends Entity {
 
     var owner:Entity;
 
-    var easing:TweenEasing;
+    var easing:Easing;
 
     var duration:Float;
 
@@ -31,7 +31,7 @@ class Tween extends Entity {
 
 /// Lifecycle
 
-    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, easing:Easing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
@@ -123,9 +123,9 @@ class Tween extends Entity {
     static var _tweens:Array<Tween> = [];
     static var _iteratedTweens:Array<Tween> = [];
 
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?easing:TweenEasing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
-        var instance = new Tween(owner, easing == null ? TweenEasing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
+        var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
         
         instance.onUpdate(owner, handleValueTime);
 
@@ -154,9 +154,12 @@ class Tween extends Entity {
     static var _computedEasingFunction:Void->Void = null;
     static var _computedCustomEasing:Float->Float = null;
 
-    static function computeEasing(easing:TweenEasing):Void {
+    inline static function computeEasing(easing:Easing):Void {
 
         switch (easing) {
+
+            case NONE:
+                _computedEasingFunction = TweenEasingFunction.none;
 
             case LINEAR:
                 _computedEasingFunction = TweenEasingFunction.linear;
@@ -236,8 +239,99 @@ class Tween extends Entity {
 
     } //computeEasing
 
+    public static function ease(easing:Easing, value:Float):Float {
+
+        TweenEasingFunction.k = value;
+        
+        switch (easing) {
+
+            case NONE:
+                TweenEasingFunction.none();
+
+            case LINEAR:
+                TweenEasingFunction.linear();
+
+            case BACK_EASE_IN:
+                TweenEasingFunction.backEaseIn();
+            case BACK_EASE_IN_OUT:
+                TweenEasingFunction.backEaseInOut();
+            case BACK_EASE_OUT:
+                TweenEasingFunction.backEaseOut();
+
+            case QUAD_EASE_IN:
+                TweenEasingFunction.quadEaseIn();
+            case QUAD_EASE_IN_OUT:
+                TweenEasingFunction.quadEaseInOut();
+            case QUAD_EASE_OUT:
+                TweenEasingFunction.quadEaseOut();
+
+            case CUBIC_EASE_IN:
+                TweenEasingFunction.cubicEaseIn();
+            case CUBIC_EASE_IN_OUT:
+                TweenEasingFunction.cubicEaseInOut();
+            case CUBIC_EASE_OUT:
+                TweenEasingFunction.cubicEaseOut();
+
+            case QUART_EASE_IN:
+                TweenEasingFunction.quartEaseIn();
+            case QUART_EASE_IN_OUT:
+                TweenEasingFunction.quartEaseInOut();
+            case QUART_EASE_OUT:
+                TweenEasingFunction.quartEaseOut();
+
+            case QUINT_EASE_IN:
+                TweenEasingFunction.quintEaseIn();
+            case QUINT_EASE_IN_OUT:
+                TweenEasingFunction.quintEaseInOut();
+            case QUINT_EASE_OUT:
+                TweenEasingFunction.quintEaseOut();
+
+            case BOUNCE_EASE_IN:
+                TweenEasingFunction.bounceEaseIn();
+            case BOUNCE_EASE_IN_OUT:
+                TweenEasingFunction.bounceEaseInOut();
+            case BOUNCE_EASE_OUT:
+                TweenEasingFunction.bounceEaseOut();
+
+            case ELASTIC_EASE_IN:
+                TweenEasingFunction.elasticEaseIn();
+            case ELASTIC_EASE_IN_OUT:
+                TweenEasingFunction.elasticEaseInOut();
+            case ELASTIC_EASE_OUT:
+                TweenEasingFunction.elasticEaseOut();
+
+            case EXPO_EASE_IN:
+                TweenEasingFunction.expoEaseIn();
+            case EXPO_EASE_IN_OUT:
+                TweenEasingFunction.expoEaseInOut();
+            case EXPO_EASE_OUT:
+                TweenEasingFunction.expoEaseOut();
+
+            case SINE_EASE_IN:
+                TweenEasingFunction.sineEaseIn();
+            case SINE_EASE_IN_OUT:
+                TweenEasingFunction.sineEaseInOut();
+            case SINE_EASE_OUT:
+                TweenEasingFunction.sineEaseOut();
+
+            case BEZIER(x1, y1, x2, y2):
+                TweenEasingFunction.customEasing = new BezierEasing(x1, y1, x2, y2).ease;
+                TweenEasingFunction.custom();
+                TweenEasingFunction.customEasing = null;
+
+            case CUSTOM(easing):
+                TweenEasingFunction.customEasing = easing;
+                TweenEasingFunction.custom();
+                TweenEasingFunction.customEasing = null;
+
+        }
+
+        return TweenEasingFunction.k;
+
+    } //ease
+
     /** Get a tween easing function as a plain Float->Float function. */
-    public static function easingFunction(easing:TweenEasing):Float->Float {
+    public static function easingFunction(easing:Easing):Float->Float {
 
         computeEasing(easing);
         var computedEasing = _computedEasingFunction;
@@ -270,6 +364,12 @@ private class TweenEasingFunction {
 
     public static function custom():Void {
         k = customEasing(k);
+    }
+
+/// None
+
+    public static function none():Void {
+        k = (k >= 1) ? 1 : 0;
     }
 
 /// Linear

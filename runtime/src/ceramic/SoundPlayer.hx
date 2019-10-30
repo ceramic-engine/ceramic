@@ -74,7 +74,7 @@ abstract SoundPlayer(backend.AudioHandle) {
             return;
         }
 
-        var tween = Tween.start(null, TweenEasing.LINEAR, duration, volume, 0, function(value, time) {
+        var tween = Tween.start(null, Easing.LINEAR, duration, volume, 0, function(value, time) {
             volume = value;
         });
         tween.onceComplete(null, function() {

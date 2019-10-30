@@ -781,7 +781,7 @@ class Scroller extends Visual {
 
     } //smoothScrollTo
 
-    public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:TweenEasing):Void {
+    public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
         momentum = 0;
         animating = true;
@@ -824,7 +824,7 @@ class Scroller extends Visual {
 
     } //smoothScrollTo
 
-    public function snapTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:TweenEasing):Void {
+    public function snapTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
         momentum = 0;
         snapping = true;
@@ -851,7 +851,7 @@ class Scroller extends Visual {
         if (direction == VERTICAL) {
             if (tweenY != null) tweenY.destroy();
             if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
-                var easing:TweenEasing = LINEAR;
+                var easing:Easing = LINEAR;
                 var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
                     toY = content.height - height;
@@ -892,7 +892,7 @@ class Scroller extends Visual {
             else {
                 // No momentum
                 var duration = bounceNoMomentumDuration;
-                var easing:TweenEasing = QUAD_EASE_OUT;
+                var easing:Easing = QUAD_EASE_OUT;
                 var fromY = scrollY;
                 var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
@@ -919,7 +919,7 @@ class Scroller extends Visual {
         else {
             if (tweenX != null) tweenX.destroy();
             if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
-                var easing:TweenEasing = LINEAR;
+                var easing:Easing = LINEAR;
                 var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
                     toX = content.width - width;
@@ -960,7 +960,7 @@ class Scroller extends Visual {
             else {
                 // No momentum
                 var duration = bounceNoMomentumDuration;
-                var easing:TweenEasing = QUAD_EASE_OUT;
+                var easing:Easing = QUAD_EASE_OUT;
                 var fromX = scrollX;
                 var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {

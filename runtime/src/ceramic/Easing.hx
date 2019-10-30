@@ -1,6 +1,8 @@
 package ceramic;
 
-enum TweenEasing {
+enum Easing {
+
+    NONE;
 
     LINEAR;
 
@@ -44,4 +46,4 @@ enum TweenEasing {
 
     CUSTOM(easing:Float->Float);
 
-} //TweenEasing
+} //Easing
