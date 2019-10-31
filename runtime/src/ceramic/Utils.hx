@@ -257,4 +257,19 @@ class Utils {
         return deg * 0.017453292519943295;
     }
 
+    /** Clamp an degrees (angle) value between 0 (included) and 360 (excluded) */
+    inline public static function clampDegrees(deg:Float):Float {
+
+        // Clamp between 0-360
+        while (deg < 0) {
+            deg += 360;
+        }
+        while (deg >= 360) {
+            deg -= 360;
+        }
+
+        return deg;
+
+    } //clampDegrees
+
 } //Utils
