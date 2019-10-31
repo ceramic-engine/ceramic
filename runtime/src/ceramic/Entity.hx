@@ -439,7 +439,24 @@ class Entity implements Events implements Lazy {
     /** Internal components representation. */
     var _components:Map<String,Component> = null;
 
-    public function component(name:String, ?component:Component):Component {
+    public function component(?name:String, ?component:Component):Component {
+
+        if (name == null && component == null) {
+            throw 'Invalid component() call: either `name` or `component` should be provided at least.';
+        }
+
+        if (name == null) {
+            name = Type.getClassName(Type.getClass(component));
+            if (_components != null && _components.exists(name)) {
+                var baseName = name;
+                var n = 1;
+                name = baseName + '#' + n;
+                while (_components.exists(name)) {
+                    n++;
+                    name = baseName + '#' + n;
+                }
+            }
+        }
 
         if (component != null) {
             if (_components == null) {
