@@ -160,6 +160,20 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
 
     } //apply
 
+    /** Find the keyframe right before or equal to given `time` */
+    public function findKeyframeBefore(time:Float):Null<Keyframe> {
+
+        return null; // TODO
+
+    } //findKeyframeBefore
+
+    /** Find the keyframe right after given `time` */
+    public function findKeyframeAfter(time:Float):Null<Keyframe> {
+
+        return null; // TODO
+
+    } //findKeyframeAfter
+
     /** Internal. Compute `before` keyframe, if any matching. */
     inline function computeKeyframeBefore():Void {
         
