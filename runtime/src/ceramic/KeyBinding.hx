@@ -20,6 +20,8 @@ class KeyBinding extends Entity {
 /// Lifecycle
 
     private function new(accelerator:Array<KeyAcceleratorItem>) {
+
+        super();
         
         this.accelerator = cast [].concat(accelerator);
 

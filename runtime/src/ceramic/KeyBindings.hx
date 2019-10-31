@@ -14,6 +14,8 @@ class KeyBindings extends Entity {
 
     public function new() {
 
+        super();
+
     } //new
 
 /// Public API
