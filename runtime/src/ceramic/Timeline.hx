@@ -26,7 +26,7 @@ class Timeline extends Entity implements Component {
     /** The tracks updated by this timeline */
     public var tracks(default, null):ImmutableArray<TimelineTrack<Dynamic>> = [];
 
-    /** Whether this timeline is paused or not. s*/
+    /** Whether this timeline is paused or not. */
     public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
