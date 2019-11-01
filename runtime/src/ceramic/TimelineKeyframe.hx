@@ -7,4 +7,11 @@ class TimelineKeyframe {
 
     public var easing:Easing = NONE;
 
+    public function new(time:Float, easing:Easing) {
+        
+        this.time = time;
+        this.easing = easing;
+
+    } //new
+
 } //TimelineKeyframe
