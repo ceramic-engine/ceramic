@@ -163,7 +163,7 @@ class Renderer extends Entity {
         // Initialize default state
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
-        draw.setRenderTarget(null);
+        draw.setRenderTarget(null, true);
         draw.enableBlending();
         activeShader = null;
         lastShader = null;
@@ -287,12 +287,12 @@ class Renderer extends Entity {
             shader = defaultTexturedShader;
         }
 
-        if (activeShader != shader) {
+        //if (activeShader != shader) {
             activeShader = shader;
             draw.useShader(shader);
             activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(activeShader);
             customFloatAttributesSize = draw.shaderCustomFloatAttributesSize(shader);
-        }
+        //}
 
     } //useShader
 

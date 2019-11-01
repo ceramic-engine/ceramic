@@ -303,9 +303,9 @@ class Draw implements spec.Draw {
 
     } //beginRender
 
-    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture):Void {
+    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
-        if (currentRenderTarget != renderTarget) {
+        if (currentRenderTarget != renderTarget || force) {
             currentRenderTarget = renderTarget;
             if (renderTarget != null) {
                 var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
