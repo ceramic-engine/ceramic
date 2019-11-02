@@ -491,8 +491,6 @@ class Screen extends Entity implements Observable {
         var ty = (nativeHeight * nativeDensity - targetHeight * density) * 0.5 + offsetY * density;
         matrix.translate(tx, ty);
 
-        trace('SCREEN MATRIX $matrix');
-
         // Force visuals to recompute their matrix and take
         // screen matrix in account
         /*

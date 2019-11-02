@@ -168,6 +168,8 @@ class Draw implements spec.Draw {
     ]);
 
     var modelViewTransform = new ceramic.Transform();
+    
+    var renderTargetTransform = new ceramic.Transform();
 
     inline static var posAttribute:Int = 0;
     inline static var uvAttribute:Int = 1;
@@ -208,7 +210,7 @@ class Draw implements spec.Draw {
 
     } //updateProjectionMatrix
 
-    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform):Void {
+    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
 
         if (transform != null) {
             modelViewTransform.setToTransform(transform);
@@ -218,6 +220,20 @@ class Draw implements spec.Draw {
             modelViewTransform.identity();
         }
         modelViewTransform.scale(density, density);
+
+        if (flipY == -1) {
+            // Flip vertically (needed when we are rendering to texture)
+            modelViewTransform.translate(
+                -width * 0.5,
+                -height * 0.5
+            );
+            modelViewTransform.scale(1, -1);
+            modelViewTransform.translate(
+                width * 0.5,
+                height * 0.5
+            );
+        }
+
         modelViewTransform.invert();
 
         setMatrixToTransform(modelViewMatrix, modelViewTransform);
@@ -429,17 +445,24 @@ class Draw implements spec.Draw {
                     renderTarget.width,
                     renderTarget.height
                 );
+
+                renderTargetTransform.identity();
+                renderTargetTransform.scale(renderTarget.density, renderTarget.density);
+
                 updateViewMatrix(
                     renderTarget.density,
                     renderTarget.width,
-                    renderTarget.height
+                    renderTarget.height,
+                    renderTargetTransform,
+                    -1
                 );
                 GL.viewport(
                     0, 0,
-                    Std.int(renderTarget.width),
-                    Std.int(renderTarget.height)
+                    Std.int(renderTarget.width * renderTarget.density),
+                    Std.int(renderTarget.height * renderTarget.density)
                 );
                 if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+                
             } else {
                 luxeRenderer.target = null;
                 view.transform.scale.x = defaultTransformScaleX;

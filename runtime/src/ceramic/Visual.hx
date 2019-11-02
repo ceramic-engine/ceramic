@@ -1366,37 +1366,6 @@ class Visual extends Entity {
                 _matrix.tx = tx1;
             }
 
-        } else {
-
-            if (renderTargetDirty) computeRenderTarget();
-
-            if (computedRenderTarget == null) {
-
-                // Concat matrix with screen transform
-                //
-                /*var m = ceramic.App.app.screen.matrix;
-                
-                var a1 = _matrix.a * m.a + _matrix.b * m.c;
-                _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
-                _matrix.a = a1;
-
-                var c1 = _matrix.c * m.a + _matrix.d * m.c;
-                _matrix.d = _matrix.c * m.b + _matrix.d * m.d;
-
-                _matrix.c = c1;
-
-                var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
-                _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
-                _matrix.tx = tx1;*/
-            }
-            else {
-
-                // Setup matrix to make it match backend render target dimensions
-                // (result may be different depending on the backend)
-                ceramic.App.app.backend.draw.transformForRenderTarget(_matrix, computedRenderTarget);
-
-            }
-
         }
 
         // Assign final matrix values to visual
@@ -1418,7 +1387,7 @@ class Visual extends Entity {
     /** Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds */
     public function hits(x:Float, y:Float):Bool {
 
-        // A visuals that renders to texture never hits
+        // A visuals that renders to texture never hits by default
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget != null) return false;
 
@@ -1426,11 +1395,7 @@ class Visual extends Entity {
             computeMatrix();
         }
 
-        _matrix.identity();
-        // Apply whole visual transform
         _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-        // But remove screen transform from it
-        _matrix.concat(ceramic.App.app.screen.reverseMatrix);
         _matrix.invert();
 
         var testX0 = _matrix.transformX(x, y);
@@ -1470,14 +1435,7 @@ class Visual extends Entity {
             computeMatrix();
         }
 
-        _matrix.identity();
-        // Apply whole visual transform
         _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-        // But remove screen transform from it if needed
-        if (renderTargetDirty) computeRenderTarget();
-        if (computedRenderTarget == null) {
-            _matrix.concat(ceramic.App.app.screen.reverseMatrix);
-        }
         _matrix.invert();
 
         point.x = _matrix.transformX(x, y);
@@ -1493,13 +1451,7 @@ class Visual extends Entity {
         }
 
         _matrix.identity();
-        // Apply whole visual transform
         _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-        // But remove screen transform from it if needed
-        if (renderTargetDirty) computeRenderTarget();
-        if (computedRenderTarget == null) {
-            _matrix.concat(ceramic.App.app.screen.reverseMatrix);
-        }
 
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
@@ -1515,11 +1467,7 @@ class Visual extends Entity {
             computeMatrix();
         }
 
-        transform.identity();
-        // Apply whole visual transform
         transform.setTo(matA, matB, matC, matD, matTX, matTY);
-        // But remove screen transform from it
-        transform.concat(ceramic.App.app.screen.reverseMatrix);
 
     } //visualToTransform
 
