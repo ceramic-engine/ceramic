@@ -137,6 +137,12 @@ class Shader extends Entity {
 
     } //setTexture
 
+    inline public function setMat4FromTransform(name:String, transform:Transform):Void {
+
+        app.backend.shaders.setMat4FromTransform(backendItem, name, transform);
+
+    } //setTexture
+
 /// Print
 
     override function toString():String {

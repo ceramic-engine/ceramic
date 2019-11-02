@@ -95,25 +95,25 @@ class Draw implements spec.Draw {
 
     inline public function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void {
 
-        // Apply scale to match render texture with native screen density
-        var sX = ceramic.App.app.screen.nativeWidth / renderTarget.width;
-        var sY = ceramic.App.app.screen.nativeHeight / renderTarget.height;
-        var nativeDensity = ceramic.App.app.screen.nativeDensity;
-        sX *= nativeDensity;
-        sY *= nativeDensity;
+        // // Apply scale to match render texture with native screen density
+        // var sX = ceramic.App.app.screen.nativeWidth / renderTarget.width;
+        // var sY = ceramic.App.app.screen.nativeHeight / renderTarget.height;
+        // var nativeDensity = ceramic.App.app.screen.nativeDensity;
+        // sX *= nativeDensity;
+        // sY *= nativeDensity;
 
-        // Flip vertically because we are rendering to texture
-        matrix.translate(
-            -renderTarget.width * 0.5,
-            -renderTarget.height * 0.5
-        );
-        matrix.scale(1, -1);
-        matrix.translate(
-            renderTarget.width * 0.5,
-            renderTarget.height * 0.5
-        );
+        // // Flip vertically because we are rendering to texture
+        // matrix.translate(
+        //     -renderTarget.width * 0.5,
+        //     -renderTarget.height * 0.5
+        // );
+        // matrix.scale(1, -1);
+        // matrix.translate(
+        //     renderTarget.width * 0.5,
+        //     renderTarget.height * 0.5
+        // );
 
-        matrix.scale(sX, sY);
+        // matrix.scale(sX, sY);
 
     } //transformForRenderTarget
 
@@ -153,6 +153,22 @@ class Draw implements spec.Draw {
 
     var activeTextureSlot:Int = 0;
 
+    var projectionMatrix = ceramic.Float32Array.fromArray([
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ]);
+
+    var modelViewMatrix = ceramic.Float32Array.fromArray([
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ]);
+
+    var modelViewTransform = new ceramic.Transform();
+
     inline static var posAttribute:Int = 0;
     inline static var uvAttribute:Int = 1;
     inline static var colorAttribute:Int = 2;
@@ -163,7 +179,103 @@ class Draw implements spec.Draw {
     var viewColorsBuffer = @:privateAccess new snow.api.buffers.ArrayBufferView(Float32);
 #end
 
-    //var primitiveType = phoenix.Batcher.PrimitiveType.triangles;
+    inline function updateProjectionMatrix(width:Float, height:Float):Void {
+
+        // Making orthographic projection
+        //
+
+        var left = 0.0;
+        var top = 0.0;
+        var right = width;
+        var bottom = height;
+        var near = 1000.0;
+        var far = -1000.0;
+
+        var w = right - left;
+        var h = top - bottom;
+        var p = far - near;
+
+        var tx = (right + left)   / w;
+        var ty = (top   + bottom) / h;
+        var tz = (far   + near)   / p;
+
+        var m = projectionMatrix;
+
+        m[0] = 2 / w;  m[4] = 0;      m[8] = 0;       m[12] = -tx;
+        m[1] = 0;      m[5] = 2 / h;  m[9] = 0;       m[13] = -ty;
+        m[2] = 0;      m[6] = 0;      m[10] = -2 / p; m[14] = -tz;
+        m[3] = 0;      m[7] = 0;      m[11] = 0;      m[15] = 1;
+
+    } //updateProjectionMatrix
+
+    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform):Void {
+
+        if (transform != null) {
+            modelViewTransform.setToTransform(transform);
+            modelViewTransform.invert();
+        }
+        else {
+            modelViewTransform.identity();
+        }
+        modelViewTransform.scale(density, density);
+        modelViewTransform.invert();
+
+        setMatrixToTransform(modelViewMatrix, modelViewTransform);
+
+    } //updateViewMatrix
+
+    inline function matrixIdentity(m:ceramic.Float32Array):Void {
+
+        m[0] = 1;        m[4] = 0;        m[8] = 0;       m[12] = 0;
+        m[1] = 0;        m[5] = 1;        m[9] = 0;       m[13] = 0;
+        m[2] = 0;        m[6] = 0;        m[10] = 1;      m[14] = 0;
+        m[3] = 0;        m[7] = 0;        m[11] = 0;      m[15] = 1;
+
+    } //matrixIdentity
+
+    inline function setMatrixToTransform(m:ceramic.Float32Array, transform:ceramic.Transform):Void {
+
+        m[0] = transform.a; m[4] = transform.c; m[8] = 0;   m[12] = transform.tx;
+        m[1] = transform.b; m[5] = transform.d; m[9] = 0;   m[13] = transform.ty;
+        m[2] = 0;           m[6] = 0;           m[10] = 1;  m[14] = 0;
+        m[3] = 0;           m[7] = 0;           m[11] = 0;  m[15] = 1;
+
+    } //setMatrixToTransform
+
+    /*inline function invertMatrix(m:ceramic.Float32Array):Void {
+
+        // based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm
+
+        var n11 = m[0], n12 = m[4], n13 = m[8],  n14 = m[12];
+        var n21 = m[1], n22 = m[5], n23 = m[9],  n24 = m[13];
+        var n31 = m[2], n32 = m[6], n33 = m[10], n34 = m[14];
+        var n41 = m[3], n42 = m[7], n43 = m[11], n44 = m[15];
+
+        m[0]  = n23*n34*n42 - n24*n33*n42 + n24*n32*n43 - n22*n34*n43 - n23*n32*n44 + n22*n33*n44;
+        m[4]  = n14*n33*n42 - n13*n34*n42 - n14*n32*n43 + n12*n34*n43 + n13*n32*n44 - n12*n33*n44;
+        m[8]  = n13*n24*n42 - n14*n23*n42 + n14*n22*n43 - n12*n24*n43 - n13*n22*n44 + n12*n23*n44;
+        m[12] = n14*n23*n32 - n13*n24*n32 - n14*n22*n33 + n12*n24*n33 + n13*n22*n34 - n12*n23*n34;
+        m[1]  = n24*n33*n41 - n23*n34*n41 - n24*n31*n43 + n21*n34*n43 + n23*n31*n44 - n21*n33*n44;
+        m[5]  = n13*n34*n41 - n14*n33*n41 + n14*n31*n43 - n11*n34*n43 - n13*n31*n44 + n11*n33*n44;
+        m[9]  = n14*n23*n41 - n13*n24*n41 - n14*n21*n43 + n11*n24*n43 + n13*n21*n44 - n11*n23*n44;
+        m[13] = n13*n24*n31 - n14*n23*n31 + n14*n21*n33 - n11*n24*n33 - n13*n21*n34 + n11*n23*n34;
+        m[2]  = n22*n34*n41 - n24*n32*n41 + n24*n31*n42 - n21*n34*n42 - n22*n31*n44 + n21*n32*n44;
+        m[6]  = n14*n32*n41 - n12*n34*n41 - n14*n31*n42 + n11*n34*n42 + n12*n31*n44 - n11*n32*n44;
+        m[10] = n12*n24*n41 - n14*n22*n41 + n14*n21*n42 - n11*n24*n42 - n12*n21*n44 + n11*n22*n44;
+        m[14] = n14*n22*n31 - n12*n24*n31 - n14*n21*n32 + n11*n24*n32 + n12*n21*n34 - n11*n22*n34;
+        m[3]  = n23*n32*n41 - n22*n33*n41 - n23*n31*n42 + n21*n33*n42 + n22*n31*n43 - n21*n32*n43;
+        m[7]  = n12*n33*n41 - n13*n32*n41 + n13*n31*n42 - n11*n33*n42 - n12*n31*n43 + n11*n32*n43;
+        m[11] = n13*n22*n41 - n12*n23*n41 - n13*n21*n42 + n11*n23*n42 + n12*n21*n43 - n11*n22*n43;
+        m[15] = n12*n23*n31 - n13*n22*n31 + n13*n21*n32 - n11*n23*n32 - n12*n21*n33 + n11*n22*n33;
+
+        var det = n11 * m[0] + n21 * m[4] + n31 * m[8] + n41 * m[12];
+
+        if (det == 0) {
+            ceramic.Shortcuts.warning('Can\'t invert matrix, determinant is 0');
+            matrixIdentity(m);
+        }
+
+    } //invertMatrix*/
 
     inline public function maxPosFloats():Int {
 
@@ -313,7 +425,20 @@ class Draw implements spec.Draw {
                 view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
                 view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
                 view.process();
-                GL.viewport(0, 0, renderTexture.width, renderTexture.height);
+                updateProjectionMatrix(
+                    renderTarget.width,
+                    renderTarget.height
+                );
+                updateViewMatrix(
+                    renderTarget.density,
+                    renderTarget.width,
+                    renderTarget.height
+                );
+                GL.viewport(
+                    0, 0,
+                    Std.int(renderTarget.width),
+                    Std.int(renderTarget.height)
+                );
                 if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
             } else {
                 luxeRenderer.target = null;
@@ -322,6 +447,21 @@ class Draw implements spec.Draw {
                 view.viewport = defaultViewport;
                 view.process();
                 luxeRenderer.state.viewport(view.viewport.x, view.viewport.y, view.viewport.w, view.viewport.h);
+                updateProjectionMatrix(
+                    ceramic.App.app.backend.screen.getWidth(),
+                    ceramic.App.app.backend.screen.getHeight()
+                );
+                updateViewMatrix(
+                    ceramic.App.app.backend.screen.getDensity(),
+                    ceramic.App.app.backend.screen.getWidth(),
+                    ceramic.App.app.backend.screen.getHeight(),
+                    @:privateAccess ceramic.App.app.screen.matrix
+                );
+                GL.viewport(
+                    0, 0,
+                    Std.int(ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity()),
+                    Std.int(ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity())
+                );
             }
         }
 
@@ -330,8 +470,15 @@ class Draw implements spec.Draw {
     inline public function useShader(shader:backend.impl.CeramicShader):Void {
 
         if (!shader.no_default_uniforms) {
-            shader.set_matrix4_arr('projectionMatrix', view.proj_arr);
-            shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
+            //shader.set_matrix4_arr('projectionMatrix', view.proj_arr);
+            shader.set_matrix4_arr('projectionMatrix', projectionMatrix);
+            //trace('proj_def=${matrixToArray(view.proj_arr)}');
+            //trace('proj_new=${matrixToArray(projectionMatrix)}');
+
+            //shader.set_matrix4_arr('modelViewMatrix', view.view_inverse_arr);
+            shader.set_matrix4_arr('modelViewMatrix', modelViewMatrix);
+            //trace('view_def=${matrixToArray(view.view_inverse_arr)}');
+            //trace('view_new=${matrixToArray(modelViewMatrix)}');
         }
         
         shader.activate();
@@ -339,6 +486,16 @@ class Draw implements spec.Draw {
         activeShader = shader;
 
     } //useShader
+
+    function matrixToArray(matrix:ceramic.Float32Array):Array<Float> {
+
+        var result = [];
+        for (i in 0...16) {
+            result[i] = matrix[i];
+        }
+        return result;
+
+    } //matrixToArray
 
     inline public function shaderCustomFloatAttributesSize(shader:backend.impl.CeramicShader):Int {
 

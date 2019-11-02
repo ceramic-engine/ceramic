@@ -1374,7 +1374,7 @@ class Visual extends Entity {
 
                 // Concat matrix with screen transform
                 //
-                var m = ceramic.App.app.screen.matrix;
+                /*var m = ceramic.App.app.screen.matrix;
                 
                 var a1 = _matrix.a * m.a + _matrix.b * m.c;
                 _matrix.b = _matrix.a * m.b + _matrix.b * m.d;
@@ -1387,7 +1387,7 @@ class Visual extends Entity {
 
                 var tx1 = _matrix.tx * m.a + _matrix.ty * m.c + m.tx;
                 _matrix.ty = _matrix.tx * m.b + _matrix.ty * m.d + m.ty;
-                _matrix.tx = tx1;
+                _matrix.tx = tx1;*/
             }
             else {
 

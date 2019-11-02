@@ -482,8 +482,6 @@ class Renderer extends Entity {
             // Special case of drawing into stencil buffer
 
             // No texture
-            lastShader = null;
-            useShader(draw, null);
             unbindUsedTextures(draw);
             useFirstTextureInBatch(draw, null);
 
@@ -499,9 +497,12 @@ class Renderer extends Entity {
             stateDirty = false;
 
             // No render target when writing to stencil buffer
-            //draw.setRenderTarget(lastRenderTarget);
             lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
+
+            // Use default shader
+            lastShader = null;
+            useShader(draw, null);
         }
         else {
             // Check if state is dirty
@@ -549,51 +550,6 @@ class Renderer extends Entity {
                 lastTexture = quad.texture;
                 useFirstTextureInBatch(draw, lastTexture);
 
-                // Update shader
-                lastShader = quad.shader;
-                useShader(draw, lastShader != null ? lastShader.backendItem : null);
-
-                // Update texture
-                /*if (quad.texture != lastTexture) {
-                    if (quad.texture != null && lastTexture != null) {
-                        if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
-                            useFirstTextureInBatch(draw, quad.texture);
-                        }
-                    } else {
-                        if (quad.texture != null) {
-                            if (lastShader == null && quad.shader == null) {
-                                // Default textured shader fallback
-                                useShader(draw, defaultTexturedShader);
-                            }
-                            useFirstTextureInBatch(draw, quad.texture);
-                        } else {
-                            if (lastShader == null && quad.shader == null) {
-                                // Default plain shader fallback
-                                useShader(draw, defaultTexturedShader);
-                            }
-                            useFirstTextureInBatch(draw, null);
-                        }
-                    }
-                }
-
-                // Update shader
-                if (quad.shader != lastShader) {
-                    lastShader = quad.shader;
-
-                    if (lastShader != null) {
-                        // Custom shader
-                        useShader(draw, lastShader.backendItem);
-                    }
-                    else if (lastTexture != null) {
-                        // Default textured shader fallback
-                        useShader(draw, defaultTexturedShader);
-                    }
-                    else {
-                        // Default plain shader fallback
-                        useShader(draw, defaultTexturedShader);
-                    }
-                }*/
-
                 // Update blending
                 var newComputedBlending = computeQuadBlending(quad);
                 if (newComputedBlending != lastComputedBlending) {
@@ -611,6 +567,10 @@ class Renderer extends Entity {
                     lastRenderTarget = quad.computedRenderTarget;
                     useRenderTarget(draw, lastRenderTarget);
                 }
+
+                // Update shader
+                lastShader = quad.shader;
+                useShader(draw, lastShader != null ? lastShader.backendItem : null);
 
                 stateDirty = false;
             }
@@ -1017,8 +977,6 @@ class Renderer extends Entity {
             // Special case of drawing into stencil buffer
 
             // No texture
-            lastShader = null;
-            useShader(draw, null);
             unbindUsedTextures(draw);
             useFirstTextureInBatch(draw, null);
 
@@ -1036,6 +994,10 @@ class Renderer extends Entity {
             // No render target when writing to stencil buffer
             lastRenderTarget = null;
             draw.setRenderTarget(lastRenderTarget);
+
+            // Use default shader
+            lastShader = null;
+            useShader(draw, null);
         }
         else {
             // Check if state is dirty
@@ -1083,51 +1045,6 @@ class Renderer extends Entity {
                 lastTexture = mesh.texture;
                 useFirstTextureInBatch(draw, lastTexture);
 
-                // Update shader
-                lastShader = mesh.shader;
-                useShader(draw, lastShader != null ? lastShader.backendItem : null);
-
-                /*
-                if (mesh.texture != lastTexture) {
-                    if (mesh.texture != null && lastTexture != null) {
-                        if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
-                            useFirstTextureInBatch(draw, mesh.texture);
-                        }
-                    } else {
-                        if (mesh.texture != null) {
-                            if (lastShader == null && mesh.shader == null) {
-                                // Default textured shader fallback
-                                useShader(draw, defaultTexturedShader);
-                            }
-                            useFirstTextureInBatch(draw, mesh.texture);
-                        } else {
-                            if (lastShader == null && mesh.shader == null) {
-                                // Default plain shader fallback
-                                useShader(draw, defaultTexturedShader);
-                            }
-                            useFirstTextureInBatch(draw, null);
-                        }
-                    }
-                }*/
-
-                // Update shader
-                /*if (mesh.shader != lastShader) {
-                    lastShader = mesh.shader;
-
-                    if (lastShader != null) {
-                        // Custom shader
-                        useShader(draw, lastShader.backendItem);
-                    }
-                    else if (lastTexture != null) {
-                        // Default textured shader fallback
-                        useShader(draw, defaultTexturedShader);
-                    }
-                    else {
-                        // Default plain shader fallback
-                        useShader(draw, defaultTexturedShader);
-                    }
-                }*/
-
                 // Update blending
                 var newComputedBlending = computeMeshBlending(mesh);
                 if (newComputedBlending != lastComputedBlending) {
@@ -1145,6 +1062,10 @@ class Renderer extends Entity {
                     lastRenderTarget = mesh.computedRenderTarget;
                     useRenderTarget(draw, lastRenderTarget);
                 }
+
+                // Update shader
+                lastShader = mesh.shader;
+                useShader(draw, lastShader != null ? lastShader.backendItem : null);
 
                 stateDirty = false;
             }

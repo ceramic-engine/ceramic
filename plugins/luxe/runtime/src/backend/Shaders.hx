@@ -227,6 +227,17 @@ class Shaders implements spec.Shaders {
 
     } //setTexture
 
+    inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
+
+        (shader:phoenix.Shader).set_matrix4_arr(name, ceramic.Float32Array.fromArray([
+            transform.a, transform.b, 0, 0,
+            transform.c, transform.d, 0, 0,
+            0, 0, 1, 0,
+            transform.tx, transform.ty, 0, 1
+        ]));
+
+    } //setMat4FromTransform
+
     static var _maxIfStatementsByFragmentShader:Int = -1;
 
     inline static function computeMaxIfStatementsByFragmentShaderIfNeeded(maxIfs:Int = 32):Void {
@@ -303,14 +314,5 @@ void main() {
         return _maxIfStatementsByFragmentShader;
 
     } //maxIfStatementsByFragmentShader
-
-    /*
-    TODO
-    inline public function setMatrix4(shader:Shader, name:String, matrix4:ceramic.Matrix3D):Void {
-        
-        (shader:phoenix.Shader).set_matrix4(name, matrix4)
-
-    } //setMatrix4
-    */
 
 } //Textures
