@@ -525,14 +525,27 @@ class Screen extends Entity implements Observable {
                     parent = parent.parent;
                 }
 
-                // If no parent did intercept, that's fine, return this matching visual
                 if (!intercepts) {
-                    return visual;
+                    // If no parent did intercept, that's should be fine,
+                    // But also check that this is not a hitVisual
+                    if (isHitVisual(visual)) {
+                        // We matched a hit visual, keep the reference and continue
+                        matchedHitVisual = visual;
+                    }
+                    else {
+                        // Clean any hitVisual reference
+                        matchedHitVisual = null;
+                        // Return this matching visual
+                        return visual;
+                    }
                 }
             }
 
             i--;
         }
+
+        // Clean any hitVisual reference
+        matchedHitVisual = null;
 
         return null;
 
@@ -558,14 +571,27 @@ class Screen extends Entity implements Observable {
                     parent = parent.parent;
                 }
 
-                // If no parent did intercept, that's fine, return this matching visual
                 if (!intercepts) {
-                    return visual;
+                    // If no parent did intercept, that's should be fine,
+                    // But also check that this is not a hitVisual
+                    if (isHitVisual(visual)) {
+                        // We matched a hit visual, keep the reference and continue
+                        matchedHitVisual = visual;
+                    }
+                    else {
+                        // Clean any hitVisual reference
+                        matchedHitVisual = null;
+                        // Return this matching visual
+                        return visual;
+                    }
                 }
             }
 
             i--;
         }
+
+        // Clean any hitVisual reference
+        matchedHitVisual = null;
 
         return null;
 
@@ -840,5 +866,52 @@ class Screen extends Entity implements Observable {
         }
 
     } //updateTouchOver
+
+/// Hit visual logic
+
+    /** Internal reference to a matched hit visual. This is used to let Visual.hit() return `false`
+        on every visual not related to the matched hit visual, if any is defined. */
+    @:noCompletion
+    public static var matchedHitVisual:Visual = null;
+
+    var hitVisuals:Array<Visual> = [];
+
+    public function addHitVisual(visual:Visual):Void {
+
+        var wasHitVisual = isHitVisual(visual);
+        hitVisuals.push(visual);
+
+        if (!wasHitVisual) {
+            visual.onPointerDown(this, handleHitVisualDown);
+        }
+
+    } //addHitVisual
+
+    public function removeHitVisual(visual:Visual):Void {
+
+        var index = hitVisuals.indexOf(visual);
+        if (index == -1) {
+            warning('Hit visual not removed from hitVisuals because it was not added at the first place');
+        }
+        else {
+            hitVisuals.splice(index, 1);
+            if (!isHitVisual(visual)) {
+                visual.offPointerDown(handleHitVisualDown);
+            }
+        }
+
+    } //removeHitVisual
+
+    public function isHitVisual(visual:Visual):Bool {
+
+        return hitVisuals.indexOf(visual) != -1;
+
+    } //isHitVisual
+
+    function handleHitVisualDown(info:TouchInfo):Void {
+
+        // Doing nothing here, except catching touch events on hit visual
+
+    } //handleHitVisualDown
 
 }

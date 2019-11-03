@@ -131,24 +131,12 @@ class Mesh extends Visual {
 
 /// Overrides
 
-    override function hits(x:Float, y:Float):Bool {
+    override function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
         if (complexHit) {
-
-            // A visuals that renders to texture never hits
-            if (renderTargetDirty) computeRenderTarget();
-            if (computedRenderTarget != null) return false;
-
-            if (matrixDirty) {
-                computeMatrix();
-            }
-
-            _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-            _matrix.invert();
-
             // Convert x and y coordinate
-            var testX = _matrix.transformX(x, y);
-            var testY = _matrix.transformY(x, y);
+            var testX = matrix.transformX(x, y);
+            var testY = matrix.transformY(x, y);
 
             // Test every triangle to see if our point hits one of these
             var i = 0;
@@ -199,15 +187,12 @@ class Mesh extends Visual {
                 i++;
             }
 
-            // Nope, it didn't
             return false;
         }
         else {
-
-            // Perform regular bounds-based hit test
-            return super.hits(x, y);
+            return super.hitTest(x, y, matrix);
         }
 
-    } //hits
+    } //hitsComplexWithMatrix
 
 } //Mesh

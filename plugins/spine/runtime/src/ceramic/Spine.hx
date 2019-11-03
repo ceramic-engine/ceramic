@@ -1900,7 +1900,9 @@ class Spine extends Visual {
                 var mesh = slotMeshes.getInline(firstBoundingBoxSlotIndex);
                 if (mesh != null) {
                     mesh.complexHit = true;
-                    return mesh.hits(x, y);
+                    var result = mesh.hits(x, y);
+                    mesh.complexHit = false;
+                    return result;
                 }
                 else {
                     return false;
@@ -1914,7 +1916,9 @@ class Spine extends Visual {
             var mesh = slotMeshes.getInline(hitWithSlotIndex);
             if (mesh != null) {
                 mesh.complexHit = true;
-                return mesh.hits(x, y);
+                var result = mesh.hits(x, y);
+                mesh.complexHit = false;
+                return result;
             }
             else {
                 return false;

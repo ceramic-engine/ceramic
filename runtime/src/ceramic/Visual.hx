@@ -1389,7 +1389,26 @@ class Visual extends Entity {
 
         // A visuals that renders to texture never hits by default
         if (renderTargetDirty) computeRenderTarget();
-        if (computedRenderTarget != null) return false;
+        if (computedRenderTarget != null) {
+            var parent = this.parent;
+            if (parent != null) {
+                do {
+                    if (parent.asQuad != null && Std.is(parent, Filter)) {
+                        var filter:Filter = cast parent;
+                        if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
+                            var doesHit = filter.visualInContentHits(this, x, y);
+                            return doesHit;
+                        }
+                    }
+                    parent = parent.parent;
+                }
+                while (parent != null);
+            }
+            return false;
+        }
+        else if (Screen.matchedHitVisual != null && Screen.matchedHitVisual != this) {
+            return false;
+        }
 
         if (matrixDirty) {
             computeMatrix();
@@ -1397,6 +1416,15 @@ class Visual extends Entity {
 
         _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
         _matrix.invert();
+
+        return hitTest(x, y, _matrix);
+
+    } //hits
+
+    /** The actual hit test performed on the visual.
+        If needed to change how hit test is performed
+        on a visual subclass, this is the method to override. */
+    function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
         var testX0 = _matrix.transformX(x, y);
         var testY0 = _matrix.transformY(x, y);
@@ -1408,7 +1436,7 @@ class Visual extends Entity {
             && testY0 >= 0
             && testY1 <= height;
 
-    } //hits
+    } //hitTest
 
     /** Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
         Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */

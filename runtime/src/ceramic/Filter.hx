@@ -10,9 +10,29 @@ import ceramic.Shortcuts.*;
     allowing to process the result through a shader, apply blending or alpha on the final result... */
 class Filter extends Quad {
 
+/// Internal
+
+    static var _matrix:Transform = Visual._matrix;
+
 /// Public properties
 
     public var content(default,null):Quad;
+
+    /** If provided, visuals in content will react to hit tests
+        and touch events as if they were inside this hit visual.
+        For this to work as expected, `hitVisual` should be inside main screen visuals hierarchy. */
+    public var hitVisual(default, set):Visual = null;
+    function set_hitVisual(hitVisual:Visual):Visual {
+        if (this.hitVisual == hitVisual) return hitVisual;
+        if (this.hitVisual != null) {
+            screen.removeHitVisual(this.hitVisual);
+        }
+        this.hitVisual = hitVisual;
+        if (this.hitVisual != null) {
+            screen.addHitVisual(this.hitVisual);
+        }
+        return hitVisual;
+    }
 
     /** If `enabled` is set to `false`, no render texture will be used.
         The children will be displayed on screen directly.
@@ -219,6 +239,45 @@ class Filter extends Quad {
 
     } //render
 
+/// Hitting visuals in content
+
+    public function visualInContentHits(visual:Visual, x:Float, y:Float):Bool {
+
+        if (hitVisual.hits(x, y)) {
+
+            // Set matrix to tested visual
+            if (visual.matrixDirty) {
+                visual.computeMatrix();
+            }
+            _matrix.setTo(visual.matA, visual.matB, visual.matC, visual.matD, visual.matTX, visual.matTY);
+
+            // Then concat hit visual's matrix
+            //
+            if (hitVisual.matrixDirty) {
+                hitVisual.computeMatrix();
+            }
+
+            var a1 = _matrix.a * hitVisual.matA + _matrix.b * hitVisual.matC;
+            _matrix.b = _matrix.a * hitVisual.matB + _matrix.b * hitVisual.matD;
+            _matrix.a = a1;
+            var c1 = _matrix.c * hitVisual.matA + _matrix.d * hitVisual.matC;
+            _matrix.d = _matrix.c * hitVisual.matB + _matrix.d * hitVisual.matD;
+            _matrix.c = c1;
+            var tx1 = _matrix.tx * hitVisual.matA + _matrix.ty * hitVisual.matC + hitVisual.matTX;
+            _matrix.ty = _matrix.tx * hitVisual.matB + _matrix.ty * hitVisual.matD + hitVisual.matTY;
+            _matrix.tx = tx1;
+
+            // Invert and test
+            //
+            _matrix.invert();
+            return visual.hitTest(x, y, _matrix);
+
+        }
+
+        return false;
+
+    } //visualInContentHits
+
 /// Overrides
 
     override function set_width(width:Float):Float {
@@ -239,6 +298,9 @@ class Filter extends Quad {
     }
 
     override function destroy() {
+
+        // Will unbind touch if needed
+        hitVisual = null;
         
         texture = null;
         if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
