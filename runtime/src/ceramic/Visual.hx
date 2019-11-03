@@ -1564,12 +1564,12 @@ class Visual extends Entity {
             if (prevComputedRenderTarget != null) {
                 if (asQuad != null) {
                     if (asQuad.texture != null && asQuad.texture.isRenderTexture) {
-                        prevComputedRenderTarget.decrementDependantTextureCount(asQuad.texture);
+                        prevComputedRenderTarget.decrementDependingTextureCount(asQuad.texture);
                     }
                 }
                 else if (asMesh != null) {
                     if (asMesh.texture != null && asMesh.texture.isRenderTexture) {
-                        prevComputedRenderTarget.decrementDependantTextureCount(asMesh.texture);
+                        prevComputedRenderTarget.decrementDependingTextureCount(asMesh.texture);
                     }
                 }
             }
@@ -1577,12 +1577,12 @@ class Visual extends Entity {
             if (computedRenderTarget != null) {
                 if (asQuad != null) {
                     if (asQuad.texture != null && asQuad.texture.isRenderTexture) {
-                        prevComputedRenderTarget.incrementDependantTextureCount(asQuad.texture);
+                        computedRenderTarget.incrementDependingTextureCount(asQuad.texture);
                     }
                 }
                 else if (asMesh != null) {
                     if (asMesh.texture != null && asMesh.texture.isRenderTexture) {
-                        prevComputedRenderTarget.incrementDependantTextureCount(asMesh.texture);
+                        computedRenderTarget.incrementDependingTextureCount(asMesh.texture);
                     }
                 }
             }

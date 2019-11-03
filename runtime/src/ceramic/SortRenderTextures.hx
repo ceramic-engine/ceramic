@@ -23,58 +23,21 @@
 package ceramic;
 
 /**
-    SortVisuals provides a stable implementation of merge sort through its `sort`
+    SortRenderTextures provides a stable implementation of merge sort through its `sort`
     method. It should be used instead of `Array.sort` in cases where the order
     of equal elements has to be retained on all targets.
     
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
+    This specific implementation has been modified to be exclusively used with array of `ceramic.RenderTexture` instances.
     The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
 **/
-class SortVisuals {
+class SortRenderTextures {
 
-    static inline function cmp(a:Visual, b:Visual):Int {
+    static inline function cmp(a:RenderTexture, b:RenderTexture):Int {
 
         var result = 0;
 
-        var aQuad:Quad = a.asQuad;
-        var bQuad:Quad = b.asQuad;
-        var aMesh:Mesh = a.asMesh;
-        var bMesh:Mesh = b.asMesh;
-        var aIsQuadOrMesh = aQuad != null || aMesh != null;
-        var bIsQuadOrMesh = bQuad != null || bMesh != null;
-
-        if (aIsQuadOrMesh || bIsQuadOrMesh) {
-            if (!aIsQuadOrMesh || !a.computedVisible && !a.computedTouchable) result = -1;
-            else if (!bIsQuadOrMesh || !b.computedVisible && !b.computedTouchable) result = 1;
-            else if (a.computedRenderTarget != b.computedRenderTarget) {
-                if (a.computedRenderTarget == null) result = 1;
-                else if (b.computedRenderTarget == null) result = -1;
-                else if (a.computedRenderTarget.priority > b.computedRenderTarget.priority) result = -1;
-                else if (a.computedRenderTarget.priority < b.computedRenderTarget.priority) result = 1;
-                else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = -1;
-                else result = 1;
-            }
-            else if (a.computedDepth > b.computedDepth) {
-                result = 1;
-            }
-            else if (a.computedDepth < b.computedDepth) {
-                result = -1;
-            }
-            else {
-                var aTexture = aMesh != null ? aMesh.texture : aQuad.texture;
-                var bTexture = bMesh != null ? bMesh.texture : bQuad.texture;
-                if (aTexture != null && bTexture == null) result = 1;
-                else if (aTexture == null && bTexture != null) result = -1;
-                else if (aTexture != null && bTexture != null) {
-                    if (aTexture.index < bTexture.index) result = 1;
-                    else if (aTexture.index > bTexture.index) result = -1;
-                    else if ((a.blending:Int) > (b.blending:Int)) result = 1;
-                    else if ((a.blending:Int) < (b.blending:Int)) result = -1;
-                }
-                else if ((a.blending:Int) > (b.blending:Int)) result = 1;
-                else if ((a.blending:Int) < (b.blending:Int)) result = -1;
-            }
-        }
+        if (a.dependsOnTexture(b)) result = 1;
+        else if (b.dependsOnTexture(a)) result = -1;
 
         return result;
 
@@ -91,11 +54,11 @@ class SortVisuals {
 
         If `a` or `cmp` are null, the result is unspecified.
     **/
-    static inline public function sort(a:Array<Visual>) {
+    static inline public function sort(a:Array<RenderTexture>) {
         rec(a, 0, a.length);
     }
 
-    static function rec(a:Array<Visual>, from:Int, to:Int) {
+    static function rec(a:Array<RenderTexture>, from:Int, to:Int) {
         var middle = (from + to) >> 1;
         if (to - from < 12) {
             if (to <= from) return;
@@ -116,7 +79,7 @@ class SortVisuals {
         doMerge(a, from, middle, to, middle - from, to - middle);
     }
 
-    static function doMerge(a:Array<Visual>, from, pivot, to, len1, len2) {
+    static function doMerge(a:Array<RenderTexture>, from, pivot, to, len1, len2) {
         var first_cut, second_cut, len11, len22, new_mid;
         if (len1 == 0 || len2 == 0)
             return;
@@ -142,7 +105,7 @@ class SortVisuals {
         doMerge(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
     }
 
-    static inline function rotate(a:Array<Visual>, from, mid, to) {
+    static inline function rotate(a:Array<RenderTexture>, from, mid, to) {
         var n;
         if (from == mid || mid == to) return;
         n = gcd(to - from, mid - from);
@@ -169,7 +132,7 @@ class SortVisuals {
         return m;
     }
 
-    static inline function upper(a:Array<Visual>, from, to, val) {
+    static inline function upper(a:Array<RenderTexture>, from, to, val) {
         var len = to - from, half, mid;
         while (len > 0) {
             half = len >> 1;
@@ -184,7 +147,7 @@ class SortVisuals {
         return from;
     }
 
-    static inline function lower(a:Array<Visual>, from, to, val) {
+    static inline function lower(a:Array<RenderTexture>, from, to, val) {
         var len = to - from, half, mid;
         while (len > 0) {
             half = len >> 1;
@@ -198,14 +161,14 @@ class SortVisuals {
         return from;
     }
 
-    static inline function swap(a:Array<Visual>, i, j) {
+    static inline function swap(a:Array<RenderTexture>, i, j) {
         var tmp = a[i];
         a[i] = a[j];
         a[j] = tmp;
     }
 
-    static inline function compare(a:Array<Visual>, i, j) {
+    static inline function compare(a:Array<RenderTexture>, i, j) {
         return cmp(a[i], a[j]);
     }
 
-} //SortVisuals
+} //SortRenderTextures

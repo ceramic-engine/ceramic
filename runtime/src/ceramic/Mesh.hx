@@ -36,10 +36,10 @@ class Mesh extends Visual {
 
     override function destroy() {
 
-        super.destroy();
-
-        // Will update texture asset retain count accordingly
+        // Will update texture asset retain count and render target dependencies accordingly
         texture = null;
+
+        super.destroy();
 
     } //destroy
 
@@ -78,10 +78,30 @@ class Mesh extends Visual {
 
         assert(texture == null || !texture.destroyed, 'Cannot assign destroyed texture: ' + texture);
 
-        // Unbind previous texture destroy event
         if (this.texture != null) {
+            // Unbind previous texture destroy event
             this.texture.offDestroy(textureDestroyed);
             if (this.texture.asset != null) this.texture.asset.release();
+
+            // Remove render target texture dependency, if any
+            if (this.texture != null && this.texture.isRenderTexture) {
+                if (renderTargetDirty) {
+                    computeRenderTarget();
+                }
+                if (computedRenderTarget != null) {
+                    computedRenderTarget.decrementDependingTextureCount(this.texture);
+                }
+            }
+        }
+
+        // Add new render target texture dependency, if needed
+        if (texture != null && texture.isRenderTexture) {
+            if (renderTargetDirty) {
+                computeRenderTarget();
+            }
+            if (computeRenderTarget != null) {
+                computedRenderTarget.incrementDependingTextureCount(texture);
+            }
         }
 
         this.texture = texture;

@@ -5,6 +5,7 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+@:allow(ceramic.App)
 class RenderTexture extends Texture {
 
     static var _clearQuad:Quad = null;
@@ -14,6 +15,10 @@ class RenderTexture extends Texture {
     public var clearOnRender:Bool = true;
 
     public var renderDirty:Bool = false;
+
+    public var dependingTextures:IntIntMap = null;
+
+    public var priority(default, null):Float = 0;
 
 /// Lifecycle
 
@@ -121,16 +126,30 @@ class RenderTexture extends Texture {
 
     } //clear
 
-    @:noCompletion inline public function incrementDependantTextureCount(texture:Texture):Void {
+    @:noCompletion inline public function dependsOnTexture(texture:Texture):Bool {
 
-        // TODO
+        return dependingTextures != null && dependingTextures.get(texture.index) > 0;
 
-    } //incrementDependantTextureCount
+    } //dependsOnTexture
 
-    @:noCompletion inline public function decrementDependantTextureCount(texture:Texture):Void {
+    @:noCompletion inline public function incrementDependingTextureCount(texture:Texture):Void {
 
-        // TODO
+        if (dependingTextures == null) {
+            dependingTextures = new IntIntMap();
+        }
+        var prevValue = dependingTextures.get(texture.index);
+        dependingTextures.set(texture.index, prevValue + 1);
 
-    } //decrementDependantTextureCount
+    } //incrementDependingTextureCount
+
+    @:noCompletion inline public function decrementDependingTextureCount(texture:Texture):Void {
+
+        if (dependingTextures == null) {
+            dependingTextures = new IntIntMap();
+        }
+        var prevValue = dependingTextures.get(texture.index);
+        dependingTextures.set(texture.index, prevValue - 1);
+
+    } //decrementDependingTextureCount
 
 } //RenderTexture

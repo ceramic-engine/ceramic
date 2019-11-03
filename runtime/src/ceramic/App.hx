@@ -1,5 +1,6 @@
 package ceramic;
 
+import haxe.ds.ArraySort;
 #if hxtelemetry
 import hxtelemetry.HxTelemetry;
 #end
@@ -643,6 +644,9 @@ class App extends Entity {
             // Update hierarchy from depth
             computeHierarchy();
 
+            // Compute render textures priority
+            computeRenderTexturesPriority(renderTextures);
+
             // Sort visuals depending on their settings
             sortVisuals(visuals);
 
@@ -769,6 +773,24 @@ class App extends Entity {
         }
 
     } //computeHierarchy
+
+    @:noCompletion
+    #if !debug inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
+
+        if (renderTextures.length == 0)
+            return;
+
+        // Sort by dependance
+        SortRenderTextures.sort(renderTextures);
+    
+        // Update priorities from order
+        var len = renderTextures.length;
+        for (i in 0...renderTextures.length) {
+            var renderTexture = renderTextures.unsafeGet(i);
+            renderTexture.priority = len + 1 - i;
+        }
+
+    } //computeRenderTexturesPriority
 
     @:noCompletion
     #if !debug inline #end public function sortVisuals(visuals:Array<Visual>) {
