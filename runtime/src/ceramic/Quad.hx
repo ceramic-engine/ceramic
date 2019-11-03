@@ -124,7 +124,7 @@ class Quad extends Visual {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        quad = this;
+        asQuad = this;
 
     } //new
 
