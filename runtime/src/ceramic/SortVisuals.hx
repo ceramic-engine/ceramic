@@ -35,48 +35,42 @@ class SortVisuals {
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
-        if (!a.computedVisible && !a.computedTouchable) result = -1;
-        else if (!b.computedVisible && !b.computedTouchable) result = 1;
-        else if (a.computedRenderTarget != b.computedRenderTarget) {
-            if (a.computedRenderTarget == null) result = 1;
-            else if (b.computedRenderTarget == null) result = -1;
-            else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = 1;
-            else result = -1;
-        }
-        else if (a.computedDepth > b.computedDepth) {
-            result = 1;
-        }
-        else if (a.computedDepth < b.computedDepth) {
-            result = -1;
-        }
-        else {
-            var aQuad:Quad = a.asQuad;
-            var bQuad:Quad = b.asQuad;
-            if (aQuad != null && bQuad == null) result = 1;
-            else if (aQuad == null && bQuad != null) result = -1;
-            else if (aQuad != null && bQuad != null) {
-                if (aQuad.texture != null && bQuad.texture == null) result = 1;
-                else if (aQuad.texture == null && bQuad.texture != null) result = -1;
-                else if (aQuad.texture != null && bQuad.texture != null) {
-                    if (aQuad.texture.index < bQuad.texture.index) result = 1;
-                    else if (aQuad.texture.index > bQuad.texture.index) result = -1;
-                }
+
+        var aQuad:Quad = a.asQuad;
+        var bQuad:Quad = b.asQuad;
+        var aMesh:Mesh = a.asMesh;
+        var bMesh:Mesh = b.asMesh;
+        var aIsQuadOrMesh = aQuad != null || aMesh != null;
+        var bIsQuadOrMesh = bQuad != null || bMesh != null;
+
+        if (aIsQuadOrMesh || bIsQuadOrMesh) {
+            if (!aIsQuadOrMesh || !a.computedVisible && !a.computedTouchable) result = -1;
+            else if (!bIsQuadOrMesh || !b.computedVisible && !b.computedTouchable) result = 1;
+            else if (a.computedRenderTarget != b.computedRenderTarget) {
+                if (a.computedRenderTarget == null) result = 1;
+                else if (b.computedRenderTarget == null) result = -1;
+                else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = -1;
+                else result = 1;
+            }
+            else if (a.computedDepth > b.computedDepth) {
+                result = 1;
+            }
+            else if (a.computedDepth < b.computedDepth) {
+                result = -1;
             }
             else {
-                var aMesh:Mesh = a.asMesh;
-                var bMesh:Mesh = b.asMesh;
-                if (aMesh != null && bMesh != null) {
-                    if (aMesh.texture != null && bMesh.texture == null) result = 1;
-                    else if (aMesh.texture == null && bMesh.texture != null) result = -1;
-                    else if (aMesh.texture != null && bMesh.texture != null) {
-                        if (aMesh.texture.index < bMesh.texture.index) result = 1;
-                        else if (aMesh.texture.index > bMesh.texture.index) result = -1;
-                        else if ((aMesh.blending:Int) > (bMesh.blending:Int)) result = 1;
-                        else if ((aMesh.blending:Int) < (bMesh.blending:Int)) result = -1;
-                    }
-                    else if ((aMesh.blending:Int) > (bMesh.blending:Int)) result = 1;
-                    else if ((aMesh.blending:Int) < (bMesh.blending:Int)) result = -1;
+                var aTexture = aMesh != null ? aMesh.texture : aQuad.texture;
+                var bTexture = bMesh != null ? bMesh.texture : bQuad.texture;
+                if (aTexture != null && bTexture == null) result = 1;
+                else if (aTexture == null && bTexture != null) result = -1;
+                else if (aTexture != null && bTexture != null) {
+                    if (aTexture.index < bTexture.index) result = 1;
+                    else if (aTexture.index > bTexture.index) result = -1;
+                    else if ((a.blending:Int) > (b.blending:Int)) result = 1;
+                    else if ((a.blending:Int) < (b.blending:Int)) result = -1;
                 }
+                else if ((a.blending:Int) > (b.blending:Int)) result = 1;
+                else if ((a.blending:Int) < (b.blending:Int)) result = -1;
             }
         }
 
