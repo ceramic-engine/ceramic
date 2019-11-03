@@ -243,7 +243,12 @@ class Filter extends Quad {
 
     public function visualInContentHits(visual:Visual, x:Float, y:Float):Bool {
 
+        var matchedHitVisual = Screen.matchedHitVisual;
+        Screen.matchedHitVisual = null;
+
         if (hitVisual.hits(x, y)) {
+
+            Screen.matchedHitVisual = matchedHitVisual;
 
             // Set matrix to tested visual
             if (visual.matrixDirty) {
@@ -251,28 +256,63 @@ class Filter extends Quad {
             }
             _matrix.setTo(visual.matA, visual.matB, visual.matC, visual.matD, visual.matTX, visual.matTY);
 
-            // Then concat hit visual's matrix
-            //
-            if (hitVisual.matrixDirty) {
-                hitVisual.computeMatrix();
-            }
+            var hv = hitVisual;
+            do {
+                // Then concat hit visual's matrix
+                //
+                if (hv.matrixDirty) {
+                    hv.computeMatrix();
+                }
 
-            var a1 = _matrix.a * hitVisual.matA + _matrix.b * hitVisual.matC;
-            _matrix.b = _matrix.a * hitVisual.matB + _matrix.b * hitVisual.matD;
-            _matrix.a = a1;
-            var c1 = _matrix.c * hitVisual.matA + _matrix.d * hitVisual.matC;
-            _matrix.d = _matrix.c * hitVisual.matB + _matrix.d * hitVisual.matD;
-            _matrix.c = c1;
-            var tx1 = _matrix.tx * hitVisual.matA + _matrix.ty * hitVisual.matC + hitVisual.matTX;
-            _matrix.ty = _matrix.tx * hitVisual.matB + _matrix.ty * hitVisual.matD + hitVisual.matTY;
-            _matrix.tx = tx1;
+                var a1 = _matrix.a * hv.matA + _matrix.b * hv.matC;
+                _matrix.b = _matrix.a * hv.matB + _matrix.b * hv.matD;
+                _matrix.a = a1;
+                var c1 = _matrix.c * hv.matA + _matrix.d * hv.matC;
+                _matrix.d = _matrix.c * hv.matB + _matrix.d * hv.matD;
+                _matrix.c = c1;
+                var tx1 = _matrix.tx * hv.matA + _matrix.ty * hv.matC + hv.matTX;
+                _matrix.ty = _matrix.tx * hv.matB + _matrix.ty * hv.matD + hv.matTY;
+                _matrix.tx = tx1;
+
+                // Is there another hit visual to look for?
+                if (hv.computedRenderTarget != null) {
+                    // Probably
+                    var didFindParentHitVisual = false;
+                    var parent = hv.parent;
+                    if (parent != null) {
+                        do {
+                            if (parent.asQuad != null && Std.is(parent, Filter)) {
+                                var filter:Filter = cast parent;
+                                if (filter.renderTexture == hv.computedRenderTarget) {
+                                    // Yes
+                                    hv = filter.hitVisual;
+                                    didFindParentHitVisual = true;
+                                    break;
+                                }
+                            }
+                            parent = parent.parent;
+                        }
+                        while (parent != null);
+                    }
+                    if (!didFindParentHitVisual) {
+                        // No, after all
+                        return false;
+                    }
+                }
+                else {
+                    // Nope
+                    hv = null;
+                }
+            }
+            while (hv != null);
 
             // Invert and test
-            //
             _matrix.invert();
             return visual.hitTest(x, y, _matrix);
 
         }
+        
+        Screen.matchedHitVisual = matchedHitVisual;
 
         return false;
 

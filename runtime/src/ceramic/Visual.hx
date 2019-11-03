@@ -1395,9 +1395,11 @@ class Visual extends Entity {
                 do {
                     if (parent.asQuad != null && Std.is(parent, Filter)) {
                         var filter:Filter = cast parent;
-                        if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
-                            var doesHit = filter.visualInContentHits(this, x, y);
-                            return doesHit;
+                        if (filter.renderTexture == computedRenderTarget) {
+                            if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
+                                var doesHit = filter.visualInContentHits(this, x, y);
+                                return doesHit;
+                            }
                         }
                     }
                     parent = parent.parent;
