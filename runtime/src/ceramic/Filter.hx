@@ -51,12 +51,7 @@ class Filter extends Quad {
     function set_explicitRender(explicitRender:Bool):Bool {
         if (this.explicitRender == explicitRender) return explicitRender;
         this.explicitRender = explicitRender;
-        if (children != null) {
-            for (i in 0...children.length) {
-                var child = children.unsafeGet(i);
-                child.active = !explicitRender;
-            }
-        }
+        content.active = !explicitRender;
         return explicitRender;
     }
 
