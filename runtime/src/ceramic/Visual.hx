@@ -1397,8 +1397,7 @@ class Visual extends Entity {
                         var filter:Filter = cast parent;
                         if (filter.renderTexture == computedRenderTarget) {
                             if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
-                                var doesHit = filter.visualInContentHits(this, x, y);
-                                return doesHit;
+                                return filter.visualInContentHits(this, x, y);
                             }
                         }
                     }
@@ -1428,15 +1427,13 @@ class Visual extends Entity {
         on a visual subclass, this is the method to override. */
     function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
-        var testX0 = _matrix.transformX(x, y);
-        var testY0 = _matrix.transformY(x, y);
-        var testX1 = _matrix.transformX(x - 1, y - 1);
-        var testY1 = _matrix.transformY(x - 1, y - 1);
+        var testX = _matrix.transformX(x, y);
+        var testY = _matrix.transformY(x, y);
 
-        return testX0 >= 0
-            && testX1 <= width
-            && testY0 >= 0
-            && testY1 <= height;
+        return testX >= 0
+            && testX < width
+            && testY >= 0
+            && testY < height;
 
     } //hitTest
 
