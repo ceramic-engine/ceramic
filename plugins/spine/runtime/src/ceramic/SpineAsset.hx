@@ -166,14 +166,14 @@ class SpineAsset extends Asset {
                             for (asset in prevPages) {
                                 var texture = asset.texture;
                                 for (visual in [].concat(ceramic.App.app.visuals)) {
-                                    if (visual.quad != null) {
-                                        var quad = visual.quad;
+                                    if (visual.asQuad != null) {
+                                        var quad = visual.asQuad;
                                         if (quad.texture == texture) {
                                             quad.texture = null;
                                         }
                                     }
-                                    else if (visual.mesh != null) {
-                                        var mesh = visual.mesh;
+                                    else if (visual.asMesh != null) {
+                                        var mesh = visual.asMesh;
                                         if (mesh.texture == texture) {
                                             mesh.texture = null;
                                         }

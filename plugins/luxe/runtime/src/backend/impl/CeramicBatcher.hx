@@ -1027,8 +1027,8 @@ class CeramicBatcher extends phoenix.Batcher {
             for (ii in 0...ceramicVisuals.length) {
                 var visual = ceramicVisuals.unsafeGet(ii);
 
-                quad = visual.quad;
-                mesh = visual.mesh;
+                quad = visual.asQuad;
+                mesh = visual.asMesh;
 
                 // If it's valid to be drawn
                 if (visual.computedVisible) {
@@ -1071,14 +1071,14 @@ class CeramicBatcher extends phoenix.Batcher {
                                     stencilClip = true;
                                     drawQuad();
                                     stencilClip = false;
-                                    quad = visual.quad;
+                                    quad = visual.asQuad;
                                 }
                                 else if (lastClip.mesh != null) {
                                     mesh = lastClip.mesh;
                                     stencilClip = true;
                                     drawMesh();
                                     stencilClip = false;
-                                    mesh = visual.mesh;
+                                    mesh = visual.asMesh;
                                 }
 
                                 // Next things to be drawn will be clipped

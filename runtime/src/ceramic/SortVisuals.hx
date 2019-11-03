@@ -50,8 +50,8 @@ class SortVisuals {
             result = -1;
         }
         else {
-            var aQuad:Quad = a.quad;
-            var bQuad:Quad = b.quad;
+            var aQuad:Quad = a.asQuad;
+            var bQuad:Quad = b.asQuad;
             if (aQuad != null && bQuad == null) result = 1;
             else if (aQuad == null && bQuad != null) result = -1;
             else if (aQuad != null && bQuad != null) {
@@ -63,8 +63,8 @@ class SortVisuals {
                 }
             }
             else {
-                var aMesh:Mesh = a.mesh;
-                var bMesh:Mesh = b.mesh;
+                var aMesh:Mesh = a.asMesh;
+                var bMesh:Mesh = b.asMesh;
                 if (aMesh != null && bMesh != null) {
                     if (aMesh.texture != null && bMesh.texture == null) result = 1;
                     else if (aMesh.texture == null && bMesh.texture != null) result = -1;

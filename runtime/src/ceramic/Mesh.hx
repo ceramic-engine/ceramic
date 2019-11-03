@@ -30,7 +30,7 @@ class Mesh extends Visual {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        mesh = this;
+        asMesh = this;
 
     } //new
 

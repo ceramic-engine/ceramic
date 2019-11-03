@@ -687,10 +687,10 @@ class Visual extends Entity {
 /// Access as specific types
 
     /** Get this visual typed as `Quad` or null if it isn't a `Quad` */
-    public var quad:Quad = null;
+    public var asQuad:Quad = null;
 
     /** Get this visual typed as `Mesh` or null if it isn't a `Mesh` */
-    public var mesh:Mesh = null;
+    public var asMesh:Mesh = null;
 
 /// Properties
 
@@ -1562,27 +1562,27 @@ class Visual extends Entity {
         if (prevComputedRenderTarget != computedRenderTarget) {
             // Release dependant render target texture
             if (prevComputedRenderTarget != null) {
-                if (quad != null) {
-                    if (quad.texture != null && quad.texture.isRenderTexture) {
-                        prevComputedRenderTarget.decrementDependantTextureCount(quad.texture);
+                if (asQuad != null) {
+                    if (asQuad.texture != null && asQuad.texture.isRenderTexture) {
+                        prevComputedRenderTarget.decrementDependantTextureCount(asQuad.texture);
                     }
                 }
-                else if (mesh != null) {
-                    if (mesh.texture != null && mesh.texture.isRenderTexture) {
-                        prevComputedRenderTarget.decrementDependantTextureCount(mesh.texture);
+                else if (asMesh != null) {
+                    if (asMesh.texture != null && asMesh.texture.isRenderTexture) {
+                        prevComputedRenderTarget.decrementDependantTextureCount(asMesh.texture);
                     }
                 }
             }
             // Add dependent render target texture
             if (computedRenderTarget != null) {
-                if (quad != null) {
-                    if (quad.texture != null && quad.texture.isRenderTexture) {
-                        prevComputedRenderTarget.incrementDependantTextureCount(quad.texture);
+                if (asQuad != null) {
+                    if (asQuad.texture != null && asQuad.texture.isRenderTexture) {
+                        prevComputedRenderTarget.incrementDependantTextureCount(asQuad.texture);
                     }
                 }
-                else if (mesh != null) {
-                    if (mesh.texture != null && mesh.texture.isRenderTexture) {
-                        prevComputedRenderTarget.incrementDependantTextureCount(mesh.texture);
+                else if (asMesh != null) {
+                    if (asMesh.texture != null && asMesh.texture.isRenderTexture) {
+                        prevComputedRenderTarget.incrementDependantTextureCount(asMesh.texture);
                     }
                 }
             }
@@ -1761,8 +1761,8 @@ class Visual extends Entity {
                     // Mesh is a specific case.
                     // For now we handle it in Visual class directly.
                     // We might move this into Mesh class later.
-                    if (child.mesh != null) {
-                        var mesh:Mesh = child.mesh;
+                    if (child.asMesh != null) {
+                        var mesh:Mesh = child.asMesh;
                         var vertices = mesh.vertices;
                         var i = 0;
                         var len = vertices.length;

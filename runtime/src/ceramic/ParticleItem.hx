@@ -21,20 +21,20 @@ class ParticleItem {
     public var color(get,set):Color;
     inline function get_color():Color {
         var color:Color = Color.WHITE;
-        if (visual.quad != null) {
-            color = visual.quad.color;
+        if (visual.asQuad != null) {
+            color = visual.asQuad.color;
         }
-        else if (visual.mesh != null) {
-            color = visual.mesh.color;
+        else if (visual.asMesh != null) {
+            color = visual.asMesh.color;
         }
         return color;
     }
     inline function set_color(color:Color):Color {
-        if (visual.quad != null) {
-            visual.quad.color = color;
+        if (visual.asQuad != null) {
+            visual.asQuad.color = color;
         }
-        else if (visual.mesh != null) {
-            visual.mesh.color = color;
+        else if (visual.asMesh != null) {
+            visual.asMesh.color = color;
         }
         return color;
     }

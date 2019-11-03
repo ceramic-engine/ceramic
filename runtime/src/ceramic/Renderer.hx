@@ -186,8 +186,8 @@ class Renderer extends Entity {
 
             for (ii in 0...ceramicVisuals.length) {
                 var visual = ceramicVisuals.unsafeGet(ii);
-                var quad = visual.quad;
-                var mesh = visual.mesh;
+                var quad = visual.asQuad;
+                var mesh = visual.asMesh;
 
                 // If it's valid to be drawn
                 if (visual.computedVisible) {
@@ -219,19 +219,19 @@ class Renderer extends Entity {
 
                                 draw.beginDrawingInStencilBuffer();
 
-                                if (lastClip.quad != null) {
-                                    quad = lastClip.quad;
+                                if (lastClip.asQuad != null) {
+                                    quad = lastClip.asQuad;
                                     stencilClip = true;
                                     drawQuad(draw, quad);
                                     stencilClip = false;
-                                    quad = visual.quad;
+                                    quad = visual.asQuad;
                                 }
-                                else if (lastClip.mesh != null) {
-                                    mesh = lastClip.mesh;
+                                else if (lastClip.asMesh != null) {
+                                    mesh = lastClip.asMesh;
                                     stencilClip = true;
                                     drawMesh(draw, mesh);
                                     stencilClip = false;
-                                    mesh = visual.mesh;
+                                    mesh = visual.asMesh;
                                 }
 
                                 // Next things to be drawn will be clipped
