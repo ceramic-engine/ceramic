@@ -1032,6 +1032,24 @@ class Visual extends Entity {
 
 /// Flags
 
+    /** Read and write arbitrary boolean flags on this visual.
+        Index should be between 0 (included) and 16 (excluded) or result is undefined. */
+    inline public function flag(index:Int, ?value:Bool):Bool {
+
+        var i = index + 16;
+        return value != null ? flags.setBool(i, value) : flags.bool(i);
+
+    } //flag
+
+    /** Read and write arbitrary boolean flags on this visual.
+        Index should be between 0 (included) and 16 (excluded) or result is undefined.
+        /!\ Reserved for internal use */
+    inline private function internalFlag(index:Int, ?value:Bool):Bool {
+
+        return value != null ? flags.setBool(index, value) : flags.bool(index);
+
+    } //internalFlag
+
     /** Just a way to store some flags. **/
     var flags:Flags = new Flags();
 

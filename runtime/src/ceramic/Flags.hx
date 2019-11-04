@@ -15,9 +15,10 @@ abstract Flags(Int) from Int to Int {
 
     } //bool
 
-    inline public function setBool(bit:Int, bool:Bool):Void {
+    inline public function setBool(bit:Int, bool:Bool):Bool {
 
         this = bool ? this | (1 << bit) : this & ~(1 << bit);
+        return bool;
 
     } //setBool
 
