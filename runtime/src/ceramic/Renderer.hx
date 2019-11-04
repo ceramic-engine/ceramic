@@ -196,7 +196,7 @@ class Renderer extends Entity {
                     if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
 
                         var clip:ceramic.Visual;
-                        if (visual.computedClip && visual.computedRenderTarget == null) {
+                        if (visual.computedClip) {
                             // Get new clip and compare with last
                             var clippingVisual = visual;
                             while (clippingVisual != null && clippingVisual.clip == null) {
@@ -209,13 +209,26 @@ class Renderer extends Entity {
                         }
 
                         if (clip != lastClip) {
+
+                            flush(draw);
+                            unbindUsedTextures(draw);
+                            stateDirty = true;
+
+                            if (lastClip != null) {
+                                lastRenderTarget = lastClip.computedRenderTarget;
+                                useRenderTarget(draw, lastRenderTarget);
+
+                                // Finish clipping
+                                draw.drawWithoutStencilTest();
+                            }
+
                             lastClip = clip;
 
                             if (lastClip != null) {
                                 // Update stencil buffer
-                                flush(draw);
-                                unbindUsedTextures(draw);
-                                stateDirty = true;
+                                
+                                lastRenderTarget = lastClip.computedRenderTarget;
+                                useRenderTarget(draw, lastRenderTarget);
 
                                 draw.beginDrawingInStencilBuffer();
 
@@ -241,15 +254,6 @@ class Renderer extends Entity {
 
                                 draw.endDrawingInStencilBuffer();
                                 draw.drawWithStencilTest();
-                            }
-                            else {
-
-                                // Clipping gets disabled
-                                flush(draw);
-                                unbindUsedTextures(draw);
-                                stateDirty = true;
-                                
-                                draw.drawWithoutStencilTest();
                             }
                         }
 
@@ -494,15 +498,15 @@ class Renderer extends Entity {
             );
             lastBlending = ceramic.Blending.NORMAL;
 
-            stateDirty = false;
-
             // No render target when writing to stencil buffer
-            lastRenderTarget = null;
-            draw.setRenderTarget(lastRenderTarget);
+            lastRenderTarget = quad.computedRenderTarget;
+            useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
             lastShader = null;
             useShader(draw, null);
+
+            stateDirty = false;
         }
         else {
             // Check if state is dirty
@@ -989,15 +993,15 @@ class Renderer extends Entity {
             );
             lastBlending = ceramic.Blending.NORMAL;
 
-            stateDirty = false;
-
             // No render target when writing to stencil buffer
-            lastRenderTarget = null;
-            draw.setRenderTarget(lastRenderTarget);
+            lastRenderTarget = quad.computedRenderTarget;
+            useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
             lastShader = null;
             useShader(draw, null);
+
+            stateDirty = false;
         }
         else {
             // Check if state is dirty

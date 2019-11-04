@@ -775,6 +775,7 @@ class Visual extends Entity {
     inline function set_renderTargetDirty(renderTargetDirty:Bool):Bool {
         this.renderTargetDirty = renderTargetDirty;
         if (renderTargetDirty) {
+            clipDirty = true;
             if (children != null) {
                 for (i in 0...children.length) {
                     var child = children.unsafeGet(i);
@@ -1550,6 +1551,10 @@ class Visual extends Entity {
 
     function computeClip() {
 
+        if (renderTargetDirty) {
+            computeRenderTarget();
+        }
+
         if (parent != null && parent.clipDirty) {
             parent.computeClip();
         }
@@ -1557,7 +1562,9 @@ class Visual extends Entity {
         computedClip = false;
         if (parent != null) {
             if (parent.computedClip || parent.clip != null) {
-                computedClip = true;
+                if (computedRenderTarget == parent.computedRenderTarget) {
+                    computedClip = true;
+                }
             }
         }
 

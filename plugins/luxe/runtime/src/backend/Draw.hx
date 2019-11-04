@@ -171,6 +171,8 @@ class Draw implements spec.Draw {
     
     var renderTargetTransform = new ceramic.Transform();
 
+    var drawingInStencilBuffer = false;
+
     inline static var posAttribute:Int = 0;
     inline static var uvAttribute:Int = 1;
     inline static var colorAttribute:Int = 2;
@@ -438,9 +440,7 @@ class Draw implements spec.Draw {
             if (renderTarget != null) {
                 var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
                 luxeRenderer.target = renderTexture;
-                view.transform.scale.x = ceramic.App.app.screen.nativeDensity;
-                view.transform.scale.y = ceramic.App.app.screen.nativeDensity;
-                view.process();
+
                 updateProjectionMatrix(
                     renderTarget.width,
                     renderTarget.height
@@ -465,11 +465,6 @@ class Draw implements spec.Draw {
                 
             } else {
                 luxeRenderer.target = null;
-                view.transform.scale.x = defaultTransformScaleX;
-                view.transform.scale.y = defaultTransformScaleY;
-                view.viewport = defaultViewport;
-                view.process();
-                luxeRenderer.state.viewport(view.viewport.x, view.viewport.y, view.viewport.w, view.viewport.h);
                 updateProjectionMatrix(
                     ceramic.App.app.backend.screen.getWidth(),
                     ceramic.App.app.backend.screen.getHeight()
@@ -756,6 +751,8 @@ class Draw implements spec.Draw {
     } //endDrawMesh
 
     inline public function beginDrawingInStencilBuffer():Void {
+        
+        drawingInStencilBuffer = true;
 
         GL.stencilMask(0xFF);
         GL.clearStencil(0xFF);
@@ -771,6 +768,8 @@ class Draw implements spec.Draw {
     } //beginDrawingInStencilBuffer
 
     inline public function endDrawingInStencilBuffer():Void {
+        
+        drawingInStencilBuffer = false;
 
     } //endDrawingInStencilBuffer
 
@@ -779,11 +778,16 @@ class Draw implements spec.Draw {
         GL.stencilFunc(GL.EQUAL, 1, 0xFF);
         GL.stencilMask(0x00);
         GL.colorMask(true, true, true, true);
+
         GL.enable(GL.STENCIL_TEST);
 
     } //drawWithStencilTest
 
     inline public function drawWithoutStencilTest():Void {
+
+        GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
+        GL.stencilMask(0xFF);
+        GL.colorMask(true, true, true, true);
 
         GL.disable(GL.STENCIL_TEST);
 
