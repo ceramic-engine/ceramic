@@ -20,7 +20,7 @@ class Filter extends Quad {
 
     /** If provided, visuals in content will react to hit tests
         and touch events as if they were inside this hit visual.
-        For this to work as expected, `hitVisual` should be inside main screen visuals hierarchy. */
+        By default, `hitVisual` is the `Filter` instance itself. */
     public var hitVisual(default, set):Visual = null;
     function set_hitVisual(hitVisual:Visual):Visual {
         if (this.hitVisual == hitVisual) return hitVisual;
@@ -106,6 +106,8 @@ class Filter extends Quad {
         content.transparent = true;
         content.color = Color.WHITE;
         add(content);
+
+        hitVisual = this;
 
     } //new
 

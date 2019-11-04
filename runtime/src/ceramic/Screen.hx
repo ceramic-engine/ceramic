@@ -509,39 +509,55 @@ class Screen extends Entity implements Observable {
 
         app.computeHierarchy();
 
-        var visuals = app.visuals;
-        var i = visuals.length - 1;
-        while (i >= 0) {
+        for (i in 0...2) {
 
-            var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y) && !visual.interceptPointerDown(visual, x, y)) {
+            // We walk through visual up to 2 times to find the correct down listener
+            // This double iteration is required when we hit first a visual that can re-route
+            // its events to children that are rendered with a custom render target
 
-                // If a parent intercepts this pointer event, ignore the visual
-                var intercepts = false;
-                var parent = visual.parent;
-                while (parent != null) {
-                    intercepts = parent.interceptPointerDown(visual, x, y);
-                    if (intercepts) break;
-                    parent = parent.parent;
+            matchedHitVisual = null;
+            var testHitVisuals = (i == 0);
+            var visuals = app.visuals;
+            var i = visuals.length - 1;
+            while (i >= 0) {
+
+                var visual = visuals[i];
+                if (visual.computedTouchable) {
+                    var listensPointerDown = visual.listensPointerDown();
+                    if ((listensPointerDown && visual.hits(x, y) && !visual.interceptPointerDown(visual, x, y)) ||
+                        (testHitVisuals && isHitVisual(visual) && visual.hits(x, y))) {
+
+                        var intercepts = false;
+
+                        // If a parent intercepts this pointer event, ignore the visual
+                        if (listensPointerDown) {
+                            var parent = visual.parent;
+                            while (parent != null) {
+                                intercepts = parent.interceptPointerDown(visual, x, y);
+                                if (intercepts) break;
+                                parent = parent.parent;
+                            }
+                        }
+
+                        if (!intercepts) {
+                            // If no parent did intercept, that's should be fine,
+                            // But also check that this is not a hitVisual
+                            if (!listensPointerDown && testHitVisuals && isHitVisual(visual)) {
+                                // We matched a hit visual, keep the reference and continue
+                                matchedHitVisual = visual;
+                            }
+                            else {
+                                // Clean any hitVisual reference
+                                matchedHitVisual = null;
+                                // Return this matching visual
+                                return visual;
+                            }
+                        }
+                    }
                 }
 
-                if (!intercepts) {
-                    // If no parent did intercept, that's should be fine,
-                    // But also check that this is not a hitVisual
-                    if (isHitVisual(visual)) {
-                        // We matched a hit visual, keep the reference and continue
-                        matchedHitVisual = visual;
-                    }
-                    else {
-                        // Clean any hitVisual reference
-                        matchedHitVisual = null;
-                        // Return this matching visual
-                        return visual;
-                    }
-                }
+                i--;
             }
-
-            i--;
         }
 
         // Clean any hitVisual reference
@@ -555,39 +571,55 @@ class Screen extends Entity implements Observable {
 
         app.computeHierarchy();
 
-        var visuals = app.visuals;
-        var i = visuals.length - 1;
-        while (i >= 0) {
+        for (i in 0...2) {
 
-            var visual = visuals[i];
-            if (visual.computedTouchable && visual.listensPointerOver() && visual.hits(x, y) && !visual.interceptPointerOver(visual, x, y)) {
+            // We walk through visual up to 2 times to find the correct down listener
+            // This double iteration is required when we hit first a visual that can re-route
+            // its events to children that are rendered with a custom render target
 
-                // If a parent intercepts this pointer event, ignore the visual
-                var intercepts = false;
-                var parent = visual.parent;
-                while (parent != null) {
-                    intercepts = parent.interceptPointerOver(visual, x, y);
-                    if (intercepts) break;
-                    parent = parent.parent;
+            matchedHitVisual = null;
+            var testHitVisuals = (i == 0);
+            var visuals = app.visuals;
+            var i = visuals.length - 1;
+            while (i >= 0) {
+
+                var visual = visuals[i];
+                if (visual.computedTouchable) {
+                    var listensPointerOver = visual.listensPointerOver();
+                    if ((listensPointerOver && visual.hits(x, y) && !visual.interceptPointerOver(visual, x, y)) ||
+                        (testHitVisuals && isHitVisual(visual) && visual.hits(x, y))) {
+
+                        var intercepts = false;
+
+                        // If a parent intercepts this pointer event, ignore the visual
+                        if (listensPointerOver) {
+                            var parent = visual.parent;
+                            while (parent != null) {
+                                intercepts = parent.interceptPointerOver(visual, x, y);
+                                if (intercepts) break;
+                                parent = parent.parent;
+                            }
+                        }
+
+                        if (!intercepts) {
+                            // If no parent did intercept, that's should be fine,
+                            // But also check that this is not a hitVisual
+                            if (!listensPointerOver && testHitVisuals && isHitVisual(visual)) {
+                                // We matched a hit visual, keep the reference and continue
+                                matchedHitVisual = visual;
+                            }
+                            else {
+                                // Clean any hitVisual reference
+                                matchedHitVisual = null;
+                                // Return this matching visual
+                                return visual;
+                            }
+                        }
+                    }
                 }
 
-                if (!intercepts) {
-                    // If no parent did intercept, that's should be fine,
-                    // But also check that this is not a hitVisual
-                    if (isHitVisual(visual)) {
-                        // We matched a hit visual, keep the reference and continue
-                        matchedHitVisual = visual;
-                    }
-                    else {
-                        // Clean any hitVisual reference
-                        matchedHitVisual = null;
-                        // Return this matching visual
-                        return visual;
-                    }
-                }
+                i--;
             }
-
-            i--;
         }
 
         // Clean any hitVisual reference
@@ -882,7 +914,7 @@ class Screen extends Entity implements Observable {
         hitVisuals.push(visual);
 
         if (!wasHitVisual) {
-            visual.onPointerDown(this, handleHitVisualDown);
+            visual.internalFlag(3, true);
         }
 
     } //addHitVisual
@@ -895,8 +927,8 @@ class Screen extends Entity implements Observable {
         }
         else {
             hitVisuals.splice(index, 1);
-            if (!isHitVisual(visual)) {
-                visual.offPointerDown(handleHitVisualDown);
+            if (hitVisuals.indexOf(visual) == -1) {
+                visual.internalFlag(3, false);
             }
         }
 
@@ -904,14 +936,8 @@ class Screen extends Entity implements Observable {
 
     public function isHitVisual(visual:Visual):Bool {
 
-        return hitVisuals.indexOf(visual) != -1;
+        return visual.internalFlag(3);
 
     } //isHitVisual
-
-    function handleHitVisualDown(info:TouchInfo):Void {
-
-        // Doing nothing here, except catching touch events on hit visual
-
-    } //handleHitVisualDown
 
 }
