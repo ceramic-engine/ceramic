@@ -221,7 +221,11 @@ class Draw implements spec.Draw {
         else {
             modelViewTransform.identity();
         }
+        var tx = modelViewTransform.tx;
+        var ty = modelViewTransform.ty;
+        modelViewTransform.translate(-tx, -ty);
         modelViewTransform.scale(density, density);
+        modelViewTransform.translate(tx, ty);
 
         if (flipY == -1) {
             // Flip vertically (needed when we are rendering to texture)

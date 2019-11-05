@@ -25,6 +25,14 @@ class Screen extends Entity implements Observable {
         Updated when the screen is resized. */
     public var height(default,null):Float = 0;
 
+    /** The actual width available on screen, including offsets, in the same unit as `width`.
+        Updated when the screen is resized. */
+    public var actualWidth(default,null):Float = 0;
+
+    /** The actual height available on screen, including offsets, in the same unit as `width`.
+        Updated when the screen is resized. */
+    public var actualHeight(default,null):Float = 0;
+
     /** Logical x offset.
         Updated when the screen is resized. */
     public var offsetX(default,null):Float = 0;
@@ -439,32 +447,56 @@ class Screen extends Entity implements Observable {
 
         // Update screen scaling
 
-        if (app.settings.scaling == RESIZE) {
-            // Auto-update target width and target height in this mode
-            app.settings.targetWidth = Std.int(nativeWidth);
-            app.settings.targetHeight = Std.int(nativeHeight);
-        }
-
         var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth;
         var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
 
-        var scale = switch (app.settings.scaling) {
+        var scale:Float;
+        
+        switch (app.settings.scaling) {
+
             case FIT:
-                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+                scale = Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+
             case FILL:
-                Math.min(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+                scale = Math.min(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+
             case RESIZE:
-                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+                targetWidth = nativeWidth;
+                targetHeight = nativeHeight;
+                scale = Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+
             case FIT_RESIZE:
-                Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
+                var nativeRatio = nativeHeight / nativeWidth;
+                var targetRatio = targetHeight / targetWidth;
+                if (nativeRatio > targetRatio) {
+                    targetHeight = targetWidth * nativeRatio;
+                }
+                else if (nativeRatio < targetRatio) {
+                    targetWidth = targetHeight / nativeRatio;
+                }
+                scale = Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
         }
 
         // Init default values
-        width = nativeWidth * nativeDensity * scale;
-        height = nativeHeight * nativeDensity * scale;
+        actualWidth = nativeWidth * nativeDensity * scale;
+        actualHeight = nativeHeight * nativeDensity * scale;
         density = 1.0 / scale;
 
         // Offset
+        switch (app.settings.scaling) {
+            case FIT | FILL:
+                offsetX = (actualWidth - targetWidth) * 0.5;
+                offsetY = (actualHeight - targetHeight) * 0.5;
+            case RESIZE | FIT_RESIZE:
+                offsetX = 0;
+                offsetY = 0;
+        }
+
+        // Update screen size
+        width = targetWidth;
+        height = targetHeight;
+
+        /*
         if (app.settings.scaling == FIT_RESIZE) {
             offsetX = (targetWidth - width) * 0.5;
             offsetY = (targetHeight - height) * 0.5;
@@ -473,33 +505,40 @@ class Screen extends Entity implements Observable {
             offsetX = 0;
             offsetY = 0;
         }
+        */
 
     } //updateScaling
 
     /** Recompute transform from screen width, height and density. */
     function updateTransform():Void {
         
-        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth : nativeWidth;
-        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
+        var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth * density : nativeWidth * nativeDensity;
+        var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight * density : nativeHeight * nativeDensity;
+
+        switch (app.settings.scaling) {
+            case RESIZE:
+                targetWidth = nativeWidth * nativeDensity;
+                targetHeight = nativeHeight * nativeDensity;
+            case FIT_RESIZE:
+                var nativeRatio = nativeHeight / nativeWidth;
+                var targetRatio = targetHeight / targetWidth;
+                if (nativeRatio > targetRatio) {
+                    targetHeight = targetWidth * nativeRatio;
+                }
+                else if (nativeRatio < targetRatio) {
+                    targetWidth = targetHeight / nativeRatio;
+                }
+            default:
+        }
 
         // Update transform
         matrix.identity();
 
         matrix.scale(density, density);
 
-        var tx = (nativeWidth * nativeDensity - targetWidth * density) * 0.5 + offsetX * density;
-        var ty = (nativeHeight * nativeDensity - targetHeight * density) * 0.5 + offsetY * density;
+        var tx = (nativeWidth * nativeDensity - targetWidth) * 0.5;
+        var ty = (nativeHeight * nativeDensity - targetHeight) * 0.5;
         matrix.translate(tx, ty);
-
-        // Force visuals to recompute their matrix and take
-        // screen matrix in account
-        /*
-        var visuals = app.visuals;
-        for (i in 0...visuals.length) {
-            var visual = visuals.unsafeGet(i);
-            visual.matrixDirty = true;
-        }
-        */
 
     } //updateTransform
 
