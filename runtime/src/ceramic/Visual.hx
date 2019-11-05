@@ -1025,6 +1025,8 @@ class Visual extends Entity {
             this.transform.onChange(this, transformDidChange);
         }
 
+        matrixDirty = true;
+
         return transform;
     }
 
