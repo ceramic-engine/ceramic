@@ -63,7 +63,7 @@ class Main extends luxe.Game {
         Luxe.core.game_config.window.background_sleep = 1.0 / 60;
         #end
 
-        #if ios
+        #if (ios || android)
         Luxe.core.game_config.render.opengl.major = 3;
         Luxe.core.game_config.render.opengl.minor = 0;
         #end
