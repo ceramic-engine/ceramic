@@ -188,6 +188,10 @@ class Filter extends Quad {
             return;
         }
 
+        if (contentDirty) {
+            computeContent();
+        }
+
         if (renderTexture == null) {
             if (done != null) {
                 done();
