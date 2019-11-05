@@ -225,6 +225,11 @@ class EventsMacro {
                 var cbOnceOwnerUnbindArray = '__cbOnceOwnerUnbind' + capitalName;
                 var emitNameBoxed = emitName + 'Boxed';
 
+                #if ceramic_debug_events
+                var cbOnPosArray = '__cbOnPos' + capitalName;
+                var cbOncePosArray = '__cbOncePos' + capitalName;
+                #end
+
                 if (!dynamicDispatch) {
 
                     // Create __cbOn{Name}
@@ -274,8 +279,6 @@ class EventsMacro {
                     newFields.push(cbOnceField);
 
                     #if ceramic_debug_events
-                    var cbOnPosArray = '__cbOnPos' + capitalName;
-                    var cbOncePosArray = '__cbOncePos' + capitalName;
 
                     // Create __cbOnPos{Name}
                     var cbOnPosField = {
