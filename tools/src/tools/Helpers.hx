@@ -187,9 +187,9 @@ class Helpers {
         }
 
         if (Sys.systemName() == 'Windows') {
-            return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), args, { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), actualArgs, { cwd: cwd, mute: mute });
         } else {
-            return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(args), { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(actualArgs), { cwd: cwd, mute: mute });
         }
 
     } //runCeramic
