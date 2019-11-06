@@ -96,6 +96,12 @@ class Filter extends Quad {
 
     public var renderTexture(default,null):RenderTexture = null;
 
+    /** Internal flag used to keep track of current explicit render state */
+    var explicitRenderState:Int = 0;
+
+    /** Used internally when concurrent renders are trigerred */
+    var explicitRenderPendingResultCallbacks:Array<Void->Void> = null;
+
 /// Lifecycle
 
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
@@ -188,14 +194,52 @@ class Filter extends Quad {
             return;
         }
 
+        // Handle concurrent renders
+        if (explicitRenderState == 1) {
+            if (done != null) {
+                if (explicitRenderPendingResultCallbacks == null) {
+                    explicitRenderPendingResultCallbacks = [];
+                }
+                explicitRenderPendingResultCallbacks.push(done);
+                done = null;
+            }
+            return;
+        } 
+        else if (explicitRenderState == 2) {
+            if (done != null) {
+                if (explicitRenderPendingResultCallbacks == null) {
+                    explicitRenderPendingResultCallbacks = [];
+                }
+                explicitRenderPendingResultCallbacks.push(() -> {
+                    render(requestFullUpdate, done);
+                    done = null;
+                });
+            }
+            return;
+        }
+
+        // First step of render
+        explicitRenderState = 1;
+
         if (contentDirty) {
             computeContent();
         }
 
         if (renderTexture == null) {
+            explicitRenderState = 0;
+            var callbacks = explicitRenderPendingResultCallbacks;
+            explicitRenderPendingResultCallbacks = null;
             if (done != null) {
                 done();
                 done = null;
+            }
+            if (callbacks != null) {
+                for (i in 0...callbacks.length) {
+                    var cb = callbacks[i];
+                    callbacks[i] = null;
+                    cb();
+                    cb = null;
+                }
             }
             return;
         }
@@ -212,15 +256,28 @@ class Filter extends Quad {
                 return;
             }
 
+            explicitRenderState = 2;
+
             if (contentDirty) {
                 computeContent();
             }
 
             if (renderTexture == null) {
                 content.active = false;
+                explicitRenderState = 0;
+                var callbacks = explicitRenderPendingResultCallbacks;
+                explicitRenderPendingResultCallbacks = null;
                 if (done != null) {
                     done();
                     done = null;
+                }
+                if (callbacks != null) {
+                    for (i in 0...callbacks.length) {
+                        var cb = callbacks[i];
+                        callbacks[i] = null;
+                        cb();
+                        cb = null;
+                    }
                 }
                 return;
             }
@@ -234,11 +291,22 @@ class Filter extends Quad {
                 }
 
                 content.active = false;
-
+                explicitRenderState = 0;
+                var callbacks = explicitRenderPendingResultCallbacks;
+                explicitRenderPendingResultCallbacks = null;
                 if (done != null) {
                     done();
                     done = null;
                 }
+                if (callbacks != null) {
+                    for (i in 0...callbacks.length) {
+                        var cb = callbacks[i];
+                        callbacks[i] = null;
+                        cb();
+                        cb = null;
+                    }
+                }
+                return;
 
             });
         });
@@ -355,6 +423,8 @@ class Filter extends Quad {
         }
         textureTilePacker = null;
         renderTexture = null;
+
+        explicitRenderPendingResultCallbacks = null;
 
         content = null;
 
