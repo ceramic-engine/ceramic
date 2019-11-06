@@ -76,4 +76,10 @@ class Shaders implements spec.Shaders {
 
     } //setTexture
 
+    inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
+        
+        //
+
+    } //setMat4FromTransform
+
 } //Shaders
