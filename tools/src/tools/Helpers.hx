@@ -178,6 +178,14 @@ class Helpers {
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
+        if (args == null) {
+            args = [];
+        }
+        var actualArgs = [].concat(args);
+        if (!context.colors && actualArgs.indexOf('--no-colors') == -1) {
+            actualArgs.push('--no-colors');
+        }
+
         if (Sys.systemName() == 'Windows') {
             return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), args, { cwd: cwd, mute: mute });
         } else {
@@ -817,7 +825,15 @@ class Helpers {
         for (hook in hooks) {
             if (hook.when == when) {
 
-                var res = command(hook.command, hook.args != null ? hook.args : [], { cwd: cwd });
+                var cmd = hook.command;
+                var res;
+                if (cmd == 'ceramic') {
+                    res = runCeramic(cwd, hook.args != null ? hook.args : []);
+                }
+                else {
+                    res = command(hook.command, hook.args != null ? hook.args : [], { cwd: cwd });
+                }
+
                 if (res.status != 0) {
                     if (res.stderr.trim().length > 0) {
                         warning(res.stderr);
