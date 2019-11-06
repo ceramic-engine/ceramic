@@ -626,7 +626,7 @@ class Renderer extends Entity {
 
 #if (ceramic_debug_draw && ceramic_debug_multitexture)
         if (debugDraw && activeShaderCanBatchMultipleTextures) {
-            warning('* drawQuad() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
 
@@ -1093,7 +1093,7 @@ class Renderer extends Entity {
 
 #if (ceramic_debug_draw && ceramic_debug_multitexture)
         if (debugDraw && activeShaderCanBatchMultipleTextures) {
-            warning('* drawMesh() slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
 
