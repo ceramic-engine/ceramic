@@ -3,6 +3,7 @@ package tools;
 import tools.Context;
 import tools.Helpers;
 import tools.Vscode;
+import tools.Ide;
 import tools.Helpers.*;
 import backend.tools.BackendTools;
 
@@ -51,6 +52,45 @@ class ToolsPlugin {
         context.backend = prevBackend;
 
     } //init
+
+    public function extendIdeInfo(tasks:Array<IdeInfoTaskItem>, variants:Array<IdeInfoVariantItem>) {
+
+        var backendName = 'headless';
+
+        for (target in backend.getBuildTargets()) {
+
+            for (config in target.configs) {
+
+                var name:String = null;
+                var kind:String = null;
+
+                switch (config) {
+                    case Build(name_):
+                        name = name_;
+                        kind = 'build';
+                    case Run(name_):
+                        name = name_;
+                        kind = 'run';
+                    case Clean(name_):
+                }
+
+                if (kind == null) continue;
+
+                tasks.push({
+                    name: '$backendName / $name',
+                    groups: ['build', backendName],
+                    command: 'ceramic',
+                    args: [backendName, kind, target.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
+                    select: {
+                        command: 'ceramic',
+                        args: [backendName, "hxml", target.name, "--setup", "--output", "completion.hxml"]
+                    }
+                });
+
+            }
+        }
+
+    } //extendIdeInfo
 
     public function extendVscodeTasksChooser(items:Array<VscodeChooserItem>) {
 
