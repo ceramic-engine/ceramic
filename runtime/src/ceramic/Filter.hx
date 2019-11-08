@@ -96,6 +96,14 @@ class Filter extends Quad {
 
     public var renderTexture(default,null):RenderTexture = null;
 
+    public var density(default,set):Float = -1;
+    function set_density(density:Float):Float {
+        if (this.density == density) return density;
+        this.density = density;
+        contentDirty = true;
+        return density;
+    }
+
     /** Internal flag used to keep track of current explicit render state */
     var explicitRenderState:Int = 0;
 
@@ -119,7 +127,7 @@ class Filter extends Quad {
 
 /// Internal
 
-    function filterSize(filterWidth:Int, filterHeight:Int):Void {
+    function filterSize(filterWidth:Int, filterHeight:Int, density:Float):Void {
 
         if (enabled) {
             if (renderTexture == null ||
@@ -149,7 +157,7 @@ class Filter extends Quad {
                         tile = textureTile;
                     }
                     else {
-                        renderTexture = new RenderTexture(filterWidth, filterHeight);
+                        renderTexture = new RenderTexture(filterWidth, filterHeight, density);
                         renderTexture.filter = textureFilter;
                         renderTexture.autoRender = autoRender;
                         tile = null;
@@ -407,7 +415,7 @@ class Filter extends Quad {
     }
 
     override function computeContent() {
-        filterSize(Math.ceil(width), Math.ceil(height));
+        filterSize(Math.ceil(width), Math.ceil(height), density);
         contentDirty = false;
     }
 
