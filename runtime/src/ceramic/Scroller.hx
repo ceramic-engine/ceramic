@@ -762,6 +762,7 @@ class Scroller extends Visual {
     public function stop():Void {
 
         status = IDLE;
+        animating = false;
 
         stopTweens();
 
@@ -787,14 +788,16 @@ class Scroller extends Visual {
 
     public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
-        momentum = 0;
-        animating = true;
-        status = SCROLLING;
         stopTweens();
+
+        momentum = 0;
+        status = SCROLLING;
 
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
+            animating = true;
+
             var tweenX = tween(easing, duration, this.scrollX, scrollX, function(scrollX, _) {
                 this.scrollX = scrollX;
             });
@@ -811,6 +814,8 @@ class Scroller extends Visual {
         }
 
         if (scrollY != this.scrollY) {
+            animating = true;
+
             var tweenY = tween(easing, duration, this.scrollY, scrollY, function(scrollY, _) {
                 this.scrollY = scrollY;
             });
@@ -832,8 +837,9 @@ class Scroller extends Visual {
 
         momentum = 0;
         snapping = true;
-        status = SCROLLING;
         stopTweens();
+
+        status = SCROLLING;
 
         if (duration > 0) {
             smoothScrollTo(scrollX, scrollY, duration, easing);
@@ -848,9 +854,8 @@ class Scroller extends Visual {
         var momentum = this.momentum;
         this.momentum = 0;
 
-        animating = true;
-        status = SCROLLING;
         stopTweens();
+        status = SCROLLING;
 
         if (direction == VERTICAL) {
             if (tweenY != null) tweenY.destroy();
@@ -867,6 +872,7 @@ class Scroller extends Visual {
                 var byY = scrollY + momentum * bounceMomentumFactor - toY;
                 var duration = bounceMinDuration + Math.abs(momentum) * bounceDurationFactor;
 
+                animating = true;
                 var tweenY = tween(easing, duration, 0, 1, function(t, _) {
 
                     var value:Float;
@@ -905,6 +911,7 @@ class Scroller extends Visual {
                 else {
                     toY = 0;
                 }
+                animating = true;
                 var tweenY = tween(easing, duration * 2, fromY, toY, function(ty, _) {
                     scrollY = ty;
                 });
