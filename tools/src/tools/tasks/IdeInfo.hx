@@ -64,6 +64,23 @@ class IdeInfo extends tools.Task {
             }
         }
 
+        // Let project extend the list
+        var customTasks:Array<IdeInfoTaskItem> = [];
+        var customVariants:Array<IdeInfoVariantItem> = [];
+        try {
+            if (project.app.ide != null) {
+                var projectTasks:Array<IdeInfoTaskItem> = project.app.ide.tasks;
+                var projectVariants:Array<IdeInfoVariantItem> = project.app.ide.variants;
+
+                if (projectTasks != null) {
+                    
+                }
+            }
+        }
+        catch (e:Dynamic) {
+            // Something went wrong
+        }
+
         print(Json.stringify({
             ide: {
                 tasks: tasks,
