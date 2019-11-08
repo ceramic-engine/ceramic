@@ -552,6 +552,7 @@ class Scroller extends Visual {
             }
         }
 
+        #if ceramic_scroller_tweak_delta
         // Scroll is expected to work fine on 60 FPS
         // If FPS is lower (higher delta), compute more frames with shorter deltas
         var optimalDelta = 1.0 / 60;
@@ -565,8 +566,11 @@ class Scroller extends Visual {
             scrollUpdate(pointerX, pointerY, delta * 0.5);
         }
         else {
+        #end
             scrollUpdate(pointerX, pointerY, delta);
+        #if ceramic_scroller_tweak_delta
         }
+        #end
 
         if (lastWheelEventTime != -1) {
             if (Timer.now - lastWheelEventTime > wheelEndDelay) {
