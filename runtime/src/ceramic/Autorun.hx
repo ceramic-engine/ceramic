@@ -155,7 +155,36 @@ class Autorun extends Entity {
 
         // If not, do it
         if (!alreadyBound) {
-            autorunArray.push(this);
+            var nullIndex = -1;
+            var len = autorunArray.length;
+
+            // Look for a null entry
+            var i = len - 1;
+            while (i >= 0) {
+                var item = autorunArray.unsafeGet(i);
+                if (item == null) {
+                    nullIndex = i;
+                    break;
+                }
+                i--;
+            }
+
+            if (nullIndex == -1) {
+                // No null entry, just add a new one
+                autorunArray.push(this);
+            }
+            else {
+                // There is a null entry, shift by one items after and put at the end
+                var lenMinus1 = len - 1;
+                if (nullIndex < lenMinus1) {
+                    for (i in nullIndex+1...len) {
+                        var item = autorunArray.unsafeGet(i);
+                        var iMinus1 = i - 1;
+                        autorunArray.unsafeSet(iMinus1, item);
+                    }
+                }
+                autorunArray.unsafeSet(lenMinus1, this);
+            }
             boundAutorunArrays.push(autorunArray);
         }
 
@@ -164,13 +193,19 @@ class Autorun extends Entity {
     public function unbindFromAllAutorunArrays():Void {
 
         if (boundAutorunArrays != null) {
+
             for (ii in 0...boundAutorunArrays.length) {
                 var autorunArray = boundAutorunArrays.unsafeGet(ii);
 
-                for (i in 0...autorunArray.length) {
+                var numNulls = 0;
+                var len = autorunArray.length;
+                for (i in 0...len) {
                     var autorun = autorunArray.unsafeGet(i);
-                    if (autorun == this) {
-                        autorunArray.unsafeSet(i, null);
+                    if (autorun != null) {
+                        if (autorun == this) {
+                            autorunArray.unsafeSet(i, null);
+                            break;
+                        }
                     }
                 }
             }
