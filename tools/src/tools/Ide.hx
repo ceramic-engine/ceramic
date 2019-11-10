@@ -8,6 +8,7 @@ typedef IdeInfoTaskItem = {
 
     @:optional var args:Array<String>;
 
+    /** The groups this task belongs to. */
     @:optional var groups:Array<String>;
 
     @:optional var select:IdeInfoTaskSelectItem;
@@ -28,8 +29,10 @@ typedef IdeInfoVariantItem = {
 
     @:optional var args:Array<String>;
 
+    /** On which task group this variant can be used. */
     @:optional var group:String;
 
+    /** We can only choose one variant for each role at a time. */
     @:optional var role:String;
 
     @:optional var select:IdeInfoVariantSelectItem;
