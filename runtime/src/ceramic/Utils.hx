@@ -272,4 +272,18 @@ class Utils {
 
     } //clampDegrees
 
+	/**
+	 * Java's String.hashCode() method implemented in Haxe.
+	 * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
+	 */
+    inline public static function hashCode(s:String):Int {
+        var hash = 0;
+        if (s.length == 0) return hash;
+        for (i in 0...s.length) {
+            hash = ((hash << 5) - hash) + s.charCodeAt(i);
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
 } //Utils
