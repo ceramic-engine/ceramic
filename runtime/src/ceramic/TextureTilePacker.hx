@@ -247,11 +247,15 @@ class TextureTilePacker extends Entity {
         stampVisual.alpha = 0;
         stampVisual.color = Color.WHITE;
 
+        var prevTransform = visual.transform;
+
         var prevParent = visual.parent;
         if (prevParent != null) {
             prevParent.remove(visual);
         }
         stampVisual.add(visual);
+        visual.transform = new Transform();
+        visual.transform.translate(margin, margin);
 
         var dynTexture:RenderTexture = cast tile.texture;
 
@@ -264,6 +268,7 @@ class TextureTilePacker extends Entity {
             stampVisual.destroy();
             stampVisual = null;
 
+            visual.transform = prevTransform;
             visual = null;
 
             done();
