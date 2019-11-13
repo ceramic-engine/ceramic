@@ -58,6 +58,22 @@ class IntIntMap {
 
     } //new
 
+    public function clear():Void {
+
+        hasFreeKey = false;
+        freeValue = NO_VALUE;
+
+        for (i in 0...data.length) {
+            data.set(i, NO_VALUE);
+        }
+        
+        if (iterableKeys != null) {
+            iterableKeys = [];
+            iterableKeysUsed = new IntBoolMap();
+        }
+
+    } //reset
+
     public function exists(key:Int):Bool {
 
         return existsInline(key);
@@ -385,6 +401,17 @@ abstract IntIntMap(Map<Int,Int>) {
 
     inline public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
         this = new Map<Int,Int>();
+    }
+
+    inline public function clear() {
+        // TODO avoid array alloc
+        var keys = [];
+        for (key in this.keys()) {
+            keys.push(key);
+        }
+        for (i in 0...keys.length) {
+            this.remove(keys[i]);
+        }
     }
 
     public var size(get,never):Int;
