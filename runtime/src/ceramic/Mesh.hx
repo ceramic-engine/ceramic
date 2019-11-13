@@ -83,7 +83,7 @@ class Mesh extends Visual {
             this.texture.offDestroy(textureDestroyed);
             if (this.texture.asset != null) this.texture.asset.release();
 
-            // Remove render target texture dependency, if any
+            /*// Remove render target texture dependency, if any
             if (this.texture != null && this.texture.isRenderTexture) {
                 if (renderTargetDirty) {
                     computeRenderTarget();
@@ -91,10 +91,10 @@ class Mesh extends Visual {
                 if (computedRenderTarget != null) {
                     computedRenderTarget.decrementDependingTextureCount(this.texture);
                 }
-            }
+            }*/
         }
 
-        // Add new render target texture dependency, if needed
+        /*// Add new render target texture dependency, if needed
         if (texture != null && texture.isRenderTexture) {
             if (renderTargetDirty) {
                 computeRenderTarget();
@@ -102,7 +102,7 @@ class Mesh extends Visual {
             if (computeRenderTarget != null) {
                 computedRenderTarget.incrementDependingTextureCount(texture);
             }
-        }
+        }*/
 
         this.texture = texture;
 

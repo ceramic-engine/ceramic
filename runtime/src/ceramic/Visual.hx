@@ -1613,6 +1613,7 @@ class Visual extends Entity {
             computedRenderTarget = parent.computedRenderTarget;
         }
 
+        /*
         if (prevComputedRenderTarget != computedRenderTarget) {
             // Release dependant render target texture
             if (prevComputedRenderTarget != null) {
@@ -1640,7 +1641,7 @@ class Visual extends Entity {
                     }
                 }
             }
-        }
+        }*/
         
         renderTargetDirty = false;
 

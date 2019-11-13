@@ -142,13 +142,11 @@ class RenderTexture extends Texture {
 
     } //incrementDependingTextureCount
 
-    @:noCompletion inline public function decrementDependingTextureCount(texture:Texture):Void {
+    @:noCompletion inline public function resetDependingTextureCounts():Void {
 
-        if (dependingTextures == null) {
-            dependingTextures = new IntIntMap();
+        if (dependingTextures != null) {
+            dependingTextures.clear();
         }
-        var prevValue = dependingTextures.get(texture.index);
-        dependingTextures.set(texture.index, prevValue - 1);
 
     } //decrementDependingTextureCount
 

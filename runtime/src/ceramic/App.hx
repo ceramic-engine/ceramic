@@ -677,6 +677,12 @@ class App extends Entity {
     @:noCompletion
     #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
 
+        // Reset render texture dependencies to recompute them
+        for (i in 0...renderTextures.length) {
+            var renderTexture = renderTextures.unsafeGet(i);
+            renderTexture.resetDependingTextureCounts();
+        }
+
         do {
             // Notify if screen matrix has changed
             screen.matrix.computeChanged();
@@ -739,6 +745,19 @@ class App extends Entity {
             if (visual.computedVisible) {
                 if (visual.clipDirty) {
                     visual.computeClip();
+                }
+            }
+
+            if (visual.computedRenderTarget != null) {
+                if (visual.asQuad != null) {
+                    if (visual.asQuad.texture != null) {
+                        visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                    }
+                }
+                else if (visual.asMesh != null) {
+                    if (visual.asMesh.texture != null) {
+                        visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                    }
                 }
             }
 

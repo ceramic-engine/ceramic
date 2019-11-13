@@ -54,17 +54,17 @@ class Quad extends Visual {
             if (this.texture.asset != null) this.texture.asset.release();
 
             // Remove render target texture dependency, if any
-            if (this.texture.isRenderTexture) {
+            /*if (this.texture.isRenderTexture) {
                 if (renderTargetDirty) {
                     computeRenderTarget();
                 }
                 if (computedRenderTarget != null) {
                     computedRenderTarget.decrementDependingTextureCount(this.texture);
                 }
-            }
+            }*/
         }
 
-        // Add new render target texture dependency, if needed
+        /*// Add new render target texture dependency, if needed
         if (texture != null && texture.isRenderTexture) {
             if (renderTargetDirty) {
                 computeRenderTarget();
@@ -72,7 +72,7 @@ class Quad extends Visual {
             if (computedRenderTarget != null) {
                 computedRenderTarget.incrementDependingTextureCount(texture);
             }
-        }
+        }*/
 
         this.texture = texture;
 

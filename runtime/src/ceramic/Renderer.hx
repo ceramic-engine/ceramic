@@ -624,8 +624,8 @@ class Renderer extends Entity {
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
         var customFloatAttributesSize = this.customFloatAttributesSize;
 
-#if (ceramic_debug_draw && ceramic_debug_multitexture)
-        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+#if ceramic_debug_draw
+        if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
             warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
@@ -1091,8 +1091,8 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
-#if (ceramic_debug_draw && ceramic_debug_multitexture)
-        if (debugDraw && activeShaderCanBatchMultipleTextures) {
+#if ceramic_debug_draw
+        if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
             warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
