@@ -1,9 +1,10 @@
 package ceramic;
 
+import ceramic.Assert.assert;
+
 #if cpp
 
 import haxe.ds.Vector;
-import ceramic.Assert.assert;
 
 /** Port of https://github.com/mikvor/hashmapTest/blob/55669a0c3ee1f9c2525580e4ace06e910d5972ec/src/main/java/map/intint/IntIntMap4a.java to haxe */
 class IntIntMap {
@@ -404,14 +405,7 @@ abstract IntIntMap(Map<Int,Int>) {
     }
 
     inline public function clear() {
-        // TODO avoid array alloc
-        var keys = [];
-        for (key in this.keys()) {
-            keys.push(key);
-        }
-        for (i in 0...keys.length) {
-            this.remove(keys[i]);
-        }
+        this.clear();
     }
 
     public var size(get,never):Int;
@@ -429,7 +423,7 @@ abstract IntIntMap(Map<Int,Int>) {
     }
 
     inline public function exists(key:Int):Bool {
-        return this.exists(Std.int(key));
+        return existsInline(key);
     }
 
     inline public function set(key:Int, value:Int):Int {
@@ -438,7 +432,7 @@ abstract IntIntMap(Map<Int,Int>) {
     }
 
     inline public function get(key:Int):Int {
-        return this.get(Std.int(key));
+        return getInline(key);
     }
 
     inline public function remove(key:Int):Int {
@@ -446,11 +440,12 @@ abstract IntIntMap(Map<Int,Int>) {
     }
 
     inline public function getInline(key:Int):Int {
-        return this.get(key);
+        var value = this.get(Std.int(key));
+        return value != null ? value : 0;
     }
 
     inline public function existsInline(key:Int):Bool {
-        return this.exists(key);
+        return this.exists(Std.int(key));
     }
 
 } //IntIntMap
