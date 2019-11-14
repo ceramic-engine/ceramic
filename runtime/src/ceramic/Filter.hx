@@ -16,6 +16,16 @@ class Filter extends Quad {
 
 /// Public properties
 
+    /** If provided, this id will be assigned to `renderTexture.id`. */
+    public var textureId(default, set):String = null;
+    function set_textureId(textureId:String):String {
+        this.textureId = textureId;
+        if (renderTexture != null) {
+            renderTexture.id = textureId;
+        }
+        return textureId;
+    }
+
     public var content(default,null):Quad;
 
     /** If provided, visuals in content will react to hit tests
@@ -158,6 +168,7 @@ class Filter extends Quad {
                     }
                     else {
                         renderTexture = new RenderTexture(filterWidth, filterHeight, density);
+                        renderTexture.id = textureId;
                         renderTexture.filter = textureFilter;
                         renderTexture.autoRender = autoRender;
                         tile = null;
