@@ -319,7 +319,7 @@ class CollectionView extends ScrollView {
 
         // Check bounds
         var lastFrame = frames[frames.length - 1];
-        var maxScrollX = lastFrame.y + lastFrame.width - width;
+        var maxScrollX = lastFrame.x + lastFrame.width - width;
         if (targetScrollX > maxScrollX) {
             targetScrollX = maxScrollX;
         }
