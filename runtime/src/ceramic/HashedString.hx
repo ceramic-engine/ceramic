@@ -1,6 +1,10 @@
 package ceramic;
 
+import haxe.crypto.Md5;
 import ceramic.Utils;
+import ceramic.Shortcuts.*;
+
+import haxe.Json;
 
 using StringTools;
 
@@ -8,32 +12,76 @@ class HashedString {
 
     public static function encode(str:String):String {
 
-        var hashCode = Utils.hashCode(str);
+        var hash = Md5.encode(str);
         var len = str.length;
 
-        return hashCode + ':' + len + ':' + str;
+        return hash + '' + len + ';' + str;
+
+    } //encode
+
+    public static function append(encoded:String, str:String):String {
+
+        return encoded + encode(str);
 
     } //append
 
     public static function decode(encoded:String):String {
 
-        var result = new StringBuf();
+        try {
+            var i = 0;
+            var len = encoded.length;
+            var result:StringBuf = null;
 
-        var i = 0;
-        var len = encoded.length;
+            while (i < len) {
+                // Retrieve hash
+                var hash = encoded.substring(i, i + 32);
 
-        var parsingHash = false;
+                // Retrieve section length
+                i += 32;
+                var n = i;
+                while (n < len && encoded.charCodeAt(n) != ';'.code) {
+                    n++;
+                }
+                var sectionLen = Std.parseInt(encoded.substring(i, n));
+                if (sectionLen == null || sectionLen <= 0) {
+                    warning('Failed to parse all encoded string: invalid section length');
+                    break;
+                }
+                i = n + 1;
 
-        var hasHash = false;
-        var hash:Int = -1;
+                // Retrieve section string
+                var section = encoded.substring(i, i + sectionLen);
+                if (section == null) {
+                    warning('Failed to parse all encoded string: null section');
+                    break;
+                }
+                if (Md5.encode(section) != hash) {
+                    warning('Failed to parse all encoded string: section hash mismatch');
+                    break;
+                }
+                i += sectionLen;
 
-        while (i < len) {
-            var charCode = encoded.charCodeAt(i);
+                // Append section
+                if (result == null) {
+                    result = new StringBuf();
+                }
+                result.add(section);
 
-            /*if (parsingHash) {
-                decodeUntil(':'.code);
-            }*/
+            }
+
+            if (result != null) {
+                return result.toString();
+            }
+            else {
+                error('Invalid encoded string');
+                return null;
+            }
         }
+        catch (e:Dynamic) {
+            error('Failed to parse encoded string: $e');
+        }
+
+        return null;
 
     } //decode
 
