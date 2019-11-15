@@ -8,8 +8,10 @@ import haxe.Json;
 
 using StringTools;
 
+/** An utility to encode strings with hashes, allowing to check their validity on decode. */
 class HashedString {
 
+    /** Encode the given string `str` and return the result. */
     public static function encode(str:String):String {
 
         var hash = Md5.encode(str);
@@ -19,12 +21,14 @@ class HashedString {
 
     } //encode
 
+    /** Encode and append `str` to the already encoded string `encoded` and return the results. */
     public static function append(encoded:String, str:String):String {
 
         return encoded + encode(str);
 
     } //append
 
+    /** Decode the given `encoded` string and return the result. */
     public static function decode(encoded:String):String {
 
         try {
