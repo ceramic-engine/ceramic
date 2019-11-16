@@ -7,6 +7,7 @@ import sys.io.File;
 
 import haxe.crypto.Md5;
 import ceramic.Path;
+import ceramic.HashedString;
 import ceramic.Shortcuts.*;
 
 class IO implements spec.IO {
@@ -26,7 +27,7 @@ class IO implements spec.IO {
                 FileSystem.deleteFile(filePath);
             }
         } else {
-            File.saveContent(filePath, str);
+            File.saveContent(filePath, HashedString.encode(str));
         }
 
         return true;
@@ -41,7 +42,7 @@ class IO implements spec.IO {
 
         if (FileSystem.exists(filePath)) {
             var output = File.append(filePath, false);
-            output.writeString(str);
+            output.writeString(HashedString.encode(str));
             output.close();
         }
         else {
@@ -63,7 +64,15 @@ class IO implements spec.IO {
             str = File.getContent(filePath);
         }
 
-        return str;
+        if (str != null) {
+            try {
+                return HashedString.decode(str);
+            }
+            catch (e:Dynamic) {
+                error('Failed to decode hashed string: $e');
+            }
+        }
+        return null;
 
     } //readString
 
@@ -78,7 +87,7 @@ class IO implements spec.IO {
         }
 
         try {
-            storage.setItem(key, str);
+            storage.setItem(key, HashedString.encode(str));
         }
         catch (e:Dynamic) {
             error('Failed to save string (key=$key): ' + e);
@@ -100,10 +109,10 @@ class IO implements spec.IO {
         try {
             var existing = storage.getItem(key);
             if (existing == null) {
-                storage.setItem(key, str);
+                storage.setItem(key, HashedString.encode(str));
             }
             else {
-                storage.setItem(key, existing + str);
+                storage.setItem(key, existing + HashedString.encode(str));
             }
         }
         catch (e:Dynamic) {
@@ -124,7 +133,8 @@ class IO implements spec.IO {
         }
 
         try {
-            return storage.getItem(key);
+            var str = storage.getItem(key);
+            return str != null ? HashedString.decode(str) : null;
         }
         catch (e:Dynamic) {
             error('Failed to read string (key=$key): ' + e);

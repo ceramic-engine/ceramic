@@ -5,7 +5,7 @@ import ceramic.Assert.*;
 
 class SaveModel {
 
-    inline static var SAVE_ROTATIONS = 5;
+    inline static var NUM_BACKUPS = 5;
 
     static var saveStepByKey:Map<String,Int> = new Map();
 

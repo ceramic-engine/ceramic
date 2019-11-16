@@ -11,6 +11,8 @@ using StringTools;
 /** An utility to encode strings with hashes, allowing to check their validity on decode. */
 class HashedString {
 
+    static var _lastDecodeIncomplete:Bool = false;
+
     /** Encode the given string `str` and return the result. */
     public static function encode(str:String):String {
 
@@ -21,7 +23,8 @@ class HashedString {
 
     } //encode
 
-    /** Encode and append `str` to the already encoded string `encoded` and return the results. */
+    /** Encode and append `str` to the already encoded string `encoded` and return the results.
+        This is equivalent to `result = encoded + HashedString.encode(str)` */
     public static function append(encoded:String, str:String):String {
 
         return encoded + encode(str);
@@ -31,62 +34,67 @@ class HashedString {
     /** Decode the given `encoded` string and return the result. */
     public static function decode(encoded:String):String {
 
-        try {
-            var i = 0;
-            var len = encoded.length;
-            var result:StringBuf = null;
+        _lastDecodeIncomplete = false;
 
-            while (i < len) {
-                // Retrieve hash
-                var hash = encoded.substring(i, i + 32);
+        var i = 0;
+        var len = encoded.length;
+        var result:StringBuf = null;
 
-                // Retrieve section length
-                i += 32;
-                var n = i;
-                while (n < len && encoded.charCodeAt(n) != ';'.code) {
-                    n++;
-                }
-                var sectionLen = Std.parseInt(encoded.substring(i, n));
-                if (sectionLen == null || sectionLen <= 0) {
-                    warning('Failed to parse all encoded string: invalid section length');
-                    break;
-                }
-                i = n + 1;
+        while (i < len) {
+            // Retrieve hash
+            var hash = encoded.substring(i, i + 32);
 
-                // Retrieve section string
-                var section = encoded.substring(i, i + sectionLen);
-                if (section == null) {
-                    warning('Failed to parse all encoded string: null section');
-                    break;
-                }
-                if (Md5.encode(section) != hash) {
-                    warning('Failed to parse all encoded string: section hash mismatch');
-                    break;
-                }
-                i += sectionLen;
-
-                // Append section
-                if (result == null) {
-                    result = new StringBuf();
-                }
-                result.add(section);
-
+            // Retrieve section length
+            i += 32;
+            var n = i;
+            while (n < len && encoded.charCodeAt(n) != ';'.code) {
+                n++;
             }
+            var sectionLen = Std.parseInt(encoded.substring(i, n));
+            if (sectionLen == null || sectionLen <= 0) {
+                warning('Failed to parse all encoded string: invalid section length');
+                _lastDecodeIncomplete = true;
+                break;
+            }
+            i = n + 1;
 
-            if (result != null) {
-                return result.toString();
+            // Retrieve section string
+            var section = encoded.substring(i, i + sectionLen);
+            if (section == null) {
+                warning('Failed to parse all encoded string: null section');
+                _lastDecodeIncomplete = true;
+                break;
             }
-            else {
-                error('Invalid encoded string');
-                return null;
+            if (Md5.encode(section) != hash) {
+                warning('Failed to parse all encoded string: section hash mismatch');
+                _lastDecodeIncomplete = true;
+                break;
             }
-        }
-        catch (e:Dynamic) {
-            error('Failed to parse encoded string: $e');
+            i += sectionLen;
+
+            // Append section
+            if (result == null) {
+                result = new StringBuf();
+            }
+            result.add(section);
+
         }
 
-        return null;
+        if (result != null) {
+            return result.toString();
+        }
+        else {
+            error('Invalid encoded string');
+            _lastDecodeIncomplete = true;
+            return null;
+        }
 
     } //decode
+
+    inline public function isLastDecodeIncomplete():Bool {
+
+        return _lastDecodeIncomplete;
+
+    } //isLastDecodeIncomplete
 
 } //HashedString
