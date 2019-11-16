@@ -286,4 +286,49 @@ class Utils {
         return hash;
     }
 
+    /** Generate an uniform list of the requested size,
+        containing values uniformly repartited from frequencies.
+        @param values the values to put in list
+        @param probabilities the corresponding probability for each value
+        @param size the size of the final list */
+    public static function uniformFrequencyList(values:Array<Int>, frequencies:Array<Float>, size:Int):Array<Int> {
+
+        var list:Array<Int> = [];
+        var pickValues:Array<Float> = [];
+
+        for (i in 0...values.length) {
+            pickValues[i] = 0;
+        }
+
+        // Set initial pick values
+        for (i in 0...frequencies.length) {
+            pickValues[i] += frequencies[i];
+        }
+
+        for (index in 0...size) {
+            // Pick a value
+            var bestPick = 0;
+            var bestPickValue = 0.0;
+            for (i in 0...values.length) {
+                var pickValue = pickValues[i];
+                if (pickValue > bestPickValue) {
+                    bestPick = i;
+                    bestPickValue = pickValue;
+                }
+            }
+
+            // Add value
+            list.push(values[bestPick]);
+            pickValues[bestPick] -= 1.0;
+
+            // Increment pick values
+            for (i in 0...frequencies.length) {
+                pickValues[i] += frequencies[i];
+            }
+        }
+
+        return list;
+
+    } //uniformFrequencyList
+
 } //Utils
