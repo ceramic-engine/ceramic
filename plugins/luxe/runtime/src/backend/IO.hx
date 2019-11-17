@@ -1,5 +1,9 @@
 package backend;
 
+#if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string)
+import ceramic.SqliteKeyValue;
+#end
+
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -14,7 +18,77 @@ class IO implements spec.IO {
 
     public function new() {}
 
-#if sys
+#if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string)
+
+    var keyValue:SqliteKeyValue = null;
+
+    function initKeyValue():Void {
+
+        var storageDir = ceramic.App.app.backend.info.storageDirectory();
+        var dbPath = Path.join([storageDir, 'data.db']);
+
+        log('Initialize sqlite (path: $dbPath)');
+        keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
+
+    } //initKeyValue
+
+    public function saveString(key:String, str:String):Bool {
+
+        if (keyValue == null) {
+            initKeyValue();
+        }
+
+        var _key = Md5.encode('data ~ ' + key);
+        try {
+            keyValue.set(_key, str);
+        }
+        catch (e:Dynamic) {
+            error('Cannot save string: $e');
+            return false;
+        }
+
+        return true;
+
+    } //saveString
+
+    public function appendString(key:String, str:String):Bool {
+
+        if (keyValue == null) {
+            initKeyValue();
+        }
+
+        var _key = Md5.encode('data ~ ' + key);
+        try {
+            keyValue.append(_key, str);
+        }
+        catch (e:Dynamic) {
+            error('Cannot append string: $e');
+            return false;
+        }
+
+        return true;
+
+    } //appendString
+
+    public function readString(key:String):String {
+
+        if (keyValue == null) {
+            initKeyValue();
+        }
+
+        var _key = Md5.encode('data ~ ' + key);
+        try {
+            return keyValue.get(_key);
+        }
+        catch (e:Dynamic) {
+            error('Cannot read string: $e');
+        }
+
+        return null;
+
+    } //readString
+
+#elseif sys
 
     public function saveString(key:String, str:String):Bool {
 
