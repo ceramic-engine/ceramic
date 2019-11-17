@@ -96,7 +96,7 @@ class Utils {
         // No id, create a new one
         id = randomId(size);
         if (!app.backend.io.saveString('persistentId_$slot', id)) {
-            warning('Failed to save persistent id at slot $slot');
+            warning('Failed to save persistent id ($id) at slot $slot');
         }
         // Keep id in memory
         _persistentIds.set(slot, id);
