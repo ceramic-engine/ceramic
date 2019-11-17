@@ -92,7 +92,7 @@ class SqliteKeyValue extends Entity {
 
         mutex.acquire();
 
-        connection.request(' INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
+        connection.request('INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
 
         mutex.release();
 
@@ -106,7 +106,11 @@ class SqliteKeyValue extends Entity {
 
         var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
 
-        mutex.release();
+        if (result.length == 0) {
+            mutex.release();
+
+            return null;
+        }
 
         var value = new StringBuf();
 
@@ -115,6 +119,8 @@ class SqliteKeyValue extends Entity {
             var rawBytes = Base64.decode(rawValue);
             value.add(rawBytes.toString());
         }
+        
+        mutex.release();
 
         return value.toString();
 
