@@ -39,15 +39,7 @@ class IO implements spec.IO {
         }
 
         var _key = Md5.encode('data ~ ' + key);
-        try {
-            keyValue.set(_key, str);
-        }
-        catch (e:Dynamic) {
-            error('Cannot save string: $e');
-            return false;
-        }
-
-        return true;
+        return keyValue.set(_key, str);
 
     } //saveString
 
@@ -58,15 +50,7 @@ class IO implements spec.IO {
         }
 
         var _key = Md5.encode('data ~ ' + key);
-        try {
-            keyValue.append(_key, str);
-        }
-        catch (e:Dynamic) {
-            error('Cannot append string: $e');
-            return false;
-        }
-
-        return true;
+        return keyValue.append(_key, str);
 
     } //appendString
 
@@ -77,14 +61,7 @@ class IO implements spec.IO {
         }
 
         var _key = Md5.encode('data ~ ' + key);
-        try {
-            return keyValue.get(_key);
-        }
-        catch (e:Dynamic) {
-            error('Cannot read string: $e');
-        }
-
-        return null;
+        return keyValue.get(_key);
 
     } //readString
 

@@ -10,6 +10,8 @@ import sys.db.Connection;
 import sys.thread.Mutex;
 import sys.FileSystem;
 
+import ceramic.Shortcuts.*;
+
 /** A string-based key value store using Sqlite as backend.
     This is expected to be thread safe. */
 class SqliteKeyValue extends Entity {
@@ -44,11 +46,10 @@ class SqliteKeyValue extends Entity {
 
     } //new
 
-    public function set(key:String, value:String):Void {
+    public function set(key:String, value:String):Bool {
 
         if (value == null) {
-            remove(key);
-            return;
+            return remove(key);
         }
 
         var escapedKey = escape(key);
@@ -58,31 +59,47 @@ class SqliteKeyValue extends Entity {
         
         mutex.acquire();
 
-        connection.request('BEGIN TRANSACTION');
+        try {
+            connection.request('BEGIN TRANSACTION');
 
-        connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
+            connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
 
-        connection.request('INSERT INTO $escapedTable (k,v) VALUES ($escapedKey,$escapedValue)');
+            connection.request('INSERT INTO $escapedTable (k,v) VALUES ($escapedKey,$escapedValue)');
 
-        connection.request('COMMIT');
+            connection.request('COMMIT');
+        }
+        catch (e:Dynamic) {
+            error('Failed to set value for key $key: $e');
+            return false;
+        }
 
         mutex.release();
 
+        return true;
+
     } //set
 
-    public function remove(key:String):Void {
+    public function remove(key:String):Bool {
 
         var escapedKey = escape(key);
 
         mutex.acquire();
 
-        connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
+        try {
+            connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
+        }
+        catch (e:Dynamic) {
+            error('Failed to remove value for key $key: $e');
+            return false;
+        }
 
         mutex.release();
 
+        return true;
+
     } //remove
 
-    public function append(key:String, value:String):Void {
+    public function append(key:String, value:String):Bool {
 
         var escapedKey = escape(key);
 
@@ -91,9 +108,17 @@ class SqliteKeyValue extends Entity {
 
         mutex.acquire();
 
-        connection.request('INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
+        try {
+            connection.request('INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
+        }
+        catch (e:Dynamic) {
+            error('Failed to append value for key $key: $e');
+            return false;
+        }
 
         mutex.release();
+
+        return true;
 
     } //append
 
@@ -102,18 +127,26 @@ class SqliteKeyValue extends Entity {
         var escapedKey = escape(key);
 
         mutex.acquire();
-
-        var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
-
+        
         var value:StringBuf = null;
 
-        for (entry in result) {
-            if (value == null) {
-                value = new StringBuf();
+        try {
+            var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
+
+            for (entry in result) {
+                if (value == null) {
+                    value = new StringBuf();
+                }
+                var rawValue:String = entry.v;
+                var rawBytes = Base64.decode(rawValue);
+                value.add(rawBytes.toString());
             }
-            var rawValue:String = entry.v;
-            var rawBytes = Base64.decode(rawValue);
-            value.add(rawBytes.toString());
+
+            // TODO auto-compact in case we reach a num entry limit
+        }
+        catch (e:Dynamic) {
+            error('Failed to get value for key $key: $e');
+            return null;
         }
         
         mutex.release();
