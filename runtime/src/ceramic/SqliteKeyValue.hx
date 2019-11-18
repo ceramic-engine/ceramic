@@ -16,6 +16,8 @@ import ceramic.Shortcuts.*;
     This is expected to be thread safe. */
 class SqliteKeyValue extends Entity {
 
+    static final APPEND_ENTRIES_LIMIT:Int = 128;
+
     var path:String;
 
     var table:String;
@@ -25,6 +27,8 @@ class SqliteKeyValue extends Entity {
     var connection:Connection;
 
     var mutex:Mutex;
+
+    var mutexAcquiredInParent:Bool = false;
 
     public function new(path:String, table:String = 'KeyValue') {
 
@@ -57,7 +61,9 @@ class SqliteKeyValue extends Entity {
         var valueBytes = Bytes.ofString(value, UTF8);
         var escapedValue = "'" + Base64.encode(valueBytes) + "'";
         
-        mutex.acquire();
+        if (!mutexAcquiredInParent) {
+            mutex.acquire();
+        }
 
         try {
             connection.request('BEGIN TRANSACTION');
@@ -73,7 +79,9 @@ class SqliteKeyValue extends Entity {
             return false;
         }
 
-        mutex.release();
+        if (!mutexAcquiredInParent) {
+            mutex.release();
+        }
 
         return true;
 
@@ -83,7 +91,9 @@ class SqliteKeyValue extends Entity {
 
         var escapedKey = escape(key);
 
-        mutex.acquire();
+        if (!mutexAcquiredInParent) {
+            mutex.acquire();
+        }
 
         try {
             connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
@@ -93,7 +103,9 @@ class SqliteKeyValue extends Entity {
             return false;
         }
 
-        mutex.release();
+        if (!mutexAcquiredInParent) {
+            mutex.release();
+        }
 
         return true;
 
@@ -129,6 +141,7 @@ class SqliteKeyValue extends Entity {
         mutex.acquire();
         
         var value:StringBuf = null;
+        var numEntries:Int = 0;
 
         try {
             var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
@@ -140,13 +153,20 @@ class SqliteKeyValue extends Entity {
                 var rawValue:String = entry.v;
                 var rawBytes = Base64.decode(rawValue);
                 value.add(rawBytes.toString());
+                numEntries++;
             }
-
-            // TODO auto-compact in case we reach a num entry limit
         }
         catch (e:Dynamic) {
             error('Failed to get value for key $key: $e');
             return null;
+        }
+
+        // When reading a key, we check that we didn't reach a too high number of entries due
+        // to subsequent calls of append(). If that happens, we compact the value as a single entry.
+        if (numEntries > APPEND_ENTRIES_LIMIT) {
+            mutexAcquiredInParent = true;
+            set(key, value.toString());
+            mutexAcquiredInParent = false;
         }
         
         mutex.release();
