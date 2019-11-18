@@ -71,8 +71,7 @@ class SqliteKeyValue extends Entity {
     } //set
 
     public function remove(key:String):Void {
-        
-        
+
         var escapedKey = escape(key);
 
         mutex.acquire();
@@ -106,15 +105,12 @@ class SqliteKeyValue extends Entity {
 
         var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
 
-        if (result.length == 0) {
-            mutex.release();
-
-            return null;
-        }
-
-        var value = new StringBuf();
+        var value:StringBuf = null;
 
         for (entry in result) {
+            if (value == null) {
+                value = new StringBuf();
+            }
             var rawValue:String = entry.v;
             var rawBytes = Base64.decode(rawValue);
             value.add(rawBytes.toString());
@@ -122,7 +118,7 @@ class SqliteKeyValue extends Entity {
         
         mutex.release();
 
-        return value.toString();
+        return value != null ? value.toString() : null;
 
     } //get
 
