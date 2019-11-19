@@ -677,12 +677,6 @@ class App extends Entity {
     @:noCompletion
     #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
 
-        // Reset render texture dependencies to recompute them
-        for (i in 0...renderTextures.length) {
-            var renderTexture = renderTextures.unsafeGet(i);
-            renderTexture.resetDependingTextureCounts();
-        }
-
         do {
             // Notify if screen matrix has changed
             screen.matrix.computeChanged();
@@ -726,6 +720,12 @@ class App extends Entity {
             }
         }
         while (flushImmediate());
+
+        // Reset render texture dependencies to recompute them
+        for (i in 0...renderTextures.length) {
+            var renderTexture = renderTextures.unsafeGet(i);
+            renderTexture.resetDependingTextureCounts();
+        }
 
         // Update visuals render target, matrix and visibility
         for (visual in visuals) {
@@ -808,10 +808,6 @@ class App extends Entity {
             var renderTexture = renderTextures.unsafeGet(i);
             renderTexture.priority = i + 1;
         }
-
-        #if ceramic_debug_texture_priority
-        trace('Render textures: $renderTextures');
-        #end
 
     } //computeRenderTexturesPriority
 

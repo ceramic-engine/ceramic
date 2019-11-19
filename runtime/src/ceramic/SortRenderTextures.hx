@@ -36,8 +36,8 @@ class SortRenderTextures {
 
         var result = 0;
 
-        if (a.dependsOnTexture(b)) result = 1;
-        else if (b.dependsOnTexture(a)) result = -1;
+        if (a.dependsOnTexture(b)) result = -1;
+        else if (b.dependsOnTexture(a)) result = 1;
 
         return result;
 

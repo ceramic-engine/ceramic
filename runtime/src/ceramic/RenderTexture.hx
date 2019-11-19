@@ -16,7 +16,11 @@ class RenderTexture extends Texture {
 
     public var renderDirty:Bool = false;
 
+    #if ceramic_rendertexture_priority_use_haxe_map
+    public var dependingTextures:Map<Int,Int> = null;
+    #else
     public var dependingTextures:IntIntMap = null;
+    #end
 
     public var priority(default, null):Float = 0;
 
@@ -128,16 +132,30 @@ class RenderTexture extends Texture {
 
     @:noCompletion inline public function dependsOnTexture(texture:Texture):Bool {
 
+        #if ceramic_rendertexture_priority_use_haxe_map
+        return dependingTextures != null && dependingTextures.exists(texture.index) && dependingTextures.get(texture.index) > 0;
+        #else
         return dependingTextures != null && dependingTextures.get(texture.index) > 0;
+        #end
 
     } //dependsOnTexture
 
     @:noCompletion inline public function incrementDependingTextureCount(texture:Texture):Void {
 
         if (dependingTextures == null) {
+            #if ceramic_rendertexture_priority_use_haxe_map
+            dependingTextures = new Map<Int,Int>();
+            #else
             dependingTextures = new IntIntMap();
+            #end
         }
+        
+        #if ceramic_rendertexture_priority_use_haxe_map
+        var prevValue = dependingTextures.exists(texture.index) ? dependingTextures.get(texture.index) : 0;
+        #else
         var prevValue = dependingTextures.get(texture.index);
+        #end
+
         dependingTextures.set(texture.index, prevValue + 1);
 
     } //incrementDependingTextureCount
