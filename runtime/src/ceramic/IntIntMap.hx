@@ -63,6 +63,7 @@ class IntIntMap {
 
         hasFreeKey = false;
         freeValue = NO_VALUE;
+        size = 0;
 
         for (i in 0...data.length) {
             data.set(i, NO_VALUE);
@@ -73,7 +74,7 @@ class IntIntMap {
             iterableKeysUsed = new IntBoolMap();
         }
 
-    } //reset
+    } //clear
 
     public function exists(key:Int):Bool {
 
