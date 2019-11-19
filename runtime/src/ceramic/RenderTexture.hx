@@ -150,4 +150,18 @@ class RenderTexture extends Texture {
 
     } //decrementDependingTextureCount
 
+/// Print
+
+    override function toString():String {
+
+        if (id != null) {
+            var name = id;
+            if (name.startsWith('texture:')) name = name.substr(8);
+            return 'RenderTexture($name $width $height $density #$index/$priority)';
+        } else {
+            return 'RenderTexture($width $height $density #$index/$priority)';
+        }
+
+    } //toString
+
 } //RenderTexture

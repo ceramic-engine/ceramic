@@ -76,9 +76,9 @@ class Texture extends Entity {
         if (id != null) {
             var name = id;
             if (name.startsWith('texture:')) name = name.substr(8);
-            return 'Texture($name $width $height $density)';
+            return 'Texture($name $width $height $density #$index)';
         } else {
-            return 'Texture($width $height $density)';
+            return 'Texture($width $height $density #$index)';
         }
 
     } //toString
