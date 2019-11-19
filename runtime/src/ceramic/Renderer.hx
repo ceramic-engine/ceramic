@@ -373,10 +373,10 @@ class Renderer extends Entity {
 #if (ceramic_debug_draw && ceramic_debug_multitexture)
             if (debugDraw && activeShaderCanBatchMultipleTextures) {
                 if (reusing) {
-                    warning('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
+                    success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
                 }
                 else {
-                    warning('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
+                    success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
                 }
             }
 #end
