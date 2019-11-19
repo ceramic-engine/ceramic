@@ -804,10 +804,14 @@ class App extends Entity {
     
         // Update priorities from order
         var len = renderTextures.length;
-        for (i in 0...renderTextures.length) {
+        for (i in 0...len) {
             var renderTexture = renderTextures.unsafeGet(i);
-            renderTexture.priority = len + 1 - i;
+            renderTexture.priority = i + 1;
         }
+
+        #if ceramic_debug_texture_priority
+        trace('Render textures: $renderTextures');
+        #end
 
     } //computeRenderTexturesPriority
 
