@@ -40,7 +40,7 @@ class Setup extends tools.Task {
         var ceramicPath = context.ceramicToolsPath;
 
         var outPath = Path.join([cwd, 'out']);
-        var targetPath = Path.join([outPath, backendName, target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var targetPath = target.outPath(backendName, cwd, context.debug, variant);
         var hxmlPath = Path.join([targetPath, 'build.hxml']);
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;

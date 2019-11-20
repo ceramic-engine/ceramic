@@ -28,7 +28,7 @@ class Compile extends tools.Task {
         var debug = context.debug;
         var variant = context.variant;
         var project = ensureCeramicProject(cwd, args, App);
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'android' + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'android', cwd, debug, variant);
 
         var archList = archs.split(',');
         for (arch in archList) {

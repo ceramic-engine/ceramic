@@ -193,7 +193,7 @@ class Assets extends tools.Task {
         if (context.assetsChanged || context.iconsChanged) {
             // Invalidate project files last modified times because assets or icons have changed
             // in order to ensure build will be reprocessed again
-            var outPath = Path.join([cwd, 'out', context.backend.name, target.name + (context.variant != 'standard' ? '-' + context.variant : '')]);
+            var outPath = target.outPath(context.backend.name, cwd, context.debug, context.variant);
             var lastModifiedListFile = Path.join([outPath, 'lastModifiedList.json']);
             if (FileSystem.exists(lastModifiedListFile)) {
                 FileSystem.deleteFile(lastModifiedListFile);

@@ -33,7 +33,7 @@ class Build extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
 
         // Load project file
         var project = new tools.Project();

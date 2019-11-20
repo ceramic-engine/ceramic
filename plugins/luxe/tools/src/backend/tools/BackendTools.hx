@@ -100,7 +100,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         var hxmlPath = Path.join([outTargetPath, 'project.hxml']);
         
         /*
@@ -138,7 +138,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
 
         return outTargetPath;
 
@@ -151,7 +151,7 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set('target', target.name);
         defines.set(target.name, '');
 
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         defines.set('target_path', outTargetPath);
         defines.set('target_assets_path', Path.join([outTargetPath, 'assets']));
 
@@ -215,7 +215,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         var assetsChanged = false;
 
@@ -310,7 +310,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
 
         var toTransform:Array<TargetImage> = [];
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         var iconsChanged = false;
 
         switch (target.name) {

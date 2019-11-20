@@ -7,6 +7,7 @@ enum BuildConfig {
 }
 
 @:structInit
+@:using(tools.BuildTargetExtensions)
 class BuildTarget {
 
     public var name:String;

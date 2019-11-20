@@ -84,7 +84,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         var hxmlPath = Path.join([hxmlProjectPath, 'build.hxml']);
 
         if (FileSystem.exists(hxmlPath)) {
@@ -97,7 +97,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
-        var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
 
         return hxmlProjectPath;
 
@@ -110,7 +110,7 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set('target', target.name);
         defines.set(target.name, '');
 
-        var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         defines.set('target_path', hxmlProjectPath);
 
         if (context.project != null
@@ -161,7 +161,7 @@ class BackendTools implements tools.spec.BackendTools {
         ];
 
         var newAssets:Array<tools.Asset> = [];
-        var hxmlProjectPath = Path.join([cwd, 'out', 'unity', target.name + (variant != 'standard' ? '-' + variant : '')]);
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         if (dstAssetsPath == null) {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);

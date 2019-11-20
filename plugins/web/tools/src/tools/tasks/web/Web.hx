@@ -38,7 +38,7 @@ class Web extends tools.Task {
         WebProject.createWebProjectIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'web' + (context.variant != 'standard' ? '-' + context.variant : '')]);
+        var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'web', cwd, context.debug, context.variant);
         //var flowWebHtmlPath = Path.join([outTargetPath, 'bin/web']);
 
         // Copy assets

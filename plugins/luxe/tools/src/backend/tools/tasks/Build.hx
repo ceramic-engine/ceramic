@@ -38,7 +38,7 @@ class Build extends tools.Task {
 	} //new
 
 	override function run(cwd:String, args:Array<String>):Void {
-		var outTargetPath = Path.join([cwd, 'out', 'luxe', target.name + (variant != 'standard' ? '-' + variant : '')]);
+		var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
 
 		// Get project file
 		var project = ensureCeramicProject(cwd, args, App);

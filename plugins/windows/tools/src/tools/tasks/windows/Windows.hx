@@ -36,7 +36,7 @@ class Windows extends tools.Task {
         WindowsApp.createWindowsAppIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var outTargetPath = Path.join([cwd, 'out', 'luxe', 'windows' + (context.variant != 'standard' ? '-' + context.variant : '')]);
+        var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'windows', cwd, context.debug, context.variant);
 
         // Copy binary file
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
