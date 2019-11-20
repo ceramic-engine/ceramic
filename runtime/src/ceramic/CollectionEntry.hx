@@ -86,7 +86,7 @@ class CollectionEntry {
                             value = rawValue;
                         }
                         else {
-                            value = Std.parseFloat(''+rawValue);
+                            value = Std.parseFloat((''+rawValue).replace(',', '.'));
                             if (value == null || Math.isNaN(value)) value = 0.0;
                         }
 
