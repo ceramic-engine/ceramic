@@ -39,6 +39,12 @@ class PersistentData {
 
     } //set
 
+    inline public function remove(key:String):Void {
+
+        internalData.remove(key);
+
+    } //remove
+
     inline public function exists(key:String):Bool {
 
         return internalData.exists(key);
