@@ -39,6 +39,8 @@ class IdeInfo extends tools.Task {
             group: 'build',
             role: 'build-preset'
         });
+
+        /*
         variants.push({
             name: 'Distribution',
             args: ['--variant', 'distribution'],
@@ -48,6 +50,7 @@ class IdeInfo extends tools.Task {
                 args: ['--variant', 'distribution']
             }
         });
+        */
 
         // Build params
         //
