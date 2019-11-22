@@ -1,6 +1,6 @@
 # Ceramic
 
-| ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Minimal and portable cross-platform 2D game/multimedia engine. |
+| ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Cross-platform 2D multimedia framework. |
 | - | - |
 
 ## ⚠️ ACTIVE DEVELOPMENT / DON'T USE IT YET! ⚠️
@@ -11,21 +11,21 @@
 
 ## Why ceramic?
 
-Ceramic is made with very simple goals in mind:
+Ceramic is made with a few goals in mind:
 
-* Provide a high level cross-platform API to make 2D games, animations and creative coding.
-* Have a clear separation of ceramic API and its backend API.
-* Ensure adding new backends is as easy as possible by keeping the API clean and minimal.
-* Leverage as much as possible existing frameworks instead of reinventing the wheel.
-* Target iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux).
+* Provide a runtime with high level cross-platform [Haxe](http://haxe.org) API to make apps, 2d games, animations and creative coding projects.
+* Bundle a set of command line tools that handle building for different targets. Currently supported: iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux), Headless (C++/Node.js).
+* Make it extensible with a plugin system. A plugin can extend both the runtime and the command line tools.
+* Ensure adding new backends is as easy as possible by keeping the API clean and platform independant. New backends/targets can be added via separate plugins without changing the framework itself.
+* Provide opinionated features out of the box (event system, observables, physics, data model...), but always try to make these optional.
 
 ## How does it work?
 
 Ceramic is built using [Haxe](http://haxe.org), a high level strictly typed programming language that can compile to multiple platforms.
 
-Depending on the platform, it tries to use the best tools available using multiple backends.
+It consists on a high level cross-platform API for Haxe, the **runtime**, and makes it work on different platforms with **backends**.
 
-The **ceramic** command line tools are also written in Haxe language but run with Node.js.
+Ceramic comes with command line tools, also written in Haxe language, then run with Node.js.
 
 ## Getting started
 
