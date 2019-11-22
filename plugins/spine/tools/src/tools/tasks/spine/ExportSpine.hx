@@ -30,6 +30,8 @@ class ExportSpine extends tools.Task {
         var spineDefaultConfigPath = Path.join([cwd, 'resources/spine-config.json']);
         var project = new tools.Project();
         var force = extractArgFlag(args, 'force');
+        var stripAnimFolders = extractArgFlag(args, 'strip-animation-folders');
+        var stripSkinFolders = extractArgFlag(args, 'strip-skin-folders');
         project.loadAppFile(projectPath);
 
         if (project.app.spine == null || !Std.is(project.app.spine.export, Array)) {
@@ -198,6 +200,52 @@ class ExportSpine extends tools.Task {
                         atlasContent = convertAtlas(atlasContent);
                         File.saveContent(Path.join([groupDir, outName]), atlasContent);
 
+                    }
+                    else if (ext == 'json') {
+                        // Patch json if needed
+                        var jsonContent = File.getContent(Path.join([tmpPath, 'spine', name]));
+                        var parsed = Json.parse(jsonContent);
+
+                        // Strip skin folders in names?
+                        if (stripSkinFolders) {
+                            if (parsed.skins != null) {
+                                var usedSkinNames = new Map<String,Bool>();
+                                var skins:Array<{name:String}> = parsed.skins;
+                                for (skin in skins) {
+                                    var lastSlashIndex = skin.name.lastIndexOf('/');
+                                    if (lastSlashIndex != -1) {
+                                        skin.name = skin.name.substring(lastSlashIndex + 1);
+                                    }
+                                    if (usedSkinNames.exists(skin.name)) {
+                                        fail('Duplicate skin name: ${skin.name} (skeleton: $name)');
+                                    }
+                                    usedSkinNames.set(skin.name, true);
+                                }
+                            }
+                        }
+
+                        // Strip anim folders in names?
+                        if (stripAnimFolders) {
+                            if (parsed.animations != null) {
+                                for (key in Reflect.fields(parsed.animations)) {
+                                    var newKey = key;
+                                    var lastSlashIndex = key.lastIndexOf('/');
+                                    if (lastSlashIndex != -1) {
+                                        newKey = key.substring(lastSlashIndex + 1);
+                                    }
+                                    if (newKey != key) {
+                                        if (Reflect.field(parsed.animations, newKey) != null) {
+                                            fail('Duplicate animation name: $newKey (skeleton: $name)');
+                                        }
+                                        Reflect.setField(parsed.animations, newKey, Reflect.field(parsed.animations, key));
+                                        Reflect.deleteField(parsed.animations, key);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Save content
+                        File.saveContent(Path.join([groupDir, outName]), Json.stringify(parsed, null, '    '));
                     }
                     else {
                         // Just copy
