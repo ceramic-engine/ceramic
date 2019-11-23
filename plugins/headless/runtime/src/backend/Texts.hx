@@ -32,7 +32,7 @@ class Texts implements spec.Texts {
             try {
                 done(File.getContent(path));
             } catch (e:Dynamic) {
-                ceramic.App.app.logger.error('Failed to load file at path: $path');
+                ceramic.App.app.logger.error('Failed to load file at path: $path, $e');
                 done(null);
             }
         }
