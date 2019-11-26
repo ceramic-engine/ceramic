@@ -114,7 +114,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
         while (i < len) {
             var next = mutableKeyframes.unsafeGet(i);
             if (next.time == keyframe.time) {
-                warning('Replacing existing keyframe at time ${keyframe.time}');
+                log.warning('Replacing existing keyframe at time ${keyframe.time}');
                 mutableKeyframes.unsafeSet(i, keyframe);
                 didInsert = true;
                 break;

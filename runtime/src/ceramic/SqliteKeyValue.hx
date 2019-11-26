@@ -75,7 +75,7 @@ class SqliteKeyValue extends Entity {
             connection.request('COMMIT');
         }
         catch (e:Dynamic) {
-            error('Failed to set value for key $key: $e');
+            log.error('Failed to set value for key $key: $e');
             return false;
         }
 
@@ -99,7 +99,7 @@ class SqliteKeyValue extends Entity {
             connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
         }
         catch (e:Dynamic) {
-            error('Failed to remove value for key $key: $e');
+            log.error('Failed to remove value for key $key: $e');
             return false;
         }
 
@@ -124,7 +124,7 @@ class SqliteKeyValue extends Entity {
             connection.request('INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
         }
         catch (e:Dynamic) {
-            error('Failed to append value for key $key: $e');
+            log.error('Failed to append value for key $key: $e');
             return false;
         }
 
@@ -157,7 +157,7 @@ class SqliteKeyValue extends Entity {
             }
         }
         catch (e:Dynamic) {
-            error('Failed to get value for key $key: $e');
+            log.error('Failed to get value for key $key: $e');
             return null;
         }
 

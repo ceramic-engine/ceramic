@@ -54,7 +54,7 @@ class ArcadePhysics extends Entity {
             worlds.push(world);
         }
         else {
-            warning('World already added to ArcadePhysics');
+            log.warning('World already added to ArcadePhysics');
         }
 
     } //addWorld
@@ -62,7 +62,7 @@ class ArcadePhysics extends Entity {
     public function removeWorld(world:arcade.World):Void {
 
         if (!worlds.remove(world)) {
-            warning('World not removed from ArcadePhysics because it was not added at the first place');
+            log.warning('World not removed from ArcadePhysics because it was not added at the first place');
         }
         
     } //removeWorld
@@ -101,11 +101,11 @@ class ArcadePhysics extends Entity {
             if (!item.destroyed) {
                 var visual = item.visual;
                 if (visual == null) {
-                    warning('Pre updating arcade body with no visual, destroy item!');
+                    log.warning('Pre updating arcade body with no visual, destroy item!');
                     item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Pre updating arcade body with destroyed visual, destroy item!');
+                    log.warning('Pre updating arcade body with destroyed visual, destroy item!');
                     item.destroy();
                 }
                 else {
@@ -140,11 +140,11 @@ class ArcadePhysics extends Entity {
             if (!item.destroyed) {
                 var visual = item.visual;
                 if (visual == null) {
-                    warning('Post updating arcade body with no visual, destroy item!');
+                    log.warning('Post updating arcade body with no visual, destroy item!');
                     item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Post updating arcade body with destroyed visual, destroy item!');
+                    log.warning('Post updating arcade body with destroyed visual, destroy item!');
                     item.destroy();
                 }
                 else {

@@ -17,13 +17,13 @@ class TextAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load text asset if path is undefined.');
+            log.warning('Cannot load text asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
         }
 
-        log('Load text $path');
+        log.info('Load text $path');
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
@@ -33,7 +33,7 @@ class TextAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                error('Failed to load text at path: $path');
+                log.error('Failed to load text at path: $path');
                 emitComplete(false);
             }
 

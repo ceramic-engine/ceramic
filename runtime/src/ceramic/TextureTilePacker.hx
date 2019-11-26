@@ -118,7 +118,7 @@ class TextureTilePacker extends Entity {
         var maxHeight = padHeightWithMargin * numRows - margin * 2;
 
         if (width > maxWidth || height > maxHeight) {
-            warning('Cannot alloc tile of $width x $height because this is bigger than $maxWidth x $maxHeight');
+            log.warning('Cannot alloc tile of $width x $height because this is bigger than $maxWidth x $maxHeight');
             return null;
         }
 
@@ -193,7 +193,7 @@ class TextureTilePacker extends Entity {
 
     public function releaseTile(tile:TextureTile):Void {
 
-        log('release tile $tile');
+        log.info('release tile $tile');
 
         if (!(Std.is(tile, PackedTextureTile))) {
             throw 'Cannot release tile: $tile.';
@@ -208,7 +208,7 @@ class TextureTilePacker extends Entity {
         }
 
         if (packer == null) {
-            warning('Failed to release tile: ' + packedTile + ' (it doesn\'t belong to this packer)');
+            log.warning('Failed to release tile: ' + packedTile + ' (it doesn\'t belong to this packer)');
             return;
         }
 
@@ -229,7 +229,7 @@ class TextureTilePacker extends Entity {
                 packedTile.texture = null;
 
                 if (!didRelease) {
-                    warning('Failed to release tile: ' + packedTile + ' (did not find it)');
+                    log.warning('Failed to release tile: ' + packedTile + ' (did not find it)');
                 }
             });
         });

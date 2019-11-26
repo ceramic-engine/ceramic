@@ -49,7 +49,7 @@ class NapePhysics extends Entity {
             spaces.push(space);
         }
         else {
-            warning('Space already added to NapePhysics');
+            log.warning('Space already added to NapePhysics');
         }
 
     } //addSpace
@@ -57,7 +57,7 @@ class NapePhysics extends Entity {
     public function removeSpace(space:nape.space.Space):Void {
 
         if (!spaces.remove(space)) {
-            warning('Space not removed from NapePhysics because it was not added at the first place');
+            log.warning('Space not removed from NapePhysics because it was not added at the first place');
         }
         
     } //removeSpace
@@ -88,11 +88,11 @@ class NapePhysics extends Entity {
             if (!item.destroyed) {
                 var visual = item.visual;
                 if (visual == null) {
-                    warning('Pre updating nape body with no visual, destroy item!');
+                    log.warning('Pre updating nape body with no visual, destroy item!');
                     item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Pre updating nape body with destroyed visual, destroy item!');
+                    log.warning('Pre updating nape body with destroyed visual, destroy item!');
                     item.destroy();
                 }
             }
@@ -116,11 +116,11 @@ class NapePhysics extends Entity {
             if (!item.destroyed) {
                 var visual = item.visual;
                 if (visual == null) {
-                    warning('Post updating nape body with no visual, destroy item!');
+                    log.warning('Post updating nape body with no visual, destroy item!');
                     item.destroy();
                 }
                 else if (visual.destroyed) {
-                    warning('Post updating nape body with destroyed visual, destroy item!');
+                    log.warning('Post updating nape body with destroyed visual, destroy item!');
                     item.destroy();
                 }
                 else {

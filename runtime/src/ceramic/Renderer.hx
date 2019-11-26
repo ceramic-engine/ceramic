@@ -279,7 +279,7 @@ class Renderer extends Entity {
 
 #if ceramic_debug_draw
         if (debugDraw) {
-            success(' -- $drawCalls draw calls / $drawnQuads quads / $drawnMeshes meshes');
+            log.success(' -- $drawCalls draw calls / $drawnQuads quads / $drawnMeshes meshes');
         }
 #end
 
@@ -373,10 +373,10 @@ class Renderer extends Entity {
 #if (ceramic_debug_draw && ceramic_debug_multitexture)
             if (debugDraw && activeShaderCanBatchMultipleTextures) {
                 if (reusing) {
-                    success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
+                    log.success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
                 }
                 else {
-                    success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
+                    log.success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
                 }
             }
 #end
@@ -626,7 +626,7 @@ class Renderer extends Entity {
 
 #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
-            warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            log.warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
 
@@ -1093,7 +1093,7 @@ class Renderer extends Entity {
 
 #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
-            warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            log.warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
         }
 #end
 
@@ -1416,7 +1416,7 @@ class Renderer extends Entity {
         var flushingQuadsNow = drawnQuads - flushedQuads;
         var flushingMeshesNow = drawnMeshes - flushedMeshes;
         if (debugDraw) {
-            log('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastBlending / $lastClip');
+            log.info('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastBlending / $lastClip');
         }
         flushedQuads = drawnQuads;
         flushedMeshes = drawnMeshes;

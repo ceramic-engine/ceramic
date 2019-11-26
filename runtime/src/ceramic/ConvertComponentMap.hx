@@ -30,7 +30,7 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
             }
             #if debug
             else {
-                warning('Missing component initializer: ' + initializerName);
+                log.warning('Missing component initializer: ' + initializerName);
             }
             #end
         }

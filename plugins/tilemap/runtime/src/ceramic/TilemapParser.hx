@@ -24,7 +24,7 @@ class TilemapParser {
         var tmxMap = tmxParser.parseTmx(rawTmxData, resolveTsxRawData);
 
         if (tmxMap == null) {
-            warning('Failed to parse TMX data: result is null!');
+            log.warning('Failed to parse TMX data: result is null!');
             return null;
         }
 
@@ -77,7 +77,7 @@ class TilemapParser {
                 tilemapData.orientation = HEXAGONAL;
             case Unknown(value):
                 tilemapData.orientation = ORTHOGONAL;
-                warning('TMX map orientation is Unknown($value), using ORTHOGONAL in TilemapData');
+                log.warning('TMX map orientation is Unknown($value), using ORTHOGONAL in TilemapData');
         }
 
         tilemapData.tileWidth = tmxMap.tileWidth;
@@ -97,7 +97,7 @@ class TilemapParser {
                     tilemapData.renderOrder = LEFT_UP;
                 case Unknown(value):
                     tilemapData.renderOrder = RIGHT_DOWN;
-                    warning('TMX map render order is Unknown($value), using RIGHT_DOWN in TilemapData');
+                    log.warning('TMX map render order is Unknown($value), using RIGHT_DOWN in TilemapData');
             }
         }
 
@@ -109,7 +109,7 @@ class TilemapParser {
                     tilemapData.staggerAxis = AXIS_Y;
                 case Unknown(value):
                     tilemapData.staggerAxis = AXIS_X;
-                    warning('TMX map stagger axis is Unknown($value), using AXIS_X in TilemapData');
+                    log.warning('TMX map stagger axis is Unknown($value), using AXIS_X in TilemapData');
             }
         }
 
@@ -206,7 +206,7 @@ class TilemapParser {
             }
         }
         else {
-            warning('TMX map has no tileset');
+            log.warning('TMX map has no tileset');
         }
 
         if (tmxMap.layers != null && tmxMap.layers.length > 0) {
@@ -235,7 +235,7 @@ class TilemapParser {
                             layer.tiles = cast [].concat(_layer.data.tiles);
                         }
                         else {
-                            warning('TMX tile layer has no tile');
+                            log.warning('TMX tile layer has no tile');
                         }
                         tilemapData.layers.push(layer);
                         
@@ -246,7 +246,7 @@ class TilemapParser {
             }
         }
         else {
-            warning('TMX map has no layer');
+            log.warning('TMX map has no layer');
         }
 
         return tilemapData;
@@ -285,7 +285,7 @@ private class TilemapTmxParser {
         }
         catch (e:Dynamic)
         {
-            error(e);
+            log.error(e);
         }
 
         return null;

@@ -43,7 +43,7 @@ class TilemapAsset extends Asset {
 
         // Load tilemap data
         status = LOADING;
-        ceramic.App.app.logger.log('Load tilemap $path');
+        ceramic.App.app.logger.info('Load tilemap $path');
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
@@ -213,10 +213,10 @@ class TilemapAsset extends Asset {
             });
         }
         else if (tmxImage.data != null) {
-            warning('Loading TMX embedded images is not supported.');
+            log.warning('Loading TMX embedded images is not supported.');
         }
         else {
-            warning('Cannot load texture for TMX image: $tmxImage');
+            log.warning('Cannot load texture for TMX image: $tmxImage');
         }
 
     } //loadTextureFromTmxImage

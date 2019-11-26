@@ -67,7 +67,7 @@ class Fragment extends Quad {
         #if ceramic_debug_fragments
         trace('set fragmentData ${fragmentData.name} / $fragmentData');
         onceReady(this, function() {
-            success('READY fragment ${fragmentData.name}');
+            log.success('READY fragment ${fragmentData.name}');
         });
         #end
         
@@ -163,7 +163,7 @@ class Fragment extends Quad {
                 };
                 newArgs.push(subContext);
                 #if ceramic_debug_fragments
-                if (isFragment) log('load item (fragment) ${item.id}');
+                if (isFragment) log.info('load item (fragment) ${item.id}');
                 #end
             }
             instance = cast Type.createInstance(entityClass, newArgs);

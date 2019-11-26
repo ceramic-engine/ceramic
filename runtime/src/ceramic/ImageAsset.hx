@@ -28,13 +28,13 @@ class ImageAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load image asset if path is undefined.');
+            log.warning('Cannot load image asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
         }
 
-        log('Load image $path (density=$density)');
+        log.info('Load image $path (density=$density)');
         app.backend.textures.load(path, {
         }, function(image) {
 
@@ -102,7 +102,7 @@ class ImageAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                error('Failed to load texture at path: $path');
+                log.error('Failed to load texture at path: $path');
                 emitComplete(false);
             }
 
@@ -127,7 +127,7 @@ class ImageAsset extends Asset {
         computePath();
 
         if (prevPath != path) {
-            log('Reload texture ($prevPath -> $path)');
+            log.info('Reload texture ($prevPath -> $path)');
             load();
         }
 

@@ -58,7 +58,7 @@ class SpineAsset extends Asset {
 
         // Load spine data
         status = LOADING;
-        ceramic.App.app.logger.log('Load spine $path');
+        ceramic.App.app.logger.info('Load spine $path');
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
@@ -114,7 +114,7 @@ class SpineAsset extends Asset {
                 assets.onceComplete(this, handleAssetsComplete);
 
                 var realAtlasInfo = Assets.decodePath(atlas.trim().substring('alias:'.length));
-                log('Atlas ${baseName + '.atlas'} is an alias for: ${realAtlasInfo.name + '.atlas'}');
+                log.info('Atlas ${baseName + '.atlas'} is an alias for: ${realAtlasInfo.name + '.atlas'}');
                 atlasAsset = new TextAsset(realAtlasInfo.name + '.atlas');
                 atlasAsset.handleTexturesDensityChange = false;
                 assets.addAsset(atlasAsset);
@@ -235,7 +235,7 @@ class SpineAsset extends Asset {
 
     function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
         
-        log('Load atlas page ${page.name} / $path / $basePath');
+        log.info('Load atlas page ${page.name} / $path / $basePath');
 
         path = Path.join([(basePath != null ? basePath : this.path), path]);
         var pathInfo = Assets.decodePath(path);
@@ -288,7 +288,7 @@ class SpineAsset extends Asset {
         var path = atlasAsset.path;
 
         if (prevPath != path) {
-            ceramic.App.app.logger.log('Reload spine ($prevPath -> $path)');
+            ceramic.App.app.logger.info('Reload spine ($prevPath -> $path)');
             load();
         }
 

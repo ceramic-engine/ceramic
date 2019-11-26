@@ -410,7 +410,7 @@ class Spine extends Visual {
         if (!destroyed && skin != null && skeleton != null) {
             var spineSkin:Skin = skeletonData.findSkin(skin == null ? 'default' : skin);
             if (spineSkin == null) {
-                warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
+                log.warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
             } else {
                 skeleton.setSkin(spineSkin);
             }
@@ -426,7 +426,7 @@ class Spine extends Visual {
         if (skeleton != null) {
             var spineSkin:Skin = skeletonData.findSkin(skin == null ? 'default' : skin);
             if (spineSkin == null) {
-                warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
+                log.warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
             } else {
                 skeleton.setSkin(spineSkin);
             }
@@ -777,7 +777,7 @@ class Spine extends Visual {
                     track.trackTime = trackTime;
                 }
             } else {
-                warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')');
+                log.warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')');
                 track = state.setEmptyAnimation(trackIndex, 0);
             }
         }

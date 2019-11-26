@@ -702,8 +702,10 @@ class Helpers {
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
             input = input.replace(RE_TRACE_FILE_LINE.matched(0), '');
             if (context.colors) {
-                if (input.startsWith('[log] ')) {
-                    input = input.substr(6).cyan();
+                if (input.startsWith('[info] ')) {
+                    input = input.substr(7).cyan();
+                } else if (input.startsWith('[debug] ')) {
+                    input = input.substr(8).magenta();
                 } else if (input.startsWith('[warning] ')) {
                     input = input.substr(10).yellow();
                 } else if (input.startsWith('[error] ')) {
@@ -748,13 +750,19 @@ class Helpers {
                 input = input.green();
             }
         }
-        else if (input.startsWith('[log] ')) {
+        else if (input.startsWith('[info] ')) {
             if (context.colors) {
-                input = input.substring('[log] '.length);
+                input = input.substring('[info] '.length);
                 input = input.cyan();
             }
         }
-        else if (input == '[log]' || input == '[success]' || input == '[warning]' || input == '[error]') {
+        else if (input.startsWith('[debug] ')) {
+            if (context.colors) {
+                input = input.substring('[debug] '.length);
+                input = input.magenta();
+            }
+        }
+        else if (input == '[debug]' || input == '[info]' || input == '[success]' || input == '[warning]' || input == '[error]') {
             input = '';
         }
         else if (context.colors && input.startsWith('Called from hxcpp::')) {

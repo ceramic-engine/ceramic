@@ -5,7 +5,7 @@ class Logger extends Entity {
 
 /// Events
 
-    @event function _log(value:Dynamic, ?pos:haxe.PosInfos);
+    @event function _info(value:Dynamic, ?pos:haxe.PosInfos);
 
     @event function _debug(value:Dynamic, ?pos:haxe.PosInfos);
 
@@ -34,13 +34,21 @@ class Logger extends Entity {
 
 /// Public API
 
-    public function log(value:Dynamic, ?pos:haxe.PosInfos):Void {
+    public function debug(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        emitLog(value, pos);
+        emitDebug(value, pos);
 
-        haxe.Log.trace(prefixLines('[log] ', value), pos);
+        haxe.Log.trace(prefixLines('[debug] ', value), pos);
 
-    } //log
+    } //debug
+
+    public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {
+        
+        emitInfo(value, pos);
+
+        haxe.Log.trace(prefixLines('[info] ', value), pos);
+
+    } //info
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
         

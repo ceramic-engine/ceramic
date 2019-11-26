@@ -232,7 +232,7 @@ class App extends Entity {
     /** App settings */
     public var settings(default,null):Settings;
 
-    /** Logger. Used by log() shortcut */
+    /** Logger. Used by log.info() shortcut */
     public var logger(default,null):Logger = new Logger();
 
     /** Visuals (ordered) */
@@ -398,7 +398,7 @@ class App extends Entity {
                 logger.success('Default assets loaded.');
                 assetsLoaded();
             } else {
-                error('Failed to load default assets.');
+                log.error('Failed to load default assets.');
             }
 
         });
@@ -517,9 +517,9 @@ class App extends Entity {
             usedClasses.sort(function(a, b) {
                 return numVisualsByClass.get(a) - numVisualsByClass.get(b);
             });
-            success(' - num visuals: ${visuals.length} - ');
+            log.success(' - num visuals: ${visuals.length} - ');
             for (clazz in usedClasses) {
-                success('    $clazz / ${numVisualsByClass.get(clazz)}');
+                log.success('    $clazz / ${numVisualsByClass.get(clazz)}');
             }
         });
         #end

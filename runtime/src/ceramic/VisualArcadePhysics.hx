@@ -99,7 +99,7 @@ class VisualArcadePhysics extends Entity {
             }
         }
         else {
-            warning('Invalid body collide event: failed to retrieve visual from body.');
+            log.warning('Invalid body collide event: failed to retrieve visual from body.');
         }
 
     } //handleCollide
@@ -118,7 +118,7 @@ class VisualArcadePhysics extends Entity {
             }
         }
         else {
-            warning('Invalid body overlap event: failed to retrieve visual from body.');
+            log.warning('Invalid body overlap event: failed to retrieve visual from body.');
         }
 
     } //handleOverlap
@@ -132,7 +132,7 @@ class VisualArcadePhysics extends Entity {
             emitWorldBounds(visual1, up, down, left, right);
         }
         else {
-            warning('Invalid body worldBounds event: failed to retrieve visual from body.');
+            log.warning('Invalid body worldBounds event: failed to retrieve visual from body.');
         }
 
     } //handleWorldBounds

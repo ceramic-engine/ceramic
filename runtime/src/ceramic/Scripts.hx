@@ -30,7 +30,7 @@ class Scripts {
         var clazz = Type.resolveClass('scripts.$scriptName');
 
         if (clazz == null) {
-            error('Unknown script with name: $scriptName');
+            log.error('Unknown script with name: $scriptName');
             Sys.exit(-1);
             return;
         }
@@ -45,14 +45,14 @@ class Scripts {
 
             instance.onceFail(null, function(reason) {
                 instance.destroy();
-                error('Error when running script $scriptName: $reason');
+                log.error('Error when running script $scriptName: $reason');
                 Sys.exit(-1);
             });
 
             instance.run();
 
         } catch (e:Dynamic) {
-            error('Error when running script $scriptName: $e');
+            log.error('Error when running script $scriptName: $e');
             Sys.exit(-1);
         }
 

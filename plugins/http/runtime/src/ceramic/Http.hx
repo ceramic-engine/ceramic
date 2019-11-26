@@ -71,7 +71,7 @@ class Http {
                 content = encoded;
             }
             else {
-                warning('HTTP request params were ignored with method: $method');
+                log.warning('HTTP request params were ignored with method: $method');
             }
         }
 

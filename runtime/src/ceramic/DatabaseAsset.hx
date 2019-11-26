@@ -19,13 +19,13 @@ class DatabaseAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load database asset if path is undefined.');
+            log.warning('Cannot load database asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
         }
 
-        log('Load database $path');
+        log.info('Load database $path');
         app.backend.texts.load(path, function(text) {
 
             if (text != null) {
@@ -33,7 +33,7 @@ class DatabaseAsset extends Asset {
                     this.database = Csv.parse(text);
                 } catch (e:Dynamic) {
                     status = BROKEN;
-                    error('Failed to parse database at path: $path');
+                    log.error('Failed to parse database at path: $path');
                     emitComplete(false);
                     return;
                 }
@@ -42,7 +42,7 @@ class DatabaseAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                error('Failed to load database at path: $path');
+                log.error('Failed to load database at path: $path');
                 emitComplete(false);
             }
 

@@ -553,7 +553,7 @@ class Editor extends Entity {
             }
 
         } catch (e:Dynamic) {
-            error('Failed to decode message: ' + event.data);
+            log.error('Failed to decode message: ' + event.data);
             return;
         }
 

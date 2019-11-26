@@ -19,13 +19,13 @@ class SoundAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load sound asset if path is undefined.');
+            log.warning('Cannot load sound asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
         }
 
-        log('Load sound $path');
+        log.info('Load sound $path');
         app.backend.audio.load(path, { stream: options.stream }, function(audio) {
 
             if (audio != null) {
@@ -36,7 +36,7 @@ class SoundAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                error('Failed to load audio at path: $path');
+                log.error('Failed to load audio at path: $path');
                 emitComplete(false);
             }
 

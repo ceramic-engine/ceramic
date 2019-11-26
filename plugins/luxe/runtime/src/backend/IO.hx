@@ -27,7 +27,7 @@ class IO implements spec.IO {
         var storageDir = ceramic.App.app.backend.info.storageDirectory();
         var dbPath = Path.join([storageDir, 'data.db']);
 
-        log('Initialize sqlite (path: $dbPath)');
+        log.info('Initialize sqlite (path: $dbPath)');
         keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
 
     } //initKeyValue
@@ -120,7 +120,7 @@ class IO implements spec.IO {
                 return HashedString.decode(str);
             }
             catch (e:Dynamic) {
-                error('Failed to decode hashed string: $e');
+                log.error('Failed to decode hashed string: $e');
             }
         }
         return null;
@@ -133,7 +133,7 @@ class IO implements spec.IO {
 
         var storage = js.Browser.window.localStorage;
         if (storage == null) {
-            error('Cannot save string: localStorage not supported on this browser');
+            log.error('Cannot save string: localStorage not supported on this browser');
             return false;
         }
 
@@ -141,7 +141,7 @@ class IO implements spec.IO {
             storage.setItem(key, HashedString.encode(str));
         }
         catch (e:Dynamic) {
-            error('Failed to save string (key=$key): ' + e);
+            log.error('Failed to save string (key=$key): ' + e);
             return false;
         }
 
@@ -153,7 +153,7 @@ class IO implements spec.IO {
 
         var storage = js.Browser.window.localStorage;
         if (storage == null) {
-            error('Cannot append string: localStorage not supported on this browser');
+            log.error('Cannot append string: localStorage not supported on this browser');
             return false;
         }
 
@@ -167,7 +167,7 @@ class IO implements spec.IO {
             }
         }
         catch (e:Dynamic) {
-            error('Failed to append string (key=$key): ' + e);
+            log.error('Failed to append string (key=$key): ' + e);
             return false;
         }
 
@@ -179,7 +179,7 @@ class IO implements spec.IO {
 
         var storage = js.Browser.window.localStorage;
         if (storage == null) {
-            error('Cannot read string: localStorage not supported on this browser');
+            log.error('Cannot read string: localStorage not supported on this browser');
             return null;
         }
 
@@ -188,7 +188,7 @@ class IO implements spec.IO {
             return str != null ? HashedString.decode(str) : null;
         }
         catch (e:Dynamic) {
-            error('Failed to read string (key=$key): ' + e);
+            log.error('Failed to read string (key=$key): ' + e);
             return null;
         }
 

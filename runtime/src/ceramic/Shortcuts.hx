@@ -25,24 +25,8 @@ class Shortcuts {
     public static var collections(get,never):Collections;
     #if !haxe_server inline #end static function get_collections():Collections { return App.app.collections; }
 
-    /** Log message */
-    #if !haxe_server inline #end public static function log(value:Dynamic, ?pos:PosInfos) {
-        App.app.logger.log(value, pos);
-    }
-
-    /** Log success */
-    #if !haxe_server inline #end public static function success(value:Dynamic, ?pos:PosInfos) {
-        App.app.logger.success(value, pos);
-    }
-
-    /** Log warning */
-    #if !haxe_server inline #end public static function warning(value:Dynamic, ?pos:PosInfos) {
-        App.app.logger.warning(value, pos);
-    }
-
-    /** Log error */
-    #if !haxe_server inline #end public static function error(value:Dynamic, ?pos:PosInfos) {
-        App.app.logger.error(value, pos);
-    }
+    /** Shared logger instance */
+    public static var log(get,never):Logger;
+    #if !haxe_server inline #end static function get_log():Logger { return App.app.logger; }
 
 } //Shortcuts

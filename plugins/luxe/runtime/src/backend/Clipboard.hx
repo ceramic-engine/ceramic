@@ -26,7 +26,7 @@ class Clipboard implements spec.Clipboard {
                 });
             }
             catch (e:Dynamic) {
-                warning('Failed to handle clipboard change: $e');
+                log.warning('Failed to handle clipboard change: $e');
             }
         });
         #end

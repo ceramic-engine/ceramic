@@ -52,7 +52,7 @@ class HashedString {
             }
             var sectionLen = Std.parseInt(encoded.substring(i, n));
             if (sectionLen == null || sectionLen <= 0) {
-                warning('Failed to parse all encoded string: invalid section length');
+                log.warning('Failed to parse all encoded string: invalid section length');
                 _lastDecodeIncomplete = true;
                 break;
             }
@@ -61,12 +61,12 @@ class HashedString {
             // Retrieve section string
             var section = encoded.substring(i, i + sectionLen);
             if (section == null) {
-                warning('Failed to parse all encoded string: null section');
+                log.warning('Failed to parse all encoded string: null section');
                 _lastDecodeIncomplete = true;
                 break;
             }
             if (Md5.encode(section) != hash) {
-                warning('Failed to parse all encoded string: section hash mismatch');
+                log.warning('Failed to parse all encoded string: section hash mismatch');
                 _lastDecodeIncomplete = true;
                 break;
             }
@@ -84,7 +84,7 @@ class HashedString {
             return result.toString();
         }
         else {
-            error('Invalid encoded string');
+            log.error('Invalid encoded string');
             _lastDecodeIncomplete = true;
             return null;
         }

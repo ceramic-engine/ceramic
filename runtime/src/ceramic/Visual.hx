@@ -1761,7 +1761,7 @@ class Visual extends Entity {
             @:privateAccess children.mutable.splice(children.indexOf(visual), 1);
         }
         else {
-            ceramic.Shortcuts.warning('Cannot remove visual $visual, index is -1');
+            ceramic.Shortcuts.log.warning('Cannot remove visual $visual, index is -1');
         }
         visual.parent = null;
         visual.visibilityDirty = true;

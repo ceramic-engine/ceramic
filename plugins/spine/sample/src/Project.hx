@@ -30,9 +30,9 @@ class Project extends Entity {
         assets.onceComplete(this, function(_success) {
 
             if (!_success) {
-                error('Failed to load some resources');
+                log.error('Failed to load some resources');
             } else {
-                success('Finished loading');
+                log.success('Finished loading');
             }
 
             var anim = new Spine();

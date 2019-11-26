@@ -178,27 +178,27 @@ class Screen extends Entity implements Observable {
         // Observe visual settings
         //
         settings.onBackgroundChange(this, function(background, prevBackground) {
-            #if debug log('Setting background=$background'); #end
+            #if debug log.info('Setting background=$background'); #end
             app.backend.screen.setBackground(background);
         });
         settings.onTitleChange(this, function(title, prevTitle) {
-            #if debug log('Setting title=$title'); #end
+            #if debug log.info('Setting title=$title'); #end
             app.backend.screen.setWindowTitle(title);
         });
         settings.onScalingChange(this, function(scaling, prevScaling) {
-            #if debug log('Setting scaling=$scaling'); #end
+            #if debug log.info('Setting scaling=$scaling'); #end
             resize();
         });
         settings.onTargetWidthChange(this, function(targetWidth, prevTargetWidth) {
-            #if debug log('Setting targetWidth=$targetWidth'); #end
+            #if debug log.info('Setting targetWidth=$targetWidth'); #end
             resize();
         });
         settings.onTargetHeightChange(this, function(targetHeight, prevTargetWidth) {
-            #if debug log('Setting targetHeight=$targetHeight'); #end
+            #if debug log.info('Setting targetHeight=$targetHeight'); #end
             resize();
         });
         settings.onTargetDensityChange(this, function(targetDensity, prevTargetDensity) {
-            #if debug log('Setting targetDensity=$targetDensity'); #end
+            #if debug log.info('Setting targetDensity=$targetDensity'); #end
             updateTexturesDensity();
         });
 
@@ -962,7 +962,7 @@ class Screen extends Entity implements Observable {
 
         var index = hitVisuals.indexOf(visual);
         if (index == -1) {
-            warning('Hit visual not removed from hitVisuals because it was not added at the first place');
+            log.warning('Hit visual not removed from hitVisuals because it was not added at the first place');
         }
         else {
             hitVisuals.splice(index, 1);

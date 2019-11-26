@@ -142,7 +142,7 @@ class Assets extends Entity {
         var previousAsset = byName.get(asset.name);
         if (previousAsset != null) {
             if (previousAsset != asset) {
-                App.app.logger.log('Replace $previousAsset with $asset');
+                App.app.logger.info('Replace $previousAsset with $asset');
                 removeAsset(previousAsset);
             } else {
                 App.app.logger.warning('Cannot add asset $asset because it is already added for name: ${asset.name}.');

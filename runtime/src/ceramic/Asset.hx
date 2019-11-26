@@ -66,7 +66,7 @@ class Asset extends Entity implements Observable {
     public function load():Void {
 
         status = BROKEN;
-        error('This asset as no load implementation.');
+        log.error('This asset as no load implementation.');
         emitComplete(false);
 
     } //load
@@ -295,7 +295,7 @@ class Asset extends Entity implements Observable {
 
     public function release():Void {
 
-        if (refCount == 0) warning('Called release() on asset ' + this + ' when its refCount is already 0');
+        if (refCount == 0) log.warning('Called release() on asset ' + this + ' when its refCount is already 0');
         else refCount--;
 
     } //release

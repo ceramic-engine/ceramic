@@ -19,7 +19,7 @@ class PersistentData {
                 var unserializer = new haxe.Unserializer(rawData);
                 internalData = unserializer.unserialize();
             } catch (e:Dynamic) {
-                warning('Failed to read persistent data with id $id');
+                log.warning('Failed to read persistent data with id $id');
             }
         }
 

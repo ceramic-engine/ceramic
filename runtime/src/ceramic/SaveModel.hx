@@ -50,22 +50,22 @@ class SaveModel {
         var data:String = null;
 
         if (id != 1 && id != 2) {
-            warning('Failed to load save from key: $key (no existing save?)');
+            log.warning('Failed to load save from key: $key (no existing save?)');
         }
         else {
             data = app.backend.io.readString('save_data_' + id + '_' + key);
             if (data == null) {
-                warning('Failed to load save from key: $key/$id (corrupted save, try backups?)');
+                log.warning('Failed to load save from key: $key/$id (corrupted save, try backups?)');
             }
         }
 
         if (data == null) {
             data = fetchMostRecentBackup(key);
             if (data == null) {
-                warning('No backup available for key $key, that is probably a new save slot.');
+                log.warning('No backup available for key $key, that is probably a new save slot.');
             }
             else {
-                success('Recovered from backup!');
+                log.success('Recovered from backup!');
             }
         }
 
@@ -185,7 +185,7 @@ class SaveModel {
                                 busyKeys.splice(busyIndex, 1);
                             }
                             else {
-                                error('Failed to remove busy key: $key (none in list)');
+                                log.error('Failed to remove busy key: $key (none in list)');
                             }
                         });
 
@@ -246,7 +246,7 @@ class SaveModel {
                                 busyKeys.splice(busyIndex, 1);
                             }
                             else {
-                                error('Failed to remove busy key: $key (none in list)');
+                                log.error('Failed to remove busy key: $key (none in list)');
                             }
                         });
                         
@@ -355,7 +355,7 @@ class SaveModel {
             }
 
             if (step == null || Math.isNaN(step) || step < 0 || step >= BACKUP_NUM_STEPS) {
-                warning('No backup step saved, start with zero');
+                log.warning('No backup step saved, start with zero');
                 step = 0;
             }
 

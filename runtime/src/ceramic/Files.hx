@@ -34,7 +34,7 @@ class Files {
 
         #else
 
-        warning('haveSameContent() is not supported on this target');
+        log.warning('haveSameContent() is not supported on this target');
         return false;
 
         #end
@@ -59,7 +59,7 @@ class Files {
 
         #else
 
-        warning('haveSameLastModified() is not supported on this target');
+        log.warning('haveSameLastModified() is not supported on this target');
         return false;
 
         #end
@@ -82,7 +82,7 @@ class Files {
 
         #else
 
-        warning('setToSameLastModified() is not supported on this target');
+        log.warning('setToSameLastModified() is not supported on this target');
 
         #end
 
@@ -99,7 +99,7 @@ class Files {
 
         #else
 
-        warning('getLastModified() is not supported on this target');
+        log.warning('getLastModified() is not supported on this target');
         return -1;
 
         #end
@@ -138,7 +138,7 @@ class Files {
 
         #else
 
-        warning('getFlatDirectory() is not supported on this target');
+        log.warning('getFlatDirectory() is not supported on this target');
         return [];
 
         #end
@@ -164,7 +164,7 @@ class Files {
 
         #else
 
-        warning('removeEmptyDirectories() is not supported on this target');
+        log.warning('removeEmptyDirectories() is not supported on this target');
 
         #end
 
@@ -185,7 +185,7 @@ class Files {
 
         #else
 
-        warning('isEmptyDirectory() is not supported on this target');
+        log.warning('isEmptyDirectory() is not supported on this target');
         return false;
 
         #end
@@ -229,7 +229,7 @@ class Files {
 
         #else
 
-        warning('deleteRecursive() is not supported on this target');
+        log.warning('deleteRecursive() is not supported on this target');
 
         #end
 
@@ -282,7 +282,7 @@ class Files {
 
         #else
 
-        warning('copyFileWithIntermediateDirs() is not supported on this target');
+        log.warning('copyFileWithIntermediateDirs() is not supported on this target');
 
         #end
 
@@ -316,7 +316,7 @@ class Files {
 
         #else
 
-        warning('copyDirectory() is not supported on this target');
+        log.warning('copyDirectory() is not supported on this target');
 
         #end
 

@@ -193,7 +193,7 @@ class Serialize {
                 
                 var clazz = Type.resolveClass(info.type);
                 if (clazz == null) {
-                    warning('Failed to resolve class for serialized type: ' + info.type);
+                    log.warning('Failed to resolve class for serialized type: ' + info.type);
                     return null;
                 }
 
@@ -262,7 +262,7 @@ class Serialize {
                     return u.unserialize();
                 }
                 catch (e:Dynamic) {
-                    warning('Failed to deserialize: ' + value.hx);
+                    log.warning('Failed to deserialize: ' + value.hx);
                     return null;
                 }
             }

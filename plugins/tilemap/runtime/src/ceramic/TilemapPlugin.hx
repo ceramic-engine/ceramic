@@ -29,7 +29,7 @@ class TilemapPlugin {
 
         App.oncePreInit(function() {
 
-            log('Init tilemap plugin');
+            log.info('Init tilemap plugin');
 
             // Extend assets with `tilemap` kind
             Assets.addAssetKind('tilemap', addTilemap, ['tmx'], false, ['ceramic.TilemapData']);

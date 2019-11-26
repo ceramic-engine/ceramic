@@ -39,13 +39,13 @@ class FontAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load font asset if path is undefined.');
+            log.warning('Cannot load font asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
         }
 
-        log('Load font $path');
+        log.info('Load font $path');
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
@@ -151,7 +151,7 @@ class FontAsset extends Asset {
                         }
                         else {
                             status = BROKEN;
-                            error('Failed to load textures for font at path: $path');
+                            log.error('Failed to load textures for font at path: $path');
                             emitComplete(false);
                         }
 
@@ -161,13 +161,13 @@ class FontAsset extends Asset {
 
                 } catch (e:Dynamic) {
                     status = BROKEN;
-                    error('Failed to decode font data at path: $path');
+                    log.error('Failed to decode font data at path: $path');
                     emitComplete(false);
                 }
             }
             else {
                 status = BROKEN;
-                error('Failed to load font data at path: $path');
+                log.error('Failed to load font data at path: $path');
                 emitComplete(false);
             }
         });
@@ -193,7 +193,7 @@ class FontAsset extends Asset {
         computePath();
 
         if (prevPath != path) {
-            log('Reload font ($prevPath -> $path)');
+            log.info('Reload font ($prevPath -> $path)');
             load();
         }
 

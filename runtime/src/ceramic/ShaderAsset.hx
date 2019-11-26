@@ -21,7 +21,7 @@ class ShaderAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            warning('Cannot load shader asset if path is undefined.');
+            log.warning('Cannot load shader asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
@@ -48,22 +48,22 @@ class ShaderAsset extends Asset {
                     }
                 }
             }
-            log('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
+            log.info('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
         }
         else {
-            log('Load shader $path');
+            log.info('Load shader $path');
         }
 
         if (options.vertId == null) {
             status = BROKEN;
-            error('Missing vertId option to load shader at path: $path');
+            log.error('Missing vertId option to load shader at path: $path');
             emitComplete(false);
             return;
         }
 
         if (options.fragId == null) {
             status = BROKEN;
-            error('Missing fragId option to load shader at path: $path');
+            log.error('Missing fragId option to load shader at path: $path');
             emitComplete(false);
             return;
         }
@@ -73,14 +73,14 @@ class ShaderAsset extends Asset {
 
                 if (vertSource == null) {
                     status = BROKEN;
-                    error('Failed to load ' + options.vertId + ' for shader at path: $path');
+                    log.error('Failed to load ' + options.vertId + ' for shader at path: $path');
                     emitComplete(false);
                     return;
                 }
 
                 if (fragSource == null) {
                     status = BROKEN;
-                    error('Failed to load ' + options.fragId + ' for shader at path: $path');
+                    log.error('Failed to load ' + options.fragId + ' for shader at path: $path');
                     emitComplete(false);
                     return;
                 }
@@ -101,7 +101,7 @@ class ShaderAsset extends Asset {
                 var backendItem = app.backend.shaders.fromSource(vertSource, fragSource, customAttributes);
                 if (backendItem == null) {
                     status = BROKEN;
-                    error('Failed to create shader from data at path: $path');
+                    log.error('Failed to create shader from data at path: $path');
                     emitComplete(false);
                     return;
                 }

@@ -250,7 +250,7 @@ class Http implements spec.Http {
                         headers.set(key, value);
                     }
                     else {
-                        warning('Failed to parse header: $rawHeader');
+                        log.warning('Failed to parse header: $rawHeader');
                     }
                 }
             }
@@ -283,7 +283,7 @@ class Http implements spec.Http {
                         headers.set(key, value);
                     }
                     else {
-                        warning('Failed to parse header: $rawHeader');
+                        log.warning('Failed to parse header: $rawHeader');
                     }
                 }
             }
@@ -408,7 +408,7 @@ class Http implements spec.Http {
         if (!Path.isAbsolute(targetPath)) {
             var basePath = app.backend.info.storageDirectory();
             if (basePath == null) {
-                warning('Cannot download $url at path $targetPath because there is no storage directory');
+                log.warning('Cannot download $url at path $targetPath because there is no storage directory');
                 done(null);
                 return;
             }
@@ -421,7 +421,7 @@ class Http implements spec.Http {
 
         IosHttp.download({ url: url }, targetPath, function(fullPath) {
             if (fullPath == null) {
-                error('Failed to download $url at path $targetPath');
+                log.error('Failed to download $url at path $targetPath');
             }
             done(fullPath);
         });
@@ -431,7 +431,7 @@ class Http implements spec.Http {
 
         AndroidHttp.download({ url: url }, targetPath, function(fullPath) {
             if (fullPath == null) {
-                error('Failed to download $url at path $targetPath');
+                log.error('Failed to download $url at path $targetPath');
             }
             done(fullPath);
         });
@@ -442,7 +442,7 @@ class Http implements spec.Http {
         // Ensure we can write the file at the desired location
         if (FileSystem.exists(tmpTargetPath)) {
             if (FileSystem.isDirectory(tmpTargetPath)) {
-                error('Cannot overwrite directory named $tmpTargetPath');
+                log.error('Cannot overwrite directory named $tmpTargetPath');
                 done(null);
                 return;
             }
@@ -453,7 +453,7 @@ class Http implements spec.Http {
             FileSystem.createDirectory(dir);
         }
         else if (!FileSystem.isDirectory(dir)) {
-            error('Target directory $dir should be a directory, but it is a file');
+            log.error('Target directory $dir should be a directory, but it is a file');
             done(null);
             return;
         }
@@ -463,7 +463,7 @@ class Http implements spec.Http {
             if (FileSystem.exists(tmpTargetPath)) {
                 if (FileSystem.exists(targetPath)) {
                     if (FileSystem.isDirectory(targetPath)) {
-                        error('Cannot overwrite directory named $targetPath');
+                        log.error('Cannot overwrite directory named $targetPath');
                         done(null);
                         return;
                     }
@@ -471,18 +471,18 @@ class Http implements spec.Http {
                 }
                 FileSystem.rename(tmpTargetPath, targetPath);
                 if (FileSystem.exists(targetPath) && !FileSystem.isDirectory(targetPath)) {
-                    success('Downloaded file from url $url at path $targetPath');
+                    log.success('Downloaded file from url $url at path $targetPath');
                     done(targetPath);
                     return;
                 }
                 else {
-                    error('Error when copying $tmpTargetPath to $targetPath');
+                    log.error('Error when copying $tmpTargetPath to $targetPath');
                     done(null);
                     return;
                 }
             }
             else {
-                error('Failed to download $url at path $targetPath. No downloaded file.');
+                log.error('Failed to download $url at path $targetPath. No downloaded file.');
                 done(null);
                 return;
             }
@@ -513,7 +513,7 @@ class Http implements spec.Http {
         #end
 
         // Too bad
-        error('Cannot download $url at path $targetPath because download is not supported on this target');
+        log.error('Cannot download $url at path $targetPath because download is not supported on this target');
         done(null);
 
     } //download

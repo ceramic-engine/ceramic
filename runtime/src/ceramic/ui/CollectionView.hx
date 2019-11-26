@@ -38,7 +38,7 @@ class CollectionView extends ScrollView {
     override function destroy() {
 
         if (id == 'ROOM_COLLECTION') {
-            error('DESTROY COLLECTION VIEW INSIDE');
+            log.error('DESTROY COLLECTION VIEW INSIDE');
         }
 
         super.destroy();

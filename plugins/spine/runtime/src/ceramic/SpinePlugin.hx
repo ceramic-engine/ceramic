@@ -36,7 +36,7 @@ class SpinePlugin {
 
         App.oncePreInit(function() {
 
-            log('Init spine plugin');
+            log.info('Init spine plugin');
 
             // Generate spine asset ids
             var clazz = Type.resolveClass('ceramic.Spines');
