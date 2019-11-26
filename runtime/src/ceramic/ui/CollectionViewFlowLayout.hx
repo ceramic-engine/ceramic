@@ -91,12 +91,12 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
         if (collectionView.direction == VERTICAL) {
             var minY = -collectionView.scroller.scrollTransform.ty - visibleOutset;
             var maxY = minY + collectionView.height + visibleOutset * 2;
-            return (frame.y <= maxY && frame.y + frame.height >= minY);
+            return (frame.y < maxY && frame.y + frame.height >= minY);
         }
         else {
             var minX = -collectionView.scroller.scrollTransform.tx - visibleOutset;
             var maxX = minX + collectionView.width + visibleOutset * 2;
-            return (frame.x <= maxX && frame.x + frame.width >= minX);
+            return (frame.x < maxX && frame.x + frame.width >= minX);
         }
 
     } //isFrameVisible
