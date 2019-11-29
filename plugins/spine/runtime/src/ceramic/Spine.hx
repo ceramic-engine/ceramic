@@ -54,6 +54,8 @@ class Spine extends Visual {
 
     var subSpines:Array<Spine> = null;
 
+    var subDepthStep:Float = 0.001;
+
     var boundParentSlots:IntMap<Array<BindSlot>> = null;
 
     var boundChildSlots:IntMap<BindSlot> = null;
@@ -1042,7 +1044,7 @@ class Spine extends Visual {
         var slotName:String = null;
         var slotGlobalIndex:Int = -1;
         var boundSlot:BindSlot = null;
-        var microDepth:Float = 0.0001;
+        var microDepth:Float = subDepthStep;
         var boneData:BoneData = null;
         var setupRotation:Float = 0;
         var boneSetupTransform:Transform = null;
@@ -1443,7 +1445,7 @@ class Spine extends Visual {
 
                                 mesh.depth = boundSlot.parentDepth + microDepth + slotInfo.depth - z;
                                 slotInfo.depth = mesh.depth;
-                                microDepth += 0.0001;
+                                microDepth += subDepthStep;
                             }
                             else {
                                 if (slotInfo.customTransform != null) {
