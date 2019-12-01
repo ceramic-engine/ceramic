@@ -152,13 +152,19 @@ class BackendTools implements tools.spec.BackendTools {
         if (dstAssetsPath == null) {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
+        
+        var assetsPrefix = '';
+        if (context.defines.get('ceramic_assets_prefix') != null) {
+            assetsPrefix = context.defines.get('ceramic_assets_prefix');
+        }
+        var assetsPrefixIsPath = assetsPrefix.indexOf('/') != -1 || assetsPrefix.indexOf('\\') != -1;
 
         // Add/update missing assets
         //
         for (asset in assets) {
 
             var srcPath = asset.absolutePath;
-            var dstPath = Path.join([dstAssetsPath, asset.name]);
+            var dstPath = Path.join([dstAssetsPath, assetsPrefix + asset.name]);
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
                 // Copy and set to same date
@@ -187,7 +193,12 @@ class BackendTools implements tools.spec.BackendTools {
             }
 
             validDstPaths.set(dstPath, true);
-            newAssets.push(new tools.Asset(asset.name, dstAssetsPath));
+            if (assetsPrefixIsPath) {
+                newAssets.push(new tools.Asset(assetsPrefix + asset.name, Path.join([dstAssetsPath, assetsPrefix])));
+            }
+            else {
+                newAssets.push(new tools.Asset(assetsPrefix + asset.name, dstAssetsPath));
+            }
         }
 
         if (!listOnly) {

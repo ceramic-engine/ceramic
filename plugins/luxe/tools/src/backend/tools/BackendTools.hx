@@ -218,6 +218,12 @@ class BackendTools implements tools.spec.BackendTools {
         var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         var assetsChanged = false;
+        
+        var assetsPrefix = '';
+        if (context.defines.get('ceramic_assets_prefix') != null) {
+            assetsPrefix = context.defines.get('ceramic_assets_prefix');
+        }
+        var assetsPrefixIsPath = assetsPrefix.indexOf('/') != -1 || assetsPrefix.indexOf('\\') != -1;
 
         if (dstAssetsPath == null) {
             switch (target.name) {
@@ -239,7 +245,7 @@ class BackendTools implements tools.spec.BackendTools {
         for (asset in assets) {
 
             var srcPath = asset.absolutePath;
-            var dstPath = Path.join([dstAssetsPath, asset.name]);
+            var dstPath = Path.join([dstAssetsPath, assetsPrefix + asset.name]);
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {
 
@@ -272,7 +278,12 @@ class BackendTools implements tools.spec.BackendTools {
             }
 
             validDstPaths.set(dstPath, true);
-            newAssets.push(new tools.Asset(asset.name, dstAssetsPath));
+            if (assetsPrefixIsPath) {
+                newAssets.push(new tools.Asset(assetsPrefix + asset.name, Path.join([dstAssetsPath, assetsPrefix])));
+            }
+            else {
+                newAssets.push(new tools.Asset(assetsPrefix + asset.name, dstAssetsPath));
+            }
         }
 
         if (!listOnly) {

@@ -24,7 +24,7 @@ class TextAsset extends Asset {
         }
 
         log.info('Load text $path');
-        app.backend.texts.load(path, function(text) {
+        app.backend.texts.load(Assets.realAssetPath(path), function(text) {
 
             if (text != null) {
                 this.text = text;

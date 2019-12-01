@@ -506,6 +506,18 @@ class Assets extends Entity {
 
         return null;
 
-    } //assetIdForFilePath
+    } //assetNameFromPath
+
+    public static function realAssetPath(path:String):String {
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            return assetsPrefix + path;
+        }
+        else {
+            return path;
+        }
+
+    } //realAssetPath
 
 } //Assets

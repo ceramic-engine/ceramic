@@ -35,7 +35,7 @@ class ImageAsset extends Asset {
         }
 
         log.info('Load image $path (density=$density)');
-        app.backend.textures.load(path, {
+        app.backend.textures.load(Assets.realAssetPath(path), {
         }, function(image) {
 
             if (image != null) {

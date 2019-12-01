@@ -26,7 +26,7 @@ class DatabaseAsset extends Asset {
         }
 
         log.info('Load database $path');
-        app.backend.texts.load(path, function(text) {
+        app.backend.texts.load(Assets.realAssetPath(path), function(text) {
 
             if (text != null) {
                 try {

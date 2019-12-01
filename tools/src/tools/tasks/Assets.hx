@@ -37,7 +37,7 @@ class Assets extends tools.Task {
         // or with provided source and destination
         if (fromArg == null || toArg == null) {
             processIcons = true;
-            ensureCeramicProject(cwd, args, App);
+            var project = ensureCeramicProject(cwd, args, App);
         }
         else {
             fromPath = fromArg;
