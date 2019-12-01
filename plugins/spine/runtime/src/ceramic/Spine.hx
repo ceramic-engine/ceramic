@@ -1181,7 +1181,6 @@ class Spine extends Visual {
                             }
                             
                             mesh.texture = texture;
-                            mesh.alpha = alpha;
 
                             if (boundingBoxAttachment != null) {
                                 count = boundingBoxAttachment.getWorldVerticesLength();
