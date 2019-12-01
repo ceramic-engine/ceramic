@@ -229,11 +229,11 @@ class ProjectLoader {
             
             // Update defines from app
             //
-            var newDefines = new Map<String,String>();
+            /*var newDefines = new Map<String,String>();
             for (key in defines.keys()) {
                 newDefines.set(key, defines.get(key));
             }
-            defines = newDefines;
+            defines = newDefines;*/
 
             // Defines (before evaluating conditions)
             if (app.defines != null) {
@@ -390,11 +390,12 @@ class ProjectLoader {
             
             // Update defines from app
             //
-            var newDefines = new Map<String,String>();
+            /*var newDefines = new Map<String,String>();
             for (key in defines.keys()) {
                 newDefines.set(key, defines.get(key));
             }
-            defines = newDefines;
+            defines = newDefines;*/
+
             // Defines (before evaluating conditions)
             if (plugin.defines != null) {
                 if (Std.is(plugin.defines, Array)) {
