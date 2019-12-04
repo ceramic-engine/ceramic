@@ -125,9 +125,15 @@ class NapePhysics extends Entity {
                 }
                 else {
                     var body = item.body;
+                    var t:Transform = new Transform();
+                    t.translate(
+                        visual.width * (0.5 - visual.anchorX),
+                        visual.height * (0.5 - visual.anchorY)
+                    );
+                    t.rotate(body.rotation);
                     visual.pos(
-                        body.position.x,
-                        body.position.y
+                        body.position.x - t.tx,
+                        body.position.y - t.ty
                     );
                     if (body.allowRotation) {
                         visual.rotation = Utils.radToDeg(body.rotation);
