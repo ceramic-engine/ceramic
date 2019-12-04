@@ -603,7 +603,7 @@ class App extends Entity {
             if (_delta > 0) arcade.preUpdate(_delta);
 #end
 #if ceramic_nape_physics
-            if (_delta > 0) nape.preUpdate(_delta);
+            if (_delta > 0) nape.update(_delta);
 #end
 
             // Flush immediate callbacks
@@ -630,9 +630,6 @@ class App extends Entity {
             // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
             if (_delta > 0) arcade.postUpdate(_delta);
-#end
-#if ceramic_nape_physics
-            if (_delta > 0) nape.postUpdate(_delta);
 #end
 
             // Flush immediate callbacks
