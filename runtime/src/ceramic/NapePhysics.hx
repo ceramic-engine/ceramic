@@ -8,12 +8,23 @@ class NapePhysics extends Entity {
 
 #if ceramic_nape_physics
 
+    static var _matrix:Transform = new Transform();
+
     @:allow(ceramic.VisualNapePhysics)
     var _destroyedItems:Array<VisualNapePhysics> = [];
     @:allow(ceramic.VisualNapePhysics)
     var _createdItems:Array<VisualNapePhysics> = [];
     @:allow(ceramic.VisualNapePhysics)
     var _freezeItems:Bool = false;
+
+    /** Triggered right before updating/stepping nape spaces */
+    @event function updateSpaces(delta:Float);
+
+    /** Triggered right before applying nape bodies to visuals */
+    @event function beginUpdateVisuals();
+
+    /** Triggered right after applying nape bodies to visuals */
+    @event function endUpdateVisuals();
 
     public var items(default, null):Array<ceramic.VisualNapePhysics> = [];
 
@@ -64,6 +75,8 @@ class NapePhysics extends Entity {
 
     inline function updateSpaces(delta:Float):Void {
 
+        emitUpdateSpaces(delta);
+
         for (i in 0...spaces.length) {
             var space = spaces.unsafeGet(i);
             updateSpace(space, delta);
@@ -77,7 +90,7 @@ class NapePhysics extends Entity {
 
     } //updateSpace
 
-    inline function preUpdate(delta:Float):Void {
+    inline function update(delta:Float):Void {
 
         if (delta <= 0) return;
 
@@ -105,9 +118,13 @@ class NapePhysics extends Entity {
 
         updateSpaces(delta);
 
+        updateVisuals(delta);
+
     } //preUpdate
 
-    inline function postUpdate(delta:Float):Void {
+    inline function updateVisuals(delta:Float):Void {
+
+        emitBeginUpdateVisuals();
 
         _freezeItems = true;
 
@@ -125,11 +142,25 @@ class NapePhysics extends Entity {
                 }
                 else {
                     var body = item.body;
-                    visual.pos(
-                        body.position.x - visual.width * visual.anchorX,
-                        body.position.y - visual.height * visual.anchorY
+
+                    var w = visual.width * visual.scaleX;
+                    var h = visual.height * visual.scaleY;
+                    var allowRotation = body.allowRotation;
+
+                    _matrix.identity();
+                    _matrix.translate(
+                        w * (0.5 - visual.anchorX),
+                        h * (0.5 - visual.anchorY)
                     );
-                    if (body.allowRotation) {
+                    if (allowRotation) {
+                        _matrix.rotate(body.rotation);
+                    }
+
+                    visual.pos(
+                        body.position.x - _matrix.tx,
+                        body.position.y - _matrix.ty
+                    );
+                    if (allowRotation) {
                         visual.rotation = Utils.radToDeg(body.rotation);
                     }
                 }
@@ -141,7 +172,9 @@ class NapePhysics extends Entity {
         flushDestroyedItems();
         flushCreatedItems();
 
-    } //postUpdate
+        emitEndUpdateVisuals();
+
+    } //updateVisuals
 
     inline function flushDestroyedItems():Void {
 
