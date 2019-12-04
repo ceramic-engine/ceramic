@@ -324,6 +324,9 @@ class View extends Quad {
 
     inline public function persistComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Void {
 
+        // Could be improved to persist multiple sizes with different contextes,
+        // but for now, this will do OK
+
         persistedParentWidth = parentWidth;
         persistedParentHeight = parentHeight;
         persistedParentLayoutMask = parentLayoutMask;
@@ -334,9 +337,13 @@ class View extends Quad {
 
     inline public function hasPersistentComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
 
-        // TODO use context details?
+        // Could be improved to persist multiple sizes with different contextes,
+        // but for now, this will do OK
 
-        return persistedComputedWidth != -1;
+        return persistedParentLayoutMask == parentLayoutMask
+            && persistedParentWidth == parentWidth
+            && persistedParentHeight == parentHeight
+            && persistedComputedWidth != -1;
 
     } //hasPersistentComputedSize
 
@@ -465,7 +472,7 @@ class View extends Quad {
         app.onceImmediate(function() {
             // We use a 2-level onceImmediate call to ensure this
             // will be executed after "standard" `onceImmediate` calls.
-            app.onceImmediate(function() {
+            app.oncePostFlushImmediate(function() {
                 canLayout = true;
                 if (layoutDirty) {
                     View.requestLayout();
@@ -733,11 +740,17 @@ class View extends Quad {
 
     public static function requestLayout():Void {
 
-        if (_layouting || _layoutRequested) return;
+        if (_layoutRequested) {
+            return;
+        }
 
         _layoutRequested = true;
-        app.onceImmediate(function() {
-            _layoutRequested = false;
+
+        if (_layouting) {
+            return;
+        }
+
+        app.oncePostFlushImmediate(function() {
             _updateViewsLayout(0.0);
         });
 
@@ -753,6 +766,7 @@ class View extends Quad {
 
     static function _updateViewsLayout(_):Void {
 
+        _layoutRequested = false;
         _layouting = true;
 
         var hasAnyDirty = false;
@@ -797,6 +811,11 @@ class View extends Quad {
         }
 
         _layouting = false;
+        if (_layoutRequested) {
+            app.oncePostFlushImmediate(function() {
+                _updateViewsLayout(0.0);
+            });
+        }
 
     } //updateViewLayouts
 
