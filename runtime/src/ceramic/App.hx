@@ -598,11 +598,13 @@ class App extends Entity {
             // Trigger pre-update event
             emitPreUpdate(_delta);
 
-            // Pre-update physics bodies (if enabled)
+            // Update/pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
+            flushImmediate();
             if (_delta > 0) arcade.preUpdate(_delta);
 #end
 #if ceramic_nape_physics
+            flushImmediate();
             if (_delta > 0) nape.update(_delta);
 #end
 
@@ -624,13 +626,14 @@ class App extends Entity {
             // Flush immediate callbacks
             flushImmediate();
 
-            // Emit post-update event
-            emitPostUpdate(_delta);
-
             // Post-update physics bodies (if enabled)
 #if ceramic_arcade_physics
             if (_delta > 0) arcade.postUpdate(_delta);
+            flushImmediate();
 #end
+
+            // Emit post-update event
+            emitPostUpdate(_delta);
 
             // Flush immediate callbacks
             flushImmediate();
