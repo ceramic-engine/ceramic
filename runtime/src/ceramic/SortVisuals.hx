@@ -36,31 +36,35 @@ class SortVisuals {
 
         var result = 0;
 
-        var aQuad:Quad = a.asQuad;
-        var bQuad:Quad = b.asQuad;
-        var aMesh:Mesh = a.asMesh;
-        var bMesh:Mesh = b.asMesh;
-        var aIsQuadOrMesh = aQuad != null || aMesh != null;
-        var bIsQuadOrMesh = bQuad != null || bMesh != null;
+        if (!a.computedVisible && !a.computedTouchable) {
+            result = -1;
+        }
+        else if (!b.computedVisible && !b.computedTouchable) {
+            result = 1;
+        }
+        else if (a.computedRenderTarget != b.computedRenderTarget) {
+            if (a.computedRenderTarget == null) result = 1;
+            else if (b.computedRenderTarget == null) result = -1;
+            else if (a.computedRenderTarget.priority > b.computedRenderTarget.priority) result = -1;
+            else if (a.computedRenderTarget.priority < b.computedRenderTarget.priority) result = 1;
+            else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = -1;
+            else result = 1;
+        }
+        else if (a.computedDepth > b.computedDepth) {
+            result = 1;
+        }
+        else if (a.computedDepth < b.computedDepth) {
+            result = -1;
+        }
+        else {
+            var aQuad:Quad = a.asQuad;
+            var bQuad:Quad = b.asQuad;
+            var aMesh:Mesh = a.asMesh;
+            var bMesh:Mesh = b.asMesh;
+            var aIsQuadOrMesh = aQuad != null || aMesh != null;
+            var bIsQuadOrMesh = bQuad != null || bMesh != null;
 
-        if (aIsQuadOrMesh || bIsQuadOrMesh) {
-            if (!aIsQuadOrMesh || !a.computedVisible && !a.computedTouchable) result = -1;
-            else if (!bIsQuadOrMesh || !b.computedVisible && !b.computedTouchable) result = 1;
-            else if (a.computedRenderTarget != b.computedRenderTarget) {
-                if (a.computedRenderTarget == null) result = 1;
-                else if (b.computedRenderTarget == null) result = -1;
-                else if (a.computedRenderTarget.priority > b.computedRenderTarget.priority) result = -1;
-                else if (a.computedRenderTarget.priority < b.computedRenderTarget.priority) result = 1;
-                else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = -1;
-                else result = 1;
-            }
-            else if (a.computedDepth > b.computedDepth) {
-                result = 1;
-            }
-            else if (a.computedDepth < b.computedDepth) {
-                result = -1;
-            }
-            else {
+            if (aIsQuadOrMesh && bIsQuadOrMesh) {
                 var aTexture = aMesh != null ? aMesh.texture : aQuad.texture;
                 var bTexture = bMesh != null ? bMesh.texture : bQuad.texture;
                 if (aTexture != null && bTexture == null) result = 1;
