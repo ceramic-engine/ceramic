@@ -666,8 +666,8 @@ class Visual extends Entity {
             type,
             shape,
             material, 
-            x - w * anchorX,
-            y - h * anchorY,
+            x - w * (anchorX - 0.5),
+            y - h * (anchorY - 0.5),
             w,
             h,
             rotation
