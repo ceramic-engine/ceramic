@@ -588,6 +588,11 @@ class Screen extends Entity implements Observable {
                             else {
                                 // Clean any hitVisual reference
                                 matchedHitVisual = null;
+
+                                #if ceramic_debug_touch
+                                log.debug('visual pointer down: $visual (parent=${visual.parent})');
+                                #end
+
                                 // Return this matching visual
                                 return visual;
                             }
