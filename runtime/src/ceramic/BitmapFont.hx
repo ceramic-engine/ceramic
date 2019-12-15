@@ -20,7 +20,7 @@ class BitmapFont extends Entity {
             spaceChar = fontData.chars.get(32);
 
             // Use regular space glyph data as no-break space
-            // if there is no explicit no-break space in data.
+            // if there is no explicit no-break space glyph in data.
             if (fontData.chars.get(160) == null) {
                 fontData.chars.set(160, spaceChar);
             }
