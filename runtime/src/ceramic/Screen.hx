@@ -562,18 +562,34 @@ class Screen extends Entity implements Observable {
 
                 var visual = visuals[i];
                 if (visual.computedTouchable) {
-                    var listensPointerDown = visual.listensPointerDown();
-                    if ((listensPointerDown && visual.hits(x, y) && !visual.interceptPointerDown(visual, x, y)) ||
+                    var visualListensPointerDown = visual.listensPointerDown();
+                    var visualHits = false;
+                    var visualIntercepts = false;
+                    if (visualListensPointerDown) {
+                        visualHits = visual.hits(x, y);
+                        if (visualHits) {
+                            visualIntercepts = visual.interceptPointerDown(visual, x, y);
+                            #if ceramic_debug_touch
+                            log.debug('visual intercepts pointer down: $visual (parent=${visual.parent})');
+                            #end
+                        }
+                    }
+                    if ((visualHits && !visualIntercepts) ||
                         (testHitVisuals && isHitVisual(visual) && visual.hits(x, y))) {
 
                         var intercepts = false;
 
                         // If a parent intercepts this pointer event, ignore the visual
-                        if (listensPointerDown) {
+                        if (visualListensPointerDown) {
                             var parent = visual.parent;
                             while (parent != null) {
                                 intercepts = parent.interceptPointerDown(visual, x, y);
-                                if (intercepts) break;
+                                if (intercepts) {
+                                    #if ceramic_debug_touch
+                                    log.debug('visual parent intercepts pointer down: $parent (parent=${parent.parent})');
+                                    #end
+                                    break;
+                                }
                                 parent = parent.parent;
                             }
                         }
@@ -581,7 +597,7 @@ class Screen extends Entity implements Observable {
                         if (!intercepts) {
                             // If no parent did intercept, that's should be fine,
                             // But also check that this is not a hitVisual
-                            if (!listensPointerDown && testHitVisuals && isHitVisual(visual)) {
+                            if (!visualListensPointerDown && testHitVisuals && isHitVisual(visual)) {
                                 // We matched a hit visual, keep the reference and continue
                                 matchedHitVisual = visual;
                             }
