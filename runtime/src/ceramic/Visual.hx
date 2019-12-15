@@ -190,44 +190,44 @@ class Visual extends Entity {
         arcade.body.accelerationY = accelerationY;
     }
 
-    /** Allow this visual to be influenced by deceleration */
-    public var allowDeceleration(get,set):Bool;
-    inline function get_allowDeceleration():Bool {
-        return arcade != null ? arcade.body.allowDeceleration : true;
+    /** Allow this visual to be influenced by drag */
+    public var allowDrag(get,set):Bool;
+    inline function get_allowDrag():Bool {
+        return arcade != null ? arcade.body.allowDrag : true;
     }
-    inline function set_allowDeceleration(allowDeceleration:Bool):Bool {
+    inline function set_allowDrag(allowDrag:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.allowDeceleration = allowDeceleration;
-        return allowDeceleration;
+        arcade.body.allowDrag = allowDrag;
+        return allowDrag;
     }
 
-    /** The x deceleration is the rate of change of the x velocity. Measured in points per second squared. */
-    public var decelerationX(get,set):Float;
-    inline function get_decelerationX():Float {
-        return arcade != null ? arcade.body.decelerationX : 0;
+    /** The x drag is the rate of reduction of the x velocity, kind of deceleration. Measured in points per second squared. */
+    public var dragX(get,set):Float;
+    inline function get_dragX():Float {
+        return arcade != null ? arcade.body.dragX : 0;
     }
-    inline function set_decelerationX(decelerationX:Float):Float {
+    inline function set_dragX(dragX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.decelerationX = decelerationX;
-        return decelerationX;
+        arcade.body.dragX = dragX;
+        return dragX;
     }
 
-    /** The y deceleration is the rate of change of the y velocity. Measured in points per second squared. */
-    public var decelerationY(get,set):Float;
-    inline function get_decelerationY():Float {
-        return arcade != null ? arcade.body.decelerationY : 0;
+    /** The y drag is the rate of reduction of the y velocity, kind of deceleration. Measured in points per second squared. */
+    public var dragY(get,set):Float;
+    inline function get_dragY():Float {
+        return arcade != null ? arcade.body.dragY : 0;
     }
-    inline function set_decelerationY(decelerationY:Float):Float {
+    inline function set_dragY(dragY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.decelerationY = decelerationY;
-        return decelerationY;
+        arcade.body.dragY = dragY;
+        return dragY;
     }
 
-    /** The deceleration is the rate of change of the y velocity. Measured in points per second squared. */
-    inline public function deceleration(decelerationX:Float, decelerationY:Float):Void {
+    /** The drag is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared. */
+    inline public function drag(dragX:Float, dragY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.decelerationX = decelerationX;
-        arcade.body.decelerationY = decelerationY;
+        arcade.body.dragX = dragX;
+        arcade.body.dragY = dragY;
     }
 
     /** The x elasticity of the visual when colliding. `bounceX = 1` means full rebound, `bounceX = 0.5` means 50% rebound velocity. */
@@ -431,15 +431,15 @@ class Visual extends Entity {
         return angularAcceleration;
     }
 
-    /** The angular deceleration is the rate of change of the angular velocity. Measured in degrees per second squared. */
-    public var angularDeceleration(get,set):Float;
-    inline function get_angularDeceleration():Float {
-        return arcade != null ? arcade.body.angularDeceleration : 0;
+    /** The angular drag is the rate of reduction of the angular velocity. Measured in degrees per second squared. */
+    public var angularDrag(get,set):Float;
+    inline function get_angularDrag():Float {
+        return arcade != null ? arcade.body.angularDrag : 0;
     }
-    inline function set_angularDeceleration(angularDeceleration:Float):Float {
+    inline function set_angularDrag(angularDrag:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.angularDeceleration = angularDeceleration;
-        return angularDeceleration;
+        arcade.body.angularDrag = angularDrag;
+        return angularDrag;
     }
 
     /** The mass of the visual's body. When two bodies collide their mass is used in the calculation to determine the exchange of velocity. */
@@ -459,7 +459,7 @@ class Visual extends Entity {
         return arcade != null ? arcade.body.speed : 0;
     }
 
-    /** Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, deceleration, and gravity. */
+    /** Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, drag, and gravity. */
     public var moves(get,set):Bool;
     inline function get_moves():Bool {
         return arcade != null ? arcade.body.moves : false;

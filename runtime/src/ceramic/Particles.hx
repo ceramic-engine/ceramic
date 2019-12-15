@@ -90,11 +90,11 @@ class Particles extends Visual implements Observable {
     }
 
     /**
-     * Set the angular deceleration range of particles launched from this emitter.
+     * Set the angular drag range of particles launched from this emitter.
      */
-    inline public function angularDeceleration(startMin:Float, startMax:Float):Void {
-        angularDecelerationStartMin = startMin;
-        angularDecelerationStartMax = startMax;
+    inline public function angularDrag(startMin:Float, startMax:Float):Void {
+        angularDragStartMin = startMin;
+        angularDragStartMax = startMax;
     }
 
     /**
@@ -229,42 +229,42 @@ class Particles extends Visual implements Observable {
     }
 
     /**
-     * Sets `deceleration` starting range of particles launched from this emitter.
+     * Sets `drag` starting range of particles launched from this emitter.
      */
-    inline public function decelerationStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
-        this.decelerationStartMinX = startMinX;
-        this.decelerationStartMinY = startMinY;
+    inline public function dragStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        this.dragStartMinX = startMinX;
+        this.dragStartMinY = startMinY;
         if (startMaxX == null) {
-            this.decelerationStartMaxX = startMinX;
+            this.dragStartMaxX = startMinX;
         }
         else {
-            this.decelerationStartMaxX = startMaxX;
+            this.dragStartMaxX = startMaxX;
         }
         if (startMaxY == null) {
-            this.decelerationStartMaxY = startMinY;
+            this.dragStartMaxY = startMinY;
         }
         else {
-            this.decelerationStartMaxY = startMaxY;
+            this.dragStartMaxY = startMaxY;
         }
     }
 
     /**
-     * Sets `deceleration` ending range of particles launched from this emitter.
+     * Sets `drag` ending range of particles launched from this emitter.
      */
-    inline public function decelerationEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
-        this.decelerationEndMinX = endMinX;
-        this.decelerationEndMinY = endMinY;
+    inline public function dragEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        this.dragEndMinX = endMinX;
+        this.dragEndMinY = endMinY;
         if (endMaxX == null) {
-            this.decelerationEndMaxX = endMinX;
+            this.dragEndMaxX = endMinX;
         }
         else {
-            this.decelerationEndMaxX = endMaxX;
+            this.dragEndMaxX = endMaxX;
         }
         if (endMaxY == null) {
-            this.decelerationEndMaxY = endMinY;
+            this.dragEndMaxY = endMinY;
         }
         else {
-            this.decelerationEndMaxY = endMaxY;
+            this.dragEndMaxY = endMaxY;
         }
     }
 
@@ -413,17 +413,17 @@ class Particles extends Visual implements Observable {
     public var angularAccelerationStartMax:Float = 0;
 
     /**
-     * Enable or disable the angular deceleration range of particles launched from this emitter.
+     * Enable or disable the angular drag range of particles launched from this emitter.
      */
-    public var angularDecelerationActive:Bool = true;
+    public var angularDragActive:Bool = true;
     /**
-     * Set the angular deceleration range of particles launched from this emitter.
+     * Set the angular drag range of particles launched from this emitter.
      */
-    public var angularDecelerationStartMin:Float = 0;
+    public var angularDragStartMin:Float = 0;
     /**
-     * Set the angular deceleration range of particles launched from this emitter.
+     * Set the angular drag range of particles launched from this emitter.
      */
-    public var angularDecelerationStartMax:Float = 0;
+    public var angularDragStartMax:Float = 0;
 
     /**
      * Enable or disable the angular velocity range of particles launched from this emitter.
@@ -587,41 +587,41 @@ class Particles extends Visual implements Observable {
     public var colorEndMax:Color = Color.WHITE;
 
     /**
-     * Enable or disable X and Y deceleration component of particles launched from this emitter.
+     * Enable or disable X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationActive:Bool = true;
+    public var dragActive:Bool = true;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationStartMinX:Float = 0;
+    public var dragStartMinX:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationStartMinY:Float = 0;
+    public var dragStartMinY:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationStartMaxX:Float = 0;
+    public var dragStartMaxX:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationStartMaxY:Float = 0;
+    public var dragStartMaxY:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationEndMinX:Float = 0;
+    public var dragEndMinX:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationEndMinY:Float = 0;
+    public var dragEndMinY:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationEndMaxX:Float = 0;
+    public var dragEndMaxX:Float = 0;
     /**
-     * Sets X and Y deceleration component of particles launched from this emitter.
+     * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var decelerationEndMaxY:Float = 0;
+    public var dragEndMaxY:Float = 0;
 
     /**
      * Enable or disable the `acceleration` range of particles launched from this emitter.
@@ -854,10 +854,10 @@ class Particles extends Visual implements Observable {
                     particle.color = interpolateColor(particle.colorRangeStart, particle.colorRangeEnd, lifespanPercent);
                 }
 
-                if (particle.decelerationRangeActive)
+                if (particle.dragRangeActive)
                 {
-                    particle.decelerationX += (particle.decelerationRangeEndX - particle.decelerationRangeStartX) * lifespanDelta;
-                    particle.decelerationY += (particle.decelerationRangeEndY - particle.decelerationRangeStartY) * lifespanDelta;
+                    particle.dragX += (particle.dragRangeEndX - particle.dragRangeStartX) * lifespanDelta;
+                    particle.dragY += (particle.dragRangeEndY - particle.dragRangeStartY) * lifespanDelta;
                 }
 
                 if (particle.accelerationRangeActive)
@@ -870,19 +870,19 @@ class Particles extends Visual implements Observable {
             // Update motion
             //
 
-            var velocityDelta = computeVelocity(particle.angularVelocity, particle.angularAcceleration, particle.angularDeceleration, maxAngularVelocity, delta) - particle.angularVelocity;
+            var velocityDelta = computeVelocity(particle.angularVelocity, particle.angularAcceleration, particle.angularDrag, maxAngularVelocity, delta) - particle.angularVelocity;
             particle.angularVelocity += velocityDelta;
             if (particle.angularVelocity != 0) {
                 particle.angle += particle.angularVelocity * delta;
             }
 
-            velocityDelta = computeVelocity(particle.velocityX, particle.accelerationX, particle.decelerationX, maxVelocityX, delta) - particle.velocityX;
+            velocityDelta = computeVelocity(particle.velocityX, particle.accelerationX, particle.dragX, maxVelocityX, delta) - particle.velocityX;
             particle.velocityX += velocityDelta;
             if (particle.velocityX != 0) {
                 particle.x += particle.velocityX * delta;
             }
 
-            velocityDelta = computeVelocity(particle.velocityY, particle.accelerationY, particle.decelerationY, maxVelocityY, delta) - particle.velocityY;
+            velocityDelta = computeVelocity(particle.velocityY, particle.accelerationY, particle.dragY, maxVelocityY, delta) - particle.velocityY;
             particle.velocityY += velocityDelta;
             if (particle.velocityY != 0) {
                 particle.y += particle.velocityY * delta;
@@ -1086,8 +1086,8 @@ class Particles extends Visual implements Observable {
                 particle.angularVelocity = particle.angularVelocityRangeStart;
             }
 
-            if (angularDecelerationActive)
-                particle.angularDeceleration = randomBetweenFloats(angularDecelerationStartMin, angularDecelerationStartMax);
+            if (angularDragActive)
+                particle.angularDrag = randomBetweenFloats(angularDragStartMin, angularDragStartMax);
         }
         else if (angularVelocityActive)
         {
@@ -1135,19 +1135,19 @@ class Particles extends Visual implements Observable {
         else
             particle.colorRangeActive = false;
 
-        // Particle deceleration settings
-        if (decelerationActive)
+        // Particle drag settings
+        if (dragActive)
         {
-            particle.decelerationRangeStartX = randomBetweenFloats(decelerationStartMinX, decelerationStartMaxX);
-            particle.decelerationRangeStartY = randomBetweenFloats(decelerationStartMinY, decelerationStartMaxY);
-            particle.decelerationRangeEndX = randomBetweenFloats(decelerationEndMinX, decelerationEndMaxX);
-            particle.decelerationRangeEndY = randomBetweenFloats(decelerationEndMinY, decelerationEndMaxY);
-            particle.decelerationRangeActive = particle.lifespan > 0 && (particle.decelerationRangeStartX != particle.decelerationRangeEndX || particle.decelerationRangeStartY != particle.decelerationRangeEndY);
-            particle.decelerationX = particle.decelerationRangeStartX;
-            particle.decelerationY = particle.decelerationRangeStartY;
+            particle.dragRangeStartX = randomBetweenFloats(dragStartMinX, dragStartMaxX);
+            particle.dragRangeStartY = randomBetweenFloats(dragStartMinY, dragStartMaxY);
+            particle.dragRangeEndX = randomBetweenFloats(dragEndMinX, dragEndMaxX);
+            particle.dragRangeEndY = randomBetweenFloats(dragEndMinY, dragEndMaxY);
+            particle.dragRangeActive = particle.lifespan > 0 && (particle.dragRangeStartX != particle.dragRangeEndX || particle.dragRangeStartY != particle.dragRangeEndY);
+            particle.dragX = particle.dragRangeStartX;
+            particle.dragY = particle.dragRangeStartY;
         }
         else
-            particle.decelerationRangeActive = false;
+            particle.dragRangeActive = false;
 
         // Particle acceleration settings
         if (accelerationActive)
@@ -1219,20 +1219,20 @@ class Particles extends Visual implements Observable {
      *
      * @param	velocity		Any component of velocity (e.g. 20).
      * @param	acceleration	Rate at which the velocity is changing.
-     * @param	deceleration	This is how much the velocity changes if acceleration is not set.
+     * @param	drag	This is how much the velocity changes if acceleration is not set.
      * @param	max				An absolute value cap for the velocity (0 for no cap).
      * @param	elapsed			The amount of time passed in to the latest update cycle
      * @return	The altered velocity value.
      */
-    inline static function computeVelocity(velocity:Float, acceleration:Float, deceleration:Float, max:Float, elapsed:Float):Float
+    inline static function computeVelocity(velocity:Float, acceleration:Float, drag:Float, max:Float, elapsed:Float):Float
     {
         if (acceleration != 0)
         {
             velocity += acceleration * elapsed;
         }
-        else if (deceleration != 0)
+        else if (drag != 0)
         {
-            var drag:Float = deceleration * elapsed;
+            var drag:Float = drag * elapsed;
             if (velocity - drag > 0)
             {
                 velocity -= drag;

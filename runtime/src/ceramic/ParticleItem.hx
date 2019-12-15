@@ -47,13 +47,13 @@ class ParticleItem {
     public var accelerationX:Float = 0;
     public var accelerationY:Float = 0;
 
-    public var decelerationRangeActive:Bool = true;
-    public var decelerationRangeStartX:Float = 0;
-    public var decelerationRangeStartY:Float = 0;
-    public var decelerationRangeEndX:Float = 0;
-    public var decelerationRangeEndY:Float = 0;
-    public var decelerationX:Float = 0;
-    public var decelerationY:Float = 0;
+    public var dragRangeActive:Bool = true;
+    public var dragRangeStartX:Float = 0;
+    public var dragRangeStartY:Float = 0;
+    public var dragRangeEndX:Float = 0;
+    public var dragRangeEndY:Float = 0;
+    public var dragX:Float = 0;
+    public var dragY:Float = 0;
 
     public var velocityRangeActive:Bool = true;
     public var velocityRangeStartX:Float = 0;
@@ -73,7 +73,7 @@ class ParticleItem {
     public var angularAccelerationRangeEnd:Float = 0;
     public var angularAcceleration:Float = 0;
 
-    public var angularDeceleration:Float = 0;
+    public var angularDrag:Float = 0;
 
     public var scaleRangeActive:Bool = true;
     public var scaleRangeStartX:Float = 1;
@@ -162,13 +162,13 @@ class ParticleItem {
         accelerationX = 0;
         accelerationY = 0;
 
-        decelerationRangeActive = true;
-        decelerationRangeStartX = 0;
-        decelerationRangeStartY = 0;
-        decelerationRangeEndX = 0;
-        decelerationRangeEndY = 0;
-        decelerationX = 0;
-        decelerationY = 0;
+        dragRangeActive = true;
+        dragRangeStartX = 0;
+        dragRangeStartY = 0;
+        dragRangeEndX = 0;
+        dragRangeEndY = 0;
+        dragX = 0;
+        dragY = 0;
 
         velocityRangeActive = true;
         velocityRangeStartX = 0;
@@ -188,7 +188,7 @@ class ParticleItem {
         angularAccelerationRangeEnd = 0;
         angularAcceleration = 0;
 
-        angularDeceleration = 0;
+        angularDrag = 0;
 
         scaleRangeActive = true;
         scaleRangeStartX = 1;
