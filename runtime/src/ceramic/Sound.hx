@@ -9,6 +9,14 @@ class Sound extends Entity {
 
     public var asset:SoundAsset;
 
+    public var group(default, set):Int = 0;
+    function set_group(group:Int):Int {
+        if (this.group == group) return group;
+        this.group = group;
+        ceramic.App.app.audio.initMixerIfNeeded(group);
+        return group;
+    }
+
 /// Lifecycle
 
     public function new(backendItem:backend.AudioResource) {
@@ -45,9 +53,20 @@ class Sound extends Entity {
         sound instance properties will be used instead. */
     public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float):SoundPlayer {
 
+        var mixer = audio.mixers.getInline(group);
+
+        // Don't play any sound linked to a muted mixed
+        if (mixer.mute)
+            return cast app.backend.audio.mute(backendItem);
+
         if (volume == null) volume = this.volume;
         if (pan == null) pan = this.pan;
         if (pitch == null) pitch = this.pitch;
+
+        // Apply mixer settings
+        volume += mixer.volume - 0.5;
+        pan += mixer.pan;
+        pitch += mixer.pitch - 1;
 
         return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop);
 

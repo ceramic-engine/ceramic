@@ -24,6 +24,12 @@ class Audio implements spec.Audio {
 
     } //unload
 
+    inline public function mute(audio:AudioResource):AudioHandle {
+
+        return null;
+
+    } //mute
+
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
         var handle = new AudioHandleImpl();

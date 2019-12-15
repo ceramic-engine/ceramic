@@ -229,6 +229,9 @@ class App extends Entity {
     /** Screen instance */
     public var screen(default,null):Screen;
 
+    /** Audio instance */
+    public var audio(default,null):Audio;
+
     /** App settings */
     public var settings(default,null):Settings;
 
@@ -326,6 +329,7 @@ class App extends Entity {
 
         settings = new Settings();
         screen = new Screen();
+        audio = new Audio();
 
         backend = new Backend();
         backend.onceReady(this, backendReady);

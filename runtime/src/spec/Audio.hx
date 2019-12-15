@@ -10,6 +10,8 @@ interface Audio {
 
     function destroy(audio:AudioResource):Void;
 
+    function mute(audio:AudioResource):AudioHandle;
+
     function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle;
 
     function pause(handle:AudioHandle):Void;

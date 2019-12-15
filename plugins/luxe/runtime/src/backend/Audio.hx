@@ -42,6 +42,12 @@ class Audio implements spec.Audio {
 
     } //unload
 
+    inline public function mute(audio:AudioResource):AudioHandle {
+
+        return -1;
+
+    } //mute
+
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
         if (!Luxe.audio.active) return -1;
@@ -133,6 +139,7 @@ class Audio implements spec.Audio {
     public function pause(handle:AudioHandle):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -149,6 +156,7 @@ class Audio implements spec.Audio {
     public function resume(handle:AudioHandle):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -165,6 +173,7 @@ class Audio implements spec.Audio {
     public function stop(handle:AudioHandle):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             var prevHandle = handle;
@@ -193,6 +202,7 @@ class Audio implements spec.Audio {
     public function setVolume(handle:AudioHandle, volume:Float):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -205,6 +215,7 @@ class Audio implements spec.Audio {
     public function getPan(handle:AudioHandle):Float {
                     
         if (!Luxe.audio.active) return 0;
+        if ((handle:Int) == -1) return 0;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -217,6 +228,7 @@ class Audio implements spec.Audio {
     public function setPan(handle:AudioHandle, pan:Float):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -229,6 +241,7 @@ class Audio implements spec.Audio {
     public function getPitch(handle:AudioHandle):Float {
                     
         if (!Luxe.audio.active) return 1;
+        if ((handle:Int) == -1) return 1;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -241,6 +254,7 @@ class Audio implements spec.Audio {
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -253,6 +267,7 @@ class Audio implements spec.Audio {
     public function getPosition(handle:AudioHandle):Float {
                     
         if (!Luxe.audio.active) return 0;
+        if ((handle:Int) == -1) return 0;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -265,6 +280,7 @@ class Audio implements spec.Audio {
     public function setPosition(handle:AudioHandle, position:Float):Void {
                     
         if (!Luxe.audio.active) return;
+        if ((handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
