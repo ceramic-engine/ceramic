@@ -12,8 +12,15 @@ class ParticleItem {
 
     public var lifespan:Float = 0;
     public var age:Float = 0;
+
+    /** The time relative to app when this particule was emitted */
     public var time:Float = 0;
+
+    /** Convenience: hold a random value between 0 and 1 for each particle */
     public var random:Float = 0;
+
+    /** In case implementation needs to keep a status for each particle, this property can be used for that */
+    public var status:Int = 0;
 
     public var colorRangeActive:Bool = true;
     public var colorRangeStart:Color = Color.WHITE;
@@ -147,6 +154,7 @@ class ParticleItem {
 
         age = 0;
         lifespan = 0;
+        status = 0;
         time = Timer.now;
 
         colorRangeActive = true;
