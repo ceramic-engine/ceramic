@@ -329,6 +329,31 @@ class Particles extends Visual implements Observable {
      */
     public var keepScaleRatio:Bool = false;
 
+    /**
+     * Whether we apply particle scale to underlying visual or not.
+     */
+    public var visualScaleActive:Bool = true;
+
+    /**
+     * Whether we apply particle color to underlying visual or not.
+     */
+    public var visualColorActive:Bool = true;
+
+    /**
+     * Whether we apply particle position (x & y) to underlying visual or not.
+     */
+    public var visualPositionActive:Bool = true;
+
+    /**
+     * Whether we apply particle angle to underlying visual rotation or not.
+     */
+    public var visualRotationActive:Bool = true;
+
+    /**
+     * Whether we apply particle alpha to underlying visual or not.
+     */
+    public var visualAlphaActive:Bool = true;
+
 	/**
 	 * If you are using `acceleration`, you can use `maxVelocity` with it
 	 * to cap the speed automatically (very useful!).
@@ -1025,6 +1050,12 @@ class Particles extends Visual implements Observable {
     public function emitParticle():Void
     {
         var particle:ParticleItem = getParticle();
+
+        particle.visualScaleActive = visualScaleActive;
+        particle.visualColorActive = visualColorActive;
+        particle.visualPositionActive = visualPositionActive;
+        particle.visualRotationActive = visualRotationActive;
+        particle.visualAlphaActive = visualAlphaActive;
 
         particle.reset();
         particle.random = _seedRandom.random();

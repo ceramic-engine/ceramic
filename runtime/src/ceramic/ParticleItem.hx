@@ -8,6 +8,12 @@ class ParticleItem {
 
     public var visual:Visual = null;
 
+    public var visualScaleActive:Bool = true;
+    public var visualColorActive:Bool = true;
+    public var visualPositionActive:Bool = true;
+    public var visualRotationActive:Bool = true;
+    public var visualAlphaActive:Bool = true;
+
     public var active:Bool = false;
 
     public var lifespan:Float = 0;
@@ -25,25 +31,32 @@ class ParticleItem {
     public var colorRangeActive:Bool = true;
     public var colorRangeStart:Color = Color.WHITE;
     public var colorRangeEnd:Color = Color.WHITE;
-    public var color(get,set):Color;
+    @:isVar public var color(get,set):Color;
     inline function get_color():Color {
         var color:Color = Color.WHITE;
-        if (visual.asQuad != null) {
-            color = visual.asQuad.color;
+        if (visualColorActive && visual != null) {
+            if (visual.asQuad != null) {
+                color = visual.asQuad.color;
+            }
+            else if (visual.asMesh != null) {
+                color = visual.asMesh.color;
+            }
         }
-        else if (visual.asMesh != null) {
-            color = visual.asMesh.color;
+        else {
+            color = this.color;
         }
         return color;
     }
     inline function set_color(color:Color):Color {
-        if (visual.asQuad != null) {
-            visual.asQuad.color = color;
+        if (visualColorActive && visual != null) {
+            if (visual.asQuad != null) {
+                visual.asQuad.color = color;
+            }
+            else if (visual.asMesh != null) {
+                visual.asMesh.color = color;
+            }
         }
-        else if (visual.asMesh != null) {
-            visual.asMesh.color = color;
-        }
-        return color;
+        return this.color = color;
     }
 
     public var accelerationRangeActive:Bool = true;
@@ -87,65 +100,79 @@ class ParticleItem {
     public var scaleRangeStartY:Float = 1;
     public var scaleRangeEndX:Float = 1;
     public var scaleRangeEndY:Float = 1;
-    public var scaleX(get,set):Float;
+    @:isVar public var scaleX(get,set):Float;
     inline function get_scaleX():Float {
-        return visual.scaleX;
+        return visualScaleActive && visual != null ? visual.scaleX : this.scaleX;
     }
     inline function set_scaleX(scaleX:Float):Float {
-        visual.scaleX = scaleX;
-        return scaleX;
+        if (visualScaleActive && visual != null) {
+            visual.scaleX = scaleX;
+        }
+        return this.scaleX = scaleX;
     }
-    public var scaleY(get,set):Float;
+    @:isVar public var scaleY(get,set):Float;
     inline function get_scaleY():Float {
-        return visual.scaleY;
+        return visualScaleActive && visual != null ? visual.scaleY : this.scaleY;
     }
     inline function set_scaleY(scaleY:Float):Float {
-        visual.scaleY = scaleY;
-        return scaleY;
+        if (visualScaleActive && visual != null) {
+            visual.scaleY = scaleY;
+        }
+        return this.scaleY = scaleY;
     }
     inline public function scale(scaleX:Float, scaleY:Float):Void {
-        visual.scale(scaleX, scaleY);
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
     }
 
-    public var x(get,set):Float;
+    @:isVar public var x(get,set):Float;
     inline function get_x():Float {
-        return visual.x;
+        return visualPositionActive && visual != null ? visual.x : this.x;
     }
     inline function set_x(x:Float):Float {
-        visual.x = x;
-        return x;
+        if (visualPositionActive && visual != null) {
+            visual.x = x;
+        }
+        return this.x = x;
     }
-    public var y(get,set):Float;
+    @:isVar public var y(get,set):Float;
     inline function get_y():Float {
-        return visual.y;
+        return visualPositionActive && visual != null ? visual.y : this.y;
     }
     inline function set_y(y:Float):Float {
-        visual.y = y;
-        return y;
+        if (visualPositionActive && visual != null) {
+            visual.y = y;
+        }
+        return this.y = y;
     }
     inline public function pos(x:Float, y:Float):Void {
-        visual.pos(x, y);
+        this.x = x;
+        this.y = y;
     }
 
-    public var angle(get,set):Float;
+    @:isVar public var angle(get,set):Float = 0;
     inline function get_angle():Float {
-        return visual.rotation;
+        return visualRotationActive && visual != null ? visual.rotation : this.angle;
     }
     inline function set_angle(angle:Float):Float {
-        visual.rotation = angle;
-        return angle;
+        if (visualRotationActive && visual != null) {
+            visual.rotation = angle;
+        }
+        return this.angle = angle;
     }
 
     public var alphaRangeActive:Bool = true;
     public var alphaRangeStart:Float = 1;
     public var alphaRangeEnd:Float = 1;
-    public var alpha(get,set):Float;
+    @:isVar public var alpha(get,set):Float;
     inline function get_alpha():Float {
-        return visual.alpha;
+        return visualAlphaActive && visual != null ? visual.alpha : this.alpha;
     }
     inline function set_alpha(alpha:Float):Float {
-        visual.alpha = alpha;
-        return alpha;
+        if (visualAlphaActive && visual != null) {
+            visual.alpha = alpha;
+        }
+        return this.alpha = alpha;
     }
 
     private function new() {}
