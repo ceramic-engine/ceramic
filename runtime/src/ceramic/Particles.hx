@@ -1230,7 +1230,7 @@ class Particles extends Visual implements Observable {
         {
             velocity += acceleration * elapsed;
         }
-        else if (drag != 0)
+        if (drag != 0)
         {
             var drag:Float = drag * elapsed;
             if (velocity - drag > 0)
