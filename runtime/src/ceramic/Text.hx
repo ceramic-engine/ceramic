@@ -237,6 +237,7 @@ class Text extends Visual {
 
         var x = 0.0;
         var y = 0.0;
+        var xVisible = 0.0;
         var sizeFactor = pointSize / font.pointSize;
         var char = null;
         var code = -1;
@@ -285,7 +286,7 @@ class Text extends Visual {
             if (!hasSpaceInLine && isWhiteSpace) hasSpaceInLine = true;
 
             if (isLineBreak || isWhiteSpace || i == len - 1) {
-                if (!justDidBreakToFit && fitWidth >= 0 && x >= fitWidth && hasSpaceInLine) {
+                if (!justDidBreakToFit && fitWidth >= 0 && xVisible > 1 && xVisible > fitWidth - 1 && hasSpaceInLine) {
                     justDidBreakToFit = true;
                     // Rewind last word because it doesn't fit
                     while (i > 0) {
@@ -347,6 +348,7 @@ class Text extends Visual {
                 lineWidths.push(x + (glyph != null ? (glyph.xOffset + glyph.width - glyph.xAdvance) * sizeFactor - letterSpacing : 0));
                 lineQuads.push([]);
                 x = 0;
+                xVisible = 0;
                 continue;
             }
 
@@ -395,6 +397,11 @@ class Text extends Visual {
             quad.pos(x + glyph.xOffset * sizeFactor, y + glyph.yOffset * sizeFactor);
             quad.size(glyph.width * sizeFactor, glyph.height * sizeFactor);
 
+            xVisible = x + Math.max(
+                (glyph.xOffset + glyph.width) * sizeFactor,
+                glyph.xAdvance * sizeFactor
+            );
+            
             x += glyph.xAdvance * sizeFactor + letterSpacing;
             lineQuads[lineQuads.length-1].push(quad);
 
