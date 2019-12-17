@@ -40,7 +40,7 @@ class Spine extends Visual {
 
     static var _trackTimes:Array<Float> = [];
 
-    static var _globalBindDepthRange:Float = 100;
+    static var _globalBindDepthRange:Float = 1000;
 
     static var _tintBlackShader:Shader = null;
 
@@ -54,7 +54,7 @@ class Spine extends Visual {
 
     var subSpines:Array<Spine> = null;
 
-    var subDepthStep:Float = 0.001;
+    var subDepthStep:Float = 0.01;
 
     var boundParentSlots:IntMap<Array<BindSlot>> = null;
 
