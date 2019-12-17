@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Assert.*;
 
+using ceramic.Extensions;
+
 /** Bezier curve easing, ported from https://github.com/gre/bezier-easing */
 class BezierEasing {
 
@@ -133,5 +135,56 @@ class BezierEasing {
     inline function A(aA1:Float, aA2:Float) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
     inline function B(aA1:Float, aA2:Float) { return 3.0 * aA2 - 6.0 * aA1; }
     inline function C(aA1:Float)            { return 3.0 * aA1; }
+
+    /// Cache
+
+    static var cachedInstances:IntMap<Array<BezierEasing>> = null;
+
+    public static function clearCache():Void {
+
+        cachedInstances = null;
+
+    } //clearCache
+
+    /** Get or create a `BezierEasing` instance with the given parameters.
+        Created instances are cached and reused. */
+    public static function get(x1:Float, y1:Float, x2:Float, y2:Float):BezierEasing {
+
+        var result:BezierEasing = null;
+
+        var floatKey = x1 * 100 + y1 * 1000 + x2 * 10000 + y2 * 100000;
+        var key = Std.int(floatKey);
+        if (cachedInstances == null) {
+            cachedInstances = new IntMap<Array<BezierEasing>>();
+        }
+        var list = cachedInstances.getInline(key);
+        if (list == null) {
+            // No list matching key, create new list with new instance
+            result = new BezierEasing(x1, y1, x2, y2);
+            cachedInstances.set(key, [result]);
+        }
+        else {
+            // Look for an existing instance, starting from the latest added
+            var i = list.length - 1;
+            while (i >= 0) {
+                var instance = list.unsafeGet(i);
+                if (instance.mX1 == x1 && instance.mY1 == y1
+                && instance.mX2 == x2 && instance.mY2 == y2) {
+                    // Found it! reuse instance
+                    result = instance;
+                    break;
+                }
+                i--;
+            }
+            if (result == null) {
+                // Nothing found, create a new instance
+                result = new BezierEasing(x1, y1, x2, y2);
+                list.push(result);
+            }
+        }
+
+        return result;
+
+    } //get
 
 } //BezierEasing

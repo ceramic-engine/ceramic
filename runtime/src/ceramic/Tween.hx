@@ -229,7 +229,7 @@ class Tween extends Entity {
 
             case BEZIER(x1, y1, x2, y2):
                 _computedEasingFunction = TweenEasingFunction.custom;
-                _computedCustomEasing = new BezierEasing(x1, y1, x2, y2).ease;
+                _computedCustomEasing = BezierEasing.get(x1, y1, x2, y2).ease;
 
             case CUSTOM(easing):
                 _computedEasingFunction = TweenEasingFunction.custom;
@@ -315,7 +315,7 @@ class Tween extends Entity {
                 TweenEasingFunction.sineEaseOut();
 
             case BEZIER(x1, y1, x2, y2):
-                TweenEasingFunction.customEasing = new BezierEasing(x1, y1, x2, y2).ease;
+                TweenEasingFunction.customEasing = BezierEasing.get(x1, y1, x2, y2).ease;
                 TweenEasingFunction.custom();
                 TweenEasingFunction.customEasing = null;
 
