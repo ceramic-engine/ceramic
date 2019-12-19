@@ -322,10 +322,12 @@ class BackendTools implements tools.spec.BackendTools {
 
         var toTransform:Array<TargetImage> = [];
         var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
+        var outIconsPath = Path.join([outTargetPath, 'icons']);
         var iconsChanged = false;
 
         switch (target.name) {
             case 'mac':
+                /*
                 toTransform.push({
                     path: 'mac/app.iconset/icon_16x16.png',
                     width: 16,
@@ -376,6 +378,7 @@ class BackendTools implements tools.spec.BackendTools {
                     width: 1024,
                     height: 1024
                 });
+                */
             
             case 'windows':
                 toTransform.push({
@@ -392,10 +395,147 @@ class BackendTools implements tools.spec.BackendTools {
                 });
             
             case 'ios':
-                // TODO
+                // Might move this to ios plugin later
+                outIconsPath = Path.join([cwd, 'project/ios/project/Images.xcassets/AppIcon.appiconset']);
+                toTransform.push({
+                    path: 'Icon-App-20x20@1x.png',
+                    width: 20,
+                    height: 20
+                });
+                toTransform.push({
+                    path: 'Icon-App-20x20@2x.png',
+                    width: 20 * 2,
+                    height: 20 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-20x20@3x.png',
+                    width: 20 * 3,
+                    height: 20 * 3
+                });
+                toTransform.push({
+                    path: 'Icon-App-29x29@1x.png',
+                    width: 29,
+                    height: 29
+                });
+                toTransform.push({
+                    path: 'Icon-App-29x29@2x.png',
+                    width: 29 * 2,
+                    height: 29 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-29x29@3x.png',
+                    width: 29 * 3,
+                    height: 29 * 3
+                });
+                toTransform.push({
+                    path: 'Icon-App-40x40@1x.png',
+                    width: 40,
+                    height: 40
+                });
+                toTransform.push({
+                    path: 'Icon-App-40x40@2x.png',
+                    width: 40 * 2,
+                    height: 40 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-40x40@3x.png',
+                    width: 40 * 3,
+                    height: 40 * 3
+                });
+                toTransform.push({
+                    path: 'Icon-App-57x57@1x.png',
+                    width: 57,
+                    height: 57
+                });
+                toTransform.push({
+                    path: 'Icon-App-57x57@2x.png',
+                    width: 57 * 2,
+                    height: 57 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-60x60@2x.png',
+                    width: 60 * 2,
+                    height: 60 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-60x60@3x.png',
+                    width: 60 * 3,
+                    height: 60 * 3
+                });
+                toTransform.push({
+                    path: 'Icon-App-72x72@1x.png',
+                    width: 72,
+                    height: 72
+                });
+                toTransform.push({
+                    path: 'Icon-App-72x72@2x.png',
+                    width: 72 * 2,
+                    height: 72 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-76x76@1x.png',
+                    width: 76,
+                    height: 76
+                });
+                toTransform.push({
+                    path: 'Icon-App-76x76@2x.png',
+                    width: 76 * 2,
+                    height: 76 * 2
+                });
+                toTransform.push({
+                    path: 'Icon-App-83.5x83.5@2x.png',
+                    width: 167,
+                    height: 167
+                });
+                toTransform.push({
+                    path: 'Icon-Small-50x50@1x.png',
+                    width: 50,
+                    height: 50
+                });
+                toTransform.push({
+                    path: 'Icon-Small-50x50@2x.png',
+                    width: 50 * 2,
+                    height: 50 * 2
+                });
+                toTransform.push({
+                    path: 'ItunesArtwork@2x.png',
+                    width: 1024,
+                    height: 1024
+                });
             
             case 'android':
-                // TODO
+                // Might move this to android plugin later
+                outIconsPath = Path.join([cwd, 'project/android/app/src/main/res']);
+                toTransform.push({
+                    path: 'mipmap-ldpi/ic_launcher.png',
+                    width: 36,
+                    height: 36
+                });
+                toTransform.push({
+                    path: 'mipmap-mdpi/ic_launcher.png',
+                    width: 48,
+                    height: 48
+                });
+                toTransform.push({
+                    path: 'mipmap-hdpi/ic_launcher.png',
+                    width: 72,
+                    height: 72
+                });
+                toTransform.push({
+                    path: 'mipmap-xhdpi/ic_launcher.png',
+                    width: 96,
+                    height: 96
+                });
+                toTransform.push({
+                    path: 'mipmap-xxhdpi/ic_launcher.png',
+                    width: 144,
+                    height: 144
+                });
+                toTransform.push({
+                    path: 'mipmap-xxxhdpi/ic_launcher.png',
+                    width: 192,
+                    height: 192
+                });
 
             default:
                 // Nothing to do?
@@ -403,7 +543,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         // Create full paths
         for (entry in toTransform) {
-            entry.path = Path.join([outTargetPath, 'icons', entry.path]);
+            entry.path = Path.join([outIconsPath, entry.path]);
 
             // Compare with original
             if (!Files.haveSameLastModified(appIcon, entry.path)) {
