@@ -716,7 +716,7 @@ class Editor extends Entity {
                     }
                 }
                 else if (action == 'select') {
-                    var entity = value != null && value.id != null ? fragment.getItemInstance(value.id) : null;
+                    var entity = value != null && value.id != null ? fragment.get(value.id) : null;
                     if (entity != null && entity.hasComponent('editable')) {
                         var edit:Editable = cast entity.component('editable');
                         edit.select();

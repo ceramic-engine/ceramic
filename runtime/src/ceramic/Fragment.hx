@@ -136,7 +136,7 @@ class Fragment extends Quad {
 
     public function putItem(item:FragmentItem):Entity {
 
-        var existing = getItemInstance(item.id);
+        var existing = get(item.id);
         var existingWasVisual = false;
         
         // Remove previous object if entity class is different
@@ -301,7 +301,7 @@ class Fragment extends Quad {
 
     } //putItem
 
-    public function getItemInstance(itemId:String):Entity {
+    public function get(itemId:String):Entity {
 
         for (entity in entities) {
             if (entity.id == itemId) {
@@ -312,7 +312,7 @@ class Fragment extends Quad {
 
         return null;
 
-    } //getItemInstance
+    } //get
 
     public function getItemInstanceByName(name:String):Entity {
 
@@ -412,7 +412,7 @@ class Fragment extends Quad {
         }
 
         // Get instance
-        var instance = getItemInstance(item.id);
+        var instance = get(item.id);
         if (instance == null) {
             return;
         }
