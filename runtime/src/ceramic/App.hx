@@ -784,7 +784,7 @@ class App extends Entity {
                 #end
 
                 if (visual.parent == null) {
-                    visual.computedDepth = visual.depth;
+                    visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
 
                     if (visual.children != null) {
                         visual.computeChildrenDepth();

@@ -16,6 +16,15 @@ using ceramic.Extensions;
 @:dce
 #end
 class Visual extends Entity {
+    
+    /** A factor applied to every computed depth. This factor is used to avoid having
+        all computed depth values being too small and risking to create precision issues.
+        It is expected to work best with use of `depthRange = 1` on visuals (default) */
+    inline static final DEPTH_FACTOR:Float = 10000;
+    
+    /** A garanteed margin between max inner computed depth and container depth range,
+        and min inner depth and container's computed depth. */
+    inline static final DEPTH_MARGIN:Float = 0.01;
 
 /// Events
 
@@ -1670,7 +1679,7 @@ class Visual extends Entity {
             // Compute deepest in hierarchy first
             for (i in 0...children.length) {
                 var child = children.unsafeGet(i);
-                child.computedDepth = child.depth;
+                child.computedDepth = child.depth * DEPTH_FACTOR;
                 child.computeChildrenDepth();
             }
 
@@ -1689,7 +1698,7 @@ class Visual extends Entity {
                 // Multiply depth
                 for (i in 0...children.length) {
                     var child = children.unsafeGet(i);
-                    child.multiplyDepths(computedDepth + Math.min(0.00001, depthRange), Math.max(0, depthRange - 0.00001));
+                    child.multiplyDepths(computedDepth + Math.min(DEPTH_MARGIN, depthRange * DEPTH_FACTOR), Math.max(0, depthRange * DEPTH_FACTOR - DEPTH_MARGIN));
                 }
             }
         }
