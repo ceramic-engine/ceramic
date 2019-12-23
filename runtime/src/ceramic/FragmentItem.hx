@@ -8,6 +8,9 @@ typedef FragmentItem = {
     /** Entity identifier. */
     var id:String;
 
+    /** Entity components. */
+    var components:Dynamic<String>;
+
     /** Entity name. */
     @:optional var name:String;
 

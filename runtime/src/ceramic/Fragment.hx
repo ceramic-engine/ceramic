@@ -200,8 +200,10 @@ class Fragment extends Quad {
                 var nA = 0;
                 var nB = 0;
 
+                #if ceramic_fragment_legacy
                 if (a == 'components') nA++;
                 else if (b == 'components') nB++;
+                #end
 
                 return nA - nB;
 
@@ -212,52 +214,7 @@ class Fragment extends Quad {
                 var value:Dynamic = Reflect.field(item.props, field);
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
                 if (converter != null) {
-                    var fn = function(field) {
-                        pendingLoads++;
-                        converter.basicToField(
-                            context.assets,
-                            value,
-                            function(value:Dynamic) {
-
-                                pendingLoads--;
-                                if (destroyed) return;
-
-                                if (!instance.destroyed) {
-
-                                    if (isFragment && field == 'fragmentData') {
-                                        var fragment:Fragment = cast instance;
-                                        pendingLoads++;
-                                        fragment.onceReady(this, function() {
-                                            pendingLoads--;
-                                            if (destroyed) return;
-                                            if (pendingLoads == 0) emitReady();
-                                        });
-                                        fragment.fragmentData = value;
-                                    }
-                                    else if (field != 'components') {
-                                        instance.setProperty(field, value);
-
-#if editor
-                                        updateEditableFieldsFromInstance(item.id);
-#end
-                                    }
-                                    else {
-
-                                        onceReady(this, function() {
-                                            instance.setProperty(field, value);
-
-#if editor
-                                            updateEditableFieldsFromInstance(item.id);
-#end
-                                        });
-                                    }
-                                }
-
-                                if (pendingLoads == 0) emitReady();
-                            }
-                        );
-                    };
-                    fn(field);
+                    putItemField(isFragment, item, instance, field, value, converter);
                 }
                 else {
                     if (!basicTypes.exists(fieldType)) {
@@ -274,6 +231,18 @@ class Fragment extends Quad {
                     instance.setProperty(field, value);
                 }
             }
+
+            // Components
+            var fieldType = FieldInfo.typeOf(item.entity, 'components');
+            var value:Dynamic = item.components;
+            var converter = fieldType != null ? app.converters.get(fieldType) : null;
+            if (converter != null) {
+                putItemField(isFragment, item, instance, 'components', value, converter);
+            }
+            else {
+                log.warning('No converter found for field: components');
+            }
+
         }
 
         // A few more stuff to do if item is new
@@ -300,6 +269,73 @@ class Fragment extends Quad {
         return instance;
 
     } //putItem
+
+   private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
+
+        pendingLoads++;
+        converter.basicToField(
+            context.assets,
+            value,
+            function(value:Dynamic) {
+
+                pendingLoads--;
+                if (destroyed) return;
+
+                if (!instance.destroyed) {
+                    if (isFragment && field == 'fragmentData') {
+                        var fragment:Fragment = cast instance;
+                        pendingLoads++;
+                        fragment.onceReady(this, function() {
+                            pendingLoads--;
+                            if (destroyed) return;
+                            if (pendingLoads == 0) emitReady();
+                        });
+                        fragment.fragmentData = value;
+                    }
+                    else if (field != 'components') {
+                        instance.setProperty(field, value);
+
+                        #if editor
+                        updateEditableFieldsFromInstance(item.id);
+                        #end
+                    }
+                    else {
+                        onceReady(this, function() {
+                            #if editor
+                            var map:Map<String,Component> = null;
+                            if (value != null) {
+                                map = cast value;
+                                if (map != null) {
+                                    for (k in map.keys()) {
+                                        var c = map.get(k);
+                                        if (c != null) {
+                                            instance.component(k, c);
+                                        }
+                                    }
+                                }
+                            }
+                            if (instance.components != null) {
+                                for (k in instance.components.keys()) {
+                                    if (k != 'editable') {
+                                        if (map == null || map.get(k) == null) {
+                                            instance.removeComponent(k);
+                                        }
+                                    }
+                                }
+                            }
+                            updateEditableFieldsFromInstance(item.id);
+                            #else
+                            instance.setProperty(field, value);
+                            #end
+                        });
+                    }
+                }
+
+                if (pendingLoads == 0) emitReady();
+            }
+        );
+
+    } //putItemField
 
     public function get(itemId:String):Entity {
 
@@ -403,7 +439,22 @@ class Fragment extends Quad {
 
 #if editor
 
+    var emitEditableItemUpdateScheduled:Bool = false;
+
     public function updateEditableFieldsFromInstance(itemId:String):Void {
+
+        if (!emitEditableItemUpdateScheduled) {
+            emitEditableItemUpdateScheduled = true;
+            app.onceImmediate(() -> {
+                if (!destroyed) {
+                    updateEditableFieldsFromInstance(itemId);
+                }
+            });
+            return;
+        }
+        else {
+            emitEditableItemUpdateScheduled = false;
+        }
 
         // Get item
         var item = getItem(itemId);
@@ -446,9 +497,14 @@ class Fragment extends Quad {
                         // Keep the value as is
                 }
             }
-            if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
-                hasChanged = true;
-                Reflect.setField(item.props, field, value);
+            if (field == 'components') {
+                // TODO?
+            }
+            else {
+                if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
+                    hasChanged = true;
+                    Reflect.setField(item.props, field, value);
+                }
             }
         }
 
