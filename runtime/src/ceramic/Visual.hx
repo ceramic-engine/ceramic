@@ -889,7 +889,7 @@ class Visual extends Entity {
         return touchable;
     }
 
-    @editable
+    @editable({ slider: [0, 1] })
     public var alpha(default,set):Float = 1;
     function set_alpha(alpha:Float):Float {
         if (this.alpha == alpha) return alpha;
@@ -925,7 +925,7 @@ class Visual extends Entity {
         return depth;
     }
 
-    @editable
+    @editable({ slider: [-360, 360] })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
         if (this.rotation == rotation) return rotation;
@@ -993,7 +993,7 @@ class Visual extends Entity {
         return anchorY;
     }
 
-    @editable
+    @editable({ min: 0 })
     public var width(get,set):Float;
     var _width:Float = 0;
     function get_width():Float {
@@ -1006,7 +1006,7 @@ class Visual extends Entity {
         return width;
     }
 
-    @editable
+    @editable({ min: 0 })
     public var height(get,set):Float;
     var _height:Float = 0;
     function get_height():Float {
