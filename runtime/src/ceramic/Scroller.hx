@@ -204,6 +204,67 @@ class Scroller extends Visual {
 
     } //scrollToBounds
 
+    public function isContentPositionInBounds(x:Float, y:Float):Bool {
+
+        if (x < scrollX)
+            return false;
+        if (x >= scrollX + width)
+            return false;
+
+        if (y < scrollY)
+            return false;
+        if (y >= scrollY + height)
+            return false;
+        
+        return true;
+
+    } //isContentPositionInBounds
+
+    public function ensureContentPositionIsInBounds(x:Float, y:Float):Void {
+        
+        var targetScrollX = scrollX;
+        var targetScrollY = scrollY;
+
+        // Compute target scrollX
+        if (x < targetScrollX) {
+            targetScrollX = x;
+        }
+        else if (x >= targetScrollX + width) {
+            targetScrollX = x - width;
+        }
+        
+        // Check bounds
+        var maxScrollX = content.width - width;
+        if (targetScrollX > maxScrollX) {
+            targetScrollX = maxScrollX;
+        }
+        if (targetScrollX < 0) {
+            targetScrollX = 0;
+        }
+        
+        // Compute target scrollY
+        if (y < targetScrollY) {
+            targetScrollY = y;
+        }
+        else if (y >= targetScrollY + height) {
+            targetScrollY = y - height;
+        }
+        
+        // Check bounds
+        var maxScrollY = content.height - height;
+        if (targetScrollY > maxScrollY) {
+            targetScrollY = maxScrollY;
+        }
+        if (targetScrollY < 0) {
+            targetScrollY = 0;
+        }
+
+        // Apply scroll
+        scrollX = targetScrollX;
+        scrollY = targetScrollY;
+
+    } //ensureContentPositionIsInBounds
+
     public var scrollX(get,set):Float;
     inline function get_scrollX():Float {
         return -scrollTransform.tx;
