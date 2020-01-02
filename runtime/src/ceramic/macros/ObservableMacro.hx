@@ -126,7 +126,7 @@ class ObservableMacro {
 
         for (field in fields) {
 
-            var metasCase = hasObserveOrSerializeMeta(field);
+            var metasCase = hasRelevantMeta(field);
             var hasKeepMeta = metasCase >= 10;
             if (metasCase >= 10) metasCase -= 10;
 
@@ -483,7 +483,7 @@ class ObservableMacro {
 
     } //build
 
-    static function hasObserveOrSerializeMeta(field:Field):Int {
+    static function hasRelevantMeta(field:Field):Int {
 
         // We also make @serialize properties observable because this
         // is useful for continuous serialization. This obviously only affect
@@ -494,6 +494,7 @@ class ObservableMacro {
         var hasObserveMeta = false;
         var hasSerializeMeta = false;
         var hasKeepMeta = false;
+        var hasComputeMeta = false;
 
         for (meta in field.meta) {
             if (meta.name == 'observe') {
@@ -502,12 +503,18 @@ class ObservableMacro {
             else if (meta.name == 'serialize') {
                 hasSerializeMeta = true;
             }
+            else if (meta.name == 'compute') {
+                hasComputeMeta = true;
+            }
             else if (meta.name == ':keep') {
                 hasKeepMeta = true;
             }
         }
 
-        if (hasObserveMeta && hasSerializeMeta) {
+        if (hasComputeMeta) {
+            return hasKeepMeta ? 14 : 4;
+        }
+        else if (hasObserveMeta && hasSerializeMeta) {
             return hasKeepMeta ? 13 : 3;
         }
         else if (hasSerializeMeta) {
@@ -518,6 +525,6 @@ class ObservableMacro {
         }
         return hasKeepMeta ? 10 : 0;
 
-    } //hasComponentMeta
+    } //hasRelevantMeta
 
 }
