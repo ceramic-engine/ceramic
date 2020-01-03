@@ -84,6 +84,15 @@ class TextView extends View {
         return centerIfOneLine;
     }
 
+    public var maxLineDiff(get,set):Float;
+    inline function get_maxLineDiff():Float return text.maxLineDiff;
+    function set_maxLineDiff(maxLineDiff:Float):Float {
+        if (this.maxLineDiff == maxLineDiff) return maxLineDiff;
+        text.maxLineDiff = maxLineDiff;
+        layoutDirty = true;
+        return maxLineDiff;
+    }
+
     public function new() {
 
         super();
