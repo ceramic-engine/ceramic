@@ -153,9 +153,146 @@ class ObservableMacro {
 
                 // @compute
 
+                if (!inheritsFromEntity) {
+                    throw new Error("Computed variable is only allowed on ceramic.Entity subclasses", field.pos);
+                }
+
                 switch field.kind {
                     case FFun(f):
-                        //
+                        var fieldName = field.name;
+                        var sanitizedName = field.name;
+                        while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
+                        while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
+                        var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
+                        var computeFieldName = 'compute' + capitalName;
+                        var fieldComputeAutorunName = 'computeAutorun' + capitalName;
+                        var unobservedFieldName = 'unobserved' + capitalName;
+
+                        // Get field type
+                        var type = f.ret;
+
+                        // Rename original field
+                        field.name = computeFieldName;
+
+                        // Make field private (but keep original access for later)
+                        var fieldAccess = field.access;
+                        field.access = [APrivate];
+                        field.meta = [{
+                            name: ':noCompletion',
+                            params: [],
+                            pos: field.pos
+                        }];
+
+                        // Add getter
+                        var getterField = {
+                            pos: field.pos,
+                            #if (!display && !completion)
+                            name: 'get_unobserved' + capitalName,
+                            #else
+                            name: 'get_' + fieldName,
+                            #end
+                            kind: FFun({
+                                args: [],
+                                ret: type,
+                                expr: macro {
+                                    #if (!display && !completion)
+                                    // At first call, initialize autorun to auto-update this property
+                                    if (this.$fieldComputeAutorunName == null) {
+                                        var _that = this;
+                                        var _autorun = new ceramic.Autorun(null);
+                                        this.$fieldComputeAutorunName = _autorun;
+                                        _autorun.onRun = function() {
+                                            var result = _that.$computeFieldName();
+                                            ceramic.Autorun.unobserve();
+                                            _that.$fieldName = result;
+                                            ceramic.Autorun.reobserve();
+                                        };
+                                        _autorun.onDestroy(this, function(_) {
+                                            if (_that.$fieldComputeAutorunName == _autorun) {
+                                                _that.$fieldComputeAutorunName = null;
+                                            }
+                                            _autorun = null;
+                                            _that = null;
+                                        });
+                                        onDestroy(_autorun, function(_) {
+                                            if (_autorun != null) {
+                                                _autorun.destroy();
+                                                _autorun = null;
+                                            }
+                                            _that = null;
+                                        });
+                                        _autorun.run();
+                                    }
+
+                                    return this.$unobservedFieldName;
+                                    #else
+                                    return this.$fieldName;
+                                    #end
+                                }
+                            }),
+                            access: [APrivate],
+                            doc: '',
+                            meta: hasKeepMeta ? [{
+                                name: ':keep',
+                                params: [],
+                                pos: field.pos
+                            }, {
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }] : [{
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }]
+                        };
+                        newFields.push(getterField);
+
+                        // Create observable field
+                        var observeField = {
+                            pos: field.pos,
+                            name: fieldName,
+                            kind: FProp('get', 'null', type, null),
+                            access: fieldAccess,
+                            meta: hasKeepMeta ? [{
+                                name: ':keep',
+                                params: [],
+                                pos: field.pos
+                            }] : []
+                        };
+                        nextEventIndex = createObserveFields(
+                            observeField, newFields, fields, fieldsByName,
+                            dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity,
+                            hasKeepMeta, true, false,
+                            toRename
+                        );
+                        toRename = _toRename;
+
+                        // Add compute method
+                        newFields.push(field);
+
+                        // Add autorun field
+                        var autorunField = {
+                            pos: field.pos,
+                            name: fieldComputeAutorunName,
+                            kind: FVar(macro :ceramic.Autorun, null),
+                            access: [APrivate],
+                            meta: hasKeepMeta ? [{
+                                name: ':keep',
+                                params: [],
+                                pos: field.pos
+                            }, {
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }] : [{
+                                name: ':noCompletion',
+                                params: [],
+                                pos: field.pos
+                            }]
+                        };
+                        newFields.push(autorunField);
+
                     default:
                         throw new Error("Invalid computed variable", field.pos);
                 }
@@ -327,7 +464,7 @@ class ObservableMacro {
             meta: hasKeepMeta ? [{
                 name: ':keep',
                 params: [],
-                pos: Context.currentPos()
+                pos: field.pos
             }] : []
         };
         newFields.push(propField);
@@ -373,7 +510,7 @@ class ObservableMacro {
             meta: hasKeepMeta ? [{
                 name: ':keep',
                 params: [],
-                pos: Context.currentPos()
+                pos: field.pos
             }] : []
         }
         newFields.push(getField);
@@ -420,7 +557,7 @@ class ObservableMacro {
             meta: hasKeepMeta ? [{
                 name: ':keep',
                 params: [],
-                pos: Context.currentPos()
+                pos: field.pos
             }] : []
         }
         newFields.push(setField);
@@ -455,7 +592,7 @@ class ObservableMacro {
             meta: hasKeepMeta ? [{
                 name: ':keep',
                 params: [],
-                pos: Context.currentPos()
+                pos: field.pos
             }] : []
         }
         newFields.push(invalidateField);
@@ -468,8 +605,10 @@ class ObservableMacro {
         newFields.push(field);
 #else
 
+        var pos = Context.currentPos();
+
         var invalidateField = {
-            pos: field.pos,
+            pos: pos,
             name: 'invalidate' + capitalName,
             kind: FFun({
                 args: [],
@@ -481,10 +620,11 @@ class ObservableMacro {
             meta: []
         }
         newFields.push(invalidateField);
-
+        
         newFields.push(field);
+
         var unobservedField = {
-            pos: field.pos,
+            pos: pos,
             name: unobservedFieldName,
             kind: FVar(type, null),
             access: [].concat(field.access),
