@@ -18,9 +18,9 @@ class Autorun extends Entity {
 
 /// Properties
 
-    var onRun:Void->Void = null;
+    @:noCompletion public var onRun:Void->Void = null;
 
-    @:noCompletion public var afterRun:Void->Void;
+    @:noCompletion public var afterRun:Void->Void = null;
 
     var boundAutorunArrays:Array<Array<Autorun>> = null;
 
@@ -35,7 +35,9 @@ class Autorun extends Entity {
         this.onRun = onRun;
 
         // Run once to create initial binding and execute callback
-        run();
+        if (onRun != null) {
+            run();
+        }
 
     } //new
 
