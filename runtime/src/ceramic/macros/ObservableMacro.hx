@@ -10,6 +10,8 @@ using StringTools;
 
 class ObservableMacro {
 
+    static var _toRename:Map<String,String> = null;
+
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -122,6 +124,7 @@ class ObservableMacro {
 
         }
 
+        _toRename = null;
         var toRename:Map<String,String> = null;
 
         for (field in fields) {
@@ -130,272 +133,32 @@ class ObservableMacro {
             var hasKeepMeta = metasCase >= 10;
             if (metasCase >= 10) metasCase -= 10;
 
-            if (metasCase != 0) {
+            if (metasCase >= 1 && metasCase <= 3) {
+
+                // @observe
+                // @serialize
 
                 var hasObserveMeta = metasCase == 1 || metasCase == 3;
                 var hasSerializeMeta = metasCase == 2 || metasCase == 3;
-                var isProp = false;
-                var get:String = null;
-                var set:String = null;
-                var type:Null<ComplexType>;
-                var expr:Null<Expr>;
 
-                switch(field.kind) {
+                nextEventIndex = createObserveFields(
+                    field, newFields, fields, fieldsByName,
+                    dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity,
+                    hasKeepMeta, hasObserveMeta, hasSerializeMeta,
+                    toRename
+                );
+                toRename = _toRename;
+            }
+            else if (metasCase == 4) {
 
-                    case FieldType.FVar(_type, _expr):
-                        type = _type;
-                        expr = _expr;
+                // @compute
 
-                    case FieldType.FProp(_get, _set, _type, _expr):
-                        get = _get;
-                        set = _set;
-                        type = _type;
-                        expr = _expr;
-                        isProp = true;
-
+                switch field.kind {
+                    case FFun(f):
+                        //
                     default:
-                        throw new Error("Invalid observed variable", field.pos);
+                        throw new Error("Invalid computed variable", field.pos);
                 }
-
-                var fieldName = field.name;
-                var sanitizedName = field.name;
-                while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
-                while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
-                var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
-                var unobservedFieldName = 'unobserved' + capitalName;
-                var emitFieldNameChange = 'emit' + capitalName + 'Change';
-                var onFieldNameChange = 'on' + capitalName + 'Change';
-                var offFieldNameChange = 'off' + capitalName + 'Change';
-                var fieldNameAutoruns = fieldName + 'Autoruns';
-                var fieldNameChange = fieldName + 'Change';
-
-                if (expr != null) {
-                    // Compute type from expr
-                    switch (expr.expr) {
-                        case ENew(t,p):
-                            if (type == null) {
-                                type = TPath(t);
-                            }
-                        default:
-                            if (type == null) {
-                                throw new Error("Cannot resolve observable field type", field.pos);
-                            }
-                    }
-                } else if (type == null) {
-                    throw new Error("Observable field must define a type", field.pos);
-                }
-
-#if (!display && !completion)
-                
-                if (isProp) {
-                    // Original is already a property (may have getter/setter)
-                    if (get == 'get') {
-                        if (toRename == null) toRename = new Map();
-                        toRename.set('get_' + fieldName, 'get_' + unobservedFieldName);
-                    }
-                    if (set == 'set') {
-                        if (toRename == null) toRename = new Map();
-                        toRename.set('set_' + fieldName, 'set_' + unobservedFieldName);
-                    }
-                }
-
-                // Create prop from var
-                var propField = {
-                    pos: field.pos,
-                    name: fieldName,
-                    kind: FProp('get', 'set', type),
-                    access: field.access,
-                    doc: field.doc,
-                    meta: hasKeepMeta ? [{
-                        name: ':keep',
-                        params: [],
-                        pos: Context.currentPos()
-                    }] : []
-                };
-                newFields.push(propField);
-
-                var fieldAutoruns = {
-                    pos: field.pos,
-                    name: fieldNameAutoruns,
-                    kind: FVar(TPath({
-                        name: 'Array',
-                        pack: [],
-                        params: [
-                            TPType(
-                                macro :ceramic.Autorun
-                            )
-                        ]
-                    }), macro null),
-                    access: [APrivate],
-                };
-                newFields.push(fieldAutoruns);
-
-                var getField = {
-                    pos: field.pos,
-                    name: 'get_' + field.name,
-                    kind: FFun({
-                        args: [],
-                        ret: type,
-                        expr: macro {
-                            // Bind invalidation if getting value
-                            // inside an Autorun call
-                            if (ceramic.Autorun.current != null) {
-                                var autorun = ceramic.Autorun.current;
-                                if (this.$fieldNameAutoruns == null) {
-                                    this.$fieldNameAutoruns = ceramic.Autorun.getAutorunArray();
-                                }
-                                autorun.bindToAutorunArray(this.$fieldNameAutoruns);
-                            }
-
-                            return this.$unobservedFieldName;
-                        }
-                    }),
-                    access: [APrivate],
-                    doc: '',
-                    meta: hasKeepMeta ? [{
-                        name: ':keep',
-                        params: [],
-                        pos: Context.currentPos()
-                    }] : []
-                }
-                newFields.push(getField);
-
-                var setField = {
-                    pos: field.pos,
-                    name: 'set_' + field.name,
-                    kind: FFun({
-                        args: [
-                            {name: field.name, type: type}
-                        ],
-                        ret: type,
-                        expr: macro {
-                            var prevValue = this.$unobservedFieldName;
-                            if (prevValue == $i{fieldName}) {
-                                return prevValue;
-                            }
-                            this.$unobservedFieldName = $i{fieldName};
-                            if (!observedDirty) {
-                                observedDirty = true;
-                                emitObservedDirty(this, $v{hasSerializeMeta});
-                            }
-                            this.$emitFieldNameChange($i{fieldName}, prevValue);
-                            
-                            if (this.$fieldNameAutoruns != null) {
-                                var fieldAutoruns = this.$fieldNameAutoruns;
-                                this.$fieldNameAutoruns = null;
-
-                                for (i in 0...fieldAutoruns.length) {
-                                    var autorun = fieldAutoruns[i];
-                                    if (autorun != null) {
-                                        autorun.invalidate();
-                                    }
-                                }
-
-                                ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
-                            }
-
-                            return $i{fieldName}
-                        }
-                    }),
-                    access: [APrivate #if !haxe_server , AInline #end],
-                    doc: '',
-                    meta: hasKeepMeta ? [{
-                        name: ':keep',
-                        params: [],
-                        pos: Context.currentPos()
-                    }] : []
-                }
-                newFields.push(setField);
-
-                var invalidateField = {
-                    pos: field.pos,
-                    name: 'invalidate' + capitalName,
-                    kind: FFun({
-                        args: [],
-                        ret: macro :Void,
-                        expr: macro {
-                            var value = this.$unobservedFieldName;
-                            this.$emitFieldNameChange(value, value);
-                            
-                            if (this.$fieldNameAutoruns != null) {
-                                var fieldAutoruns = this.$fieldNameAutoruns;
-                                this.$fieldNameAutoruns = null;
-
-                                for (i in 0...fieldAutoruns.length) {
-                                    var autorun = fieldAutoruns[i];
-                                    if (autorun != null) {
-                                        autorun.invalidate();
-                                    }
-                                }
-
-                                ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
-                            }
-                        }
-                    }),
-                    access: [APublic #if !haxe_server , AInline #end],
-                    doc: '',
-                    meta: hasKeepMeta ? [{
-                        name: ':keep',
-                        params: [],
-                        pos: Context.currentPos()
-                    }] : []
-                }
-                newFields.push(invalidateField);
-
-                // Rename original field from name to unobservedName
-                field.name = unobservedFieldName;
-                field.access = [].concat(field.access);
-                field.access.remove(APublic);
-                field.access.remove(APrivate);
-                newFields.push(field);
-#else
-
-                var invalidateField = {
-                    pos: field.pos,
-                    name: 'invalidate' + capitalName,
-                    kind: FFun({
-                        args: [],
-                        ret: macro :Void,
-                        expr: macro {}
-                    }),
-                    access: [APublic #if !haxe_server , AInline #end],
-                    doc: '',
-                    meta: []
-                }
-                newFields.push(invalidateField);
-
-                newFields.push(field);
-                var unobservedField = {
-                    pos: field.pos,
-                    name: unobservedFieldName,
-                    kind: FVar(type, null),
-                    access: [].concat(field.access),
-                    doc: '',
-                    meta: []
-                };
-                unobservedField.access.remove(APublic);
-                unobservedField.access.remove(APrivate);
-                newFields.push(unobservedField);
-#end
-
-                var eventField = {
-                    pos: field.pos,
-                    name: fieldNameChange,
-                    kind: FFun({
-                        args: [
-                            {name: 'current', type: type},
-                            {name: 'previous', type: type}
-                        ],
-                        ret: macro :Void,
-                        expr: null
-                    }),
-                    access: [],
-                    doc: 'Event when $fieldName field changes.',
-                    meta: []
-                };
-
-                // Add related events
-                nextEventIndex = EventsMacro.createEventFields(eventField, newFields, fields, fieldsByName, dynamicDispatch, nextEventIndex, dispatcherName, inheritsFromEntity);
             }
             else {
                 unchangedFields.push(field);
@@ -482,6 +245,282 @@ class ObservableMacro {
         return newFields;
 
     } //build
+
+    static function createObserveFields(
+        field:Field, newFields:Array<Field>, existingFields:Array<Field>, fieldsByName:Map<String,Bool>,
+        dynamicDispatch:Bool, eventIndex:Int, dispatcherName:String, inheritsFromEntity:Bool,
+        hasKeepMeta:Bool, hasObserveMeta:Bool, hasSerializeMeta:Bool,
+        toRename:Map<String,String>):Int {
+
+        var isProp = false;
+        var get:String = null;
+        var set:String = null;
+        var type:Null<ComplexType>;
+        var expr:Null<Expr>;
+
+        switch(field.kind) {
+
+            case FieldType.FVar(_type, _expr):
+                type = _type;
+                expr = _expr;
+
+            case FieldType.FProp(_get, _set, _type, _expr):
+                get = _get;
+                set = _set;
+                type = _type;
+                expr = _expr;
+                isProp = true;
+
+            default:
+                throw new Error("Invalid observed variable", field.pos);
+        }
+
+        var fieldName = field.name;
+        var sanitizedName = field.name;
+        while (sanitizedName.startsWith('_')) sanitizedName = sanitizedName.substr(1);
+        while (sanitizedName.endsWith('_')) sanitizedName = sanitizedName.substr(0, sanitizedName.length - 1);
+        var capitalName = sanitizedName.substr(0,1).toUpperCase() + sanitizedName.substr(1);
+        var unobservedFieldName = 'unobserved' + capitalName;
+        var emitFieldNameChange = 'emit' + capitalName + 'Change';
+        var onFieldNameChange = 'on' + capitalName + 'Change';
+        var offFieldNameChange = 'off' + capitalName + 'Change';
+        var fieldNameAutoruns = fieldName + 'Autoruns';
+        var fieldNameChange = fieldName + 'Change';
+
+        if (expr != null) {
+            // Compute type from expr
+            switch (expr.expr) {
+                case ENew(t,p):
+                    if (type == null) {
+                        type = TPath(t);
+                    }
+                default:
+                    if (type == null) {
+                        throw new Error("Cannot resolve observable field type", field.pos);
+                    }
+            }
+        } else if (type == null) {
+            throw new Error("Observable field must define a type", field.pos);
+        }
+
+#if (!display && !completion)
+        
+        if (isProp) {
+            // Original is already a property (may have getter/setter)
+            if (get == 'get') {
+                if (toRename == null) toRename = new Map();
+                toRename.set('get_' + fieldName, 'get_' + unobservedFieldName);
+            }
+            if (set == 'set') {
+                if (toRename == null) toRename = new Map();
+                toRename.set('set_' + fieldName, 'set_' + unobservedFieldName);
+            }
+        }
+
+        // Create prop from var
+        var propField = {
+            pos: field.pos,
+            name: fieldName,
+            kind: FProp('get', 'set', type),
+            access: field.access,
+            doc: field.doc,
+            meta: hasKeepMeta ? [{
+                name: ':keep',
+                params: [],
+                pos: Context.currentPos()
+            }] : []
+        };
+        newFields.push(propField);
+
+        var fieldAutoruns = {
+            pos: field.pos,
+            name: fieldNameAutoruns,
+            kind: FVar(TPath({
+                name: 'Array',
+                pack: [],
+                params: [
+                    TPType(
+                        macro :ceramic.Autorun
+                    )
+                ]
+            }), macro null),
+            access: [APrivate],
+        };
+        newFields.push(fieldAutoruns);
+
+        var getField = {
+            pos: field.pos,
+            name: 'get_' + field.name,
+            kind: FFun({
+                args: [],
+                ret: type,
+                expr: macro {
+                    // Bind invalidation if getting value
+                    // inside an Autorun call
+                    if (ceramic.Autorun.current != null) {
+                        var autorun = ceramic.Autorun.current;
+                        if (this.$fieldNameAutoruns == null) {
+                            this.$fieldNameAutoruns = ceramic.Autorun.getAutorunArray();
+                        }
+                        autorun.bindToAutorunArray(this.$fieldNameAutoruns);
+                    }
+
+                    return this.$unobservedFieldName;
+                }
+            }),
+            access: [APrivate],
+            doc: '',
+            meta: hasKeepMeta ? [{
+                name: ':keep',
+                params: [],
+                pos: Context.currentPos()
+            }] : []
+        }
+        newFields.push(getField);
+
+        var setField = {
+            pos: field.pos,
+            name: 'set_' + field.name,
+            kind: FFun({
+                args: [
+                    {name: field.name, type: type}
+                ],
+                ret: type,
+                expr: macro {
+                    var prevValue = this.$unobservedFieldName;
+                    if (prevValue == $i{fieldName}) {
+                        return prevValue;
+                    }
+                    this.$unobservedFieldName = $i{fieldName};
+                    if (!observedDirty) {
+                        observedDirty = true;
+                        emitObservedDirty(this, $v{hasSerializeMeta});
+                    }
+                    this.$emitFieldNameChange($i{fieldName}, prevValue);
+                    
+                    if (this.$fieldNameAutoruns != null) {
+                        var fieldAutoruns = this.$fieldNameAutoruns;
+                        this.$fieldNameAutoruns = null;
+
+                        for (i in 0...fieldAutoruns.length) {
+                            var autorun = fieldAutoruns[i];
+                            if (autorun != null) {
+                                autorun.invalidate();
+                            }
+                        }
+
+                        ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
+                    }
+
+                    return $i{fieldName}
+                }
+            }),
+            access: [APrivate #if !haxe_server , AInline #end],
+            doc: '',
+            meta: hasKeepMeta ? [{
+                name: ':keep',
+                params: [],
+                pos: Context.currentPos()
+            }] : []
+        }
+        newFields.push(setField);
+
+        var invalidateField = {
+            pos: field.pos,
+            name: 'invalidate' + capitalName,
+            kind: FFun({
+                args: [],
+                ret: macro :Void,
+                expr: macro {
+                    var value = this.$unobservedFieldName;
+                    this.$emitFieldNameChange(value, value);
+                    
+                    if (this.$fieldNameAutoruns != null) {
+                        var fieldAutoruns = this.$fieldNameAutoruns;
+                        this.$fieldNameAutoruns = null;
+
+                        for (i in 0...fieldAutoruns.length) {
+                            var autorun = fieldAutoruns[i];
+                            if (autorun != null) {
+                                autorun.invalidate();
+                            }
+                        }
+
+                        ceramic.Autorun.recycleAutorunArray(fieldAutoruns);
+                    }
+                }
+            }),
+            access: [APublic #if !haxe_server , AInline #end],
+            doc: '',
+            meta: hasKeepMeta ? [{
+                name: ':keep',
+                params: [],
+                pos: Context.currentPos()
+            }] : []
+        }
+        newFields.push(invalidateField);
+
+        // Rename original field from name to unobservedName
+        field.name = unobservedFieldName;
+        field.access = [].concat(field.access);
+        field.access.remove(APublic);
+        field.access.remove(APrivate);
+        newFields.push(field);
+#else
+
+        var invalidateField = {
+            pos: field.pos,
+            name: 'invalidate' + capitalName,
+            kind: FFun({
+                args: [],
+                ret: macro :Void,
+                expr: macro {}
+            }),
+            access: [APublic #if !haxe_server , AInline #end],
+            doc: '',
+            meta: []
+        }
+        newFields.push(invalidateField);
+
+        newFields.push(field);
+        var unobservedField = {
+            pos: field.pos,
+            name: unobservedFieldName,
+            kind: FVar(type, null),
+            access: [].concat(field.access),
+            doc: '',
+            meta: []
+        };
+        unobservedField.access.remove(APublic);
+        unobservedField.access.remove(APrivate);
+        newFields.push(unobservedField);
+#end
+
+        var eventField = {
+            pos: field.pos,
+            name: fieldNameChange,
+            kind: FFun({
+                args: [
+                    {name: 'current', type: type},
+                    {name: 'previous', type: type}
+                ],
+                ret: macro :Void,
+                expr: null
+            }),
+            access: [],
+            doc: 'Event when $fieldName field changes.',
+            meta: []
+        };
+
+        // Add related events
+        eventIndex = EventsMacro.createEventFields(eventField, newFields, existingFields, fieldsByName, dynamicDispatch, eventIndex, dispatcherName, inheritsFromEntity);
+    
+        // In case it was initialized on this iteration
+        _toRename = toRename;
+
+        return eventIndex;
+
+    } //createObserveFields
 
     static function hasRelevantMeta(field:Field):Int {
 
