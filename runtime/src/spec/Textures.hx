@@ -10,7 +10,7 @@ interface Textures {
 
 /// Textures
 
-    function createTexture(width:Int, height:Int):Texture;
+    function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture;
     
     function destroyTexture(texture:Texture):Void;
 

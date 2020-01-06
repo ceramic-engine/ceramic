@@ -10,7 +10,7 @@ class Textures implements spec.Textures {
 
     } //load
 
-    public function createTexture(width:Int, height:Int):Texture {
+    public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         return null;
 

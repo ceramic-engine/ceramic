@@ -133,9 +133,18 @@ class Textures implements spec.Textures {
 
     var nextRenderIndex:Int = 0;
 
-    public function createTexture(width:Int, height:Int):Texture {
+    var nextPixelsIndex:Int = 0;
 
-        return null;
+    public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
+
+        var texture = new phoenix.Texture({
+            id: 'pixels:' + (nextPixelsIndex++),
+            width: width,
+            height: height,
+            pixels: pixels
+        });
+
+        return texture;
 
     } //createTexture
 
@@ -154,6 +163,27 @@ class Textures implements spec.Textures {
         return renderTexture;
 
     } //createRenderTarget
+
+    public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
+
+        var w = (texture:phoenix.Texture).width;
+        var h = (texture:phoenix.Texture).height;
+
+        if (result == null) {
+            result = new ceramic.UInt8Array(w * h * 4);
+        }
+
+        (texture:phoenix.Texture).fetch(result);
+
+        return result;
+
+    } //fetchTexturePixels
+
+    public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
+
+        (texture:phoenix.Texture).submit(pixels);
+
+    } //submitTexturePixels
 
     public function destroyTexture(texture:Texture):Void {
 
