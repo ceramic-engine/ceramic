@@ -206,8 +206,10 @@ class Build extends tools.Task {
 				if (target.name == 'ios' || target.name == 'android' || target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
 					var criticalFilePath = Path.join([outTargetPath, 'cpp', 'src', 'ceramic', 'Renderer.cpp']);
 					var cppContent = File.getContent(criticalFilePath);
-					cppContent = stripHxcppLineMarkers(cppContent);
-					File.saveContent(criticalFilePath, cppContent);
+					var newCppContent = stripHxcppLineMarkers(cppContent);
+					if (cppContent != newCppContent) {
+						File.saveContent(criticalFilePath, newCppContent);
+					}
 				}
 			}
 

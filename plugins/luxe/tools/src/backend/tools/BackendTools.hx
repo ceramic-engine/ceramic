@@ -289,8 +289,10 @@ class BackendTools implements tools.spec.BackendTools {
         if (!listOnly) {
             // Remove outdated assets
             //
+            var assetsJsonName = assetsPrefix + '_assets.json';
+
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
-                if (name != '_assets.json') {
+                if (name != assetsJsonName) {
                     var dstPath = Path.join([dstAssetsPath, name]);
                     if (!validDstPaths.exists(dstPath)) {
 
