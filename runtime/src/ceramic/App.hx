@@ -220,6 +220,14 @@ class App extends Entity {
 
 /// Properties
 
+    /** Computed fps of the app. Read only.
+        Value is automatically computed from last second of frame updates. */
+    public var computedFps(get,never):Int;
+    inline function get_computedFps():Int {
+        return _computeFps.fps;
+    }
+    var _computeFps = new ComputeFps();
+
     /** Current frame delta time */
     public var delta(default,null):Float;
 
@@ -561,6 +569,9 @@ class App extends Entity {
     } //assetsLoaded
 
     function update(delta:Float):Void {
+
+        // Update computed fps
+        _computeFps.addFrame(delta);
 
         // Update frame delta time
         this.delta = delta;
