@@ -42,4 +42,10 @@ class Settings implements Observable {
     /** Settings passed to backend. */
     public var backend(default,null):Dynamic = {};
 
+    /** Default font */
+    public var defaultFont(default,null):AssetId<String> = Fonts.ARIAL_20;
+
+    /** Default shader */
+    public var defaultShader(default,null):AssetId<String> = Shaders.TEXTURED;
+
 }

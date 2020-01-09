@@ -112,4 +112,22 @@ class InitSettings {
         return @:privateAccess settings.backend = backend;
     }
 
+    /** Default font asset */
+    public var defaultFont(get,set):AssetId<String>;
+    inline function get_defaultFont():AssetId<String> {
+        return settings.defaultFont;
+    }
+    inline function set_defaultFont(defaultFont:AssetId<String>):AssetId<String> {
+        return @:privateAccess settings.defaultFont = defaultFont;
+    }
+
+    /** Default shader asset */
+    public var defaultShader(get,set):AssetId<String>;
+    inline function get_defaultShader():AssetId<String> {
+        return settings.defaultShader;
+    }
+    inline function set_defaultShader(defaultShader:AssetId<String>):AssetId<String> {
+        return @:privateAccess settings.defaultShader = defaultShader;
+    }
+
 }

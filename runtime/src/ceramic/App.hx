@@ -388,12 +388,10 @@ class App extends Entity {
         // Load default assets
         //
         // Default font
-        assets.add(Fonts.ARIAL_20);
+        assets.add(settings.defaultFont);
 
         // Default shaders
-        //assets.add(Shaders.COLOR);
-        assets.add(Shaders.TEXTURED);
-        //assets.add(Shaders.FXAA);
+        assets.add(settings.defaultShader);
 
         // Default textures
         assets.add(Images.WHITE);
@@ -403,9 +401,9 @@ class App extends Entity {
             if (success) {
 
                 // Get default asset instances now that they are loaded
-                defaultFont = assets.font(Fonts.ARIAL_20);
+                defaultFont = assets.font(settings.defaultFont);
                 defaultWhiteTexture = assets.texture(Images.WHITE);
-                defaultTexturedShader = assets.shader(Shaders.TEXTURED);
+                defaultTexturedShader = assets.shader(settings.defaultShader);
 
                 logger.success('Default assets loaded.');
                 assetsLoaded();
