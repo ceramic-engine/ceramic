@@ -1228,6 +1228,7 @@ class Spine extends Visual {
                                 mesh.color = Color.LIME;
                                 mesh.alpha = 0.7;
                                 mesh.shader = null;
+                                mesh.customFloatAttributesSize = 0;
                                 boundingBoxAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, 2);
                                 Triangulate.triangulate(mesh.vertices, mesh.indices);
 
@@ -1242,7 +1243,14 @@ class Spine extends Visual {
                             else {
                                 if (slotInfo.drawDefault) {
                                     mesh.visible = true;
-                                    mesh.shader = tintBlack ? _tintBlackShader : null;
+                                    if (tintBlack) {
+                                        mesh.shader = _tintBlackShader;
+                                        mesh.customFloatAttributesSize = _tintBlackShader.customFloatAttributesSize;
+                                    }
+                                    else {
+                                        mesh.shader = null;
+                                        mesh.customFloatAttributesSize = 0;
+                                    }
                                     mesh.colorMapping = MeshColorMapping.MESH;
                                     if (meshAttachment != null) {
 

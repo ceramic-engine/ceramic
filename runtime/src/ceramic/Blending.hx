@@ -6,14 +6,17 @@ package ceramic;
         are automatically converted to their premultiplied-alpha versions at build time. */
     var NORMAL = 0;
     
+    /** Forced premultiplied alpha blending */
+    var PREMULTIPLIED_ALPHA = 1;
+    
     /** Additive blending */
-    var ADD = 1;
+    var ADD = 2;
 
     /** Set blending */
-    var SET = 3;
+    var SET = 4;
     
     /** Traditional alpha blending. This should only be used on very specific cases. Used instead of `NORMAL` blending
         when the visual is drawing a RenderTexture. */
-    @:noCompletion var ALPHA = 2;
+    var ALPHA = 3;
 
 } //Blending

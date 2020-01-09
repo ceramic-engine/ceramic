@@ -102,6 +102,7 @@ class MeshPool {
         mesh.alpha = 1;
         mesh.blending = Blending.NORMAL;
         mesh.shader = null;
+        mesh.customFloatAttributesSize = 0;
 
         #if ceramic_no_depth_range
         mesh.depthRange = -1;

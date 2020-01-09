@@ -86,6 +86,9 @@ class App extends Entity {
     @event function beginEnterForeground();
     @event function finishEnterForeground();
 
+    @event function beginSortVisuals();
+    @event function finishSortVisuals();
+
     @event function beginDraw();
     @event function finishDraw();
 
@@ -827,8 +830,14 @@ class App extends Entity {
     @:noCompletion
     #if !debug inline #end public function sortVisuals(visuals:Array<Visual>) {
 
+        // Emit event before sorting visuals (last moment we can tweak visuals sorting)
+        emitBeginSortVisuals();
+
         // Sort visuals by (computed) depth
         SortVisuals.sort(visuals);
+
+        // Emit event after sorting visuals (if we want to reverse any tweak)
+        emitFinishSortVisuals();
 
     } //sortVisuals
 

@@ -302,6 +302,12 @@ class Renderer extends Entity {
 
     #if !ceramic_debug_draw inline #end function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
 
+        #if ceramic_debug_draw
+        if (debugDraw) {
+            log.debug('(use blending $blending)');
+        }
+        #end
+
         if (blending == ceramic.Blending.ADD) {
             draw.setBlendFuncSeparate(
                 backend.BlendMode.ONE,
@@ -514,12 +520,22 @@ class Renderer extends Entity {
             if (!stateDirty) {
                 var newComputedBlending = computeQuadBlending(quad);
                 stateDirty =
-                    quad.shader != lastShader ||
+                    !isSameShader(quad.shader, lastShader) ||
                     newComputedBlending != lastComputedBlending ||
 #if ceramic_debug_rendering_option
                     quad.debugRendering != lastDebugRendering ||
 #end
                     quad.computedRenderTarget != lastRenderTarget;
+#if ceramic_debug_draw_flush_reason
+                if (debugDraw && stateDirty) {
+                    if (!isSameShader(quad.shader, lastShader))
+                        log.debug('- dirty: shader');
+                    if (newComputedBlending != lastComputedBlending)
+                        log.debug('- dirty: blending $lastComputedBlending -> $newComputedBlending');
+                    if (quad.computedRenderTarget != lastRenderTarget)
+                        log.debug('- dirty: render target');
+                }
+#end
                 if (!stateDirty) {
                     if (quad.texture != lastTexture) {
                         if (quad.texture != null && lastTexture != null) {
@@ -554,13 +570,6 @@ class Renderer extends Entity {
                 lastTexture = quad.texture;
                 useFirstTextureInBatch(draw, lastTexture);
 
-                // Update blending
-                var newComputedBlending = computeQuadBlending(quad);
-                if (newComputedBlending != lastComputedBlending) {
-                    lastComputedBlending = newComputedBlending;
-                    useBlending(draw, lastComputedBlending);
-                }
-
 #if ceramic_debug_rendering_option
                 lastDebugRendering = quad.debugRendering;
                 draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
@@ -575,6 +584,10 @@ class Renderer extends Entity {
                 // Update shader
                 lastShader = quad.shader;
                 useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+                // Update blending
+                lastComputedBlending = computeQuadBlending(quad);
+                useBlending(draw, lastComputedBlending);
 
                 stateDirty = false;
             }
@@ -626,195 +639,147 @@ class Renderer extends Entity {
 
 #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
-            log.warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            log.warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip clip=$lastClip');
         }
 #end
 
         // Let backend know we will start sending quad data
         draw.beginDrawQuad(quad);
 
+        /** Using an inline internal function because we want to use similar code multiple times,
+            and let haxe compiler evaluate `hasCustomAttributes` and `hasTextureSlot`
+            at compile time. */
+        inline function batchQuadVertices(hasCustomAttributes:Bool, hasTextureSlot:Bool) {
+
+            //tl
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+            //tr
+            draw.putInPosList(posList, posFloats, matTX + matA * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matB * w);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+            //br
+            var n8 = matTX + matA * w + matC * h;
+            var n9 = matTY + matB * w + matD * h;
+
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+            //bl
+            draw.putInPosList(posList, posFloats, matTX + matC * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY + matD * h);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+            //tl2
+            draw.putInPosList(posList, posFloats, matTX);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, matTY);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+            //br2
+            draw.putInPosList(posList, posFloats, n8);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, n9);
+            posFloats++;
+            draw.putInPosList(posList, posFloats, z);
+            posFloats++;
+            if (hasTextureSlot) {
+                draw.putInPosList(posList, posFloats, textureSlot);
+                posFloats++;
+            }
+            if (hasCustomAttributes) {
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putInPosList(posList, posFloats, 0.0);
+                    posFloats++;
+                }
+            }
+
+        } //batchQuadVertices
+
         // Position
         var n = posFloats;
         if (customFloatAttributesSize == 0) {
-
-            //tl
-            draw.putInPosList(posList, posFloats, matTX);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
+                batchQuadVertices(false, true);
             }
-            //draw.putInPosList(posList, posFloats, 0);
-            //tr
-            draw.putInPosList(posList, posFloats, matTX + matA * w);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY + matB * w);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
+            else {
+                batchQuadVertices(false, false);
             }
-            //draw.putInPosList(posList, posFloats, 0);
-
-            var n8 = matTX + matA * w + matC * h;
-            var n9 = matTY + matB * w + matD * h;
-
-            //br
-            draw.putInPosList(posList, posFloats, n8);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, n9);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            //bl
-            draw.putInPosList(posList, posFloats, matTX + matC * h);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY + matD * h);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            //tl2
-            draw.putInPosList(posList, posFloats, matTX);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            //br2
-            draw.putInPosList(posList, posFloats, n8);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, n9);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
         }
         else {
-
-            //tl
-            draw.putInPosList(posList, posFloats, matTX);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
             if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
+                batchQuadVertices(true, true);
             }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
-            }
-            //tr
-            draw.putInPosList(posList, posFloats, matTX + matA * w);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY + matB * w);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
-            }
-
-            var n8 = matTX + matA * w + matC * h;
-            var n9 = matTY + matB * w + matD * h;
-
-            //br
-            draw.putInPosList(posList, posFloats, n8);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, n9);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
-            }
-            //bl
-            draw.putInPosList(posList, posFloats, matTX + matC * h);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY + matD * h);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
-            }
-            //tl2
-            draw.putInPosList(posList, posFloats, matTX);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, matTY);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
-            }
-            //br2
-            draw.putInPosList(posList, posFloats, n8);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, n9);
-            posFloats++;
-            draw.putInPosList(posList, posFloats, z);
-            posFloats++;
-            if (textureSlot != -1) {
-                draw.putInPosList(posList, posFloats, textureSlot);
-                posFloats++;
-            }
-            //draw.putInPosList(posList, posFloats, 0);
-            for (l in 0...customFloatAttributesSize) {
-                draw.putInPosList(posList, posFloats, 0.0);
-                posFloats++;
+            else {
+                batchQuadVertices(true, false);
             }
         }
 
@@ -1009,12 +974,22 @@ class Renderer extends Entity {
             if (!stateDirty) {
                 var newComputedBlending = computeMeshBlending(mesh);
                 stateDirty =
-                    mesh.shader != lastShader ||
+                    !isSameShader(mesh.shader, lastShader) ||
                     newComputedBlending != lastComputedBlending ||
 #if ceramic_debug_rendering_option
                     mesh.debugRendering != lastDebugRendering ||
 #end
                     mesh.computedRenderTarget != lastRenderTarget;
+#if ceramic_debug_draw_flush_reason
+                if (debugDraw && stateDirty) {
+                    if (!isSameShader(mesh.shader, lastShader))
+                        log.debug('- dirty: shader');
+                    if (newComputedBlending != lastComputedBlending)
+                        log.debug('- dirty: blending $lastComputedBlending -> $newComputedBlending');
+                    if (mesh.computedRenderTarget != lastRenderTarget)
+                        log.debug('- dirty: render target');
+                }
+#end
                 if (!stateDirty) {
                     if (mesh.texture != lastTexture) {
                         if (mesh.texture != null && lastTexture != null) {
@@ -1049,13 +1024,6 @@ class Renderer extends Entity {
                 lastTexture = mesh.texture;
                 useFirstTextureInBatch(draw, lastTexture);
 
-                // Update blending
-                var newComputedBlending = computeMeshBlending(mesh);
-                if (newComputedBlending != lastComputedBlending) {
-                    lastComputedBlending = newComputedBlending;
-                    useBlending(draw, lastComputedBlending);
-                }
-
 #if ceramic_debug_rendering_option
                 lastDebugRendering = mesh.debugRendering;
                 draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
@@ -1070,6 +1038,10 @@ class Renderer extends Entity {
                 // Update shader
                 lastShader = mesh.shader;
                 useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+                // Update blending
+                lastComputedBlending = computeMeshBlending(mesh);
+                useBlending(draw, lastComputedBlending);
 
                 stateDirty = false;
             }
@@ -1093,7 +1065,7 @@ class Renderer extends Entity {
 
 #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
-            log.warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip');
+            log.warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip clip=$lastClip');
         }
 #end
 
@@ -1133,6 +1105,7 @@ class Renderer extends Entity {
         var posFloats = this.posFloats;
         var posList = draw.getPosList();
         var customFloatAttributesSize = this.customFloatAttributesSize;
+        var meshCustomFloatAttributesSize = mesh.customFloatAttributesSize;
         var floatsPerVertex = (4 + customFloatAttributesSize);
         var countAdd = visualNumVertices * floatsPerVertex;
         var countAfter = posFloats + countAdd;
@@ -1168,79 +1141,151 @@ class Renderer extends Entity {
         var uvList = draw.getUvList();
         var colorList = draw.getColorList();
 
-        // We may run this code multiple times if the mesh
-        // needs to be splitted into multiple draw calls.
-        // That is why it is inside a `while` block
-        // Exit condition is at the end.
-        while (true) {
-        
-            var uvFloats = this.uvFloats;
-            var colorFloats = this.colorFloats; 
+        inline function batchMeshVertices() {
 
-            var i = startVertices;
-            while (i < endVertices) {
+            // We may run this code multiple times if the mesh
+            // needs to be splitted into multiple draw calls.
+            // That is why it is inside a `while` block
+            // Exit condition is at the end.
+            while (true) {
+            
+                var uvFloats = this.uvFloats;
+                var colorFloats = this.colorFloats; 
 
-                var j = meshIndices.unsafeGet(i);
-                var k = j * 2;
-                var l = j * (2 + customFloatAttributesSize);
+                var i = startVertices;
+                while (i < endVertices) {
 
-                // Position
-                //
-                var x = meshVertices.unsafeGet(l++);
-                var y = meshVertices.unsafeGet(l++);
+                    var j = meshIndices.unsafeGet(i);
+                    var k = j * 2;
+                    var l = j * (2 + meshCustomFloatAttributesSize);
 
-                draw.putInPosList(posList, posFloats, matTX + matA * x + matC * y);
-                posFloats++;
-                draw.putInPosList(posList, posFloats, matTY + matB * x + matD * y);
-                posFloats++;
-                draw.putInPosList(posList, posFloats, z);
-                posFloats++;
-                if (textureSlot != -1) {
-                    draw.putInPosList(posList, posFloats, textureSlot);
+                    // Position
+                    //
+                    var x = meshVertices.unsafeGet(l++);
+                    var y = meshVertices.unsafeGet(l++);
+
+                    draw.putInPosList(posList, posFloats, matTX + matA * x + matC * y);
                     posFloats++;
-                }
-                //draw.putInPosList(posList, posFloats, 0);
-
-                // Custom (float) attributes
-                //
-                if (customFloatAttributesSize != 0) {
-                    for (n in 0...customFloatAttributesSize) {
-                        draw.putInPosList(posList, posFloats, meshVertices.unsafeGet(l++));
+                    draw.putInPosList(posList, posFloats, matTY + matB * x + matD * y);
+                    posFloats++;
+                    draw.putInPosList(posList, posFloats, z);
+                    posFloats++;
+                    if (textureSlot != -1) {
+                        draw.putInPosList(posList, posFloats, textureSlot);
                         posFloats++;
+                    }
+                    //draw.putInPosList(posList, posFloats, 0);
+
+                    // Custom (float) attributes
+                    //
+                    if (customFloatAttributesSize != 0) {
+                        for (n in 0...customFloatAttributesSize) {
+                            if (n < meshCustomFloatAttributesSize) {
+                                draw.putInPosList(posList, posFloats, meshVertices.unsafeGet(l++));
+                            }
+                            else {
+                                draw.putInPosList(posList, posFloats, 0.0);
+                            }
+                            posFloats++;
+                        }
+                    }
+
+                    // UV
+                    //
+                    if (texture != null) {
+                        var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
+                        var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                        draw.putInUvList(uvList, uvFloats, uvX);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, uvY);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                    }
+
+                    // Color
+                    //
+                    if (!meshSingleColor) {
+                        var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+
+                        var a:Float;
+                        var r:Float;
+                        var g:Float;
+                        var b:Float;
+                        if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                            a = mesh.computedAlpha;
+                            r = mesh.color.redFloat;
+                            g = mesh.color.greenFloat;
+                            b = mesh.color.blueFloat;
+                        }
+                        else {
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat * a;
+                            g = meshAlphaColor.greenFloat * a;
+                            b = meshAlphaColor.blueFloat * a;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
+
+                        draw.putInColorList(colorList, colorFloats, r);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, g);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, b);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, a);
+                        colorFloats++;
+                    }
+
+                    i++;
+                }
+
+                this.posFloats = posFloats;
+                var uvList = draw.getUvList();
+
+                // No texture, all uvs to zero
+                //
+                if (texture == null) {
+                    i = startVertices;
+                    while (i < endVertices) {
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                        draw.putInUvList(uvList, uvFloats, 0);
+                        uvFloats++;
+                        i++;
                     }
                 }
 
-                // UV
-                //
-                if (texture != null) {
-                    var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
-                    var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                    draw.putInUvList(uvList, uvFloats, uvX);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, uvY);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                }
+                this.uvFloats = uvFloats;
 
-                // Color
+                // Single color
                 //
-                if (!meshSingleColor) {
-                    var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+                if (meshSingleColor) {
 
-                    var a:Float;
                     var r:Float;
                     var g:Float;
                     var b:Float;
-                    if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                    var a:Float;
+
+                    if (stencilClip) {
+                        a = 1;
+                        r = 1;
+                        g = 0;
+                        b = 0;
+                    }
+                    else if (lastComputedBlending == ceramic.Blending.ALPHA) {
                         a = mesh.computedAlpha;
                         r = mesh.color.redFloat;
                         g = mesh.color.greenFloat;
                         b = mesh.color.blueFloat;
                     }
                     else {
+                        var meshAlphaColor = meshColors.unsafeGet(0);
                         a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
                         r = meshAlphaColor.redFloat * a;
                         g = meshAlphaColor.greenFloat * a;
@@ -1248,111 +1293,50 @@ class Renderer extends Entity {
                         if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                     }
 
-                    draw.putInColorList(colorList, colorFloats, r);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, g);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, b);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, a);
-                    colorFloats++;
+                    var colorList = draw.getColorList();
+                    i = startVertices;
+                    while (i < endVertices) {
+                        draw.putInColorList(colorList, colorFloats, r);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, g);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, b);
+                        colorFloats++;
+                        draw.putInColorList(colorList, colorFloats, a);
+                        colorFloats++;
+                        i++;
+                    }
                 }
 
-                i++;
-            }
+                this.colorFloats = colorFloats;
 
-            this.posFloats = posFloats;
-            var uvList = draw.getUvList();
-
-            // No texture, all uvs to zero
-            //
-            if (texture == null) {
-                i = startVertices;
-                while (i < endVertices) {
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                    draw.putInUvList(uvList, uvFloats, 0);
-                    uvFloats++;
-                    i++;
-                }
-            }
-
-            this.uvFloats = uvFloats;
-
-            // Single color
-            //
-            if (meshSingleColor) {
-
-                var r:Float;
-                var g:Float;
-                var b:Float;
-                var a:Float;
-
-                if (stencilClip) {
-                    a = 1;
-                    r = 1;
-                    g = 0;
-                    b = 0;
-                }
-                else if (lastComputedBlending == ceramic.Blending.ALPHA) {
-                    a = mesh.computedAlpha;
-                    r = mesh.color.redFloat;
-                    g = mesh.color.greenFloat;
-                    b = mesh.color.blueFloat;
+                if (endVertices == visualNumVertices) {
+                    // No need to submit more data, exit loop
+                    break;
                 }
                 else {
-                    var meshAlphaColor = meshColors.unsafeGet(0);
-                    a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                    r = meshAlphaColor.redFloat * a;
-                    g = meshAlphaColor.greenFloat * a;
-                    b = meshAlphaColor.blueFloat * a;
-                    if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    
+                    // There is still data left that needs to be submitted.
+                    // Flush pending buffers and iterate once more.
+
+                    var textureBeforeFlush = lastTexture;
+                    flush(draw);
+                    unbindUsedTextures(draw);
+                    useFirstTextureInBatch(draw, textureBeforeFlush);
+                    posFloats = this.posFloats;
+
+                    startVertices = endVertices;
+                    endVertices = startVertices + maxVertices;
+                    if (endVertices > visualNumVertices) {
+                        endVertices = visualNumVertices;
+                    }
                 }
 
-                var colorList = draw.getColorList();
-                i = startVertices;
-                while (i < endVertices) {
-                    draw.putInColorList(colorList, colorFloats, r);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, g);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, b);
-                    colorFloats++;
-                    draw.putInColorList(colorList, colorFloats, a);
-                    colorFloats++;
-                    i++;
-                }
-            }
+            } //while
 
-            this.colorFloats = colorFloats;
+        } //batchMeshVertices
 
-            if (endVertices == visualNumVertices) {
-                // No need to submit more data, exit loop
-                break;
-            }
-            else {
-                
-                // There is still data left that needs to be submitted.
-                // Flush pending buffers and iterate once more.
-
-                var textureBeforeFlush = lastTexture;
-                flush(draw);
-                unbindUsedTextures(draw);
-                useFirstTextureInBatch(draw, textureBeforeFlush);
-                posFloats = this.posFloats;
-
-                startVertices = endVertices;
-                endVertices = startVertices + maxVertices;
-                if (endVertices > visualNumVertices) {
-                    endVertices = visualNumVertices;
-                }
-            }
-
-        } //while
+        batchMeshVertices();
 
         // Let backend know we did finish sending quad data
         draw.endDrawMesh();
@@ -1366,7 +1350,10 @@ class Renderer extends Entity {
 
         var blending = quad.blending;
 
-        if (blending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+        if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
+            blending = ceramic.Blending.NORMAL;
+        }
+        else if (blending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
         else if (blending == ceramic.Blending.ADD && (quad.texture == null || !quad.texture.isRenderTexture)) {
@@ -1381,7 +1368,10 @@ class Renderer extends Entity {
 
         var blending = mesh.blending;
 
-        if (blending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+        if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
+            blending = ceramic.Blending.NORMAL;
+        }
+        else if (blending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
         else if (blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) {
@@ -1391,6 +1381,15 @@ class Renderer extends Entity {
         return blending;
 
     } //computeMeshBlending
+
+    inline function isSameShader(shaderA:ceramic.Shader, shaderB:ceramic.Shader):Bool {
+
+        var backendItemA = shaderA != null ? shaderA.backendItem : defaultTexturedShader;
+        var backendItemB = shaderB != null ? shaderB.backendItem : defaultTexturedShader;
+
+        return backendItemA == backendItemB;
+
+    } //isSameShader
 
     #if !ceramic_debug_draw inline #end function flush(draw:backend.Draw):Bool {
 

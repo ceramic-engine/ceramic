@@ -19,6 +19,10 @@ class Mesh extends Visual {
 
     public var primitiveType:MeshPrimitiveType = MeshPrimitiveType.TRIANGLE;
 
+    /** The number of floats to add to fill float attributes in vertices array.
+        Default is zero: no custom attributes. Update this value when using shaders with custom attributes. */
+    public var customFloatAttributesSize:Int = 0;
+
     /** When set to `true` hit test on this mesh will be performed at vertices level instead
         of simply using bounds. This make the test substancially more expensive however.
         Use only when needed. */
