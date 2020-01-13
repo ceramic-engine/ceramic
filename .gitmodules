@@ -69,3 +69,7 @@
 	path = git/differ
 	url = https://github.com/ceramic-engine/differ.git
 	branch = master
+[submodule "git/hsluv"]
+	path = git/hsluv
+	url = https://github.com/ceramic-engine/hsluv.git
+	branch = master

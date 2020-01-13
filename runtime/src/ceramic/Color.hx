@@ -680,4 +680,68 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
     } //toString
 
+#if hsluv
+
+/// HSLuv helpers
+
+    static var _hsluvTuple:Array<Float> = [0, 0, 0];
+
+    static var _hsluvResult:Array<Float> = [0, 0, 0];
+
+    /**
+     * Generate a color from HSLuv components.
+     *
+     * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
+     * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
+     * @param    lightness    A number between 0 and 1, indicating the lightness of the color
+     * @return    The color as a Color
+     */
+    public static inline function fromHSLuv(hue:Float, saturation:Float, lightness:Float):Color
+    {
+        var color = new Color();
+        return color.setHSLuv(hue, saturation, lightness);
+    }
+
+    /**
+     * Set HSLuv components.
+     *
+     * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
+     * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
+     * @param    lightness    A number between 0 and 1, indicating the lightness of the color
+     * @return    This color
+     */
+    public inline function setHSLuv(hue:Float, saturation:Float, lightness:Float):Color
+    {
+        _hsluvTuple[0] = hue;
+        _hsluvTuple[1] = saturation * 100;
+        _hsluvTuple[2] = lightness * 100;
+        hsluv.Hsluv.hsluvToRgb(_hsluvTuple, _hsluvResult);
+        set_redFloat(_hsluvResult[0]);
+        set_greenFloat(_hsluvResult[1]);
+        set_blueFloat(_hsluvResult[2]);
+        return this;
+    }
+
+    /**
+     * Get HSLuv components from the color instance.
+     *
+     * @param result A pre-allocated array to store the result into.
+     * @return    The HSLuv components as a float array
+     */
+    public inline function getHSLuv(?result:Array<Float>):Array<Float>
+    {
+        if (result == null) {
+            result = [0, 0, 0];
+        }
+        _hsluvTuple[0] = redFloat;
+        _hsluvTuple[1] = greenFloat;
+        _hsluvTuple[2] = blueFloat;
+        hsluv.Hsluv.rgbToHsluv(_hsluvTuple, result);
+        result[1] *= 0.01;
+        result[2] *= 0.01;
+        return result;
+    }
+
+#end
+
 }

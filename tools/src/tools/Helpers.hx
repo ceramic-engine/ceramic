@@ -345,6 +345,7 @@ class Helpers {
             haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
             haxelib(['dev', 'nape', Path.join([context.ceramicGitDepsPath, 'nape']), '--always'], {cwd: cwd});
             haxelib(['dev', 'differ', Path.join([context.ceramicGitDepsPath, 'differ']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'hsluv', Path.join([context.ceramicGitDepsPath, 'hsluv', 'haxe']), '--always'], {cwd: cwd});
             haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always'], {cwd: cwd});
             haxelib(['dev', 'polyline', Path.join([context.ceramicGitDepsPath, 'polyline']), '--always'], {cwd: cwd});
             haxelib(['dev', 'earcut', Path.join([context.ceramicGitDepsPath, 'earcut']), '--always'], {cwd: cwd});

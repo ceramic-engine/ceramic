@@ -44,6 +44,7 @@ class Project {
         { 'polyline': 'github:jeremyfa/polyline' },
         { 'bind': 'github:jeremyfa/polyline' },
         { 'earcut': 'github:ceramic-engine/earcut' },
+        { 'hsluv': 'github:ceramic-engine/hsluv' },
         { 'format-tiled': 'github:ceramic-engine/format-tiled' }
     ];
 
