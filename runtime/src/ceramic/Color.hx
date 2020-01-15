@@ -715,10 +715,24 @@ abstract Color(Int) from Int from UInt to Int to UInt
         _hsluvTuple[0] = hue;
         _hsluvTuple[1] = saturation * 100;
         _hsluvTuple[2] = lightness * 100;
-        hsluv.Hsluv.hsluvToRgb(_hsluvTuple, _hsluvResult);
-        set_redFloat(_hsluvResult[0]);
-        set_greenFloat(_hsluvResult[1]);
-        set_blueFloat(_hsluvResult[2]);
+        if (lightness > 0.001) {
+            hsluv.Hsluv.hsluvToRgb(_hsluvTuple, _hsluvResult);
+            var v = _hsluvResult[0];
+            if (v < 0)
+                v = 0;
+            set_redFloat(v);
+            v = _hsluvResult[1];
+            if (v < 0)
+                v = 0;
+            set_greenFloat(v);
+            v = _hsluvResult[2];
+            if (v < 0)
+                v = 0;
+            set_blueFloat(v);
+        }
+        else {
+            setHSL(hue, saturation, lightness);
+        }
         return this;
     }
 
