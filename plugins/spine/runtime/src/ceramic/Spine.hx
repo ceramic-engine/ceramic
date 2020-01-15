@@ -146,21 +146,21 @@ class Spine extends Visual {
     }
     var runScheduledRenderDyn:Void->Void = null;
 
-    /** Internal flag to know if render became dirty because of a skin change. */
+    /** Internal flag to know if render became dirty because of a skin change or a new animation was set. */
     var renderDirtyAgressive(default,set):Bool = false;
     function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
         if (renderDirtyAgressive && parent != null && Std.is(parent, Spine)) {
             var parentSpine:Spine = cast parent;
             parentSpine.renderDirty = true;
         }
-        if (renderDirtyAgressive && pausedOrFrozen && !renderScheduled) {
+        if (renderDirtyAgressive && !renderScheduled) {
             if (!renderWhenInvisible && visibilityDirty) {
                 spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 renderScheduled = true;
                 if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
-                app.onceImmediate(runScheduledRenderDyn);
+                app.oncePostFlushImmediate(runScheduledRenderDyn);
             }
         }
         return (this.renderDirtyAgressive = renderDirtyAgressive);
@@ -172,14 +172,14 @@ class Spine extends Visual {
             var parentSpine:Spine = cast parent;
             parentSpine.renderDirty = true;
         }
-        if (renderDirty && pausedOrFrozen && !renderScheduled) {
+        if (renderDirty && !renderScheduled) {
             if (!renderWhenInvisible && visibilityDirty) {
                 spineComputeVisibility();
             }
             if (computedVisible || renderWhenInvisible) {
                 renderScheduled = true;
                 if (runScheduledRenderDyn == null) runScheduledRenderDyn = runScheduledRender;
-                app.onceImmediate(runScheduledRenderDyn);
+                app.oncePostFlushImmediate(runScheduledRenderDyn);
             }
         }
         return (this.renderDirty = renderDirty);
@@ -324,6 +324,9 @@ class Spine extends Visual {
         renderDirty = true;
         return color;
     }
+
+    @editable
+    public var autoRenderOnAnimate:Bool = false;
 
     /** The Spine data used to animate this animation. */
     @editable
@@ -815,10 +818,14 @@ class Spine extends Visual {
             frozen = false;
         }
 
-        // Ensure animation gets rendered once to prevent 1-frame glitches
-        deferEvents = true;
-        forceRender(false);
-        deferEvents = false;
+        if (autoRenderOnAnimate) {
+            deferEvents = true;
+            forceRender(false);
+            deferEvents = false;
+        }
+        else {
+            renderDirtyAgressive = true;
+        }
 
     } //animate
 
