@@ -640,8 +640,8 @@ class Renderer extends Entity {
         // Update num vertices
         var posFloats = this.posFloats;
         var customFloatAttributesSize = this.customFloatAttributesSize;
-        var visualNumVertices = 6 + customFloatAttributesSize;
-        var countAfter = posFloats + visualNumVertices * 4;
+        var visualNumVertices = 6;
+        var countAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
