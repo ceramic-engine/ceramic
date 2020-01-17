@@ -1151,7 +1151,7 @@ class Renderer extends Entity {
         var countAdd = visualNumVertices * floatsPerVertex;
         var countAfter = posFloats + countAdd;
         var startVertices = 0;
-        var meshDrawsRenderTexture:Bool = false;//mesh.texture != null && mesh.texture.isRenderTexture;
+        var meshDrawsRenderTexture:Bool = mesh.texture != null && mesh.texture.isRenderTexture;
         var endVertices = visualNumVertices;
         var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
 
@@ -1257,10 +1257,10 @@ class Renderer extends Entity {
                         var g:Float;
                         var b:Float;
                         if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                            a = mesh.computedAlpha;
-                            r = mesh.color.redFloat;
-                            g = mesh.color.greenFloat;
-                            b = mesh.color.blueFloat;
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat;
+                            g = meshAlphaColor.greenFloat;
+                            b = meshAlphaColor.blueFloat;
                             if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                         }
                         else {
@@ -1322,10 +1322,11 @@ class Renderer extends Entity {
                         b = 0;
                     }
                     else if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                        a = mesh.computedAlpha;
-                        r = mesh.color.redFloat;
-                        g = mesh.color.greenFloat;
-                        b = mesh.color.blueFloat;
+                        var meshAlphaColor = meshColors.unsafeGet(0);
+                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                        r = meshAlphaColor.redFloat;
+                        g = meshAlphaColor.greenFloat;
+                        b = meshAlphaColor.blueFloat;
                         if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                     }
                     else {
