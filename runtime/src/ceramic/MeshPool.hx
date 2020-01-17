@@ -100,7 +100,7 @@ class MeshPool {
         mesh.clip = null;
         mesh.inheritAlpha = false;
         mesh.alpha = 1;
-        mesh.blending = Blending.NORMAL;
+        mesh.blending = Blending.AUTO;
         mesh.shader = null;
         mesh.customFloatAttributesSize = 0;
 

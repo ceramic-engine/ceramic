@@ -465,7 +465,7 @@ class Draw implements spec.Draw {
                     Std.int(renderTarget.width * renderTarget.density),
                     Std.int(renderTarget.height * renderTarget.density)
                 );
-                if (renderTarget.clearOnRender) Luxe.renderer.clear(transparentColor);
+                if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);
                 
             } else {
                 luxeRenderer.target = null;

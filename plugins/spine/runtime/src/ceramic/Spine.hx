@@ -1403,7 +1403,7 @@ class Spine extends Visual {
                                         mesh.indices = clippedTriangles.items;
                                     }
 
-                                    mesh.blending = isAdditive ? Blending.ADD : Blending.NORMAL;
+                                    mesh.blending = isAdditive ? Blending.ADD : Blending.AUTO;
                                     mesh.depth = slotInfo.depth;
                                     mesh.scaleY = -1;
 

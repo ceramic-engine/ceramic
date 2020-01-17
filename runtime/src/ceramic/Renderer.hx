@@ -26,8 +26,7 @@ class Renderer extends Entity {
     var lastTextureId:backend.TextureId = backend.TextureId.DEFAULT;
     var lastShader:ceramic.Shader = null;
     var lastRenderTarget:ceramic.RenderTexture = null;
-    var lastBlending:ceramic.Blending = ceramic.Blending.NORMAL;
-    var lastComputedBlending:ceramic.Blending = ceramic.Blending.NORMAL;
+    var lastComputedBlending:ceramic.Blending = ceramic.Blending.AUTO;
     var lastClip:ceramic.Visual = null;
     var activeTextureSlot:Int = 0;
 
@@ -129,8 +128,7 @@ class Renderer extends Entity {
         lastTextureId = backend.TextureId.DEFAULT;
         lastShader = null;
         lastRenderTarget = null;
-        lastBlending = ceramic.Blending.NORMAL;
-        lastComputedBlending = ceramic.Blending.NORMAL;
+        lastComputedBlending = ceramic.Blending.AUTO;
 #if ceramic_debug_rendering_option
         lastDebugRendering = ceramic.DebugRendering.DEFAULT;
 #end
@@ -176,6 +174,7 @@ class Renderer extends Entity {
             backend.BlendMode.ONE,
             backend.BlendMode.ONE_MINUS_SRC_ALPHA
         );
+        lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
         // Default stencil test
         draw.drawWithoutStencilTest();
@@ -308,6 +307,45 @@ class Renderer extends Entity {
         }
         #end
 
+        switch blending {
+            case AUTO | PREMULTIPLIED_ALPHA:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                );
+            case ADD:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE
+                );
+            case SET:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.SRC_ALPHA
+                );
+            case RENDER_TO_TEXTURE:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE_MINUS_DST_ALPHA,
+                    backend.BlendMode.ONE
+                );
+            case ALPHA:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.SRC_ALPHA,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                );
+        }
+
+        /*
         if (blending == ceramic.Blending.ADD) {
             draw.setBlendFuncSeparate(
                 backend.BlendMode.ONE,
@@ -322,14 +360,14 @@ class Renderer extends Entity {
                 backend.BlendMode.ONE,
                 backend.BlendMode.SRC_ALPHA
             );
-        } else if (blending == ceramic.Blending.NORMAL) {
+        } else if (blending == ceramic.Blending.AUTO) {
             draw.setBlendFuncSeparate(
                 backend.BlendMode.ONE,
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA,
                 backend.BlendMode.ONE,
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA
             );
-        } else /*if (lastBlending == ceramic.Blending.ALPHA)*/ {
+        } else {
             draw.setBlendFuncSeparate(
                 backend.BlendMode.SRC_ALPHA,
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA,
@@ -337,6 +375,7 @@ class Renderer extends Entity {
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA
             );
         }
+        */
 
     } //useBlending
 
@@ -502,7 +541,7 @@ class Renderer extends Entity {
                 backend.BlendMode.ONE,
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA
             );
-            lastBlending = ceramic.Blending.NORMAL;
+            lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
             lastRenderTarget = quad.computedRenderTarget;
@@ -600,7 +639,8 @@ class Renderer extends Entity {
 
         // Update num vertices
         var posFloats = this.posFloats;
-        var visualNumVertices = 6;
+        var customFloatAttributesSize = this.customFloatAttributesSize;
+        var visualNumVertices = 6 + customFloatAttributesSize;
         var countAfter = posFloats + visualNumVertices * 4;
 
         // Submit the current batch if we exceed the max buffer size
@@ -635,7 +675,7 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var posList = draw.getPosList();
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
-        var customFloatAttributesSize = this.customFloatAttributesSize;
+        var quadDrawsRenderTexture:Bool = quad.texture != null && quad.texture.isRenderTexture;
 
 #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
@@ -893,11 +933,12 @@ class Renderer extends Entity {
             g = 0;
             b = 0;
         }
-        else if (lastComputedBlending == ceramic.Blending.ALPHA) {
+        else if (quadDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
             a = quad.computedAlpha;
             r = quad.color.redFloat;
             g = quad.color.greenFloat;
             b = quad.color.blueFloat;
+            if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
         }
         else {
             a = quad.computedAlpha;
@@ -956,7 +997,7 @@ class Renderer extends Entity {
                 backend.BlendMode.ONE,
                 backend.BlendMode.ONE_MINUS_SRC_ALPHA
             );
-            lastBlending = ceramic.Blending.NORMAL;
+            lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
             lastRenderTarget = quad.computedRenderTarget;
@@ -1110,6 +1151,7 @@ class Renderer extends Entity {
         var countAdd = visualNumVertices * floatsPerVertex;
         var countAfter = posFloats + countAdd;
         var startVertices = 0;
+        var meshDrawsRenderTexture:Bool = false;//mesh.texture != null && mesh.texture.isRenderTexture;
         var endVertices = visualNumVertices;
         var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
 
@@ -1214,11 +1256,12 @@ class Renderer extends Entity {
                         var r:Float;
                         var g:Float;
                         var b:Float;
-                        if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                        if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
                             a = mesh.computedAlpha;
                             r = mesh.color.redFloat;
                             g = mesh.color.greenFloat;
                             b = mesh.color.blueFloat;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                         }
                         else {
                             a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
@@ -1278,11 +1321,12 @@ class Renderer extends Entity {
                         g = 0;
                         b = 0;
                     }
-                    else if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                    else if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
                         a = mesh.computedAlpha;
                         r = mesh.color.redFloat;
                         g = mesh.color.greenFloat;
                         b = mesh.color.blueFloat;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                     }
                     else {
                         var meshAlphaColor = meshColors.unsafeGet(0);
@@ -1350,14 +1394,20 @@ class Renderer extends Entity {
 
         var blending = quad.blending;
 
-        if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
-            blending = ceramic.Blending.NORMAL;
-        }
-        else if (blending == ceramic.Blending.NORMAL && quad.texture != null && quad.texture.isRenderTexture) {
+        /*if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
+            // Keep explicit blending
+        }*/
+        /*else if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
-        else if (blending == ceramic.Blending.ADD && (quad.texture == null || !quad.texture.isRenderTexture)) {
-            blending = ceramic.Blending.NORMAL;
+        else */
+        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+            if (quad.computedRenderTarget != null) {
+                blending = ceramic.Blending.RENDER_TO_TEXTURE;
+            }
+            else {
+                blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
+            }
         }
 
         return blending;
@@ -1368,14 +1418,24 @@ class Renderer extends Entity {
 
         var blending = mesh.blending;
 
+        /*
         if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
-            blending = ceramic.Blending.NORMAL;
+            // Keep explicit blending
         }
-        else if (blending == ceramic.Blending.NORMAL && mesh.texture != null && mesh.texture.isRenderTexture) {
+        else if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
             blending = ceramic.Blending.ALPHA;
         }
         else if (blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) {
-            blending = ceramic.Blending.NORMAL;
+            blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
+        }
+        */
+        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+            if (mesh.computedRenderTarget != null) {
+                blending = ceramic.Blending.RENDER_TO_TEXTURE;
+            }
+            else {
+                blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
+            }
         }
 
         return blending;
@@ -1415,7 +1475,7 @@ class Renderer extends Entity {
         var flushingQuadsNow = drawnQuads - flushedQuads;
         var flushingMeshesNow = drawnMeshes - flushedMeshes;
         if (debugDraw) {
-            log.info('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastBlending / $lastClip');
+            log.info('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
         }
         flushedQuads = drawnQuads;
         flushedMeshes = drawnMeshes;

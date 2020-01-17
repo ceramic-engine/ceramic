@@ -866,7 +866,7 @@ class Visual extends Entity {
         return renderTarget;
     }
 
-    public var blending(default,set):Blending = Blending.NORMAL;
+    public var blending(default,set):Blending = Blending.AUTO;
     function set_blending(blending:Blending):Blending {
         return this.blending = blending;
     }
