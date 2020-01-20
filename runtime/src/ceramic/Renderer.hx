@@ -26,7 +26,7 @@ class Renderer extends Entity {
     var lastTextureId:backend.TextureId = backend.TextureId.DEFAULT;
     var lastShader:ceramic.Shader = null;
     var lastRenderTarget:ceramic.RenderTexture = null;
-    var lastComputedBlending:ceramic.Blending = ceramic.Blending.AUTO;
+    var lastComputedBlending:ceramic.Blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
     var lastClip:ceramic.Visual = null;
     var activeTextureSlot:Int = 0;
 
@@ -128,7 +128,7 @@ class Renderer extends Entity {
         lastTextureId = backend.TextureId.DEFAULT;
         lastShader = null;
         lastRenderTarget = null;
-        lastComputedBlending = ceramic.Blending.AUTO;
+        lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 #if ceramic_debug_rendering_option
         lastDebugRendering = ceramic.DebugRendering.DEFAULT;
 #end
@@ -308,7 +308,7 @@ class Renderer extends Entity {
         #end
 
         switch blending {
-            case AUTO | PREMULTIPLIED_ALPHA:
+            case PREMULTIPLIED_ALPHA:
                 draw.setBlendFuncSeparate(
                     backend.BlendMode.ONE,
                     backend.BlendMode.ONE_MINUS_SRC_ALPHA,
@@ -343,6 +343,8 @@ class Renderer extends Entity {
                     backend.BlendMode.ONE,
                     backend.BlendMode.ONE_MINUS_SRC_ALPHA
                 );
+            case AUTO:
+                throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
         }
 
         /*
@@ -527,6 +529,38 @@ class Renderer extends Entity {
         drawnQuads++;
 #end
 
+        inline function flushAndCleanState() {
+
+            flush(draw);
+            unbindUsedTextures(draw);
+
+            // Update texture
+            lastTexture = quad.texture;
+            useFirstTextureInBatch(draw, lastTexture);
+
+#if ceramic_debug_rendering_option
+            lastDebugRendering = quad.debugRendering;
+            draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+#end
+
+            // Update render target
+            if (quad.computedRenderTarget != lastRenderTarget) {
+                lastRenderTarget = quad.computedRenderTarget;
+                useRenderTarget(draw, lastRenderTarget);
+            }
+
+            // Update shader
+            lastShader = quad.shader;
+            useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+            // Update blending
+            lastComputedBlending = computeQuadBlending(quad);
+            useBlending(draw, lastComputedBlending);
+
+            stateDirty = false;
+
+        } //flushAndCleanState
+
         if (stencilClip) {
             // Special case of drawing into stencil buffer
 
@@ -602,33 +636,7 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
-                flush(draw);
-                unbindUsedTextures(draw);
-
-                // Update texture
-                lastTexture = quad.texture;
-                useFirstTextureInBatch(draw, lastTexture);
-
-#if ceramic_debug_rendering_option
-                lastDebugRendering = quad.debugRendering;
-                draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
-#end
-
-                // Update render target
-                if (quad.computedRenderTarget != lastRenderTarget) {
-                    lastRenderTarget = quad.computedRenderTarget;
-                    useRenderTarget(draw, lastRenderTarget);
-                }
-
-                // Update shader
-                lastShader = quad.shader;
-                useShader(draw, lastShader != null ? lastShader.backendItem : null);
-
-                // Update blending
-                lastComputedBlending = computeQuadBlending(quad);
-                useBlending(draw, lastComputedBlending);
-
-                stateDirty = false;
+                flushAndCleanState();
             }
             else {
                 if (textureToUseInSameBatch != null) {
@@ -645,10 +653,7 @@ class Renderer extends Entity {
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
-            var textureBeforeFlush = lastTexture;
-            flush(draw);
-            unbindUsedTextures(draw);
-            useFirstTextureInBatch(draw, textureBeforeFlush);
+            flushAndCleanState();
             posFloats = this.posFloats;
         }
 
@@ -983,6 +988,38 @@ class Renderer extends Entity {
         // We could try to refactor to prevent redundancy but this is not required as our
         // main concern here is raw performance and anyway this code won't be updated often.
 
+        inline function flushAndCleanState() {
+
+            flush(draw);
+            unbindUsedTextures(draw);
+
+            // Update texture
+            lastTexture = mesh.texture;
+            useFirstTextureInBatch(draw, lastTexture);
+
+#if ceramic_debug_rendering_option
+            lastDebugRendering = mesh.debugRendering;
+            draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+#end
+
+            // Update render target
+            if (mesh.computedRenderTarget != lastRenderTarget) {
+                lastRenderTarget = mesh.computedRenderTarget;
+                useRenderTarget(draw, lastRenderTarget);
+            }
+
+            // Update shader
+            lastShader = mesh.shader;
+            useShader(draw, lastShader != null ? lastShader.backendItem : null);
+
+            // Update blending
+            lastComputedBlending = computeMeshBlending(mesh);
+            useBlending(draw, lastComputedBlending);
+
+            stateDirty = false;
+
+        } //flushAndCleanState
+
         if (stencilClip) {
             // Special case of drawing into stencil buffer
 
@@ -1058,33 +1095,7 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
-                flush(draw);
-                unbindUsedTextures(draw);
-
-                // Update texture
-                lastTexture = mesh.texture;
-                useFirstTextureInBatch(draw, lastTexture);
-
-#if ceramic_debug_rendering_option
-                lastDebugRendering = mesh.debugRendering;
-                draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
-#end
-
-                // Update render target
-                if (mesh.computedRenderTarget != lastRenderTarget) {
-                    lastRenderTarget = mesh.computedRenderTarget;
-                    useRenderTarget(draw, lastRenderTarget);
-                }
-
-                // Update shader
-                lastShader = mesh.shader;
-                useShader(draw, lastShader != null ? lastShader.backendItem : null);
-
-                // Update blending
-                lastComputedBlending = computeMeshBlending(mesh);
-                useBlending(draw, lastComputedBlending);
-
-                stateDirty = false;
+                flushAndCleanState();
             }
             else {
                 if (textureToUseInSameBatch != null) {
@@ -1157,10 +1168,8 @@ class Renderer extends Entity {
 
         // Submit the current batch if we exceed the max buffer size
         if (countAfter > maxVertFloats) {
-            var textureBeforeFlush = lastTexture;
-            flush(draw);
-            unbindUsedTextures(draw);
-            useFirstTextureInBatch(draw, textureBeforeFlush);
+            flushAndCleanState();
+            textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
             posFloats = this.posFloats;
             countAfter = posFloats + countAdd;
 
@@ -1364,10 +1373,8 @@ class Renderer extends Entity {
                     // There is still data left that needs to be submitted.
                     // Flush pending buffers and iterate once more.
 
-                    var textureBeforeFlush = lastTexture;
-                    flush(draw);
-                    unbindUsedTextures(draw);
-                    useFirstTextureInBatch(draw, textureBeforeFlush);
+                    flushAndCleanState();
+                    textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
                     posFloats = this.posFloats;
 
                     startVertices = endVertices;
