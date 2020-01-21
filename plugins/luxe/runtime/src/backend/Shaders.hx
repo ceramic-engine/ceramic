@@ -315,4 +315,20 @@ void main() {
 
     } //maxIfStatementsByFragmentShader
 
+    inline public function customFloatAttributesSize(shader:backend.impl.CeramicShader):Int {
+
+        var customFloatAttributesSize = 0;
+
+        var allAttrs = shader.customAttributes;
+        if (allAttrs != null) {
+            for (ii in 0...allAttrs.length) {
+                var attr = allAttrs.unsafeGet(ii);
+                customFloatAttributesSize += attr.size;
+            }
+        }
+
+        return customFloatAttributesSize;
+
+    } //customFloatAttributesSize
+
 } //Textures

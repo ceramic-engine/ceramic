@@ -30,4 +30,6 @@ interface Shaders {
 
     function setTexture(shader:Shader, name:String, texture:Texture):Void;
 
+    function customFloatAttributesSize(shader:Shader):Int;
+
 } //Shaders

@@ -60,7 +60,7 @@ class Shader extends Entity {
         this.attributes = attributes;
         this.customAttributes = customAttributes;
 
-        this.customFloatAttributesSize = app.backend.draw.shaderCustomFloatAttributesSize(backendItem);
+        this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
 
     } //new
 

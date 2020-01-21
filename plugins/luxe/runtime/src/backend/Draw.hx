@@ -519,22 +519,6 @@ class Draw implements spec.Draw {
 
     } //matrixToArray
 
-    inline public function shaderCustomFloatAttributesSize(shader:backend.impl.CeramicShader):Int {
-
-        var customFloatAttributesSize = 0;
-
-        var allAttrs = shader.customAttributes;
-        if (allAttrs != null) {
-            for (ii in 0...allAttrs.length) {
-                var attr = allAttrs.unsafeGet(ii);
-                customFloatAttributesSize += attr.size;
-            }
-        }
-
-        return customFloatAttributesSize;
-
-    } //shaderCustomFloatAttributesSize
-
     /*inline public function useRenderTarget(renderTarget:backend.Texture):Void {
 
         if (renderTarget != null) {

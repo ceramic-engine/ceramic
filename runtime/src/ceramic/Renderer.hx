@@ -293,8 +293,8 @@ class Renderer extends Entity {
         //if (activeShader != shader) {
             activeShader = shader;
             draw.useShader(shader);
-            activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(activeShader);
-            customFloatAttributesSize = draw.shaderCustomFloatAttributesSize(shader);
+            activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(shader);
+            customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(shader);
         //}
 
     } //useShader

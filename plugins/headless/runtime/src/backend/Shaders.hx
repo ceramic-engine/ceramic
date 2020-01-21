@@ -10,7 +10,7 @@ class Shaders implements spec.Shaders {
 
     inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
 
-        return new ShaderImpl();
+        return new ShaderImpl(customAttributes);
 
     } //fromSource
 
@@ -81,5 +81,21 @@ class Shaders implements spec.Shaders {
         //
 
     } //setMat4FromTransform
+
+    inline public function customFloatAttributesSize(shader:ShaderImpl):Int {
+
+        var customFloatAttributesSize = 0;
+
+        var allAttrs = shader.customAttributes;
+        if (allAttrs != null) {
+            for (ii in 0...allAttrs.length) {
+                var attr = allAttrs.unsafeGet(ii);
+                customFloatAttributesSize += attr.size;
+            }
+        }
+
+        return customFloatAttributesSize;
+
+    } //customFloatAttributesSize
 
 } //Shaders

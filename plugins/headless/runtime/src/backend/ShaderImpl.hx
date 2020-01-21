@@ -1,5 +1,8 @@
 package backend;
 
 class ShaderImpl {
-    public function new() {}
+    public var customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute> = null;
+    public function new(?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>) {
+        this.customAttributes = customAttributes;
+    }
 }
