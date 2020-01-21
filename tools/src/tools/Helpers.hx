@@ -336,7 +336,7 @@ class Helpers {
         if (!FileSystem.exists(haxelibRepoPath)) {
             FileSystem.createDirectory(haxelibRepoPath);
             haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
-            haxelib(['install', 'bind', '0.4.3', '--always'], {cwd: cwd});
+            haxelib(['install', 'bind', '0.4.4', '--always'], {cwd: cwd});
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
             haxelib(['install', 'unifill', '0.4.1', '--always'], {cwd: cwd});
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
