@@ -155,7 +155,8 @@ class Textures implements spec.Textures {
         var renderTexture = new backend.impl.CeramicRenderTexture({
             id: id,
             width: width,
-            height: height
+            height: height,
+            render_stencil: true // TODO optionize
         });
 
         loadedTexturesRetainCount.set(id, 1);
