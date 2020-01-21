@@ -55,4 +55,10 @@ class Draw #if !completion implements spec.Draw #end {
 
     } //transformForRenderTarget
 
+    inline public function shaderCustomFloatAttributesSize(shader:backend.Shader):Int {
+
+        return 0; // Unused in headless
+
+    } //shaderCustomFloatAttributesSize
+
 } //Draw

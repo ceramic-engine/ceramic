@@ -12,4 +12,6 @@ interface Draw {
 
     function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void;
 
+    function shaderCustomFloatAttributesSize(backendItem:backend.Shader):Int;
+
 } //Draw
