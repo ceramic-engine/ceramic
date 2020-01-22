@@ -129,6 +129,15 @@ class Main extends luxe.Game {
         project = @:privateAccess new Project(ceramic.App.init());
         var app = @:privateAccess ceramic.App.app;
 
+
+#if snow_openal_manual_init
+        // On ios, we didn't init OpenAL right away because
+        // we need to wait for ceramic app init to be able to configure
+        // which kind of AVAudioSessionCategory we are running on
+        Luxe.snow.audio.module.init_al();
+        Luxe.snow.audio.active = true;
+#end
+
         // Configure luxe
         config.render.antialiasing = app.settings.antialiasing;
         config.window.borderless = false;

@@ -196,6 +196,9 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-D hxcpp_static_std';
             targetFlags += '\n' + '-D luxe_native';
             targetFlags += '\n' + '-D snow_native';
+            if (target.name == 'ios') {
+                targetFlags += '\n' + '-D snow_openal_manual_init';
+            }
             if (target.name == 'ios' || target.name == 'android') {
                 targetFlags += '\n' + '-D linc_opengl_GLES';
                 targetFlags += '\n' + '-D mobile';
