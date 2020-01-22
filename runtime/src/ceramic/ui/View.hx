@@ -464,7 +464,7 @@ class View extends Quad {
         // Register view in global list
         if (_allViews == null) {
             _allViews = [];
-            app.onUpdate(null, _updateViewsLayout);
+            app.onPostUpdate(null, _updateViewsLayout);
         }
         _allViews.push(this);
 
