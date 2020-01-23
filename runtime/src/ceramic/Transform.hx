@@ -11,7 +11,9 @@ package ceramic;
 @:allow(ceramic.TransformPool)
 class Transform implements Events {
 
-    static var _decomposed:DecomposedTransform = new DecomposedTransform();
+    static var _decomposed1:DecomposedTransform = new DecomposedTransform();
+
+    static var _decomposed2:DecomposedTransform = new DecomposedTransform();
 
 /// Events
 
@@ -92,6 +94,12 @@ class Transform implements Events {
 
     inline function didEmitChange():Void {
 
+        cleanChangedState();
+
+    } //didEmitChange
+
+    inline public function cleanChangedState():Void {
+
         _aPrev = a;
         _bPrev = b;
         _cPrev = c;
@@ -101,7 +109,7 @@ class Transform implements Events {
 
         changed = false;
 
-    } //didEmitChange
+    } //cleanChangedState
 
     inline public function clone():Transform {
 
@@ -184,6 +192,31 @@ class Transform implements Events {
         );
 
     } //setFromValues
+
+    inline public function setFromInterpolated(transform1:Transform, transform2:Transform, ratio:Float):Void {
+
+        if (ratio == 0) {
+            setToTransform(transform1);
+        }
+        else if (ratio == 1) {
+            setToTransform(transform2);
+        }
+        else {
+            transform1.decompose(_decomposed1);
+            transform2.decompose(_decomposed2);
+            _decomposed1.pivotX = _decomposed1.pivotX + (_decomposed2.pivotX - _decomposed1.pivotX) * ratio;
+            _decomposed1.pivotY = _decomposed1.pivotY + (_decomposed2.pivotY - _decomposed1.pivotY) * ratio;
+            _decomposed1.rotation = _decomposed1.rotation + (_decomposed2.rotation - _decomposed1.rotation) * ratio;
+            _decomposed1.scaleX = _decomposed1.scaleX + (_decomposed2.scaleX - _decomposed1.scaleX) * ratio;
+            _decomposed1.scaleY = _decomposed1.scaleY + (_decomposed2.scaleY - _decomposed1.scaleY) * ratio;
+            _decomposed1.skewX = _decomposed1.skewX + (_decomposed2.skewX - _decomposed1.skewX) * ratio;
+            _decomposed1.skewY = _decomposed1.skewY + (_decomposed2.skewY - _decomposed1.skewY) * ratio;
+            _decomposed1.x = _decomposed1.x + (_decomposed2.x - _decomposed1.x) * ratio;
+            _decomposed1.y = _decomposed1.y + (_decomposed2.y - _decomposed1.y) * ratio;
+            setFromDecomposed(_decomposed1);
+        }
+
+    } //setFromInterpolated
 
     inline public function deltaTransformX(x:Float, y:Float):Float {
 
@@ -355,8 +388,8 @@ class Transform implements Events {
 
     public function toString():String {
 
-        decompose(_decomposed);
-        return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + " " + _decomposed + ")";
+        decompose(_decomposed1);
+        return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + " " + _decomposed1 + ")";
 
     } //toString
 
