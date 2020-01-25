@@ -199,4 +199,30 @@ class Mesh extends Visual {
 
     } //hitsComplexWithMatrix
 
+    /** Compute width and height from vertices */
+    public function computeSize() {
+
+        if (vertices != null && vertices.length >= 2) {
+            var maxX:Float = 0;
+            var maxY:Float = 0;
+            var i = 0;
+            var lenMinus1 = vertices.length - 1;
+            while (i < lenMinus1) {
+                var x = vertices.unsafeGet(i);
+                if (x > maxX)
+                    maxX = x;
+                i++;
+                var y = vertices.unsafeGet(i);
+                if (y > maxY)
+                    maxY = y;
+                i++;
+            }
+            size(maxX, maxY);
+        }
+        else {
+            size(0, 0);
+        }
+
+    } //computeSize
+
 } //Mesh
