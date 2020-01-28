@@ -38,7 +38,7 @@ extern class Canvas
 		return cast getContext("2d", attribs);
 	}
 
-} //Canvas
+}
 
 @:jsRequire("canvas-prebuilt", "Image")
 extern class Image {
@@ -150,7 +150,7 @@ extern class Image {
 	**/
 	var y(default,null) : Int;
 
-} //Image
+}
 
 extern class CanvasRenderingContext2D {
 
@@ -257,7 +257,7 @@ extern class CanvasRenderingContext2D {
 	/** @throws DOMError */
 	function ellipse( x : Float, y : Float, radiusX : Float, radiusY : Float, rotation : Float, startAngle : Float, endAngle : Float, ?anticlockwise : Bool = false ) : Void;
 
-} //CanvasRenderingContext2D
+}
 
 @:jsRequire("canvas-prebuilt", "ImageData")
 extern class ImageData

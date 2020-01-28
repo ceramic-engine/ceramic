@@ -7,4 +7,4 @@ import ceramic.AssetId;
 #end
 class Tilemaps {
 
-} //Tilemaps
+}

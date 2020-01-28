@@ -182,7 +182,7 @@ class Entity implements Events implements Lazy {
 
         #end
 
-    } //new
+    }
 
     #if (cpp && ceramic_debug_entity_allocs)
     @:void public static function __finalizeEntity(o:Entity):Void {
@@ -244,7 +244,7 @@ class Entity implements Events implements Lazy {
         clearComponents();
         unbindEvents();
 
-    } //destroy
+    }
 
     /** Remove all events handlers from this entity. */
     public function unbindEvents():Void {
@@ -252,7 +252,7 @@ class Entity implements Events implements Lazy {
         // Events macro will automatically fill this method
         // and create overrides in subclasses to unbind any event
 
-    } //unbindEvents
+    }
 
 /// Autorun
 
@@ -327,7 +327,7 @@ class Entity implements Events implements Lazy {
         return _autorun;
         //*/
 
-    } //autorun
+    }
 
     function checkAutoruns(_):Void {
 
@@ -338,7 +338,7 @@ class Entity implements Events implements Lazy {
             }
         }
 
-    } //checkAutoruns
+    }
 
 /// Tween
 
@@ -346,7 +346,7 @@ class Entity implements Events implements Lazy {
 
         return Tween.start(this, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
 
-    } //tween
+    }
 
 /// Print
 
@@ -357,7 +357,7 @@ class Entity implements Events implements Lazy {
         if (dotIndex != -1) className = className.substr(dotIndex + 1);
         return className;
 
-    } //className
+    }
 
     function toString():String {
 
@@ -369,7 +369,7 @@ class Entity implements Events implements Lazy {
             return '$className';
         }
 
-    } //toString
+    }
 
 /// Components
 
@@ -389,7 +389,7 @@ class Entity implements Events implements Lazy {
             }
         }
 
-    } //clearComponents
+    }
 
     /** Public components mapping. Contain components
         created separately with `component()` or macro-based components as well. */
@@ -493,13 +493,13 @@ class Entity implements Events implements Lazy {
             return _components.get(name);
         }
 
-    } //component
+    }
 
     public function hasComponent(name:String):Bool {
 
         return component(name) != null;
 
-    } //hasComponent
+    }
 
     public function removeComponent(name:String):Void {
 
@@ -510,7 +510,7 @@ class Entity implements Events implements Lazy {
             existingAsEntity.destroy();
         }
 
-    } //removeComponent
+    }
 
 #if editor
 
@@ -519,4 +519,4 @@ class Entity implements Events implements Lazy {
 
 #end
 
-} //Entity
+}

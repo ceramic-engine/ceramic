@@ -39,7 +39,7 @@ class Files {
 
         #end
 
-    } //haveSameContent
+    }
 
     /** Only works in nodejs for now. */
     public static function haveSameLastModified(filePath1:String, filePath2:String):Bool {
@@ -64,7 +64,7 @@ class Files {
 
         #end
 
-    } //haveSameLastModified
+    }
 
     /** Only works in nodejs for now. */
     public static function setToSameLastModified(srcFilePath:String, dstFilePath:String):Void {
@@ -86,7 +86,7 @@ class Files {
 
         #end
 
-    } //haveSameLastModified
+    }
 
     /** Return file mtime in seconds. Only works in nodejs for now. */
     public static function getLastModified(filePath:String):Int {
@@ -104,7 +104,7 @@ class Files {
 
         #end
 
-    } //getLastModified
+    }
     
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
@@ -143,7 +143,7 @@ class Files {
 
         #end
 
-    } //getFlatDirectory
+    }
 
     public static function removeEmptyDirectories(dir:String, excludeSystemFiles:Bool = true):Void {
 
@@ -168,7 +168,7 @@ class Files {
 
         #end
 
-    } //removeEmptyDirectories
+    }
 
     public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true):Bool {
 
@@ -190,7 +190,7 @@ class Files {
 
         #end
 
-    } //isEmptyDirectory
+    }
 
     public static function deleteRecursive(toDelete:String):Void {
 
@@ -233,7 +233,7 @@ class Files {
 
         #end
 
-    } //deleteRecursive
+    }
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
@@ -267,7 +267,7 @@ class Files {
 
         return result;
 
-    } //getRelativePath
+    }
 
     public static function copyFileWithIntermediateDirs(srcPath:String, dstPath:String):Void {
 
@@ -286,7 +286,7 @@ class Files {
 
         #end
 
-    } //copyFileWithIntermediateDirs
+    }
 
     public static function copyDirectory(srcDir:String, dstDir:String, removeExisting:Bool = false):Void {
 
@@ -320,6 +320,6 @@ class Files {
 
         #end
 
-    } //copyDirectory
+    }
 
-} //Files
+}

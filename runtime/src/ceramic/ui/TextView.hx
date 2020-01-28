@@ -103,7 +103,7 @@ class TextView extends View {
 
         transparent = true;
 
-    } //new
+    }
 
     var persistedFitWidth:Float = -1;
 
@@ -198,7 +198,7 @@ class TextView extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
         }
 
-    } //computeSize
+    }
 
     override function layout() {
 
@@ -277,6 +277,6 @@ class TextView extends View {
             text.x = width * 0.5 + paddingLeft - paddingRight;
         }
 
-    } //layout
+    }
 
-} //View
+}

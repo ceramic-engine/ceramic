@@ -87,4 +87,4 @@ typedef Context = {
     /** A flag to tell whether one icon or more have changed since last icon pass */
     var iconsChanged:Bool;
 
-} //Context
+}

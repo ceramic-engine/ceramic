@@ -15,12 +15,12 @@ class ConvertTexture implements ConvertField<String,Texture> {
             done(null);
         }
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:Texture):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 
-    } //fieldToBasic
+    }
 
-} //ConvertTexture
+}

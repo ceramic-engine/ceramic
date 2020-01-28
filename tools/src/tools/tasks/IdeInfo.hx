@@ -13,7 +13,7 @@ class IdeInfo extends tools.Task {
 
         return "Print project information for IDE.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -154,7 +154,7 @@ class IdeInfo extends tools.Task {
                             select: itemSelect
                         });
                     }
-                } //projectTasks
+                }
                 
                 if (projectVariants != null) {
                     for (item in projectVariants) {
@@ -212,7 +212,7 @@ class IdeInfo extends tools.Task {
                             select: itemSelect
                         });
                     }
-                } //projectVariants
+                }
             }
         }
         catch (e:Dynamic) {
@@ -227,6 +227,6 @@ class IdeInfo extends tools.Task {
             }
         }, null, '    '));
 
-    } //run
+    }
 
-} //IdeInfo
+}

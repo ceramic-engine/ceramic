@@ -14,7 +14,7 @@ class Script extends tools.Task {
 
         return "Run script (headless).";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -46,6 +46,6 @@ class Script extends tools.Task {
 
         setVariant(prevVariant);
 
-    } //run
+    }
 
-} //Script
+}

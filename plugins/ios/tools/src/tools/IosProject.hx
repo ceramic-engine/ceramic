@@ -81,7 +81,7 @@ class IosProject {
             }
         }
 
-    } //createIosProjectIfNeeded
+    }
 
     public static function updateBuildNumber(cwd:String, project:Project) {
 
@@ -114,7 +114,7 @@ class IosProject {
             #end
         }
 
-    } //updateBuildNumber
+    }
 
     public static function headerSearchPaths(cwd:String, project:Project, debug:Bool):Array<String> {
 
@@ -135,7 +135,7 @@ class IosProject {
 
         return headerSearchPaths;
 
-    } //headerSearchPaths
+    }
 
     static function pods(cwd:String, project:Project):Array<String> {
 
@@ -163,7 +163,7 @@ class IosProject {
 
         return pods;
 
-    } //pods
+    }
 
 /// Internal
 
@@ -210,6 +210,6 @@ class IosProject {
 
         return result;
 
-    } //parseXcConfigValue
+    }
 
-} //IosProject
+}

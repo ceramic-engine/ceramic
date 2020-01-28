@@ -24,7 +24,7 @@ class Main {
         // Emit ready event
         ceramic.App.app.backend.emitReady();
 
-    } //main
+    }
 
     static function update() {
 
@@ -37,6 +37,6 @@ class Main {
         ceramic.App.app.backend.emitUpdate(delta);
         #end
 
-    } //update
+    }
 
-} //Main
+}

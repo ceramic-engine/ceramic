@@ -24,4 +24,4 @@ interface Textures {
 
     function createRenderTarget(width:Int, height:Int):Texture;
 
-} //Textures
+}

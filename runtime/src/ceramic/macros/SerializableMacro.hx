@@ -167,7 +167,7 @@ class SerializableMacro {
 
         return fields;
 
-    } //build
+    }
 
     static function hasSerializeMeta(field:Field):Bool {
 
@@ -181,6 +181,6 @@ class SerializableMacro {
 
         return false;
 
-    } //hasSerializeMeta
+    }
 
-} //SerializableMacro
+}

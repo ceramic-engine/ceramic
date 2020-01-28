@@ -15,7 +15,7 @@ class ScanCode {
 
         return res != null ? res : "";
 
-    } //name
+    }
 
     // special value remains caps
     public static inline var MASK:Int                      = (1<<30);
@@ -617,4 +617,4 @@ class ScanCode {
         "Sleep",
     ]; //scanCode names
 
-} //ScanCode
+}

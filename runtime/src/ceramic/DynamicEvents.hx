@@ -17,14 +17,14 @@ class DynamicEvents<T> extends Entity {
         dispatcher = new EventDispatcher();
         mapping = new Map();
 
-    } //new
+    }
 
     function eventToString(event:T):String {
 
         var name:Dynamic = event;
         return name.toString();
 
-    } //keyToString
+    }
 
     function indexForEvent(event:T):Int {
 
@@ -38,7 +38,7 @@ class DynamicEvents<T> extends Entity {
             return index;
         }
 
-    } //indexForEvent
+    }
 
     /// Publi API
 
@@ -62,34 +62,34 @@ class DynamicEvents<T> extends Entity {
             dispatcher.emit(index, -1, args);
         }
 
-    } //emit
+    }
 
     public function on(event:T, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
         var index = indexForEvent(event);
         dispatcher.on(index, owner, cb);
 
-    } //on
+    }
 
     public function once(event:T, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
         var index = indexForEvent(event);
         dispatcher.once(index, owner, cb);
 
-    } //once
+    }
 
     public function off(event:T, ?cb:Dynamic):Void {
 
         var index = indexForEvent(event);
         dispatcher.off(index, cb);
 
-    } //off
+    }
 
     public function listens(event:T):Bool {
 
         var index = indexForEvent(event);
         return dispatcher.listens(index);
 
-    } //listens
+    }
 
-} //DynamicEvents
+}

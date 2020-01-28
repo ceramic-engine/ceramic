@@ -7,4 +7,4 @@ extern class CommandExists {
         return js.Node.require('command-exists').sync(name);
     }
 
-} //CommandExists
+}

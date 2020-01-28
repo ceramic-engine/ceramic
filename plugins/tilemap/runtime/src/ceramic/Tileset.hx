@@ -50,4 +50,4 @@ class Tileset extends Entity {
         to determine how tile overlays for terrain an collision information are rendered. */
     public var gridCellHeight:Int = 0;
 
-} //Tileset
+}

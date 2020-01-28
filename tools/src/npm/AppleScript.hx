@@ -5,4 +5,4 @@ extern class AppleScript {
 
     static function execString(script:String, callback:Dynamic->Dynamic->Void):Void;
 
-} //AppleScript
+}

@@ -14,7 +14,7 @@ class Init extends tools.Task {
 
         return "Initialize a new ceramic project.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -113,6 +113,6 @@ app:
 
         }
 
-    } //run
+    }
 
-} //Init
+}

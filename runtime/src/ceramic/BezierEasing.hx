@@ -46,7 +46,7 @@ class BezierEasing {
 
         inline configure(x1, y1, x2, y2);
 
-    } //new
+    }
 
     /** Configure the instance with the given arguments.
         If only `x1` and `y1` are provided, the curve is treated as quadratic.
@@ -90,7 +90,7 @@ class BezierEasing {
             }
         }
 
-    } //configure
+    }
 
     public function ease(x:Float):Float {
 
@@ -98,7 +98,7 @@ class BezierEasing {
         if (x == 1) return 1;
         return calcBezier(getTForX(x), mY1, mY2);
 
-    } //ease
+    }
 
     inline function getTForX(aX:Float):Float {
 
@@ -125,21 +125,21 @@ class BezierEasing {
             return binarySubdivide(aX, intervalStart, intervalStart + SAMPLE_STEP_SIZE, mX1, mX2);
         }
 
-    } //aX
+    }
 
     /** Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2 */
     inline function calcBezier(aT:Float, aA1:Float, aA2:Float) {
 
         return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
 
-    } //calcBezier
+    }
 
     /** Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2 **/
     inline function getSlope(aT:Float, aA1:Float, aA2:Float) {
         
         return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
         
-    } //getSlope
+    }
 
     inline function binarySubdivide(aX:Float, aA:Float, aB:Float, mX1:Float, mX2:Float) {
 
@@ -159,7 +159,7 @@ class BezierEasing {
 
         return currentT;
 
-    } //binarySubdivide
+    }
 
     function newtonRaphsonIterate(aX:Float, aGuessT:Float, mX1:Float, mX2:Float) {
 
@@ -174,7 +174,7 @@ class BezierEasing {
 
         return aGuessT;
 
-    } //newtonRaphsonIterate
+    }
 
     inline function A(aA1:Float, aA2:Float) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
     inline function B(aA1:Float, aA2:Float) { return 3.0 * aA2 - 6.0 * aA1; }
@@ -184,13 +184,13 @@ class BezierEasing {
 
         return TWO_THIRD * p;
         
-    } //quadraticToCubicCP1
+    }
 
     inline static function quadraticToCubicCP2(p:Float):Float {
 
         return 1.0 + TWO_THIRD * (p - 1.0);
         
-    } //quadraticToCubicCP2
+    }
 
     /// Cache
 
@@ -215,21 +215,21 @@ class BezierEasing {
             }
         }
 
-    } //removeFromCache
+    }
 
     inline static function cacheKey(x1:Float, y1:Float, x2:Float, y2:Float):Int {
 
         var floatKey = x1 * 100 + y1 * 1000 + x2 * 10000 + y2 * 100000;
         return Std.int(floatKey);
 
-    } //cacheKey
+    }
 
     public static function clearCache():Void {
 
         cachedInstances = null;
         numCachedInstances = 0;
 
-    } //clearCache
+    }
 
     /** Get or create a `BezierEasing` instance with the given parameters.
         Created instances are cached and reused. */
@@ -281,6 +281,6 @@ class BezierEasing {
 
         return result;
 
-    } //get
+    }
 
-} //BezierEasing
+}

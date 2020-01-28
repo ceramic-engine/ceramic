@@ -13,7 +13,7 @@ class BuildPlugin extends tools.Task {
 
         return "Build the current plugin or all enabled plugins (with --all).";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -74,6 +74,6 @@ class BuildPlugin extends tools.Task {
 
         }
 
-    } //run
+    }
 
-} //BuildPlugin
+}

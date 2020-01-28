@@ -10,4 +10,4 @@ package ceramic;
 
     var DELETE = "DELETE";
 
-} //HttpMethod
+}

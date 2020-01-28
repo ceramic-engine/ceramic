@@ -14,7 +14,7 @@ class Extensions<T> {
 #else
         return array[index];
 #end
-    } //unsafeGet
+    }
 
     #if !ceramic_debug_unsafe inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
 #if ceramic_debug_unsafe
@@ -25,7 +25,7 @@ class Extensions<T> {
 #else
         array[index] = value;
 #end
-    } //unsafeSet
+    }
 
     #if !debug inline #end public static function setArrayLength<T>(array:Array<T>, length:Int):Void {
         if (array.length != length) {
@@ -41,14 +41,14 @@ class Extensions<T> {
             }
 #end
         }
-    } //setArrayLength
+    }
 
     /** Return a random element contained in the given array */
     inline public static function randomElement<T>(array:Array<T>):T {
 
         return array[Math.floor(Math.random() * 0.99999 * array.length)];
 
-    } //randomElement
+    }
 
     /** Return a random element contained in the given array that is not equal to the `except` arg.
         @param array  The array in which we extract the element from
@@ -87,7 +87,7 @@ class Extensions<T> {
 
         return null;
 
-    } //randomElementExcept
+    }
 
     /** Return a random element contained in the given array that is validated by the provided validator.
         If no item is valid, returns null.
@@ -112,7 +112,7 @@ class Extensions<T> {
 
         return null;
 
-    } //randomElementMatchingValidator
+    }
 
     /** Shuffle an Array. This operation affects the array in place.
         The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle) */
@@ -133,7 +133,7 @@ class Extensions<T> {
 			}
 		}
 
-	} //shuffle
+	}
 
     public static function swapElements<T>(arr:Array<T>, index0:Int, index1:Int):Void {
 
@@ -141,7 +141,7 @@ class Extensions<T> {
         arr[index0] = arr[index1];
         arr[index1] = a;
 
-    } //swapElements
+    }
 
 /// Generic extensions
 
@@ -150,13 +150,13 @@ class Extensions<T> {
 
         Reflect.setProperty(instance, field, value);
 
-    } //setProperty
+    }
 
     @:noCompletion
     inline public static function getProperty<T>(instance:T, field:String):Dynamic {
 
         return Reflect.getProperty(instance, field);
 
-    } //getProperty
+    }
 
-} //Extensions
+}

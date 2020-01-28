@@ -10,7 +10,7 @@ namespace backend {
         forKey:@"AppleMomentumScrollSupported"];
         [defaults registerDefaults:appDefaults];
 
-    } //NativeMac_setAppleMomentumScrollSupported
+    }
 
 }
 

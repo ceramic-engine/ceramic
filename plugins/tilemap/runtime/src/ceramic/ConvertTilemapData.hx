@@ -21,12 +21,12 @@ class ConvertTilemapData implements ConvertField<String,TilemapData> {
             done(null);
         }
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:TilemapData):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 
-    } //fieldToBasic
+    }
 
-} //ConvertTilemapData
+}

@@ -7,7 +7,7 @@ package ceramic;
         this.keyCode = keyCode;
         this.scanCode = scanCode;
 
-    } //new
+    }
 
     /** Key code (localized key) depends on keyboard mapping (QWERTY, AZERTY, ...) */
     public var keyCode:Int;
@@ -31,6 +31,6 @@ package ceramic;
 
         return 'Key($keyCode $keyCodeName / $scanCode $scanCodeName)';
 
-    } //toString
+    }
 
-} //Key
+}

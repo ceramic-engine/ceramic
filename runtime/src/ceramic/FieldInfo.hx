@@ -55,13 +55,13 @@ class FieldInfo {
 
         return info;
 
-    } //types
+    }
 
     public static function typeOf(targetClass:String, field:String):String {
 
         return types(targetClass).get(field);
 
-    } //typeOf
+    }
 
     public static function stringFromCType(type:CType):String {
         
@@ -88,7 +88,7 @@ class FieldInfo {
 
         return result;
 
-    } //stringFromCType
+    }
 
 #if editor
 
@@ -130,8 +130,8 @@ class FieldInfo {
 
         return info;
 
-    } //editableFieldTypes
+    }
 
 #end
 
-} //FieldInfo
+}

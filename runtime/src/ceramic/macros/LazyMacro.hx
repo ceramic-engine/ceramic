@@ -132,7 +132,7 @@ class LazyMacro {
 
         return newFields;
 
-    } //build
+    }
 
     static function hasLazyMeta(field:Field):Bool {
 
@@ -146,6 +146,6 @@ class LazyMacro {
 
         return false;
 
-    } //hasComponentMeta
+    }
 
 }

@@ -29,7 +29,7 @@ class TextInput implements spec.TextInput {
             if (inputActive) handleKeyUp(ev.keycode, ev.scancode);
         });
 
-    } //new
+    }
 
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
@@ -51,7 +51,7 @@ class TextInput implements spec.TextInput {
 #end
         inputActive = true;
 
-    } //start
+    }
 
     public function stop():Void {
 
@@ -69,7 +69,7 @@ class TextInput implements spec.TextInput {
 
         inputActive = false;
 
-    } //stop
+    }
 
 /// Internal
 
@@ -86,7 +86,7 @@ class TextInput implements spec.TextInput {
 
         ceramic.App.app.textInput.appendText(text);
 
-    } //handleTextInput
+    }
 
     function handleKeyDown(keyCode:Int, scanCode:Int) {
 
@@ -127,7 +127,7 @@ class TextInput implements spec.TextInput {
             ceramic.App.app.textInput.shiftDown();
         }
 
-    } //handleKeyDown
+    }
 
     function handleKeyUp(keyCode:Int, scanCode:Int) {
 
@@ -136,6 +136,6 @@ class TextInput implements spec.TextInput {
             ceramic.App.app.textInput.shiftUp();
         }
 
-    } //handleKeyUp
+    }
 
-} //TextInput
+}

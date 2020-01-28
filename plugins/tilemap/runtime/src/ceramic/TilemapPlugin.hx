@@ -23,7 +23,7 @@ class TilemapPlugin {
         // compatible with haxe-modular or similar bundling tools
         TilemapPlugin.pluginInit();
 
-    } //__init__
+    }
     
     static function pluginInit() {
 
@@ -40,7 +40,7 @@ class TilemapPlugin {
             
         });
 
-    } //pluginInit
+    }
 
 /// Asset extensions
 
@@ -50,7 +50,7 @@ class TilemapPlugin {
 
         assets.addAsset(new TilemapAsset(name, options));
 
-    } //addTilemap
+    }
 
     public static function ensureTilemap(assets:Assets, name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TilemapAsset->Void):Void {
 
@@ -60,7 +60,7 @@ class TilemapPlugin {
             done(Std.is(asset, TilemapAsset) ? cast asset : null);
         });
 
-    } //ensureTilemap
+    }
 
     @:access(ceramic.Assets)
     public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>):TilemapData {
@@ -74,6 +74,6 @@ class TilemapPlugin {
 
         return asset.tilemapData;
 
-    } //tilemap
+    }
 
-} //TilemapPlugin
+}

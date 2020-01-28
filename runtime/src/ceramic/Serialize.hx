@@ -31,7 +31,7 @@ class Serialize {
 
         return result;
 
-    } //serialize
+    }
 
     public static function deserialize(serializable:Serializable, data:String):Void {
 
@@ -45,7 +45,7 @@ class Serialize {
         _deserializedMap = null;
         _serializedMap = null;
 
-    } //deserialize
+    }
 
 /// Internal
 
@@ -157,7 +157,7 @@ class Serialize {
 
         }
 
-    } //serializeValue
+    }
 
     static function deserializeValue(value:Dynamic, ?serializable:Serializable):Dynamic {
 
@@ -274,6 +274,6 @@ class Serialize {
 
         }
 
-    } //deserializeValue
+    }
 
-} //Serialize
+}

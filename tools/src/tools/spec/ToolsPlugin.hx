@@ -23,4 +23,4 @@ typedef ToolsPlugin = {
 
     @:optional function extendCompletionHxml(hxml:String):Void;
 
-} //ToolsPlugin
+}

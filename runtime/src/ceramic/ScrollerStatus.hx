@@ -14,4 +14,4 @@ enum ScrollerStatus {
     /** Scrolling after dragging has ended */
     SCROLLING;
 
-} //ScrollerStatus
+}

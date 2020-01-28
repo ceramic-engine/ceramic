@@ -36,7 +36,7 @@ class Assets extends Entity {
 
         super();
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -49,7 +49,7 @@ class Assets extends Entity {
         addedAssets = null;
         assetsByKindAndName = null;
 
-    } //destroy
+    }
 
     /** Destroy assets that have their refCount at `0`. */
     public function flush() {
@@ -58,7 +58,7 @@ class Assets extends Entity {
             if (asset.refCount == 0) asset.destroy();
         }
 
-    } //flush
+    }
 
 /// Add assets to load
 
@@ -89,49 +89,49 @@ class Assets extends Entity {
                 }
         }
 
-    } //add
+    }
 
     public function addImage(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('image:')) name = name.substr(6);
         addAsset(new ImageAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addImage
+    }
 
     public function addFont(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('font:')) name = name.substr(5);
         addAsset(new FontAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addFont
+    }
 
     public function addText(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('text:')) name = name.substr(5);
         addAsset(new TextAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addText
+    }
 
     public function addSound(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('sound:')) name = name.substr(6);
         addAsset(new SoundAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addSound
+    }
 
     public function addDatabase(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('database:')) name = name.substr(9);
         addAsset(new DatabaseAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addDatabase
+    }
 
     public function addShader(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
         if (name.startsWith('shader:')) name = name.substr(7);
         addAsset(new ShaderAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
-    } //addShader
+    }
 
     /** Add the given asset. If a previous asset was replaced, return it. */
     public function addAsset(asset:Asset):Asset {
@@ -162,7 +162,7 @@ class Assets extends Entity {
 
         return previousAsset;
 
-    } //addAsset
+    }
 
     function assetDestroyed(_) {
 
@@ -179,7 +179,7 @@ class Assets extends Entity {
             }
         }
 
-    } //assetDestroyed
+    }
     
     public function asset(idOrName:Dynamic, ?kind:String):Asset {
 
@@ -198,7 +198,7 @@ class Assets extends Entity {
         if (byName == null) return null;
         return byName.get(name);
 
-    } //asset
+    }
 
     public function removeAsset(asset:Asset):Void {
 
@@ -215,7 +215,7 @@ class Assets extends Entity {
         byName.remove(asset.name);
         asset.owner = null;
 
-    } //removeAsset
+    }
 
 /// Load
 
@@ -266,7 +266,7 @@ class Assets extends Entity {
 
         }
 
-    } //load
+    }
 
 /// Ensure
 
@@ -321,7 +321,7 @@ class Assets extends Entity {
             done(null);
         }
 
-    } //ensure
+    }
 
     public function ensureImage(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ImageAsset->Void):Void {
 
@@ -330,7 +330,7 @@ class Assets extends Entity {
             done(Std.is(asset, ImageAsset) ? cast asset : null);
         });
 
-    } //ensureImage
+    }
 
     public function ensureFont(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:FontAsset->Void):Void {
 
@@ -339,7 +339,7 @@ class Assets extends Entity {
             done(Std.is(asset, FontAsset) ? cast asset : null);
         });
 
-    } //ensureFont
+    }
 
     public function ensureText(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TextAsset->Void):Void {
 
@@ -348,7 +348,7 @@ class Assets extends Entity {
             done(Std.is(asset, TextAsset) ? cast asset : null);
         });
 
-    } //ensureText
+    }
 
     public function ensureSound(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:SoundAsset->Void):Void {
 
@@ -357,7 +357,7 @@ class Assets extends Entity {
             done(Std.is(asset, SoundAsset) ? cast asset : null);
         });
 
-    } //ensureSound
+    }
 
     public function ensureDatabase(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:DatabaseAsset->Void):Void {
 
@@ -366,7 +366,7 @@ class Assets extends Entity {
             done(Std.is(asset, DatabaseAsset) ? cast asset : null);
         });
 
-    } //ensureDatabase
+    }
 
     public function ensureShader(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ShaderAsset->Void):Void {
 
@@ -375,7 +375,7 @@ class Assets extends Entity {
             done(Std.is(asset, ShaderAsset) ? cast asset : null);
         });
 
-    } //ensureShader
+    }
 
 /// Get
 
@@ -390,7 +390,7 @@ class Assets extends Entity {
 
         return asset.texture;
 
-    } //texture
+    }
 
     public function font(name:Either<String,AssetId<String>>):BitmapFont {
 
@@ -403,7 +403,7 @@ class Assets extends Entity {
 
         return asset.font;
 
-    } //font
+    }
 
     public function sound(name:Either<String,AssetId<String>>):Sound {
 
@@ -416,7 +416,7 @@ class Assets extends Entity {
 
         return asset.sound;
 
-    } //sound
+    }
 
     public function text(name:Either<String,AssetId<String>>):String {
 
@@ -429,7 +429,7 @@ class Assets extends Entity {
 
         return asset.text;
 
-    } //text
+    }
 
     public function shader(name:Either<String,AssetId<String>>):Shader {
 
@@ -442,7 +442,7 @@ class Assets extends Entity {
 
         return asset.shader;
 
-    } //shader
+    }
 
     public function database(name:Either<String,AssetId<String>>):Array<DynamicAccess<String>> {
 
@@ -455,7 +455,7 @@ class Assets extends Entity {
 
         return asset.database;
 
-    } //database
+    }
 
 /// Iterator
 
@@ -471,7 +471,7 @@ class Assets extends Entity {
 
         return list.iterator();
 
-    } //iterator
+    }
 
 /// Static helpers
 
@@ -479,7 +479,7 @@ class Assets extends Entity {
 
         return new AssetPathInfo(path);
 
-    } //decodePath
+    }
 
     public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool, types:Array<String>):Void {
 
@@ -491,7 +491,7 @@ class Assets extends Entity {
             types: types
         });
 
-    } //addAssetKind
+    }
 
     public static function assetNameFromPath(path:String):String {
 
@@ -506,7 +506,7 @@ class Assets extends Entity {
 
         return null;
 
-    } //assetNameFromPath
+    }
 
     public static function realAssetPath(path:String):String {
 
@@ -518,6 +518,6 @@ class Assets extends Entity {
             return path;
         }
 
-    } //realAssetPath
+    }
 
-} //Assets
+}

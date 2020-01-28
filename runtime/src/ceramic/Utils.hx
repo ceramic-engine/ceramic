@@ -20,13 +20,13 @@ class Utils {
 
         return path;
 
-    } //realPath
+    }
 
     inline public static function getRtti<T>(c:Class<T>):Classdef {
 
         return PlatformSpecific.getRtti(c);
 
-    } //getRtti
+    }
 
     static var _nextUniqueIntCursor:Int = 0;
     static var _nextUniqueInt0:Int = Std.random(0x7fffffff);
@@ -52,7 +52,7 @@ class Utils {
 
         return base62Id(_nextUniqueInt0) + base62Id() + base62Id(_nextUniqueInt1) + base62Id() + base62Id(_nextUniqueInt2) + base62Id() + base62Id(_nextUniqueInt3);
 
-    } //uniqueId
+    }
 
     /** Provides a random identifier which should be fairly unpredictable and
         should have an extremely low chance to provide the same identifier twice. */
@@ -68,7 +68,7 @@ class Utils {
         chars.shuffle();
         return chars.join('').substr(0, size);
 
-    } //randomId
+    }
 
     static var _persistentIds:Map<Int,String> = null;
 
@@ -104,14 +104,14 @@ class Utils {
         // Return result
         return id;
 
-    } //persistentId
+    }
 
     public static function resetPersistentId(?slot:Int = 0) {
 
         if (_persistentIds != null) _persistentIds.remove(slot);
         app.backend.io.saveString('persistentId_$slot', null);
 
-    } //resetPersistentId
+    }
 
     inline public static function base62Id(?val:Null<Int>):String {
 
@@ -128,14 +128,14 @@ class Utils {
                 if (ascii > 90) { ascii += 6; }
                 return String.fromCharCode(ascii);
             } else return Std.string(value).charAt(0);
-        } //toChar
+        }
 
         var r = Std.int(val % 62);
         var q = Std.int(val / 62);
         if (q > 0) return base62Id(q) + toChar(r);
         else return Std.string(toChar(r));
 
-    } //base62Id
+    }
 
     public static function printStackTrace():String {
 
@@ -212,7 +212,7 @@ class Utils {
 
         return result.toString();
 
-    } //printStackTrace
+    }
 
     public static function stackItemToString(item:StackItem):String {
 
@@ -247,7 +247,7 @@ class Utils {
 
         return str;
 
-    } //stackItemToString
+    }
 
     inline public static function radToDeg(rad:Float):Float {
         return rad * 57.29577951308232;
@@ -270,7 +270,7 @@ class Utils {
 
         return deg;
 
-    } //clampDegrees
+    }
 
     inline public static function distance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
 
@@ -279,7 +279,7 @@ class Utils {
 
         return Math.sqrt(dx * dx + dy * dy);
 
-    } //distance
+    }
 
 	/**
 	 * Java's String.hashCode() method implemented in Haxe.
@@ -338,6 +338,6 @@ class Utils {
 
         return list;
 
-    } //uniformFrequencyList
+    }
 
-} //Utils
+}

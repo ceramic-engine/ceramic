@@ -14,7 +14,7 @@ class Vscode extends tools.Task {
 
         return "Generate project files for Visual Studio Code.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -156,6 +156,6 @@ class Vscode extends tools.Task {
             });
         }*/
 
-    } //run
+    }
 
-} //Vscode
+}

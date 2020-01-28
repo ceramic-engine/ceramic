@@ -8,4 +8,4 @@ enum LayoutHorizontalAlign {
 
     CENTER;
 
-} //LayoutHorizontalAlign
+}

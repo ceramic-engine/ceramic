@@ -58,7 +58,7 @@ class Fragment extends Quad {
         trace('new Fragment(context=$context)');
         #end
 
-    } //new
+    }
 
 /// Data
 
@@ -130,7 +130,7 @@ class Fragment extends Quad {
 
         return fragmentData;
 
-    } //putData
+    }
 
 /// Public API
 
@@ -268,7 +268,7 @@ class Fragment extends Quad {
 
         return instance;
 
-    } //putItem
+    }
 
    private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
 
@@ -335,7 +335,7 @@ class Fragment extends Quad {
             }
         );
 
-    } //putItemField
+    }
 
     public function get(itemId:String):Entity {
 
@@ -348,7 +348,7 @@ class Fragment extends Quad {
 
         return null;
 
-    } //get
+    }
 
     public function getItemInstanceByName(name:String):Entity {
 
@@ -361,7 +361,7 @@ class Fragment extends Quad {
 
         return null;
 
-    } //getItemInstanceByName
+    }
 
     public function getItem(itemId:String):FragmentItem {
 
@@ -374,7 +374,7 @@ class Fragment extends Quad {
 
         return null;
 
-    } //getItem
+    }
 
     public function getItemByName(name:String):FragmentItem {
 
@@ -387,7 +387,7 @@ class Fragment extends Quad {
 
         return null;
 
-    } //getItemByName
+    }
 
     public function removeItem(itemId:String):Void {
 
@@ -410,7 +410,7 @@ class Fragment extends Quad {
             }
         }
 
-    } //removeItem
+    }
 
     public function removeAllItems():Void {
 
@@ -427,7 +427,7 @@ class Fragment extends Quad {
 
         }
 
-    } //removeAllItems
+    }
 
     override function destroy() {
 
@@ -435,7 +435,7 @@ class Fragment extends Quad {
 
         removeAllItems();
 
-    } //destroy
+    }
 
 #if editor
 
@@ -523,7 +523,7 @@ class Fragment extends Quad {
             updatedEditableItems.set(item.id, item);
         }
 
-    } //updateItemFromInstance
+    }
 
 #end
 
@@ -612,4 +612,4 @@ class Fragment extends Quad {
         return fragmentComponents;
     }
 
-} //Fragment
+}

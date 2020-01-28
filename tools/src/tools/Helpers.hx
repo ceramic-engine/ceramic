@@ -85,7 +85,7 @@ class Helpers {
             }
         }
 
-    } //extractDefines
+    }
 
     public static function setVariant(variant:String) {
 
@@ -103,7 +103,7 @@ class Helpers {
             context.defines.set(context.variant, 'variant');
         }
 
-    } //setVariant
+    }
 
     public static function computePlugins() {
 
@@ -174,7 +174,7 @@ class Helpers {
             }
         }
 
-    } //computePlugins
+    }
 
     public static function runCeramic(cwd:String, args:Array<String>, mute:Bool = false) {
 
@@ -192,7 +192,7 @@ class Helpers {
             return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(actualArgs), { cwd: cwd, mute: mute });
         }
 
-    } //runCeramic
+    }
 
     public static function print(message:String):Void {
 
@@ -200,7 +200,7 @@ class Helpers {
 
         stdoutWrite(''+message+"\n");
 
-    } //log
+    }
 
     public static function success(message:String):Void {
 
@@ -212,7 +212,7 @@ class Helpers {
             stdoutWrite(''+message+"\n");
         }
 
-    } //success
+    }
 
     public static function error(message:String):Void {
 
@@ -224,7 +224,7 @@ class Helpers {
             stderrWrite(''+message+"\n");
         }
 
-    } //error
+    }
 
     public static function warning(message:String):Void {
 
@@ -236,7 +236,7 @@ class Helpers {
             stderrWrite(''+message+"\n");
         }
 
-    } //warning
+    }
 
     public static function stdoutWrite(input:String) {
 
@@ -254,7 +254,7 @@ class Helpers {
             js.Node.process.stdout.write(input);
         }
 
-    } //stdoutWrite
+    }
 
     public static function stderrWrite(input:String) {
 
@@ -272,14 +272,14 @@ class Helpers {
             js.Node.process.stderr.write(input);
         }
 
-    } //stderrWrite
+    }
 
     public static function fail(message:String):Void {
 
         error(message);
         js.Node.process.exit(1);
 
-    } //fail
+    }
 
     public static function runningHaxeServerPort():Int {
 
@@ -295,40 +295,40 @@ class Helpers {
             return -1;
         }
 
-    } //runningHaxeServerPort
+    }
 
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
-    } //haxe
+    }
 
     public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }) {
         
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return commandWithChecksAndLogs(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
-    } //haxe
+    }
 
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
         return command(Path.join([context.ceramicToolsPath, haxelib]), args, options);
 
-    } //haxelib
+    }
 
     public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
 
         return command('haxelib', args, options);
 
-    } //haxelibGlobal
+    }
 
     public static function commandExists(name:String):Bool {
 
         return npm.CommandExists.existsSync(name);
 
-    } //commandExists
+    }
 
     public static function checkProjectHaxelibSetup(cwd:String, args:Array<String>) {
 
@@ -353,7 +353,7 @@ class Helpers {
             haxelib(['dev', 'format-tiled', Path.join([context.ceramicGitDepsPath, 'format-tiled']), '--always'], {cwd: cwd});
         }
 
-    } //checkProjectHaxelibSetup
+    }
 
     /** Like `command()`, but will perform additional checks and log formatting,
         compared to a regular `command()` call. Use it to run compilers and run apps.
@@ -426,7 +426,7 @@ class Helpers {
 
         return status;
 
-    } //commandWithChecksAndLogs
+    }
 
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
         
@@ -496,7 +496,7 @@ class Helpers {
 
         return result;
 
-    } //command
+    }
 
     public static function runTask(taskCommand, ?args:Array<String>, addContextArgs:Bool = true, allowMissingTask:Bool = false):Bool {
 
@@ -530,7 +530,7 @@ class Helpers {
 
         return true;
 
-    } //runTask
+    }
 
     public static function extractArgValue(args:Array<String>, name:String, remove:Bool = false):String {
 
@@ -552,7 +552,7 @@ class Helpers {
 
         return value;
 
-    } //extractArgValue
+    }
 
     public static function extractArgFlag(args:Array<String>, name:String, remove:Bool = false):Bool {
         
@@ -568,13 +568,13 @@ class Helpers {
 
         return true;
 
-    } //extractArgFlag
+    }
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
         return Files.getRelativePath(absolutePath, relativeTo);
 
-    } //getRelativePath
+    }
 
     public static function getTargetName(args:Array<String>, availableTargets:Array<tools.BuildTarget>):String {
 
@@ -625,7 +625,7 @@ class Helpers {
         // Nothing matched
         return null;
 
-    } //getTargetName
+    }
 
     static var RE_STACK_FILE_LINE = ~/Called\s+from\s+([a-zA-Z0-9_:\.]+)\s+(.+?\.hx)\s+line\s+([0-9]+)$/;
     static var RE_STACK_FILE_LINE_BIS = ~/([a-zA-Z0-9_:\.]+)\s+\((.+?\.hx)\s+line\s+([0-9]+)\)$/;
@@ -644,7 +644,7 @@ class Helpers {
 
         return result;
 
-    } //isErrorOutput
+    }
 
     public static function formatLineOutput(cwd:String, input:String):String {
 
@@ -772,7 +772,7 @@ class Helpers {
 
         return input;
 
-    } //formatLineOutput
+    }
 
     public static function loadProject(cwd:String, args:Array<String>):Project {
 
@@ -793,13 +793,13 @@ class Helpers {
         }
         return null;
 
-    } //loadProject
+    }
 
     public static function getProjectKind(cwd:String, args:Array<String>):ProjectKind {
 
         return new Project().getKind(Path.join([cwd, 'ceramic.yml']));
 
-    } //getProjectKind
+    }
 
     public static function ensureCeramicProject(cwd:String, args:Array<String>, kind:ProjectKind):Project {
 
@@ -818,7 +818,7 @@ class Helpers {
         fail('Failed to ensure this is a ceramic project.');
         return null;
 
-    } //ensureCeramicProject
+    }
 
     public static function runHooks(cwd:String, args:Array<String>, hooks:Array<Hook>, when:String):Void {
 
@@ -853,19 +853,19 @@ class Helpers {
             }
         }
 
-    } //runHooks
+    }
 
     public static function isElectron():Bool {
 
         return js.Node.process.versions['electron'] != null;
 
-    } //isElectron
+    }
 
     public static function isElectronProxy():Bool {
 
         return js.Node.global.isElectronProxy != null;
 
-    } //isElectronProxy
+    }
 
     static var RE_HXCPP_LINE_MARKER = ~/^(HXLINE|HXDLIN)\([^)]+\)/;
 
@@ -887,6 +887,6 @@ class Helpers {
 
         return cppLines.join("\n");
 
-    } //stripHxcppLineMarkers
+    }
 
-} //Helpers
+}

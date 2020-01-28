@@ -13,7 +13,7 @@ class BuildTargetExtensions {
 
         return outPathWithName(group, target.name, cwd, debug, variant);
 
-    } //outPath
+    }
 
     public static function outPathWithName(group:String, targetName:String, ?cwd:String, ?debug:Bool, ?variant:String):String {
 
@@ -23,6 +23,6 @@ class BuildTargetExtensions {
 
         return Path.join([cwd, 'out', group, targetName + (variant != 'standard' ? '-' + variant : '') + (debug ? '-debug' : '')]);
 
-    } //outPath
+    }
 
-} //BuildTargetExtensions
+}

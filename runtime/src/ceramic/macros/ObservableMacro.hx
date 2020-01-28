@@ -381,7 +381,7 @@ class ObservableMacro {
 
         return newFields;
 
-    } //build
+    }
 
     static function createObserveFields(
         field:Field, newFields:Array<Field>, existingFields:Array<Field>, fieldsByName:Map<String,Bool>,
@@ -660,7 +660,7 @@ class ObservableMacro {
 
         return eventIndex;
 
-    } //createObserveFields
+    }
 
     static function hasRelevantMeta(field:Field):Int {
 
@@ -704,6 +704,6 @@ class ObservableMacro {
         }
         return hasKeepMeta ? 10 : 0;
 
-    } //hasRelevantMeta
+    }
 
 }

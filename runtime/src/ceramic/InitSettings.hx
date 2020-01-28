@@ -13,7 +13,7 @@ class InitSettings {
 
         this.settings = settings;
 
-    } //new
+    }
 
     /** Target width. Affects window size at startup
         and affects screen scaling at any time.

@@ -45,7 +45,7 @@ class SerializeModel extends Entity implements Component {
         // Perform first compaction to get initial data
         compact();
 
-    } //bindAsComponent
+    }
 
 /// Public API
 
@@ -86,7 +86,7 @@ class SerializeModel extends Entity implements Component {
         // Call done() callback if provided
         if (done != null) done(data);
 
-    } //compact
+    }
 
 /// Internal
 
@@ -109,7 +109,7 @@ class SerializeModel extends Entity implements Component {
             model.onceDestroy(this, trackedModelDestroyed);
         }
 
-    } //track
+    }
 
     inline function untrack(model:Model) {
 
@@ -123,7 +123,7 @@ class SerializeModel extends Entity implements Component {
             }
         }
 
-    } //untrack
+    }
 
     function trackedModelDestroyed(_) {
 
@@ -146,7 +146,7 @@ class SerializeModel extends Entity implements Component {
             willCleanDestroyedTrackedModels = false;
         });
 
-    } //trackedModelDestroyed
+    }
 
     function cleanTrackingFromPrevSerializedMap(prevSerializedMap:Map<String,{ id:String, type:String, props:Dynamic }>) {
 
@@ -165,7 +165,7 @@ class SerializeModel extends Entity implements Component {
             }
         }
 
-    } //cleanTrackingFromPrevSerializedMap
+    }
 
     function modelDirty(model:Model, fromSerializedField:Bool) {
 
@@ -180,14 +180,14 @@ class SerializeModel extends Entity implements Component {
         dirtyModels.set(model._serializeId, model);
         dirty = true;
 
-    } //modelDirty
+    }
 
     function explicitModelDirty(model:Model) {
 
         dirtyModels.set(model._serializeId, model);
         dirty = true;
 
-    } //explicitModelDirty
+    }
 
     /** Synchronize at regular interval */
     public function synchronize() {
@@ -217,7 +217,7 @@ class SerializeModel extends Entity implements Component {
             emitChangeset({ data: data, append: true });
         }
 
-    } //synchronize
+    }
 
     function compactIfNeeded() {
 
@@ -226,7 +226,7 @@ class SerializeModel extends Entity implements Component {
             compact();
         }
 
-    } //compactIfNeeded
+    }
 
     inline function serializeModel(model:Model, toAppend:Array<{ id:String, type:String, props:Dynamic }>) {
 
@@ -266,6 +266,6 @@ class SerializeModel extends Entity implements Component {
         Serialize._onAddSerializable = null;
         Serialize._serializedMap = null;
 
-    } //serializeModel
+    }
 
-} //SerializeModel
+}

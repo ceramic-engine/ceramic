@@ -8,4 +8,4 @@ enum LayoutVerticalAlign {
 
     CENTER;
 
-} //LayoutVerticalAlign
+}

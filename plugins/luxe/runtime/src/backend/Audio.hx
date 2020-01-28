@@ -34,19 +34,19 @@ class Audio implements spec.Audio {
             done(null);
         });
 
-    } //load
+    }
 
     inline public function destroy(audio:AudioResource):Void {
 
         (audio:luxe.resource.Resource.AudioResource).destroy(true);
 
-    } //unload
+    }
 
     inline public function mute(audio:AudioResource):AudioHandle {
 
         return -1;
 
-    } //mute
+    }
 
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
@@ -134,7 +134,7 @@ class Audio implements spec.Audio {
 
         return handle;
 
-    } //play
+    }
 
     public function pause(handle:AudioHandle):Void {
                     
@@ -151,7 +151,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.pause(handle);
 
-    } //pause
+    }
 
     public function resume(handle:AudioHandle):Void {
                     
@@ -168,7 +168,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.unpause(handle);
 
-    } //resume
+    }
 
     public function stop(handle:AudioHandle):Void {
                     
@@ -185,7 +185,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.stop(handle);
 
-    } //stop
+    }
 
     public function getVolume(handle:AudioHandle):Float {
                     
@@ -197,7 +197,7 @@ class Audio implements spec.Audio {
 
         return Luxe.audio.volume_of(handle);
 
-    } //getVolume
+    }
 
     public function setVolume(handle:AudioHandle, volume:Float):Void {
                     
@@ -210,7 +210,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.volume(handle, volume);
 
-    } //setVolume
+    }
 
     public function getPan(handle:AudioHandle):Float {
                     
@@ -223,7 +223,7 @@ class Audio implements spec.Audio {
 
         return Luxe.audio.pan_of(handle);
 
-    } //getPan
+    }
 
     public function setPan(handle:AudioHandle, pan:Float):Void {
                     
@@ -236,7 +236,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.pan(handle, pan);
 
-    } //setPan
+    }
 
     public function getPitch(handle:AudioHandle):Float {
                     
@@ -249,7 +249,7 @@ class Audio implements spec.Audio {
 
         return Luxe.audio.pitch_of(handle);
 
-    } //getPitch
+    }
 
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
                     
@@ -262,7 +262,7 @@ class Audio implements spec.Audio {
 
         Luxe.audio.pitch(handle, pitch);
 
-    } //setPitch
+    }
 
     public function getPosition(handle:AudioHandle):Float {
                     
@@ -275,7 +275,7 @@ class Audio implements spec.Audio {
 
         return Luxe.audio.position_of(handle);
 
-    } //getPosition
+    }
 
     public function setPosition(handle:AudioHandle, position:Float):Void {
                     
@@ -288,6 +288,6 @@ class Audio implements spec.Audio {
 
         Luxe.audio.position(handle, position);
 
-    } //setPosition
+    }
 
 } //Audio

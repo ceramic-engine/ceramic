@@ -18,4 +18,4 @@ interface Info {
 
     function shaderExtensions():Array<String>;
 
-} //Info
+}

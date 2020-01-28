@@ -15,7 +15,7 @@ public class AppActivity extends org.snowkit.snow.SnowActivity {
         
         super.onCreate(savedInstanceState);
 
-    } //onCreate
+    }
 
     @Override
     protected String[] getLibraries() {
@@ -25,7 +25,7 @@ public class AppActivity extends org.snowkit.snow.SnowActivity {
             "MyApp"
         };
 
-    } //getLibraries
+    }
 
     @Override
     public void loadLibraries() {
@@ -37,7 +37,7 @@ public class AppActivity extends org.snowkit.snow.SnowActivity {
         bind.Support.setContext(this);
         bind.Support.init();
 
-    } //loadLibraries
+    }
 
-} //AppActivity
+}
 

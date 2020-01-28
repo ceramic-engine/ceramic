@@ -36,7 +36,7 @@ class CollectionEntry {
         this.id = id != null ? id : 'id' + (_nextId++);
         this.name = name;
 
-    } //new
+    }
 
     /** Set entry fields from given raw data.
         Takes care of converting types when needed, and possible.
@@ -111,7 +111,7 @@ class CollectionEntry {
             }
         }
 
-    } //setRawData
+    }
 
     /** Override this method to perform custom deserialisation on a specific field. If the overrided method
         returns `true`, default behavior will be skipped for the related field.*/
@@ -119,7 +119,7 @@ class CollectionEntry {
 
         return false;
 
-    } //setRawField
+    }
 
 #if editor
 
@@ -148,8 +148,8 @@ class CollectionEntry {
 
         return cast result;
 
-    } //getEditableData
+    }
 
 #end
 
-} //CollectionEntry
+}

@@ -13,7 +13,7 @@ typedef IdeInfoTaskItem = {
 
     @:optional var select:IdeInfoTaskSelectItem;
 
-} //IdeInfoTaskItem
+}
 
 typedef IdeInfoTaskSelectItem = {
 
@@ -21,7 +21,7 @@ typedef IdeInfoTaskSelectItem = {
 
     @:optional var args:Array<String>;
 
-} //IdeInfoTaskSelectItem
+}
 
 typedef IdeInfoVariantItem = {
 
@@ -37,11 +37,11 @@ typedef IdeInfoVariantItem = {
 
     @:optional var select:IdeInfoVariantSelectItem;
 
-} //IdeInfoVariantItem
+}
 
 typedef IdeInfoVariantSelectItem = {
 
     @:optional var args:Array<String>;
 
-} //IdeInfoVariantSelectItem
+}
 

@@ -12,7 +12,7 @@ class SerializeChangeset {
         this.data = data;
         this.append = append;
 
-    } //new
+    }
 
     function toString() {
 
@@ -35,6 +35,6 @@ class SerializeChangeset {
             };
 #end
 
-    } //toString
+    }
 
-} //SerializeChangeset
+}

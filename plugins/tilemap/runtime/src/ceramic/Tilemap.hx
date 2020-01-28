@@ -78,7 +78,7 @@ class Tilemap extends Quad {
 
         super();
 
-    } //new
+    }
 
 /// Display
 
@@ -95,7 +95,7 @@ class Tilemap extends Quad {
 
         contentDirty = false;
 
-    } //computeContent
+    }
 
     function computeLayers() {
 
@@ -129,7 +129,7 @@ class Tilemap extends Quad {
             layer.destroy();
         }
 
-    } //computeLayers
+    }
 
 /// Clip
 
@@ -140,6 +140,6 @@ class Tilemap extends Quad {
         this.clipTilesWidth = clipTilesWidth;
         this.clipTilesHeight = clipTilesHeight;
 
-    } //clipTiles
+    }
 
-} //Tilemap
+}

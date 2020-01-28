@@ -52,7 +52,7 @@ class SpineAsset extends Asset {
 
         assets = new Assets();
 
-    } //name
+    }
 
     override public function load() {
 
@@ -231,7 +231,7 @@ class SpineAsset extends Asset {
 
         assets.load();
 
-    } //load
+    }
 
     function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
         
@@ -252,7 +252,7 @@ class SpineAsset extends Asset {
         assets.addAsset(asset);
         pages.set(page, asset);
 
-    } //loadPage
+    }
 
     function unloadPage(page:AtlasPage):Void {
 
@@ -266,7 +266,7 @@ class SpineAsset extends Asset {
             ceramic.App.app.logger.warning('Cannot unload spine page: ' + page);
         }
 
-    } //loadPage
+    }
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -277,7 +277,7 @@ class SpineAsset extends Asset {
             checkTexturesDensity();
         }
 
-    } //texturesDensityDidChange
+    }
 
     function checkTexturesDensity():Void {
 
@@ -292,7 +292,7 @@ class SpineAsset extends Asset {
             load();
         }
 
-    } //checkTexturesDensity
+    }
 
     override function destroy():Void {
 
@@ -303,6 +303,6 @@ class SpineAsset extends Asset {
             spineData = null;
         }
 
-    } //destroy
+    }
 
-} //SpineAsset
+}

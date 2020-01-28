@@ -9,24 +9,24 @@ class State extends Entity {
 
         super();
 
-    } //new
+    }
 
     public function enter():Void {
 
         //
 
-    } //enter
+    }
 
     public function update(delta:Float):Void {
 
         //
 
-    } //update
+    }
 
     public function exit():Void {
 
         //
 
-    } //exit
+    }
 
-} //State
+}

@@ -14,4 +14,4 @@ extern class ToIco {
         : js.Node.require('to-ico')(input);
     }
 
-} //ToIco
+}

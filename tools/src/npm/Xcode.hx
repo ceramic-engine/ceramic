@@ -5,7 +5,7 @@ extern class Xcode {
 
     static function project(path:String):PbxProject;
 
-} //Xcode
+}
 
 extern class PbxProject {
 
@@ -207,7 +207,7 @@ extern class PbxProject {
 
     function addDataModelDocument(filePath:String, group:String, ?opt:Dynamic):PbxFile;
 
-} //XcodeProject
+}
 
 extern class PbxWriter {
 
@@ -239,7 +239,7 @@ extern class PbxWriter {
 
     var indentLevel(default,null):Int;
 
-} //PbxWriter
+}
 
 extern class PbxFile {
 
@@ -255,4 +255,4 @@ extern class PbxFile {
 
     var settings:Dynamic;
 
-} //PbxFile
+}

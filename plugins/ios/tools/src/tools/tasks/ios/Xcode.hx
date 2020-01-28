@@ -16,7 +16,7 @@ class Xcode extends tools.Task {
 
         return "Generate or open iOS/Xcode project to build or run it";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -162,6 +162,6 @@ class Xcode extends tools.Task {
             });
         });
 
-    } //run
+    }
 
-} //Xcode
+}

@@ -13,7 +13,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -33,7 +33,7 @@ class ToolsPlugin {
         tasks.set('ios pod install', new tools.tasks.ios.InstallPods());
         tasks.set('ios profile uuid', new tools.tasks.ios.ProfileUUID());
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -43,6 +43,6 @@ class ToolsPlugin {
             app.paths.push(Path.join([context.plugins.get('iOS').path, 'runtime/src']));
         }
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

@@ -14,7 +14,7 @@ abstract TilemapTile(Int) from Int to Int {
 
         this = value;
 
-    } //new
+    }
   
     /** Global tile id */
     public var gid(get, set):Int;
@@ -55,4 +55,4 @@ abstract TilemapTile(Int) from Int to Int {
         return value;
     }
 
-} //TilemapTile
+}

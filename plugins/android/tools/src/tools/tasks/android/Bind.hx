@@ -16,7 +16,7 @@ class Bind extends tools.Task {
 
         return "Generate Haxe interface from Java/Android code.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -114,6 +114,6 @@ class Bind extends tools.Task {
             }
         }
 
-    } //run
+    }
 
-} //Bind
+}

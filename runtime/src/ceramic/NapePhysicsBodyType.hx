@@ -8,4 +8,4 @@ enum NapePhysicsBodyType {
 
     DYNAMIC;
 
-} //NapePhysicsBodyType
+}

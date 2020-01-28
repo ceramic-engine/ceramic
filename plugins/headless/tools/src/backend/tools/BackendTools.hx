@@ -22,7 +22,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         // Custom setup
 
-    } //init
+    }
 
     public function getBuildTargets():Array<tools.BuildTarget> {
 
@@ -86,7 +86,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         return targets;
 
-    } //getBuildConfigs
+    }
 
     public function getHxml(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
@@ -99,7 +99,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         return null;
 
-    } //getHxml
+    }
 
     public function getHxmlCwd(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):String {
 
@@ -107,7 +107,7 @@ class BackendTools implements tools.spec.BackendTools {
 
         return hxmlProjectPath;
 
-    } //getHxmlCwd
+    }
 
     public function getTargetDefines(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String):Map<String,String> {
 
@@ -122,27 +122,27 @@ class BackendTools implements tools.spec.BackendTools {
 
         return defines;
 
-    } //getTargetDefines
+    }
 
     public function runSetup(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, continueOnFail:Bool = false):Void {
 
         var task = new backend.tools.tasks.Setup(target, variant, continueOnFail);
         task.run(cwd, args);
 
-    } //runSetup
+    }
 
     public function runBuild(cwd:String, args:Array<String>, target:tools.BuildTarget, variant:String, configIndex:Int = 0):Void {
 
         var task = new backend.tools.tasks.Build(target, variant, configIndex);
         task.run(cwd, args);
 
-    } //runBuild
+    }
 
     public function runUpdate(cwd:String, args:Array<String>):Void {
 
         // Update/install dependencies
 
-    } //runUpdate
+    }
 
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
@@ -221,12 +221,12 @@ class BackendTools implements tools.spec.BackendTools {
 
         return newAssets;
 
-    } //transformAssets
+    }
 
     public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
 
         // TODO
 
-    } //transformIcons
+    }
 
-} //Config
+}

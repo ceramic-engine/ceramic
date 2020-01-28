@@ -76,7 +76,7 @@ class Texts implements spec.Texts {
             snow.api.Promise.Promises.step();
         });
 
-    } //load
+    }
 
 /// Internal
 

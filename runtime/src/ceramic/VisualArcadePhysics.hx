@@ -41,7 +41,7 @@ class VisualArcadePhysics extends Entity {
             ceramic.App.app.arcade.items.push(this);
         }
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -66,7 +66,7 @@ class VisualArcadePhysics extends Entity {
             ceramic.App.app.arcade.items.remove(this);
         }
 
-    } //destroy
+    }
 
     /// Event handling
 
@@ -102,7 +102,7 @@ class VisualArcadePhysics extends Entity {
             log.warning('Invalid body collide event: failed to retrieve visual from body.');
         }
 
-    } //handleCollide
+    }
 
     function handleOverlap(body1:arcade.Body, body2:arcade.Body):Void {
 
@@ -121,7 +121,7 @@ class VisualArcadePhysics extends Entity {
             log.warning('Invalid body overlap event: failed to retrieve visual from body.');
         }
 
-    } //handleOverlap
+    }
 
     function handleWorldBounds(body1:arcade.Body, up:Bool, down:Bool, left:Bool, right:Bool):Void {
 
@@ -135,7 +135,7 @@ class VisualArcadePhysics extends Entity {
             log.warning('Invalid body worldBounds event: failed to retrieve visual from body.');
         }
 
-    } //handleWorldBounds
+    }
 
     /// Static helpers
 
@@ -147,8 +147,8 @@ class VisualArcadePhysics extends Entity {
         }
         return null;
 
-    } //fromBody
+    }
 
 #end
 
-} //VisualArcadePhysics
+}

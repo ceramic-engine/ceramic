@@ -35,7 +35,7 @@ class RuntimeAssets {
 
         initData();
 
-    } //new
+    }
 
 /// Public API
 
@@ -126,7 +126,7 @@ class RuntimeAssets {
 
         return entries;
 
-    } //getNames
+    }
 
     public function getLists():{
         all: Array<String>,
@@ -174,7 +174,7 @@ class RuntimeAssets {
 
         return result;
 
-    } //getLists
+    }
 
     /** Same as getLists(), but will transform Maps into JSON-encodable raw objects. */
     public function getEncodableLists():{
@@ -203,7 +203,7 @@ class RuntimeAssets {
             allDirsByName: allDirsByNameEncodable
         };
 
-    } //getEncodableLists
+    }
 
 /// Internal
 
@@ -251,7 +251,7 @@ class RuntimeAssets {
 
         return str;
 
-    } //toAssetConstName
+    }
 
     function initData() {
 
@@ -317,7 +317,7 @@ class RuntimeAssets {
             }
         }
 
-    } //initData
+    }
 
     static function isAsciiChar(c:String):Bool {
 
@@ -326,6 +326,6 @@ class RuntimeAssets {
             || (code >= 'A'.code && code <= 'Z'.code)
             || (code >= 'a'.code && code <= 'z'.code);
 
-    } //isAsciiChar
+    }
 
-} //RuntimeAssets
+}

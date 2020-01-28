@@ -18,7 +18,7 @@ class AndroidStudio extends tools.Task {
 
         return "Generate or open Android Studio project to build or run it";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -86,6 +86,6 @@ class AndroidStudio extends tools.Task {
 
         }
 
-    } //run
+    }
 
-} //AndroidStudio
+}

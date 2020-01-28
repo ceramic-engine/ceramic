@@ -45,7 +45,7 @@ class AssetsMacro {
 
         return fields;
 
-    } //buildNames
+    }
 
     static public function computeNames(inFields:Array<Field>, pos:Position, kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
 
@@ -128,7 +128,7 @@ class AssetsMacro {
 
         return fields;
 
-    } //computeNames
+    }
 
     macro static public function buildLists():Array<Field> {
         
@@ -237,7 +237,7 @@ class AssetsMacro {
 
         return fields;
 
-    } //buildLists
+    }
 
     public static function initData(assetsPath:String, ceramicPluginsAssetsPathsRaw:String, ceramicAssetsPath:String):Void {
 
@@ -342,7 +342,7 @@ class AssetsMacro {
             }
         }
 
-    } //initData
+    }
 
     public static function toAssetConstName(input:String):String {
 
@@ -389,7 +389,7 @@ class AssetsMacro {
 
         return str;
 
-    } //toAssetConstName
+    }
     
     static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
@@ -419,6 +419,6 @@ class AssetsMacro {
 
         return result;
 
-    } //getFlatDirectory
+    }
 
 }

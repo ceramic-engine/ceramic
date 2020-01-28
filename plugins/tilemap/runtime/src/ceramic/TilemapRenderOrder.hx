@@ -10,4 +10,4 @@ enum TilemapRenderOrder {
 
     LEFT_UP;
 
-} //TilemapRenderOrder
+}

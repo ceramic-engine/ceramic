@@ -62,7 +62,7 @@ class Timer {
             }
         }
 
-    } //update
+    }
 
 // Public API
 
@@ -72,7 +72,7 @@ class Timer {
 
         return schedule(owner, seconds, callback, -1);
 
-    } //delay
+    }
 
     /** Execute a callback periodically at the given interval in seconds.
         @return a function to cancel this timer interval */
@@ -80,7 +80,7 @@ class Timer {
         
         return schedule(owner, seconds, callback, seconds);
 
-    } //interval
+    }
 
     private static function schedule(owner:Entity, seconds:Float, callback:Void->Void, interval:Float):Void->Void {
 
@@ -114,9 +114,9 @@ class Timer {
 
         return clearScheduled;
 
-    } //schedule
+    }
 
-} //Timer
+}
 
 class TimerCallback {
 
@@ -127,4 +127,4 @@ class TimerCallback {
 
     public function new() {}
 
-} //TimerCallback
+}

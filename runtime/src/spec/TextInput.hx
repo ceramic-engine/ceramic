@@ -6,4 +6,4 @@ interface TextInput {
 
     function stop():Void;
 
-} //TextInput
+}

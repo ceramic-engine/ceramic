@@ -48,7 +48,7 @@ class SqliteKeyValue extends Entity {
             createDb();
         }
 
-    } //new
+    }
 
     public function set(key:String, value:String):Bool {
 
@@ -85,7 +85,7 @@ class SqliteKeyValue extends Entity {
 
         return true;
 
-    } //set
+    }
 
     public function remove(key:String):Bool {
 
@@ -109,7 +109,7 @@ class SqliteKeyValue extends Entity {
 
         return true;
 
-    } //remove
+    }
 
     public function append(key:String, value:String):Bool {
 
@@ -132,7 +132,7 @@ class SqliteKeyValue extends Entity {
 
         return true;
 
-    } //append
+    }
 
     public function get(key:String):String {
 
@@ -173,7 +173,7 @@ class SqliteKeyValue extends Entity {
 
         return value != null ? value.toString() : null;
 
-    } //get
+    }
 
     /// Internal
 
@@ -181,7 +181,7 @@ class SqliteKeyValue extends Entity {
 
         return "'" + StringTools.replace(token, "'", "''") + "'";
 
-    } //escape
+    }
 
     function createDb():Void {
 
@@ -205,8 +205,8 @@ class SqliteKeyValue extends Entity {
 
         mutex.release();
 
-    } //createDb
+    }
 
-} //SqliteKeyValue
+}
 
 #end

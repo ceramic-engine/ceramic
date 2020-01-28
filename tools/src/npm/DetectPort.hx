@@ -7,4 +7,4 @@ extern class DetectPort {
         js.Node.require('detect-port')(port, callback);
     }
 
-} //DetectPort
+}

@@ -13,7 +13,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -28,7 +28,7 @@ class ToolsPlugin {
         var tasks = context.tasks;
         tasks.set('windows app', new tools.tasks.windows.Windows());
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -39,6 +39,6 @@ class ToolsPlugin {
             app.paths.push(Path.join([context.plugins.get('Mac').path, 'runtime/src']));
         }*/
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

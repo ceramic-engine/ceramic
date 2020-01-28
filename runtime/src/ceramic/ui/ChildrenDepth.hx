@@ -12,4 +12,4 @@ enum ChildrenDepth {
     /** Every children share the same depth. */
     SAME;
 
-} //ChildrenDepth
+}

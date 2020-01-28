@@ -799,7 +799,7 @@ class Particles extends Visual implements Observable {
             status = _activeParticles.length > 0 ? SPREADING : IDLE;
         }
 
-    } //update
+    }
 
     /** Emit one or more particles if continuous emission is active and enough time has passed */
     inline function emitContinuousParticlesIfNeeded(delta:Float):Void {
@@ -832,7 +832,7 @@ class Particles extends Visual implements Observable {
             emitParticle();
         }
 
-    } //emitContinuousParticlesIfNeeded
+    }
 
     /** Update a particle (and its visual) from its parameter and elapsed time */
     function updateParticle(particle:ParticleItem, delta:Float):Void {
@@ -914,7 +914,7 @@ class Particles extends Visual implements Observable {
             }
         }
 
-    } //updateParticle
+    }
 
 /// Managing particles and visuals
 
@@ -940,7 +940,7 @@ class Particles extends Visual implements Observable {
 
         return particle;
 
-    } //getParticle
+    }
 
     /** Get a visual for a particle that will be emitted right after.
         If a visual is being recycled, provide it as argument. */
@@ -967,7 +967,7 @@ class Particles extends Visual implements Observable {
         quad.color = Color.WHITE;
         return quad;
 
-    } //getParticleVisual
+    }
 
     function recycleParticle(particle:ParticleItem):Void {
 
@@ -982,7 +982,7 @@ class Particles extends Visual implements Observable {
 
         _recycledParticles.push(particle);
 
-    } //recycleParticle
+    }
 
     /** Recycle a particle's visual to reuse it later. */
     function recycleParticleVisual(visual:Visual):Void {
@@ -990,7 +990,7 @@ class Particles extends Visual implements Observable {
         // Just make the visual inactive
         visual.active = false;
 
-    } //recycleParticleVisual
+    }
 
 
 /// Public API
@@ -1015,7 +1015,7 @@ class Particles extends Visual implements Observable {
         this.status = EMITTING;
         _quantityToEmit = quantity;
 
-    } //startEmitting
+    }
 
     /**
      * Burst a given quantity number of particles at once
@@ -1033,7 +1033,7 @@ class Particles extends Visual implements Observable {
             emitParticle();
         }
 
-    } //explode
+    }
 
     /** Stop emitting (if it was emitting) */
     public function stop():Void {
@@ -1042,7 +1042,7 @@ class Particles extends Visual implements Observable {
         _quantityToEmit = 0;
         _continuousTimer = 0;
 
-    } //stop
+    }
 
     /**
      * This function can be used both internally and externally to emit the next particle.
@@ -1200,7 +1200,7 @@ class Particles extends Visual implements Observable {
 
         emitEmitParticle(particle);
 
-    } //emitParticle
+    }
 
 /// Static internal helpers
 
@@ -1208,13 +1208,13 @@ class Particles extends Visual implements Observable {
 
         return deg * 0.017453292519943295;
 
-    } //degToRad
+    }
 
     inline function randomBetweenFloats(a:Float, b:Float):Float {
 
         return a + (b - a) * _seedRandom.random();
 
-    } //randomBetweenFloats
+    }
 
     inline function randomBetweenColors(a:Color, b:Color):Color {
 
@@ -1225,7 +1225,7 @@ class Particles extends Visual implements Observable {
             a.blueFloat + (b.blueFloat - a.blueFloat) * rnd
         );
 
-    } //randomBetweenColors
+    }
 
     inline static function interpolateColor(a:Color, b:Color, percent:Float):Color {
 
@@ -1235,7 +1235,7 @@ class Particles extends Visual implements Observable {
             a.blueFloat + (b.blueFloat - a.blueFloat) * percent
         );
 
-    } //interpolateColor
+    }
 
     inline static function velocityFromAngle(angle:Float, speed:Float, result:Point):Void {
 
@@ -1243,7 +1243,7 @@ class Particles extends Visual implements Observable {
         result.x = Math.cos(a) * speed;
         result.y = Math.sin(a) * speed;
 
-    } //velocityFromAngle
+    }
 
     /**
      * A tween-like function that takes a starting velocity and some other factors and returns an altered velocity.
@@ -1291,6 +1291,6 @@ class Particles extends Visual implements Observable {
 
         return velocity;
 
-    } //computeVelocity
+    }
 
-} //Particles
+}

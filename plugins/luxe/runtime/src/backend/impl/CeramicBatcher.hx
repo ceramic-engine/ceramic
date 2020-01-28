@@ -17,9 +17,9 @@ class CeramicBatcher extends phoenix.Batcher {
 
         ceramicRenderer.render(isMainRender, ceramicVisuals);
 
-    } //batch
+    }
 
-} //CeramicBatcher
+}
 
 #else
 
@@ -87,7 +87,7 @@ class CeramicBatcher extends phoenix.Batcher {
         }
 #end
 
-    } //new
+    }
 
     override function batch(persist_immediate:Bool = false) {
 
@@ -286,7 +286,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 );
             }
 
-        } //applyBlending
+        }
 
         inline function computeRenderTarget(lastRenderTarget:ceramic.RenderTexture) {
 
@@ -306,7 +306,7 @@ class CeramicBatcher extends phoenix.Batcher {
                 update_view();
             }
 
-        } //computeRenderTarget
+        }
 
         #if (!ceramic_debug_draw) inline #end function drawQuad() {
 #if ceramic_debug_draw
@@ -680,7 +680,7 @@ class CeramicBatcher extends phoenix.Batcher {
             dynamic_batched_count++;
             vert_count += visualNumVertices;
 
-        } //drawQuad
+        }
 
         #if (!ceramic_debug_draw) inline #end function drawMesh() {
 
@@ -1019,7 +1019,7 @@ class CeramicBatcher extends phoenix.Batcher {
             dynamic_batched_count++;
             vert_count += visualNumVertices;
 
-        } //drawMesh
+        }
 
         // For each ceramic visual in the list
         //
@@ -1100,13 +1100,13 @@ class CeramicBatcher extends phoenix.Batcher {
 
                             drawQuad();
 
-                        } //quad
+                        }
 
                         else if (mesh != null) {
 
                             drawMesh();
 
-                        } //mesh
+                        }
                     }
                 }
             }
@@ -1160,7 +1160,7 @@ class CeramicBatcher extends phoenix.Batcher {
         if (debugDraw) trace('CeramicBatched.batch() drawCalls=' + draw_calls + ' visuals=' + ceramicVisuals.length + ' drawnQuads=' + drawnQuads + ' drawnMeshes=' + drawnMeshes);
 #end
 
-    } //batch
+    }
 
     #if (!ceramic_debug_draw && !telemetry) inline #end function flush():Bool {
 
@@ -1268,7 +1268,7 @@ class CeramicBatcher extends phoenix.Batcher {
 
         return true;
 
-    } //flush
+    }
 
     #if !telemetry inline #end public function useShader(_shader:backend.impl.CeramicShader) {
 
@@ -1291,8 +1291,8 @@ class CeramicBatcher extends phoenix.Batcher {
             }
         }
 
-    } //applyDefaultUniforms
+    }
 
-} //CeramicBatcher
+}
 
 #end

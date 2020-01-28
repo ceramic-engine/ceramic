@@ -37,7 +37,7 @@ class TilemapAsset extends Asset {
 
         assets = new Assets();
 
-    } //name
+    }
 
     override public function load() {
 
@@ -126,7 +126,7 @@ class TilemapAsset extends Asset {
 
         assets.load();
 
-    } //load
+    }
 
     function loadExternalTilesetData(rawTmxData:String, done:Bool->Void) {
 
@@ -165,7 +165,7 @@ class TilemapAsset extends Asset {
 
         textAssets.load();
 
-    } //loadExternalTilesetData
+    }
 
     function addTilesetTextAsset(textAssets:Assets, source:String):Void {
 
@@ -177,7 +177,7 @@ class TilemapAsset extends Asset {
 
         textAssets.addAsset(asset);
 
-    } //addTilesetTextAsset
+    }
 
     function resolveTsxRawData(name:String):String {
 
@@ -187,7 +187,7 @@ class TilemapAsset extends Asset {
 
         return null;
 
-    } //resolveTsxRawData
+    }
 
     function loadTextureFromTmxImage(tmxImage:TmxImage, done:Texture->Void):Void {
 
@@ -219,7 +219,7 @@ class TilemapAsset extends Asset {
             log.warning('Cannot load texture for TMX image: $tmxImage');
         }
 
-    } //loadTextureFromTmxImage
+    }
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -230,14 +230,14 @@ class TilemapAsset extends Asset {
             checkTexturesDensity();
         }
 
-    } //texturesDensityDidChange
+    }
 
     function checkTexturesDensity():Void {
 
         // TODO, for now it keeps the same texture always
         // but we should be able to improve this to resolved higher density of images
 
-    } //checkTexturesDensity
+    }
 
     override function destroy():Void {
 
@@ -252,6 +252,6 @@ class TilemapAsset extends Asset {
             tmxMap = null;
         }
 
-    } //destroy
+    }
 
-} //TilemapAsset
+}

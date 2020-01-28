@@ -10,4 +10,4 @@ extern class Future {
     @:native('return')
     function ret():Void;
 
-} //Future
+}

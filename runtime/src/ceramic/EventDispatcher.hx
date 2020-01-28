@@ -26,7 +26,7 @@ class EventDispatcher {
 
         item.willEmit = cb;
 
-    } //setWillEmit
+    }
 
     public function setDidEmit(index:Int, cb:Dynamic):Void {
 
@@ -38,7 +38,7 @@ class EventDispatcher {
 
         item.didEmit = cb;
 
-    } //setDidEmit
+    }
 
     public function setWillListen(index:Int, cb:Dynamic):Void {
 
@@ -50,7 +50,7 @@ class EventDispatcher {
 
         item.willListen = cb;
 
-    } //setWillListen
+    }
 
 /// Emit
 
@@ -95,7 +95,7 @@ class EventDispatcher {
 
         return wrapped;
 
-    } //wrapEmit
+    }
 
     public function emit(index:Int, numArgs:Int, ?arg1:Dynamic, ?arg2:Dynamic, ?arg3:Dynamic):Void {
 
@@ -194,7 +194,7 @@ class EventDispatcher {
             }
         }
 
-    } //emit
+    }
 
 /// On
 
@@ -224,7 +224,7 @@ class EventDispatcher {
 
         return wrapped;
 
-    } //wrapOn
+    }
 
     public function on(index:Int, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
@@ -279,7 +279,7 @@ class EventDispatcher {
         }
         item.cbOnArray.push(cb);
 
-    } //on
+    }
 
 /// Once
 
@@ -309,7 +309,7 @@ class EventDispatcher {
 
         return wrapped;
 
-    } //wrapOnce
+    }
 
     public function once(index:Int, #if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, cb:Dynamic):Void {
 
@@ -364,7 +364,7 @@ class EventDispatcher {
         }
         item.cbOnceArray.push(cb);
 
-    } //once
+    }
 
 /// Off
 
@@ -386,7 +386,7 @@ class EventDispatcher {
 
         return wrapped;
 
-    } //wrapOff
+    }
 
     public function off(index:Int, cb:Dynamic):Void {
 
@@ -433,7 +433,7 @@ class EventDispatcher {
             item.cbOnceArray = null;
         }
 
-    } //off
+    }
 
 /// Listens
 
@@ -455,7 +455,7 @@ class EventDispatcher {
 
         return wrapped;
 
-    } //wrapListens
+    }
 
     public function listens(index:Int):Bool {
 
@@ -465,9 +465,9 @@ class EventDispatcher {
         return (item.cbOnArray != null && item.cbOnArray.length > 0)
             || (item.cbOnceArray != null && item.cbOnceArray.length > 0);
 
-    } //listens
+    }
 
-} //EventDispatcher
+}
 
 @:allow(ceramic.EventDispatcher)
 private class EventDispatcherItem {
@@ -498,4 +498,4 @@ private class EventDispatcherItem {
 
     public function new() {}
 
-} //EventDispatcherItem
+}

@@ -63,7 +63,7 @@ class Runner {
         }
         #end
 
-    } //tick
+    }
 
     /** Returns `true` if _running in background_ is emulated on this platform by
         running _background_ code in main thread instead of using background thread. */
@@ -75,7 +75,7 @@ class Runner {
         return true;
         #end
 
-    } //isEmulatingBackgroundWithMain
+    }
 
     /** Call a function on the primary thread without waiting or blocking.
         If you want return values see runInMainBlocking */
@@ -87,7 +87,7 @@ class Runner {
         app.onceImmediate(_fn);
         #end
 
-    } //runInMain
+    }
 
     /** Create a background thread using the given function, or just run (deferred) the function if threads are not supported */
     public static function runInBackground(fn:Void->Void):Void {
@@ -98,6 +98,6 @@ class Runner {
         app.onceImmediate(fn);
         #end
 
-    } //runInBackground
+    }
 
 } //Runner

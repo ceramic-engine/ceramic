@@ -25,4 +25,4 @@ class HttpResponse {
         };
     }
 
-} //HttpResponse
+}

@@ -7,4 +7,4 @@ typedef HttpRequestOptions = {
 
     @:optional var params:Map<String,String>;
 
-} //HttpRequestOptions
+}

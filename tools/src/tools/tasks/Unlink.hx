@@ -10,7 +10,7 @@ class Unlink extends tools.Task {
 
         return "Remove global ceramic command.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -25,6 +25,6 @@ class Unlink extends tools.Task {
             FileSystem.deleteFile(Path.join([haxePath, 'ceramic.cmd']));
         }
 
-    } //run
+    }
 
-} //Unlink
+}

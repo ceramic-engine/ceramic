@@ -18,7 +18,7 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
 
     public function new() {
 
-    } //new
+    }
 
     public function collectionViewLayout(collectionView:CollectionView, frames:ImmutableArray<CollectionViewItemFrame>):Void {
 
@@ -82,7 +82,7 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
 
         }
 
-    } //collectionViewLayout
+    }
 
     public function isFrameVisible(collectionView:CollectionView, frame:CollectionViewItemFrame):Bool {
 
@@ -99,6 +99,6 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
             return (frame.x < maxX && frame.x + frame.width >= minX);
         }
 
-    } //isFrameVisible
+    }
 
-} //CollectionViewFlowLayout
+}

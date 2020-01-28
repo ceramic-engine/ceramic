@@ -174,7 +174,7 @@ class Border extends Mesh {
 
         computeVertices();
 
-    } //new
+    }
 
     function computeColors() {
 
@@ -211,7 +211,7 @@ class Border extends Mesh {
         colors.unsafeSet(22, leftColor);
         colors.unsafeSet(23, leftColor);
 
-    } //computeColors
+    }
 
     function computeVertices() {
 
@@ -281,6 +281,6 @@ class Border extends Mesh {
         tmp = h + bottomOuter;
         vertices.unsafeSet(15, tmp);
 
-    } //computeVertices
+    }
 
-} //Mesh
+}

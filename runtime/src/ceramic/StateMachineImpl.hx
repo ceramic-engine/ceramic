@@ -47,7 +47,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         var name:Dynamic = key;
         return name.toString();
 
-    } //keyToString
+    }
 
     public function set(key:T, stateInstance:State):Void {
 
@@ -82,7 +82,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             }
         }
 
-    } //set
+    }
 
     public function get(key:T):State {
 
@@ -94,7 +94,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         return stateInstances.get(name);
 
-    } //get
+    }
 
     /// Lifecycle
 
@@ -104,7 +104,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         ceramic.App.app.onUpdate(this, _updateState);
 
-    } //new
+    }
 
     function _enterState():Void {
 
@@ -114,7 +114,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             currentStateInstance.enter();
         }
         
-    } //enterState
+    }
 
     function _updateState(delta:Float):Void {
 
@@ -124,7 +124,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             currentStateInstance.update(delta);
         }
 
-    } //update
+    }
 
     function _exitState():Void {
 
@@ -134,13 +134,13 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             currentStateInstance = null;
         }
         
-    } //exitState
+    }
 
     function bindAsComponent():Void {
 
         // Nothing to do
 
-    } //bindAsComponent
+    }
 
     override function destroy():Void {
 
@@ -156,6 +156,6 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         super.destroy();
 
-    } //destroy
+    }
 
-} //StateMachineImpl
+}

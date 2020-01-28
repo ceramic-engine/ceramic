@@ -20,6 +20,6 @@ class Triangulate {
         // Perform triangulation
         Earcut.earcut(vertices, holes, 2, indices);
 
-    } //triangulate
+    }
 
-} //Triangulate
+}

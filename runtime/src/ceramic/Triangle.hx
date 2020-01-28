@@ -14,7 +14,7 @@ class Triangle extends Mesh {
         updateVertices();
         return width;
 
-    } //set_width
+    }
 
     override function set_height(height:Float):Float {
         super.set_height(height);
@@ -22,7 +22,7 @@ class Triangle extends Mesh {
         updateVertices();
         return height;
 
-    } //set_height
+    }
 
 /// Lifecycle
 
@@ -38,7 +38,7 @@ class Triangle extends Mesh {
         indices = [0, 1, 2];
         color = Color.WHITE;
 
-    } //new
+    }
 
     inline function updateVertices() {
 
@@ -51,6 +51,6 @@ class Triangle extends Mesh {
         vertices.unsafeSet(4, width);
         vertices.unsafeSet(5, height);
 
-    } //updateVertices
+    }
 
-} //Triangle
+}

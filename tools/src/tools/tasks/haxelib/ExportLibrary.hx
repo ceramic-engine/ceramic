@@ -16,7 +16,7 @@ class ExportLibrary extends tools.Task {
 
         return "Export haxelib-compatible libraries from ceramic source-code.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -70,7 +70,7 @@ class ExportLibrary extends tools.Task {
             File.saveContent(Path.join([libPath, 'haxelib.json']), Json.stringify(haxelibJson, null, '  '));
         }
 
-    } //run
+    }
 
     function createHaxelibJson(name:String, github:String, description:String, version:String, releaseNote:String):Dynamic {
 
@@ -87,6 +87,6 @@ class ExportLibrary extends tools.Task {
             "dependencies": {}
         };
 
-    } //createHaxelibJson
+    }
 
-} //ExportLibrary
+}

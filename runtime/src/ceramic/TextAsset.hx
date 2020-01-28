@@ -10,7 +10,7 @@ class TextAsset extends Asset {
 
         super('text', name, options #if ceramic_debug_entity_allocs , pos #end);
 
-    } //name
+    }
 
     override public function load() {
 
@@ -39,7 +39,7 @@ class TextAsset extends Asset {
 
         });
 
-    } //load
+    }
 
     override function destroy():Void {
 
@@ -47,6 +47,6 @@ class TextAsset extends Asset {
 
         text = null;
 
-    } //destroy
+    }
 
-} //TextAsset
+}

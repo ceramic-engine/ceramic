@@ -72,7 +72,7 @@ class TilemapLayer extends Visual {
 
         super();
 
-    } //new
+    }
 
 /// Display
 
@@ -89,7 +89,7 @@ class TilemapLayer extends Visual {
 
         contentDirty = false;
         
-    } //computeContent
+    }
 
     function computeTileQuads() {
 
@@ -185,4 +185,4 @@ class TilemapLayer extends Visual {
         }
     }
 
-} //TilemapLayer
+}

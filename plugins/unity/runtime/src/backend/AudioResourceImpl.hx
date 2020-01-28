@@ -4,4 +4,4 @@ class AudioResourceImpl {
 
     public function new() {}
 
-} //AudioResourceImpl
+}

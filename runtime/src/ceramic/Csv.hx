@@ -164,7 +164,7 @@ class Csv {
 
         return result;
 
-    } //parse
+    }
 
     public static function stringify(items:Array<Dynamic>, ?fields:Array<String>):String {
 
@@ -182,7 +182,7 @@ class Csv {
             }
             output.add('"');
 
-        } //addEscaped
+        }
 
         if (fields == null) {
             fields = [];
@@ -217,7 +217,7 @@ class Csv {
 
         return output.toString();
 
-    } //stringify
+    }
 
 #if (!ceramic || macro)
 
@@ -231,7 +231,7 @@ class Csv {
         trace(str);
 #end
 
-    } //warning
+    }
 
 #end
 

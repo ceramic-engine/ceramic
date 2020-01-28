@@ -263,14 +263,14 @@ class View extends Quad {
 
         return borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0;
 
-    } //shouldDisplayBorder
+    }
 
     function initBorder():Void {
 
         border = new Border();
         add(border);
 
-    } //initBorder
+    }
 
     function updateBorder():Void {
 
@@ -302,7 +302,7 @@ class View extends Quad {
             if (border != null) border.destroy();
         }
 
-    } //updateBorder
+    }
 
 /// Computed size context
 
@@ -333,7 +333,7 @@ class View extends Quad {
         persistedComputedWidth = computedWidth;
         persistedComputedHeight = computedHeight;
 
-    } //persistComputedSizeWithContext
+    }
 
     inline public function hasPersistentComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
 
@@ -345,14 +345,14 @@ class View extends Quad {
             && persistedParentHeight == parentHeight
             && persistedComputedWidth != -1;
 
-    } //hasPersistentComputedSize
+    }
 
     inline public function resetComputedSize():Void {
         
         computedWidth = -1;
         persistedComputedWidth = -1;
 
-    } //resetComputedSize
+    }
 
 /// Overrides
 
@@ -436,20 +436,20 @@ class View extends Quad {
         return _autorun;
         //*/
 
-    } //autorun
+    }
 
     function _immediateAutorunLayout() {
 
         app.onceImmediate(_autorunLayout);
 
-    } //_immediateAutorunLayout
+    }
 
     function _autorunLayout() {
 
         layoutDirty = true;
         requestLayout();
 
-    } //_autorunLayout
+    }
 
 /// Lifecycle
 
@@ -480,7 +480,7 @@ class View extends Quad {
             });
         });
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -489,7 +489,7 @@ class View extends Quad {
         // Remove view from global list
         _allViews.splice(_allViews.indexOf(this), 1);
 
-    } //destroy
+    }
 
     public function removeAllViews():Void {
 
@@ -507,7 +507,7 @@ class View extends Quad {
         pool.release(tmp);
         subviews = null;
 
-    } //removeAllViews
+    }
 
     /** Auto compute size from constraints and `viewWidth`/`viewHeight`.
         @param applyComputedSize if `true`, apply the computed size to the view. */
@@ -516,7 +516,7 @@ class View extends Quad {
         computeSize(0, 0, ViewLayoutMask.FLEXIBLE, true);
         if (applyComputedSize) this.applyComputedSize();
 
-    } //autoComputeSize
+    }
 
     /** Auto compute size (if needed) from constraints and `viewWidth`/`viewHeight`.
         @param applyComputedSize if `true`, apply the computed size to the view. */
@@ -525,7 +525,7 @@ class View extends Quad {
         computeSizeIfNeeded(0, 0, ViewLayoutMask.FLEXIBLE, true);
         if (applyComputedSize) this.applyComputedSize();
 
-    } //autoComputeSize
+    }
 
     /** Apply the computed size to the view.
         This is equivalent to `size(computedWidth, computedHeight)` */
@@ -533,7 +533,7 @@ class View extends Quad {
 
         size(computedWidth, computedHeight);
 
-    } //applyComputedSize
+    }
 
     /** Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
         Typically used to compute image size with _scale to fit_ requirements and similar */
@@ -651,7 +651,7 @@ class View extends Quad {
 
         return appliedScale;
 
-    } //computeSizeWithIntrinsicBounds
+    }
 
     inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
@@ -663,7 +663,7 @@ class View extends Quad {
             computeSize(parentWidth, parentHeight, layoutMask, persist);
         }
 
-    } //computeSizeIfNeeded
+    }
 
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
@@ -721,20 +721,20 @@ class View extends Quad {
             persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
         }
 
-    } //computeSize
+    }
 
     inline function willEmitLayout():Void {
 
         updateBorder();
         layout();
 
-    } //willEmitLayout
+    }
 
     function layout():Void {
 
         // Override in subclasses
 
-    } //layout
+    }
 
 /// On-demand explicit layout
 
@@ -754,7 +754,7 @@ class View extends Quad {
             _updateViewsLayout(0.0);
         });
 
-    } //requestLayout
+    }
 
 /// Internal
 
@@ -817,7 +817,7 @@ class View extends Quad {
             });
         }
 
-    } //updateViewLayouts
+    }
 
     inline static function _markParentsAsLayoutDirty(view:View):Void {
 
@@ -830,7 +830,7 @@ class View extends Quad {
             }
         }
 
-    } //_markParentsAsLayoutDirty
+    }
 
     static function _layoutParentThenSelf(view:View):Void {
 
@@ -843,7 +843,7 @@ class View extends Quad {
             view.layoutDirty = false;
         }
 
-    } //layoutParentThenSelf
+    }
 
 /// Screen size helpers
 
@@ -858,7 +858,7 @@ class View extends Quad {
         size(screen.width, screen.height);
         View.requestLayout();
 
-    } //bindToScreenSize
+    }
 
 /// View size helpers
 
@@ -866,24 +866,24 @@ class View extends Quad {
 
         return ViewSize.percent(value);
 
-    } //percent
+    }
 
     inline public function percentToFloat(encoded:Float):Float {
 
         return ViewSize.percentToFloat(encoded);
 
-    } //percentToFloat
+    }
 
     inline public function fill():Float {
 
         return ViewSize.fill();
 
-    } //auto
+    }
 
     inline public function auto():Float {
 
         return ViewSize.auto();
 
-    } //auto
+    }
 
-} //View
+}

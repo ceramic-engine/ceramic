@@ -11,7 +11,7 @@ extern class OpenType {
 
 
 
-} //OpenType
+}
 
 @:jsRequire('opentype.js', 'Font')
 extern class OpenTypeFont {
@@ -37,7 +37,7 @@ extern class OpenTypeFont {
     /** Returns the advance width of a text. This is something different than Path.getBoundingBox() as for example a suffixed whitespace increases the advancewidth but not the bounding box or an overhanging letter like a calligraphic 'f' might have a quite larger bounding box than its advance width. */
     function getAdvanceWidth(text:String, fontSize:Int, ?options:{?kerning:Bool, ?features:Dynamic, ?hinting:Bool}):Float;
 
-} //OpenTypeFont
+}
 
 @:jsRequire('opentype.js', 'Glyph')
 extern class OpenTypeGlyph {
@@ -78,7 +78,7 @@ extern class OpenTypeGlyph {
     /** Get a scaled glyph Path object we can draw on a drawing context. */
     function getPath(x:Float, y:Float, fontSize:Int):OpenTypePath;
 
-} //OpenTypeGlyph
+}
 
 @:jsRequire('opentype.js', 'BoundingBox')
 extern class OpenTypeBoundingBox {
@@ -91,7 +91,7 @@ extern class OpenTypeBoundingBox {
 
     var y2:Float;
 
-} //OpenTypeBoundingBox
+}
 
 extern class OpenTypePath {
 
@@ -106,4 +106,4 @@ extern class OpenTypePath {
     /** Draw the path on the given 2D context. This uses the fill, stroke and strokeWidth properties of the Path object. */
     function draw(ctx:Dynamic):Void;
 
-} //OpenTypePath
+}

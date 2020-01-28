@@ -148,6 +148,6 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
         return toHexString();
 
-    } //toString
+    }
 
-} //AlphaColor
+}

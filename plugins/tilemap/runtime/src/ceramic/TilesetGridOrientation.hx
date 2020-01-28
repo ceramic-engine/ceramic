@@ -6,4 +6,4 @@ enum TilesetGridOrientation {
 
     ISOMETRIC;
 
-} //TilesetGridOrientation
+}

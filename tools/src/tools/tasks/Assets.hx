@@ -16,13 +16,13 @@ class Assets extends tools.Task {
 
         super();
 
-    } //new
+    }
 
     override public function info(cwd:String):String {
 
         return "Transform/copy project's assets for " + context.backend.name + " backend and given target.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -204,6 +204,6 @@ class Assets extends tools.Task {
             }
         }
 
-    } //run
+    }
 
 }

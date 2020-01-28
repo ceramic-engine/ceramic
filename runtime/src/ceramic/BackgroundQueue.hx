@@ -38,7 +38,7 @@ class BackgroundQueue extends Entity {
         Runner.runInBackground(internalRunInBackground);
         #end
         
-    } //new
+    }
 
     public function schedule(fn:Void->Void):Void {
 
@@ -56,7 +56,7 @@ class BackgroundQueue extends Entity {
 
         #end
 
-    } //schedule
+    }
 
     #if cpp
 
@@ -82,7 +82,7 @@ class BackgroundQueue extends Entity {
             }
         }
 
-    } //internalRunInBackground
+    }
 
     #end
 
@@ -92,6 +92,6 @@ class BackgroundQueue extends Entity {
 
         stop = true;
 
-    } //destroy
+    }
 
-} //BackgroundQueue
+}

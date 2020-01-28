@@ -6,4 +6,4 @@ enum LayoutDirection {
 
     VERTICAL;
 
-} //LayoutDirection
+}

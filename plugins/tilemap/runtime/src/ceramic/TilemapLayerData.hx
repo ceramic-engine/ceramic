@@ -32,4 +32,4 @@ class TilemapLayerData extends Entity {
     /** Tiles */
     public var tiles:Array<TilemapTile> = null;
 
-} //TilemapLayerData
+}

@@ -19,4 +19,4 @@ enum ScreenScaling {
         Result is scaled to fit exactly into native screen bounds. */
     FIT_RESIZE;
 
-} //ScreenScaling
+}

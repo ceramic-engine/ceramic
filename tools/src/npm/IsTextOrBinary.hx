@@ -9,4 +9,4 @@ extern class IsTextOrBinary {
 
     static function isText(filename:String, buffer:Buffer, callback:String->Bool->Void):Bool;
 
-} //IsTextOrBinary
+}

@@ -19,6 +19,6 @@ class AudioMixer extends Entity {
 
         this.index = index;
 
-    } //new
+    }
 
-} //AudioMixer
+}

@@ -82,7 +82,7 @@ class SortVisuals {
 
         return result;
 
-    } //cmp
+    }
 
     /**
         Sorts Array `a` according to the comparison function `cmp`, where
@@ -212,4 +212,4 @@ class SortVisuals {
         return cmp(a[i], a[j]);
     }
 
-} //SortVisuals
+}

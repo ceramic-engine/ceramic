@@ -178,7 +178,7 @@ class Highlight extends Visual {
 
         updateCornersAndBorders();
 
-    } //new
+    }
 
 /// Overrides
 
@@ -212,7 +212,7 @@ class Highlight extends Visual {
 
         updateCornersAndBorders();
 
-    } //wrapVisual
+    }
 
 /// Internal
 
@@ -282,6 +282,6 @@ class Highlight extends Visual {
         borderLeft.pos(pointBottomLeft.x, pointBottomLeft.y);
         borderLeft.rotation = r;
 
-    } //updateCornersPosition
+    }
 
-} //Highlight
+}

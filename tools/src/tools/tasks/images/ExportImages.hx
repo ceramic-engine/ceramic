@@ -19,7 +19,7 @@ typedef ExportImagesInfo = {
 
     @:optional var scale:DynamicAccess<Float>;
 
-} //ExportImagesInfo
+}
 
 class ExportImages extends tools.Task {
 
@@ -27,7 +27,7 @@ class ExportImages extends tools.Task {
 
         return "Export images from a directory to usable assets.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -84,6 +84,6 @@ class ExportImages extends tools.Task {
         }
         
 
-    } //run
+    }
 
-} //ExportImages
+}

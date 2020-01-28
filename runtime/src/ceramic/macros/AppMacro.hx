@@ -17,7 +17,7 @@ class AppMacro {
         if (AppMacro.computedInfo == null) AppMacro.computedInfo = computeInfo(rawInfo);
         return AppMacro.computedInfo;
 
-    } //getComputedInfo
+    }
 
     macro static public function build():Array<Field> {
 
@@ -79,7 +79,7 @@ class AppMacro {
 
         return fields;
 
-    } //build
+    }
 
     static function computeInfo(rawInfo:String):Dynamic {
 
@@ -96,7 +96,7 @@ class AppMacro {
 
         return data;
 
-    } //computeInfo
+    }
 
     static function convertArrays(data:Dynamic):Dynamic {
 
@@ -127,6 +127,6 @@ class AppMacro {
 
         return newData;
 
-    } //convertArrays
+    }
 
-} //AppMacro
+}

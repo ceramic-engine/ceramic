@@ -11,6 +11,6 @@ class TimelineFloatKeyframe extends TimelineKeyframe {
         
         this.value = value;
 
-    } //new
+    }
 
-} //TimelineKeyframe
+}

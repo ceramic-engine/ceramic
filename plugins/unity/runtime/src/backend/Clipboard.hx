@@ -10,12 +10,12 @@ class Clipboard implements spec.Clipboard {
         
         return clipboardText;
 
-    } //getText
+    }
 
     public function setText(text:String):Void {
 
         clipboardText = text;
 
-    } //setText
+    }
 
-} //Clipboard
+}

@@ -29,7 +29,7 @@ class Build extends tools.Task {
         this.variant = variant;
         this.config = target.configs[configIndex];
 
-    } //new
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -221,6 +221,6 @@ class Build extends tools.Task {
             }*/
         }
 
-    } //run
+    }
 
-} //Setup
+}

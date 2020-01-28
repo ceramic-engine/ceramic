@@ -21,7 +21,7 @@ class ImageAsset extends Asset {
         super('image', name, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
-    } //name
+    }
 
     override public function load() {
 
@@ -108,7 +108,7 @@ class ImageAsset extends Asset {
 
         });
 
-    } //load
+    }
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -119,7 +119,7 @@ class ImageAsset extends Asset {
             checkTexturesDensity();
         }
 
-    } //texturesDensityDidChange
+    }
 
     function checkTexturesDensity():Void {
 
@@ -131,7 +131,7 @@ class ImageAsset extends Asset {
             load();
         }
 
-    } //checkTexturesDensity
+    }
 
     override function destroy():Void {
 
@@ -142,6 +142,6 @@ class ImageAsset extends Asset {
             texture = null;
         }
 
-    } //destroy
+    }
 
-} //ImageAsset
+}

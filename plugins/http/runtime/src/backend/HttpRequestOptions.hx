@@ -12,4 +12,4 @@ typedef HttpRequestOptions = {
 
     @:optional var timeout:Int;
 
-} //HttpRequestOptions
+}

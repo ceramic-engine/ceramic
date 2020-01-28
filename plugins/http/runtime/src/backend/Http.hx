@@ -401,7 +401,7 @@ class Http implements spec.Http {
         });
 #end
 
-    } //request
+    }
 
     public function download(url:String, targetPath:String, done:String->Void):Void {
 
@@ -487,7 +487,7 @@ class Http implements spec.Http {
                 return;
             }
 
-        } //finishDownload
+        }
 
         #if (mac || linux)
         // Use built-in curl on mac & linux, that's the easiest!
@@ -516,6 +516,6 @@ class Http implements spec.Http {
         log.error('Cannot download $url at path $targetPath because download is not supported on this target');
         done(null);
 
-    } //download
+    }
 
-} //Http
+}

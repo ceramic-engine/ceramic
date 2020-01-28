@@ -35,18 +35,18 @@ class Model extends Entity implements Observable implements Serializable {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-    } //new
+    }
 
     /** Called right before the object will be serialized. */
     function willSerialize():Void {
 
-    } //willSerialize
+    }
 
     /** Called right after the object has been deserialized. Could be useful to override it to check data integrity
         when running a newer model version etc... */
     function didDeserialize():Void {
 
-    } //didDeserialize
+    }
 
 /// Print
 
@@ -75,7 +75,7 @@ class Model extends Entity implements Observable implements Serializable {
 
         return '' + result;
 
-    } //toString
+    }
 
 /// Haxe built in serializer extension
 
@@ -89,4 +89,4 @@ class Model extends Entity implements Observable implements Serializable {
         @:privateAccess Serialize.deserializeValue(u.unserialize(), this);
     }
 
-} //Model
+}

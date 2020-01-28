@@ -41,14 +41,14 @@ import UIKit
             viewController.present(alert, animated: true, completion: nil)
         }
         
-    } //hello
+    }
     
     /** Get iOS version string */
     public func iosVersionString() -> String {
         
         return UIDevice.current.systemVersion
         
-    } //iosVersionString
+    }
     
     /** Get iOS version number */
     public func iosVersionNumber() -> Float {
@@ -60,7 +60,7 @@ import UIKit
         
         return 0
         
-    } //iosVersionNumber
+    }
     
     /** Dummy method to get Haxe types converted to Swift types that then get returned back as an array. */
     public func testTypes(_ aBool: Bool, anInt: Int, aFloat: Float, anArray: Array<Any>, aDict: Dictionary<String,Any>) -> Array<Any> {
@@ -78,7 +78,7 @@ import UIKit
                 anArray,
                 aDict];
         
-    } //testTypes
+    }
     
-} //AppSwiftInterface
+}
 

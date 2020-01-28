@@ -41,7 +41,7 @@ class RenderTexture extends Texture {
 
         app.renderTextures.push(this);
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -49,7 +49,7 @@ class RenderTexture extends Texture {
 
         app.renderTextures.remove(this);
 
-    } //destroy
+    }
 
 /// Public API / Utilities
 
@@ -97,7 +97,7 @@ class RenderTexture extends Texture {
             });
         });
 
-    } //stamp
+    }
 
     /** Clears the texture, or a specific area of it with a fill color and alpha.
         The drawing operation is not done synchronously.
@@ -128,7 +128,7 @@ class RenderTexture extends Texture {
 
         stamp(_clearQuad, done);
 
-    } //clear
+    }
 
     @:noCompletion inline public function dependsOnTexture(texture:Texture):Bool {
 
@@ -138,7 +138,7 @@ class RenderTexture extends Texture {
         return dependingTextures != null && dependingTextures.get(texture.index) > 0;
         #end
 
-    } //dependsOnTexture
+    }
 
     @:noCompletion inline public function incrementDependingTextureCount(texture:Texture):Void {
 
@@ -158,7 +158,7 @@ class RenderTexture extends Texture {
 
         dependingTextures.set(texture.index, prevValue + 1);
 
-    } //incrementDependingTextureCount
+    }
 
     @:noCompletion inline public function resetDependingTextureCounts():Void {
 
@@ -166,7 +166,7 @@ class RenderTexture extends Texture {
             dependingTextures.clear();
         }
 
-    } //decrementDependingTextureCount
+    }
 
 /// Print
 
@@ -180,6 +180,6 @@ class RenderTexture extends Texture {
             return 'RenderTexture($width $height $density #$index/$priority)';
         }
 
-    } //toString
+    }
 
-} //RenderTexture
+}

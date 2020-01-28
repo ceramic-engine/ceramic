@@ -12,7 +12,7 @@ class Compile extends tools.Task {
 
         return "Compile C++ for iOS platform.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -89,6 +89,6 @@ class Compile extends tools.Task {
         print('Combine binaries');
         command('xcrun', lipoArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
 
-    } //run
+    }
 
-} //Compile
+}

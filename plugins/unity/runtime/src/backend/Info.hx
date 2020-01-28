@@ -28,4 +28,4 @@ class Info #if !completion implements spec.Info #end {
         return ['glsl', 'frag', 'vert'];
     }
 
-} //Info
+}

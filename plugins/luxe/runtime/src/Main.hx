@@ -20,7 +20,7 @@ class Main extends luxe.Game {
         
         new Main();
 
-    } //main
+    }
 
     public static var project:Project = null;
 
@@ -261,7 +261,7 @@ class Main extends luxe.Game {
 
         return config;
 
-    } //config
+    }
 
     override function ready():Void {
 
@@ -297,7 +297,7 @@ class Main extends luxe.Game {
         }
 #end
 
-    } //ready
+    }
 
     override function update(delta:Float):Void {
 
@@ -308,13 +308,13 @@ class Main extends luxe.Game {
         // Update
         ceramic.App.app.backend.emitUpdate(delta);
 
-    } //update
+    }
 
     override function onwindowresized(event:luxe.Screen.WindowEvent) {
 
         triggerResizeIfNeeded();
 
-    } //onwindowresized
+    }
 
 // Only handle mouse on desktop & web, for now
 #if (mac || windows || linux || web)
@@ -335,7 +335,7 @@ class Main extends luxe.Game {
             event.y
         );
 
-    } //onmousedown
+    }
 
     override function onmouseup(event:MouseEvent) {
 
@@ -353,7 +353,7 @@ class Main extends luxe.Game {
             event.y
         );
 
-    } //onmouseup
+    }
 
     override function onmousewheel(event:MouseEvent) {
 
@@ -381,7 +381,7 @@ class Main extends luxe.Game {
             event.y
         );
 
-    } //onmousewheel
+    }
 
     override function onmousemove(event:MouseEvent) {
 
@@ -393,7 +393,7 @@ class Main extends luxe.Game {
             event.y
         );
 
-    } //onmousemove
+    }
 
 #end
 
@@ -404,7 +404,7 @@ class Main extends luxe.Game {
             scanCode: event.scancode
         });
 
-    } //onkeydown
+    }
 
     override function onkeyup(event:KeyEvent) {
 
@@ -413,7 +413,7 @@ class Main extends luxe.Game {
             scanCode: event.scancode
         });
 
-    } //onkeyup
+    }
 
 // Don't handle touch on desktop, for now
 #if !(mac || windows || linux)
@@ -433,7 +433,7 @@ class Main extends luxe.Game {
             event.y * lastHeight
         );
 
-    } //ontouchdown
+    }
 
     override function ontouchup(event:TouchEvent) {
 
@@ -451,7 +451,7 @@ class Main extends luxe.Game {
         touches.remove(event.touch_id);
         touchIndexes.remove(index);
 
-    } //ontouchup
+    }
 
     override function ontouchmove(event:TouchEvent) {
 
@@ -466,7 +466,7 @@ class Main extends luxe.Game {
             event.y * lastHeight
         );
 
-    } //ontouchmove
+    }
 
 #end
 
@@ -481,7 +481,7 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.emitControllerAxis(id, event.axis, event.value);
 
-    } //ongamepadaxis
+    }
 
     override public function ongamepaddown(event:GamepadEvent) {
 
@@ -494,7 +494,7 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.emitControllerDown(id, event.button);
 
-    } //ongamepaddown
+    }
 
     override public function ongamepadup(event:GamepadEvent) {
 
@@ -507,7 +507,7 @@ class Main extends luxe.Game {
 
         ceramic.App.app.backend.emitControllerUp(id, event.button);
 
-    } //ongamepadup
+    }
 
     override public function ongamepaddevice(event:GamepadEvent) {
 
@@ -531,7 +531,7 @@ class Main extends luxe.Game {
             }
         }
 
-    } //ongamepaddevice
+    }
 
     override function onevent(event:snow.types.Types.SystemEvent) {
 
@@ -561,7 +561,7 @@ class Main extends luxe.Game {
                 @:privateAccess ceramic.App.app.emitFinishEnterForeground();
         }
 
-    } //onevent
+    }
 
 /// Internal
 

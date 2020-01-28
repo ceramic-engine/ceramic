@@ -11,4 +11,4 @@ extern class NativeMac {
     @:native('backend::NativeMac_setAppleMomentumScrollSupported')
     static function setAppleMomentumScrollSupported(value:Bool):Void;
 
-} //NativeMac
+}

@@ -17,7 +17,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -50,7 +50,7 @@ class ToolsPlugin {
         // Restore default backend
         context.backend = prevBackend;
 
-    } //init
+    }
 
     public function extendIdeInfo(tasks:Array<IdeInfoTaskItem>, variants:Array<IdeInfoVariantItem>) {
 
@@ -89,7 +89,7 @@ class ToolsPlugin {
             }
         }
 
-    } //extendIdeInfo
+    }
 
     public function extendVscodeTasksChooser(items:Array<VscodeChooserItem>) {
 
@@ -165,6 +165,6 @@ class ToolsPlugin {
 
         }
 
-    } //extendVscodeTasksChooser
+    }
 
-} //ToolsPlugin
+}

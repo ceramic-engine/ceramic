@@ -13,7 +13,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -28,7 +28,7 @@ class ToolsPlugin {
         var tasks = context.tasks;
         tasks.set('web project', new tools.tasks.web.Web());
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -38,6 +38,6 @@ class ToolsPlugin {
             // Do web stuff
         }
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

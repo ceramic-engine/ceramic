@@ -6,4 +6,4 @@ typedef Message = {
 
     @:optional var value:Dynamic;
 
-} //Message
+}

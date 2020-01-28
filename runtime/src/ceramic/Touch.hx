@@ -20,6 +20,6 @@ class Touch {
             y: y
         };
 
-    } //toString
+    }
 
-} //Point
+}

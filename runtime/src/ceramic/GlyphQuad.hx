@@ -28,7 +28,7 @@ class GlyphQuad extends Quad {
 
         return 'GlyphQuad(c=$char,i=$index,l=$line,x=$glyphX,y=$glyphY)';
 
-    } //toString
+    }
 
     override function clear() {
 
@@ -36,6 +36,6 @@ class GlyphQuad extends Quad {
 
         super.clear();
 
-    } //clear
+    }
 
-} //GlyphQuad
+}

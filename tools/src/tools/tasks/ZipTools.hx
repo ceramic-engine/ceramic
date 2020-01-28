@@ -11,7 +11,7 @@ class ZipTools extends tools.Task {
 
         return "Package these ceramic tools as a redistribuable zip file.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -60,6 +60,6 @@ class ZipTools extends tools.Task {
             fail('Not supported on linux yet');
         }
 
-    } //run
+    }
 
-} //ZipTools
+}

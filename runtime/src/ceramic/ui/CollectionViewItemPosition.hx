@@ -10,4 +10,4 @@ package ceramic.ui;
 
     var ENSURE_VISIBLE = 3;
 
-} //CollectionViewItemPosition
+}

@@ -25,4 +25,4 @@ typedef FragmentData = {
     /** Fragment items (visuals or other entities) */
     @:optional public var items:Array<FragmentItem>;
 
-} //FragmentData
+}

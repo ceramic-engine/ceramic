@@ -80,6 +80,6 @@ abstract ViewLayoutMask(Int) from Int to Int {
         if (this == DECREASE) return 'DECREASE';
         return ''+this;
 
-    } //toString
+    }
 
-} //ViewLayoutMask
+}

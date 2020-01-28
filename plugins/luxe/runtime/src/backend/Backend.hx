@@ -47,7 +47,7 @@ class Backend implements ceramic.Events implements spec.Backend {
         NativeWindows.init();
 #end
 
-    } //init
+    }
 
 /// Events
 
@@ -70,12 +70,12 @@ class Backend implements ceramic.Events implements spec.Backend {
 
         draw.begin();
 
-    } //willEmitUpdate
+    }
 
     inline function didEmitUpdate(delta:Float) {
 
         draw.end();
 
-    } //didEmitUpdate
+    }
 
-} //Backend
+}

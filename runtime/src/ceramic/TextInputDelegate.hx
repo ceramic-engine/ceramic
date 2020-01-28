@@ -15,4 +15,4 @@ interface TextInputDelegate {
 
     function textInputPosInLineForIndex(index:Int):Int;
 
-} //TextInputDelegate
+}

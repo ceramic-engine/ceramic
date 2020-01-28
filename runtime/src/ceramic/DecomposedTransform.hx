@@ -29,4 +29,4 @@ class DecomposedTransform {
         return '(pos=$x,$y pivot=$pivotX,$pivotY rotation=$rotation scale=${(scaleX == scaleY ? '' + scaleX : scaleX + ',' + scaleY)} skew=$skewX,$skewY)';
     }
 
-} //DecomposedTransform
+}

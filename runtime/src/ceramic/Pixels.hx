@@ -22,7 +22,7 @@ class Pixels extends Entity {
 
         super();
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -30,7 +30,7 @@ class Pixels extends Entity {
 
         if (asset != null) asset.destroy();
 
-    } //destroy
+    }
 
 /// Print
 
@@ -44,6 +44,6 @@ class Pixels extends Entity {
             return 'Pixels($width $height)';
         }
 
-    } //toString
+    }
 
-} //Image
+}

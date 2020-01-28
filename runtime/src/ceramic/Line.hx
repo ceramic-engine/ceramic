@@ -99,7 +99,7 @@ class Line extends Mesh {
 
         contentDirty = false;
 
-    } //computeContent
+    }
 
     override function computeSize() {
 
@@ -124,6 +124,6 @@ class Line extends Mesh {
             size(0, 0);
         }
 
-    } //computeSize
+    }
 
-} //Line
+}

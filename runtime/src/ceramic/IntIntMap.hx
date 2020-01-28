@@ -57,7 +57,7 @@ class IntIntMap {
             iterableKeysUsed = new IntBoolMap();
         }
 
-    } //new
+    }
 
     public function clear():Void {
 
@@ -74,13 +74,13 @@ class IntIntMap {
             iterableKeysUsed = new IntBoolMap();
         }
 
-    } //clear
+    }
 
     public function exists(key:Int):Bool {
 
         return existsInline(key);
 
-    } //exists
+    }
 
     inline public function existsInline(key:Int):Bool {
 
@@ -120,13 +120,13 @@ class IntIntMap {
 
         return res;
 
-    } //existsInline
+    }
 
     public function get(key:Int):Int {
 
         return getInline(key);
 
-    } //get
+    }
 
     inline public function getInline(key:Int):Int {
 
@@ -168,7 +168,7 @@ class IntIntMap {
 
         return res;
 
-    } //getInline
+    }
 
     public function set(key:Int, value:Int):Int {
 
@@ -247,7 +247,7 @@ class IntIntMap {
             }
         }
 
-    } //set
+    }
 
     public function remove(key:Int):Int {
 
@@ -309,7 +309,7 @@ class IntIntMap {
             }
         }
 
-    } //remove
+    }
 
     private function shiftKeys(pos:Int):Int {
 
@@ -336,7 +336,7 @@ class IntIntMap {
             data.set(last + 1, data.get(pos + 1));
         }
 
-    } //shiftKeys
+    }
 
     function rehash(newCapacity:Int):Void {
 
@@ -358,7 +358,7 @@ class IntIntMap {
             i += 2;
         }
 
-    } //rehash
+    }
 
 /// Tools
 
@@ -377,7 +377,7 @@ class IntIntMap {
         }
         return result;
 
-    } //nextPowerOfTwo
+    }
 
     /** Returns the least power of two smaller than or equal to 2^30 and larger than or equal to ```Math.ceil(expected / fillFactor)``` **/
     inline static function arraySize(expected:Int, fillFactor:Float):Int {
@@ -386,16 +386,16 @@ class IntIntMap {
    		assert(s <= (1 << 30), "array size too large (" + expected + " expected elements with fill factor " + fillFactor + ")");
    		return Std.int(s);
 
-    } //arraySize
+    }
 
     inline static function phiMix(x:Int):Int {
 
    		var h = x * INT_PHI;
    		return h ^ (h >> 16);
 
-   	} //phiMix
+   	}
 
-} //IntIntMap
+}
 
 #else
 
@@ -449,6 +449,6 @@ abstract IntIntMap(Map<Int,Int>) {
         return this.exists(Std.int(key));
     }
 
-} //IntIntMap
+}
 
 #end

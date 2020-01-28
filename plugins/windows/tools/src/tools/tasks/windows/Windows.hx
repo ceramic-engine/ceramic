@@ -21,7 +21,7 @@ class Windows extends tools.Task {
 
         return "Generate or update Windows app to run or debug it";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -57,6 +57,6 @@ class Windows extends tools.Task {
             js.Node.process.exit(status);
         }
 
-    } //run
+    }
 
 } //Windows

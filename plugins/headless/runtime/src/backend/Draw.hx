@@ -29,30 +29,30 @@ class Draw #if !completion implements spec.Draw #end {
             return NONE;
         }
 
-    } //getItem
+    }
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
         // Unused in headless
 
-    } //draw
+    }
 
     public function swap():Void {
 
         // Unused in headless
 
-    } //swap
+    }
 
     public function stamp(visuals:Array<ceramic.Visual>):Void {
 
         // Unused in headless
 
-    } //draw
+    }
 
     inline public function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void {
 
         // Unused in headless
 
-    } //transformForRenderTarget
+    }
 
-} //Draw
+}

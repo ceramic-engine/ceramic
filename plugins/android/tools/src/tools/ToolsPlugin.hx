@@ -13,7 +13,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -32,7 +32,7 @@ class ToolsPlugin {
         tasks.set('android ndk stack', new tools.tasks.android.NdkStack());
         tasks.set('android export apk', new tools.tasks.android.ExportAPK());
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -42,6 +42,6 @@ class ToolsPlugin {
             // Do android stuff
         }
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

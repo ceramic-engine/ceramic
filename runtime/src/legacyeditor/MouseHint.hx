@@ -26,6 +26,6 @@ class MouseHint extends Visual {
         text.pos(0, 0);
         add(text);
 
-    } //new
+    }
 
-} //MouseHint
+}

@@ -17,4 +17,4 @@ interface ConvertField<BasicType,FieldType> {
     /** Get a basic type from the field value. */
     function fieldToBasic(value:FieldType):BasicType;
 
-} //ConvertField
+}

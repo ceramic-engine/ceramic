@@ -17,6 +17,6 @@ class ImmutablePoint {
             y: y
         };
 
-    } //toString
+    }
 
-} //Point
+}

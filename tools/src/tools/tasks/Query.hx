@@ -10,7 +10,7 @@ class Query extends tools.Task {
 
         return "Query an active ceramic server";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -44,6 +44,6 @@ class Query extends tools.Task {
 
         });
 
-    } //run
+    }
 
-} //Query
+}

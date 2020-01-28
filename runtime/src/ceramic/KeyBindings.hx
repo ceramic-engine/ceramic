@@ -16,7 +16,7 @@ class KeyBindings extends Entity {
 
         super();
 
-    } //new
+    }
 
 /// Public API
 
@@ -34,6 +34,6 @@ class KeyBindings extends Entity {
 
         return binding;
 
-    } //bind
+    }
 
-} //KeyBindings
+}

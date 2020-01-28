@@ -12,7 +12,7 @@ class ShaderAttribute {
         this.size = size;
         this.name = name;
 
-    } //new
+    }
 
 /// Print
 
@@ -23,6 +23,6 @@ class ShaderAttribute {
             name: name
         };
 
-    } //toString
+    }
 
-} //ShaderAttribute
+}

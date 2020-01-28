@@ -135,7 +135,7 @@ class EventsMacro {
 
         return newFields;
 
-    } //build
+    }
 
     @:allow(ceramic.macros.ObservableMacro)
     @:allow(ceramic.macros.SerializableMacro)
@@ -157,7 +157,7 @@ class EventsMacro {
             }]
         });
 
-    } //createEventDispatcherField
+    }
 
     @:allow(ceramic.macros.ObservableMacro)
     @:allow(ceramic.macros.SerializableMacro)
@@ -1123,7 +1123,7 @@ class EventsMacro {
 
         return dynamicDispatch ? eventIndex + 1 : eventIndex;
 
-    } //createEventFields
+    }
 
     static function hasEventMeta(field:Field):Bool {
 
@@ -1137,7 +1137,7 @@ class EventsMacro {
 
         return false;
 
-    } //hasEventMeta
+    }
 
     static function hasStaticEventMeta(field:Field):Bool {
 
@@ -1150,7 +1150,7 @@ class EventsMacro {
         }
 
         return false;
-    } //hasStaticEventMeta
+    }
 
     @:allow(ceramic.macros.ObservableMacro)
     @:allow(ceramic.macros.SerializableMacro)
@@ -1166,7 +1166,7 @@ class EventsMacro {
 
         return false;
 
-    } //hasDynamicEventsMeta
+    }
 
     static function isEmpty(expr:Expr) {
 
@@ -1177,6 +1177,6 @@ class EventsMacro {
             default: false;
         }
 
-    } //isEmpty
+    }
 
 }

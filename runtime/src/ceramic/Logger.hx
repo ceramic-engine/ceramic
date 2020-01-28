@@ -40,7 +40,7 @@ class Logger extends Entity {
 
         haxe.Log.trace(prefixLines('[debug] ', value), pos);
 
-    } //debug
+    }
 
     public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
@@ -48,7 +48,7 @@ class Logger extends Entity {
 
         haxe.Log.trace(prefixLines('[info] ', value), pos);
 
-    } //info
+    }
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
@@ -56,7 +56,7 @@ class Logger extends Entity {
 
         haxe.Log.trace(prefixLines('[success] ', value), pos);
 
-    } //success
+    }
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
@@ -74,7 +74,7 @@ class Logger extends Entity {
         haxe.Log.trace(prefixLines('[warning] ', value), pos);
 #end
 
-    } //warning
+    }
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
@@ -92,7 +92,7 @@ class Logger extends Entity {
         haxe.Log.trace(prefixLines('[error] ', value), pos);
 #end
 
-    } //error
+    }
 
 /// Internal
 
@@ -104,6 +104,6 @@ class Logger extends Entity {
         }
         return result.join("\n");
 
-    } //prefixLines
+    }
 
 } //Log

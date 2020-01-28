@@ -26,13 +26,13 @@ class Draw implements spec.Draw {
 
         initBatcherIfNeeded();
 
-    } //begin
+    }
 
     #if !debug inline #end function end():Void {
 
         //
 
-    } //begin
+    }
 
     inline function initBatcherIfNeeded():Void {
 
@@ -48,7 +48,7 @@ class Draw implements spec.Draw {
 
         }
 
-    } //initBatcherIfNeeded
+    }
 
 /// Public API
 
@@ -58,7 +58,7 @@ class Draw implements spec.Draw {
 
         return null;
 
-    } //getItem
+    }
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
@@ -66,7 +66,7 @@ class Draw implements spec.Draw {
         batcher.ceramicVisuals = visuals;
         Luxe.core.render();
 
-    } //draw
+    }
 
     public function swap():Void {
 
@@ -74,7 +74,7 @@ class Draw implements spec.Draw {
         Luxe.snow.runtime.window_swap();
         #end
 
-    } //swap
+    }
 
     @:deprecated
     public function stamp(visuals:Array<ceramic.Visual>):Void {
@@ -91,7 +91,7 @@ class Draw implements spec.Draw {
         #end
         Luxe.core.renderer.should_clear = shouldClear;
 
-    } //draw
+    }
 
     inline public function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void {
 
@@ -115,7 +115,7 @@ class Draw implements spec.Draw {
 
         // matrix.scale(sX, sY);
 
-    } //transformForRenderTarget
+    }
 
 /// Render driver
 
@@ -210,7 +210,7 @@ class Draw implements spec.Draw {
         m[2] = 0;      m[6] = 0;      m[10] = -2 / p; m[14] = -tz;
         m[3] = 0;      m[7] = 0;      m[11] = 0;      m[15] = 1;
 
-    } //updateProjectionMatrix
+    }
 
     inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
 
@@ -244,7 +244,7 @@ class Draw implements spec.Draw {
 
         setMatrixToTransform(modelViewMatrix, modelViewTransform);
 
-    } //updateViewMatrix
+    }
 
     inline function matrixIdentity(m:ceramic.Float32Array):Void {
 
@@ -253,7 +253,7 @@ class Draw implements spec.Draw {
         m[2] = 0;        m[6] = 0;        m[10] = 1;      m[14] = 0;
         m[3] = 0;        m[7] = 0;        m[11] = 0;      m[15] = 1;
 
-    } //matrixIdentity
+    }
 
     inline function setMatrixToTransform(m:ceramic.Float32Array, transform:ceramic.Transform):Void {
 
@@ -262,7 +262,7 @@ class Draw implements spec.Draw {
         m[2] = 0;           m[6] = 0;           m[10] = 1;  m[14] = 0;
         m[3] = 0;           m[7] = 0;           m[11] = 0;  m[15] = 1;
 
-    } //setMatrixToTransform
+    }
 
     /*inline function invertMatrix(m:ceramic.Float32Array):Void {
 
@@ -303,7 +303,7 @@ class Draw implements spec.Draw {
 
         return maxFloats;
 
-    } //maxPosFloats
+    }
 
     /** Number of floats in a single position. 3 = vec3, 4 = vec4 */
     inline static var numFloatsInPos:Int = 3;
@@ -413,7 +413,7 @@ class Draw implements spec.Draw {
         _uvs = null;
         _colors = null;
 
-    } //flush
+    }
 
     inline public function initBuffers(maxVerts:Int):Void {
 
@@ -427,7 +427,7 @@ class Draw implements spec.Draw {
 
         }
 
-    } //initBuffers
+    }
 
     inline public function beginRender():Void {
 
@@ -435,7 +435,7 @@ class Draw implements spec.Draw {
         defaultTransformScaleY = view.transform.scale.y;
         defaultViewport = view.viewport;
 
-    } //beginRender
+    }
 
     inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
@@ -487,7 +487,7 @@ class Draw implements spec.Draw {
             }
         }
 
-    } //setRenderTarget
+    }
 
     inline public function useShader(shader:backend.impl.CeramicShader):Void {
 
@@ -507,7 +507,7 @@ class Draw implements spec.Draw {
         
         activeShader = shader;
 
-    } //useShader
+    }
 
     function matrixToArray(matrix:ceramic.Float32Array):Array<Float> {
 
@@ -517,7 +517,7 @@ class Draw implements spec.Draw {
         }
         return result;
 
-    } //matrixToArray
+    }
 
     /*inline public function useRenderTarget(renderTarget:backend.Texture):Void {
 
@@ -544,19 +544,19 @@ class Draw implements spec.Draw {
 
         Luxe.renderer.clear(transparentColor);
 
-    } //clear
+    }
 
     inline public function enableBlending():Void {
 
         luxeRenderer.state.enable(GL.BLEND);
 
-    } //enableBlending
+    }
 
     inline public function disableBlending():Void {
 
         luxeRenderer.state.disable(GL.BLEND);
 
-    } //disableBlending
+    }
 
     inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
@@ -567,32 +567,32 @@ class Draw implements spec.Draw {
             dstAlpha
         );
 
-    } //setBlendFuncSeparate
+    }
 
     inline public function getActiveTexture():Int {
 
         return activeTextureSlot;
 
-    } //getActiveTexture
+    }
 
     inline public function setActiveTexture(slot:Int):Void {
 
         activeTextureSlot = slot;
         luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
 
-    } //setActiveTexture
+    }
 
     inline public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem : phoenix.Texture).texture == textureId;
 
-    } //textureBackendItemMatchesId
+    }
 
     inline public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem : phoenix.Texture).texture;
 
-    } //getTextureId
+    }
 
     /*inline public function getTextureSlot(backendItem:backend.Texture):Int {
 
@@ -604,45 +604,45 @@ class Draw implements spec.Draw {
 
         return (backendItem : phoenix.Texture).width;
 
-    } //getTextureWidth
+    }
 
     inline public function getTextureHeight(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).height;
 
-    } //getTextureHeight
+    }
 
     inline public function getTextureWidthActual(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).width_actual;
 
-    } //getTextureWidthActual
+    }
 
     inline public function getTextureHeightActual(backendItem:backend.Texture):Int {
 
         return (backendItem : phoenix.Texture).height_actual;
 
-    } //getTextureHeightActual
+    }
 
     inline public function bindTexture(backendItem:backend.Texture):Void {
 
         (backendItem : phoenix.Texture).slot = activeTextureSlot;
         (backendItem : phoenix.Texture).bind();
 
-    } //getTextureHeightActual
+    }
 
     inline public function bindNoTexture():Void {
 
         luxeRenderer.state.bindTexture2D(#if snow_web null #else 0 #end);
 
-    } //bindNoTexture
+    }
 
     inline public function setRenderWireframe(value:Bool):Void {
 
         renderWireframe = value;
         primitiveType = value ? phoenix.Batcher.PrimitiveType.lines : phoenix.Batcher.PrimitiveType.triangles;
 
-    } //renderWireframe
+    }
 
     #if cpp
 
@@ -650,37 +650,37 @@ class Draw implements spec.Draw {
 
         return (posList:snow.api.buffers.ArrayBufferView).buffer;
 
-    } //getPosList
+    }
 
     inline public function putInPosList(buffer:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
 
         snow.api.buffers.ArrayBufferIO.setFloat32(buffer, (index*Float32Array.BYTES_PER_ELEMENT), value);
 
-    } //putInPosList
+    }
 
     inline public function getUvList():snow.api.buffers.ArrayBuffer {
 
         return (uvList:snow.api.buffers.ArrayBufferView).buffer;
 
-    } //getUvList
+    }
 
     inline public function putInUvList(uvList:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
 
         snow.api.buffers.ArrayBufferIO.setFloat32(uvList, (index*Float32Array.BYTES_PER_ELEMENT), value);
 
-    } //putInUvList
+    }
 
     inline public function getColorList():snow.api.buffers.ArrayBuffer {
 
         return (colorList:snow.api.buffers.ArrayBufferView).buffer;
 
-    } //getColorList
+    }
 
     inline public function putInColorList(colorList:snow.api.buffers.ArrayBuffer, index:Int, value:Float):Void {
 
         snow.api.buffers.ArrayBufferIO.setFloat32(colorList, (index*Float32Array.BYTES_PER_ELEMENT), value);
 
-    } //putInColorList
+    }
 
     #else
 
@@ -688,55 +688,55 @@ class Draw implements spec.Draw {
 
         return posList;
 
-    } //getPosList
+    }
 
     inline public function putInPosList(posList:Float32Array, index:Int, value:Float):Void {
 
         posList[index] = value;
 
-    } //putInPosList
+    }
 
     inline public function getUvList():Float32Array {
 
         return uvList;
 
-    } //getUvList
+    }
 
     inline public function putInUvList(uvList:Float32Array, index:Int, value:Float):Void {
 
         uvList[index] = value;
 
-    } //putInUvList
+    }
 
     inline public function getColorList():Float32Array {
 
         return colorList;
 
-    } //getColorList
+    }
 
     inline public function putInColorList(colorList:Float32Array, index:Int, value:Float):Void {
 
         colorList[index] = value;
 
-    } //putInColorList
+    }
 
     #end
 
     inline public function beginDrawQuad(quad:ceramic.Quad):Void {
 
-    } //beginDrawQuad
+    }
 
     inline public function endDrawQuad():Void {
 
-    } //endDrawQuad
+    }
 
     inline public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
-    } //beginDrawMesh
+    }
 
     inline public function endDrawMesh():Void {
 
-    } //endDrawMesh
+    }
 
     inline public function beginDrawingInStencilBuffer():Void {
         
@@ -753,13 +753,13 @@ class Draw implements spec.Draw {
         GL.stencilMask(0xFF);
         GL.colorMask(false, false, false, false);
 
-    } //beginDrawingInStencilBuffer
+    }
 
     inline public function endDrawingInStencilBuffer():Void {
         
         drawingInStencilBuffer = false;
 
-    } //endDrawingInStencilBuffer
+    }
 
     inline public function drawWithStencilTest():Void {
 
@@ -769,7 +769,7 @@ class Draw implements spec.Draw {
 
         GL.enable(GL.STENCIL_TEST);
 
-    } //drawWithStencilTest
+    }
 
     inline public function drawWithoutStencilTest():Void {
 
@@ -779,7 +779,7 @@ class Draw implements spec.Draw {
 
         GL.disable(GL.STENCIL_TEST);
 
-    } //drawWithStencilTest
+    }
 
 #else
 
@@ -811,7 +811,7 @@ class Draw implements spec.Draw {
 
         vertexPoolIndex = 0;
 
-    } //begin
+    }
 
     #if !debug inline #end function end():Void {
 
@@ -845,7 +845,7 @@ class Draw implements spec.Draw {
 
         }
 
-    } //end
+    }
 
 /// Public API
 
@@ -869,7 +869,7 @@ class Draw implements spec.Draw {
             return NONE;
         }
 
-    } //getItem
+    }
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
@@ -1446,4 +1446,4 @@ class Draw implements spec.Draw {
 
 #end
 
-} //Draw
+}

@@ -17,7 +17,7 @@ class Setup extends tools.Task {
             return "Setup ceramic on this machine.";
         }
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -85,6 +85,6 @@ class Setup extends tools.Task {
             //haxelib(['install', Path.join([context.ceramicToolsPath, 'build.hxml']), '--always']);
         }*/
 
-    } //run
+    }
 
-} //Setup
+}

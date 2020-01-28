@@ -5,7 +5,7 @@ extern class Chokidar {
 
     static function watch(paths:Dynamic, options:Dynamic):ChokidarWatcher;
 
-} //Chokidar
+}
 
 extern class ChokidarWatcher {
 
@@ -19,4 +19,4 @@ extern class ChokidarWatcher {
 
     function getWatched():Dynamic;
 
-} //ChokidarWatcher
+}

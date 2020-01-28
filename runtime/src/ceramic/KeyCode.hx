@@ -11,7 +11,7 @@ class KeyCode {
 
         return (scanCode | ScanCode.MASK);
 
-    } //fromScanCode
+    }
 
     /** Convert a keyCode to a scanCode if possible.
         NOTE - this will only map a large % but not all keys,
@@ -109,7 +109,7 @@ class KeyCode {
 
         return ScanCode.UNKNOWN;
 
-    } //toScanCode
+    }
 
     /** Convert a keyCode to string */
     public static function name( keyCode:Int ) : String {
@@ -164,11 +164,11 @@ class KeyCode {
 
                 return decoder.toString();
 
-            } //default
+            }
 
         } //switch(keyCode)
 
-    } //name
+    }
 
     public static #if (!no_inline && !haxe_server) inline #end var UNKNOWN:Int              = 0;
 
@@ -422,4 +422,4 @@ class KeyCode {
     public static #if (!no_inline && !haxe_server) inline #end var EJECT:Int                = fromScanCode(ScanCode.EJECT);
     public static #if (!no_inline && !haxe_server) inline #end var SLEEP:Int                = fromScanCode(ScanCode.SLEEP);
 
-} //KeyCode
+}

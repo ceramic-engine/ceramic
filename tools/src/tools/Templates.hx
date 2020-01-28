@@ -58,7 +58,7 @@ class Templates {
 
         }
 
-    } //replaceInNamesAndContents
+    }
 
     public static function replaceInNames(path:String, replacements:Map<String,String>):Void {
 
@@ -91,7 +91,7 @@ class Templates {
             }
         }
 
-    } //replaceInNames
+    }
 
     public static function evalTemplate(tplPath:String, project:Project, ?extraContext:Dynamic):String {
 
@@ -122,6 +122,6 @@ class Templates {
 
         return template(context);
 
-    } //evalTemplateForApp
+    }
 
-} //Templates
+}

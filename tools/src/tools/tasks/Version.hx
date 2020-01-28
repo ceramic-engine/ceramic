@@ -13,7 +13,7 @@ class Version extends tools.Task {
 
         return "Print ceramic tools version.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -40,6 +40,6 @@ class Version extends tools.Task {
         
         print(context.ceramicVersion + ' (' + toolsPath + ')' + (date != null ? ' $date' : ''));
 
-    } //run
+    }
 
-} //Version
+}

@@ -23,7 +23,7 @@ class Files {
 
         return Math.abs(time1 - time2) < 1000; // 1 second tolerance
 
-    } //haveSameLastModified
+    }
 
     public static function setToSameLastModified(srcFilePath:String, dstFilePath:String):Void {
 
@@ -36,7 +36,7 @@ class Files {
 
         Fs.utimesSync(dstFilePath, cast utime, cast utime);
 
-    } //haveSameLastModified
+    }
 
     public static function getLastModified(filePath:String):Int {
 
@@ -44,7 +44,7 @@ class Files {
 
         return Math.round(Fs.statSync(filePath).mtime.getTime() / 1000.0);
 
-    } //getLastModified
+    }
 
     public static function touch(filePath:String):Void {
 
@@ -57,7 +57,7 @@ class Files {
         var utime = Date.now().getTime() / 1000.0;
         Fs.utimesSync(filePath, cast utime, cast utime);
 
-    } //touch
+    }
     
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
@@ -87,7 +87,7 @@ class Files {
 
         return result;
 
-    } //getFlatDirectory
+    }
 
     public static function removeEmptyDirectories(dir:String, excludeSystemFiles:Bool = true):Void {
 
@@ -104,7 +104,7 @@ class Files {
             }
         }
 
-    } //removeEmptyDirectories
+    }
 
     public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true):Bool {
 
@@ -117,7 +117,7 @@ class Files {
 
         return true;
 
-    } //isEmptyDirectory
+    }
 
     public static function deleteAnyFileNamed(toDeleteName:String, inDirectory:String):Void {
 
@@ -143,7 +143,7 @@ class Files {
             throw '$inDirectory is not a directory!';
         }
 
-    } //deleteAnyFileNamed
+    }
 
     public static function zipDirectory(srcDirectory:String, dstZip:String):Void {
 
@@ -155,7 +155,7 @@ class Files {
             throw 'Zip not supported on $os';
         }
 
-    } //zipDirectory
+    }
 
     public static function deleteRecursive(toDelete:String):Void {
         
@@ -189,7 +189,7 @@ class Files {
 
         }
 
-    } //deleteRecursive
+    }
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
@@ -223,7 +223,7 @@ class Files {
 
         return result;
 
-    } //getRelativePath
+    }
 
     /** Copy a file from `srcFile` to `dstPath`, only if target is different than source.
         After copy, sets target to the same last modified time than source. */
@@ -240,7 +240,7 @@ class Files {
             Files.setToSameLastModified(srcFile, dstFile);
         }
 
-    } //copyIfNeeded
+    }
 
     public static function copyDirectory(srcDir:String, dstDir:String, removeExisting:Bool = false):Void {
 
@@ -266,7 +266,7 @@ class Files {
             
         }
 
-    } //copyDirectory
+    }
 
     /** Scan a directory and return a mapping of file paths and their last modified time. */
     public static function getDirectoryLastModifiedList(dir:String, fileSuffix:String, ?output:DynamicAccess<Float>):DynamicAccess<Float> {
@@ -294,7 +294,7 @@ class Files {
 
         return output;
 
-    } //getDirectoryLastModifiedList
+    }
 
     public static function hasDirectoryChanged(lastModifiedListBefore:DynamicAccess<Float>, lastModifiedListAfter:DynamicAccess<Float>):Bool {
 
@@ -321,6 +321,6 @@ class Files {
         // Nothing changed
         return false;
 
-    } //hasDirectoryChanged
+    }
 
-} //Files
+}

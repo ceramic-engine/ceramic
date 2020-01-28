@@ -16,13 +16,13 @@ class Build extends tools.Task {
 
         this.kind = kind;
 
-    } //new
+    }
 
     override public function info(cwd:String):String {
 
         return kind + " project with " + context.backend.name + " backend and given target.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -104,6 +104,6 @@ class Build extends tools.Task {
             task.run(cwd, ['vscode', target.name, '--variant', context.variant, '--settings-only']);
         }*/
 
-    } //run
+    }
 
-} //Build
+}

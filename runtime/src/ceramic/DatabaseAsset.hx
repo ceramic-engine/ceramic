@@ -12,7 +12,7 @@ class DatabaseAsset extends Asset {
 
         super('database', name, options #if ceramic_debug_entity_allocs , pos #end);
 
-    } //new
+    }
 
     override public function load() {
 
@@ -48,7 +48,7 @@ class DatabaseAsset extends Asset {
 
         });
 
-    } //load
+    }
 
     override function destroy():Void {
 
@@ -56,6 +56,6 @@ class DatabaseAsset extends Asset {
 
         database = null;
 
-    } //destroy
+    }
 
-} //DatabaseAsset
+}

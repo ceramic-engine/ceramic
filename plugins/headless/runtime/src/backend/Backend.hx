@@ -32,7 +32,7 @@ class Backend implements ceramic.Events implements spec.Backend {
 
     public function init(app:ceramic.App) {
 
-    } //init
+    }
 
 /// Events
 
@@ -55,12 +55,12 @@ class Backend implements ceramic.Events implements spec.Backend {
 
         //
 
-    } //willEmitUpdate
+    }
 
     inline function didEmitUpdate(delta:Float) {
 
         //
 
-    } //didEmitUpdate
+    }
 
-} //Backend
+}

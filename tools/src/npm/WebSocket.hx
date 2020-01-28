@@ -15,7 +15,7 @@ extern class WebSocket {
 
     function terminate():Void;
 
-} //WebSocket
+}
 
 @:jsRequire('ws', 'Server')
 extern class WebSocketServer {
@@ -26,10 +26,10 @@ extern class WebSocketServer {
 
     function on(event:String, callback:Dynamic):Void;
 
-} //WebSocketServer
+}
 
 extern class WebSocketSet<T> {
 
     function forEach(cb:T->Void):Void;
 
-} //WebSocketSet
+}

@@ -21,7 +21,7 @@ typedef RawImageData = {
 
     var channels:Int;
 
-} //RawImageData
+}
 
 typedef ImageMetadata = {
 
@@ -29,7 +29,7 @@ typedef ImageMetadata = {
 
     var height:Int;
 
-} //ImageMetadata
+}
 
 typedef TargetImage = {
 
@@ -39,7 +39,7 @@ typedef TargetImage = {
 
     var height:Int;
 
-} //TargetImage
+}
 
 class Images {
 
@@ -76,7 +76,7 @@ class Images {
             channels: channels
         };
 
-    } //getRaw
+    }
 
     public static function saveRaw(dstPath:String, data:RawImageData):Void {
 
@@ -100,7 +100,7 @@ class Images {
 
         });
 
-    } //saveRaw
+    }
 
     public static function premultiplyAlpha(pixels:Uint8Array):Void {
 
@@ -122,7 +122,7 @@ class Images {
 
         }
 
-    } //premultiplyAlpha
+    }
 
     public static function resize(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float):Void {
 
@@ -149,7 +149,7 @@ class Images {
 
         });
 
-    } //resize
+    }
 
     public static function createIco(srcPath:String, dstPath:String, targetWidth:Float = 256, targetHeight:Float = 256):Void {
 
@@ -185,7 +185,7 @@ class Images {
 
         });
 
-    } //createIco
+    }
 
     public function metadata(path:String):ImageMetadata {
 
@@ -211,6 +211,6 @@ class Images {
             height: Math.round(height)
         };
 
-    } //metadata
+    }
 
-} //Images
+}

@@ -37,7 +37,7 @@ class ArrayPool {
             return null;
         }
 
-    } //pool
+    }
 
 /// Properties
 
@@ -57,7 +57,7 @@ class ArrayPool {
 
         this.arrayLengths = arrayLengths;
 
-    } //new
+    }
 
 /// Public API
 
@@ -88,7 +88,7 @@ class ArrayPool {
         
         return cast result;
 
-    } //get
+    }
 
     public function release(array:ReusableArray<Dynamic>):Void {
         
@@ -103,6 +103,6 @@ class ArrayPool {
             array.set(i, null);
         }
 
-    } //release
+    }
 
-} //ArrayPool
+}

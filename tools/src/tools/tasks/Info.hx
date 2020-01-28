@@ -10,7 +10,7 @@ class Info extends tools.Task {
 
         return "Print project information depending on the current settings and defines.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -18,6 +18,6 @@ class Info extends tools.Task {
 
         print(Json.stringify(project.app, null, '    '));
 
-    } //run
+    }
 
-} //Info
+}

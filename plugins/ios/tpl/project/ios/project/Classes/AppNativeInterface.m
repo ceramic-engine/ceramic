@@ -19,7 +19,7 @@
     
     return instance;
     
-} //sharedInterface
+}
 
 - (void)hello:(NSString *)name done:(Callback)done {
     
@@ -45,20 +45,20 @@
     UIViewController *viewController = [[UIApplication sharedApplication] keyWindow].rootViewController;
     [viewController presentViewController:alert animated:YES completion:nil];
     
-} //hello
+}
 
 - (NSString *)iosVersionString {
     
     return [[UIDevice currentDevice] systemVersion];
     
-} //iosVersionString
+}
 
 /** Get iOS version number */
 - (CGFloat)iosVersionNumber {
     
     return [[[UIDevice currentDevice] systemVersion] floatValue];
     
-} //iosVersionNumber
+}
 
 /** Dummy method to get Haxe types converted to ObjC types that then get returned back as an dictionary. */
 - (NSArray *)testTypes:(BOOL)aBool anInt:(NSInteger)anInt aFloat:(CGFloat)aFloat anArray:(NSArray *)anArray aDict:(NSDictionary *)aDict {
@@ -76,7 +76,7 @@
              anArray ? anArray : [NSNull null],
              aDict ? aDict : [NSNull null]];
     
-} //testTypes
+}
 
 @end
 

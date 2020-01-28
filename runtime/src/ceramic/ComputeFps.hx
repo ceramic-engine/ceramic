@@ -21,7 +21,7 @@ class ComputeFps {
             frames.push(0);
         }
 
-    } //new
+    }
 
     public function addFrame(delta:Float) {
 
@@ -41,6 +41,6 @@ class ComputeFps {
 
         this.fps = Math.round(Math.min(999, newFps));
 
-    } //addFrame
+    }
 
-} //ComputeFps
+}

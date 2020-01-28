@@ -8,6 +8,6 @@ class CeramicRenderTexture extends phoenix.RenderTexture {
 
         super(_options);
 
-    } //new
+    }
 
-} //CeramicRenderTexture
+}

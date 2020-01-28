@@ -13,6 +13,6 @@ class WindowsApp {
         
         // Nothing to do (might change later)
 
-    } //createMacAppIfNeeded
+    }
 
-} //MacApp
+}

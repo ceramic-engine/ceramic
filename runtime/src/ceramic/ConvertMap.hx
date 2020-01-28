@@ -21,7 +21,7 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
 
         done(value);
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:Map<String,T>):DynamicAccess<T> {
 
@@ -35,6 +35,6 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
 
         return basic;
 
-    } //fieldToBasic
+    }
 
-} //ConvertMap
+}

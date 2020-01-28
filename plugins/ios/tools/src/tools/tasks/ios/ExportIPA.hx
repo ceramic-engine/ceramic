@@ -19,7 +19,7 @@ class ExportIPA extends tools.Task {
 
         return "Export a packaged iOS app (IPA).";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -221,7 +221,7 @@ class ExportIPA extends tools.Task {
 
         success('Generated IPA file at path: $iosIPAPath');
 
-    } //run
+    }
 
     function replaceWithLimit(text:String, sub:String, by:String, limit:Int):String {
 
@@ -236,6 +236,6 @@ class ExportIPA extends tools.Task {
 
         return text;
 
-    } //replaceWithLimit
+    }
 
-} //ExportIPA
+}

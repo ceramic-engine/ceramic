@@ -149,6 +149,6 @@ class ComponentMacro {
 
         return fields;
 
-    } //build
+    }
 
 }

@@ -28,7 +28,7 @@ class Setup extends tools.Task {
         this.variant = variant;
         this.continueOnFail = continueOnFail;
 
-    } //new
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -181,6 +181,6 @@ class Setup extends tools.Task {
         Files.setToSameLastModified(projectPath, hxmlPath);
         print('Updated headless project at: $hxmlPath');
 
-    } //run
+    }
 
-} //Setup
+}

@@ -9,4 +9,4 @@ extern class Yaml {
 
     static function stringify(obj:Dynamic, ?inlineAt:Int, ?spaces:Int):String;
 
-} //Yaml
+}

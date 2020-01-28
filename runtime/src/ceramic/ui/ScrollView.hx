@@ -37,20 +37,20 @@ class ScrollView extends View {
         initContentView();
         initScroller();
 
-    } //new
+    }
 
     function initContentView() {
 
         contentView = new View();
 
-    } //initContentView
+    }
 
     function initScroller() {
 
         scroller = new Scroller(contentView);
         add(scroller);
 
-    } //initScroller
+    }
 
     override function layout() {
 
@@ -63,6 +63,6 @@ class ScrollView extends View {
             contentView.width = Math.max(width, contentSize);
         }
 
-    } //layout
+    }
 
-} //ScrollView
+}

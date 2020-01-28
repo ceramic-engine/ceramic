@@ -16,4 +16,4 @@ class BuildTarget {
 
     public var configs:Array<BuildConfig>;
 
-} //BuildConfig
+}

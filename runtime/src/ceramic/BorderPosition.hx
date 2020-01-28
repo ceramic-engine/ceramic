@@ -8,4 +8,4 @@ enum BorderPosition {
 
     MIDDLE;
 
-} //BorderPosition
+}

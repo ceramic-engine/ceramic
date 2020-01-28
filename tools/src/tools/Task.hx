@@ -24,18 +24,18 @@ class Task {
         backend = context.backend;
         plugin = context.plugin;
 
-    } //new
+    }
 
     public function info(cwd:String):String {
 
         return null;
 
-    } //info
+    }
 
     public function run(cwd:String, args:Array<String>):Void {
 
         fail('This task has no implementation.');
 
-    } //run
+    }
 
-} //Task
+}

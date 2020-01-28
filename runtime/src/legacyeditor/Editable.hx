@@ -32,13 +32,13 @@ class Editable extends Component {
         super();
         this.fragment = fragment;
 
-    } //new
+    }
 
     function init() {
 
         entity.onPointerDown(this, handleDown);
 
-    } //init
+    }
 
     override function destroy() {
 
@@ -52,7 +52,7 @@ class Editable extends Component {
             hint.destroy();
         }
 
-    } //destroy
+    }
 
 /// Public API
 
@@ -107,7 +107,7 @@ class Editable extends Component {
             value: entity.id
         });
 
-    } //select
+    }
 
     function update(_) {
 
@@ -115,7 +115,7 @@ class Editable extends Component {
 
         highlight.wrapVisual(entity);
 
-    } //update
+    }
 
 /// Clicked
 
@@ -161,7 +161,7 @@ class Editable extends Component {
 
         });
 
-    } //handleDown
+    }
 
 /// Corner clicked
 
@@ -652,7 +652,7 @@ class Editable extends Component {
 
         });
 
-    } //handleCornerDown
+    }
 
     function handleCornerOver(corner:HighlightCorner, info:TouchInfo) {
 
@@ -701,7 +701,7 @@ class Editable extends Component {
 
         project.render();*/
 
-    } //handleCornerOver
+    }
 
     function handleCornerOut(corner:HighlightCorner, info:TouchInfo) {
 
@@ -715,6 +715,6 @@ class Editable extends Component {
 
         project.render();*/
 
-    } //handleCornerOut
+    }
 
-} //Editable
+}

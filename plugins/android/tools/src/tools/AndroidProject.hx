@@ -78,7 +78,7 @@ class AndroidProject {
             }
         }
 
-    } //createAndroidProjectIfNeeded
+    }
 
     public static function updateBuildNumber(cwd:String, project:Project) {
 
@@ -109,7 +109,7 @@ class AndroidProject {
             File.saveContent(androidManifestFile, manifestContent);
         }
 
-    } //updateBuildNumber
+    }
 
     public static function copyMainBinariesIfNeeded(cwd:String, project:Project) {
 
@@ -136,7 +136,7 @@ class AndroidProject {
 
         // TODO x86_64
 
-    } //copyMainBinariesIfNeeded
+    }
 
     public static function copyOpenALBinariesIfNeeded(cwd:String, project:Project) {
 
@@ -161,7 +161,7 @@ class AndroidProject {
 
         // TODO x86_64
 
-    } //copyOpenALBinariesIfNeeded
+    }
 
     public static function copyJavaFilesIfNeeded(cwd:String, project:Project):Void {
 
@@ -187,7 +187,7 @@ class AndroidProject {
             }
         }
 
-    } //copyJavaFilesIfNeeded
+    }
 
     public static function findJavaPackage(java:String):String {
 
@@ -211,7 +211,7 @@ class AndroidProject {
 
         return null;
 
-    } //findJavaPackage
+    }
 
     public static function javaSearchPaths(cwd:String, project:Project, debug:Bool):Array<String> {
 
@@ -228,7 +228,7 @@ class AndroidProject {
 
         return javaSearchPaths;
 
-    } //javaSearchPaths
+    }
 
     static function getCodeWithEmptyCommentsAndStrings(input:String):String {
 
@@ -297,8 +297,8 @@ class AndroidProject {
 
         return output;
 
-    } //getCodeWithEmptyComments
+    }
 
     static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
 
-} //AndroidProject
+}

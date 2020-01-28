@@ -21,7 +21,7 @@ class Mac extends tools.Task {
 
         return "Generate or update Mac app to run or debug it";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -61,6 +61,6 @@ class Mac extends tools.Task {
             js.Node.process.exit(status);
         }
 
-    } //run
+    }
 
 } //Mac

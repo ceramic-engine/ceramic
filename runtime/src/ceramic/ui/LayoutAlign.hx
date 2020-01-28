@@ -12,4 +12,4 @@ enum LayoutAlign {
 
     CENTER;
 
-} //LayoutAlign
+}

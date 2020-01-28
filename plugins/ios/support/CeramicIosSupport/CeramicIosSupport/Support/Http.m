@@ -104,7 +104,7 @@
     
     [task resume];
     
-} //sendHTTPRequest
+}
 
 + (void)download:(NSDictionary *)params targetPath:(NSString *)targetPath done:(void (^)(NSString *fullPath))done {
     
@@ -212,7 +212,7 @@
     
     [task resume];
     
-} //download
+}
 
 #pragma mark - Internal
 
@@ -246,6 +246,6 @@
     
     return request;
     
-} //requestWithParams
+}
 
 @end

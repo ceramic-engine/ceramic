@@ -12,7 +12,7 @@ class SoundAsset extends Asset {
 
         super('sound', name, options #if ceramic_debug_entity_allocs , pos #end);
 
-    } //name
+    }
 
     override public function load() {
 
@@ -42,7 +42,7 @@ class SoundAsset extends Asset {
 
         });
 
-    } //load
+    }
 
     override function destroy():Void {
 
@@ -53,6 +53,6 @@ class SoundAsset extends Asset {
             sound = null;
         }
 
-    } //destroy
+    }
 
-} //SoundAsset
+}

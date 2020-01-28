@@ -33,7 +33,7 @@ class CollectionView extends ScrollView {
 
         scroller.scrollTransform.onChange(this, computeVisibleItems);
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -50,7 +50,7 @@ class CollectionView extends ScrollView {
         }
         reusableViews = null;
 
-    } //destroy
+    }
 
     function set_dataSource(dataSource:CollectionViewDataSource):CollectionViewDataSource {
         if (this.dataSource == dataSource) return dataSource;
@@ -60,7 +60,7 @@ class CollectionView extends ScrollView {
         reloadData();
 
         return dataSource;
-    } //dataSource
+    }
 
     public function reloadData():Void {
 
@@ -88,7 +88,7 @@ class CollectionView extends ScrollView {
 
         layoutDirty = true;
 
-    } //reloadData
+    }
 
     override function layout() {
 
@@ -113,7 +113,7 @@ class CollectionView extends ScrollView {
         //scroller.scrollToBounds();
         computeVisibleItems();
 
-    } //layout
+    }
 
     public function findClosestItem(x:Float, y:Float, includeScroll:Bool = true):Int {
 
@@ -171,7 +171,7 @@ class CollectionView extends ScrollView {
 
         return itemIndex;
 
-    } //findClosestItem
+    }
 
     public function computeVisibleItems():Void {
 
@@ -284,7 +284,7 @@ class CollectionView extends ScrollView {
             }
         }
 
-    } //computeVisibleItems
+    }
 
 /// Helpers
 
@@ -329,7 +329,7 @@ class CollectionView extends ScrollView {
 
         return targetScrollX;
 
-    } //getTargetScrollXForItem
+    }
 
     public function getTargetScrollYForItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Float {
 
@@ -372,7 +372,7 @@ class CollectionView extends ScrollView {
 
         return targetScrollY;
 
-    } //getTargetScrollYForItem
+    }
 
     public function scrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Void {
 
@@ -390,7 +390,7 @@ class CollectionView extends ScrollView {
 
         scroller.scrollTo(targetScrollX, targetScrollY);
 
-    } //scrollToItem
+    }
 
     public function smoothScrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE) {
 
@@ -408,6 +408,6 @@ class CollectionView extends ScrollView {
 
         scroller.smoothScrollTo(targetScrollX, targetScrollY);
 
-    } //smoothScrollToItem
+    }
 
-} //CollectionView
+}

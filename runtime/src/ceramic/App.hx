@@ -123,7 +123,7 @@ class App extends Entity {
         immediateCallbacks[immediateCallbacksLen++] = handleImmediate;
         #end
 
-    } //onceImmediate
+    }
 
     /** Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
         @param defer if `true` (default), will box this call into an immediate callback */
@@ -143,7 +143,7 @@ class App extends Entity {
             });
         }
 
-    } //oncePostFlushImmediate
+    }
 
     /** Execute and flush every awaiting immediate callback, including the ones that
         could have been added with `onceImmediate()` after executing the existing callbacks. */
@@ -199,7 +199,7 @@ class App extends Entity {
 
         return didFlush;
 
-    } //flushImmediate
+    }
 
     public var inUpdate(default,null):Bool = false;
 
@@ -211,7 +211,7 @@ class App extends Entity {
             shouldUpdateAndDrawAgain = true;
         }
 
-    } //requestFullUpdateAndDrawInFrame
+    }
 
 /// Static pre-init code (used to add plugins)
 
@@ -322,7 +322,7 @@ class App extends Entity {
         app = new App();
         return new InitSettings(app.settings);
         
-    } //init
+    }
     
 /// Lifecycle
 
@@ -346,7 +346,7 @@ class App extends Entity {
         backend.onceReady(this, backendReady);
         backend.init(this);
 
-    } //new
+    }
 
     function backendReady():Void {
 
@@ -421,7 +421,7 @@ class App extends Entity {
 
         assets.load();
 
-    } //backendReady
+    }
 
     function initFieldConverters():Void {
 
@@ -434,13 +434,13 @@ class App extends Entity {
         converters.set('ceramic.ImmutableMap<String,Bool>', new ConvertMap<Bool>());
         converters.set('ceramic.ImmutableMap<String,ceramic.Component>', new ConvertComponentMap());
 
-    } //initFieldConverters
+    }
 
     function initComponentInitializers():Void {
 
         // Nothing to do for now
 
-    } //initComponentInitializers
+    }
 
     function initCollections():Void {
 
@@ -497,7 +497,7 @@ class App extends Entity {
 
         }
 
-    } //initCollections
+    }
 
     function assetsLoaded():Void {
 
@@ -567,7 +567,7 @@ class App extends Entity {
             beginUpdateCallbacks.push(function() emitControllerAxis(controllerId, axisId, value));
         });
 
-    } //assetsLoaded
+    }
 
     function update(delta:Float):Void {
 
@@ -688,7 +688,7 @@ class App extends Entity {
         // Update finished
         inUpdate = false;
 
-    } //update
+    }
 
     @:noCompletion
     #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
@@ -779,7 +779,7 @@ class App extends Entity {
 
         }
 
-    } //updateVisuals
+    }
 
     @:noCompletion
     #if !debug inline #end public function computeHierarchy() {
@@ -807,7 +807,7 @@ class App extends Entity {
             hierarchyDirty = false;
         }
 
-    } //computeHierarchy
+    }
 
     @:noCompletion
     #if !debug inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
@@ -825,7 +825,7 @@ class App extends Entity {
             renderTexture.priority = i + 1;
         }
 
-    } //computeRenderTexturesPriority
+    }
 
     @:noCompletion
     #if !debug inline #end public function sortVisuals(visuals:Array<Visual>) {
@@ -839,7 +839,7 @@ class App extends Entity {
         // Emit event after sorting visuals (if we want to reverse any tweak)
         emitFinishSortVisuals();
 
-    } //sortVisuals
+    }
 
 /// Keyboard
 
@@ -847,24 +847,24 @@ class App extends Entity {
 
         pressedScanCodes.set(key.scanCode, pressedScanCodes.get(key.scanCode) + 1);
 
-    } //willEmitKeyDown
+    }
 
     function willEmitKeyUp(key:Key):Void {
 
         pressedScanCodes.set(key.scanCode, 0);
 
-    } //willEmitKeyUp
+    }
 
     public function isKeyPressed(key:Key):Bool {
 
         return pressedScanCodes.get(key.scanCode) > 0;
 
-    } //isKeyPressed
+    }
 
     public function isKeyJustPressed(key:Key):Bool {
 
         return pressedScanCodes.get(key.scanCode) == 1;
 
-    } //isKeyJustPressed
+    }
 
-} //App
+}

@@ -32,6 +32,6 @@ class TilemapMacros {
 
         return fields;
 
-    } //buildNames
+    }
 
-} //TilemapMacros
+}

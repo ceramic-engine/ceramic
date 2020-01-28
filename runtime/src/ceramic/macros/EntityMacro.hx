@@ -234,7 +234,7 @@ class EntityMacro {
 
         return newFields;
 
-    } //build
+    }
 
     /** Replace `super.destroy();`
         with `{ _lifecycleState = -1; super.destroy(); }`
@@ -253,7 +253,7 @@ class EntityMacro {
                 return ExprTools.map(e, transformSuperDestroy);
         }
 
-    } //transformSuperDestroy
+    }
 
     static function hasOwnerOrComponentMeta(field:Field):Int {
 
@@ -284,6 +284,6 @@ class EntityMacro {
             return 0;
         }
 
-    } //hasOwnerOrComponentMeta
+    }
 
 }

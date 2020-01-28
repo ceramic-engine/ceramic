@@ -5,4 +5,4 @@ class StateMachine<T> extends Entity {
 
     // Implementation is in StateMachineImpl (bound by genericBuild macro)
 
-} //StateMachine
+}

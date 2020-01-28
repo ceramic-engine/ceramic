@@ -16,7 +16,7 @@ class ExportAPK extends tools.Task {
 
         return "Export a packaged Android app (APK).";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -75,6 +75,6 @@ class ExportAPK extends tools.Task {
 
         success('Generated APK file at path: $androidAPKPath');
 
-    } //run
+    }
 
-} //ExportAPK
+}

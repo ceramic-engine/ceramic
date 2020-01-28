@@ -23,4 +23,4 @@ package ceramic;
         when the visual is drawing a RenderTexture. */
     var ALPHA = 3;
 
-} //Blending
+}

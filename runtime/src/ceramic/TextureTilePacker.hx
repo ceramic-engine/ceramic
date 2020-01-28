@@ -74,7 +74,7 @@ class TextureTilePacker extends Entity {
 
         }
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -90,19 +90,19 @@ class TextureTilePacker extends Entity {
 
         areas = null;
 
-    } //destroy
+    }
 
     inline function getTileAtPosition(col:Int, row:Int):TextureTile {
 
         return areas[row * numCols + col];
 
-    } //getTileAtPosition
+    }
 
     inline function setTileAtPosition(col:Int, row:Int, tile:TextureTile):Void {
 
         areas[row * numCols + col] = tile;
 
-    } //setTileAtPosition
+    }
 
 /// Public API
 
@@ -189,7 +189,7 @@ class TextureTilePacker extends Entity {
         }
         return nextPacker.allocTile(width, height);
 
-    } //allocTile
+    }
 
     public function releaseTile(tile:TextureTile):Void {
 
@@ -234,7 +234,7 @@ class TextureTilePacker extends Entity {
             });
         });
 
-    } //releaseTile
+    }
 
     public function stamp(tile:TextureTile, visual:Visual, done:Void->Void):Void {
 
@@ -276,15 +276,15 @@ class TextureTilePacker extends Entity {
 
         });
 
-    } //stamp
+    }
 
     public function managesTexture(texture:Texture):Bool {
 
         return this.texture == texture || (nextPacker != null && nextPacker.managesTexture(texture));
 
-    } //managesTexture
+    }
 
-} //TextureTilePacker
+}
 
 /** Private class used internally to store additional texture tile data. */
 @:allow(ceramic.TextureTilePacker)
@@ -306,6 +306,6 @@ private class PackedTextureTile extends TextureTile {
 
         super(texture, frameX, frameY, frameWidth, frameHeight);
 
-    } //new
+    }
 
-} //PackedTextureTile
+}

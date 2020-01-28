@@ -236,6 +236,6 @@ class ParticleItem {
         alpha = 1;
         angle = 0;
 
-    } //reset
+    }
 
-} //ParticleItem
+}

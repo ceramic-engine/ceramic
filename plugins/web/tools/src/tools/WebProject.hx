@@ -55,6 +55,6 @@ class WebProject {
             Templates.replaceInContents(webProjectPath, replacementsInContents);
         }
 
-    } //createWebProjectIfNeeded
+    }
 
-} //WebProject
+}

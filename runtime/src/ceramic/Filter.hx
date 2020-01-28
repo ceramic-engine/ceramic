@@ -133,7 +133,7 @@ class Filter extends Quad {
 
         hitVisual = this;
 
-    } //new
+    }
 
 /// Internal
 
@@ -202,7 +202,7 @@ class Filter extends Quad {
             content.computeContent();
         }
 
-    } //filterSize
+    }
 
 /// Public API
 
@@ -330,7 +330,7 @@ class Filter extends Quad {
             });
         });
 
-    } //render
+    }
 
 /// Hitting visuals in content
 
@@ -409,7 +409,7 @@ class Filter extends Quad {
 
         return false;
 
-    } //visualInContentHits
+    }
 
 /// Overrides
 
@@ -450,4 +450,4 @@ class Filter extends Quad {
         super.destroy();
     }
 
-} //Filter
+}

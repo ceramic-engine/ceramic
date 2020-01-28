@@ -70,7 +70,7 @@ class Renderer extends Entity {
 
         super();
 
-    } //new
+    }
 
     public function render(isMainRender:Bool, ceramicVisuals:Array<Visual>):Void {
 
@@ -260,13 +260,13 @@ class Renderer extends Entity {
 
                             drawQuad(draw, quad);
 
-                        } //quad
+                        }
 
                         else if (mesh != null) {
 
                             drawMesh(draw, mesh);
 
-                        } //mesh
+                        }
                     }
                 }
             }
@@ -282,7 +282,7 @@ class Renderer extends Entity {
         }
 #end
 
-    } //render
+    }
 
     #if !ceramic_debug_draw inline #end function useShader(draw:backend.Draw, shader:backend.Shader):Void {
 
@@ -297,7 +297,7 @@ class Renderer extends Entity {
             customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(shader);
         //}
 
-    } //useShader
+    }
 
     #if !ceramic_debug_draw inline #end function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
 
@@ -379,7 +379,7 @@ class Renderer extends Entity {
         }
         */
 
-    } //useBlending
+    }
 
     #if !ceramic_debug_draw inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
 
@@ -390,7 +390,7 @@ class Renderer extends Entity {
             draw.setRenderTarget(null);
         }
 
-    } //useRenderTarget
+    }
 
     #if !ceramic_debug_draw inline #end function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
 
@@ -412,7 +412,7 @@ class Renderer extends Entity {
             useTexture(draw, null);
         }*/
 
-    } //useFirstTextureInBatch
+    }
 
     #if !ceramic_debug_draw inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
 
@@ -443,7 +443,7 @@ class Renderer extends Entity {
             draw.bindNoTexture();
         }
 
-    } //useTexture
+    }
 
     #if !ceramic_debug_draw inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
 
@@ -474,7 +474,7 @@ class Renderer extends Entity {
 
         return canKeepSameState;
 
-    } //canUseTextureInSameBatch
+    }
 
     #if !ceramic_debug_draw inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
 
@@ -508,7 +508,7 @@ class Renderer extends Entity {
             }
         }
 
-    } //useTextureInSameBatch
+    }
 
     #if !ceramic_debug_draw inline #end function unbindUsedTextures(draw:backend.Draw):Void {
 
@@ -521,7 +521,7 @@ class Renderer extends Entity {
         activeTextureSlot = 0;
         useTexture(draw, null);
 
-    } //unbindUsedTextures
+    }
 
     #if !ceramic_debug_draw inline #end function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
 
@@ -559,7 +559,7 @@ class Renderer extends Entity {
 
             stateDirty = false;
 
-        } //flushAndCleanState
+        }
 
         if (stencilClip) {
             // Special case of drawing into stencil buffer
@@ -807,7 +807,7 @@ class Renderer extends Entity {
                 }
             }
 
-        } //batchQuadVertices
+        }
 
         // Position
         var n = posFloats;
@@ -977,7 +977,7 @@ class Renderer extends Entity {
         // Increase counts
         this.z = z + 0.001;
 
-    } //drawQuad
+    }
 
     #if !ceramic_debug_draw inline #end function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
 
@@ -1018,7 +1018,7 @@ class Renderer extends Entity {
 
             stateDirty = false;
 
-        } //flushAndCleanState
+        }
 
         if (stencilClip) {
             // Special case of drawing into stencil buffer
@@ -1384,9 +1384,9 @@ class Renderer extends Entity {
                     }
                 }
 
-            } //while
+            }
 
-        } //batchMeshVertices
+        }
 
         batchMeshVertices();
 
@@ -1396,7 +1396,7 @@ class Renderer extends Entity {
         // Increase counts
         this.z = z + 0.001;
 
-    } //drawMesh
+    }
 
     #if !ceramic_debug_draw inline #end function computeQuadBlending(quad:ceramic.Quad):ceramic.Blending {
 
@@ -1420,7 +1420,7 @@ class Renderer extends Entity {
 
         return blending;
 
-    } //computeQuadBlending
+    }
 
     #if !ceramic_debug_draw inline #end function computeMeshBlending(mesh:ceramic.Mesh):ceramic.Blending {
 
@@ -1448,7 +1448,7 @@ class Renderer extends Entity {
 
         return blending;
 
-    } //computeMeshBlending
+    }
 
     inline function isSameShader(shaderA:ceramic.Shader, shaderB:ceramic.Shader):Bool {
 
@@ -1457,7 +1457,7 @@ class Renderer extends Entity {
 
         return backendItemA == backendItemB;
 
-    } //isSameShader
+    }
 
     #if !ceramic_debug_draw inline #end function flush(draw:backend.Draw):Bool {
 
@@ -1491,6 +1491,6 @@ class Renderer extends Entity {
 
         return true;
 
-    } //flush
+    }
 
-} //Renderer
+}

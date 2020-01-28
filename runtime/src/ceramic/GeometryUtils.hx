@@ -10,4 +10,4 @@ class GeometryUtils {
                (bx - x) * (cy - y) - (cx - x) * (by - y) >= 0;
     }
 
-} //GeometryUtils
+}

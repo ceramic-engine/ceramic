@@ -20,6 +20,6 @@ class Asset {
         this.rootDirectory = rootDirectory;
         this.absolutePath = Path.join([rootDirectory, name]);
 
-    } //new
+    }
 
-} //Asset
+}

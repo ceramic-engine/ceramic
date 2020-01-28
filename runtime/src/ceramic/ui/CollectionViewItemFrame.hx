@@ -22,7 +22,7 @@ class CollectionViewItemFrame {
         this.width = width;
         this.height = height;
 
-    } //new
+    }
 
 /// Print
 
@@ -30,4 +30,4 @@ class CollectionViewItemFrame {
         return 'Frame(x=$x y=$y w=$width h=$height)';
     }
 
-} //CollectionViewItemFrame
+}

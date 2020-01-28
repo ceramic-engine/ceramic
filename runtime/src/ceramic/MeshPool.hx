@@ -14,13 +14,13 @@ class MeshPool {
 
         return availableIntArrays.length > 0 ? availableIntArrays.pop() : [];
 
-    } //getIntArray
+    }
 
     @:noCompletion inline static public function getFloatArray():Array<Float> {
 
         return availableFloatArrays.length > 0 ? availableFloatArrays.pop() : [];
 
-    } //getFloatArray
+    }
 
     @:noCompletion inline static public function recycleIntArray(array:Array<Int>):Void {
 
@@ -35,7 +35,7 @@ class MeshPool {
             availableIntArrays.push(array);
         }
 
-    } //recycleIntArray
+    }
 
     @:noCompletion inline static public function recycleFloatArray(array:Array<Float>):Void {
 
@@ -50,7 +50,7 @@ class MeshPool {
             availableFloatArrays.push(array);
         }
 
-    } //recycleIntArray
+    }
 
     /** Get or create a mesh. The mesh is active an ready to be displayed. */
     public static function get():Mesh {
@@ -70,7 +70,7 @@ class MeshPool {
             return new Mesh();
         }
 
-    } //get
+    }
 
     /** Recycle an existing mesh. The mesh will be cleaned up and marked as inactive (e.g. not displayed) */
     public static function recycle(mesh:Mesh):Void {
@@ -133,7 +133,7 @@ class MeshPool {
 
         availableMeshes.push(mesh);
 
-    } //recycle
+    }
 
     public static function clear():Void {
         
@@ -145,6 +145,6 @@ class MeshPool {
             }
         }
 
-    } //clear
+    }
 
 } //MeshPool

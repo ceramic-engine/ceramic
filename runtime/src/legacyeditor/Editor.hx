@@ -123,7 +123,7 @@ class Editor extends Entity {
 
         settings.targetDensity = 2; // TODO set to 1
 
-    } //new
+    }
 
     /** Render is called explicitly. If not called on change, nothing will display.
         This is intended to save CPU/GPU when nothing is being edited. */
@@ -141,7 +141,7 @@ class Editor extends Entity {
             }
         });
 
-    } //render
+    }
 
 /// Start
 
@@ -414,7 +414,7 @@ class Editor extends Entity {
         // Render once
         render();
 
-    } //start
+    }
 
     function updateCanvas() {
 
@@ -431,7 +431,7 @@ class Editor extends Entity {
         appEl.height = Math.round(height * window.devicePixelRatio);
 #end
 
-    } //updateCanvas
+    }
 
     function fitFragment() {
 
@@ -529,7 +529,7 @@ class Editor extends Entity {
         // Update density
         settings.targetDensity = 2; //Math.ceil(screen.density * fragment.scaleX);
 
-    } //fitFragment
+    }
 
 /// Messages
 
@@ -565,7 +565,7 @@ class Editor extends Entity {
         // Render to reflect changes
         render();
 
-    } //receiveRawMessage
+    }
 
     function receiveMessage(message:Message) {
 
@@ -736,9 +736,9 @@ class Editor extends Entity {
 
             default:
 
-        } //switch
+        }
 
-    } //receiveMessage
+    }
 
     public function send(message:Message):Void {
 
@@ -752,9 +752,9 @@ class Editor extends Entity {
         });
 #end
 
-    } //send
+    }
 
-} //Editor
+}
 
 typedef EditableType = {
 
@@ -766,7 +766,7 @@ typedef EditableType = {
 
     var fields:Array<EditableTypeField>;
 
-} //EditableType
+}
 
 typedef EditableTypeField = {
 
@@ -776,7 +776,7 @@ typedef EditableTypeField = {
 
     var type:String;
 
-} //EditableTypeField
+}
 
 typedef CollectionInfo = {
 
@@ -790,7 +790,7 @@ typedef CollectionInfo = {
 
     var fields:Array<CollectionEntryField>;
 
-} //CollectionInfo
+}
 
 typedef CollectionEntryField = {
 
@@ -800,7 +800,7 @@ typedef CollectionEntryField = {
 
     var type:String;
 
-} //CollectionEntryField
+}
 
 typedef CollectionEntryData = {
 
@@ -810,4 +810,4 @@ typedef CollectionEntryData = {
 
     var props:Dynamic;
 
-} //CollectionEntryData
+}

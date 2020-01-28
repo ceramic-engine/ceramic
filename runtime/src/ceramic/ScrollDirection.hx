@@ -6,4 +6,4 @@ enum ScrollDirection {
 
     VERTICAL;
 
-} //ScrollDirection
+}

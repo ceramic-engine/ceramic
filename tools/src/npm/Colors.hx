@@ -38,4 +38,4 @@ extern class Colors {
     static function trap(str:String):String;
     static function random(str:String):String;
 
-} //Colors
+}

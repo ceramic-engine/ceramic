@@ -11,6 +11,6 @@ class ValueEntry<T> extends CollectionEntry {
 
         this.value = value;
 
-    } //new
+    }
 
-} //ValueEntry
+}

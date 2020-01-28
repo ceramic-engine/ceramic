@@ -27,7 +27,7 @@ class Collections {
         }
         return collection;
 
-    } //toCollection
+    }
 
     /** Returns a filtered collection from the provided collection and filter. */
     public static function filtered<T:CollectionEntry>(collection:Collection<T>, filter:Array<T>->Array<T>, ?cacheKey:String):Collection<T> {
@@ -57,7 +57,7 @@ class Collections {
 
         return collection;
 
-    } //filtered
+    }
 
     /** Returns a combined collection from the provided ones. */
     public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
@@ -94,6 +94,6 @@ class Collections {
 
         return cast collection;
 
-    } //combined
+    }
 
-} //Collections
+}

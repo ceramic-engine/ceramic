@@ -36,7 +36,7 @@ class Mesh extends Visual {
 
         asMesh = this;
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -45,7 +45,7 @@ class Mesh extends Visual {
 
         super.destroy();
 
-    } //destroy
+    }
 
 /// Color
 
@@ -131,7 +131,7 @@ class Mesh extends Visual {
         // Remove texture because it has been destroyed
         this.texture = null;
 
-    } //textureDestroyed
+    }
 
 /// Overrides
 
@@ -197,7 +197,7 @@ class Mesh extends Visual {
             return super.hitTest(x, y, matrix);
         }
 
-    } //hitsComplexWithMatrix
+    }
 
     /** Compute width and height from vertices */
     public function computeSize() {
@@ -223,6 +223,6 @@ class Mesh extends Visual {
             size(0, 0);
         }
 
-    } //computeSize
+    }
 
-} //Mesh
+}

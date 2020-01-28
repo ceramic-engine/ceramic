@@ -14,6 +14,6 @@ import ceramic.AssetId;
         if (_clazz == null) _clazz = Type.resolveClass('ceramic.Spines');
         return Reflect.field(_clazz, skeletonName);
 
-    } //toAssetId
+    }
 
-} //Spines
+}

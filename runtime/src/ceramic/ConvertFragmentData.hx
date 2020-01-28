@@ -8,12 +8,12 @@ class ConvertFragmentData implements ConvertField<Dynamic,FragmentData> {
 
         done(basic);
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:FragmentData):Dynamic {
 
         return value;
 
-    } //fieldToBasic
+    }
 
-} //ConvertFragmentData
+}

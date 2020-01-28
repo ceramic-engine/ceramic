@@ -28,7 +28,7 @@ class BitmapFont extends Entity {
 
         return fontData;
 
-    } //fontData
+    }
 
     public var face(get,set):String;
     inline function get_face():String { return fontData.face; }
@@ -86,7 +86,7 @@ class BitmapFont extends Entity {
             this.pages.set(pageInfo.id, texture);
         }
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -99,7 +99,7 @@ class BitmapFont extends Entity {
         }
         pages = null;
 
-    } //destroy
+    }
 
 /// Public API
 
@@ -115,6 +115,6 @@ class BitmapFont extends Entity {
 
         return 0;
 
-    } //kerning
+    }
 
-} //BitmapFont
+}

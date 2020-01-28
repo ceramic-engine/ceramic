@@ -116,7 +116,7 @@ class Scroller extends Visual {
         // Start tracking events to handle scroll
         startTracking();
 
-    } //new
+    }
 
     function set_scrollEnabled(scrollEnabled:Bool):Bool {
 
@@ -133,7 +133,7 @@ class Scroller extends Visual {
 
         return scrollEnabled;
 
-    } //scrollEnabled
+    }
 
 /// Overrides
 
@@ -147,7 +147,7 @@ class Scroller extends Visual {
 
         return width;
 
-    } //set_width
+    }
 
     override function set_height(height:Float):Float {
 
@@ -159,7 +159,7 @@ class Scroller extends Visual {
 
         return height;
 
-    } //set_height
+    }
 
     override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
 
@@ -169,7 +169,7 @@ class Scroller extends Visual {
 
         return false;
         
-    } //interceptPointerDown
+    }
 
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
@@ -179,7 +179,7 @@ class Scroller extends Visual {
 
         return false;
         
-    } //interceptPointerOver
+    }
 
 /// Public API
 
@@ -202,7 +202,7 @@ class Scroller extends Visual {
            }
        }
 
-    } //scrollToBounds
+    }
 
     public function isContentPositionInBounds(x:Float, y:Float):Bool {
 
@@ -218,7 +218,7 @@ class Scroller extends Visual {
         
         return true;
 
-    } //isContentPositionInBounds
+    }
 
     public function ensureContentPositionIsInBounds(x:Float, y:Float):Void {
         
@@ -263,7 +263,7 @@ class Scroller extends Visual {
         scrollX = targetScrollX;
         scrollY = targetScrollY;
 
-    } //ensureContentPositionIsInBounds
+    }
 
     public var scrollX(get,set):Float;
     inline function get_scrollX():Float {
@@ -329,7 +329,7 @@ class Scroller extends Visual {
 
         screen.onMouseWheel(this, mouseWheel);
 
-    } //startTracking
+    }
 
     function stopTracking():Void {
 
@@ -341,7 +341,7 @@ class Scroller extends Visual {
 
         screen.offMouseWheel(mouseWheel);
 
-    } //stopTracking
+    }
 
 /// Event handling
 
@@ -422,7 +422,7 @@ class Scroller extends Visual {
         }
         scrollTransform.changedDirty = true;
 
-    } //mouseWheel
+    }
 
     function pointerDown(info:TouchInfo):Void {
 
@@ -487,7 +487,7 @@ class Scroller extends Visual {
             emitScrollerPointerDown(info);
         }
 
-    } //pointerDown
+    }
 
     function matchFirstDownListener(x:Float, y:Float):Visual {
 
@@ -507,7 +507,7 @@ class Scroller extends Visual {
 
         return null;
 
-    } //matchFirstDownListener
+    }
 
     function pointerUp(info:TouchInfo):Void {
 
@@ -552,7 +552,7 @@ class Scroller extends Visual {
             emitScrollerPointerUp(info);
         }
 
-    } //pointerUp
+    }
 
     function screenFocus(focusedVisual:Visual):Void {
 
@@ -568,7 +568,7 @@ class Scroller extends Visual {
 
         }
 
-    } //screenFocus
+    }
 
 /// Helpers
 
@@ -576,25 +576,25 @@ class Scroller extends Visual {
 
         return scrollTransform.ty > 0;
 
-    } //isOverScrollingTop
+    }
 
     inline public function isOverScrollingBottom() {
 
         return scrollTransform.ty < height - content.height;
 
-    } //isOverScrollingBottom
+    }
 
     inline public function isOverScrollingLeft() {
 
         return scrollTransform.tx > 0;
 
-    } //isOverScrollingLeft
+    }
 
     inline public function isOverScrollingRight() {
 
         return scrollTransform.tx < width - content.width;
 
-    } //isOverScrollingRight
+    }
 
 /// Update loop
 
@@ -649,7 +649,7 @@ class Scroller extends Visual {
                 prevPointerY = -999999;
         }
 
-    } //update
+    }
 
     function scrollUpdate(pointerX:Float, pointerY:Float, delta:Float, minusDelta:Float = 0):Void {
 
@@ -827,14 +827,14 @@ class Scroller extends Visual {
 
         stopTweens();
 
-    } //stop
+    }
 
     inline public function stopTweens():Void {
 
         if (tweenX != null) tweenX.destroy();
         if (tweenY != null) tweenY.destroy();
 
-    } //stop
+    }
 
 /// Smooth scroll
 
@@ -845,7 +845,7 @@ class Scroller extends Visual {
         this.scrollX = scrollX;
         this.scrollY = scrollY;
 
-    } //smoothScrollTo
+    }
 
     public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
@@ -892,7 +892,7 @@ class Scroller extends Visual {
             });
         }
 
-    } //smoothScrollTo
+    }
 
     public function snapTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
@@ -908,7 +908,7 @@ class Scroller extends Visual {
             scrollTo(scrollY, scrollY);
         }
 
-    } //snapTo
+    }
 
     public function bounce():Void {
 
@@ -1057,6 +1057,6 @@ class Scroller extends Visual {
             }
         }
 
-    } //bounce
+    }
 
 } //Scroller

@@ -25,7 +25,7 @@ class FontAsset extends Asset {
 
         assets = new Assets();
 
-    } //name
+    }
 
     override public function load() {
 
@@ -174,7 +174,7 @@ class FontAsset extends Asset {
 
         assets.load();
 
-    } //load
+    }
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -185,7 +185,7 @@ class FontAsset extends Asset {
             checkTexturesDensity();
         }
 
-    } //texturesDensityDidChange
+    }
 
     function checkTexturesDensity():Void {
 
@@ -197,7 +197,7 @@ class FontAsset extends Asset {
             load();
         }
 
-    } //checkTexturesDensity
+    }
 
     override function destroy():Void {
 
@@ -216,6 +216,6 @@ class FontAsset extends Asset {
             pages = null;
         }
 
-    } //destroy
+    }
 
-} //FontAsset
+}

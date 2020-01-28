@@ -12,19 +12,19 @@ class Shaders implements spec.Shaders {
 
         return new ShaderImpl(customAttributes);
 
-    } //fromSource
+    }
 
     inline public function destroy(shader:Shader):Void {
 
         //
 
-    } //destroy
+    }
 
     inline public function clone(shader:Shader):Shader {
 
         return new ShaderImpl();
 
-    } //clone
+    }
 
 /// Public API
 
@@ -32,55 +32,55 @@ class Shaders implements spec.Shaders {
         
         //
 
-    } //setInt
+    }
 
     inline public function setFloat(shader:Shader, name:String, value:Float):Void {
         
         //
 
-    } //setFloat
+    }
 
     inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
         
         //
 
-    } //setColor
+    }
 
     inline public function setVec2(shader:Shader, name:String, x:Float, y:Float):Void {
         
         //
 
-    } //setVec2
+    }
 
     inline public function setVec3(shader:Shader, name:String, x:Float, y:Float, z:Float):Void {
         
         //
 
-    } //setVec3
+    }
 
     inline public function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void {
         
         //
 
-    } //setVec4
+    }
 
     inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
         
         //
 
-    } //setFloatArray
+    }
 
     inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
         
         //
 
-    } //setTexture
+    }
 
     inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
         
         //
 
-    } //setMat4FromTransform
+    }
 
     inline public function customFloatAttributesSize(shader:ShaderImpl):Int {
 
@@ -96,6 +96,6 @@ class Shaders implements spec.Shaders {
 
         return customFloatAttributesSize;
 
-    } //customFloatAttributesSize
+    }
 
-} //Shaders
+}

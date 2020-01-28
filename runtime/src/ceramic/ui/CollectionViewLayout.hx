@@ -6,4 +6,4 @@ interface CollectionViewLayout {
 
     function isFrameVisible(collectionView:CollectionView, frame:CollectionViewItemFrame):Bool;
 
-} //CollectionViewLayout
+}

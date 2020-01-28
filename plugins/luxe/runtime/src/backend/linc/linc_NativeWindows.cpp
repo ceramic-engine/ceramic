@@ -10,7 +10,7 @@ namespace backend {
 
         // Nothing to do
 
-    } //NativeWindows_init
+    }
 
 }
 

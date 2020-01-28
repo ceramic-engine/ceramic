@@ -30,7 +30,7 @@ class TilemapParser {
 
         return tmxMap;
 
-    } //parseTmx
+    }
 
     public static function parseExternalTilesetNames(rawTmxData:String):Array<String> {
 
@@ -57,7 +57,7 @@ class TilemapParser {
 
         return result;
 
-    } //parseExternalTilesetNames
+    }
 
     public static function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
 
@@ -251,9 +251,9 @@ class TilemapParser {
 
         return tilemapData;
 
-    } //tmxMapToTilemapData
+    }
 
-} //TilemapParser
+}
 
 @:allow(ceramic.TilemapParser)
 private class TilemapTmxParser {
@@ -266,7 +266,7 @@ private class TilemapTmxParser {
 
     public function new() {
 
-    } //new
+    }
 
     public function parseTmx(rawTmxData:String, ?resolveTsxRawData:String->String):TmxMap {
 
@@ -290,7 +290,7 @@ private class TilemapTmxParser {
 
         return null;
 
-    } //parse
+    }
 
     function getTsx(name:String):TmxTileset {
 
@@ -302,6 +302,6 @@ private class TilemapTmxParser {
 
         return cached;
 
-    } //getTsx
+    }
 
-} //TilemapParser
+}

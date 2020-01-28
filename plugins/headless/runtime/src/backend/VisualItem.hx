@@ -8,4 +8,4 @@ enum VisualItem {
 
     MESH;
 
-} //VisualItem
+}

@@ -33,7 +33,7 @@ class ArcadePhysics extends Entity {
 
         this.world = createWorld();
 
-    } //new
+    }
 
 
     public function createWorld(autoAdd:Bool = true):arcade.World {
@@ -46,7 +46,7 @@ class ArcadePhysics extends Entity {
 
         return world;
 
-    } //createWorld
+    }
 
     public function addWorld(world:arcade.World):Void {
 
@@ -57,7 +57,7 @@ class ArcadePhysics extends Entity {
             log.warning('World already added to ArcadePhysics');
         }
 
-    } //addWorld
+    }
 
     public function removeWorld(world:arcade.World):Void {
 
@@ -65,7 +65,7 @@ class ArcadePhysics extends Entity {
             log.warning('World not removed from ArcadePhysics because it was not added at the first place');
         }
         
-    } //removeWorld
+    }
 
     inline function updateWorlds(delta:Float):Void {
 
@@ -74,13 +74,13 @@ class ArcadePhysics extends Entity {
             updateWorld(world, delta);
         }
 
-    } //updateWorlds
+    }
 
     inline function updateWorld(world:arcade.World, delta:Float):Void {
 
         world.elapsed = delta;
 
-    } //updateWorld
+    }
 
     inline function preUpdate(delta:Float):Void {
 
@@ -128,7 +128,7 @@ class ArcadePhysics extends Entity {
         flushDestroyedItems();
         flushCreatedItems();
 
-    } //preUpdate
+    }
 
     inline function postUpdate(delta:Float):Void {
 
@@ -164,7 +164,7 @@ class ArcadePhysics extends Entity {
         flushDestroyedItems();
         flushCreatedItems();
 
-    } //postUpdate
+    }
 
     inline function flushDestroyedItems():Void {
 
@@ -173,7 +173,7 @@ class ArcadePhysics extends Entity {
             items.remove(item);
         }
         
-    } //flushDestroyedItems
+    }
 
     inline function flushCreatedItems():Void {
 
@@ -182,8 +182,8 @@ class ArcadePhysics extends Entity {
             items.push(item);
         }
         
-    } //flushCreatedItems
+    }
 
 #end
 
-} //ArcadePhysics
+}

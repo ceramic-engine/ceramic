@@ -59,6 +59,6 @@ class Shape extends Mesh {
 
         contentDirty = false;
 
-    } //computeContent
+    }
 
-} //Shape
+}

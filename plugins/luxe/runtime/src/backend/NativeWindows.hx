@@ -11,4 +11,4 @@ extern class NativeWindows {
     @:native('backend::NativeWindows_init')
     static function init():Void;
 
-} //NativeWindows
+}

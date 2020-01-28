@@ -34,6 +34,6 @@ class TouchInfo {
             hits: hits
         };
 
-    } //toString
+    }
 
-} //TouchInfo
+}

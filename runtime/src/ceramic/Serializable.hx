@@ -14,4 +14,4 @@ interface Serializable {
 
     private function didDeserialize():Void;
 
-} //Serializable
+}

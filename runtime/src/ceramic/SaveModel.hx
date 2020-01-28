@@ -29,7 +29,7 @@ class SaveModel {
 
         return instance;
 
-    } //modelClass
+    }
 
     /** Load data from the given key. */
     public static function loadFromKey(model:Model, key:String):Bool {
@@ -71,7 +71,7 @@ class SaveModel {
 
         return loadFromData(model, data);
 
-    } //loadFromKey
+    }
 
     public static function loadFromData(model:Model, data:String):Bool {
 
@@ -119,7 +119,7 @@ class SaveModel {
 
         return true;
 
-    } //loadFromData
+    }
 
     public static function autoSaveAsKey(model:Model, key:String, appendInterval:Float = 1.0, compactInterval:Float = 60.0) {
 
@@ -260,7 +260,7 @@ class SaveModel {
         // Assign component
         model.serializer = serializer;
 
-    } //autoSaveAsKey
+    }
 
 /// Internal
 
@@ -326,7 +326,7 @@ class SaveModel {
             serializedMap: serializedMap
         };
 
-    } //decodeData
+    }
 
     static function initBackupLogicIfNeeded(key:String):Void {
 
@@ -362,7 +362,7 @@ class SaveModel {
             backupStepByKey.set(key, step);
         }
 
-    } //initBackupLogicIfNeeded
+    }
 
     static function fetchMostRecentBackup(key:String):String {
 
@@ -407,6 +407,6 @@ class SaveModel {
             return null;
         }
 
-    } //fetchMostRecentBackup
+    }
 
-} //SaveModel
+}

@@ -16,6 +16,6 @@ class Enums {
             value != null && value.getName() == $v{nameStr};
         }
 
-    } //assert
+    }
 
-} //Enums
+}

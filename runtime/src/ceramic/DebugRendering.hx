@@ -6,4 +6,4 @@ package ceramic;
 
     var WIREFRAME = 1;
 
-} //DebugRendering
+}

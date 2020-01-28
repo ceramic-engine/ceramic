@@ -80,7 +80,7 @@ class Visual extends Entity {
 
         return arcade;
 
-    } //initArcadePhysics
+    }
 
     #if !ceramic_no_arcade_shortcuts
 
@@ -689,7 +689,7 @@ class Visual extends Entity {
 
         return nape;
 
-    } //initNapePhysics
+    }
 
 #end
 
@@ -1051,7 +1051,7 @@ class Visual extends Entity {
         var i = index + 16;
         return value != null ? flags.setBool(i, value) : flags.bool(i);
 
-    } //flag
+    }
 
     /** Read and write arbitrary boolean flags on this visual.
         Index should be between 0 (included) and 16 (excluded) or result is undefined.
@@ -1060,7 +1060,7 @@ class Visual extends Entity {
 
         return value != null ? flags.setBool(index, value) : flags.bool(index);
 
-    } //internalFlag
+    }
 
     /** Just a way to store some flags. **/
     var flags:Flags = new Flags();
@@ -1138,35 +1138,35 @@ class Visual extends Entity {
         this.width = width;
         this.height = height;
 
-    } //size
+    }
 
     inline public function anchor(anchorX:Float, anchorY:Float):Void {
 
         this.anchorX = anchorX;
         this.anchorY = anchorY;
 
-    } //anchor
+    }
 
     inline public function pos(x:Float, y:Float):Void {
 
         this.x = x;
         this.y = y;
 
-    } //pos
+    }
 
     inline public function scale(scaleX:Float, scaleY:Float = -1):Void {
 
         this.scaleX = scaleX;
         this.scaleY = scaleY != -1 ? scaleY : scaleX;
 
-    } //scale
+    }
 
     inline public function skew(skewX:Float, skewY:Float):Void {
 
         this.skewX = skewX;
         this.skewY = skewY;
 
-    } //skew
+    }
 
 /// Advanced helpers
 
@@ -1197,7 +1197,7 @@ class Visual extends Entity {
         this.x += prevX - _point.x;
         this.y += prevY - _point.y;
 
-    } //anchor
+    }
 
     /** Returns the first child matching the requested `id` or `null` otherwise. */
     public function childWithId(id:String, recursive:Bool = true):Visual {
@@ -1218,7 +1218,7 @@ class Visual extends Entity {
 
         return null;
 
-    } //childWithId
+    }
 
 /// Lifecycle
 
@@ -1233,7 +1233,7 @@ class Visual extends Entity {
         backendItem = ceramic.App.app.backend.draw.getItem(this);
 #end
 
-    } //new
+    }
 
     override public function destroy() {
 
@@ -1265,7 +1265,7 @@ class Visual extends Entity {
 
         clear();
 
-    } //destroy
+    }
 
     public function clear() {
 
@@ -1284,7 +1284,7 @@ class Visual extends Entity {
             pool.release(tmp);
         }
 
-    } //clear
+    }
 
 /// Matrix
 
@@ -1292,7 +1292,7 @@ class Visual extends Entity {
 
         matrixDirty = true;
 
-    } //transformDidChange
+    }
 
     function computeMatrix() {
 
@@ -1304,14 +1304,14 @@ class Visual extends Entity {
 
         doComputeMatrix();
 
-    } //computeMatrix
+    }
 
     inline function computeTranslatesOnly() {
 
         translatesOnly = (rotation == 0 && scaleX == 1 && scaleY == 1 && skewX == 0 && skewY == 0);
         translatesOnlyDirty = false;
 
-    } //computeTranslatesOnly
+    }
 
     inline function doComputeMatrix() {
 
@@ -1450,7 +1450,7 @@ class Visual extends Entity {
 
         return hitTest(x, y, _matrix);
 
-    } //hits
+    }
 
     /** The actual hit test performed on the visual.
         If needed to change how hit test is performed
@@ -1465,7 +1465,7 @@ class Visual extends Entity {
             && testY >= 0
             && testY < height;
 
-    } //hitTest
+    }
 
     /** Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
         Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
@@ -1473,7 +1473,7 @@ class Visual extends Entity {
 
         return false;
 
-    } //interceptPointerDown
+    }
 
     /** Override this method in subclasses to intercept hitting pointer over events on this visual's children (any level in sub-hierarchy).
         Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
@@ -1481,7 +1481,7 @@ class Visual extends Entity {
 
         return false;
 
-    } //interceptPointerOver
+    }
 
 /// Screen to visual positions and vice versa
 
@@ -1498,7 +1498,7 @@ class Visual extends Entity {
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
 
-    } //screenToVisual
+    }
 
     /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
     public function visualToScreen(x:Float, y:Float, point:Point):Void {
@@ -1513,7 +1513,7 @@ class Visual extends Entity {
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
 
-    } //visualToScreen
+    }
 
 /// Transform from visual
 
@@ -1526,7 +1526,7 @@ class Visual extends Entity {
 
         transform.setTo(matA, matB, matC, matD, matTX, matTY);
 
-    } //visualToTransform
+    }
 
 /// Visibility / Alpha
 
@@ -1556,7 +1556,7 @@ class Visual extends Entity {
 
         visibilityDirty = false;
 
-    } //computeVisibility
+    }
 
 /// Clipping
 
@@ -1581,7 +1581,7 @@ class Visual extends Entity {
 
         clipDirty = false;
 
-    } //computeClip
+    }
 
 /// Touchable
 
@@ -1605,7 +1605,7 @@ class Visual extends Entity {
 
         touchableDirty = false;
 
-    } //computedTouchable
+    }
 
 /// RenderTarget (computed)
 
@@ -1654,7 +1654,7 @@ class Visual extends Entity {
         
         renderTargetDirty = false;
 
-    } //computeRenderTarget
+    }
 
 /// Display
 
@@ -1662,7 +1662,7 @@ class Visual extends Entity {
         
         contentDirty = false;
 
-    } //computeContent
+    }
 
 /// Children
 
@@ -1703,7 +1703,7 @@ class Visual extends Entity {
             }
         }
 
-    } //computeChildrenDepth
+    }
 
     function computeMinMaxDepths():Void {
 
@@ -1718,7 +1718,7 @@ class Visual extends Entity {
             }
         }
 
-    } //computeMinMaxDepths
+    }
 
     function multiplyDepths(startDepth:Float, targetRange:Float):Void {
 
@@ -1737,7 +1737,7 @@ class Visual extends Entity {
             }
         }
 
-    } //multiplyDepths
+    }
 
     public function add(visual:Visual):Void {
 
@@ -1757,7 +1757,7 @@ class Visual extends Entity {
         @:privateAccess children.mutable.push(visual);
         clipDirty = true;
 
-    } //add
+    }
 
     public function remove(visual:Visual):Void {
 
@@ -1778,7 +1778,7 @@ class Visual extends Entity {
         visual.renderTargetDirty = true;
         visual.clipDirty = true;
 
-    } //remove
+    }
 
     /** Returns `true` if the current visual contains this child.
         When `recursive` option is `true`, will return `true` if
@@ -1798,7 +1798,7 @@ class Visual extends Entity {
 
         return false;
 
-    } //contains
+    }
 
 /// Size helpers
 
@@ -1914,6 +1914,6 @@ class Visual extends Entity {
             matrixDirty = true;
         }
 
-    } //computeIntrinsicSize
+    }
 
-} //Visual
+}

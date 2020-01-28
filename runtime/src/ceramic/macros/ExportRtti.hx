@@ -111,7 +111,7 @@ class ExportRtti {
         trace(Context.getLocalClass() + ' -> END ExportRtti.build()');
         #end
 
-    } //init
+    }
 
 /// Internal
 
@@ -130,7 +130,7 @@ class ExportRtti {
         var name = 'rtti';
         return Path.join([cacheDir, name]);
 
-    } //getRttiPath
+    }
 
     public static function deleteRecursive(toDelete:String):Void {
 
@@ -155,8 +155,8 @@ class ExportRtti {
 
         }
 
-    } //deleteRecursive
+    }
 
-} //ExportRtti
+}
 
 #end

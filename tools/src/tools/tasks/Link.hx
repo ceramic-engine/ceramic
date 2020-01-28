@@ -11,7 +11,7 @@ class Link extends tools.Task {
 
         return "Make this ceramic command global.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -38,6 +38,6 @@ ${Path.join([context.ceramicToolsPath, 'node_modules/.bin/node'])} ${Path.join([
             );
         }
 
-    } //run
+    }
 
-} //Link
+}

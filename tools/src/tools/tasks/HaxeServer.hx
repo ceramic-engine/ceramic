@@ -15,7 +15,7 @@ class HaxeServer extends tools.Task {
 
         return "Run a haxe compilation server to build projects faster.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
         
@@ -66,6 +66,6 @@ class HaxeServer extends tools.Task {
         }
         haxe(haxeArgs);
 
-    } //run
+    }
 
-} //HaxeServer
+}

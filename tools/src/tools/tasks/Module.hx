@@ -15,7 +15,7 @@ class Module extends tools.Task {
 
         return "Target a specific module.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -52,6 +52,6 @@ class Module extends tools.Task {
             }
         }
 
-    } //run
+    }
 
-} //Module
+}

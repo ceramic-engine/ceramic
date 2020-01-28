@@ -12,6 +12,6 @@ class TimelineKeyframe {
         this.time = time;
         this.easing = easing;
 
-    } //new
+    }
 
-} //TimelineKeyframe
+}

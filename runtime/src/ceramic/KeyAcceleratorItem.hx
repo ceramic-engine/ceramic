@@ -13,4 +13,4 @@ enum KeyAcceleratorItem {
 
     KEY(keyCode:Int);
 
-} //KeyAcceleratorItem
+}

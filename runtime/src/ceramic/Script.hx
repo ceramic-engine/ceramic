@@ -13,13 +13,13 @@ class Script extends Entity {
 
         emitDone();
 
-    } //done
+    }
 
     public function fail(reason:String):Void {
 
         emitFail(reason);
 
-    } //done
+    }
 
     /// Lifecycle
 
@@ -27,6 +27,6 @@ class Script extends Entity {
 
         fail('Script.run() method must be overrided in subclasses.');
 
-    } //run
+    }
 
-} //Script
+}

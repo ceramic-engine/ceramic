@@ -65,6 +65,6 @@ class AssetPathInfo {
 
         return '' + {extension: extension, name: name, path: path, density: density};
 
-    } //toString
+    }
 
-} //AssetPathInfo
+}

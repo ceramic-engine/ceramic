@@ -6,4 +6,4 @@ enum TilemapStaggerIndex {
 
     EVEN;
 
-} //TilemapStaggerIndex
+}

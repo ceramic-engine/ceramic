@@ -9,12 +9,12 @@ class Path extends tools.Task {
 
         return "Print ceramic path on this machine.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
         print(context.ceramicToolsPath);
 
-    } //run
+    }
 
-} //Link
+}

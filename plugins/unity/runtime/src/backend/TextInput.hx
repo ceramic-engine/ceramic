@@ -8,4 +8,4 @@ class TextInput implements spec.TextInput {
 
     public function stop():Void {}
 
-} //TextInput
+}

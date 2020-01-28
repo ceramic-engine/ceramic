@@ -29,4 +29,4 @@ extern class LockFile {
 
     static function checkSync(path:String, ?opts:LockFileOptions):Void;
 
-} //LockFile
+}

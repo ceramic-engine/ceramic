@@ -600,7 +600,7 @@ class Spine extends Visual {
 
 #end
 
-    } //new
+    }
 
     inline function clearMeshes():Void {
 
@@ -630,7 +630,7 @@ class Spine extends Visual {
             slotMeshes = null;
         }
 
-    } //clearMeshes
+    }
 
     override function clear():Void {
 
@@ -638,7 +638,7 @@ class Spine extends Visual {
 
         super.clear();
 
-    } //clear
+    }
 
 /// Content
 
@@ -740,7 +740,7 @@ class Spine extends Visual {
 
         renderDirty = true;
 
-    } //computeContent
+    }
 
     inline function willEmitComplete() {
 
@@ -758,7 +758,7 @@ class Spine extends Visual {
             }
         }
 
-    } //willEmitComplete
+    }
 
 /// Size
 
@@ -827,7 +827,7 @@ class Spine extends Visual {
             renderDirtyAgressive = true;
         }
 
-    } //animate
+    }
 
     public function forceRender(muteEvents:Bool = true):Void {
 
@@ -874,7 +874,7 @@ class Spine extends Visual {
         this.frozen = prevFrozen;
         this.muteEvents = prevMuteEvents;
 
-    } //forceRender
+    }
 
     /** Reset the animation (set to setup pose). */
     public function reset():Void {
@@ -882,7 +882,7 @@ class Spine extends Visual {
 
         resetSkeleton = true;
 
-    } //reset
+    }
 
 /// Cleanup
 
@@ -921,7 +921,7 @@ class Spine extends Visual {
         skeleton = null;
         listener = null;
 
-    } //destroy
+    }
 
     public function update(delta:Float):Void {
 
@@ -946,7 +946,7 @@ class Spine extends Visual {
             render(delta, 0, false);
         }
 
-    } //update
+    }
 
     /** Returns `true` if the current instance doesn't move
         and doesn't need to get updated at every frame. */
@@ -974,7 +974,7 @@ class Spine extends Visual {
 
         return result;
 
-    } //canFreeze
+    }
 
 /// Internal
 
@@ -988,7 +988,7 @@ class Spine extends Visual {
             ceramic.App.app.onUpdate(this, update);
         }
 
-    } //bindOrUnbindUpdateIfNeeded
+    }
 
     /** Update skeleton with the given delta time. */
     function updateSkeleton(delta:Float):Void {
@@ -1026,7 +1026,7 @@ class Spine extends Visual {
             skeleton.updateWorldTransform();
         }
 
-    } //updateSkeleton
+    }
 
     /** Process spine draw order and output quads and meshes. */
     function render(delta:Float, z:Float, setup:Bool) {
@@ -1629,7 +1629,7 @@ class Spine extends Visual {
             }
         }
 
-    } //render
+    }
 
 /// Spine animations compositing
 
@@ -1648,7 +1648,7 @@ class Spine extends Visual {
             subSpines.push(item);
         }
 
-    } //add
+    }
 
     override public function remove(visual:Visual):Void {
 
@@ -1662,7 +1662,7 @@ class Spine extends Visual {
             subSpines.remove(item);
         }
 
-    } //add
+    }
 
     var globalSlotIndexFromSkeletonSlotIndex:Array<Int> = [];
 
@@ -1686,7 +1686,7 @@ class Spine extends Visual {
             globalSlotIndexFromSkeletonSlotIndex[slotIndex] = globalIndex;
         }
 
-    } //updateSlotIndexMappings
+    }
 
     /** A more optimal way of listening to updated slots.
         With this method, we are targeting a specific slot by its name (global index internally).
@@ -1695,7 +1695,7 @@ class Spine extends Visual {
 
         onUpdateSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
-    } //onUpdateSlotWithName
+    }
 
     /** A more optimal way of listening to updated slots.
         With this method, we are targeting a specific slot by its global index.
@@ -1719,13 +1719,13 @@ class Spine extends Visual {
         // Bind handler
         dispatch.onDispatch(owner, handleInfo);
 
-    } //onUpdateSlotWithGlobalIndex
+    }
 
     inline public function offUpdateSlotWithName(slotName:String, ?handleInfo:SlotInfo->Void):Void {
 
         offUpdateSlotWithGlobalIndex(globalSlotIndexForName(slotName), handleInfo);
 
-    } //offUpdateSlotWithName
+    }
 
     public function offUpdateSlotWithGlobalIndex(index:Int, ?handleInfo:SlotInfo->Void):Void {
 
@@ -1744,14 +1744,14 @@ class Spine extends Visual {
         // Unbind handler (or every handler if handleInfo is null)
         dispatch.offDispatch(handleInfo);
 
-    } //offUpdateSlotWithGlobalIndex
+    }
 
     /** Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`) */
     inline public function onUpdateVisibleSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, slotName:String, handleInfo:SlotInfo->Void):Void {
 
         onUpdateVisibleSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
-    } //onUpdateVisibleSlotWithName
+    }
 
     /** Same as `onUpdateSlotWithGlobalIndex`, but fired only for visible slots (`drawDefault=true`) */
     public function onUpdateVisibleSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, index:Int, handleInfo:SlotInfo->Void):Void {
@@ -1773,13 +1773,13 @@ class Spine extends Visual {
         // Bind handler
         dispatch.onDispatch(owner, handleInfo);
 
-    } //onUpdateVisibleSlotWithGlobalIndex
+    }
 
     inline public function offUpdateVisibleSlotWithName(slotName:String, ?handleInfo:SlotInfo->Void):Void {
 
         offUpdateVisibleSlotWithGlobalIndex(globalSlotIndexForName(slotName), handleInfo);
 
-    } //offUpdateVisibleSlotWithName
+    }
 
     public function offUpdateVisibleSlotWithGlobalIndex(index:Int, ?handleInfo:SlotInfo->Void):Void {
 
@@ -1798,7 +1798,7 @@ class Spine extends Visual {
         // Unbind handler (or every handler if handleInfo is null)
         dispatch.offDispatch(handleInfo);
 
-    } //offUpdateVisibleSlotWithGlobalIndex
+    }
 
     inline function willEmitUpdateSlot(info:SlotInfo):Void {
 
@@ -1813,7 +1813,7 @@ class Spine extends Visual {
             }
         }
 
-    } //willEmitUpdateSlot
+    }
 
     inline function willEmitUpdateVisibleSlot(info:SlotInfo):Void {
 
@@ -1828,7 +1828,7 @@ class Spine extends Visual {
             }
         }
 
-    } //willEmitUpdateVisibleSlot
+    }
 
     /** Bind a slot of parent animation to one of our local slots or bones. */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
@@ -1868,7 +1868,7 @@ class Spine extends Visual {
 
         }
 
-    } //bindParentSlot
+    }
 
     /** Compute `boundChildSlots` from `boundParentSlots` to make it more efficient
         to gather parent slot transformations when drawing child animation. */
@@ -1891,7 +1891,7 @@ class Spine extends Visual {
 
         boundChildSlotsDirty = false;
 
-    } //computeBoundChildSlots
+    }
 
 /// Helpers
 
@@ -1901,7 +1901,7 @@ class Spine extends Visual {
 
         return 1.0 * (value & 0xFEFFFFFF);
 
-    } //intToFloatColor
+    }
 
 /// Visibility
 
@@ -1909,7 +1909,7 @@ class Spine extends Visual {
 
         super.computeVisibility();
 
-    } //spineComputeVisibility
+    }
 
     override function computeVisibility():Void {
 
@@ -1926,7 +1926,7 @@ class Spine extends Visual {
             }*/
         }
 
-    } //computeVisibility
+    }
 
 /// Hit test
 
@@ -2014,7 +2014,7 @@ class Spine extends Visual {
             }
         });
 
-    } //computeAnimationList
+    }
 
 #end
 
@@ -2034,9 +2034,9 @@ class Spine extends Visual {
         }
         return _globalSlotIndexes.get(slotName);
 
-    } //globalSlotIndexForName
+    }
 
-} //Spine
+}
 
 class SpineListener implements AnimationStateListener {
 
@@ -2090,7 +2090,7 @@ typedef BindSlotOptions = {
 
     @:optional var flipYOnConcat:Bool;
 
-} //BindSlotOptions
+}
 
 @:allow(ceramic.Spine)
 private class BindSlot {
@@ -2125,7 +2125,7 @@ private class BindSlot {
         return '' + props;
     }
 
-} //BindSlot
+}
 
 /** An object to hold every needed info about updating a slot. */
 class SlotInfo {
@@ -2150,11 +2150,11 @@ class SlotInfo {
 
     public function new() {}
 
-} //SlotInfo
+}
 
 @:allow(ceramic.Spine)
 private class DispatchSlotInfo extends Entity {
 
     @event function dispatch(info:SlotInfo);
 
-} //DispatchSlotInfo
+}

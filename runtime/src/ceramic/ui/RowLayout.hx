@@ -9,13 +9,13 @@ class RowLayout extends LinearLayout {
         super();
         direction = HORIZONTAL;
 
-    } //new
+    }
 
     override function set_direction(direction:LayoutDirection):LayoutDirection {
 
         if (direction != HORIZONTAL) throw('Changing direction of an RowLayout is not allowed. Use a LinearLayout if you want to change direction at runtime.');
         return this.direction = HORIZONTAL;
 
-    } //set_direction
+    }
 
-} //RowLayout
+}

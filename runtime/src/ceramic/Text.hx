@@ -198,7 +198,7 @@ class Text extends Visual {
         // Default font
         font = app.defaultFont;
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -211,7 +211,7 @@ class Text extends Visual {
             glyphQuads = null;
         }
 
-    } //destroy
+    }
 
 /// Display
 
@@ -231,7 +231,7 @@ class Text extends Visual {
         
         emitGlyphQuadsChange();
 
-    } //computeContent
+    }
 
     function computeGlyphQuads(fitWidth:Float, maxLineDiff:Float, fixedNumLines:Int = -1) {
 
@@ -489,7 +489,7 @@ class Text extends Visual {
 
         return lineWidths.length;
 
-    } //computeGlyphQuads
+    }
 
 /// Helpers
 
@@ -515,7 +515,7 @@ class Text extends Visual {
 
         return line;
 
-    } //lineForYPosition
+    }
 
     /** Get the character index position relative to `line` at the requested `x` value.
         `x` is relative this `Text` visual. */
@@ -548,7 +548,7 @@ class Text extends Visual {
 
         return pos;
 
-    } //posInLineForX
+    }
 
     /** Get the _global_ character index from the given `line` and `posInLine` index position relative to `line` */
     public function indexForPosInLine(line:Int, posInLine:Int):Int {
@@ -574,7 +574,7 @@ class Text extends Visual {
         return content.uLength();
         #end
 
-    } //indexForPosInLine
+    }
 
     /** Get an `x` position from the given character `index`.
         `x` is relative to this `Text` visual. */
@@ -609,7 +609,7 @@ class Text extends Visual {
 
         return 0;
 
-    } //xPositionAtIndex
+    }
 
     /** Get the line number (starting from zero) of the character at the given `index` */
     public function lineForIndex(index:Int):Int {
@@ -639,7 +639,7 @@ class Text extends Visual {
 
         return glyphQuads[glyphQuads.length-1].line;
 
-    } //lineForIndex
+    }
 
     /** Get a character index position relative to its line from its _global_ `index` position. */
     public function posInLineForIndex(index:Int):Int {
@@ -680,7 +680,7 @@ class Text extends Visual {
 
         return 0;
 
-    } //posInLineForIndex
+    }
 
 /// Font destroyed
 
@@ -689,7 +689,7 @@ class Text extends Visual {
         // Remove font (and set default one) because it has been destroyed
         this.font = app.defaultFont;
 
-    } //fontDestroyed
+    }
 
 /// Print
 
@@ -701,6 +701,6 @@ class Text extends Visual {
             return 'Text($content)';
         }
 
-    } //toString
+    }
 
-} //Text
+}

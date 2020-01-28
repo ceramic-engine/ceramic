@@ -9,4 +9,4 @@ extern class Fiber {
 
     function run():Void;
 
-} //Fiber
+}

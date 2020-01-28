@@ -34,32 +34,32 @@ class IntFloatMap {
             iterableKeys = [];
         }
 
-    } //new
+    }
 
     public function get(key:Int):Float {
 
         return getInline(key);
 
-    } //get
+    }
 
     inline public function getInline(key:Int):Float {
 
         var index = keys.getInline(key);
         return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : 0.0;
 
-    } //getInline
+    }
 
     public function exists(key:Int) {
 
         return existsInline(key);
 
-    } //exists
+    }
 
     inline public function existsInline(key:Int) {
 
         return keys.existsInline(key);
 
-    } //existsInline
+    }
 
     public function set(key:Int, value:Float):Void {
 
@@ -88,7 +88,7 @@ class IntFloatMap {
             while (nextFreeIndex < valuesLen && values.get(nextFreeIndex) != FREE_VALUE);
         }
 
-    } //set
+    }
 
     public function remove(key:Int) {
 
@@ -108,7 +108,7 @@ class IntFloatMap {
             }
         }
 
-    } //remove
+    }
 
 /// Internal
 
@@ -120,9 +120,9 @@ class IntFloatMap {
             values.set(i, prevValues.get(i));
         }
 
-    } //resizeValues
+    }
 
-} //IntFloatMap
+}
 
 #else
 
@@ -171,6 +171,6 @@ abstract IntFloatMap(Map<Int,Float>) {
         return this.exists(key);
     }
 
-} //IntFloatMap
+}
 
 #end

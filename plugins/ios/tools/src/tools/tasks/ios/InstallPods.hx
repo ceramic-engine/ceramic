@@ -9,7 +9,7 @@ class InstallPods extends tools.Task {
 
         return "Install Xcode project pod dependencies.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -34,6 +34,6 @@ class InstallPods extends tools.Task {
         // Run command
         command('pod', cmdArgs, { cwd: Path.join([cwd, 'project/ios/project']) });
 
-    } //run
+    }
 
-} //InstallPods
+}

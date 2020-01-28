@@ -94,7 +94,7 @@ class Images implements spec.Images {
 
         doLoad();
 
-    } //load
+    }
 
     var nextRenderIndex:Int = 0;
 
@@ -102,7 +102,7 @@ class Images implements spec.Images {
 
         return null;
 
-    } //createImage
+    }
 
     inline public function createRenderTarget(width:Int, height:Int):Image {
 
@@ -110,7 +110,7 @@ class Images implements spec.Images {
 
         return null;
 
-    } //createRenderTarget
+    }
 
     public function destroyImage(texture:Image):Void {
 
@@ -124,25 +124,25 @@ class Images implements spec.Images {
             untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:ImageImpl).unityTexture);
         }
 
-    } //destroy
+    }
 
     inline public function getImageWidth(texture:Image):Int {
 
         return (texture:ImageImpl).width;
 
-    } //getWidth
+    }
 
     inline public function getImageHeight(texture:Image):Int {
 
         return (texture:ImageImpl).height;
 
-    } //getHeight
+    }
 
     inline public function getImagePixels(texture:Image):Null<UInt8Array> {
 
         return null;
 
-    } //getImagePixels
+    }
 
     inline public function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void {
 
@@ -153,7 +153,7 @@ class Images implements spec.Images {
                 (texture:ImageImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
         }
 
-    } //setTextureFilter
+    }
 
 /// Internal
 

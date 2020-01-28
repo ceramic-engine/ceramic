@@ -243,7 +243,7 @@ class StateMachineMacro {
         Context.error("Invalid type parameter. Accepted: Enum or String.", currentPos);
         return null;
 
-    } //buildGeneric
+    }
 
     /** Called on `StateMachinImpl` subclasses. Will generate code that will automatically
         call `enter{State}()`, `update{State}(delta)` and `exit{State}()` from the enum definition.
@@ -460,7 +460,7 @@ class StateMachineMacro {
 
         return fields;
 
-    } //buildFields
+    }
 
     /** Transforms `SOME_IDENTIFIER` to `SomeIdentifier` */
     static function upperCaseToCamelCase(input:String, firstLetterUppercase:Bool = true):String {
@@ -489,6 +489,6 @@ class StateMachineMacro {
 
         return res.toString();
 
-    } //upperCaseToCamelCase
+    }
 
-} //StateMachineMacro
+}

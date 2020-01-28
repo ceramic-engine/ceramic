@@ -81,7 +81,7 @@ public class SnowActivity extends org.libsdl.app.SDLActivity {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         
-    } //preWindowCreate
+    }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -114,5 +114,5 @@ public class SnowActivity extends org.libsdl.app.SDLActivity {
 
     }
 
-} //SnowActivity
+}
 

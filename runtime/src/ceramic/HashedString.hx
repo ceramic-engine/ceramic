@@ -21,7 +21,7 @@ class HashedString {
 
         return hash + '' + len + ';' + str;
 
-    } //encode
+    }
 
     /** Encode and append `str` to the already encoded string `encoded` and return the results.
         This is equivalent to `result = encoded + HashedString.encode(str)` */
@@ -29,7 +29,7 @@ class HashedString {
 
         return encoded + encode(str);
 
-    } //append
+    }
 
     /** Decode the given `encoded` string and return the result. */
     public static function decode(encoded:String):String {
@@ -89,12 +89,12 @@ class HashedString {
             return null;
         }
 
-    } //decode
+    }
 
     inline public function isLastDecodeIncomplete():Bool {
 
         return _lastDecodeIncomplete;
 
-    } //isLastDecodeIncomplete
+    }
 
-} //HashedString
+}

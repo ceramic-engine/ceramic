@@ -48,7 +48,7 @@ class SeedRandom {
         this.seed = seed;
         initialSeed = this.seed;
 
-    } //new
+    }
 
 // Public API
 
@@ -70,4 +70,4 @@ class SeedRandom {
         seed = this.initialSeed;
     }
 
-} //SeedRandom
+}

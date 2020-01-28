@@ -14,7 +14,7 @@ class ListPlugins extends tools.Task {
 
         return "List enabled plugins.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -26,6 +26,6 @@ class ListPlugins extends tools.Task {
             print(name + ' ' + path.gray());
         }
 
-    } //run
+    }
 
-} //ListPlugins
+}

@@ -23,30 +23,30 @@ class Screen implements ceramic.Events #if !completion implements spec.Screen #e
 
         return ceramic.App.app.settings.targetWidth;
 
-    } //getPixelWidth
+    }
 
     inline public function getHeight():Int {
 
         return ceramic.App.app.settings.targetHeight;
 
-    } //getPixelHeight
+    }
 
     inline public function getDensity():Float {
 
         return 1.0;
 
-    } //getPixelHeight
+    }
 
     public function setBackground(background:Int):Void {
 
         //
 
-    } //setBackground
+    }
 
     public function setWindowTitle(title:String):Void {
 
         //
 
-    } //setWindowTitle
+    }
 
-} //Screen
+}

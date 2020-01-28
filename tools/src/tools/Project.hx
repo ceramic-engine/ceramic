@@ -60,7 +60,7 @@ class Project {
 
     public function new():Void {
 
-    } //new
+    }
 
     public function getKind(path:String):ProjectKind {
 
@@ -107,7 +107,7 @@ class Project {
         fail('Unable to retrieve project kind.');
         return null;
 
-    } //getKind
+    }
 
     public function loadAppFile(path:String):Void {
 
@@ -162,7 +162,7 @@ class Project {
             app.hxml += "\n" + "-D NO_PRECOMPILED_HEADERS";
         }
 
-    } //loadAppFile
+    }
 
     public function loadPluginFile(path:String):Void {
 
@@ -190,11 +190,11 @@ class Project {
         // Add path
         plugin.path = Path.isAbsolute(path) ? path : Path.normalize(Path.join([context.cwd, path]));
 
-    } //loadPluginFile
+    }
 
 /// Utilities
 
-} //Project
+}
 
 /** Parsing/loading code to read ceramic project format. */
 class ProjectLoader {
@@ -357,7 +357,7 @@ class ProjectLoader {
 
         return app;
 
-    } //loadAppConfig
+    }
 
     public static function loadPluginConfig(input:String, defines:Map<String,String>):Dynamic<Dynamic> {
 
@@ -455,7 +455,7 @@ class ProjectLoader {
 
         return plugin;
 
-    } //loadPluginConfig
+    }
 
 /// Internal
 
@@ -504,7 +504,7 @@ class ProjectLoader {
             }
         }
 
-    } //evaluateConditionals
+    }
 
     static function mergeConfigs(app:Dynamic, extra:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
@@ -612,7 +612,7 @@ class ProjectLoader {
 
         }
 
-    } //mergeConfigs
+    }
 
     static function extractIdentifiers(input:String):Array<String> {
 
@@ -644,6 +644,6 @@ class ProjectLoader {
         }
         return result;
 
-    } //extractIdentifiers
+    }
 
-} //Parser
+}

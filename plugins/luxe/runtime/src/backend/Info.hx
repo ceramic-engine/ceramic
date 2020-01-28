@@ -32,4 +32,4 @@ class Info implements spec.Info {
         return ['glsl', 'frag', 'vert'];
     }
 
-} //Info
+}

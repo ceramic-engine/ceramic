@@ -8,7 +8,7 @@ class RunSpine extends tools.Task {
 
         return "Run Spine application.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -24,6 +24,6 @@ class RunSpine extends tools.Task {
         // Run
         command(spineAppPath, args.slice(2));
 
-    } //run
+    }
 
-} //RunSpine
+}

@@ -40,7 +40,7 @@ class NapePhysics extends Entity {
 
         this.space = createSpace();
 
-    } //new
+    }
 
     public function createSpace(autoAdd:Bool = true):nape.space.Space {
 
@@ -52,7 +52,7 @@ class NapePhysics extends Entity {
 
         return space;
 
-    } //createSpace
+    }
 
     public function addSpace(space:nape.space.Space):Void {
 
@@ -63,7 +63,7 @@ class NapePhysics extends Entity {
             log.warning('Space already added to NapePhysics');
         }
 
-    } //addSpace
+    }
 
     public function removeSpace(space:nape.space.Space):Void {
 
@@ -71,7 +71,7 @@ class NapePhysics extends Entity {
             log.warning('Space not removed from NapePhysics because it was not added at the first place');
         }
         
-    } //removeSpace
+    }
 
     inline function updateSpaces(delta:Float):Void {
 
@@ -82,13 +82,13 @@ class NapePhysics extends Entity {
             updateSpace(space, delta);
         }
 
-    } //updateSpaces
+    }
 
     inline function updateSpace(space:nape.space.Space, delta:Float):Void {
 
         space.step(delta);
 
-    } //updateSpace
+    }
 
     inline function update(delta:Float):Void {
 
@@ -120,7 +120,7 @@ class NapePhysics extends Entity {
 
         updateVisuals(delta);
 
-    } //preUpdate
+    }
 
     inline function updateVisuals(delta:Float):Void {
 
@@ -174,7 +174,7 @@ class NapePhysics extends Entity {
 
         emitEndUpdateVisuals();
 
-    } //updateVisuals
+    }
 
     inline function flushDestroyedItems():Void {
 
@@ -183,7 +183,7 @@ class NapePhysics extends Entity {
             items.remove(cast body);
         }
         
-    } //flushDestroyedItems
+    }
 
     inline function flushCreatedItems():Void {
 
@@ -192,8 +192,8 @@ class NapePhysics extends Entity {
             items.push(cast body);
         }
         
-    } //flushCreatedItems
+    }
 
 #end
 
-} //NapePhysics
+}

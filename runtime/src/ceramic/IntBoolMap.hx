@@ -39,7 +39,7 @@ abstract IntBoolMap(IntIntMap) {
         return this.remove(key) != 0;
     }
 
-} //IntBoolMap
+}
 
 #else
 
@@ -88,6 +88,6 @@ abstract IntBoolMap(Map<Int,Bool>) {
         return this.exists(key);
     }
 
-} //IntBoolMap
+}
 
 #end

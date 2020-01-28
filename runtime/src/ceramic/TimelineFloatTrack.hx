@@ -48,6 +48,6 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
             emitChange(this);
         }
 
-    } //apply
+    }
 
 } //TimelineFloatTrack

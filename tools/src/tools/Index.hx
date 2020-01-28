@@ -28,7 +28,7 @@ class Index {
             js.Node.global.ceramicEnvReady = true;
         }
     
-    } //main
+    }
 
     static function run(cwd:String, args:Array<String>, ceramicPath:String):Void {
 
@@ -45,6 +45,6 @@ class Index {
             @:privateAccess Tools.runInFiber(cwd, ['help'], ceramicPath);
         }
 
-    } //main
+    }
     
-} //Index
+}

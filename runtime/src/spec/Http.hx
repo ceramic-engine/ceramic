@@ -7,4 +7,4 @@ interface Http {
 
     function request(options:HttpRequestOptions, done:HttpResponse->Void):Void;
 
-} //Http
+}

@@ -28,12 +28,12 @@ public class AppAndroidInterface {
 
         return sSharedInterface;
 
-    } //sharedInterface
+    }
 
     /** Constructor */
     public AppAndroidInterface() {
 
-    } //SharedInterface
+    }
 
     /**
      * If provided, will be called when main activity is paused
@@ -73,7 +73,7 @@ public class AppAndroidInterface {
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
 
-    } //hello
+    }
 
     /**
      * Get Android version string
@@ -82,7 +82,7 @@ public class AppAndroidInterface {
 
         return Build.VERSION.RELEASE;
 
-    } //androidVersionString
+    }
 
     /**
      * Get Android version number
@@ -91,7 +91,7 @@ public class AppAndroidInterface {
 
         return Build.VERSION.SDK_INT;
 
-    } //androidVersionNumber
+    }
 
     /**
      * Dummy method to get Haxe types converted to Java types that then get returned back as an array.
@@ -113,6 +113,6 @@ public class AppAndroidInterface {
                 aMap
         );
 
-    } //testTypes
+    }
 
 }

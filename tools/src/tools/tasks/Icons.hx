@@ -14,13 +14,13 @@ class Icons extends tools.Task {
 
         super();
 
-    } //new
+    }
 
     override public function info(cwd:String):String {
 
         return "Generate app icons using " + context.backend.name + " backend and given target.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -72,6 +72,6 @@ class Icons extends tools.Task {
 
         context.backend.transformIcons(cwd, appIcon, target, context.variant);
 
-    } //run
+    }
 
 }

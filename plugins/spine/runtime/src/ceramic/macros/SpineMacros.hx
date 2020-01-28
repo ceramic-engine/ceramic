@@ -153,6 +153,6 @@ class SpineMacros {
 
         return fields;
 
-    } //buildNames
+    }
 
 }

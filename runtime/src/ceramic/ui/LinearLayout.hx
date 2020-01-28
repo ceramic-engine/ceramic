@@ -65,7 +65,7 @@ class LinearLayout extends View {
 
         transparent = true;
 
-    } //new
+    }
 
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
 
@@ -361,7 +361,7 @@ class LinearLayout extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
         }
 
-    } //computeSize
+    }
 
     override function layout() {
 
@@ -594,6 +594,6 @@ class LinearLayout extends View {
             }
         }
 
-    } //layout
+    }
 
-} //View
+}

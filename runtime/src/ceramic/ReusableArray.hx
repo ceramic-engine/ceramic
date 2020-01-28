@@ -17,7 +17,7 @@ class ReusableArray<T> {
 
         this.length = length;
 
-    } //new
+    }
 
     function set_length(length:Int):Int {
         if (vector == null) {
@@ -53,12 +53,12 @@ class ReusableArray<T> {
 
         return vector.get(index);
 
-    } //get
+    }
 
     inline public function set(index:Int, value:T):Void {
 
         vector.set(index, value);
 
-    } //set
+    }
 
-} //ReusableArray
+}

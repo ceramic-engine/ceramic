@@ -26,7 +26,7 @@ class PlatformSpecific {
         });
         #end
 
-    } //postAppInit
+    }
 
     public static function getRtti<T>(c:Class<T>):Classdef {
         /*#if (cpp && snow)
@@ -58,4 +58,4 @@ class PlatformSpecific {
         //#end
     }
 
-} //PlatformSpecific
+}

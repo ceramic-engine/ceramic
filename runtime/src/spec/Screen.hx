@@ -12,4 +12,4 @@ interface Screen {
 
     function setWindowTitle(title:String):Void;
 
-} //Screen
+}

@@ -30,7 +30,7 @@ class SpinePlugin {
         // compatible with haxe-modular or similar bundling tools
         SpinePlugin.pluginInit();
 
-    } //__init__
+    }
     
     static function pluginInit() {
 
@@ -64,7 +64,7 @@ class SpinePlugin {
             
         });
 
-    } //pluginInit
+    }
 
 /// Asset extensions
 
@@ -74,7 +74,7 @@ class SpinePlugin {
 
         assets.addAsset(new SpineAsset(name, options));
 
-    } //addSpine
+    }
 
     public static function ensureSpine(assets:Assets, name:Either<String,AssetId<Dynamic>>, ?options:AssetOptions, done:SpineAsset->Void):Void {
 
@@ -85,7 +85,7 @@ class SpinePlugin {
             done(Std.is(asset, SpineAsset) ? cast asset : null);
         });
 
-    } //ensureSpine
+    }
 
     @:access(ceramic.Assets)
     public static function spine(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineData {
@@ -99,12 +99,12 @@ class SpinePlugin {
 
         return asset.spineData;
 
-    } //spine
+    }
 
     inline public static function toSkeletonName(name:AssetId<Dynamic>):String {
 
         return Reflect.field(name, '_id');
 
-    } //spineSkeletonName
+    }
 
-} //SpinePlugin
+}

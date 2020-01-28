@@ -67,7 +67,7 @@ class CeramicShader extends phoenix.Shader {
 
         return true;
 
-    } //link
+    }
 
 /// Internal
 
@@ -99,6 +99,6 @@ class CeramicShader extends phoenix.Shader {
             default: 'unknown';
         }
 
-    } //glTypeToString
+    }
 
-} //CeramicShader
+}

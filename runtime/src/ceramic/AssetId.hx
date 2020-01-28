@@ -7,4 +7,4 @@ abstract AssetId<T:String>(T) from T to T {
         this = value;
     }
 
-} //AssetId
+}

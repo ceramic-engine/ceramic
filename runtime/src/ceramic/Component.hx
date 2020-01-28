@@ -25,4 +25,4 @@ interface Component /* extends Entity (enforced by ComponentMacro) */ {
         When the target entity is destroyed, our instance (the component) will be unbound and destroyed as well. */
     private function bindAsComponent():Void;
 
-} //Component
+}

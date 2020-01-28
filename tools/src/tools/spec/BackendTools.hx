@@ -39,4 +39,4 @@ interface BackendTools {
     /** Transform icons */
     function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void;
 
-} //Tools
+}

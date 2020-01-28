@@ -23,6 +23,6 @@ class ImageImpl {
         this.path = path;
         this.unityTexture = unityTexture;
 
-    } //new
+    }
 
-} //ImageImpl
+}

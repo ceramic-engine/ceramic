@@ -287,4 +287,4 @@ class Colors {
         }
     }
 
-} //Colors
+}

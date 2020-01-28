@@ -12,7 +12,7 @@ class TransformPool {
 
         return (availableTransforms.length > 0) ? availableTransforms.pop() : new Transform();
 
-    } //get
+    }
 
     /** Recycle an existing transform. The transform will be cleaned up. */
     public static function recycle(transform:Transform):Void {
@@ -37,7 +37,7 @@ class TransformPool {
 
         availableTransforms.push(transform);
 
-    } //recycle
+    }
 
     public static function clear():Void {
         
@@ -45,6 +45,6 @@ class TransformPool {
             availableTransforms = [];
         }
 
-    } //clear
+    }
 
 } //TransformPool

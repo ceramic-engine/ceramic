@@ -11,6 +11,6 @@ class TimelineColorKeyframe extends TimelineKeyframe {
         
         this.value = value;
 
-    } //new
+    }
 
-} //TimelineColorKeyframe
+}

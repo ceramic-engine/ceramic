@@ -13,4 +13,4 @@ class CustomAssetKind {
 
     public var types:Array<String>;
 
-} //CustomAssetKind
+}

@@ -53,9 +53,9 @@ class Sync {
 
         return payload;
 
-    } //run
+    }
 
-} //Sync
+}
 
 @:allow(tools.Sync)
 private class InternalError {
@@ -66,4 +66,4 @@ private class InternalError {
         this.err = err;
     }
 
-} //InternalError
+}

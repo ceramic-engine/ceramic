@@ -25,4 +25,4 @@ class DefinesMacro {
         return macro $a{map};
     }
 
-} //DefinesMacro
+}

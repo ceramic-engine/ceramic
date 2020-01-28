@@ -43,7 +43,7 @@ class Tween extends Entity {
 
         init();
 
-    } //new
+    }
 
     function init() {
 
@@ -64,7 +64,7 @@ class Tween extends Entity {
 
         App.app.onceImmediate(immediateStart);
 
-    } //init
+    }
 
     inline function updateFromTick(delta:Float):Void {
         
@@ -89,7 +89,7 @@ class Tween extends Entity {
             }
         }
 
-    } //updateFromTick
+    }
 
     function immediateComplete() {
 
@@ -97,13 +97,13 @@ class Tween extends Entity {
         emitComplete();
         destroy();
 
-    } //immediateComplete
+    }
 
     function immediateStart() {
 
         emitUpdate(fromValue, 0);
 
-    } //immediateStar
+    }
 
     override function destroy() {
 
@@ -116,7 +116,7 @@ class Tween extends Entity {
 
         super.destroy();
 
-    } //destroy
+    }
 
 /// Static helpers
 
@@ -131,7 +131,7 @@ class Tween extends Entity {
 
         return instance;
 
-    } //start
+    }
 
     static function tick(delta:Float):Void {
 
@@ -149,7 +149,7 @@ class Tween extends Entity {
             tween.updateFromTick(delta);
         }
 
-    } //tick
+    }
 
     static var _computedEasingFunction:Void->Void = null;
     static var _computedCustomEasing:Float->Float = null;
@@ -237,7 +237,7 @@ class Tween extends Entity {
 
         }
 
-    } //computeEasing
+    }
 
     public static function ease(easing:Easing, value:Float):Float {
 
@@ -328,7 +328,7 @@ class Tween extends Entity {
 
         return TweenEasingFunction.k;
 
-    } //ease
+    }
 
     /** Get a tween easing function as a plain Float->Float function. */
     public static function easingFunction(easing:Easing):Float->Float {
@@ -345,9 +345,9 @@ class Tween extends Entity {
             return TweenEasingFunction.k;
         };
 
-    } //easingFunction
+    }
 
-} //Tween
+}
 
 @:allow(ceramic.Tween)
 private class TweenEasingFunction {
@@ -577,5 +577,5 @@ private class TweenEasingFunction {
 		k = Math.sin(k * (Math.PI / 2));
     }
 
-} //TweenEasingFunction
+}
 

@@ -8,7 +8,7 @@ class Velocity {
 
     public function new() {
 
-    } //new
+    }
     
     public function reset():Void {
 
@@ -20,7 +20,7 @@ class Velocity {
             len--;
         }
 
-    } //reset
+    }
 
     public function add(position:Float, minusDelta:Float = 0):Void {
 
@@ -31,7 +31,7 @@ class Velocity {
 
         prune(now - 0.15);
 
-    } //add
+    }
 
     public function get():Float {
 
@@ -49,7 +49,7 @@ class Velocity {
 
         return distance / Math.max(0.15, time);
 
-    } //get
+    }
 
 /// Internal
 
@@ -63,7 +63,7 @@ class Velocity {
             len--;
         }
 
-    } //prune
+    }
 
 /// Print
 
@@ -71,6 +71,6 @@ class Velocity {
 
         return '' + get();
 
-    } //toString
+    }
 
 } // Velocity

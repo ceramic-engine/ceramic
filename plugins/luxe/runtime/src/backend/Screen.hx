@@ -27,25 +27,25 @@ class Screen implements ceramic.Events implements spec.Screen {
 
         return width;
 
-    } //getPixelWidth
+    }
 
     inline public function getHeight():Int {
 
         return height;
 
-    } //getPixelHeight
+    }
 
     inline public function getDensity():Float {
 
         return density;
 
-    } //getPixelHeight
+    }
 
     public function setBackground(background:Int):Void {
 
         Luxe.renderer.clear_color.rgb(background);
 
-    } //setBackground
+    }
 
     public function setWindowTitle(title:String):Void {
 
@@ -56,6 +56,6 @@ class Screen implements ceramic.Events implements spec.Screen {
         sdl.SDL.setWindowTitle(runtime.window, title);
         #end
 
-    } //setWindowTitle
+    }
 
-} //Screen
+}

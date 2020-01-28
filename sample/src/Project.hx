@@ -42,7 +42,7 @@ class Project extends Entity {
 
 #end
 
-    } //new
+    }
 
     function ready() {
 
@@ -57,7 +57,7 @@ class Project extends Entity {
 
         assets.load();
 
-    } //ready
+    }
     
     function assetsLoaded() {
 
@@ -167,7 +167,7 @@ class Project extends Entity {
             4 * 2 + 3
         ];
 */
-    } //assetsLoaded
+    }
 
     function ready_() {
 
@@ -351,6 +351,6 @@ class Project extends Entity {
 
         });
 
-    } //ready
+    }
 
-} //Project
+}

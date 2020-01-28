@@ -30,7 +30,7 @@ public class Http {
 
         }).execute();
 
-    } //sendHttpRequest
+    }
 
     /** Download file */
     public static void download(final Map<String,Object> params, String targetPath, final Func1<String,Void> done) {
@@ -49,6 +49,6 @@ public class Http {
 
         }).execute();
 
-    } //download
+    }
 
-} //Http
+}

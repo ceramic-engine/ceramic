@@ -56,7 +56,7 @@ class Texture extends Entity {
         this.backendItem = backendItem;
         this.density = density; // sets widht/height as well
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -67,7 +67,7 @@ class Texture extends Entity {
         app.backend.textures.destroyTexture(backendItem);
         backendItem = null;
 
-    } //destroy
+    }
 
 /// Print
 
@@ -81,6 +81,6 @@ class Texture extends Entity {
             return 'Texture($width $height $density #$index)';
         }
 
-    } //toString
+    }
 
-} //Texture
+}

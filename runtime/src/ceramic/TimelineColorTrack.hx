@@ -49,6 +49,6 @@ class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
             emitChange(this);
         }
 
-    } //apply
+    }
 
 } //TimelineColorTrack

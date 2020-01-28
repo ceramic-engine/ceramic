@@ -27,7 +27,7 @@ class KeyBinding extends Entity {
 
         bindKeyboardEvents();
 
-    } //new
+    }
 
 /// Internal
 
@@ -60,7 +60,7 @@ class KeyBinding extends Entity {
             }
         }
 
-    } //bindKeyboardEvents
+    }
 
     function bindScanCode(scanCode:Int, itemIndex:Int):Void {
 
@@ -86,7 +86,7 @@ class KeyBinding extends Entity {
 
         });
 
-    } //bindScanCode
+    }
 
     function bindKeyCode(keyCode:Int, itemIndex:Int):Void {
 
@@ -113,7 +113,7 @@ class KeyBinding extends Entity {
 
         });
 
-    } //bindKeyCode
+    }
 
     function checkStatus() {
 
@@ -139,6 +139,6 @@ class KeyBinding extends Entity {
             matches = false;
         }
 
-    } //checkStatus
+    }
 
-} //KeyBinding
+}

@@ -14,7 +14,7 @@ class Hxml extends tools.Task {
 
         return "Print hxml data using " + context.backend.name + " backend and the given target.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -135,6 +135,6 @@ class Hxml extends tools.Task {
             print(finalHxml.rtrim());
         }
 
-    } //run
+    }
 
-} //Hxml
+}

@@ -35,7 +35,7 @@ class Build extends tools.Task {
 		this.variant = variant;
 		this.config = target.configs[configIndex];
 
-	} //new
+	}
 
 	override function run(cwd:String, args:Array<String>):Void {
 		var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
@@ -304,6 +304,6 @@ class Build extends tools.Task {
 		} else if (action == 'run') {
 			runHooks(cwd, args, project.app.hooks, 'end run');
 		}
-	} //run
+	}
 
 } // Setup

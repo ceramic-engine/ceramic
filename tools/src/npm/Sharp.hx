@@ -49,4 +49,4 @@ extern class Sharp {
 
     function metadata(callback:Dynamic->SharpMetadata->Void):Sharp;
 
-} //Sharp
+}

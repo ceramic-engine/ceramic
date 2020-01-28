@@ -43,7 +43,7 @@ class VisualNapePhysics extends Entity {
             ceramic.App.app.nape.items.push(cast this);
         }
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -63,8 +63,8 @@ class VisualNapePhysics extends Entity {
             ceramic.App.app.nape.items.remove(cast this);
         }
 
-    } //destroy
+    }
 
 #end
 
-} //VisualNapePhysics
+}

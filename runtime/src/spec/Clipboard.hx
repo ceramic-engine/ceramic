@@ -6,4 +6,4 @@ interface Clipboard {
 
     function setText(text:String):Void;
 
-} //Clipboard
+}

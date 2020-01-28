@@ -18,7 +18,7 @@ class Server extends tools.Task {
 
         return "Create a ceramic server to run consecutive commands with a single output";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -88,7 +88,7 @@ class Server extends tools.Task {
             server.listen(port);
         });
 
-    } //run
+    }
 
     function handleCommand(args:Array<String>) {
 
@@ -98,6 +98,6 @@ class Server extends tools.Task {
 
         return queryId;
 
-    } //handleCommand
+    }
 
-} //Server
+}

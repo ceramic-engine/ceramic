@@ -9,21 +9,21 @@ abstract SoundPlayer(backend.AudioHandle) {
 
         app.backend.audio.pause(this);
 
-    } //pause
+    }
 
     /** Resume playing the sound. */
     inline public function resume():Void {
 
         app.backend.audio.resume(this);
 
-    } //resume
+    }
 
     /** Stop the sound. */
     inline public function stop():Void {
 
         app.backend.audio.stop(this);
 
-    } //stop
+    }
 
     /** The volume of the sound being played. */
     public var volume(get,set):Float;
@@ -81,6 +81,6 @@ abstract SoundPlayer(backend.AudioHandle) {
             stop();
         });
 
-    } //fadeOut
+    }
 
-} //SoundPlayer
+}

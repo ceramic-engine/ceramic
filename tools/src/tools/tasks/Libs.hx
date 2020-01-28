@@ -17,7 +17,7 @@ class Libs extends tools.Task {
             return "Install required haxe libs on current project.";
         }
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -122,6 +122,6 @@ class Libs extends tools.Task {
             
         }
 
-    } //run
+    }
 
-} //Libs
+}

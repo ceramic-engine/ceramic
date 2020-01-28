@@ -39,7 +39,7 @@ class Autorun extends Entity {
             run();
         }
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -53,13 +53,13 @@ class Autorun extends Entity {
         // Destroy
         super.destroy();
 
-    } //destroy
+    }
 
     inline function willEmitReset():Void {
 
         unbindFromAllAutorunArrays();
 
-    } //willEmitReset
+    }
 
     public function run():Void {
 
@@ -87,7 +87,7 @@ class Autorun extends Entity {
         while (numPrevCurrent < prevCurrent.length) prevCurrent.pop();
         current = _prevCurrent;
 
-    } //run
+    }
 
     inline public function invalidate():Void {
 
@@ -98,7 +98,7 @@ class Autorun extends Entity {
 
         app.onceImmediate(run);
 
-    } //invalidate
+    }
 
 /// Static helpers
 
@@ -110,7 +110,7 @@ class Autorun extends Entity {
         prevCurrent.push(current);
         current = null;
 
-    } //unobserve
+    }
 
     /** Resume observing values and resume affecting current `autorun` scope.
         This should be called after an `unobserve()` call. */
@@ -121,7 +121,7 @@ class Autorun extends Entity {
         // Restore previous current autorun
         current = prevCurrent.pop();
 
-    } //reobserve
+    }
 
     /** Executes the given function synchronously and ensures the
         current `autorun` scope won't be affected */
@@ -131,7 +131,7 @@ class Autorun extends Entity {
         func();
         reobserve();
 
-    } //unobserved
+    }
 
 /// Autorun arrays
 
@@ -190,7 +190,7 @@ class Autorun extends Entity {
             boundAutorunArrays.push(autorunArray);
         }
 
-    } //bindToAutorunArray
+    }
 
     public function unbindFromAllAutorunArrays():Void {
 
@@ -216,7 +216,7 @@ class Autorun extends Entity {
             boundAutorunArrays = null;
         }
 
-    } //unbindFromAllAutorunArrays
+    }
 
 /// Recycling autorun arrays
 
@@ -235,7 +235,7 @@ class Autorun extends Entity {
             return [];
         }
 
-    } //getAutorunArray
+    }
 
     public static function recycleAutorunArray(array:Array<Autorun>):Void {
 
@@ -248,7 +248,7 @@ class Autorun extends Entity {
         _autorunArrays[_autorunArraysLen] = array;
         _autorunArraysLen++;
 
-    } //recycleAutorunArray
+    }
 
 /// Recycling array of autorun arrays
 
@@ -267,7 +267,7 @@ class Autorun extends Entity {
             return [];
         }
 
-    } //getArrayOfAutorunArrays
+    }
 
     inline public static function recycleArrayOfAutorunArrays(array:Array<Array<Autorun>>):Void {
 
@@ -280,6 +280,6 @@ class Autorun extends Entity {
         _arrayOfAutorunArrays[_arrayOfAutorunArraysLen] = array;
         _arrayOfAutorunArraysLen++;
 
-    } //recycleArrayOfAutorunArrays
+    }
 
-} //Autorun
+}

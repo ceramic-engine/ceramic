@@ -8,5 +8,5 @@ enum ImageViewScaling {
 
     FILL;
 
-} //ImageViewScaling
+}
 

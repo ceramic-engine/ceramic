@@ -190,7 +190,7 @@ class CollectionsMacro {
 
         return fields;
 
-    } //build
+    }
 
 /// Internal
 
@@ -240,7 +240,7 @@ class CollectionsMacro {
 
         return str;
 
-    } //toCollectionConstName
+    }
 
     static function toCollectionFieldName(input:String):String {
 
@@ -250,6 +250,6 @@ class CollectionsMacro {
 
         return input.charAt(0).toLowerCase() + input.substring(1);
 
-    } //toCollectionFieldName
+    }
 
-} //CollectionsMacro
+}

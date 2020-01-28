@@ -53,7 +53,7 @@ class TextInput implements Events {
 
         //
 
-    } //new
+    }
 
 /// Public API
 
@@ -91,7 +91,7 @@ class TextInput implements Events {
         emitUpdate(text);
         emitSelection(selectionStart, selectionEnd);
 
-    } //start
+    }
 
     public function stop():Void {
 
@@ -106,7 +106,7 @@ class TextInput implements Events {
         app.backend.textInput.stop();
         emitStop();
 
-    } //stop
+    }
 
     public function updateSelection(selectionStart:Int, selectionEnd:Int, ?inverted:Bool):Void {
 
@@ -117,7 +117,7 @@ class TextInput implements Events {
             emitSelection(selectionStart, selectionEnd);
         }
 
-    } //updateSelection
+    }
 
     public function appendText(text:String):Void {
 
@@ -153,7 +153,7 @@ class TextInput implements Events {
         explicitPosInLine = posInCurrentLine(selectionStart);
         explicitPosLine = lineForPos(selectionStart);
 
-    } //appendText
+    }
 
     public function backspace():Void {
 
@@ -185,7 +185,7 @@ class TextInput implements Events {
         explicitPosInLine = posInCurrentLine(selectionStart);
         explicitPosLine = lineForPos(selectionStart);
 
-    } //backspace
+    }
 
     public function moveLeft():Void {
 
@@ -239,7 +239,7 @@ class TextInput implements Events {
             explicitPosLine = lineForPos(selectionStart);
         }
 
-    } //moveLeft
+    }
 
     public function moveRight():Void {
 
@@ -300,7 +300,7 @@ class TextInput implements Events {
             explicitPosLine = lineForPos(selectionStart);
         }
 
-    } //moveRight
+    }
 
     public function moveUp():Void {
 
@@ -360,7 +360,7 @@ class TextInput implements Events {
             }
         }
 
-    } //moveUp
+    }
 
     public function moveDown():Void {
 
@@ -455,7 +455,7 @@ class TextInput implements Events {
             }
         }
 
-    } //moveDown
+    }
 
     public function enter():Void {
 
@@ -468,26 +468,26 @@ class TextInput implements Events {
             appendText("\n");
         }
 
-    } //enter
+    }
 
     public function escape():Void {
 
         emitEscape();
         stop();
 
-    } //escape
+    }
 
     public function shiftDown():Void {
 
         shiftPressed = true;
 
-    } //shiftDown
+    }
 
     public function shiftUp():Void {
 
         shiftPressed = false;
 
-    } //shiftUp
+    }
 
 /// Helpers
 
@@ -515,7 +515,7 @@ class TextInput implements Events {
 
         return posInLine;
 
-    } //posInLine
+    }
 
     /** Get the current line (starts from 0) from the given global position in text */
     function lineForPos(globalPos:Int):Int {
@@ -538,7 +538,7 @@ class TextInput implements Events {
 
         return lineNumber;
 
-    } //lineForPos
+    }
 
     function numLines():Int {
 
@@ -546,7 +546,7 @@ class TextInput implements Events {
 
         return text.split("\n").length;
 
-    } //numLines
+    }
 
     function globalPosForLine(lineNumber:Int, lineOffset:Int):Int {
 
@@ -583,7 +583,7 @@ class TextInput implements Events {
 
         return i;
 
-    } //globalPosForLine
+    }
 
     function set_text(text:String):String {
 
@@ -605,6 +605,6 @@ class TextInput implements Events {
 
         return text;
 
-    } //set_text
+    }
 
-} //TextInput
+}

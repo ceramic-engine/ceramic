@@ -6,4 +6,4 @@ enum TextureFilter {
 
     NEAREST;
 
-} //TextureFilter
+}

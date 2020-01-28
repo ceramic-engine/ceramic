@@ -165,7 +165,7 @@ class Screen extends Entity implements Observable {
 
         super();
 
-    } //new
+    }
 
     function backendReady():Void {
 
@@ -378,7 +378,7 @@ class Screen extends Entity implements Observable {
             });
         });
 
-    } //backendReady
+    }
 
     function updatePointerOverState(delta:Float):Void {
 
@@ -395,7 +395,7 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //updatePointerOverState
+    }
 
     function resize():Void {
 
@@ -430,7 +430,7 @@ class Screen extends Entity implements Observable {
         // Resize finished
         resizing = false;
 
-    } //resize
+    }
 
     function updateTexturesDensity():Void {
 
@@ -440,7 +440,7 @@ class Screen extends Entity implements Observable {
             density
         ;
 
-    } //updateTexturesDensity
+    }
 
     /** Recompute screen width, height and density from settings and native state. */
     function updateScaling():Void {
@@ -507,7 +507,7 @@ class Screen extends Entity implements Observable {
         }
         */
 
-    } //updateScaling
+    }
 
     /** Recompute transform from screen width, height and density. */
     function updateTransform():Void {
@@ -540,7 +540,7 @@ class Screen extends Entity implements Observable {
         var ty = (nativeHeight * nativeDensity - targetHeight) * 0.5;
         matrix.translate(tx, ty);
 
-    } //updateTransform
+    }
 
 /// Match visuals to x,y
 
@@ -625,7 +625,7 @@ class Screen extends Entity implements Observable {
 
         return null;
 
-    } //matchFirstDownListener
+    }
 
     function matchFirstOverListener(x:Float, y:Float):Visual {
 
@@ -687,7 +687,7 @@ class Screen extends Entity implements Observable {
 
         return null;
 
-    } //matchFirstOverListener
+    }
 
 /// Touch/Mouse events
 
@@ -713,7 +713,7 @@ class Screen extends Entity implements Observable {
 
         updatePointer();
 
-    } //prepareMultiTouchPointerDown
+    }
 
     inline function prepareMultiTouchPointerUp(info:TouchInfo):Void {
 
@@ -742,7 +742,7 @@ class Screen extends Entity implements Observable {
             touches.set(info.touchIndex, null);
         }
 
-    } //prepareMultiTouchPointerUp
+    }
 
     inline function prepareMultiTouchPointerMove(info:TouchInfo):Void {
 
@@ -766,7 +766,7 @@ class Screen extends Entity implements Observable {
 
         updatePointer();
 
-    } //prepareMultiTouchPointerMove
+    }
 
     inline function updatePointer():Void {
 
@@ -793,7 +793,7 @@ class Screen extends Entity implements Observable {
             pointerY = mouseY;
         }
 
-    } //updatePointer
+    }
 
     var matchedDownListeners:Map<Int,Visual> = new Map();
 
@@ -818,7 +818,7 @@ class Screen extends Entity implements Observable {
         var id = 10000 + buttonId;
         matchedDownListeners.set(id, matched);
 
-    } //didEmitMouseDown
+    }
 
     inline function didEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
 
@@ -838,7 +838,7 @@ class Screen extends Entity implements Observable {
         }
         matchedDownListeners.remove(id);
 
-    } //didEmitMouseUp
+    }
 
     inline function updateMouseOver(x:Float, y:Float) {
 
@@ -877,7 +877,7 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //updateMouseOver
+    }
 
     inline function didEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
 
@@ -898,7 +898,7 @@ class Screen extends Entity implements Observable {
         var id = 20000 + touchIndex;
         matchedDownListeners.set(id, matched);
 
-    } //didEmitTouchDown
+    }
 
     inline function didEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
 
@@ -918,7 +918,7 @@ class Screen extends Entity implements Observable {
         }
         matchedDownListeners.remove(id);
 
-    } //didEmitTouchUp
+    }
 
     inline function updateTouchOver(touchIndex:Int, x:Float, y:Float):Void {
 
@@ -957,7 +957,7 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //updateTouchOver
+    }
 
 /// Hit visual logic
 
@@ -977,7 +977,7 @@ class Screen extends Entity implements Observable {
             visual.internalFlag(3, true);
         }
 
-    } //addHitVisual
+    }
 
     public function removeHitVisual(visual:Visual):Void {
 
@@ -992,12 +992,12 @@ class Screen extends Entity implements Observable {
             }
         }
 
-    } //removeHitVisual
+    }
 
     public function isHitVisual(visual:Visual):Bool {
 
         return visual.internalFlag(3);
 
-    } //isHitVisual
+    }
 
 }

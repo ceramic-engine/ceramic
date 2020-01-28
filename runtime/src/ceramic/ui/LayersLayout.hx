@@ -91,7 +91,7 @@ class LayersLayout extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
         }
 
-    } //computeSize
+    }
 
     override function layout() {
 
@@ -126,6 +126,6 @@ class LayersLayout extends View {
             }
         }
 
-    } //layout
+    }
 
-} //LayersLayout
+}

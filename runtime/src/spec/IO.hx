@@ -8,4 +8,4 @@ interface IO {
 
     function readString(key:String):String;
 
-} //IO
+}

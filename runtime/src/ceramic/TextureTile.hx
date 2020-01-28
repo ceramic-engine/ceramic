@@ -21,7 +21,7 @@ class TextureTile {
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
 
-    } //new
+    }
 
     function toString() {
 
@@ -33,6 +33,6 @@ class TextureTile {
             frameHeight: frameHeight
         };
 
-    } //toString
+    }
 
-} //TextureTile
+}

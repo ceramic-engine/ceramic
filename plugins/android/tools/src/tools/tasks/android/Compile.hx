@@ -12,7 +12,7 @@ class Compile extends tools.Task {
 
         return "Compile C++ for Android platform.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -101,6 +101,6 @@ class Compile extends tools.Task {
         // Copy main binaries if needed
         AndroidProject.copyMainBinariesIfNeeded(cwd, project);
 
-    } //run
+    }
 
-} //Compile
+}

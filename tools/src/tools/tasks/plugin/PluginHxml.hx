@@ -15,7 +15,7 @@ class PluginHxml extends tools.Task {
 
         return "Print hxml data for the current plugin.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -158,6 +158,6 @@ class PluginHxml extends tools.Task {
             print(finalHxml.rtrim());
         }
 
-    } //run
+    }
 
-} //PluginHxml
+}

@@ -41,13 +41,13 @@ class Timeline extends Entity implements Component {
 
         bindOrUnbindUpdateIfNeeded();
 
-    } //new
+    }
 
     function bindAsComponent() {
 
         // Nothing to do
 
-    } //bindAsComponent
+    }
 
     /** Internal function to bind or update to app
         update event depending on current settings */
@@ -59,13 +59,13 @@ class Timeline extends Entity implements Component {
             app.onUpdate(this, update);
         }
 
-    } //bindOrUnbindUpdateIfNeeded
+    }
 
     function update(delta:Float):Void {
 
         inlineSeek(time + delta);
 
-    } //update
+    }
 
     /** Seek the given time (in seconds) in the timeline.
         Will take care of clamping `time` or looping it depending on `duration` and `loop` properties. */
@@ -73,7 +73,7 @@ class Timeline extends Entity implements Component {
 
         inlineSeek(targetTime);
 
-    } //seek
+    }
 
     inline function inlineSeek(targetTime:Float):Void {
 
@@ -112,7 +112,7 @@ class Timeline extends Entity implements Component {
             }
         }
 
-    } //inlineSeek
+    }
 
     /** Add a track to this timeline */
     public function add(track:TimelineTrack<Dynamic>):Void {
@@ -129,7 +129,7 @@ class Timeline extends Entity implements Component {
             fitDuration();
         }
 
-    } //add
+    }
 
     /** Remove a track from this timeline */
     public function remove(track:TimelineTrack<Dynamic>):Void {
@@ -143,7 +143,7 @@ class Timeline extends Entity implements Component {
             fitDuration();
         }
 
-    } //remove
+    }
 
     /** Update `duration` property to make it fit
         the duration of the longuest track. */
@@ -160,6 +160,6 @@ class Timeline extends Entity implements Component {
 
         duration = newDuration;
 
-    } //fitDuration
+    }
 
-} //Timeline
+}

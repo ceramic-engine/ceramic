@@ -68,7 +68,7 @@ class TilemapData extends Entity {
         }
         layers = null;
         
-    } //destroy
+    }
 
 /// Helpers
 
@@ -86,7 +86,7 @@ class TilemapData extends Entity {
         }
         return result;
 
-    } //Tileset
+    }
 
 /// Print
 
@@ -107,6 +107,6 @@ class TilemapData extends Entity {
             layers: layers,
         }
 
-    } //toString
+    }
 
 } //TilemapData

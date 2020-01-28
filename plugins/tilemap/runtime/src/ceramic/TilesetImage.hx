@@ -39,7 +39,7 @@ class TilesetImage extends Entity {
         // Will update texture asset retain count accordingly
         texture = null;
 
-    } //destroy
+    }
 
 /// Internal
 
@@ -47,6 +47,6 @@ class TilesetImage extends Entity {
 
         this.texture = newTexture;
 
-    } //replaceTexture
+    }
 
-} //TilesetImage
+}

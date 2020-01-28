@@ -146,7 +146,7 @@ class Quad extends Visual {
 
         asQuad = this;
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -155,7 +155,7 @@ class Quad extends Visual {
 
         super.destroy();
 
-    } //destroy
+    }
 
 /// Helpers
 
@@ -166,7 +166,7 @@ class Quad extends Visual {
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
 
-    } //frame
+    }
 
 /// Overrides
 
@@ -187,7 +187,7 @@ class Quad extends Visual {
 
         doComputeMatrix();
 
-    } //computeMatrix
+    }
 
 /// Texture destroyed
 
@@ -197,6 +197,6 @@ class Quad extends Visual {
         this.texture = null;
         this.tile = null;
 
-    } //textureDestroyed
+    }
 
-} //Quad
+}

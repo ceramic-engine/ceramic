@@ -12,4 +12,4 @@ enum ParticlesLaunchMode {
     /** Particles will use `velocityX` and `velocityY` to be launched */
     SQUARE;
 
-} //ParticlesLaunchMode
+}

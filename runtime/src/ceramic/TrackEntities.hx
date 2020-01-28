@@ -22,7 +22,7 @@ class TrackEntities extends Component {
         // Perform first scan to get initial data
         scan();
 
-    } //init
+    }
 
 /// Public API
 
@@ -37,7 +37,7 @@ class TrackEntities extends Component {
 
         cleanTrackingFromPrevEntityMap(prevEntityMap);
 
-    } //scan
+    }
 
     function scanValue(value:Dynamic):Void {
 
@@ -83,12 +83,12 @@ class TrackEntities extends Component {
 
         }
 
-    } //scanEntity
+    }
 
     function cleanTrackingFromPrevEntityMap(prevEntityMap:Map<Entity,Bool>) {
 
         // TODO
 
-    } //cleanTrackingFromPrevEntityMap
+    }
 
-} //TrackEntities
+}

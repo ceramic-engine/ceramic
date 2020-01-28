@@ -11,13 +11,13 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
         this = new CollectionImpl();
 
-    } //new
+    }
 
 	@:arrayAccess public inline function arrayAccess(index:Int) {
         
         return this.getByIndex(index);
     
-    } //arrayAccess
+    }
 
     /** Return a random element contained in the collection */
     public function randomElement():T {
@@ -27,7 +27,7 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
         return Extensions.randomElement(this.entries);
 
-    } //randomElement
+    }
 
     /** Return a random element contained in the given array that is not equal to the `except` arg.
         @param except The element we don't want
@@ -40,7 +40,7 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
         return Extensions.randomElementExcept(this.entries, except, unsafe);
 
-    } //randomElementExcept
+    }
 
     /** Return a random element contained in the given array that is validated by the provided validator.
         If no item is valid, returns null.
@@ -54,9 +54,9 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
         return Extensions.randomElementMatchingValidator(this.entries, validator);
 
-    } //randomElementMatchingValidator
+    }
 
-} //Collection
+}
 
 @:allow(ceramic.Collection)
 @:allow(ceramic.Collections)
@@ -104,7 +104,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
 
-    } //pushAll
+    }
 
     public function clear() {
 
@@ -119,7 +119,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
 
-    } //clear
+    }
 
 	public function push(entry:T) {
 
@@ -130,7 +130,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
 
-    } //push
+    }
 
     public function get(id:String):T {
 
@@ -141,7 +141,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         return byId.get(id);
 
-    } //get
+    }
 
     public function getByIndex(index:Int):T {
 
@@ -151,7 +151,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         return entries[index];
 
-    } //getByIndex
+    }
 
 	inline public function iterator():Iterator<T> {
 
@@ -161,7 +161,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
 		return entries.iterator();
 
-	} //iterator
+	}
 
 /// Internal
 
@@ -182,7 +182,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
             }
         }
 
-    } //checkCombined
+    }
 
     function computeIndex() {
 
@@ -198,7 +198,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         indexDirty = false;
 
-    } //computeIndex
+    }
 
     function computeEntries() {
 
@@ -221,6 +221,6 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         indexDirty = true;
         if (_lastCheckedCombined != this) _lastCheckedCombined = null;
 
-    } //computeEntries
+    }
 
-} //CollectionImpl
+}

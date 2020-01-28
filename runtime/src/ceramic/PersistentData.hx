@@ -25,37 +25,37 @@ class PersistentData {
 
         if (internalData == null) internalData = {};
 
-    } //new
+    }
 
     inline public function get(key:String):Dynamic {
 
         return internalData.get(key);
 
-    } //get
+    }
 
     inline public function set(key:String, value:Dynamic):Void {
 
         internalData.set(key, value);
 
-    } //set
+    }
 
     inline public function remove(key:String):Void {
 
         internalData.remove(key);
 
-    } //remove
+    }
 
     inline public function exists(key:String):Bool {
 
         return internalData.exists(key);
 
-    } //exists
+    }
 
     inline public function keys():Array<String> {
 
         return internalData.keys();
 
-    } //keys
+    }
 
     public function save() {
 
@@ -65,6 +65,6 @@ class PersistentData {
 
         app.backend.io.saveString('persistent_' + id, rawData);
 
-    } //save
+    }
 
-} //PersistentData
+}

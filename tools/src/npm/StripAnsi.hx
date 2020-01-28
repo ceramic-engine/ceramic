@@ -7,4 +7,4 @@ extern class StripAnsi {
         return js.Node.require('strip-ansi')(input);
     }
 
-} //StripAnsi
+}

@@ -17,4 +17,4 @@ class SpineFile implements FileHandle {
         this.content = content;
     }
 
-} //SpineFile
+}

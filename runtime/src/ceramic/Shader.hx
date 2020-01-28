@@ -22,7 +22,7 @@ class Shader extends Entity {
 
         return new Shader(backendItem);
 
-    } //fromSource
+    }
 
 /// Properties
 
@@ -62,7 +62,7 @@ class Shader extends Entity {
 
         this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -74,7 +74,7 @@ class Shader extends Entity {
         backendItem = null;
         attributes = null;
 
-    } //destroy
+    }
 
     public function clone():Shader {
 
@@ -83,7 +83,7 @@ class Shader extends Entity {
 
         return cloned;
 
-    } //clone
+    }
 
 /// Public API
 
@@ -91,61 +91,61 @@ class Shader extends Entity {
 
         app.backend.shaders.setInt(backendItem, name, value);
 
-    } //setInt
+    }
 
     inline public function setFloat(name:String, value:Float):Void {
 
         app.backend.shaders.setFloat(backendItem, name, value);
 
-    } //setFloat
+    }
 
     inline public function setColor(name:String, color:Color):Void {
 
         app.backend.shaders.setColor(backendItem, name, color.redFloat, color.greenFloat, color.blueFloat, 1.0);
 
-    } //setColor
+    }
 
     inline public function setAlphaColor(name:String, color:AlphaColor):Void {
 
         app.backend.shaders.setColor(backendItem, name, color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
 
-    } //setAlphaColor
+    }
 
     inline public function setVec2(name:String, x:Float, y:Float):Void {
 
         app.backend.shaders.setVec2(backendItem, name, x, y);
 
-    } //setVec2
+    }
 
     inline public function setVec3(name:String, x:Float, y:Float, z:Float):Void {
 
         app.backend.shaders.setVec3(backendItem, name, x, y, z);
 
-    } //setVec3
+    }
 
     inline public function setVec4(name:String, x:Float, y:Float, z:Float, w:Float):Void {
 
         app.backend.shaders.setVec4(backendItem, name, x, y, z, w);
 
-    } //setVec4
+    }
 
     inline public function setFloatArray(name:String, array:Array<Float>):Void {
 
         app.backend.shaders.setFloatArray(backendItem, name, array);
 
-    } //setFloatArray
+    }
 
     inline public function setTexture(name:String, texture:Texture):Void {
 
         app.backend.shaders.setTexture(backendItem, name, texture.backendItem);
 
-    } //setTexture
+    }
 
     inline public function setMat4FromTransform(name:String, transform:Transform):Void {
 
         app.backend.shaders.setMat4FromTransform(backendItem, name, transform);
 
-    } //setTexture
+    }
 
 /// Print
 
@@ -166,6 +166,6 @@ class Shader extends Entity {
             return 'Shader()';
         }
 
-    } //toString
+    }
 
 } //Shader

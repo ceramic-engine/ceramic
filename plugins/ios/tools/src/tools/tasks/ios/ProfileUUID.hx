@@ -19,7 +19,7 @@ class ProfileUUID extends tools.Task {
 
         return "Extract a provisioning profile's UUID.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -48,6 +48,6 @@ class ProfileUUID extends tools.Task {
         // Print result
         print(provisioningUUID);
 
-    } //run
+    }
 
-} //ProfileUUID
+}

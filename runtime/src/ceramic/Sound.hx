@@ -25,7 +25,7 @@ class Sound extends Entity {
 
         this.backendItem = backendItem;
 
-    } //new
+    }
 
     override function destroy() {
 
@@ -36,7 +36,7 @@ class Sound extends Entity {
         app.backend.audio.destroy(backendItem);
         backendItem = null;
 
-    } //destroy
+    }
 
 /// Public API
 
@@ -70,6 +70,6 @@ class Sound extends Entity {
 
         return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop);
 
-    } //play
+    }
 
-} //Sound
+}

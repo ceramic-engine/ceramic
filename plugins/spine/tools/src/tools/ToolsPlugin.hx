@@ -13,7 +13,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -29,7 +29,7 @@ class ToolsPlugin {
         tasks.set('spine export', new tools.tasks.spine.ExportSpine());
         tasks.set('spine run', new tools.tasks.spine.RunSpine());
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -40,6 +40,6 @@ class ToolsPlugin {
             app.editable.push('ceramic.Spine');
         }
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

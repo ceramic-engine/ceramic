@@ -27,6 +27,6 @@ class Assert {
         return macro null;
 #end
 
-    } //assert
+    }
 
-} //Assert
+}

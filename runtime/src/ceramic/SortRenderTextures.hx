@@ -41,7 +41,7 @@ class SortRenderTextures {
 
         return result;
 
-    } //cmp
+    }
 
     /**
         Sorts Array `a` according to the comparison function `cmp`, where
@@ -171,4 +171,4 @@ class SortRenderTextures {
         return cmp(a[i], a[j]);
     }
 
-} //SortRenderTextures
+}

@@ -19,7 +19,7 @@ class Http {
             }
             return formatKey.join('-');
 
-        } //formatHeaderKey
+        }
 
         // Compute headers
         var headers = new Map<String,String>();
@@ -113,6 +113,6 @@ class Http {
             });
         });
 
-    } //request
+    }
 
-} //Http
+}

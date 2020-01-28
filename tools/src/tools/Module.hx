@@ -49,7 +49,7 @@ class Module {
 
         return newHxml.join("\n");
 
-    } //patchHxml
+    }
 
     public static function resolvePath(cwd:String, project:Project, moduleName:String):String {
 
@@ -68,7 +68,7 @@ class Module {
 
         return path;
 
-    } //resolvePath
+    }
 
     public static function resolvePack(cwd:String, project:Project, moduleName:String):String {
 
@@ -85,7 +85,7 @@ class Module {
         var pack:String = info.pack;
         return pack;
 
-    } //resolvePack
+    }
 
     public static function resolveDependencies(project:Project, moduleName:String):Array<String> {
 
@@ -100,12 +100,12 @@ class Module {
         if (uses == null) return [];
         return uses;
 
-    } //resolveDependencies
+    }
 
     public static function resolveDependants(project:Project, moduleName:String):Array<String> {
 
         return [];
 
-    } //resolveDependants
+    }
 
-} //Module
+}

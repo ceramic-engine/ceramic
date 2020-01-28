@@ -18,7 +18,7 @@ class NdkStack extends tools.Task {
 
         return "Filter and reformat android logcat output to print better stack traces.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -148,6 +148,6 @@ cat $filePath | $ndkStackPath -sym $symbolsPath';
 
         });
 
-    } //run
+    }
 
-} //NdkStack
+}

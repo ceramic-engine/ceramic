@@ -678,7 +678,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
         return this == Color.NONE ? 'NONE' : toHexString();
 
-    } //toString
+    }
 
 #if hsluv
 

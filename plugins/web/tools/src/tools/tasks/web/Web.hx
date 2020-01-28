@@ -21,7 +21,7 @@ class Web extends tools.Task {
 
         return "Generate or update Web/HTML5 project to run or debug it";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -134,6 +134,6 @@ class Web extends tools.Task {
 
         });
 
-    } //run
+    }
 
-} //Web
+}

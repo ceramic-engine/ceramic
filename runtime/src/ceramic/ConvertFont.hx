@@ -22,12 +22,12 @@ class ConvertFont implements ConvertField<String,BitmapFont> {
             done(null);
         }
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:BitmapFont):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 
-    } //fieldToBasic
+    }
 
-} //ConvertFont
+}

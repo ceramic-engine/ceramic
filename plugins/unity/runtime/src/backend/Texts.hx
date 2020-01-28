@@ -39,6 +39,6 @@ class Texts implements spec.Texts {
 
         done(text);
 
-    } //load
+    }
 
 } //Textures

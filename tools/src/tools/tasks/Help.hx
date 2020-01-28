@@ -14,7 +14,7 @@ class Help extends tools.Task {
 
         return "Display help/manual.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -124,6 +124,6 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
 
         print(lines.join("\n") + "\n");
 
-    } //run
+    }
 
-} //Help
+}

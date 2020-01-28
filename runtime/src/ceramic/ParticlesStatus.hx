@@ -12,4 +12,4 @@ enum ParticlesStatus {
     /** Not emitting particles, but previously emitted particles are still spreading */
     SPREADING;
 
-} //ParticlesStatus
+}

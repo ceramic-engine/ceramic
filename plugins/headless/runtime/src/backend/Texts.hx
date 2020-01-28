@@ -48,6 +48,6 @@ class Texts implements spec.Texts {
 
         #end
 
-    } //load
+    }
 
 } //Textures

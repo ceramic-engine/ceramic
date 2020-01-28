@@ -29,7 +29,7 @@ class Setup extends tools.Task {
         this.variant = variant;
         this.continueOnFail = continueOnFail;
 
-    } //new
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -310,7 +310,7 @@ ${haxeflagsHxml.join('\n')}
         // Run initial project setup if needed
         runInitialProjectSetupIfNeeded(cwd, args);
 
-    } //run
+    }
 
     function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>):Void {
 
@@ -322,7 +322,7 @@ ${haxeflagsHxml.join('\n')}
         runCeramic(cwd, ['luxe', 'libs', 'web']);
         runCeramic(cwd, ['luxe', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml']);
 
-    } //runInitialProjectSetupIfNeeded
+    }
 
     function checkFrameworkSetup(forceSetup:Bool = false):Void {
         
@@ -370,6 +370,6 @@ ${haxeflagsHxml.join('\n')}
             fail('Failed to install luxe or some of its dependency. Check log.');
         }
 
-    } //checkFrameworkSetup
+    }
 
-} //Setup
+}

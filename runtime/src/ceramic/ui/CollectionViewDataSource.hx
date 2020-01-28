@@ -17,4 +17,4 @@ interface CollectionViewDataSource {
         it can be recycled as the new item to avoid creating new instances. */
     function collectionViewItemAtIndex(collectionView:CollectionView, itemIndex:Int, reusableView:View):View;
 
-} //CollectionViewDataSource
+}

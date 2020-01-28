@@ -73,7 +73,7 @@ class Transform implements Events {
         changed = false;
         changedDirty = false;
 
-    } //new
+    }
 
     #if !debug inline #end public function computeChanged() {
 
@@ -90,13 +90,13 @@ class Transform implements Events {
             changedDirty = false;
         }
 
-    } //computeChanged
+    }
 
     inline function didEmitChange():Void {
 
         cleanChangedState();
 
-    } //didEmitChange
+    }
 
     inline public function cleanChangedState():Void {
 
@@ -109,13 +109,13 @@ class Transform implements Events {
 
         changed = false;
 
-    } //cleanChangedState
+    }
 
     inline public function clone():Transform {
 
         return new Transform(a, b, c, d, tx, ty);
 
-    } //clone
+    }
 
     inline public function concat(m:Transform):Void {
 
@@ -134,7 +134,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //concat
+    }
 
     inline public function decompose(?output:DecomposedTransform):DecomposedTransform {
 
@@ -169,13 +169,13 @@ class Transform implements Events {
 
         return output;
 
-    } //decompose
+    }
 
     inline public function setFromDecomposed(decomposed:DecomposedTransform):Void {
 
         setFromValues(decomposed.x, decomposed.y, decomposed.pivotX, decomposed.pivotY, decomposed.scaleX, decomposed.scaleY, decomposed.rotation, decomposed.skewX, decomposed.skewY);
 
-    } //setFromDecomposed
+    }
 
     inline public function setFromValues(x:Float = 0, y:Float = 0, scaleX:Float = 1, scaleY:Float = 1, rotation:Float = 0, skewX:Float = 0, skewY:Float = 0, pivotX:Float = 0, pivotY:Float = 0):Void {
 
@@ -191,7 +191,7 @@ class Transform implements Events {
             y - pivotY * scaleY
         );
 
-    } //setFromValues
+    }
 
     inline public function setFromInterpolated(transform1:Transform, transform2:Transform, ratio:Float):Void {
 
@@ -216,25 +216,25 @@ class Transform implements Events {
             setFromDecomposed(_decomposed1);
         }
 
-    } //setFromInterpolated
+    }
 
     inline public function deltaTransformX(x:Float, y:Float):Float {
 
         return x * a + y * c;
 
-    } //deltaTransformX
+    }
 
     inline public function deltaTransformY(x:Float, y:Float):Float {
 
         return x * b + y * d;
 
-    } //deltaTransformY
+    }
 
     inline public function equals(transform:Transform):Bool {
 
         return (transform != null && tx == transform.tx && ty == transform.ty && a == transform.a && b == transform.b && c == transform.c && d == transform.d);
 
-    } //equals
+    }
 
     inline public function identity():Void {
 
@@ -247,7 +247,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //identity
+    }
 
     inline public function invert():Void {
 
@@ -276,7 +276,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //invert
+    }
 
     /** Rotate by angle (in radians) */
     inline public function rotate(angle:Float):Void {
@@ -298,7 +298,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //rotate
+    }
 
     inline public function scale(x:Float, y:Float):Void {
 
@@ -313,7 +313,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //scale
+    }
 
     inline public function translate(x:Float, y:Float):Void {
 
@@ -322,7 +322,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //translate
+    }
 
     inline public function skew(skewX:Float, skewY:Float):Void {
 
@@ -347,7 +347,7 @@ class Transform implements Events {
 
         concat(_tmp);
 
-    } //translate
+    }
 
     inline public function setRotation(angle:Float, scale:Float = 1):Void {
 
@@ -358,7 +358,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //setRotation
+    }
 
     inline public function setTo(a:Float, b:Float, c:Float, d:Float, tx:Float, ty:Float):Void {
 
@@ -371,7 +371,7 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //setTo
+    }
 
     inline public function setToTransform(transform:Transform):Void {
 
@@ -384,27 +384,27 @@ class Transform implements Events {
 
         changedDirty = true;
 
-    } //setTo
+    }
 
     public function toString():String {
 
         decompose(_decomposed1);
         return "(a=" + a + ", b=" + b + ", c=" + c + ", d=" + d + ", tx=" + tx + ", ty=" + ty + " " + _decomposed1 + ")";
 
-    } //toString
+    }
 
 
     inline public function transformX(x:Float, y:Float):Float {
 
         return x * a + y * c + tx;
 
-    } //transformX
+    }
 
 
     inline public function transformY(x:Float, y:Float):Float {
 
         return x * b + y * d + ty;
 
-    } //transformY
+    }
 
-} //Transform
+}

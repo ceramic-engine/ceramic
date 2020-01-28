@@ -61,7 +61,7 @@ class Asset extends Entity implements Observable {
 
         computePath();
 
-    } //name
+    }
 
     public function load():Void {
 
@@ -69,7 +69,7 @@ class Asset extends Entity implements Observable {
         log.error('This asset as no load implementation.');
         emitComplete(false);
 
-    } //load
+    }
 
     override function destroy():Void {
 
@@ -85,7 +85,7 @@ class Asset extends Entity implements Observable {
             assets = null;
         }
 
-    } //destroy
+    }
 
     public function computePath(?extensions:Array<String>, ?dir:Bool, ?runtimeAssets:RuntimeAssets):Void {
 
@@ -196,7 +196,7 @@ class Asset extends Entity implements Observable {
             }
         }
 
-    } //computePath
+    }
 
     function set_path(path:String):String {
 
@@ -215,7 +215,7 @@ class Asset extends Entity implements Observable {
 
         return path;
 
-    } //set_path
+    }
 
     function set_name(name:String):String {
 
@@ -226,7 +226,7 @@ class Asset extends Entity implements Observable {
 
         return name;
 
-    } //set_name
+    }
 
     function set_runtimeAssets(runtimeAssets:RuntimeAssets):RuntimeAssets {
 
@@ -237,7 +237,7 @@ class Asset extends Entity implements Observable {
 
         return runtimeAssets;
 
-    } //set_runtimeAssets
+    }
 
     function set_handleTexturesDensityChange(value:Bool):Bool {
 
@@ -253,13 +253,13 @@ class Asset extends Entity implements Observable {
 
         return value;
 
-    } //set_handleTexturesDensityChange
+    }
 
     function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         // Override
 
-    } //texturesDensityDidChange
+    }
 
 /// Print
 
@@ -273,7 +273,7 @@ class Asset extends Entity implements Observable {
             return '$className($name)';
         }
 
-    } //toString
+    }
 
 /// Complete event hook
 
@@ -283,7 +283,7 @@ class Asset extends Entity implements Observable {
             owner.emitUpdate(this);
         }
 
-    } //willEmitComplete
+    }
 
 /// Reference counting
 
@@ -291,13 +291,13 @@ class Asset extends Entity implements Observable {
 
         refCount++;
 
-    } //retain
+    }
 
     public function release():Void {
 
         if (refCount == 0) log.warning('Called release() on asset ' + this + ' when its refCount is already 0');
         else refCount--;
 
-    } //release
+    }
 
-} //Asset
+}

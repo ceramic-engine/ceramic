@@ -16,7 +16,7 @@ class ExportSpine extends tools.Task {
 
         return "Export spine animations from a Spine project to usable assets.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -320,7 +320,7 @@ class ExportSpine extends tools.Task {
         // Cleanup
         Files.deleteRecursive(tmpPath);
 
-    } //run
+    }
 
     function convertName(inName:String) {
 
@@ -338,7 +338,7 @@ class ExportSpine extends tools.Task {
             return inName;
         }
 
-    } //convertName
+    }
 
     function convertAtlas(inAtlas:String) {
 
@@ -353,9 +353,9 @@ class ExportSpine extends tools.Task {
 
         return newLines.join("\n");
 
-    } //convertAtlas
+    }
 
     static var RE_AT_NX = ~/@([0-9]+(?:\.[0-9]+)?)x([0-9]+)?$/;
     static var RE_PNG = ~/\.(png|PNG)$/;
 
-} //ExportSpine
+}

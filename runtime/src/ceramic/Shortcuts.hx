@@ -33,4 +33,4 @@ class Shortcuts {
     public static var log(get,never):Logger;
     #if !haxe_server inline #end static function get_log():Logger { return App.app.logger; }
 
-} //Shortcuts
+}

@@ -32,7 +32,7 @@ class Clipboard implements spec.Clipboard {
         #end
         */
 
-    } //new
+    }
 
     public function getText():String {
 
@@ -44,7 +44,7 @@ class Clipboard implements spec.Clipboard {
 
         return clipboardText;
 
-    } //getText
+    }
 
     public function setText(text:String):Void {
 
@@ -54,6 +54,6 @@ class Clipboard implements spec.Clipboard {
         SDL.setClipboardText(text);
         #end
 
-    } //setText
+    }
 
-} //Clipboard
+}

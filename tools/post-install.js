@@ -50,6 +50,6 @@ function postInstall() {
     var npm = process.platform == 'win32' ? 'npm.cmd' : '../tools/npm';
     spawnSync(npm, ['install'], { stdio: "inherit", cwd: __dirname + '/../runner' });
 
-} //installDeps
+}
 
 postInstall();

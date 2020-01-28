@@ -43,6 +43,6 @@ abstract ImmutableArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
         return Extensions.unsafeGet(this, index);
 
-    } //unsafeGet
+    }
 
-} //ImmutableArray
+}

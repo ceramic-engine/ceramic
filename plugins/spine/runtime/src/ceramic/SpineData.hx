@@ -39,7 +39,7 @@ class SpineData extends Entity {
             json
         );
 
-    } //new
+    }
 
     /** Find a slot index from its name */
     public function findSlotIndex(slotName:String):Int {
@@ -60,7 +60,7 @@ class SpineData extends Entity {
             return -1;
         }
 
-    } //findSlotIndex
+    }
 
     override public function destroy():Void {
 
@@ -71,6 +71,6 @@ class SpineData extends Entity {
         atlas.dispose();
         atlas = null;
 
-    } //destroy
+    }
 
-} //SpineData
+}

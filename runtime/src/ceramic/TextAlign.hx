@@ -8,4 +8,4 @@ enum TextAlign {
 
     CENTER;
 
-} //TextAlign
+}

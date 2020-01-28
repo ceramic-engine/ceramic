@@ -6,4 +6,4 @@ package ceramic;
 
     var LINE = 1;
 
-} //MeshPrimitiveType
+}

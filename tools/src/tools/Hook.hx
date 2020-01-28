@@ -8,4 +8,4 @@ typedef Hook = {
 
     public var args:Array<String>;
 
-} //Hook
+}

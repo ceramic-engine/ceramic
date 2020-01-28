@@ -14,7 +14,7 @@ class ShaderAsset extends Asset {
 
         super('shader', name, options #if ceramic_debug_entity_allocs , pos #end);
 
-    } //name
+    }
 
     override public function load() {
 
@@ -115,7 +115,7 @@ class ShaderAsset extends Asset {
             });
         });
 
-    } //load
+    }
 
     override function destroy():Void {
 
@@ -126,7 +126,7 @@ class ShaderAsset extends Asset {
             shader = null;
         }
 
-    } //destroy
+    }
 
 /// Print
 
@@ -145,6 +145,6 @@ class ShaderAsset extends Asset {
             return '$className($name)';
         }
 
-    } //toString
+    }
 
-} //ShaderAsset
+}

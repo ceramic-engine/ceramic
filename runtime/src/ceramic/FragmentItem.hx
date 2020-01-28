@@ -20,4 +20,4 @@ typedef FragmentItem = {
     /** Arbitrary data hold by this item. */
     @:optional var data:Dynamic<Dynamic>;
 
-} //FragmentItem
+}

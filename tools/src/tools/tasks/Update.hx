@@ -10,12 +10,12 @@ class Update extends tools.Task {
 
         return "Update or install " + context.backend.name + " framework and dependencies.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
         context.backend.runUpdate(cwd, args);
 
-    } //run
+    }
 
 } //Update

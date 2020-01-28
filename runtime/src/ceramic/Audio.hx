@@ -13,7 +13,7 @@ class Audio extends Entity {
         mixers = new IntMap();
         initMixerIfNeeded(0);
 
-    } //new
+    }
 
     @:allow(ceramic.Sound)
     inline function initMixerIfNeeded(index:Int):Void {
@@ -22,12 +22,12 @@ class Audio extends Entity {
             mixers.set(index, new AudioMixer(index));
         }
 
-    } //initMixerIfNeeded
+    }
 
     public function mixer(index:Int):AudioMixer {
 
         return mixers.getInline(index);
 
-    } //mixer
+    }
 
-} //Audio
+}

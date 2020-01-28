@@ -6,4 +6,4 @@ extern class TreeKill {
         js.Node.require('tree-kill')(pid);
     }
 
-} //TreeKill
+}

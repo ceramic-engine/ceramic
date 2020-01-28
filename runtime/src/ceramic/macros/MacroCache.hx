@@ -17,7 +17,7 @@ typedef MacroCacheEntry = {
 
     var value:Dynamic;
 
-} //MacroCacheEntry
+}
 
 class MacroCache {
 
@@ -49,7 +49,7 @@ class MacroCache {
             }
         });
 
-    } //init
+    }
 
     public static function get(key:String):Dynamic {
 
@@ -59,14 +59,14 @@ class MacroCache {
 
         return entries != null ? entries.get(key) : null;
 
-    } //get
+    }
 
     public static function set(key:String, value:Dynamic):Void {
 
         if (entries == null) return;
         entries.set(key, value);
 
-    } //set
+    }
 
 /// Internal
 
@@ -112,8 +112,8 @@ class MacroCache {
             entries = new Map();
         }
 
-    } //loadEntries
+    }
 
-} //MacroCache
+}
 
 #end

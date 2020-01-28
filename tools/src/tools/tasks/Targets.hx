@@ -8,7 +8,7 @@ class Targets extends tools.Task {
 
         return "List targets available with " + context.backend.name + " backend.";
 
-    } //info
+    }
 
     override function run(cwd:String, args:Array<String>):Void {
 
@@ -25,6 +25,6 @@ class Targets extends tools.Task {
 
         }
 
-    } //run
+    }
 
-} //Targets
+}

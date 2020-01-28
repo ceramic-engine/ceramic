@@ -43,6 +43,6 @@ class Errors {
         if (!hasCustomHandler) Sys.exit(1);
 #end
 
-    } //handleUncaughtError
+    }
 
-} //Errors
+}

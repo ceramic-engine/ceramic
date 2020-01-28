@@ -23,7 +23,7 @@ class Scripts {
             run(script);
         }
 
-    } //runFromArgs
+    }
 
     public static function run(scriptName:String):Void {
 
@@ -56,6 +56,6 @@ class Scripts {
             Sys.exit(-1);
         }
 
-    } //run
+    }
 
-} //Scripts
+}

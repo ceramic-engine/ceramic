@@ -38,7 +38,7 @@ class ImageView extends View implements Observable {
         autorun(updateImage);
         autorun(updateImageScale);
 
-    } //new
+    }
 
     function updateImageScale() {
 
@@ -53,7 +53,7 @@ class ImageView extends View implements Observable {
 
         imageQuad.scale(scale);
 
-    } //updateImageScale
+    }
 
     function updateImage() {
 
@@ -92,7 +92,7 @@ class ImageView extends View implements Observable {
 
         Autorun.reobserve();
 
-    } //updateImage
+    }
 
     public function setImageTexture(texture:Texture):Void {
 
@@ -106,7 +106,7 @@ class ImageView extends View implements Observable {
         imageQuad.texture = texture;
         layoutDirty = true;
 
-    } //setImageTexture
+    }
 
     override function destroy() {
 
@@ -118,7 +118,7 @@ class ImageView extends View implements Observable {
         }
         loadedTexture = null;
 
-    } //destroy
+    }
 
 /// Layout
 
@@ -139,7 +139,7 @@ class ImageView extends View implements Observable {
 
         updateImageScale();
 
-    } //computeSize
+    }
 
     override function layout() {
 
@@ -187,6 +187,6 @@ class ImageView extends View implements Observable {
             }
         }
 
-    } //layout
+    }
 
-} //ImageView
+}

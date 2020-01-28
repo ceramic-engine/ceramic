@@ -33,7 +33,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
         ceramic.App.app.onUpdate(this, tick);
 
-    } //new
+    }
 
     public function canWatch():Bool {
 
@@ -54,7 +54,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return true;
         #end
 
-    } //canWatch
+    }
 
     public function watch(path:String, onUpdate:String->Void):Void->Void {
 
@@ -83,13 +83,13 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
         return stopWatching;
 
-    } //watch
+    }
 
     override public function destroy() {
 
         ceramic.App.app.offUpdate(tick);
 
-    } //destroy
+    }
 
 /// Internal
 
@@ -135,7 +135,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
             #end
         }
 
-    } //tick
+    }
 
     function isFile(path:String):Bool {
 
@@ -153,7 +153,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return false;
         #end
 
-    } //isFile
+    }
 
     function lastModified(path:String):Float {
 
@@ -175,7 +175,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return -1;
         #end
 
-    } //lastModified
+    }
 
     function getContent(path:String):String {
 
@@ -193,9 +193,9 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return null;
         #end
 
-    } //getContent
+    }
 
-} //FileWatcher
+}
 
 @:allow(ceramic.FileWatcher)
 private class WatchedFile {
@@ -208,4 +208,4 @@ private class WatchedFile {
 
     public function new() {}
 
-} //WatchedFile
+}

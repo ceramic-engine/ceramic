@@ -20,7 +20,7 @@ class Tools {
         var module:Dynamic = js.Node.module;
         module.exports = runInFiber;
 
-    } //main
+    }
 
     static function runInFiber(cwd:String, args:Array<String>, ceramicPath:String) {
 
@@ -30,7 +30,7 @@ class Tools {
             run(cwd, args, ceramicPath);
         }).run();
 
-    } //runInFiber
+    }
 
 /// Run
 
@@ -259,6 +259,6 @@ class Tools {
             }
         }
         
-    } //run
+    }
 
-} //Tools
+}

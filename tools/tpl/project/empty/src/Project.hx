@@ -20,7 +20,7 @@ class Project extends Entity {
 
         app.onceReady(this, ready);
 
-    } //new
+    }
 
     function ready() {
 
@@ -52,6 +52,6 @@ class Project extends Entity {
 
         });
 
-    } //ready
+    }
 
 }

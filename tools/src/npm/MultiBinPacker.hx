@@ -11,7 +11,7 @@ extern class MultiBinPacker<T> {
 
     var bins:Array<MultiBinPackerBin<T>>;
 
-} //MultiBinPacker
+}
 
 extern class MultiBinPackerBin<T> {
 
@@ -21,7 +21,7 @@ extern class MultiBinPackerBin<T> {
 
     var rects:Array<MultiBinPackerBinRect<T>>;
 
-} //MultiBinPackerBin
+}
 
 extern class MultiBinPackerBinRect<T> {
 
@@ -35,4 +35,4 @@ extern class MultiBinPackerBinRect<T> {
 
     var data:T;
 
-} //MultiBinPackerBinRect
+}

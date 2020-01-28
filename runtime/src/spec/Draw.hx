@@ -12,4 +12,4 @@ interface Draw {
 
     function transformForRenderTarget(matrix:ceramic.Transform, renderTarget:ceramic.RenderTexture):Void;
 
-} //Draw
+}

@@ -6,4 +6,4 @@ abstract TextureId(phoenix.TextureID) from phoenix.TextureID to phoenix.TextureI
 
     #if !debug inline #end public static var DEFAULT:TextureId = (#if snow_web null #else 0 #end : phoenix.TextureID);
 
-} //TextureId
+}

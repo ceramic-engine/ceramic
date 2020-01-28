@@ -14,7 +14,7 @@ class ToolsPlugin {
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
-    } //main
+    }
 
 /// Tools
 
@@ -25,7 +25,7 @@ class ToolsPlugin {
         // Use same context as parent
         Helpers.context = context;
 
-    } //init
+    }
 
     public function extendProject(project:Project):Void {
 
@@ -47,6 +47,6 @@ class ToolsPlugin {
             }
         }
 
-    } //extendProject
+    }
 
-} //ToolsPlugin
+}

@@ -30,7 +30,7 @@ class IO implements spec.IO {
         log.info('Initialize sqlite (path: $dbPath)');
         keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
 
-    } //initKeyValue
+    }
 
     public function saveString(key:String, str:String):Bool {
 
@@ -41,7 +41,7 @@ class IO implements spec.IO {
         var _key = Md5.encode('data ~ ' + key);
         return keyValue.set(_key, str);
 
-    } //saveString
+    }
 
     public function appendString(key:String, str:String):Bool {
 
@@ -52,7 +52,7 @@ class IO implements spec.IO {
         var _key = Md5.encode('data ~ ' + key);
         return keyValue.append(_key, str);
 
-    } //appendString
+    }
 
     public function readString(key:String):String {
 
@@ -63,7 +63,7 @@ class IO implements spec.IO {
         var _key = Md5.encode('data ~ ' + key);
         return keyValue.get(_key);
 
-    } //readString
+    }
 
 #elseif sys
 
@@ -83,7 +83,7 @@ class IO implements spec.IO {
 
         return true;
 
-    } //saveString
+    }
 
     public function appendString(key:String, str:String):Bool {
 
@@ -102,7 +102,7 @@ class IO implements spec.IO {
 
         return true;
 
-    } //appendString
+    }
 
     public function readString(key:String):String {
 
@@ -125,7 +125,7 @@ class IO implements spec.IO {
         }
         return null;
 
-    } //readString
+    }
 
 #elseif web
 
@@ -147,7 +147,7 @@ class IO implements spec.IO {
 
         return true;
 
-    } //saveString
+    }
 
     public function appendString(key:String, str:String):Bool {
 
@@ -173,7 +173,7 @@ class IO implements spec.IO {
 
         return true;
 
-    } //appendString
+    }
 
     public function readString(key:String):String {
 
@@ -192,7 +192,7 @@ class IO implements spec.IO {
             return null;
         }
 
-    } //readString
+    }
 
 #else
 
@@ -205,7 +205,7 @@ class IO implements spec.IO {
 
         return Luxe.io.string_save(key, str, 0);
 
-    } //saveString
+    }
 
     public function appendString(key:String, str:String):Bool {
 
@@ -216,14 +216,14 @@ class IO implements spec.IO {
         
         return Luxe.io.string_save(key, str0 + str, 0);
 
-    } //appendString
+    }
 
     public function readString(key:String):String {
 
         return Luxe.io.string_load(key, 0);
 
-    } //readString
+    }
 
 #end
 
-} //IO
+}

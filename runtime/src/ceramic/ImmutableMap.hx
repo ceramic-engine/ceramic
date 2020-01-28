@@ -9,4 +9,4 @@ abstract ImmutableMap<K,V>(Map<K,V>) from Map<K,V> to Map<K,V> {
     public var mutable(get,never):Map<K,V>;
     inline private function get_mutable():Map<K,V> return this;
 
-} //ImmutableMap
+}

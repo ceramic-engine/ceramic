@@ -21,12 +21,12 @@ class ConvertSpineData implements ConvertField<String,SpineData> {
             done(null);
         }
 
-    } //basicToField
+    }
 
     public function fieldToBasic(value:SpineData):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 
-    } //fieldToBasic
+    }
 
-} //ConvertSpineData
+}

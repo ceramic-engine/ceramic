@@ -79,6 +79,6 @@ class MacApp {
             }
         }
 
-    } //createMacAppIfNeeded
+    }
 
-} //MacApp
+}

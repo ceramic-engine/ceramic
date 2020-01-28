@@ -129,7 +129,7 @@ class Textures implements spec.Textures {
             snow.api.Promise.Promises.step();
         });
 
-    } //load
+    }
 
     var nextRenderIndex:Int = 0;
 
@@ -146,7 +146,7 @@ class Textures implements spec.Textures {
 
         return texture;
 
-    } //createTexture
+    }
 
     inline public function createRenderTarget(width:Int, height:Int):Texture {
 
@@ -163,7 +163,7 @@ class Textures implements spec.Textures {
 
         return renderTexture;
 
-    } //createRenderTarget
+    }
 
     public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
 
@@ -178,13 +178,13 @@ class Textures implements spec.Textures {
 
         return result;
 
-    } //fetchTexturePixels
+    }
 
     public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
         (texture:phoenix.Texture).submit(pixels);
 
-    } //submitTexturePixels
+    }
 
     public function destroyTexture(texture:Texture):Void {
 
@@ -198,31 +198,31 @@ class Textures implements spec.Textures {
             (texture:phoenix.Texture).destroy(true);
         }
 
-    } //destroy
+    }
 
     inline public function getTextureWidth(texture:Texture):Int {
 
         return (texture:phoenix.Texture).width;
 
-    } //getWidth
+    }
 
     inline public function getTextureHeight(texture:Texture):Int {
 
         return (texture:phoenix.Texture).height;
 
-    } //getHeight
+    }
 
     inline public function getTexturePixels(texture:Texture):Null<UInt8Array> {
 
         return null;
 
-    } //getTexturePixels
+    }
 
     inline public function getTextureIndex(texture:Texture):Int {
 
         return (texture:phoenix.Texture).index;
 
-    } //getTextureIndex
+    }
 
     inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
@@ -235,7 +235,7 @@ class Textures implements spec.Textures {
                 (texture:phoenix.Texture).filter_mag = nearest;
         }
 
-    } //setTextureFilter
+    }
 
     static var _maxTexturesByBatch:Int = -1;
 
@@ -248,7 +248,7 @@ class Textures implements spec.Textures {
     // in our generated c++ file
     @:noCompletion @:keep function importGlHeaders():Void {
         GL.glClear(0);
-    } //importGlHeaders
+    }
 
     inline static function computeMaxTextureSizeIfNeeded() {
 
@@ -259,7 +259,7 @@ class Textures implements spec.Textures {
             _maxTextureHeight = maxSize[0];
         }
 
-    } //computeMaxTextureSizeIfNeeded
+    }
 
     #end
 
@@ -272,7 +272,7 @@ class Textures implements spec.Textures {
         return 2048;
         #end
 
-    } //maxTextureWidth
+    }
 
     public function maxTextureHeight():Int {
 
@@ -283,7 +283,7 @@ class Textures implements spec.Textures {
         return 2048;
         #end
 
-    } //maxTextureHeight
+    }
 
     inline static function computeMaxTexturesByBatchIfNeeded() {
 
@@ -300,7 +300,7 @@ class Textures implements spec.Textures {
             #end
         }
 
-    } //computeMaxTexturesByBatchIfNeeded
+    }
 
     /** If this returns a value above 1, that means this backend supports multi-texture batching. */
     public function maxTexturesByBatch():Int {
@@ -308,7 +308,7 @@ class Textures implements spec.Textures {
         computeMaxTexturesByBatchIfNeeded();
         return _maxTexturesByBatch;
 
-    } //maxTexturesByBatch
+    }
 
 /// Internal
 

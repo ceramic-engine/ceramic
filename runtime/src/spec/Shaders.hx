@@ -32,4 +32,4 @@ interface Shaders {
 
     function customFloatAttributesSize(shader:Shader):Int;
 
-} //Shaders
+}

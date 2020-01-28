@@ -133,4 +133,4 @@ class Hxml {
     /** Match any single/double quoted string */
     static var RE_BEGINS_WITH_STRING:EReg = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
 
-} //Hxml
+}

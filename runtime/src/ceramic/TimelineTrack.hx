@@ -53,7 +53,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
 
         super();
 
-    } //new
+    }
 
     /** Seek the given time (in seconds) in the track.
         Will take care of clamping `time` or looping it depending on `duration` and `loop` properties. */
@@ -61,7 +61,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
 
         inlineSeek(targetTime);
 
-    } //seek
+    }
 
     @:allow(ceramic.Timeline)
     inline function inlineSeek(targetTime:Float):Void {
@@ -100,7 +100,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
             }
         }
 
-    } //inlineSeek
+    }
 
     /** Add a keyframe to this track */
     public function add(keyframe:Keyframe):Void {
@@ -138,7 +138,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
             fitDuration();
         }
 
-    } //add
+    }
 
     /** Update `duration` property to make it fit
         the time of the last keyframe on this track. */
@@ -151,14 +151,14 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
             duration = 0;
         }
 
-    } //fitDuration
+    }
 
     /** Apply changes that this track is responsible of. Usually called after `update(delta)` or `seek(time)`. */
     public function apply():Void {
 
         // Override in subclasses
 
-    } //apply
+    }
 
     /** Find the keyframe right before or equal to given `time` */
     public function findKeyframeBefore(time:Float):Null<Keyframe> {
@@ -181,7 +181,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
 
         return result;
 
-    } //findKeyframeBefore
+    }
 
     /** Find the keyframe right after given `time` */
     public function findKeyframeAfter(time:Float):Null<Keyframe> {
@@ -204,7 +204,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
 
         return result;
 
-    } //findKeyframeAfter
+    }
 
     /** Internal. Compute `before` keyframe, if any matching. */
     inline function computeKeyframeBefore():Void {
@@ -252,7 +252,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
         keyframeBeforeIndex = index;
         before = result;
 
-    } //computeKeyframeBefore
+    }
 
     /** Internal. Compute `after` keyframe, if any matching. */
     inline function computeKeyframeAfter():Void {
@@ -309,6 +309,6 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
         keyframeAfterIndex = index;
         after = result;
 
-    } //computeKeyframeAfter
+    }
 
-} //TimelineTrack
+}
