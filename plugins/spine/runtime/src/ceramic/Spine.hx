@@ -147,7 +147,7 @@ class Spine extends Visual {
     var runScheduledRenderDyn:Void->Void = null;
 
     /** Internal flag to know if render became dirty because of a skin change or a new animation was set. */
-    var renderDirtyAgressive(default,set):Bool = false;
+    public var renderDirtyAgressive(default,set):Bool = false;
     function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
         if (renderDirtyAgressive && parent != null && Std.is(parent, Spine)) {
             var parentSpine:Spine = cast parent;
