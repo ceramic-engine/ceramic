@@ -26,6 +26,9 @@ import backend.Backend;
 
 using ceramic.Extensions;
 
+/**
+ * `App` class is the starting point of any ceramic app.
+ */
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
 #end
@@ -39,32 +42,60 @@ class App extends Entity {
 
 /// Shared instances
 
+    /**
+     * Shared `App` instance singleton.
+     */
     public static var app(get,null):App;
     static inline function get_app():App { return app; }
 
 /// Events
 
-    /** Ready event is triggered when the app is ready and
-        the game logic can be started. */
+    /**
+     * @event ready
+     * Ready event is triggered when the app is ready
+     * and the game logic can be started.
+     */
     @event function ready();
 
-    /** Update event is triggered as many times as there are frames per seconds.
-        It is in sync with screen FPS but used for everything that needs
-        to get updated depending on time (ceramic.Timer relies on it).
-        Use this event to update your contents before they get drawn again. */
+    /**
+     * @event update
+     * Update event is triggered as many times as there are frames per seconds.
+     * It is in sync with screen FPS but used for everything that needs
+     * to get updated depending on time (ceramic.Timer relies on it).
+     * Use this event to update your contents before they get drawn again.
+     * @param delta The elapsed delta time since last frame
+     */
     @event function update(delta:Float);
 
-    /** Pre-update event is triggered right before update event and
-        can be used when you want to run garantee your code
-        will be run before regular update event.*/
+    /**
+     * @event preUpdate
+     * Pre-update event is triggered right before update event and
+     * can be used when you want to run garantee your code
+     * will be run before regular update event.
+     * @param delta The elapsed delta time since last frame
+     */
     @event function preUpdate(delta:Float);
 
-    /** Post-update event is triggered right after update event and
-        can be used when you want to run garantee your code
-        will be run after regular update event.*/
+    /**
+     * @event postUpdate
+     * Post-update event is triggered right after update event and
+     * can be used when you want to run garantee your code
+     * will be run after regular update event.
+     * @param delta The elapsed delta time since last frame
+     */
     @event function postUpdate(delta:Float);
 
+    /**
+     * @event keyDown
+     * Triggered when a key from the keyboard is being pressed.
+     * @param key The key being pressed
+     */
     @event function keyDown(key:Key);
+    /**
+     * @event keyUp
+     * Triggered when a key from the keyboard is being released.
+     * @param key The key being released
+     */
     @event function keyUp(key:Key);
 
     @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
