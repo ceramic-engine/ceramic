@@ -53,40 +53,42 @@ class ToolsPlugin {
 
     }
 
-    public function extendIdeInfo(tasks:Array<IdeInfoTaskItem>, variants:Array<IdeInfoVariantItem>) {
+    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>) {
 
         var backendName = 'headless';
 
-        for (target in backend.getBuildTargets()) {
-
-            for (config in target.configs) {
-
-                var name:String = null;
-                var kind:String = null;
-
-                switch (config) {
-                    case Build(name_):
-                        name = name_;
-                        kind = 'build';
-                    case Run(name_):
-                        name = name_;
-                        kind = 'run';
-                    case Clean(name_):
-                }
-
-                if (kind == null) continue;
-
-                tasks.push({
-                    name: '$backendName / $name',
-                    groups: ['build', backendName],
-                    command: 'ceramic',
-                    args: [backendName, kind, target.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
-                    select: {
-                        command: 'ceramic',
-                        args: [backendName, "hxml", target.name, "--setup", "--output", "completion.hxml"]
+        if (context.project != null && context.project.app != null) {
+            for (buildTarget in backend.getBuildTargets()) {
+    
+                for (config in buildTarget.configs) {
+    
+                    var name:String = null;
+                    var kind:String = null;
+    
+                    switch (config) {
+                        case Build(name_):
+                            name = name_;
+                            kind = 'build';
+                        case Run(name_):
+                            name = name_;
+                            kind = 'run';
+                        case Clean(name_):
                     }
-                });
-
+    
+                    if (kind == null) continue;
+    
+                    targets.push({
+                        name: '$backendName / $name',
+                        groups: ['build', backendName],
+                        command: 'ceramic',
+                        args: [backendName, kind, buildTarget.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
+                        select: {
+                            command: 'ceramic',
+                            args: [backendName, "hxml", buildTarget.name, "--setup", "--output", "completion.hxml"]
+                        }
+                    });
+    
+                }
             }
         }
 

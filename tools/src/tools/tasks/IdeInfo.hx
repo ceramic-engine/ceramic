@@ -17,77 +17,80 @@ class IdeInfo extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var project = ensureCeramicProject(cwd, args, App);
+        var ide = loadIdeInfo(cwd, args);
 
-        var tasks:Array<IdeInfoTaskItem> = [];
+        var targets:Array<IdeInfoTargetItem> = [];
         var variants:Array<IdeInfoVariantItem> = [];
 
-        // Build config
-        //
-        variants.push({
-            name: 'Debug',
-            args: ['--debug'],
-            group: 'build',
-            role: 'build-preset',
-            select: {
-                args: ['--debug']
-            }
-        });
-        variants.push({
-            name: 'Release',
-            args: [],
-            group: 'build',
-            role: 'build-preset'
-        });
-
-        /*
-        variants.push({
-            name: 'Distribution',
-            args: ['--variant', 'distribution'],
-            group: 'build',
-            role: 'build-preset',
-            select: {
-                args: ['--variant', 'distribution']
-            }
-        });
-        */
-
-        // Build params
-        //
-        variants.push({
-            name: 'No skip',
-            args: ['--no-skip'],
-            group: 'build'
-        });
+        // Add app-related targets
+        if (context.project != null && context.project.app != null) {
+            // Build config
+            //
+            variants.push({
+                name: 'Debug',
+                args: ['--debug'],
+                group: 'build',
+                role: 'build-preset',
+                select: {
+                    args: ['--debug']
+                }
+            });
+            variants.push({
+                name: 'Release',
+                args: [],
+                group: 'build',
+                role: 'build-preset'
+            });
+    
+            /*
+            variants.push({
+                name: 'Distribution',
+                args: ['--variant', 'distribution'],
+                group: 'build',
+                role: 'build-preset',
+                select: {
+                    args: ['--variant', 'distribution']
+                }
+            });
+            */
+    
+            // Build params
+            //
+            variants.push({
+                name: 'No skip',
+                args: ['--no-skip'],
+                group: 'build'
+            });
+        }
 
         // Let plugins extend the list
         for (plugin in context.plugins) {
             if (plugin.extendIdeInfo != null) {
-                plugin.extendIdeInfo(tasks, variants);
+                plugin.extendIdeInfo(targets, variants);
             }
         }
 
         // Let project extend the list
         try {
-            if (project.app.ide != null) {
-                var projectTasks:Array<IdeInfoTaskItem> = project.app.ide.tasks;
-                var projectVariants:Array<IdeInfoVariantItem> = project.app.ide.variants;
+            if (ide != null) {
+                var projectTargets:Array<IdeInfoTargetItem> = ide.targets;
+                var projectVariants:Array<IdeInfoVariantItem> = ide.variants;
 
-                if (projectTasks != null) {
-                    for (item in projectTasks) {
+                if (projectTargets != null) {
+                    for (item in projectTargets) {
                         if (item == null || Std.is(item, Bool) || Std.is(item, Array) || Std.is(item, Int) || Std.is(item, Float)) {
-                            fail('Invalid task item: $item');
+                            fail('Invalid target item: $item');
                         }
                         if (item.name == null || !Std.is(item.name, String) || ('' + item.name).trim() == '') {
-                            fail('Invalid task name in ceramic.yml: ${item.name}');
+                            fail('Invalid target name in ceramic.yml: ${item.name}');
                         }
                         var itemName = ('' + item.name).trim();
                         if (item.command == null || !Std.is(item.name, String) || ('' + item.name).trim() == '') {
-                            fail('Invalid task command in ceramic.yml: ${item.command}');
+                            fail('Invalid target command in ceramic.yml: ${item.command}');
                         }
                         var itemCommand = ('' + item.command).trim();
                         if (item.args != null && !Std.is(item.args, Array)) {
-                            fail('Invalid task args in ceramic.yml: ${item.args}');
+                            fail('Invalid target args in ceramic.yml: ${item.args}');
                         }
                         var itemArgs:Array<String> = [];
                         if (item.args != null) {
@@ -99,7 +102,7 @@ class IdeInfo extends tools.Task {
                             }
                         }
                         if (item.groups != null && !Std.is(item.groups, Array)) {
-                            fail('Invalid task groups in ceramic.yml: ${item.groups}');
+                            fail('Invalid target groups in ceramic.yml: ${item.groups}');
                         }
                         var itemGroups:Array<String> = [];
                         if (item.groups != null) {
@@ -123,14 +126,14 @@ class IdeInfo extends tools.Task {
                                 }
                             }
                         }
-                        var itemSelect:IdeInfoTaskSelectItem = null;
+                        var itemSelect:IdeInfoTargetSelectItem = null;
                         if (item.select != null) {
                             if (Std.is(item.select, Bool) || Std.is(item.select, Array) || Std.is(item.select, Int) || Std.is(item.select, Float)) {
-                                fail('Invalid task item select: ${item.select}');
+                                fail('Invalid target item select: ${item.select}');
                             }
                             var selectCommand = ('' + item.select.command).trim();
                             if (item.select.args != null && !Std.is(item.select.args, Array)) {
-                                fail('Invalid task select args in ceramic.yml: ${item.select.args}');
+                                fail('Invalid target select args in ceramic.yml: ${item.select.args}');
                             }
                             var selectArgs:Array<String> = [];
                             if (item.select.args != null) {
@@ -146,7 +149,7 @@ class IdeInfo extends tools.Task {
                                 args: selectArgs
                             };
                         }
-                        tasks.push({
+                        targets.push({
                             name: itemName,
                             command: itemCommand,
                             args: itemArgs,
@@ -217,12 +220,12 @@ class IdeInfo extends tools.Task {
         }
         catch (e:Dynamic) {
             // Something went wrong
-            fail('Invalid task list in ceramic.yml: $e');
+            fail('Invalid target list in ceramic.yml: $e');
         }
 
         print(Json.stringify({
             ide: {
-                tasks: tasks,
+                targets: targets,
                 variants: variants
             }
         }, null, '    '));

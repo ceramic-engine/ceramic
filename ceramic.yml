@@ -1,0 +1,5 @@
+ide:
+    targets:
+        - name: Generate API docs
+          command: ceramic
+          args: ['docs', 'html']

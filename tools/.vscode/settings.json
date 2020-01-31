@@ -1,6 +1,6 @@
 {
     "window.title": "${activeEditorShort} — Ceramic Tools",
-    "haxe.displayConfigurations": [
+    "haxe.configurations": [
         ["build.hxml"]
     ],
     "search.exclude": {

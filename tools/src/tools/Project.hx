@@ -92,7 +92,7 @@ class Project {
                 if (parsed.plugin != null) {
                     return Plugin([]);
                 } else {
-                    fail('This project is not a ceramic app project.');
+                    return null;
                 }
             } else {
                 return App;

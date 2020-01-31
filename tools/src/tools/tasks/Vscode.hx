@@ -22,7 +22,11 @@ class Vscode extends tools.Task {
 
         var force = extractArgFlag(args, 'force');
         var settingsOnly = extractArgFlag(args, 'settings-only');
-        var vscodeDir = Path.join([cwd, '.vscode']);
+        var vscodeProjectRoot = extractArgValue(args, 'vscode-project-root');
+        var vscodeDir = vscodeProjectRoot != null ? vscodeProjectRoot : Path.join([cwd, '.vscode']);
+        if (!Path.isAbsolute(vscodeDir)) {
+            vscodeDir = Path.join([cwd, vscodeDir]);
+        }
 
         var backends = [];
         while (true) {
@@ -97,7 +101,7 @@ class Vscode extends tools.Task {
         //
         var vscodeSettings = {
             "window.title": "${activeEditorShort} — " + project.app.name,
-            "haxe.displayConfigurations": [
+            "haxe.configurations": [
                 ["completion.hxml"]
             ],
             "search.exclude": {
@@ -108,12 +112,12 @@ class Vscode extends tools.Task {
             }
         };
 
-        // If settings already exist, just change haxe.displayConfigurations
+        // If settings already exist, just change haxe.configurations
         var settingsExist = false;
         if (FileSystem.exists(Path.join([vscodeDir, 'settings.json']))) {
             try {
                 var existingVscodeSettings = Json.parse(File.getContent(Path.join([vscodeDir, 'settings.json'])));
-                Reflect.setField(existingVscodeSettings, "haxe.displayConfigurations", Reflect.field(vscodeSettings, "haxe.displayConfigurations"));
+                Reflect.setField(existingVscodeSettings, "haxe.configurations", Reflect.field(vscodeSettings, "haxe.configurations"));
                 vscodeSettings = existingVscodeSettings;
                 settingsExist = true;
             }
@@ -149,7 +153,7 @@ class Vscode extends tools.Task {
             // Just forcing haxe server to restart and clean compile cache.
             Sync.run(function(done) {
                 js.Node.setTimeout(function() {
-                    Reflect.setField(vscodeSettings, "haxe.displayConfigurations", [["completion.hxml"]]);
+                    Reflect.setField(vscodeSettings, "haxe.configurations", [["completion.hxml"]]);
                     File.saveContent(Path.join([vscodeDir, 'settings.json']), Json.stringify(vscodeSettings, null, '    '));
                     done();
                 }, 250);

@@ -1,6 +1,6 @@
 package tools;
 
-typedef IdeInfoTaskItem = {
+typedef IdeInfoTargetItem = {
 
     var name:String;
 
@@ -11,11 +11,11 @@ typedef IdeInfoTaskItem = {
     /** The groups this task belongs to. */
     @:optional var groups:Array<String>;
 
-    @:optional var select:IdeInfoTaskSelectItem;
+    @:optional var select:IdeInfoTargetSelectItem;
 
 }
 
-typedef IdeInfoTaskSelectItem = {
+typedef IdeInfoTargetSelectItem = {
 
     var command:String;
 

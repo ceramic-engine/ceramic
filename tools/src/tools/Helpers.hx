@@ -801,6 +801,33 @@ class Helpers {
 
     }
 
+    public static function loadIdeInfo(cwd:String, args:Array<String>):Dynamic {
+
+        var ceramicYamlPath = Path.join([cwd, 'ceramic.yml']);
+        if (!FileSystem.exists(ceramicYamlPath)) {
+            fail('Cannot load IDE info because ceramic.yml does not exist ($ceramicYamlPath)');
+        }
+
+        try {
+            var yml = File.getContent(ceramicYamlPath);
+            var data = Yaml.parse(yml);
+            if (data == null) {
+                fail('Invalid IDE data at path: $ceramicYamlPath');
+            }
+            if (data.ide == null) {
+                return {};
+            }
+            else {
+                return data.ide;
+            }
+        }
+        catch (e:Dynamic) {
+            fail('Failed to load yaml data at path: $ceramicYamlPath ; $e');
+            return null;
+        }
+
+    }
+
     public static function ensureCeramicProject(cwd:String, args:Array<String>, kind:ProjectKind):Project {
 
         switch (kind) {

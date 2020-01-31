@@ -19,7 +19,7 @@ typedef ToolsPlugin = {
 
     @:optional function extendVscodeTasksChooser(items:Array<VscodeChooserItem>):Void;
 
-    @:optional function extendIdeInfo(tasks:Array<IdeInfoTaskItem>, variants:Array<IdeInfoVariantItem>):Void;
+    @:optional function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>):Void;
 
     @:optional function extendCompletionHxml(hxml:String):Void;
 
