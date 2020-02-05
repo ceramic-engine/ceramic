@@ -65,7 +65,8 @@ class Tools {
             isEmbeddedInElectron: false,
             ceramicVersion: null,
             assetsChanged: false,
-            iconsChanged: false
+            iconsChanged: false,
+            printSplitLines: (args.indexOf('--print-split-lines') != -1)
         };
 
         // Check if we are embedded in electron

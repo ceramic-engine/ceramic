@@ -87,4 +87,8 @@ typedef Context = {
     /** A flag to tell whether one icon or more have changed since last icon pass */
     var iconsChanged:Bool;
 
+    /** If `true`, data will be printed line by line instead of as a single chunk of data.
+        This is sometimes needed to prevent some truncated bug (seen in vscode + spawn) */
+    var printSplitLines:Bool;
+
 }

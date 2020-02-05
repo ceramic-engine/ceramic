@@ -198,7 +198,19 @@ class Helpers {
 
         if (context.muted) return;
 
-        stdoutWrite(''+message+"\n");
+        var message = '' + message;
+        if (context.printSplitLines) {
+            var parts = message.split("\n");
+            for (part in parts) {
+                Sync.run(function(done) {
+                    js.Node.setTimeout(done, 0);
+                });
+                stdoutWrite(part+"\n");
+            }
+        }
+        else {
+            stdoutWrite(message+"\n");
+        }
 
     }
 
