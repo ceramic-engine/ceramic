@@ -29,10 +29,10 @@ class Utils {
     }
 
     static var _nextUniqueIntCursor:Int = 0;
-    static var _nextUniqueInt0:Int = Std.random(0x7fffffff);
+    static var _nextUniqueInt0:Int = Std.int(Math.random() * 0x7ffffffe);
     static var _nextUniqueInt1:Int = Std.int(Date.now().getTime() * 0.0001);
-    static var _nextUniqueInt2:Int = Std.random(0x7fffffff);
-    static var _nextUniqueInt3:Int = Std.random(0x7fffffff);
+    static var _nextUniqueInt2:Int = Std.int(Math.random() * 0x7ffffffe);
+    static var _nextUniqueInt3:Int = Std.int(Math.random() * 0x7ffffffe);
 
     /** Provides an identifier which is garanteed to be unique on this local device.
         It however doesn't garantee that this identifier is not predictable. */
@@ -119,7 +119,7 @@ class Utils {
         // Haxe snippet from Luxe
 
         if (val == null) {
-            val = Std.random(0x7fffffff);
+            val = Std.int(Math.random() * 0x7ffffffe);
         }
 
         inline function toChar(value:Int):String {
