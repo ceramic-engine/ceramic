@@ -1031,7 +1031,7 @@ class Spine extends Visual {
     /** Process spine draw order and output quads and meshes. */
     function render(delta:Float, z:Float, setup:Bool) {
 
-        if (skeleton == null) return;
+        if (skeleton == null || destroyed) return;
 
         if (boundChildSlotsDirty) {
             computeBoundChildSlots();
