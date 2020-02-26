@@ -89,6 +89,7 @@ class MeshPool {
         mesh._height = 0;
         mesh.transform = null;
         mesh.rotation = 0;
+        mesh.active = true;
         mesh.visible = true;
         mesh.touchable = true;
         mesh.active = false;
