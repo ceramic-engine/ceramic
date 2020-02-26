@@ -1090,6 +1090,8 @@ class Spine extends Visual {
 
         if (regularRender) {
             emitBeginRender();
+            if (destroyed)
+                return;
         }
 
         if (setup && setupBoneTransforms == null) {
@@ -1171,6 +1173,8 @@ class Spine extends Visual {
                         if (slotInfo.drawDefault) {
                             emitUpdateVisibleSlot(slotInfo);
                         }
+                        if (destroyed)
+                            return;
 
                         mesh = slotMeshes.getInline(slot.data.index);
 
@@ -1609,6 +1613,8 @@ class Spine extends Visual {
 
         if (regularRender) {
             emitEndRender();
+            if (destroyed)
+                return;
         }
 
         renderDirty = false;
