@@ -85,6 +85,12 @@ class MeshPool {
 
         mesh.clear();
 
+        #if ceramic_debug_mesh_pool
+        if (availableMeshes.indexOf(mesh) != -1) {
+            throw 'Mesh is already recycled: $mesh';
+        }
+        #end
+
         if (mesh.parent != null) {
             mesh.parent.remove(mesh);
         }
