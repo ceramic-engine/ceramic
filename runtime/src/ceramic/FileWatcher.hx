@@ -87,6 +87,8 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     override public function destroy() {
 
+        super.destroy();
+
         ceramic.App.app.offUpdate(tick);
 
     }

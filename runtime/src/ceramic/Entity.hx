@@ -34,6 +34,8 @@ class Entity implements Events implements Lazy {
 
     #if ceramic_debug_entity_allocs
     var posInfos:haxe.PosInfos;
+    var reusedPosInfos:haxe.PosInfos;
+    var recycledPosInfos:haxe.PosInfos;
 
     static var debugEntityAllocsInitialized = false;
     static var numEntityAliveInMemoryByClass = new Map<String,Int>();
@@ -99,9 +101,9 @@ class Entity implements Events implements Lazy {
                     }
                     return numA - numB;
                 });
-                ceramic.Shortcuts.log(' - entities in memory -');
+                ceramic.Shortcuts.log.info(' - entities in memory -');
                 for (clazz in allClasses) {
-                    ceramic.Shortcuts.log('    $clazz / ${usedKeys.get(clazz)} / alive=${numEntityAliveInMemoryByClass.get(clazz)} destroyed=${numEntityDestroyedButInMemoryByClass.get(clazz)}');
+                    ceramic.Shortcuts.log.info('    $clazz / ${usedKeys.get(clazz)} / alive=${numEntityAliveInMemoryByClass.get(clazz)} destroyed=${numEntityDestroyedButInMemoryByClass.get(clazz)}');
 
                     var weakRefs = destroyedWeakRefs.get(clazz);
                     if (weakRefs != null) {
@@ -150,7 +152,7 @@ class Entity implements Events implements Lazy {
                                 var path = allPaths[i];
                                 var num = pathStats.get(path);
                                 numLogged += num;
-                                ceramic.Shortcuts.log('        leak ${num} x $path');
+                                ceramic.Shortcuts.log.info('        leak ${num} x $path');
                                 i--;
                                 limit--;
                             }
@@ -159,7 +161,7 @@ class Entity implements Events implements Lazy {
                                 for (path in allPaths) {
                                     total += pathStats.get(path);
                                 }
-                                ceramic.Shortcuts.log('        leak ${total - numLogged} x ...');
+                                ceramic.Shortcuts.log.info('        leak ${total - numLogged} x ...');
                             }
                         }
                     }

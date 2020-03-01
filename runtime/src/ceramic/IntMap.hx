@@ -90,7 +90,7 @@ class IntMap<V> {
             }
         }
         else {
-            // New key, use next free index
+            // Non-null value, use next free index
             var valuesLen = values.length;
             if (nextFreeIndex >= valuesLen) {
                 resizeValues(values.length * 2);
@@ -98,8 +98,8 @@ class IntMap<V> {
             values.set(nextFreeIndex, value);
             keys.set(key, nextFreeIndex + RESERVED_GAP);
 
-            // Update iterable keys
-            if (iterableKeys != null) {
+            // Update iterable keys if new value
+            if (index != NULL_VALUE && iterableKeys != null) {
                 iterableKeys.push(key);
             };
 

@@ -32,6 +32,7 @@ class ExportSpine extends tools.Task {
         var force = extractArgFlag(args, 'force');
         var stripAnimFolders = extractArgFlag(args, 'strip-animation-folders');
         var stripSkinFolders = extractArgFlag(args, 'strip-skin-folders');
+        var prettyPrint = extractArgFlag(args, 'pretty');
         project.loadAppFile(projectPath);
 
         if (project.app.spine == null || !Std.is(project.app.spine.export, Array)) {
@@ -282,7 +283,7 @@ class ExportSpine extends tools.Task {
                         }
 
                         // Save content
-                        File.saveContent(Path.join([groupDir, outName]), Json.stringify(parsed, null, '    '));
+                        File.saveContent(Path.join([groupDir, outName]), prettyPrint ? Json.stringify(parsed, null, '    ') : Json.stringify(parsed));
                     }
                     else {
                         // Just copy
