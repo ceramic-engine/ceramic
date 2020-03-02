@@ -20,6 +20,8 @@ import ceramic.ConvertField;
 import ceramic.Collections;
 import ceramic.Shortcuts.*;
 
+import tracker.Tracker;
+
 import haxe.CallStack;
 
 import backend.Backend;
@@ -368,6 +370,8 @@ class App extends Entity {
 #end
 
         Runner.init();
+
+        Tracker.backend = new TrackerBackend();
 
         settings = new Settings();
         screen = new Screen();

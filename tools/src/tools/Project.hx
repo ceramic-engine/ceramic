@@ -42,6 +42,7 @@ class Project {
         { 'unifill': '0.4.1' },
         { 'format': '3.4.2' },
         { 'polyline': 'github:jeremyfa/polyline' },
+        { 'tracker': 'github:jeremyfa/tracker' },
         { 'bind': 'github:jeremyfa/polyline' },
         { 'earcut': 'github:ceramic-engine/earcut' },
         { 'hsluv': 'github:ceramic-engine/hsluv' },

@@ -1,6 +1,7 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
+import tracker.Observable;
 
 using ceramic.Extensions;
 

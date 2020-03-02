@@ -1,5 +1,8 @@
 package ceramic.ui;
 
+import tracker.Observable;
+import tracker.Autorun;
+
 /** A view to display and layout images. */
 class ImageView extends View implements Observable {
 

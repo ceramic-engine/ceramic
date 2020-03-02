@@ -1,5 +1,7 @@
 package ceramic;
 
+import tracker.Observable;
+
 class Settings implements Observable {
 
     @:allow(ceramic.App)

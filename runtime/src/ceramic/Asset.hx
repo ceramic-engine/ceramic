@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 import ceramic.Path;
+import tracker.Observable;
 
 using StringTools;
 

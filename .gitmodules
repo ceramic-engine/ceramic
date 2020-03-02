@@ -73,3 +73,7 @@
 	path = git/hsluv
 	url = https://github.com/ceramic-engine/hsluv.git
 	branch = master
+[submodule "git/tracker"]
+	path = git/tracker
+	url = https://github.com/jeremyfa/tracker.git
+	branch = master
