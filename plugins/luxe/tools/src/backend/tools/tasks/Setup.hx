@@ -217,13 +217,6 @@ class Setup extends tools.Task {
             }
         }
 
-        targetFlags += '\n' + '-D tracker_no_default_backend';
-        targetFlags += '\n' + '--macro tracker.macros.TrackerMacro.setEntity("ceramic.Entity")';
-        targetFlags += '\n' + '--macro tracker.macros.TrackerMacro.setComponent("ceramic.Component")';
-        targetFlags += '\n' + '--macro tracker.macros.TrackerMacro.setBackend("ceramic.TrackerBackend")';
-        targetFlags += '\n' + '--macro tracker.macros.TrackerMacro.setArrayPool("ceramic.ArrayPool")';
-        targetFlags += '\n' + '--macro tracker.macros.TrackerMacro.setReusableArray("ceramic.ReusableArray")';
-
         var hxmlFileContent = ('
 -main Main
 $targetFlags

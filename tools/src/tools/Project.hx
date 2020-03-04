@@ -156,7 +156,13 @@ class Project {
 
         app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(app));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
-        //app.hxml += "\n" + "--macro ceramic.macros.ExportRtti.init()";
+
+        app.hxml += '\n' + '-D tracker_no_default_backend';
+        app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setEntity("ceramic.Entity")';
+        app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setComponent("ceramic.Component")';
+        app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setBackend("ceramic.TrackerBackend")';
+        app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setArrayPool("ceramic.ArrayPool")';
+        app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setReusableArray("ceramic.ReusableArray")';
 
         if (context.defines.exists('android')) {
             app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=26 -D PLATFORM=android-26";
