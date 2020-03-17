@@ -349,22 +349,19 @@ class Helpers {
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
         
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,0,52'])))
             haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind'])))
-            haxelib(['install', 'bind', '0.4.4', '--always'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,5'])))
+            haxelib(['install', 'bind', '0.4.5', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'unifill'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'unifill', '0,4,1'])))
             haxelib(['install', 'unifill', '0.4.1', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format'])))
-            haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
-
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '10,0,0'])))
             haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'akifox-asynchttp'])))
