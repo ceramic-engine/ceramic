@@ -58,4 +58,35 @@ class PlatformSpecific {
         //#end
     }
 
+    #if (web && ceramic_use_electron)
+    static var testedElectronAvailability:Bool = false;
+    static var electron:Dynamic = null;
+
+    public static function nodeRequire(module:String):Dynamic {
+
+        if (!testedElectronAvailability) {
+            testedElectronAvailability = true;
+            try {
+                electron = untyped __js__("require('electron')");
+            }
+            catch (e:Dynamic) {}
+        }
+    
+        if (electron != null) {
+    
+            var required:Dynamic = untyped __js__("{0}.remote.require({1})", electron, module);
+            return required;
+
+        }
+        else {
+            return null;
+        }
+            
+    }
+    #elseif (js && (node || nodejs))
+    public static function nodeRequire(module:String):Dynamic {
+        return js.Lib.require(module);
+    }
+    #end
+
 }
