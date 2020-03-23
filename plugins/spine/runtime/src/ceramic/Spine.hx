@@ -377,7 +377,7 @@ class Spine extends Visual {
             }
         }
 
-#if editor
+#if legacy_editor
         computeAnimationList();
 #end
 
@@ -529,7 +529,7 @@ class Spine extends Visual {
     }
 
     /** Is this animation paused? */
-    public var paused(default,set):Bool = #if editor true #else false #end;
+    public var paused(default,set):Bool = #if legacy_editor true #else false #end;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
 
@@ -555,7 +555,7 @@ class Spine extends Visual {
 
 /// Editor collections
 
-#if editor
+#if legacy_editor
 
     public var animationList:Collection<CollectionEntry> = new Collection();
 
@@ -575,7 +575,7 @@ class Spine extends Visual {
 
         bindOrUnbindUpdateIfNeeded();
 
-#if editor
+#if legacy_editor
 
         function render(delta:Float) {
             editor.render();
@@ -1974,7 +1974,7 @@ class Spine extends Visual {
 
 /// Editor stuff
 
-#if editor
+#if legacy_editor
 
     function computeAnimationList():Void {
 
