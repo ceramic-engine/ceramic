@@ -173,7 +173,10 @@ class Scroller extends Visual {
 
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
-        if (!allowPointerOutside && !hits(x, y)) {
+        var doesHit = hits(x, y);
+        pointerOnScrollerChild = doesHit && !Std.is(hittingVisual, Scroller);
+
+        if (!allowPointerOutside && !doesHit) {
             return true;
         }
 
@@ -317,11 +320,18 @@ class Scroller extends Visual {
 
     var snapping:Bool = false;
 
+    var pointerOnScroller:Bool = false;
+
+    var pointerOnScrollerChild:Bool = false;
+
 /// Toggle tracking
 
     function startTracking():Void {
 
         app.onUpdate(this, update);
+
+        onPointerOver(this, pointerOver);
+        onPointerOut(this, pointerOut);
 
         screen.onMultiTouchPointerDown(this, pointerDown);
 
@@ -335,6 +345,9 @@ class Scroller extends Visual {
 
         app.offUpdate(update);
 
+        offPointerOver(pointerOver);
+        offPointerOut(pointerOut);
+
         screen.offMultiTouchPointerDown(pointerDown);
 
         screen.offFocus(screenFocus);
@@ -345,9 +358,21 @@ class Scroller extends Visual {
 
 /// Event handling
 
+    function pointerOver(info:TouchInfo) {
+
+        pointerOnScroller = true;
+        
+    }
+
+    function pointerOut(info:TouchInfo) {
+
+        pointerOnScroller = false;
+        
+    }
+
     function mouseWheel(x:Float, y:Float):Void {
 
-        if (status == TOUCHING || status == DRAGGING) {
+        if (status == TOUCHING || status == DRAGGING || (!pointerOnScroller && !pointerOnScrollerChild)) {
             // Did already put a finger on this scroller
             return;
         }
