@@ -207,6 +207,10 @@ class Renderer extends Entity {
                             clip = null;
                         }
 
+                        /*if (visual.id == 'clip1') {
+                            trace('CLIP with $clip (prev=$lastClip)');
+                        }*/
+
                         if (clip != lastClip) {
 
                             flush(draw);
@@ -935,8 +939,8 @@ class Renderer extends Entity {
         if (stencilClip) {
             a = 1;
             r = 1;
-            g = 0;
-            b = 0;
+            g = 1;
+            b = 1;
         }
         else if (quadDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
             a = quad.computedAlpha;
@@ -1037,7 +1041,7 @@ class Renderer extends Entity {
             lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
-            lastRenderTarget = quad.computedRenderTarget;
+            lastRenderTarget = mesh.computedRenderTarget;
             useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
@@ -1327,8 +1331,8 @@ class Renderer extends Entity {
                     if (stencilClip) {
                         a = 1;
                         r = 1;
-                        g = 0;
-                        b = 0;
+                        g = 1;
+                        b = 1;
                     }
                     else if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
                         var meshAlphaColor = meshColors.unsafeGet(0);

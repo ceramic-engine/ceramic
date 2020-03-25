@@ -16,60 +16,60 @@ import sys.io.File;
 using StringTools;
 
 /** Export Runtime Type Information into external XML files. */
-class ExportRtti {
+class ExportInfo {
 
-    public static function init(rttiPath:String):Void {
+    public static function init(infoPath:String):Void {
 
         #if ceramic_debug_macro
-        trace(Context.getLocalClass() + ' -> BEGIN ExportRtti.build()');
+        trace(Context.getLocalClass() + ' -> BEGIN ExportInfo.init()');
         #end
 
         var isCompletion = Context.defined('completion') || Context.defined('display');
         if (isCompletion) return;
 
-        //var rttiPath = getRttiPath();
-        if (rttiPath == null) {
+        if (infoPath == null) {
             return;
         }
 
-        if (FileSystem.exists(rttiPath)) {
-            deleteRecursive(rttiPath);
+        if (FileSystem.exists(infoPath)) {
+            deleteRecursive(infoPath);
         }
-        FileSystem.createDirectory(rttiPath);
+        FileSystem.createDirectory(infoPath);
 
-        var rttiTypes:Map<String,Bool> = new Map();
+        var infoTypes:Map<String,Bool> = new Map();
 
         Context.onGenerate(function(types) {
 
-            // Compute rtti roots
+            // Compute info roots
             //
-            var rttiRoots:Map<String,Bool> = new Map();
+            var infoRoots:Map<String,Bool> = new Map();
 
             for (type in types) {
                 switch (type) {
                     case TInst(t, params):
-                        if (t.get().meta.has(':rtti')) {
-                            rttiRoots.set(t.toString(), true);
+                        if (t.get().meta.has('info')) {
+                            infoRoots.set(t.toString(), true);
                         }
                     default:
                 }
             }
 
-            // Compute any class that has a rtti root as superclass
+            /*
+            // Compute any class that has a info root as superclass
 
             for (type in types) {
                 switch (type) {
                     case TInst(t, params):
                         var tGet = t.get();
                         var typeName = t.toString();
-                        if (tGet.meta.has(':rtti')) {
-                            rttiTypes.set(typeName, true);
+                        if (tGet.meta.has('info')) {
+                            infoTypes.set(typeName, true);
                         }
                         else {
                             while (tGet.superClass != null) {
                                 var superTypeName = tGet.superClass.t.toString();
-                                if (rttiRoots.exists(superTypeName)) {
-                                    rttiTypes.set(typeName, true);
+                                if (infoRoots.exists(superTypeName)) {
+                                    infoTypes.set(typeName, true);
                                     break;
                                 }
                                 tGet = tGet.superClass.t.get();
@@ -78,12 +78,13 @@ class ExportRtti {
                     default:
                 }
             }
+            */
 
         });
 
         Context.onAfterGenerate(function() {
             
-            for (typeName in rttiTypes.keys()) {
+            for (typeName in infoTypes.keys()) {
                 var type = null;
                 try {
                     type = Context.getType(typeName);
@@ -94,13 +95,13 @@ class ExportRtti {
                         case TInst(t, params):
                             if (t.get().name != 'Context') {
                                 for (field in t.get().statics.get()) {
-                                    if (field.name == '__rtti') {
-                                        var rtti = TypedExprTools.toString(field.expr());
-                                        rtti = Json.parse(rtti.substr('[Const:String] '.length));
+                                    if (field.name == '__info') {
+                                        var info = TypedExprTools.toString(field.expr());
+                                        info = Json.parse(info.substr('[Const:String] '.length));
                                         
                                         // Save result
-                                        var xmlPath = Path.join([rttiPath, Md5.encode(typeName + '.xml')]);
-                                        File.saveContent(xmlPath, rtti);
+                                        var xmlPath = Path.join([infoPath, Md5.encode(typeName + '.xml')]);
+                                        File.saveContent(xmlPath, info);
                                     }
                                 }
                             }
@@ -112,7 +113,7 @@ class ExportRtti {
         });
 
         #if ceramic_debug_macro
-        trace(Context.getLocalClass() + ' -> END ExportRtti.build()');
+        trace(Context.getLocalClass() + ' -> END ExportInfo.init()');
         #end
 
     }
@@ -132,7 +133,7 @@ class ExportRtti {
         if (!FileSystem.exists(cacheDir)) {
             FileSystem.createDirectory(cacheDir);
         }
-        var name = 'rtti';
+        var name = 'info';
         return Path.join([cacheDir, name]);
 
     }

@@ -212,6 +212,28 @@ class BackendTools implements tools.spec.BackendTools {
 
     }
 
+    public function getDstAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
+
+        var dstAssetsPath = null;
+        var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
+
+        switch (target.name) {
+            case 'mac':
+                dstAssetsPath = Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+            case 'ios':
+                dstAssetsPath = Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
+            case 'android':
+                dstAssetsPath = Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
+            case 'windows' | 'linux' | 'web':
+                dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
+            default:
+                dstAssetsPath = Path.join([outTargetPath, 'assets']);
+        }
+
+        return dstAssetsPath;
+
+    }
+
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
@@ -226,18 +248,7 @@ class BackendTools implements tools.spec.BackendTools {
         var assetsPrefixIsPath = assetsPrefix.indexOf('/') != -1 || assetsPrefix.indexOf('\\') != -1;
 
         if (dstAssetsPath == null) {
-            switch (target.name) {
-                case 'mac':
-                    dstAssetsPath = Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
-                case 'ios':
-                    dstAssetsPath = Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
-                case 'android':
-                    dstAssetsPath = Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
-                case 'windows' | 'linux' | 'web':
-                    dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
-                default:
-                    dstAssetsPath = Path.join([outTargetPath, 'assets']);
-            }
+            dstAssetsPath = getDstAssetsPath(cwd, target, variant);
         }
 
         // Add/update missing assets
@@ -290,9 +301,10 @@ class BackendTools implements tools.spec.BackendTools {
             // Remove outdated assets
             //
             var assetsJsonName = assetsPrefix + '_assets.json';
+            var rttiPathPrefix = assetsPrefix + '_rtti/';
 
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
-                if (name != assetsJsonName) {
+                if (name != assetsJsonName && !name.replace('\\', '/').startsWith(rttiPathPrefix)) {
                     var dstPath = Path.join([dstAssetsPath, name]);
                     if (!validDstPaths.exists(dstPath)) {
 

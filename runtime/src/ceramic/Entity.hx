@@ -9,7 +9,7 @@ using ceramic.Extensions;
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
-@:rtti
+//@:rtti
 class Entity implements Events implements Lazy {
 
 /// Properties

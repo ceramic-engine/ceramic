@@ -51,6 +51,14 @@ class Setup extends tools.Task {
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
 
+        var typedBackend:backend.tools.BackendTools = cast context.backend;
+        var dstAssetsPath = typedBackend.getDstAssetsPath(cwd, target, variant);
+        var assetsPrefix = '';
+        if (context.defines.get('ceramic_assets_prefix') != null) {
+            assetsPrefix = context.defines.get('ceramic_assets_prefix');
+        }
+        var rttiPath = Path.join([dstAssetsPath, assetsPrefix + '_rtti']);
+
         // Compute relative ceramicPath
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
         var runtimePathRelative = getRelativePath(runtimePath, targetPath);
@@ -206,6 +214,9 @@ class Setup extends tools.Task {
             if (target.name == 'android') {
                 targetFlags += '\n' + '-D ceramic_avoid_last_texture_slot';
             }
+
+            targetFlags += '\n' + '--macro ceramic.macros.ExportRtti.init(' + Json.stringify(rttiPath) + ')';
+            
             targetFlags += '\n' + '--macro snow.Set.assets("snow.core.native.assets.Assets")';
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.modules.sdl.Runtime")';
             targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.openal.Audio")';

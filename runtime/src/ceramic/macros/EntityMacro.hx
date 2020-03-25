@@ -2,6 +2,7 @@ package ceramic.macros;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.DynamicAccess;
 
 using haxe.macro.ExprTools;
 
@@ -34,6 +35,14 @@ class EntityMacro {
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
 
+        var editableFieldData:DynamicAccess<{type:String,?editable:Array<Expr>}> = null;
+        for (meta in Context.getLocalClass().get().meta.get()) {
+            if (meta.name == 'editable') {
+                editableFieldData = {};
+                break;
+            }
+        }
+
         var newFields:Array<Field> = [];
 
         var constructor = null;
@@ -50,6 +59,24 @@ class EntityMacro {
         for (field in fields) {
 
             var hasMeta = hasOwnerOrComponentMeta(field);
+
+            // Editable data?
+            if (editableFieldData != null) {
+                var editableMeta = getEditableMeta(field);
+                if (editableMeta != null) {
+                    switch(field.kind) {
+                        case FieldType.FVar(type, expr) | FieldType.FProp(_, _, type, expr):
+                            var typeStr = complexTypeToString(type);
+                            editableFieldData.set(field.name, {
+                                type: typeStr,
+                                editable: editableMeta.params
+                            });
+
+                        default:
+                            throw new Error("Only variable/property fields can be marked as editable", field.pos);
+                    }
+                }
+            }
 
             if (hasMeta == 2 || hasMeta == 3) { // has component meta
 
@@ -228,6 +255,10 @@ class EntityMacro {
             }
         }
 
+        if (editableFieldData != null) {
+            
+        }
+
         #if ceramic_debug_macro
         trace(Context.getLocalClass() + ' -> END EntityMacro.build()');
         #end
@@ -252,6 +283,20 @@ class EntityMacro {
             default:
                 return ExprTools.map(e, transformSuperDestroy);
         }
+
+    }
+
+    static function getEditableMeta(field:Field):MetadataEntry {
+
+        if (field.meta == null || field.meta.length == 0) return null;
+
+        for (meta in field.meta) {
+            if (meta.name == 'editable') {
+                return meta;
+            }
+        }
+
+        return null;
 
     }
 
@@ -283,6 +328,45 @@ class EntityMacro {
         else {
             return 0;
         }
+
+    }
+
+    static function complexTypeToString(type:ComplexType):String {
+
+        var typeStr:String = null;
+
+        if (type != null) {
+            switch (type) {
+                case TPath(p):
+                    typeStr = p.name;
+                    if (p.pack != null && p.pack.length > 0) {
+                        typeStr = p.pack.join('.') + '.' + typeStr;
+                    }
+                    if (p.params != null && p.params.length > 0) {
+                        typeStr += '<';
+                        var n = 0;
+                        for (param in p.params) {
+                            if (n > 0)
+                                typeStr += ',';
+                            switch param {
+                                case TPType(t):
+                                    typeStr += complexTypeToString(t);
+                                case TPExpr(e):
+                                    typeStr += 'Dynamic';
+                            }
+                            n++;
+                        }
+                        typeStr += '>';
+                    }
+                default:
+                    typeStr = 'Dynamic';
+            }
+        }
+        else {
+            typeStr = 'Dynamic';
+        }
+
+        return typeStr;
 
     }
 
