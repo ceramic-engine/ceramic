@@ -9,8 +9,19 @@ using ceramic.Extensions;
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
-@:rtti
 class Entity implements Events implements Lazy {
+
+/// Statics
+
+    #if (!macro && !display && !completion)
+    /** Field info */
+    @:noCompletion public static var _fieldInfo(default, null) = {
+        components: {
+            editable: [],
+            type: 'ceramic.ImmutableMap<String,ceramic.Component>'
+        }
+    };
+    #end
 
 /// Properties
 

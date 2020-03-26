@@ -5,10 +5,13 @@ import haxe.DynamicAccess;
 using ceramic.Extensions;
 using StringTools;
 
-@:rtti
 @:structInit
 @:keep
 @:keepSub
+#if (!macro && !display && !completion)
+@:autoBuild(ceramic.macros.FieldInfoMacro.build())
+@:build(ceramic.macros.FieldInfoMacro.build())
+#end
 class CollectionEntry {
 
     static var _nextId:Int = 1;

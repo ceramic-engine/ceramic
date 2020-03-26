@@ -1,17 +1,17 @@
 package ceramic;
 
-import haxe.rtti.Meta;
-import haxe.rtti.CType;
-import haxe.rtti.Rtti;
 import haxe.DynamicAccess;
 
+/**
+ * Extract field information from a given class type.
+ * This is expected to only work with Entity subclasses marked with @editable, @fieldInfo or @autoFieldInfo
+ * or classes using FieldInfoMacro. 
+ */
 class FieldInfo {
 
     static var fieldInfoMap:Map<String,Map<String,String>> = new Map();
 
-    static var rttiMap:Map<String,Classdef> = new Map();
-
-    public static function types(targetClass:String):Map<String,String> {
+    public static function types(targetClass:String, recursive:Bool = true):Map<String,String> {
 
         var info = fieldInfoMap.get(targetClass);
 
@@ -21,35 +21,26 @@ class FieldInfo {
 
             var clazz = Type.resolveClass(targetClass);
             var clazzStr = '' + clazz;
-            var usedFields = new Map();
-            var rtti = rttiMap.get(clazzStr);
-            if (rtti == null) {
-                rtti = Utils.getRtti(clazz);
-                rttiMap.set(clazzStr, rtti);
-            }
+            var firstTry = true;
 
             while (clazz != null) {
 
-                for (field in rtti.fields) {
+                var storedFieldInfo:DynamicAccess<Dynamic> = Reflect.field(clazz, '_fieldInfo');
+                Assert.assert(storedFieldInfo != null || !firstTry, 'Missing _fieldInfo on class $targetClass');
+                firstTry = false;
 
-                    var fieldType = stringFromCType(field.type);
-
-                    if (!usedFields.exists(field.name)) {
-                        usedFields.set(field.name, true);
-                        info.set(field.name, fieldType);
+                if (storedFieldInfo != null) {
+                    for (key => val in storedFieldInfo) {
+                        if (!info.exists(key))
+                            info.set(key, val.type);
                     }
                 }
+
+                if (!recursive)
+                    break;
 
                 clazz = Type.getSuperClass(clazz);
-                if (clazz != null) {
-                    clazzStr = '' + clazz;
-                    rtti = rttiMap.get(clazzStr);
-                    if (rtti == null) {
-                        rtti = Utils.getRtti(clazz);
-                        rttiMap.set(clazzStr, rtti);
-                    }
-                }
-
+                
             }
         }
 
@@ -63,38 +54,11 @@ class FieldInfo {
 
     }
 
-    public static function stringFromCType(type:CType):String {
-        
-        var result = '';
-        var i = 0;
-        var len = 0;
-
-        switch (type) {
-            case CEnum(name, params), CClass(name, params), CTypedef(name, params), CAbstract(name, params):
-                result += name;
-                if (params.length > 0) {
-                    result += '<';
-                    i = 0; len = params.length;
-                    for (param in params) {
-                        result += stringFromCType(param);
-                        if (i < len - 1) result += ',';
-                        i++;
-                    }
-                    result += '>';
-                }
-            default:
-                result = 'Dynamic';
-        }
-
-        return result;
-
-    }
-
 #if editor
 
     static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:DynamicAccess<Dynamic>}>> = new Map();
 
-    public static function editableFieldInfo(targetClass:String):Map<String,{type:String, meta:DynamicAccess<Dynamic>}> {
+    public static function editableFieldInfo(targetClass:String, recursive:Bool = true):Map<String,{type:String, meta:DynamicAccess<Dynamic>}> {
 
         var info = editableFieldInfoMap.get(targetClass);
 
@@ -103,28 +67,31 @@ class FieldInfo {
             editableFieldInfoMap.set(targetClass, info);
 
             var clazz = Type.resolveClass(targetClass);
-            var usedFields = new Map();
-            var rtti = Utils.getRtti(clazz);
+            var clazzStr = '' + clazz;
 
             while (clazz != null) {
 
-                var meta = Meta.getFields(clazz);
-                for (field in rtti.fields) {
-                    var k = field.name;
-                    var v = Reflect.field(meta, k);
-                    var fieldType = FieldInfo.stringFromCType(field.type);
-                    if (v != null && Reflect.hasField(v, 'editable') && !usedFields.exists(k)) {
-                        usedFields.set(k, true);
-                        info.set(k, {
-                            type: fieldType,
-                            meta: v
-                        });
+                var storedFieldInfo:DynamicAccess<Dynamic> = Reflect.field(clazz, '_fieldInfo');
+
+                if (storedFieldInfo != null) {
+                    for (key => val in storedFieldInfo) {
+                        if (Reflect.hasField(val, 'editable')) {
+                            if (!info.exists(key))
+                                info.set(key, {
+                                    type: val.type,
+                                    meta: {
+                                        editable: val.editable
+                                    }
+                                });
+                        }
                     }
                 }
 
-                clazz = Type.getSuperClass(clazz);
-                if (clazz != null) rtti = Utils.getRtti(clazz);
+                if (!recursive)
+                    break;
 
+                clazz = Type.getSuperClass(clazz);
+                
             }
         }
 

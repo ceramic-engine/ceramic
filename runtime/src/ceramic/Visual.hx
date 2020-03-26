@@ -11,6 +11,7 @@ using ceramic.Extensions;
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
 @:allow(ceramic.MeshPool)
+@editable
 #if lua
 @dynamicEvents
 @:dce

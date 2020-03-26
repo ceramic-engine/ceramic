@@ -1,9 +1,12 @@
 package ceramic.macros;
 
+import haxe.macro.TypeTools;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.DynamicAccess;
 
 using haxe.macro.ExprTools;
+using StringTools;
 
 class EntityMacro {
 
@@ -34,6 +37,42 @@ class EntityMacro {
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
 
+        // Look for @editable, @fieldInfo or @autoFieldInfo meta
+        var fieldInfoData:DynamicAccess<{type:String,?editable:Array<Expr>}> = null;
+        var storeAllFieldInfo = false;
+        var storeEditableMeta = false;
+        var localClass = Context.getLocalClass().get();
+        for (meta in localClass.meta.get()) {
+            if (meta.name == 'editable') {
+                if (fieldInfoData == null)
+                    fieldInfoData = {};
+                storeEditableMeta = true;
+            }
+            else if (meta.name == 'fieldInfo' || meta.name == 'autoFieldInfo') {
+                if (fieldInfoData == null)
+                    fieldInfoData = {};
+                storeAllFieldInfo = true;
+            }
+        }
+        if (!storeAllFieldInfo) {
+            var parentHold = localClass.superClass;
+            var parent = parentHold != null ? parentHold.t : null;
+            while (parent != null) {
+
+                for (meta in parent.get().meta.get()) {
+                    if (meta.name == 'autoFieldInfo') {
+                        if (fieldInfoData == null)
+                            fieldInfoData = {};
+                        storeAllFieldInfo = true;
+                        break;
+                    }
+                }
+
+                parentHold = parent.get().superClass;
+                parent = parentHold != null ? parentHold.t : null;
+            }
+        }
+
         var newFields:Array<Field> = [];
 
         var constructor = null;
@@ -50,6 +89,29 @@ class EntityMacro {
         for (field in fields) {
 
             var hasMeta = hasOwnerOrComponentMeta(field);
+
+            // Keep field info?
+            if (fieldInfoData != null && !field.name.startsWith('unobserved') && (field.access == null || field.access.indexOf(AStatic) == -1)) {
+                var editableMeta = storeEditableMeta ? getEditableMeta(field) : null;
+                if (editableMeta != null || storeAllFieldInfo) {
+                    switch(field.kind) {
+                        case FieldType.FVar(type, expr) | FieldType.FProp(_, _, type, expr):
+                            var resolvedType = Context.resolveType(type, Context.currentPos());
+                            var typeStr = complexTypeToString(TypeTools.toComplexType(resolvedType));
+                            if (typeStr == 'StdTypes') {
+                                typeStr = complexTypeToString(type);
+                            }
+                            fieldInfoData.set(field.name, {
+                                type: typeStr,
+                                editable: editableMeta != null ? editableMeta.params : null
+                            });
+
+                        default:
+                            if (editableMeta != null)
+                                throw new Error("Only variable/property fields can be marked as editable", field.pos);
+                    }
+                }
+            }
 
             if (hasMeta == 2 || hasMeta == 3) { // has component meta
 
@@ -228,6 +290,53 @@ class EntityMacro {
             }
         }
 
+        // Add field info
+        if (fieldInfoData != null) {
+            var fieldInfoEntries = [];
+            var pos = Context.currentPos();
+            for (name => info in fieldInfoData) {
+                var entries = [];
+                if (info.editable != null) {
+                    entries.push({
+                        expr: {
+                            expr: EArrayDecl(info.editable),
+                            pos: pos
+                        },
+                        field: 'editable'
+                    });
+                }
+                if (info.type != null) {
+                    entries.push({
+                        expr: {
+                            expr: EConst(CString(info.type)),
+                            pos: pos
+                        },
+                        field: 'type'
+                    });
+                }
+                fieldInfoEntries.push({
+                    expr: {
+                        expr: EObjectDecl(entries),
+                        pos: pos
+                    },
+                    field: name
+                });
+            }
+
+            newFields.push({
+                pos: pos,
+                name: '_fieldInfo',
+                kind: FProp('default', 'null', null, { expr: EObjectDecl(fieldInfoEntries), pos: pos }),
+                access: [APublic, AStatic],
+                doc: 'Field info',
+                meta: [{
+                    name: ':noCompletion',
+                    params: [],
+                    pos: pos
+                }]
+            });
+        }
+
         #if ceramic_debug_macro
         trace(Context.getLocalClass() + ' -> END EntityMacro.build()');
         #end
@@ -283,6 +392,59 @@ class EntityMacro {
         else {
             return 0;
         }
+
+    }
+
+    static function getEditableMeta(field:Field):MetadataEntry {
+
+        if (field.meta == null || field.meta.length == 0) return null;
+
+        for (meta in field.meta) {
+            if (meta.name == 'editable') {
+                return meta;
+            }
+        }
+
+        return null;
+
+    }
+
+    static function complexTypeToString(type:ComplexType):String {
+
+        var typeStr:String = null;
+
+        if (type != null) {
+            switch (type) {
+                case TPath(p):
+                    typeStr = p.name;
+                    if (p.pack != null && p.pack.length > 0) {
+                        typeStr = p.pack.join('.') + '.' + typeStr;
+                    }
+                    if (p.params != null && p.params.length > 0) {
+                        typeStr += '<';
+                        var n = 0;
+                        for (param in p.params) {
+                            if (n > 0)
+                                typeStr += ',';
+                            switch param {
+                                case TPType(t):
+                                    typeStr += complexTypeToString(t);
+                                case TPExpr(e):
+                                    typeStr += 'Dynamic';
+                            }
+                            n++;
+                        }
+                        typeStr += '>';
+                    }
+                default:
+                    typeStr = 'Dynamic';
+            }
+        }
+        else {
+            typeStr = 'Dynamic';
+        }
+
+        return typeStr;
 
     }
 

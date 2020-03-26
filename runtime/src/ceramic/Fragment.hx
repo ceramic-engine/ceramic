@@ -240,7 +240,7 @@ class Fragment extends Quad {
                 putItemField(isFragment, item, instance, 'components', value, converter);
             }
             else {
-                log.warning('No converter found for field: components');
+                log.warning('No converter found for field: components (type: $fieldType)');
             }
 
         }
