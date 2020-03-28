@@ -286,6 +286,12 @@ class Renderer extends Entity {
 
     #if !ceramic_debug_draw inline #end function useShader(draw:backend.Draw, shader:backend.Shader):Void {
 
+        #if ceramic_debug_draw
+        if (debugDraw) {
+            log.debug('(use shader $shader)');
+        }
+        #end
+
         if (shader == null) {
             shader = defaultTexturedShader;
         }
@@ -683,7 +689,7 @@ class Renderer extends Entity {
         var quadDrawsRenderTexture:Bool = quad.texture != null && quad.texture.isRenderTexture;
 
 #if ceramic_debug_draw
-        if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
+        if (debugDraw && #if ceramic_debug_draw_all true #elseif ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
             log.warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip clip=$lastClip');
         }
 #end
@@ -1116,7 +1122,7 @@ class Renderer extends Entity {
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
 #if ceramic_debug_draw
-        if (debugDraw && #if ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
+        if (debugDraw && #if ceramic_debug_draw_all true #elseif ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
             log.warning('* drawMesh(${mesh.id != null ? mesh.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip clip=$lastClip');
         }
 #end
@@ -1483,7 +1489,7 @@ class Renderer extends Entity {
         var flushingQuadsNow = drawnQuads - flushedQuads;
         var flushingMeshesNow = drawnMeshes - flushedMeshes;
         if (debugDraw) {
-            log.info('#$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
+            log.info('flush - #$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
         }
         flushedQuads = drawnQuads;
         flushedMeshes = drawnMeshes;
