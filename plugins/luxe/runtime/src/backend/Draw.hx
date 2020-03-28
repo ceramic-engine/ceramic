@@ -626,14 +626,14 @@ class Draw implements spec.Draw {
 
     inline public function bindTexture(backendItem:backend.Texture):Void {
 
-        (backendItem : phoenix.Texture).slot = activeTextureSlot;
-        (backendItem : phoenix.Texture).bind();
+        GL.activeTexture(GL.TEXTURE0+activeTextureSlot);
+        GL.bindTexture(GL.TEXTURE_2D, (backendItem : phoenix.Texture).texture);
 
     }
 
     inline public function bindNoTexture():Void {
 
-        luxeRenderer.state.bindTexture2D(#if snow_web null #else 0 #end);
+        GL.bindTexture(GL.TEXTURE_2D, #if snow_web null #else 0 #end);
 
     }
 
