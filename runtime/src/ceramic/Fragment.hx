@@ -168,6 +168,9 @@ class Fragment extends Quad {
             }
             instance = cast Type.createInstance(entityClass, newArgs);
         }
+        if (instance == null) {
+            throw 'Failed to create instance of ${item.entity}';
+        }
         instance.id = item.id;
 
         if (isFragment) {
