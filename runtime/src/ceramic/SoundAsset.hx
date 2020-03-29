@@ -26,7 +26,7 @@ class SoundAsset extends Asset {
         }
 
         log.info('Load sound $path');
-        app.backend.audio.load(Assets.realAssetPath(path), { stream: options.stream }, function(audio) {
+        app.backend.audio.load(Assets.realAssetPath(path, runtimeAssets), { stream: options.stream }, function(audio) {
 
             if (audio != null) {
                 this.sound = new Sound(audio);

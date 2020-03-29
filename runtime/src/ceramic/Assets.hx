@@ -26,6 +26,8 @@ class Assets extends Entity {
     /** If set, will be provided to each added asset in this `Assets` instance. */
     public var runtimeAssets:RuntimeAssets = null;
 
+    public var defaultImageOptions:AssetOptions = null;
+
 /// Internal
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
@@ -138,6 +140,11 @@ class Assets extends Entity {
 
         if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
         var byName = assetsByKindAndName.get(asset.kind);
+
+        if (Std.is(asset, ImageAsset)) {
+            var imageAsset:ImageAsset = cast asset;
+            imageAsset.defaultImageOptions = defaultImageOptions;
+        }
 
         var previousAsset = byName.get(asset.name);
         if (previousAsset != null) {
@@ -508,14 +515,24 @@ class Assets extends Entity {
 
     }
 
-    public static function realAssetPath(path:String):String {
+    public static function realAssetPath(path:String, ?runtimeAssets:RuntimeAssets):String {
 
-        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
-        if (assetsPrefix != null) {
-            return assetsPrefix + path;
+        if (runtimeAssets != null) {
+            if (runtimeAssets.path != null) {
+                return ceramic.Path.join([runtimeAssets.path, path]);
+            }
+            else {
+                return path;
+            }
         }
         else {
-            return path;
+            var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+            if (assetsPrefix != null) {
+                return assetsPrefix + path;
+            }
+            else {
+                return path;
+            }
         }
 
     }

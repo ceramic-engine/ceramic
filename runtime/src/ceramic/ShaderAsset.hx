@@ -68,8 +68,8 @@ class ShaderAsset extends Asset {
             return;
         }
 
-        app.backend.texts.load(Assets.realAssetPath(options.vertId), function(vertSource) {
-            app.backend.texts.load(Assets.realAssetPath(options.fragId), function(fragSource) {
+        app.backend.texts.load(Assets.realAssetPath(options.vertId, runtimeAssets), function(vertSource) {
+            app.backend.texts.load(Assets.realAssetPath(options.fragId, runtimeAssets), function(fragSource) {
 
                 if (vertSource == null) {
                     status = BROKEN;

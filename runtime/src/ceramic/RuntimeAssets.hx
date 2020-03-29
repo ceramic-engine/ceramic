@@ -34,9 +34,12 @@ class RuntimeAssets {
         allDirsByName: Map<String,Array<String>>
     } = null;
 
-    public function new(allAssets:Array<String>) {
+    public var path(default, null):String = null;
+
+    public function new(allAssets:Array<String>, ?path:String) {
 
         this.allAssets = allAssets;
+        this.path = path;
 
         initData();
 
@@ -45,7 +48,7 @@ class RuntimeAssets {
     public static function fromPath(path:String):RuntimeAssets {
 
         #if (sys || node || nodejs || (web && ceramic_use_electron))
-        return new RuntimeAssets(getFlatDirectory(path));
+        return new RuntimeAssets(getFlatDirectory(path), path);
         #else
         return null;
         #end

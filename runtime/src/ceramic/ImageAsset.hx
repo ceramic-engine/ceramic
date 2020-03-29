@@ -14,6 +14,11 @@ class ImageAsset extends Asset {
 
     public var texture:Texture = null;
 
+/// Internal
+
+    @:allow(ceramic.Assets)
+    var defaultImageOptions:AssetOptions = null;
+
 /// Lifecycle
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -34,9 +39,20 @@ class ImageAsset extends Asset {
             return;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (defaultImageOptions != null) {
+            for (key in Reflect.fields(defaultImageOptions)) {
+                Reflect.setField(loadOptions, key, Reflect.field(defaultImageOptions, key));
+            }
+        }
+        if (options != null) {
+            for (key in Reflect.fields(options)) {
+                Reflect.setField(loadOptions, key, Reflect.field(options, key));
+            }
+        }
+
         log.info('Load image $path (density=$density)');
-        app.backend.textures.load(Assets.realAssetPath(path), {
-        }, function(image) {
+        app.backend.textures.load(Assets.realAssetPath(path, runtimeAssets), loadOptions, function(image) {
 
             if (image != null) {
 
