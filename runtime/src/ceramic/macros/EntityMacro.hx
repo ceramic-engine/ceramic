@@ -38,7 +38,7 @@ class EntityMacro {
         var classPath = Context.getLocalClass().toString();
 
         // Look for @editable, @fieldInfo or @autoFieldInfo meta
-        var fieldInfoData:DynamicAccess<{type:String,?editable:Array<Expr>}> = null;
+        var fieldInfoData:DynamicAccess<{type:String,?editable:Array<Expr>,index:Int}> = null;
         var storeAllFieldInfo = false;
         var storeEditableMeta = false;
         var localClass = Context.getLocalClass().get();
@@ -85,6 +85,7 @@ class EntityMacro {
 
         var componentFields = [];
         var ownFields:Array<String> = null;
+        var index = 0;
 
         for (field in fields) {
 
@@ -103,7 +104,8 @@ class EntityMacro {
                             }
                             fieldInfoData.set(field.name, {
                                 type: typeStr,
-                                editable: editableMeta != null ? editableMeta.params : null
+                                editable: editableMeta != null ? editableMeta.params : null,
+                                index: index
                             });
 
                         default:
@@ -227,6 +229,8 @@ class EntityMacro {
             else {
                 newFields.push(field);
             }
+
+            index++;
         }
 
         var isProcessed = processed.exists(classPath);
@@ -312,6 +316,15 @@ class EntityMacro {
                             pos: pos
                         },
                         field: 'type'
+                    });
+                }
+                if (info.index != null) {
+                    entries.push({
+                        expr: {
+                            expr: EConst(CInt(Std.string(info.index))),
+                            pos: pos
+                        },
+                        field: 'index'
                     });
                 }
                 fieldInfoEntries.push({

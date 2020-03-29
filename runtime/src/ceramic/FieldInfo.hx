@@ -56,11 +56,13 @@ class FieldInfo {
 
 #if editor
 
-    static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:DynamicAccess<Dynamic>}>> = new Map();
+    static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:DynamicAccess<Dynamic>, index:Int}>> = new Map();
 
-    public static function editableFieldInfo(targetClass:String, recursive:Bool = true):Map<String,{type:String, meta:DynamicAccess<Dynamic>}> {
+    public static function editableFieldInfo(targetClass:String, recursive:Bool = true):Map<String,{type:String, meta:DynamicAccess<Dynamic>, index:Int}> {
 
         var info = editableFieldInfoMap.get(targetClass);
+
+        var indexStart = 10000000;
 
         if (info == null) {
             info = new Map();
@@ -69,6 +71,8 @@ class FieldInfo {
             var clazz = Type.resolveClass(targetClass);
             var clazzStr = '' + clazz;
 
+            var toSort = [];
+
             while (clazz != null) {
 
                 var storedFieldInfo:DynamicAccess<Dynamic> = Reflect.field(clazz, '_fieldInfo');
@@ -76,13 +80,20 @@ class FieldInfo {
                 if (storedFieldInfo != null) {
                     for (key => val in storedFieldInfo) {
                         if (Reflect.hasField(val, 'editable')) {
-                            if (!info.exists(key))
-                                info.set(key, {
+                            if (!info.exists(key)) {
+                                var item:{type:String, meta:DynamicAccess<Dynamic>, index:Int} = {
                                     type: val.type,
                                     meta: {
                                         editable: val.editable
-                                    }
-                                });
+                                    },
+                                    index: indexStart + Std.int(val.index)
+                                };
+                                info.set(key, item);
+                                toSort.push(item);
+                            }
+                            else {
+                                info.get(key).index = indexStart + Std.int(val.index);
+                            }
                         }
                     }
                 }
@@ -91,7 +102,23 @@ class FieldInfo {
                     break;
 
                 clazz = Type.getSuperClass(clazz);
+                indexStart -= 10000;
                 
+            }
+
+            toSort.sort((a, b) -> {
+                var indexA = a.index;
+                var indexB = b.index;
+                if (indexA > indexB)
+                    return 1;
+                else if (indexA < indexB)
+                    return -1;
+                else
+                    return 0;
+            });
+            var i = 0;
+            for (item in toSort) {
+                item.index = i++;
             }
         }
 

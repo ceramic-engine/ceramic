@@ -18,7 +18,8 @@ class Entity implements Events implements Lazy {
     @:noCompletion public static var _fieldInfo(default, null) = {
         components: {
             editable: [],
-            type: 'ceramic.ImmutableMap<String,ceramic.Component>'
+            type: 'ceramic.ImmutableMap<String,ceramic.Component>',
+            index: 1
         }
     };
     #end
