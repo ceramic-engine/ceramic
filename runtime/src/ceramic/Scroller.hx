@@ -68,7 +68,7 @@ class Scroller extends Visual {
 
     public var wheelFactor = 1.0;
 
-    public var wheelMomentum = #if mac true #else false #end;
+    public var wheelMomentum = false;
 
     public var wheelEndDelay = 0.25;
 
