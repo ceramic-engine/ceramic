@@ -9,13 +9,15 @@ class Quad extends Visual {
 
     static var _degToRad = Visual._degToRad;
 
-    @editable public var color:Color = Color.WHITE;
+    @editable
+    public var color:Color = Color.WHITE;
 
     /** If set to `true`, this quad will be considered
         transparent thus won't be draw on screen. 
         Children still behave and get drawn as before:
         they don't inherit this property. */
-    @editable public var transparent:Bool = false;
+    @editable
+    public var transparent:Bool = false;
 
     public var tile(default,set):TextureTile = null;
     function set_tile(tile:TextureTile):TextureTile {

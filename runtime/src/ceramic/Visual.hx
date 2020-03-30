@@ -840,22 +840,6 @@ class Visual extends Entity {
         }
         return clipDirty;
     }
-
-    /** If set, children will be sort by depth and their computed depth
-        will be within range [parent.depth, parent.depth + depthRange] */
-    @editable
-    #if ceramic_no_depth_range
-    public var depthRange(default,set):Float = -1;
-    #else
-    public var depthRange(default,set):Float = 1;
-    #end
-    function set_depthRange(depthRange:Float):Float {
-        if (this.depthRange == depthRange) return depthRange;
-        this.depthRange = depthRange;
-        ceramic.App.app.hierarchyDirty = true;
-        return depthRange;
-    }
-
     /** If set, the visual will be rendered into this target RenderTexture instance
         instead of being drawn onto screen directly. */
     public var renderTarget(default,set):RenderTexture = null;
@@ -872,7 +856,7 @@ class Visual extends Entity {
         return this.blending = blending;
     }
 
-    @editable
+    @editable({ group: 'active' })
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
         if (this.visible == visible) return visible;
@@ -881,7 +865,7 @@ class Visual extends Entity {
         return visible;
     }
 
-    @editable
+    @editable({ group: 'active' })
     public var touchable(default,set):Bool = true;
     function set_touchable(touchable:Bool):Bool {
         if (this.touchable == touchable) return touchable;
@@ -890,34 +874,7 @@ class Visual extends Entity {
         return touchable;
     }
 
-    @editable({ slider: [0, 1] })
-    public var alpha(default,set):Float = 1;
-    function set_alpha(alpha:Float):Float {
-        if (this.alpha == alpha) return alpha;
-        this.alpha = alpha;
-        visibilityDirty = true;
-        return alpha;
-    }
-
-    @editable
-    public var x(default,set):Float = 0;
-    function set_x(x:Float):Float {
-        if (this.x == x) return x;
-        this.x = x;
-        matrixDirty = true;
-        return x;
-    }
-
-    @editable
-    public var y(default,set):Float = 0;
-    function set_y(y:Float):Float {
-        if (this.y == y) return y;
-        this.y = y;
-        matrixDirty = true;
-        return y;
-    }
-
-    @editable
+    @editable({ group: 'depth' })
     public var depth(default,set):Float = 0;
     function set_depth(depth:Float):Float {
         if (this.depth == depth) return depth;
@@ -926,17 +883,41 @@ class Visual extends Entity {
         return depth;
     }
 
-    @editable({ slider: [-360, 360] })
-    public var rotation(default,set):Float = 0;
-    function set_rotation(rotation:Float):Float {
-        if (this.rotation == rotation) return rotation;
-        this.rotation = rotation;
-        matrixDirty = true;
-        translatesOnlyDirty = true;
-        return rotation;
+
+    /** If set, children will be sort by depth and their computed depth
+        will be within range [parent.depth, parent.depth + depthRange] */
+    @editable({ group: 'depth', label: 'Range' })
+    #if ceramic_no_depth_range
+    public var depthRange(default,set):Float = -1;
+    #else
+    public var depthRange(default,set):Float = 1;
+    #end
+    function set_depthRange(depthRange:Float):Float {
+        if (this.depthRange == depthRange) return depthRange;
+        this.depthRange = depthRange;
+        ceramic.App.app.hierarchyDirty = true;
+        return depthRange;
     }
 
-    @editable
+    @editable({ group: 'position' })
+    public var x(default,set):Float = 0;
+    function set_x(x:Float):Float {
+        if (this.x == x) return x;
+        this.x = x;
+        matrixDirty = true;
+        return x;
+    }
+
+    @editable({ group: 'position' })
+    public var y(default,set):Float = 0;
+    function set_y(y:Float):Float {
+        if (this.y == y) return y;
+        this.y = y;
+        matrixDirty = true;
+        return y;
+    }
+
+    @editable({ group: 'scale' })
     public var scaleX(default,set):Float = 1;
     function set_scaleX(scaleX:Float):Float {
         if (this.scaleX == scaleX) return scaleX;
@@ -946,7 +927,7 @@ class Visual extends Entity {
         return scaleX;
     }
 
-    @editable
+    @editable({ group: 'scale' })
     public var scaleY(default,set):Float = 1;
     function set_scaleY(scaleY:Float):Float {
         if (this.scaleY == scaleY) return scaleY;
@@ -956,7 +937,7 @@ class Visual extends Entity {
         return scaleY;
     }
 
-    @editable
+    @editable({ group: 'skew' })
     public var skewX(default,set):Float = 0;
     function set_skewX(skewX:Float):Float {
         if (this.skewX == skewX) return skewX;
@@ -966,7 +947,7 @@ class Visual extends Entity {
         return skewX;
     }
 
-    @editable
+    @editable({ group: 'skew' })
     public var skewY(default,set):Float = 0;
     function set_skewY(skewY:Float):Float {
         if (this.skewY == skewY) return skewY;
@@ -976,7 +957,7 @@ class Visual extends Entity {
         return skewY;
     }
 
-    @editable
+    @editable({ group: 'anchor' })
     public var anchorX(default,set):Float = 0;
     function set_anchorX(anchorX:Float):Float {
         if (this.anchorX == anchorX) return anchorX;
@@ -985,7 +966,7 @@ class Visual extends Entity {
         return anchorX;
     }
 
-    @editable
+    @editable({ group: 'anchor' })
     public var anchorY(default,set):Float = 0;
     function set_anchorY(anchorY:Float):Float {
         if (this.anchorY == anchorY) return anchorY;
@@ -994,7 +975,7 @@ class Visual extends Entity {
         return anchorY;
     }
 
-    @editable({ min: 0 })
+    @editable({ min: 0, group: 'size' })
     public var width(get,set):Float;
     var _width:Float = 0;
     function get_width():Float {
@@ -1007,7 +988,7 @@ class Visual extends Entity {
         return width;
     }
 
-    @editable({ min: 0 })
+    @editable({ min: 0, group: 'size' })
     public var height(get,set):Float;
     var _height:Float = 0;
     function get_height():Float {
@@ -1018,6 +999,25 @@ class Visual extends Entity {
         _height = height;
         if (anchorY != 0) matrixDirty = true;
         return height;
+    }
+
+    @editable({ slider: [-360, 360] })
+    public var rotation(default,set):Float = 0;
+    function set_rotation(rotation:Float):Float {
+        if (this.rotation == rotation) return rotation;
+        this.rotation = rotation;
+        matrixDirty = true;
+        translatesOnlyDirty = true;
+        return rotation;
+    }
+
+    @editable({ slider: [0, 1] })
+    public var alpha(default,set):Float = 1;
+    function set_alpha(alpha:Float):Float {
+        if (this.alpha == alpha) return alpha;
+        this.alpha = alpha;
+        visibilityDirty = true;
+        return alpha;
     }
 
     /** Set additional matrix-based transform to this visual. Default is null. */
