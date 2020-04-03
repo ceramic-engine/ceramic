@@ -352,7 +352,7 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,0,52'])))
             haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,5'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,6'])))
             haxelib(['install', 'bind', '0.4.6', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
