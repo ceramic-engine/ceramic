@@ -30,7 +30,41 @@ class IO implements spec.IO {
         log.info('Initialize sqlite (path: $dbPath)');
         keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
 
+        #if ceramic_import_assets_sqlite_db
+        var testKey:String = ceramic.macros.DefinesMacro.getDefine('ceramic_import_assets_sqlite_db');
+        var didImport = keyValue.get(testKey);
+        if (didImport == null) {
+            log.debug('Import custom db from assets');
+            // Need to import db from assets
+            keyValue.destroy();
+            var dbInAssets = ceramic.Path.join([ceramic.internal.PlatformSpecific.getAssetsPath(), 'data.db']);
+            if (!FileSystem.exists(dbInAssets)) {
+                throw 'Missing assets data.db file (path: $dbInAssets)';
+            }
+            if (FileSystem.isDirectory(dbInAssets)) {
+                throw 'Directory data.db is not a file, expected an sqlite db (path: $dbInAssets)';
+            }
+            File.copy(
+                dbInAssets,
+                dbPath
+            );
+            // Initialize updated key value store
+            keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
+            // Mark it as imported
+            keyValue.set(testKey, '1');
+        }
+        #end
+
     }
+
+    #if ceramic_import_assets_sqlite_db
+    public function unmarkDbImportedFromAssets() {
+
+        var testKey:String = ceramic.macros.DefinesMacro.getDefine('ceramic_import_assets_sqlite_db');
+        keyValue.set(testKey, null);
+
+    }
+    #end
 
     public function saveString(key:String, str:String):Bool {
 
