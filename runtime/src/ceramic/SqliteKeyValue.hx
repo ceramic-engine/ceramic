@@ -50,6 +50,14 @@ class SqliteKeyValue extends Entity {
 
     }
 
+    override function destroy() {
+
+        connection.close();
+
+        super.destroy();
+
+    }
+
     public function set(key:String, value:String):Bool {
 
         if (value == null) {
