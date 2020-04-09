@@ -2,6 +2,7 @@ package ceramic.internal;
 
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
+import haxe.io.Bytes;
 #if (bind && android && snow)
 import bind.java.Support;
 #end
@@ -24,6 +25,91 @@ class PlatformSpecific {
         ceramic.App.app.onUpdate(null, function(_) {
             bind.java.Support.flushRunnables();
         });
+        #end
+
+    }
+
+    /**
+     * Read a string from an asset file, synchronously.
+     * Warning: not available on every targets
+     * @return String
+     */
+    public static function readStringFromAsset(assetPath:String):String {
+
+        #if (cpp && snow)
+
+        var root = '';
+        #if (ios || tvos)
+        root = 'assets/';
+        #end
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+
+        var filePath = ceramic.Path.join([root, assetPath]);
+        return @:privateAccess Luxe.snow.io.module._data_load(filePath).toBytes().toString();
+
+        #else
+        return null;
+        #end
+
+    }
+    
+    /**
+     * Read bytes from an asset file, synchronously.
+     * Warning: not available on every targets
+     * @return String
+     */
+    public static function readBytesFromAsset(assetPath:String):Bytes {
+
+        #if (cpp && snow)
+
+        var root = '';
+        #if (ios || tvos)
+        root = 'assets/';
+        #end
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+        
+        var filePath = ceramic.Path.join([root, assetPath]);
+        return @:privateAccess Luxe.snow.io.module._data_load(filePath).toBytes();
+
+        #else
+        return null;
+        #end
+
+    }
+
+    /**
+     * Returns assets paths on disk (if any)
+     * Warning: not available on every targets
+     * @return String
+     */
+    public static function getAssetsPath():String {
+
+        #if (cpp && snow)
+
+        var root = 'assets/';
+        #if (ios || tvos)
+        root = 'assets/assets/';
+        #end
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+        
+        var filePath = ceramic.Path.join([sdl.SDL.getBasePath(), root]);
+
+        return filePath;
+
+        #else
+        return null;
         #end
 
     }
