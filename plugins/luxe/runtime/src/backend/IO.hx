@@ -25,6 +25,9 @@ class IO implements spec.IO {
     function initKeyValue():Void {
 
         var storageDir = ceramic.App.app.backend.info.storageDirectory();
+        if (storageDir == null) {
+            throw 'Failed to init sqlite key value because storage directory is null';
+        }
         var dbPath = Path.join([storageDir, 'data.db']);
 
         log.info('Initialize sqlite (path: $dbPath)');
@@ -37,17 +40,34 @@ class IO implements spec.IO {
             log.debug('Import custom db from assets');
             // Need to import db from assets
             keyValue.destroy();
-            var dbInAssets = ceramic.Path.join([ceramic.internal.PlatformSpecific.getAssetsPath(), 'data.db']);
-            if (!FileSystem.exists(dbInAssets)) {
-                throw 'Missing assets data.db file (path: $dbInAssets)';
+
+            // Try to locate a file in assets
+            var assetsFilePath = ceramic.internal.PlatformSpecific.getAssetsPath();
+            if (assetsFilePath != null) {
+                var dbInAssets = ceramic.Path.join([assetsFilePath, 'data.db']);
+                if (!FileSystem.exists(dbInAssets)) {
+                    throw 'Missing assets data.db file (path: $dbInAssets)';
+                }
+                if (FileSystem.isDirectory(dbInAssets)) {
+                    throw 'Directory data.db is not a file, expected an sqlite db (path: $dbInAssets)';
+                }
+                File.copy(
+                    dbInAssets,
+                    dbPath
+                );
             }
-            if (FileSystem.isDirectory(dbInAssets)) {
-                throw 'Directory data.db is not a file, expected an sqlite db (path: $dbInAssets)';
+            else {
+                // No assets file path on this platform. Try to get bytes directly
+                var bytes = ceramic.internal.PlatformSpecific.readBytesFromAsset('data.db');
+                if (bytes == null) {
+                    throw 'Failed to extract bytes from data.db asset';
+                }
+                if (FileSystem.exists(dbPath)) {
+                    ceramic.Files.deleteRecursive(dbPath);
+                }
+                File.saveBytes(dbPath, bytes);
             }
-            File.copy(
-                dbInAssets,
-                dbPath
-            );
+
             // Initialize updated key value store
             keyValue = new SqliteKeyValue(dbPath, 'KeyValue');
             // Mark it as imported

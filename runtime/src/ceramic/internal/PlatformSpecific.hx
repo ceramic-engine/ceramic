@@ -38,9 +38,9 @@ class PlatformSpecific {
 
         #if (cpp && snow)
 
-        var root = '';
+        var root = 'assets';
         #if (ios || tvos)
-        root = 'assets/';
+        root = 'assets/assets/';
         #end
 
         var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
@@ -49,7 +49,11 @@ class PlatformSpecific {
         }
 
         var filePath = ceramic.Path.join([root, assetPath]);
-        return @:privateAccess Luxe.snow.io.module._data_load(filePath).toBytes().toString();
+        var handle = @:privateAccess Luxe.snow.io.module._data_load(filePath);
+        if (handle != null)
+            return handle.toBytes().toString();
+        else
+            return null;
 
         #else
         return null;
@@ -66,18 +70,22 @@ class PlatformSpecific {
 
         #if (cpp && snow)
 
-        var root = '';
+        var root = 'assets';
         #if (ios || tvos)
-        root = 'assets/';
+        root = 'assets/assets/';
         #end
 
         var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
         if (assetsPrefix != null) {
-            root += assetsPrefix;
+            assetPath = assetsPrefix + assetPath;
         }
         
         var filePath = ceramic.Path.join([root, assetPath]);
-        return @:privateAccess Luxe.snow.io.module._data_load(filePath).toBytes();
+        var handle = @:privateAccess Luxe.snow.io.module._data_load(filePath);
+        if (handle != null)
+            return handle.toBytes();
+        else
+            return null;
 
         #else
         return null;
@@ -92,7 +100,11 @@ class PlatformSpecific {
      */
     public static function getAssetsPath():String {
 
-        #if (cpp && snow)
+        #if android
+
+        return null;
+
+        #elseif (cpp && snow)
 
         var root = 'assets/';
         #if (ios || tvos)
