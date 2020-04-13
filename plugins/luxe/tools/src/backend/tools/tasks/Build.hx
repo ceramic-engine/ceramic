@@ -10,7 +10,6 @@ import tools.Sync;
 import tools.Files;
 import js.node.ChildProcess;
 import npm.StreamSplitter;
-import npm.Chokidar;
 import npm.Fiber;
 
 using StringTools;
@@ -76,9 +75,18 @@ class Build extends tools.Task {
 		// Save last modified list callback
 		var saveLastModifiedListCallback:Void->Void = null;
 
+		// Forbid skip haxe compilation?
+		var forbidSkipHaxeCompilation = false;
+		var hotReloadFlag = extractArgFlag(args, 'hot-reload');
+		var hotReloadPort = extractArgValue(args, 'hot-reload-port');
+		if (target.name == 'web' && hotReloadFlag) {
+			// If hot reload is enabled on web, yes, never skip
+			forbidSkipHaxeCompilation = true;
+		}
+
 		// Check if we could skip haxe compilation
 		var skipHaxeCompilation = false;
-		if (action == 'run' || action == 'build') {
+		if (!forbidSkipHaxeCompilation && (action == 'run' || action == 'build')) {
 			var lastModifiedListFile = Path.join([outTargetPath, (debug ? 'lastModifiedList-debug.json' : 'lastModifiedList.json')]);
 			var lastModifiedListBefore:DynamicAccess<Float> = null;
 			var ceramicYmlPath = Path.join([cwd, 'ceramic.yml']);
@@ -185,6 +193,18 @@ class Build extends tools.Task {
 			}
 			else {
 				print('Run haxe compiler');
+			}
+
+			// Hot reload info
+			if (target.name == 'web') {
+				if (hotReloadFlag) {
+					cmdArgs.push('-D');
+					cmdArgs.push('ceramic_hotreload');
+				}
+				if (hotReloadPort != null) {
+					cmdArgs.push('-D');
+					cmdArgs.push('ceramic_hotreload_port=' + hotReloadPort);
+				}
 			}
 
 			status = haxeWithChecksAndLogs(cmdArgs, {cwd: outTargetPath});
@@ -294,6 +314,13 @@ class Build extends tools.Task {
 					taskArgs.push('--debug');
 				if (electronErrors) {
 					taskArgs.push('--electron-errors');
+				}
+				if (hotReloadFlag) {
+					taskArgs.push('--hot-reload');
+				}
+				if (hotReloadPort != null) {
+					taskArgs.push('--hot-reload-port');
+					taskArgs.push(hotReloadPort);
 				}
 				// if (watch) taskArgs.push('--watch');
 				task.run(cwd, taskArgs);

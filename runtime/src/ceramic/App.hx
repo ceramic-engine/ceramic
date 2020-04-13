@@ -340,6 +340,10 @@ class App extends Entity {
 
     var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
+#if (web && hotml && ceramic_hotreload)
+    var hotReloadClient:hotml.client.Client;
+#end
+
 /// Public initializer
 
     public static function init():InitSettings {
@@ -387,6 +391,12 @@ class App extends Entity {
 
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
+#end
+
+#if (web && hotml && ceramic_hotreload)
+        log.debug('Initialize hot reload client');
+        var port:Null<Int> = ceramic.macros.DefinesMacro.getDefine('ceramic_hotreload_port');
+        hotReloadClient = new hotml.client.Client(port);
 #end
 
         // Init persistent data (that relies on backend)

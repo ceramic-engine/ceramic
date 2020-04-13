@@ -77,3 +77,7 @@
 	path = git/tracker
 	url = https://github.com/jeremyfa/tracker.git
 	branch = master
+[submodule "git/hotml"]
+	path = git/hotml
+	url = https://github.com/jeremyfa/hotml.git
+	branch = master

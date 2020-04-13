@@ -11,7 +11,12 @@ import sys.io.File;
 
 import js.node.Os;
 import js.node.ChildProcess;
+
 import npm.StreamSplitter;
+import npm.Fiber;
+import npm.Chokidar;
+
+import hotml.server.Main as HotReloadServer;
 
 using StringTools;
 
@@ -32,6 +37,7 @@ class Web extends tools.Task {
 
         var doRun = extractArgFlag(args, 'run');
         var doWatch = extractArgFlag(args, 'watch');
+        var doHotReload = extractArgFlag(args, 'hot-reload');
         var electronErrors = extractArgFlag(args, 'electron-errors');
 
         // Create web project if needed
@@ -113,7 +119,10 @@ class Web extends tools.Task {
                 stdoutWrite(token + "\n");
             });
             out.on('done', function() {
-                done();
+                if (done != null) {
+                    done();
+                    done = null;
+                }
             });
             out.on('error', function(err) {
                 warning(''+err);
@@ -131,6 +140,79 @@ class Web extends tools.Task {
             err.on('error', function(err) {
                 warning(''+err);
             });
+
+            if (doHotReload) {
+                // JS hot reload server
+    
+                var argPort = extractArgValue(args, 'hot-reload-port');
+                var port = argPort != null ? Std.parseInt(argPort) : 3220;
+                if (port < 1024) {
+                    fail('Invalid port $argPort');
+                }
+    
+                var server = new HotReloadServer(
+                    webProjectPath,
+                    project.app.name + '.js',
+                    port
+                );
+    
+                var watcher = Chokidar.watch([
+                    Path.join([cwd, 'src/**/*.hx']),
+                    Path.join([webProjectPath, project.app.name + '.js'])
+                ], {
+                    ignoreInitial: true,
+                    cwd: cwd
+                });
+    
+                var scheduledDelay:js.Node.TimeoutObject = null;
+                var building = false;
+    
+                function doBuild() {
+
+                    if (building) {
+                        js.Node.setTimeout(doBuild, 500);
+                        return;
+                    }
+    
+                    scheduledDelay = null;
+    
+                    var buildArgs = ['build', 'web', '--variant', context.variant];
+                    if (context.debug)
+                        buildArgs.push('--debug');
+                    Fiber.fiber(function() {
+                        building = true;
+                        runTask('luxe build', buildArgs);
+                        building = false;
+                    }).run();
+    
+                }
+    
+                function scheduleBuild() {
+    
+                    if (scheduledDelay != null)
+                        js.Node.clearTimeout(scheduledDelay);
+                    
+                    scheduledDelay = js.Node.setTimeout(doBuild, 500);
+    
+                }
+    
+                watcher.on('add', (path, stats) -> {
+                    print('Added: $path');
+                    if (path.endsWith('.hx')) {
+                        scheduleBuild();
+                    }
+                });
+                watcher.on('change', (path, stats) -> {
+                    print('Changed: $path');
+                    if (path.endsWith('.hx')) {
+                        scheduleBuild();
+                    }
+                    else if (path.endsWith('.js')) {
+                        print('reload server');
+                        server.reload();
+                    }
+                });
+            }
 
         });
 

@@ -122,6 +122,7 @@ class PluginHxml extends tools.Task {
         var rawHxml = '
         -cp tools/src
         -lib hxnodejs
+        -lib hxnodejs-ws
         -lib hscript
         -js index.js
         -debug

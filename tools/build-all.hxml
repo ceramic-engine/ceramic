@@ -1,7 +1,9 @@
 -cp src
 -main tools.Index
 -lib hxnodejs
+-lib hxnodejs-ws
 -lib hscript
+-lib hotml
 -js index.js
 -debug
 -cmd node_modules/.bin/node ceramic plugin build --tools --all

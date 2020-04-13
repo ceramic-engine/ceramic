@@ -43,6 +43,7 @@ class Project {
         { 'format': '3.4.2' },
         { 'polyline': 'github:jeremyfa/polyline' },
         { 'tracker': 'github:jeremyfa/tracker' },
+        { 'hotml': 'github:jeremyfa/hotml' },
         { 'bind': 'github:jeremyfa/polyline' },
         { 'earcut': 'github:ceramic-engine/earcut' },
         { 'hsluv': 'github:ceramic-engine/hsluv' },

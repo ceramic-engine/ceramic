@@ -370,6 +370,9 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'tracker'])))
             haxelib(['dev', 'tracker', Path.join([context.ceramicGitDepsPath, 'tracker']), '--always'], {cwd: cwd});
 
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hotml'])))
+            haxelib(['dev', 'hotml', Path.join([context.ceramicGitDepsPath, 'hotml']), '--always'], {cwd: cwd});
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'arcade'])))
             haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
 

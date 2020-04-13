@@ -1,2 +1,5 @@
 plugin:
     name: Web
+
+    libs:
+        - hotml
