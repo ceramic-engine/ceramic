@@ -2,7 +2,9 @@ package ceramic;
 
 import haxe.DynamicAccess;
 import ceramic.Path;
+import ceramic.Shortcuts.*;
 
+using ceramic.Extensions;
 using StringTools;
 
 #if !macro
@@ -89,6 +91,122 @@ class Assets extends Entity {
                 } else {
                     throw "Assets: invalid asset kind for id: " + id;
                 }
+        }
+
+    }
+
+    /**
+     * Add all assets matching given path pattern (if provided)
+     * @param pathPattern 
+     */
+    public function addAll(?pathPattern:EReg):Void {
+
+        var info = app.backend.info;
+        var imageExtensions = info.imageExtensions();
+        var textExtensions = info.textExtensions();
+        var soundExtensions = info.soundExtensions();
+        var shaderExtensions = info.shaderExtensions();
+        var fontExtensions = ['fnt'];
+        var databaseExtensions = ['csv'];
+
+        var customKindsExtensions = [];
+        var customKindsAdd = [];
+        for (value in customAssetKinds) {
+            customKindsExtensions.push(value.extensions);
+            customKindsAdd.push(value.add);
+        }
+        
+        for (name => paths in Assets.allByName) {
+
+            // Check pattern, if any
+            if (pathPattern != null) {
+                var matches = false;
+                for (i in 0...paths.length) {
+                    if (pathPattern.match(paths.unsafeGet(i))) {
+                        matches = true;
+                        break;
+                    }
+                }
+                if (!matches)
+                    continue;
+            }
+
+            var assetExtension = Path.extension(paths[0]);
+
+            var didAdd = false;
+            for (i in 0...imageExtensions.length) {
+                if (imageExtensions.unsafeGet(i) == assetExtension) {
+                    addImage(name);
+                    didAdd = true;
+                    break;
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...textExtensions.length) {
+                    if (textExtensions.unsafeGet(i) == assetExtension) {
+                        addText(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...soundExtensions.length) {
+                    if (soundExtensions.unsafeGet(i) == assetExtension) {
+                        addSound(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...shaderExtensions.length) {
+                    if (shaderExtensions.unsafeGet(i) == assetExtension) {
+                        addShader(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...fontExtensions.length) {
+                    if (fontExtensions.unsafeGet(i) == assetExtension) {
+                        addFont(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...databaseExtensions.length) {
+                    if (databaseExtensions.unsafeGet(i) == assetExtension) {
+                        addDatabase(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (j in 0...customKindsExtensions.length) {
+                    var extensions = customKindsExtensions.unsafeGet(j);
+                    for (i in 0...extensions.length) {
+                        if (extensions.unsafeGet(i) == assetExtension) {
+                            var add = customKindsAdd.unsafeGet(j);
+                            add(this, name);
+                            didAdd = true;
+                            break;
+                        }
+                    }
+                    if (didAdd)
+                        break;
+                }
+            }
         }
 
     }
