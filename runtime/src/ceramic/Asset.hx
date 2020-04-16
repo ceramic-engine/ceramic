@@ -50,6 +50,8 @@ class Asset extends Entity implements Observable {
 
     var handleTexturesDensityChange(default,set):Bool = false;
 
+    var hotReload(default,set):Bool = false;
+
 /// Lifecycle
 
     public function new(kind:String, name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -257,6 +259,28 @@ class Asset extends Entity implements Observable {
     }
 
     function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
+
+        // Override
+
+    }
+
+    function set_hotReload(value:Bool):Bool {
+
+        if (hotReload == value) return value;
+        hotReload = value;
+
+        if (value) {
+            owner.onAssetFilesChange(this, assetFilesDidChange);
+        }
+        else {
+            owner.offAssetFilesChange(assetFilesDidChange);
+        }
+
+        return value;
+
+    }
+
+    function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
 
         // Override
 

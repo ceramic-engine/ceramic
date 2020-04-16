@@ -15,13 +15,20 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
     static var electron:Dynamic = null;
     #end
 
+    /**
+     * If set to `true`, actual content of files will be compared
+     */
+    var checkContent:Bool = true;
+
     var watched:Map<String,WatchedFile> = new Map();
 
     var timeSinceLastCheck:Float = 0.0;
 
     public function new() {
 
-        #if web
+        super();
+
+        #if (web && ceramic_use_electron)
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
@@ -112,12 +119,20 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
                 if (watchedFile.mtime != -1 && mtime > watchedFile.mtime) {
                     // File modification time has changed
                     watchedFile.mtime = mtime;
-                    var content = getContent(path);
-
-                    if (content != watchedFile.content) {
-                        watchedFile.content = content;
-                        
-                        // File content has changed, notify
+                    if (checkContent) {
+                        var content = getContent(path);
+    
+                        if (content != watchedFile.content) {
+                            watchedFile.content = content;
+                            
+                            // File content has changed, notify
+                            for (i in 0...watchedFile.updateCallbacks.length) {
+                                watchedFile.updateCallbacks[i](watchedFile.content);
+                            }
+                        }
+                    }
+                    else {
+                        // File modification time is enough to notify
                         for (i in 0...watchedFile.updateCallbacks.length) {
                             watchedFile.updateCallbacks[i](watchedFile.content);
                         }

@@ -181,7 +181,7 @@ class PlatformSpecific {
         }
             
     }
-    #elseif (js && (node || nodejs))
+    #elseif (js && (node || nodejs || hxnodejs))
     public static function nodeRequire(module:String):Dynamic {
         return js.Lib.require(module);
     }

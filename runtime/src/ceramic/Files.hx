@@ -10,6 +10,7 @@ import js.node.ChildProcess;
 #end
 
 import ceramic.Path;
+import ceramic.internal.PlatformSpecific;
 import ceramic.Shortcuts.*;
 
 using StringTools;
@@ -87,28 +88,9 @@ class Files {
         #end
 
     }
-
-    /** Return file mtime in seconds. Only works in nodejs for now. */
-    public static function getLastModified(filePath:String):Int {
-
-        #if (node || nodejs || hxnodejs)
-
-        if (!FileSystem.exists(filePath)) return -1;
-
-        return Math.round(Fs.statSync(filePath).mtime.getTime() / 1000.0);
-
-        #else
-
-        log.warning('getLastModified() is not supported on this target');
-        return -1;
-
-        #end
-
-    }
     
+    #if (sys || node || nodejs)
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
-
-        #if (sys || node || nodejs || hxnodejs)
 
         var result:Array<String> = [];
 
@@ -136,11 +118,77 @@ class Files {
 
         return result;
 
-        #else
+    }
+    #elseif (web && ceramic_use_electron)
+    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
-        log.warning('getFlatDirectory() is not supported on this target');
+        var fs = PlatformSpecific.nodeRequire('fs');
+        var result:Array<String> = [];
+        
+        if (fs == null) {
+            return result;
+        }
+
+        var list:Array<String> = fs.readdirSync(dir);
+        for (name in list) {
+
+            if (excludeSystemFiles && name == '.DS_Store') continue;
+
+            var path = Path.join([dir, name]);
+            var stat:Dynamic = fs.lstatSync(path);
+            var isDir:Bool = stat != null && stat.isDirectory();
+            if (isDir) {
+                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
+            } else {
+                result.push(path);
+            }
+        }
+
+        if (!subCall) {
+            var prevResult = result;
+            result = [];
+            var prefix = Path.normalize(dir);
+            if (!prefix.endsWith('/')) prefix += '/';
+            for (item in prevResult) {
+                result.push(item.substr(prefix.length));
+            }
+        }
+
+        return result;
+
+    }
+    #else
+    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true):Array<String> {
+
+        // Not implemented on this platform
         return [];
 
+    }
+    #end
+
+    /**
+     * Get file last modified time (in seconds) or `-1` if not available
+     * @param path 
+     * @return Float
+     */
+    public static function getLastModified(path:String):Float {
+
+        #if (sys || hxnodejs || nodejs || node)
+        var stat = FileSystem.stat(path);
+        if (stat == null) return -1;
+        return stat.mtime.getTime() / 1000.0;
+        #elseif (web && ceramic_use_electron)
+        var fs = PlatformSpecific.nodeRequire('fs');
+        if (fs != null) {
+            var stat = fs.statSync(path);
+            if (stat == null) return -1;
+            return stat.mtime.getTime() / 1000.0;
+        }
+        else {
+            return -1;
+        }
+        #else
+        return -1;
         #end
 
     }
@@ -237,7 +285,10 @@ class Files {
 
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
-        var isWindows = Sys.systemName() == 'Windows';
+        var isWindows = false;
+        #if (sys || node || nodejs || hxnodejs)
+        isWindows = Sys.systemName() == 'Windows';
+        #end
 
         var fromParts = Path.normalize(relativeTo).substr(isWindows ? 3 : 1).split('/');
         var toParts = Path.normalize(absolutePath).substr(isWindows ? 3 : 1).split('/');

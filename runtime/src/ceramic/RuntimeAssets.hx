@@ -45,85 +45,30 @@ class RuntimeAssets {
 
     }
 
+    public function reset(allAssets:Array<String>, ?path:String) {
+
+        this.allAssets = allAssets;
+        this.path = path;
+
+        allAssetDirs = null;
+        assetsByBaseName = null;
+        assetDirsByBaseName = null;
+        cachedNames = new Map();
+        cachedLists = null;
+
+        initData();
+
+    }
+
     public static function fromPath(path:String):RuntimeAssets {
 
         #if (sys || node || nodejs || (web && ceramic_use_electron))
-        return new RuntimeAssets(getFlatDirectory(path), path);
+        return new RuntimeAssets(Files.getFlatDirectory(path), path);
         #else
         return null;
         #end
 
     }
-    
-    #if (sys || node || nodejs)
-    static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
-
-        var result:Array<String> = [];
-
-        for (name in FileSystem.readDirectory(dir)) {
-
-            if (excludeSystemFiles && name == '.DS_Store') continue;
-
-            var path = Path.join([dir, name]);
-            if (FileSystem.isDirectory(path)) {
-                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
-            } else {
-                result.push(path);
-            }
-        }
-
-        if (!subCall) {
-            var prevResult = result;
-            result = [];
-            var prefix = Path.normalize(dir);
-            if (!prefix.endsWith('/')) prefix += '/';
-            for (item in prevResult) {
-                result.push(item.substr(prefix.length));
-            }
-        }
-
-        return result;
-
-    }
-    #elseif (web && ceramic_use_electron)
-    static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
-
-        var fs = PlatformSpecific.nodeRequire('fs');
-        var result:Array<String> = [];
-        
-        if (fs == null) {
-            return result;
-        }
-
-        var list:Array<String> = fs.readdirSync(dir);
-        for (name in list) {
-
-            if (excludeSystemFiles && name == '.DS_Store') continue;
-
-            var path = Path.join([dir, name]);
-            var stat:Dynamic = fs.lstatSync(path);
-            var isDir:Bool = stat != null && stat.isDirectory();
-            if (isDir) {
-                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
-            } else {
-                result.push(path);
-            }
-        }
-
-        if (!subCall) {
-            var prevResult = result;
-            result = [];
-            var prefix = Path.normalize(dir);
-            if (!prefix.endsWith('/')) prefix += '/';
-            for (item in prevResult) {
-                result.push(item.substr(prefix.length));
-            }
-        }
-
-        return result;
-
-    }
-    #end
 
 /// Public API
 

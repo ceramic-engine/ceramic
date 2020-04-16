@@ -19,6 +19,8 @@ class Assets extends Entity {
 
     @event function update(asset:Asset);
 
+    @event function assetFilesChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>);
+
 /// Properties
 
     var addedAssets:Array<Asset> = [];
@@ -115,8 +117,13 @@ class Assets extends Entity {
             customKindsExtensions.push(value.extensions);
             customKindsAdd.push(value.add);
         }
+
+        var allByName = Assets.allByName;
+        if (runtimeAssets != null) {
+            allByName = runtimeAssets.getLists().allByName;
+        }
         
-        for (name => paths in Assets.allByName) {
+        for (name => paths in allByName) {
 
             // Check pattern, if any
             if (pathPattern != null) {
@@ -595,6 +602,37 @@ class Assets extends Entity {
         }
 
         return list.iterator();
+
+    }
+
+/// Watching assets
+
+    public function watchDirectory(path:String):WatchDirectory {
+        
+        if (runtimeAssets != null) {
+            throw 'There is already an instance of RuntimeAssets assigned. Cannot watch a directory, which also need its own instance';
+        }
+        
+        // Needed to find new assets
+        runtimeAssets = RuntimeAssets.fromPath(path);
+
+        // Watch directory
+        var watch = new WatchDirectory();
+        watch.watchDirectory(path);
+        watch.onDirectoryChange(this, (_, newFiles, previousFiles) -> {
+            if (runtimeAssets == null) {
+                log.warning('Missing instance of RuntimeAssets when watched directory changed (path: $path)');
+            }
+            else {
+                runtimeAssets.reset(Files.getFlatDirectory(path), path);
+            }
+            emitAssetFilesChange(newFiles, previousFiles);
+        });
+        onDestroy(watch, _ -> {
+            watch.destroy();
+        });
+
+        return watch;
 
     }
 
