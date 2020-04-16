@@ -1,5 +1,6 @@
 package backend;
 
+import backend.impl.CeramicTexture;
 import snow.systems.assets.Asset;
 import luxe.Resources;
 import luxe.options.ResourceOptions;
@@ -50,9 +51,15 @@ class Textures implements spec.Textures {
             return;
         }
 
+        var cleanedPath = path;
+        var questionMarkIndex = cleanedPath.indexOf('?');
+        if (questionMarkIndex != -1) {
+            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        }
+
         // No texture yet, load one
-        var texture:phoenix.Texture = new phoenix.Texture({
-            id: path,
+        var texture:phoenix.Texture = new CeramicTexture(path, {
+            id: cleanedPath,
             system: Luxe.resources,
             filter_min: null,
             filter_mag: null,
@@ -62,6 +69,9 @@ class Textures implements spec.Textures {
         });
 
         // Keep it in luxe cache
+        if (Luxe.resources.cache.exists(texture.id)) {
+            Luxe.resources.remove(texture);
+        }
         Luxe.resources.add(texture);
 
         // Create callbacks list with first entry
@@ -77,7 +87,7 @@ class Textures implements spec.Textures {
         function doLoad() {
             // Load from asset using Luxe's internal API
             texture.state = ResourceState.loading;
-            var get = Luxe.snow.assets.image(path);
+            var get = Luxe.snow.assets.image(texture.id);
             get.then(function(asset:AssetImage) {
                 texture.state = ResourceState.loaded;
 
@@ -203,6 +213,10 @@ class Textures implements spec.Textures {
     public function destroyTexture(texture:Texture):Void {
 
         var id = (texture:phoenix.Texture).id;
+        if (Std.is(texture, CeramicTexture)) {
+            var ceramicTexture:CeramicTexture = cast texture;
+            id = ceramicTexture.ceramicId;
+        }
         if (loadedTexturesRetainCount.get(id) > 1) {
             loadedTexturesRetainCount.set(id, loadedTexturesRetainCount.get(id) - 1);
         }

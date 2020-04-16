@@ -291,6 +291,7 @@ class Assets extends Entity {
         addedAssets.push(asset);
         asset.owner = this;
         asset.runtimeAssets = this.runtimeAssets;
+        asset.hotReload = this.hotReload;
 
         return previousAsset;
 
@@ -606,6 +607,21 @@ class Assets extends Entity {
     }
 
 /// Watching assets
+
+    /**
+     * Set to `true` to enable hot reload.
+     * Note: this won't do anything unless used in pair with `watchDirectory(path)`
+     */
+    public var hotReload(default, set):Bool = false;
+
+    function set_hotReload(hotReload:Bool):Bool {
+        if (this.hotReload == hotReload) return hotReload;
+        this.hotReload = hotReload;
+        for (asset in addedAssets) {
+            asset.hotReload = hotReload;
+        }
+        return hotReload;
+    }
 
     public function watchDirectory(path:String):WatchDirectory {
         

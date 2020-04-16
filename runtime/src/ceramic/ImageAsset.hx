@@ -4,6 +4,8 @@ import ceramic.Shortcuts.*;
 
 class ImageAsset extends Asset {
 
+    static var reloadedCount:Map<String, Int> = null;
+
 /// Events
 
     @event function replaceTexture(newTexture:Texture, prevTexture:Texture);
@@ -18,6 +20,8 @@ class ImageAsset extends Asset {
 
     @:allow(ceramic.Assets)
     var defaultImageOptions:AssetOptions = null;
+
+    var reloadedBecauseOfHotReload:Bool = false;
 
 /// Lifecycle
 
@@ -51,8 +55,15 @@ class ImageAsset extends Asset {
             }
         }
 
-        log.info('Load image $path (density=$density)');
-        app.backend.textures.load(Assets.realAssetPath(path, runtimeAssets), loadOptions, function(image) {
+        var backendPath = path;
+        var assetReloadedCount = getReloadedCount(path);
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        if (assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+        log.info('Load image $backendPath (density=$density)');
+        app.backend.textures.load(realPath, loadOptions, function(image) {
 
             if (image != null) {
 
@@ -87,12 +98,20 @@ class ImageAsset extends Asset {
 
                                 quad.texture = this.texture;
 
-                                // Frame was reset by texture assign.
-                                // Put it back to what it was.
-                                quad.frameX = frameX;
-                                quad.frameY = frameY;
-                                quad.frameWidth = frameWidth;
-                                quad.frameHeight = frameHeight;
+                                // We keep the frame, unless image
+                                // is being hot-reloaded and its frame is all texture area
+                                if (!reloadedBecauseOfHotReload
+                                    || frameX != 0 || frameY != 0
+                                    || frameWidth != prevTexture.width
+                                    || frameHeight != prevTexture.height
+                                ) {
+                                    // Frame was reset by texture assign.
+                                    // Put it back to what it was.
+                                    quad.frameX = frameX;
+                                    quad.frameY = frameY;
+                                    quad.frameWidth = frameWidth;
+                                    quad.frameHeight = frameHeight;
+                                }
                             }
                         }
                         else if (visual.asMesh != null) {
@@ -144,8 +163,52 @@ class ImageAsset extends Asset {
 
         if (prevPath != path) {
             log.info('Reload texture ($prevPath -> $path)');
+            reloadedBecauseOfHotReload = false;
             load();
         }
+
+    }
+
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            incrementReloadedCount(path);
+            log.info('Reload texture (file has changed)');
+            reloadedBecauseOfHotReload = true;
+            load();
+        }
+
+    }
+
+    function incrementReloadedCount(path:String) {
+
+        if (reloadedCount == null)
+            reloadedCount = new Map();
+
+        if (reloadedCount.exists(path)) {
+            reloadedCount.set(path, reloadedCount.get(path) + 1);
+        }
+        else {
+            reloadedCount.set(path, 1);
+        }
+
+    }
+
+    function getReloadedCount(path:String):Int {
+
+        if (reloadedCount == null || !reloadedCount.exists(path))
+            return 0;
+
+        return reloadedCount.get(path);
 
     }
 
