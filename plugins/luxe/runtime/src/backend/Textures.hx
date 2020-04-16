@@ -89,7 +89,14 @@ class Textures implements spec.Textures {
                     var callbacks = loadingTextureCallbacks.get(path);
                     loadingTextureCallbacks.remove(path);
                     for (callback in callbacks) {
-                        callback(texture);
+                        try {
+                            callback(texture);
+                        }
+                        catch (e:Dynamic) {
+                            ceramic.App.app.onceImmediate(() -> {
+                                throw e;
+                            });
+                        }
                     }
                 }
 /*#if cpp
@@ -107,7 +114,14 @@ class Textures implements spec.Textures {
                     var callbacks = loadingTextureCallbacks.get(path);
                     loadingTextureCallbacks.remove(path);
                     for (callback in callbacks) {
-                        callback(null);
+                        try {
+                            callback(null);
+                        }
+                        catch (e:Dynamic) {
+                            ceramic.App.app.onceImmediate(() -> {
+                                throw e;
+                            });
+                        }
                     }
                 }
 /*#if cpp
