@@ -4,24 +4,22 @@ import ceramic.Shortcuts.*;
 
 class ImageAsset extends Asset {
 
-    static var reloadedCount:Map<String, Int> = null;
-
 /// Events
 
     @event function replaceTexture(newTexture:Texture, prevTexture:Texture);
 
 /// Properties
 
-    public var pixels:Pixels = null;
+    //public var pixels:Pixels = null;
 
-    public var texture:Texture = null;
+    @observe public var texture:Texture = null;
 
 /// Internal
 
     @:allow(ceramic.Assets)
     var defaultImageOptions:AssetOptions = null;
 
-    var reloadedBecauseOfHotReload:Bool = false;
+    var reloadBecauseOfDensityChange:Bool = false;
 
 /// Lifecycle
 
@@ -35,6 +33,9 @@ class ImageAsset extends Asset {
     override public function load() {
 
         status = LOADING;
+
+        var reloadBecauseOfDensityChange = this.reloadBecauseOfDensityChange;
+        this.reloadBecauseOfDensityChange = false;
 
         if (path == null) {
             log.warning('Cannot load image asset if path is undefined.');
@@ -55,21 +56,24 @@ class ImageAsset extends Asset {
             }
         }
 
+        // Add reload count if any
         var backendPath = path;
-        var assetReloadedCount = getReloadedCount(path);
         var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
-        if (assetReloadedCount > 0) {
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.textures.supportsHotReloadPath() && assetReloadedCount > 0) {
             realPath += '?hot=' + assetReloadedCount;
             backendPath += '?hot=' + assetReloadedCount;
         }
+
         log.info('Load image $backendPath (density=$density)');
         app.backend.textures.load(realPath, loadOptions, function(image) {
 
             if (image != null) {
 
                 var prevTexture = this.texture;
-                this.texture = new Texture(image, density);
-                this.texture.id = 'texture:' + path;
+                var newTexture = new Texture(image, density);
+                newTexture.id = 'texture:' + backendPath;
+                this.texture = newTexture;
                 
                 // Link the texture to this asset so that
                 // destroying one will destroy the other
@@ -100,7 +104,7 @@ class ImageAsset extends Asset {
 
                                 // We keep the frame, unless image
                                 // is being hot-reloaded and its frame is all texture area
-                                if (!reloadedBecauseOfHotReload
+                                if (reloadBecauseOfDensityChange
                                     || frameX != 0 || frameY != 0
                                     || frameWidth != prevTexture.width
                                     || frameHeight != prevTexture.height
@@ -163,13 +167,16 @@ class ImageAsset extends Asset {
 
         if (prevPath != path) {
             log.info('Reload texture ($prevPath -> $path)');
-            reloadedBecauseOfHotReload = false;
+            reloadBecauseOfDensityChange = true;
             load();
         }
 
     }
 
     override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.textures.supportsHotReloadPath())
+            return;
 
         var previousTime:Float = -1;
         if (previousFiles.exists(path)) {
@@ -181,34 +188,9 @@ class ImageAsset extends Asset {
         }
 
         if (newTime > previousTime) {
-            incrementReloadedCount(path);
             log.info('Reload texture (file has changed)');
-            reloadedBecauseOfHotReload = true;
             load();
         }
-
-    }
-
-    function incrementReloadedCount(path:String) {
-
-        if (reloadedCount == null)
-            reloadedCount = new Map();
-
-        if (reloadedCount.exists(path)) {
-            reloadedCount.set(path, reloadedCount.get(path) + 1);
-        }
-        else {
-            reloadedCount.set(path, 1);
-        }
-
-    }
-
-    function getReloadedCount(path:String):Int {
-
-        if (reloadedCount == null || !reloadedCount.exists(path))
-            return 0;
-
-        return reloadedCount.get(path);
 
     }
 

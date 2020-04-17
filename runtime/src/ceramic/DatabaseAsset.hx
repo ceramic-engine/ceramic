@@ -25,8 +25,17 @@ class DatabaseAsset extends Asset {
             return;
         }
 
-        log.info('Load database $path');
-        app.backend.texts.load(Assets.realAssetPath(path, runtimeAssets), function(text) {
+        // Add reload count if any
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.texts.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+
+        log.info('Load database $backendPath');
+        app.backend.texts.load(realPath, function(text) {
 
             if (text != null) {
                 try {
@@ -47,6 +56,27 @@ class DatabaseAsset extends Asset {
             }
 
         });
+
+    }
+
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.texts.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload database (file has changed)');
+            load();
+        }
 
     }
 

@@ -10,6 +10,12 @@ interface Textures {
 
 /// Textures
 
+    /**
+     * Returns `true` if paths with `?hot=...` are supported on this backend
+     * @return Bool
+     */
+    function supportsHotReloadPath():Bool;
+
     function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture;
     
     function destroyTexture(texture:Texture):Void;

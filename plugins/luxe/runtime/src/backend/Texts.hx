@@ -28,7 +28,14 @@ class Texts implements spec.Texts {
             loadingTextCallbacks.set(path, []);
         }
 
-        Luxe.resources.load_text(path)
+        // Remove ?something in path
+        var cleanedPath = path;
+        var questionMarkIndex = cleanedPath.indexOf('?');
+        if (questionMarkIndex != -1) {
+            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        }
+
+        Luxe.resources.load_text(cleanedPath)
         .then(function(res:luxe.resource.Resource.TextResource) {
             
             if (res.asset == null) {
@@ -75,6 +82,12 @@ class Texts implements spec.Texts {
         ceramic.App.app.onceImmediate(function() {
             snow.api.Promise.Promises.step();
         });
+
+    }
+
+    inline public function supportsHotReloadPath():Bool {
+        
+        return true;
 
     }
 

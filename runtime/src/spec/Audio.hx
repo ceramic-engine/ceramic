@@ -8,6 +8,8 @@ interface Audio {
 
     function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void;
 
+    function supportsHotReloadPath():Bool;
+
     function destroy(audio:AudioResource):Void;
 
     function mute(audio:AudioResource):AudioHandle;

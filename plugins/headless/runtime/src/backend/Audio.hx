@@ -18,6 +18,12 @@ class Audio implements spec.Audio {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+        
+        return false;
+
+    }
+
     inline public function destroy(audio:AudioResource):Void {
 
         //

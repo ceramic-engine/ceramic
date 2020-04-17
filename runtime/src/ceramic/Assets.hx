@@ -36,6 +36,10 @@ class Assets extends Entity {
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
 
+    static var reloadCountByRealAssetPath:Map<String, Int> = null;
+
+    static var lastModifiedByRealAssetPath:Map<String, Float> = null;
+
 /// Lifecycle
 
     public function new() {
@@ -623,10 +627,27 @@ class Assets extends Entity {
         return hotReload;
     }
 
-    public function watchDirectory(path:String):WatchDirectory {
+    /**
+     * Watch the given asset directory. Any change will fire `assetFilesChange` event.
+     * If `hotReload` is set to `true` (its default), related assets will be hot reloaded
+     * when their file changes on disk.
+     * Behavior may differ depending on the platfom.
+     * When using web target via electron, be sure to add `ceramic_use_electron` define.
+     * @param path
+     *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getDefine('assets_path')`
+     *     to watch default asset path in project.
+     * @param hotReload 
+     *     `true` by default. Will enable hot reload of assets when related file changes on disk
+     * @return WatchDirectory instance used internally
+     */
+    public function watchDirectory(path:String, hotReload:Bool = true):WatchDirectory {
         
         if (runtimeAssets != null) {
             throw 'There is already an instance of RuntimeAssets assigned. Cannot watch a directory, which also need its own instance';
+        }
+
+        if (hotReload) {
+            this.hotReload = hotReload;
         }
         
         // Needed to find new assets
@@ -642,6 +663,31 @@ class Assets extends Entity {
             else {
                 runtimeAssets.reset(Files.getFlatDirectory(path), path);
             }
+
+            // Init last modified by real asset path if needed
+            if (lastModifiedByRealAssetPath == null) {
+                lastModifiedByRealAssetPath = new Map();
+                for (key => value in previousFiles.mutable) {
+                    var realPathKey = realAssetPath(key, runtimeAssets);
+                    lastModifiedByRealAssetPath.set(realPathKey, value);
+                }
+            }
+
+            // Create new list and increment reload counts if any relevant changes
+            var newLastModifiedByRealAssetPath = new Map();
+            for (key => value in newFiles.mutable) {
+                var realPathKey = realAssetPath(key, runtimeAssets);
+                newLastModifiedByRealAssetPath.set(realPathKey, value);
+                if (lastModifiedByRealAssetPath.exists(realPathKey)) {
+                    if (value > lastModifiedByRealAssetPath.get(realPathKey)) {
+                        incrementReloadCount(realPathKey);
+                    }
+                }
+            }
+            lastModifiedByRealAssetPath = newLastModifiedByRealAssetPath;
+
+            // Emit event to trigger chain of hot reload (if enabled)
+            // or any custom behavior
             emitAssetFilesChange(newFiles, previousFiles);
         });
         onDestroy(watch, _ -> {
@@ -706,6 +752,34 @@ class Assets extends Entity {
                 return path;
             }
         }
+
+    }
+
+/// Reload count
+
+
+/// Reloaded count
+
+    static function incrementReloadCount(realAssetPath:String) {
+
+        if (Assets.reloadCountByRealAssetPath == null)
+            Assets.reloadCountByRealAssetPath = new Map();
+
+        if (Assets.reloadCountByRealAssetPath.exists(realAssetPath)) {
+            Assets.reloadCountByRealAssetPath.set(realAssetPath, Assets.reloadCountByRealAssetPath.get(realAssetPath) + 1);
+        }
+        else {
+            Assets.reloadCountByRealAssetPath.set(realAssetPath, 1);
+        }
+
+    }
+
+    public static function getReloadCount(realAssetPath:String):Int {
+
+        if (Assets.reloadCountByRealAssetPath == null || !Assets.reloadCountByRealAssetPath.exists(realAssetPath))
+            return 0;
+
+        return Assets.reloadCountByRealAssetPath.get(realAssetPath);
 
     }
 

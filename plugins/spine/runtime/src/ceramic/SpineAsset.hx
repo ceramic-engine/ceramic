@@ -25,7 +25,7 @@ class SpineAsset extends Asset {
 
     public var atlas:TextureAtlas = null;
 
-    public var spineData:SpineData = null;
+    @observe public var spineData:SpineData = null;
 
     public var scale:Float = 1.0;
 
@@ -289,6 +289,27 @@ class SpineAsset extends Asset {
 
         if (prevPath != path) {
             ceramic.App.app.logger.info('Reload spine ($prevPath -> $path)');
+            load();
+        }
+
+    }
+
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.texts.supportsHotReloadPath() && !app.backend.textures.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload spine (file has changed)');
             load();
         }
 

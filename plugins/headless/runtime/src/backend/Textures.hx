@@ -10,6 +10,12 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+        
+        return false;
+
+    }
+
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         return null;

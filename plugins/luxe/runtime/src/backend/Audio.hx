@@ -24,7 +24,14 @@ class Audio implements spec.Audio {
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
-        Luxe.resources.load_audio(path, {
+        // Remove ?something in path
+        var cleanedPath = path;
+        var questionMarkIndex = cleanedPath.indexOf('?');
+        if (questionMarkIndex != -1) {
+            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        }
+
+        Luxe.resources.load_audio(cleanedPath, {
             is_stream: options != null ? options.stream : false
         })
         .then(function(audio:AudioResource) {
@@ -33,6 +40,12 @@ class Audio implements spec.Audio {
         function(_) {
             done(null);
         });
+
+    }
+
+    inline public function supportsHotReloadPath():Bool {
+        
+        return true;
 
     }
 

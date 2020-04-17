@@ -4,7 +4,7 @@ import ceramic.Shortcuts.*;
 
 class TextAsset extends Asset {
 
-    public var text:String = null;
+    @observe public var text:String = null;
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
@@ -23,8 +23,17 @@ class TextAsset extends Asset {
             return;
         }
 
-        log.info('Load text $path');
-        app.backend.texts.load(Assets.realAssetPath(path, runtimeAssets), function(text) {
+        // Add reload count if any
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.texts.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+
+        log.info('Load text $backendPath');
+        app.backend.texts.load(realPath, function(text) {
 
             if (text != null) {
                 this.text = text;
@@ -38,6 +47,27 @@ class TextAsset extends Asset {
             }
 
         });
+
+    }
+
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.texts.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload text (file has changed)');
+            load();
+        }
 
     }
 

@@ -199,6 +199,27 @@ class FontAsset extends Asset {
 
     }
 
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.texts.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload font (file has changed)');
+            load();
+        }
+
+    }
+
     override function destroy():Void {
 
         super.destroy();

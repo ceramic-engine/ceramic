@@ -51,6 +51,7 @@ class Textures implements spec.Textures {
             return;
         }
 
+        // Remove ?something in path
         var cleanedPath = path;
         var questionMarkIndex = cleanedPath.indexOf('?');
         if (questionMarkIndex != -1) {
@@ -152,6 +153,12 @@ class Textures implements spec.Textures {
         ceramic.App.app.onceImmediate(function() {
             snow.api.Promise.Promises.step();
         });
+
+    }
+
+    inline public function supportsHotReloadPath():Bool {
+        
+        return true;
 
     }
 

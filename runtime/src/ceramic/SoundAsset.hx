@@ -4,9 +4,13 @@ import ceramic.Shortcuts.*;
 
 class SoundAsset extends Asset {
 
+    /// Events
+    
+    @event function replaceSound(newSound:Sound, prevSound:Sound);
+
     public var stream:Bool = false;
 
-    public var sound:Sound = null;
+    @observe public var sound:Sound = null;
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
@@ -25,8 +29,17 @@ class SoundAsset extends Asset {
             return;
         }
 
-        log.info('Load sound $path');
-        app.backend.audio.load(Assets.realAssetPath(path, runtimeAssets), { stream: options.stream }, function(audio) {
+        // Add reload count if any
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.texts.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+
+        log.info('Load sound $backendPath');
+        app.backend.audio.load(realPath, { stream: options.stream }, function(audio) {
 
             if (audio != null) {
                 this.sound = new Sound(audio);
@@ -41,6 +54,27 @@ class SoundAsset extends Asset {
             }
 
         });
+
+    }
+
+    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+
+        if (!app.backend.audio.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload sound (file has changed)');
+            load();
+        }
 
     }
 
