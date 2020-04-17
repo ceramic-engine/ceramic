@@ -143,7 +143,10 @@ class ToolsPlugin {
                                     kind: "build",
                                     isDefault: true
                                 },
-                                problemMatcher: "$haxe"
+                                problemMatcher: "$haxe",
+                                runOptions: {
+                                    instanceLimit: 1
+                                }
                             }
                         ];
 
