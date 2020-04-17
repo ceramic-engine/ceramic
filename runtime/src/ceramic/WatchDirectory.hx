@@ -13,9 +13,32 @@ class WatchDirectory extends Entity {
 
     var startingToWatchDirectories:Map<String, Bool> = null;
 
+    #if js
+    static var didTryRequireChokidar:Bool = false;
+    static var chokidar:Dynamic = null;
+    static var fs:Dynamic = null;
+
+    var chokidarUpdatedFilesByWatchedDirectory:Map<String, Array<{
+        status:ChokidarWatchedFileStatus,
+        lastModified:Float,
+        name:String
+    }>> = null;
+
+    var chokidarWatchers:Map<String, Dynamic> = null;
+    #end
+
     public function new(updateInterval:Float = 1.0) {
 
         super();
+
+        #if js
+        if (!didTryRequireChokidar) {
+            didTryRequireChokidar = true;
+            fs = ceramic.internal.PlatformSpecific.nodeRequire('fs');
+            if (fs != null)
+                chokidar = ceramic.internal.PlatformSpecific.nodeRequire('chokidar');
+        }
+        #end
 
         this.updateInterval = updateInterval;
 
@@ -23,7 +46,7 @@ class WatchDirectory extends Entity {
 
     }
 
-    public function watchDirectory(path:String, ?onUpdate:ImmutableMap<String,Float>):Void {
+    public function watchDirectory(path:String):Void {
 
         if (watchedDirectories == null)
             watchedDirectories = new Map();
@@ -42,12 +65,86 @@ class WatchDirectory extends Entity {
                     return;
                 startingToWatchDirectories.remove(path);
                 watchedDirectories.mutable.set(path, newFilesModificationTime);
+                
+                #if js
+                if (chokidar != null) {
+                    if (chokidarUpdatedFilesByWatchedDirectory == null) {
+                        chokidarUpdatedFilesByWatchedDirectory = new Map();
+                    }
+                    chokidarUpdatedFilesByWatchedDirectory.set(path, []);
+                    watchWithChokidar(path);
+                }
+                #end
             });
         });
 
     }
 
+    #if js
+    function watchWithChokidar(path:String):Void {
+
+        var watcher = chokidar.watch('.', {
+            ignoreInitial: true,
+            disableGlobbing: true,
+            cwd: path
+        });
+
+        if (chokidarWatchers == null) {
+            chokidarWatchers = new Map();
+        }
+
+        if (chokidarWatchers.exists(path)) {
+            chokidarWatchers.get(path).close();
+        }
+
+        chokidarWatchers.set(path, watcher);
+
+        watcher.on('add', name -> {
+            var stats = fs.statSync(Path.join([path, name]));
+            if (!stats.isDirectory()) {
+                chokidarUpdatedFilesByWatchedDirectory.get(path).push({
+                    status: ADD,
+                    lastModified: stats.mtime.getTime() / 1000,
+                    name: name
+                });
+            }
+        });
+
+        watcher.on('change', name -> {
+            var stats = fs.statSync(Path.join([path, name]));
+            if (!stats.isDirectory()) {
+                chokidarUpdatedFilesByWatchedDirectory.get(path).push({
+                    status: CHANGE,
+                    lastModified: stats.mtime.getTime() / 1000,
+                    name: name
+                });
+            }
+        });
+
+        watcher.on('unlink', name -> {
+            var stats = fs.statSync(Path.join([path, name]));
+            if (!stats.isDirectory()) {
+                chokidarUpdatedFilesByWatchedDirectory.get(path).push({
+                    status: UNLINK,
+                    lastModified: stats.mtime.getTime() / 1000,
+                    name: name
+                });
+            }
+        });
+
+    }
+    #end
+
     public function stopWatchingDirectory(path:String):Bool {
+
+        #if js
+        if (chokidarWatchers != null) {
+            if (chokidarWatchers.exists(path)) {
+                chokidarWatchers.get(path).close();
+                chokidarWatchers.remove(path);
+            }
+        }
+        #end
 
         if (watchedDirectories == null && watchedDirectories.exists(path)) {
             watchedDirectories.mutable.remove(path);
@@ -82,6 +179,37 @@ class WatchDirectory extends Entity {
 
     function checkWatchedDirectory(path:String):Void {
 
+        #if js
+
+        if (chokidar != null) {
+            if (chokidarUpdatedFilesByWatchedDirectory.exists(path)) {
+                var list = chokidarUpdatedFilesByWatchedDirectory.get(path);
+                if (list.length > 0) {
+                    var previousFilesModificationTime = watchedDirectories.get(path);
+                    var newFilesModificationTime = new Map<String,Float>();
+                    for (key => value in previousFilesModificationTime.mutable) {
+                        newFilesModificationTime.set(key, value);
+                    }
+                    for (info in list) {
+                        switch info.status {
+                            case ADD | CHANGE:
+                                newFilesModificationTime.set(info.name, info.lastModified);
+                            case UNLINK:
+                                newFilesModificationTime.remove(info.name);
+                        }
+                    }
+                    if (watchedDirectories.exists(path)) {
+                        watchedDirectories.mutable.set(path, cast newFilesModificationTime);
+                        emitDirectoryChange(path, newFilesModificationTime, previousFilesModificationTime);
+                    }
+                    list.splice(0, list.length);
+                }
+            }
+        }
+        else {
+
+        #end
+        
         var previousFilesModificationTime = watchedDirectories.get(path);
         Runner.runInBackground(() -> {
             var newFilesModificationTime = computeFilesModificationTime(path);
@@ -123,6 +251,10 @@ class WatchDirectory extends Entity {
                 });
             }
         });
+
+        #if js
+        }
+        #end
         
     }
 
@@ -139,3 +271,11 @@ class WatchDirectory extends Entity {
     }
 
 }
+
+#if js
+enum abstract ChokidarWatchedFileStatus(Int) from Int to Int {
+    var ADD;
+    var CHANGE;
+    var UNLINK;
+}
+#end

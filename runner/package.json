@@ -10,6 +10,7 @@
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^3.3.1",
     "detect-port": "^1.3.0",
     "electron": "^6.0.10",
     "express": "^4.17.1",
