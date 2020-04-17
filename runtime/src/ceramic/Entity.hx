@@ -278,7 +278,7 @@ class Entity implements Events implements Lazy {
     /** Creates a new `Autorun` instance with the given callback associated with the current entity.
         @param run The run callback
         @return The autorun instance */
-    public function autorun(run:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
+    public function autorun(run:Void->Void, ?afterRun:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
         /*
         if (destroyed) return null;
 
@@ -319,8 +319,9 @@ class Entity implements Events implements Lazy {
         }
 #end
 
-        var _autorun = new Autorun(run #if ceramic_debug_entity_allocs , pos #end);
+        var _autorun = new Autorun(run, afterRun #if ceramic_debug_entity_allocs , pos #end);
         run = null;
+        afterRun = null;
 
         if (autoruns == null) {
             autoruns = [_autorun];
