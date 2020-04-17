@@ -42,8 +42,22 @@ class SoundAsset extends Asset {
         app.backend.audio.load(realPath, { stream: options.stream }, function(audio) {
 
             if (audio != null) {
-                this.sound = new Sound(audio);
-                this.sound.asset = this;
+
+                var prevSound = this.sound;
+                
+                var newSound = new Sound(audio);
+                newSound.asset = this;
+                this.sound = newSound;
+
+                if (prevSound != null) {
+                    // When replacing the sound, emit an event to notify about it
+                    emitReplaceSound(this.sound, prevSound);
+
+                    // Destroy previous sound
+                    prevSound.asset = null;
+                    prevSound.destroy();
+                }
+                
                 status = READY;
                 emitComplete(true);
             }
