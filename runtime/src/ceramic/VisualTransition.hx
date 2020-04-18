@@ -217,7 +217,7 @@ class VisualTransition extends Entity implements Component {
         var colorCurrent = Color.NONE;
         var didRetrieveColorCurrent = false;
         if (entity.asQuad != null) {
-            colorCurrent = entity.asMesh.color;
+            colorCurrent = entity.asQuad.color;
             didRetrieveColorCurrent = true;
         }
         else if (entity.asMesh != null) {
