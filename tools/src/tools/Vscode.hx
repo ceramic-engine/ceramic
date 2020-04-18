@@ -27,7 +27,15 @@ typedef VscodeChooserItemTask = {
     var group:VscodeChooserItemTaskGroup;
 
     var problemMatcher:String;
+
+    var runOptions:VscodeChooserItemTaskRunOptions;
     
+}
+
+typedef VscodeChooserItemTaskRunOptions = {
+
+    var instanceLimit:Int;
+
 }
 
 typedef VscodeChooserItemOnSelect = {
