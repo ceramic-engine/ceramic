@@ -1671,6 +1671,26 @@ class Visual extends Entity {
 
     static var _maxDepth:Float = 0;
 
+    /**
+     * Will walk on every children and set their depths starting from 
+     * `start` and incrementing depth by `step`.
+     * @param start the depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
+     * @param step the depth step to use when increment depth for each child
+     */
+    public function autoChildrenDepth(start:Float = 1, step:Float = 1):Void {
+
+        var depth = start;
+
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                child.depth = depth;
+                depth += step;
+            }
+        }
+
+    }
+
     /** Compute children depth. The result depends on whether
         a parent defines a custom `depthRange` value or not. */
     function computeChildrenDepth():Void {
