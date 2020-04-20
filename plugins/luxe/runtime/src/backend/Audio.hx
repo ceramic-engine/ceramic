@@ -43,6 +43,31 @@ class Audio implements spec.Audio {
 
     }
 
+    #if web
+    public function resumeAudioContext(done:Bool->Void):Void {
+
+        var webAudio:snow.modules.webaudio.Audio = cast Luxe.snow.audio.module;
+        if (webAudio != null) {
+            try {
+                var context:Dynamic = @:privateAccess webAudio.context;
+                context.resume().then(() -> {
+                    done(true);
+                }, () -> {
+                    done(false);
+                });
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to resume audio context: $e');
+            }
+        }
+
+    }
+    #else
+    public function resumeAudioContext(done:Bool->Void):Void {
+        done(true);
+    }
+    #end
+
     inline public function supportsHotReloadPath():Bool {
         
         return true;

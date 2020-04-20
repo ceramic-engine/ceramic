@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Path;
 import ceramic.Shortcuts.*;
 
 class SoundAsset extends Asset {
@@ -39,7 +40,8 @@ class SoundAsset extends Asset {
         }
 
         log.info('Load sound $backendPath');
-        app.backend.audio.load(realPath, { stream: options.stream }, function(audio) {
+
+        function handleBackendResponse(audio:backend.AudioResource) {
 
             if (audio != null) {
 
@@ -65,6 +67,23 @@ class SoundAsset extends Asset {
                 status = BROKEN;
                 log.error('Failed to load audio at path: $path');
                 emitComplete(false);
+            }
+
+        }
+        
+        var ext = ceramic.Path.extension(realPath);
+        if (ext != null)
+            ext = ext.toLowerCase();
+
+        app.backend.audio.load(realPath, { stream: options.stream }, function(audio) {
+
+            if (audio != null || ext == 'wav') {
+                handleBackendResponse(audio);
+            }
+            else {
+                log.warning('Failed to load $backendPath. Try ${Path.withoutExtension(backendPath) + '.wav'}...');
+                realPath = Path.withoutExtension(realPath) + '.wav';
+                app.backend.audio.load(realPath, { stream: options.stream }, handleBackendResponse);
             }
 
         });
