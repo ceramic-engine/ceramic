@@ -17,7 +17,7 @@ class Info implements spec.Info {
 /// Assets
 
     inline public function imageExtensions():Array<String> {
-        return ['png'];
+        return ['png', 'jpg', 'jpeg'];
     }
 
     inline public function textExtensions():Array<String> {

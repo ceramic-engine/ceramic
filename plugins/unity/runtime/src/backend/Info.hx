@@ -13,7 +13,7 @@ class Info #if !completion implements spec.Info #end {
 /// Assets
 
     inline public function imageExtensions():Array<String> {
-        return ['png'];
+        return ['png', 'jpg', 'jpeg'];
     }
 
     inline public function textExtensions():Array<String> {
