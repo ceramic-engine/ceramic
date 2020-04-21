@@ -763,7 +763,14 @@ class Visual extends Entity {
     public var translatesOnlyDirty:Bool = false;
 
     /** Setting this to true will force the visual to recompute its displayed content */
-    public var contentDirty:Bool = true;
+    public var contentDirty(default, set):Bool = true;
+    inline function set_contentDirty(contentDirty:Bool):Bool {
+        this.contentDirty = contentDirty;
+        if (contentDirty) {
+            ceramic.App.app.visualsContentDirty = true;
+        }
+        return contentDirty;
+    }
 
     /** Setting this to true will force the visual's matrix to be re-computed */
     public var matrixDirty(default,set):Bool = true;

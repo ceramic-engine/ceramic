@@ -334,6 +334,8 @@ class App extends Entity {
 
     var hierarchyDirty:Bool = false;
 
+    var visualsContentDirty:Bool = false;
+
     /** List of functions that will be called and purged when update iteration begins.
         Useful to run some specific code once exactly before update event is sent. */
     var beginUpdateCallbacks:Array<Void->Void> = [];
@@ -738,7 +740,12 @@ class App extends Entity {
     @:noCompletion
     #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
 
+        var numIterations = 0;
+        var didFlush = false;
+
         do {
+            visualsContentDirty = false;
+
             // Notify if screen matrix has changed
             screen.matrix.computeChanged();
             if (screen.matrix.changed) {
@@ -779,8 +786,26 @@ class App extends Entity {
                 }
 
             }
+
+            if (numIterations++ > 100) {
+                if (didFlush && visualsContentDirty) {
+                    throw 'Failed to update visuals because flushImmediate() is being called continuously and visuals content stays dirty.';
+                }
+                else if (didFlush) {
+                    throw 'Failed to update visuals because flushImmediate() is being called continuously.';
+                }
+                else {
+                    for (visual in visuals) {
+                        if (visual.contentDirty) {
+                            throw 'Failed to update visuals because visuals content stays dirty. ($visual)';
+                        }
+                    }
+                }
+            }
+
+            didFlush = flushImmediate();
         }
-        while (flushImmediate());
+        while (didFlush || visualsContentDirty);
 
         // Reset render texture dependencies to recompute them
         for (i in 0...renderTextures.length) {
