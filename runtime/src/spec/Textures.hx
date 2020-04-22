@@ -24,7 +24,9 @@ interface Textures {
 
     function getTextureHeight(texture:Texture):Int;
 
-    function getTexturePixels(texture:Texture):UInt8Array;
+    function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array;
+
+    function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void;
 
     function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void;
 

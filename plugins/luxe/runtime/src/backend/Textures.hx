@@ -247,12 +247,6 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function getTexturePixels(texture:Texture):Null<UInt8Array> {
-
-        return null;
-
-    }
-
     inline public function getTextureIndex(texture:Texture):Int {
 
         return (texture:phoenix.Texture).index;

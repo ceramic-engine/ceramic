@@ -69,6 +69,20 @@ class Texture extends Entity {
 
     }
 
+/// Pixels
+
+    public function fetchPixels(?result:ceramic.UInt8Array):ceramic.UInt8Array {
+
+        return app.backend.textures.fetchTexturePixels(backendItem, result);
+
+    }
+
+    public function submitPixels(pixels:ceramic.UInt8Array):Void {
+
+        app.backend.textures.submitTexturePixels(backendItem, pixels);
+
+    }
+
 /// Print
 
     override function toString():String {

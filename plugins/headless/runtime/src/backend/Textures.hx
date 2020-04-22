@@ -50,9 +50,13 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function getTexturePixels(texture:Texture):Null<UInt8Array> {
+    inline public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
 
         return null;
+
+    }
+
+    inline public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
     }
 
