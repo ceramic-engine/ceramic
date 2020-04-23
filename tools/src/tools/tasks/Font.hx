@@ -134,7 +134,7 @@ class Font extends Task {
 
         if (msdf) {
             fnt += 'distanceField';
-            fnt += ' fieldType=' + Json.stringify(json.distanceField.fieldType);
+            fnt += ' fieldType=' + json.distanceField.fieldType;
             fnt += ' distanceRange=' + json.distanceField.distanceRange;
             fnt += '\n';
         }
@@ -149,6 +149,7 @@ class Font extends Task {
 
             fnt += 'page id=' + i + ' file=' + Json.stringify(page) + '\n';
             fnt += 'chars count=' + chars.length;
+            fnt += '\n';
 
             for (char in chars) {
                 fnt += 'char';
