@@ -213,7 +213,7 @@ class BitmapFont extends Entity {
         }
 
         renderTexture.stamp(quad, () -> {
-            
+
             quad.destroy();
             quad = null;
 

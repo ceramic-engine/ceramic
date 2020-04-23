@@ -454,7 +454,8 @@ class Text extends Visual {
         }
 
         // If we added a trailing space, ensure it doesn't add any width
-        if (addTrailingSpace) {
+        if (addTrailingSpace && usedQuads > 0) {
+            
             var lastQuad = glyphQuads[usedQuads-1];
             var lastLineWidth = lineWidths[lineWidths.length-1];
 
