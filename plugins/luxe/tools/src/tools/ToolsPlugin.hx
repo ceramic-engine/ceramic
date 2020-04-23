@@ -38,9 +38,9 @@ class ToolsPlugin {
         tasks.set('luxe targets', new tools.tasks.Targets());
         tasks.set('luxe setup', new tools.tasks.Setup());
         tasks.set('luxe hxml', new tools.tasks.Hxml());
-        tasks.set('luxe build', new tools.tasks.Build('Build'));
-        tasks.set('luxe run', new tools.tasks.Build('Run'));
-        tasks.set('luxe clean', new tools.tasks.Build('Clean'));
+        tasks.set('luxe build', new tools.tasks.Build('Build', 'luxe'));
+        tasks.set('luxe run', new tools.tasks.Build('Run', 'luxe'));
+        tasks.set('luxe clean', new tools.tasks.Build('Clean', 'luxe'));
         tasks.set('luxe assets', new tools.tasks.Assets());
         tasks.set('luxe icons', new tools.tasks.Icons());
         tasks.set('luxe update', new tools.tasks.Update());

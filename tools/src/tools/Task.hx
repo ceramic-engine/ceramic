@@ -26,6 +26,12 @@ class Task {
 
     }
 
+    public function help(cwd:String):Array<Array<String>> {
+
+        return null;
+
+    }
+
     public function info(cwd:String):String {
 
         return null;

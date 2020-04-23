@@ -38,9 +38,9 @@ class ToolsPlugin {
         tasks.set('headless targets', new tools.tasks.Targets());
         tasks.set('headless setup', new tools.tasks.Setup());
         tasks.set('headless hxml', new tools.tasks.Hxml());
-        tasks.set('headless build', new tools.tasks.Build('Build'));
-        tasks.set('headless run', new tools.tasks.Build('Run'));
-        tasks.set('headless clean', new tools.tasks.Build('Clean'));
+        tasks.set('headless build', new tools.tasks.Build('Build', 'headless'));
+        tasks.set('headless run', new tools.tasks.Build('Run', 'headless'));
+        tasks.set('headless clean', new tools.tasks.Build('Clean', 'headless'));
         tasks.set('headless assets', new tools.tasks.Assets());
         tasks.set('headless icons', new tools.tasks.Icons());
         tasks.set('headless update', new tools.tasks.Update());

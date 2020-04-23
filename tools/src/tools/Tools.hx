@@ -121,6 +121,8 @@ class Tools {
         context.tasks.set('libs', new tools.tasks.Libs());
         context.tasks.set('module', new tools.tasks.Module());
 
+        context.tasks.set('font', new tools.tasks.Font());
+
         context.tasks.set('tools zip', new tools.tasks.ZipTools());
 
         context.tasks.set('haxe server', new tools.tasks.HaxeServer());

@@ -37,9 +37,9 @@ class ToolsPlugin {
         tasks.set('unity targets', new tools.tasks.Targets());
         tasks.set('unity setup', new tools.tasks.Setup());
         tasks.set('unity hxml', new tools.tasks.Hxml());
-        tasks.set('unity build', new tools.tasks.Build('Build'));
-        tasks.set('unity run', new tools.tasks.Build('Run'));
-        tasks.set('unity clean', new tools.tasks.Build('Clean'));
+        tasks.set('unity build', new tools.tasks.Build('Build', 'unity'));
+        tasks.set('unity run', new tools.tasks.Build('Run', 'unity'));
+        tasks.set('unity clean', new tools.tasks.Build('Clean', 'unity'));
         tasks.set('unity assets', new tools.tasks.Assets());
         tasks.set('unity icons', new tools.tasks.Icons());
         tasks.set('unity update', new tools.tasks.Update());
