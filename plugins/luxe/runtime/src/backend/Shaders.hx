@@ -22,6 +22,20 @@ class Shaders implements spec.Shaders {
         }
         #end
 
+        #if !(web || ios || android)
+        var fragLines = [];
+        var i = 0;
+        for (line in fragSource.split('\n')) {
+            if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
+                // Skip line on desktop GL
+            }
+            else {
+                fragLines.push(line);
+            }
+        }
+        fragSource = fragLines.join('\n');
+        #end
+
         if (isMultiTextureTemplate) {
             var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
             var maxIfs = maxIfStatementsByFragmentShader();

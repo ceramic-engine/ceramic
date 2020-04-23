@@ -380,6 +380,7 @@ class Text extends Visual {
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
             quad.texture = font.pages.get(glyph.page);
+            quad.shader = font.pageShaders != null ? font.pageShaders.get(glyph.page) : null;
             quad.color = color;
             quad.depth = depth;
             quad.blending = blending;

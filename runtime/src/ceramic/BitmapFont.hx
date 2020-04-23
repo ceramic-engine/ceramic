@@ -60,6 +60,13 @@ class BitmapFont extends Entity {
 
     /** Cached reference of the ' '(32) character, for sizing on tabs/spaces */
     public var spaceChar:BitmapFontCharacter;
+
+    /**
+     * Shaders used to render the characters. If null, uses default shader.
+     * When loading MSDF fonts, ceramic's MSDF shader will be assigned here.
+     * Stored per page
+     */
+    public var pageShaders:Map<Int,Shader> = null;
     
     public var asset:Asset;
 
@@ -78,12 +85,23 @@ class BitmapFont extends Entity {
             throw 'BitmapFont: pages is null';
         }
 
+        if (fontData.distanceField != null) {
+            this.pageShaders = new Map();
+        }
+
         for (pageInfo in fontData.pages) {
             var texture = pages.get(pageInfo.file);
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
             }
             this.pages.set(pageInfo.id, texture);
+
+            if (fontData.distanceField != null) {
+                var shader = ceramic.App.app.assets.shader(Shaders.MSDF).clone();
+                shader.setFloat('pxRange', fontData.distanceField.distanceRange);
+                shader.setVec2('texSize', texture.width * texture.density, texture.height * texture.density);
+                this.pageShaders.set(pageInfo.id, shader);
+            }
         }
 
     }
@@ -94,10 +112,19 @@ class BitmapFont extends Entity {
 
         if (asset != null) asset.destroy();
         
-        for (texture in pages) {
-            texture.destroy();
+        if (pages != null) {
+            for (texture in pages) {
+                texture.destroy();
+            }
+            pages = null;
         }
-        pages = null;
+
+        if (pageShaders != null) {
+            for (shader in pageShaders) {
+                shader.destroy();
+            }
+            pageShaders = null;
+        }
 
     }
 

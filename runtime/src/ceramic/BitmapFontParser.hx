@@ -15,6 +15,7 @@ class BitmapFontParser {
         var info : BitmapFontData = {
             face : null,
             chars : new Map(),
+            distanceField : null,
             pointSize : 0, baseSize : 0,
             charCount : 0, lineHeight : 0,
             pages : [], kernings : new Map()
@@ -108,6 +109,18 @@ class BitmapFontParser {
                 }
 
                 map.set(second, amount);
+
+            }
+
+            case 'distanceField': {
+
+                var fieldType = items["fieldType"];
+                var distanceRange = Std.parseInt(items["distanceRange"]);
+
+                info.distanceField = {
+                    fieldType: fieldType,
+                    distanceRange: distanceRange
+                };
 
             }
 

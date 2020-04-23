@@ -18,7 +18,7 @@ class Font extends Task {
             ['--font <path to font>', 'The ttf/otf font file to convert'],
             ['--out <output directory>', 'The output directory'],
             ['--msdf', 'If used, export with multichannel distance field'],
-            ['--size <font size>', 'The font size to export (default: 40)'],
+            ['--size <font size>', 'The font size to export (default: 42)'],
             ['--charset', 'Characters to use as charset'],
             ['--charset-file', 'A text file containing characters to use as charset']
         ];
@@ -33,12 +33,14 @@ class Font extends Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        // TODO fonts with multiple pages
+
         var fontPath = extractArgValue(args, 'font');
         var outputPath = extractArgValue(args, 'out');
         var charset = extractArgValue(args, 'charset');
         var charsetFile = extractArgValue(args, 'charset-file');
         var msdf = extractArgFlag(args, 'msdf');
-        var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 40;
+        var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
 
         if (fontPath == null) {
             fail('--font argument is required');
@@ -262,8 +264,13 @@ class Font extends Task {
 
         }
 
-        var fntPath = Path.join([tmpDir, rawName + '.fnt']);
+        // Final export
+        var fntPath = Path.join([outputPath, rawName + '.fnt']);
         File.saveContent(fntPath, fnt);
+        File.copy(pngPath, Path.join([outputPath, Path.withoutDirectory(pngPath)]));
+
+        // Remove temporary files
+        Files.deleteRecursive(tmpDir);
 
     }
 

@@ -442,6 +442,7 @@ class App extends Entity {
 
         // Default shaders
         assets.add(settings.defaultShader);
+        assets.add(Shaders.MSDF);
 
         // Default textures
         assets.add(Images.WHITE);
