@@ -131,7 +131,7 @@ class SelectText extends Entity implements Component implements Observable {
         var backgroundBottom:Float = -1;
         var backgroundPad = Math.round(entity.pointSize * 0.1);
         var cursorPad = Math.round(entity.pointSize * 0.2);
-        var selectionHeight = Math.ceil(entity.pointSize * 1.1);
+        var selectionHeight = Math.ceil(entity.pointSize * 1.0);
         var cursorWidth:Float = 1;
         var cursorHeight:Float = Math.ceil(entity.pointSize);
         var computedLineHeight = entity.lineHeight * entity.font.lineHeight * entity.pointSize / entity.font.pointSize;

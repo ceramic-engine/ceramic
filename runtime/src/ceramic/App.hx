@@ -437,35 +437,41 @@ class App extends Entity {
 
         // Load default assets
         //
-        // Default font
-        assets.add(settings.defaultFont);
 
-        // Default shaders
+        // Default shaders (need to load these first because font loading needs MSDF shader)
         assets.add(settings.defaultShader);
         assets.add(Shaders.MSDF);
 
-        // Default textures
-        assets.add(Images.WHITE);
-
         assets.onceComplete(this, function(success) {
-
-            if (success) {
-
-                // Get default asset instances now that they are loaded
-                defaultFont = assets.font(settings.defaultFont);
-                defaultWhiteTexture = assets.texture(Images.WHITE);
-                defaultTexturedShader = assets.shader(settings.defaultShader);
-
-                logger.success('Default assets loaded.');
-                assetsLoaded();
-            } else {
-                log.error('Failed to load default assets.');
-            }
-
+            // Default font
+            assets.add(settings.defaultFont);
+    
+            // Default textures
+            assets.add(Images.WHITE);
+    
+            assets.onceComplete(this, function(success) {
+    
+                if (success) {
+    
+                    // Get default asset instances now that they are loaded
+                    defaultFont = assets.font(settings.defaultFont);
+                    defaultWhiteTexture = assets.texture(Images.WHITE);
+                    defaultTexturedShader = assets.shader(settings.defaultShader);
+    
+                    logger.success('Default assets loaded.');
+                    assetsLoaded();
+                } else {
+                    log.error('Failed to load default assets.');
+                }
+    
+            });
+            
+            // Allow to load more default assets
+            emitDefaultAssetsLoad(assets);
+            
+            assets.load();
+            
         });
-        
-        // Allow to load more default assets
-        emitDefaultAssetsLoad(assets);
 
         assets.load();
 

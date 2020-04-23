@@ -45,7 +45,7 @@ class Settings implements Observable {
     public var backend(default,null):Dynamic = {};
 
     /** Default font */
-    public var defaultFont(default,null):AssetId<String> = Fonts.ARIAL_20;
+    public var defaultFont(default,null):AssetId<String> = Fonts.ROBOTO_MEDIUM;
 
     /** Default shader */
     public var defaultShader(default,null):AssetId<String> = Shaders.TEXTURED;
