@@ -8,19 +8,22 @@ class Build extends tools.Task {
 
     var kind:String;
 
+    var backendName:String;
+
 /// Lifecycle
 
-    override public function new(kind:String) {
+    override public function new(kind:String, backendName:String) {
 
         super();
 
         this.kind = kind;
+        this.backendName = backendName;
 
     }
 
     override public function info(cwd:String):String {
 
-        return kind + " project with " + context.backend.name + " backend and given target.";
+        return kind + " project with " + backendName + " backend and given target.";
 
     }
 

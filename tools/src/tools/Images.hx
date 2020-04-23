@@ -56,7 +56,7 @@ class Images {
             .raw()
             .toBuffer(function(err, data, info) {
 
-                if (err) throw err;
+                if (err != null) throw err;
 
                 pixels = data;
                 width = info.width;
@@ -92,7 +92,7 @@ class Images {
             .png()
             .toFile(dstPath, function(err, info) {
 
-                if (err) throw err;
+                if (err != null) throw err;
 
                 done();
 
@@ -167,7 +167,7 @@ class Images {
                 Math.round(targetWidth), Math.round(targetHeight)
             ).toBuffer(function(err, data, info) {
 
-                if (err) throw err;
+                if (err != null) throw err;
 
                 toIco([data], {resize: true, sizes: [16, 24, 32, 48, 64, 128, 256]})
                 .then(function(buffer:js.node.Buffer) {
