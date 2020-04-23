@@ -788,7 +788,7 @@ class App extends Entity {
 
             }
 
-            if (numIterations++ > 100) {
+            if (numIterations++ > 9999) {
                 if (didFlush && visualsContentDirty) {
                     throw 'Failed to update visuals because flushImmediate() is being called continuously and visuals content stays dirty.';
                 }
