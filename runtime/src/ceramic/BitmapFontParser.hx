@@ -1,5 +1,7 @@
 package ceramic;
 
+import haxe.Json;
+
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/luxe/importers/bitmapfont/BitmapFontParser.hx)
 
 class BitmapFontParser {
@@ -137,11 +139,21 @@ class BitmapFontParser {
 
         for (token in tokens) {
             var items = token.split("=");
-            itemMap.set( items[0], items[1] );
+            itemMap.set( items[0], removeQuotes(items[1]) );
             items = null;
         }
 
         return itemMap;
+
+    }
+
+    inline static function removeQuotes(token:String) {
+
+        var result = token;
+        if (token != null && token.length >= 2 && token.charCodeAt(0) == '"'.code && token.charCodeAt(token.length-1) == '"'.code) {
+            result = Json.parse(token);
+        }
+        return result;
 
     }
 

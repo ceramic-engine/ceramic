@@ -58,6 +58,9 @@ class BitmapFont extends Entity {
     inline function get_kernings():Map<Int,Map<Int,Float>> { return fontData.kernings; }
     inline function set_kernings(kernings:Map<Int,Map<Int,Float>>):Map<Int,Map<Int,Float>> { return fontData.kernings = kernings; }
 
+    public var msdf(get,never):Bool;
+    inline function get_msdf():Bool { return fontData.distanceField != null && fontData.distanceField.fieldType == 'msdf'; }
+
     /** Cached reference of the ' '(32) character, for sizing on tabs/spaces */
     public var spaceChar:BitmapFontCharacter;
 
@@ -67,6 +70,13 @@ class BitmapFont extends Entity {
      * Stored per page
      */
     public var pageShaders:Map<Int,Shader> = null;
+
+    /**
+     * When using MSDF fonts, or fonts with custom shaders, it is possible to pre-render characters
+     * onto a RenderTexture to use it like a regular texture later with default shader.
+     * Useful in some situations to reduce draw calls.
+     */
+    public var preRenderedPages:Map<Int,Map<Int,Texture>> = null;
     
     public var asset:Asset;
 
@@ -126,9 +136,100 @@ class BitmapFont extends Entity {
             pageShaders = null;
         }
 
+        if (preRenderedPages != null) {
+            for (renderedForSize in preRenderedPages) {
+                for (texture in renderedForSize) {
+                    texture.destroy();
+                }
+            }
+            preRenderedPages = null;
+        }
+
     }
 
 /// Public API
+
+    public function needsToPreRenderAtSize(pixelSize:Int):Bool {
+
+        if (preRenderedPages == null || !preRenderedPages.exists(pixelSize))
+            return true;
+
+        var preRenderedForSize = preRenderedPages.get(pixelSize);
+        for (id in pages.keys()) {
+            if (!preRenderedForSize.exists(id))
+                return true;
+        }
+
+        return false;
+
+    }
+
+    public function preRenderAtSize(pixelSize:Int, done:Void->Void):Void {
+
+        var numPending = 0;
+
+        for (id in pages.keys()) {
+            numPending++;
+
+            preRenderPage(id, pixelSize, () -> {
+                numPending--;
+                if (numPending == 0) {
+                    done();
+                    done = null;
+                }
+            });
+        }
+
+    }
+
+    function preRenderPage(id:Int, pixelsSize:Int, done:Void->Void):Void {
+
+        if (preRenderedPages == null) {
+            preRenderedPages = new Map();
+        }
+
+        var renderedForSize = preRenderedPages.get(pixelsSize);
+
+        var originalTexture = pages.get(id);
+        if (originalTexture == null)
+            throw 'Invalid bitmap font page with id $id';
+
+        var sizeFactor = pixelsSize / pointSize;
+        var scaledWidth = Math.ceil((originalTexture.width * originalTexture.density) * sizeFactor);
+        var scaledHeight = Math.ceil((originalTexture.width * originalTexture.density) * sizeFactor);
+
+        var renderTexture = new RenderTexture(scaledWidth, scaledHeight, 1);
+        renderTexture.clearOnRender = true;
+        renderTexture.autoRender = false;
+
+        var quad = new Quad();
+        quad.texture = originalTexture;
+        quad.size(scaledWidth, scaledHeight);
+        quad.shader = pageShaders != null ? pageShaders.get(id) : null;
+        quad.visible = false;
+
+        if (renderedForSize != null && renderedForSize.exists(id)) {
+            renderedForSize.get(id).destroy();
+        }
+
+        renderTexture.stamp(quad, () -> {
+            
+            quad.destroy();
+            quad = null;
+
+            if (renderedForSize == null) {
+                renderedForSize = new Map();
+                preRenderedPages.set(pixelsSize, renderedForSize);
+            }
+
+            renderedForSize.set(id, renderTexture);
+
+            done();
+            done = null;
+
+        });
+
+    }
 
     /** Returns the kerning between two glyphs, or 0 if none.
         A glyph int id is the value from 'c'.charCodeAt(0) */

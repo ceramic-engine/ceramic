@@ -27,7 +27,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var color(default,set):Color = Color.WHITE;
+    public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
         this.color = color;
@@ -44,7 +44,7 @@ class Text extends Visual {
     }
 
     @editable({ multiline: true })
-    public var content(default,set):String = '';
+    public var content(default, set):String = '';
     function set_content(content:String):String {
         Assert.assert(content != null, 'Text.content should not be null');
         if (this.content == content) return content;
@@ -54,7 +54,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var pointSize(default,set):Float = 20;
+    public var pointSize(default, set):Float = 20;
     function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
         contentDirty = true;
@@ -63,7 +63,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var lineHeight(default,set):Float = 1.0;
+    public var lineHeight(default, set):Float = 1.0;
     function set_lineHeight(lineHeight:Float):Float {
         if (this.lineHeight == lineHeight) return lineHeight;
         contentDirty = true;
@@ -72,7 +72,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var letterSpacing(default,set):Float = 0.0;
+    public var letterSpacing(default, set):Float = 0.0;
     function set_letterSpacing(letterSpacing:Float):Float {
         if (this.letterSpacing == letterSpacing) return letterSpacing;
         contentDirty = true;
@@ -81,7 +81,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var font(default,set):BitmapFont;
+    public var font(default, set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
         
         if (font == null) {
@@ -108,8 +108,26 @@ class Text extends Visual {
         return font;
     }
 
+    public var preRenderedSize(default, set):Int = -1;
+    function set_preRenderedSize(preRenderedSize:Int):Int {
+        if (this.preRenderedSize == preRenderedSize) return preRenderedSize;
+        contentDirty = true;
+        if (this.preRenderedSize <= 0 && preRenderedSize > 0) {
+            screen.onTexturesDensityChange(this, handleTexturesDensityChange);
+        }
+        if (this.preRenderedSize > 0 && preRenderedSize <= 0) {
+            screen.offTexturesDensityChange(handleTexturesDensityChange);
+        }
+        this.preRenderedSize = preRenderedSize;
+        return preRenderedSize;
+    }
+
+    function handleTexturesDensityChange(_, _):Void {
+        contentDirty = true;
+    }
+
     @editable
-    public var align(default,set):TextAlign = LEFT;
+    public var align(default, set):TextAlign = LEFT;
     function set_align(align:TextAlign):TextAlign {
         if (this.align == align) return align;
         contentDirty = true;
@@ -120,7 +138,7 @@ class Text extends Visual {
     /** If set to `true`, text will be displayed with line breaks
         as needed so that it fits in the requested width. */
     @editable
-    public var fitWidth(default,set):Float = -1;
+    public var fitWidth(default, set):Float = -1;
     function set_fitWidth(fitWidth:Float):Float {
         if (this.fitWidth == fitWidth) return fitWidth;
         this.fitWidth = fitWidth;
@@ -129,7 +147,7 @@ class Text extends Visual {
     }
 
     @editable
-    public var maxLineDiff(default,set):Float = -1;
+    public var maxLineDiff(default, set):Float = -1;
     function set_maxLineDiff(maxLineDiff:Float):Float {
         if (this.maxLineDiff == maxLineDiff) return maxLineDiff;
         this.maxLineDiff = maxLineDiff;
@@ -228,6 +246,13 @@ class Text extends Visual {
 
         contentDirty = false;
         matrixDirty = true;
+
+        var scaledPreRenderedSize = Std.int(preRenderedSize * screen.texturesDensity);
+        if (scaledPreRenderedSize > 0 && font.msdf && font.needsToPreRenderAtSize(scaledPreRenderedSize)) {
+            font.preRenderAtSize(scaledPreRenderedSize, () -> {
+                contentDirty = true;
+            });
+        }
         
         emitGlyphQuadsChange();
 
@@ -255,6 +280,9 @@ class Text extends Visual {
         var wasWhiteSpace = false;
         var numCharsBeforeLine = 0;
         var addTrailingSpace = false;
+
+        var scaledPreRenderedSize = Std.int(preRenderedSize * screen.texturesDensity);
+        var usePrerenderedSize = scaledPreRenderedSize > 0 && font.msdf && !font.needsToPreRenderAtSize(scaledPreRenderedSize);
 
         var content = this.content;
         if (content == '' || content.endsWith("\n")) {
@@ -379,8 +407,8 @@ class Text extends Visual {
             quad.transparent = false;
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
-            quad.texture = font.pages.get(glyph.page);
-            quad.shader = font.pageShaders != null ? font.pageShaders.get(glyph.page) : null;
+            quad.texture = usePrerenderedSize ? font.preRenderedPages.get(scaledPreRenderedSize).get(glyph.page) : font.pages.get(glyph.page);
+            quad.shader = !usePrerenderedSize && font.pageShaders != null ? font.pageShaders.get(glyph.page) : null;
             quad.color = color;
             quad.depth = depth;
             quad.blending = blending;
@@ -388,12 +416,23 @@ class Text extends Visual {
             quad.glyphY = y;
             quad.glyphAdvance = glyph.xAdvance * sizeFactor + letterSpacing;
             quad.glyph = glyph;
-            quad.frame(
-                glyph.x / quad.texture.density,
-                glyph.y / quad.texture.density,
-                glyph.width / quad.texture.density,
-                glyph.height / quad.texture.density
-            );
+            if (usePrerenderedSize) {
+                var originalTexture = font.pages.get(glyph.page);
+                quad.frame(
+                    glyph.x * quad.texture.width / originalTexture.width,
+                    glyph.y * quad.texture.height / originalTexture.height,
+                    glyph.width * quad.texture.width / originalTexture.width,
+                    glyph.height * quad.texture.height / originalTexture.height
+                );
+            }
+            else {
+                quad.frame(
+                    glyph.x / quad.texture.density,
+                    glyph.y / quad.texture.density,
+                    glyph.width / quad.texture.density,
+                    glyph.height / quad.texture.density
+                );
+            }
             quad.anchor(0, 0);
             quad.pos(x + glyph.xOffset * sizeFactor, y + glyph.yOffset * sizeFactor);
             quad.size(glyph.width * sizeFactor, glyph.height * sizeFactor);
