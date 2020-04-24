@@ -85,18 +85,42 @@ class Font extends Task {
             File.saveContent(charsetPath, charset);
         }
 
-        // Run generator
-        command(Path.join([context.ceramicToolsPath, 'npx']), [
-            'msdf-bmfont',
-            tmpFontPath,
-            '-f', 'json',
-            '-s', '' + size,
-            '-i', charsetPath,
-            '-t', 'msdf',
-            '-v', //'--pot',
-            '-p', '2',
-            '--smart-size'
-        ], { cwd: tmpDir });
+        var factor = 0.25;
+
+        if (msdf) {
+            // Run generator (export msdf with factor)
+            command(Path.join([context.ceramicToolsPath, 'npx']), [
+                'msdf-bmfont',
+                tmpFontPath,
+                '-f', 'json',
+                '-s', '' + Math.round(size / factor),
+                '-i', charsetPath,
+                '-t', 'msdf',
+                //'--pot',
+                '-p', '2',
+                '-d', '2',
+                '--factor', '' + Math.round(1.0 / factor),
+                '--smart-size'
+            ], { cwd: tmpDir });
+        }
+        else {
+            // Run generator (export vector file)
+            command(Path.join([context.ceramicToolsPath, 'npx']), [
+                'msdf-bmfont',
+                tmpFontPath,
+                '-f', 'json',
+                '-s', '' + size,
+                '-i', charsetPath,
+                '-t', 'msdf',
+                '-v', //'--pot',
+                '-p', '2',
+                //'-d', '2',
+                '--factor', '1',
+                '--smart-size'
+            ], { cwd: tmpDir });
+
+            factor = 1;
+        }
 
         // Extract font data
         var jsonPath = Path.join([tmpDir, rawName + '.json']);
@@ -107,20 +131,34 @@ class Font extends Task {
 
         fnt += 'info';
         fnt += ' face=' + Json.stringify(rawName);
-        fnt += ' size=' + json.info.size;
+        fnt += ' size=' + Math.round(Std.parseFloat(json.info.size) * factor);
         fnt += ' bold=' + json.info.bold;
         fnt += ' italic=' + json.info.italic;
         fnt += ' unicode=' + json.info.unicode;
         fnt += ' stretchH=' + json.info.stretchH;
         fnt += ' smooth=' + json.info.smooth;
         fnt += ' aa=' + json.info.aa;
-        fnt += ' padding=' + (json.info.padding:Array<String>).join(',');
-        fnt += ' spacing=' + (json.info.spacing:Array<String>).join(',');
+        if (!msdf) {
+            var padding:Array<String> = json.info.padding;
+            var spacing:Array<String> = json.info.spacing;
+            padding = padding.map((s) -> {
+                '' + (Std.parseFloat(s) * factor);
+            });
+            spacing = spacing.map((s) -> {
+                '' + (Std.parseFloat(s) * factor);
+            });
+            fnt += ' padding=' + padding.join(',');
+            fnt += ' spacing=' + spacing.join(',');
+        }
+        else {
+            fnt += ' padding=' + (json.info.padding:Array<String>).join(',');
+            fnt += ' spacing=' + (json.info.spacing:Array<String>).join(',');
+        }
         fnt += ' charset=""';
         fnt += '\n';
 
         fnt += 'common';
-        fnt += ' lineHeight=' + json.common.lineHeight;
+        fnt += ' lineHeight=' + Math.round(Std.parseFloat(json.common.lineHeight) * factor);
         fnt += ' base=' + json.common.base;
         fnt += ' scaleW=' + json.common.scaleW;
         fnt += ' scaleH=' + json.common.scaleH;
@@ -139,6 +177,8 @@ class Font extends Task {
             fnt += '\n';
         }
 
+        var base:Float = Std.parseFloat(json.common.base);
+
         var pngFiles = [];
         var i = 0;
         for (page in (json.pages:Array<String>)) {
@@ -152,15 +192,24 @@ class Font extends Task {
             fnt += '\n';
 
             for (char in chars) {
+
+                //var yoffset:Float = Std.parseFloat(char.yoffset);
+
                 fnt += 'char';
                 fnt += ' id=' + char.id;
                 fnt += ' index=' + char.index;
                 fnt += ' char=' + Json.stringify(char.char);
-                fnt += ' width=' + char.width;
-                fnt += ' height=' + char.height;
-                fnt += ' xoffset=' + char.xoffset;
-                fnt += ' yoffset=' + char.yoffset;
-                fnt += ' xadvance=' + char.xadvance;
+                if (msdf) {
+                    fnt += ' width=' + char.width;
+                    fnt += ' height=' + char.height;
+                }
+                else {
+                    fnt += ' width=' + (Std.parseFloat(char.width) * factor);
+                    fnt += ' height=' + (Std.parseFloat(char.height) * factor);
+                }
+                fnt += ' xoffset=' + (Std.parseFloat(char.xoffset) * factor);
+                fnt += ' yoffset=' + (Std.parseFloat(char.yoffset) * factor);
+                fnt += ' xadvance=' + (Std.parseFloat(char.xadvance) * factor);
                 fnt += ' chnl=' + char.chnl;
                 fnt += ' x=' + char.x;
                 fnt += ' y=' + char.y;
@@ -180,7 +229,7 @@ class Font extends Task {
                 fnt += 'kerning';
                 fnt += ' first=' + kerning.first;
                 fnt += ' second=' + kerning.second;
-                fnt += ' amount=' + kerning.amount;
+                fnt += ' amount=' + (Std.parseFloat(kerning.amount) * factor);
                 fnt += '\n';
             }
 
@@ -222,6 +271,10 @@ class Font extends Task {
                         .extract({
                             left: offsetX, top: offsetY, width: width, height: height
                         })
+                        .resize(
+                            Math.round(width * factor), 
+                            Math.round(height * factor)
+                        )
                         .toFile(
                             flatPngPath,
                             function(err, info) {
