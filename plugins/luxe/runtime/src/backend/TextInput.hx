@@ -75,6 +75,9 @@ class TextInput implements spec.TextInput {
 
     function handleTextInput(text:String) {
 
+        if (text == ' ')
+            return;
+
 #if cpp
         sdl.SDL.setTextInputRect(
             inputRectX,
@@ -97,6 +100,10 @@ class TextInput implements spec.TextInput {
         if (scanCode == 42) {
             // Backspace
             ceramic.App.app.textInput.backspace();
+        }
+        else if (scanCode == 44) {
+            // Space
+            ceramic.App.app.textInput.space();
         }
         else if (scanCode == 40) {
             // Enter

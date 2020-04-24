@@ -156,6 +156,12 @@ class TextInput implements Events {
 
     }
 
+    public function space():Void {
+
+        appendText(' ');
+        
+    }
+
     public function backspace():Void {
 
         // Clear selection and erase text in place
