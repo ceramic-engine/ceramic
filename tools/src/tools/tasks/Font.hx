@@ -20,7 +20,9 @@ class Font extends Task {
             ['--msdf', 'If used, export with multichannel distance field'],
             ['--size <font size>', 'The font size to export (default: 42)'],
             ['--charset', 'Characters to use as charset'],
-            ['--charset-file', 'A text file containing characters to use as charset']
+            ['--charset-file', 'A text file containing characters to use as charset'],
+            ['--offset-x', 'Move every character by this X offset'],
+            ['--offset-y', 'Move every character by this Y offset']
         ];
 
     }
@@ -39,6 +41,8 @@ class Font extends Task {
         var charsetFile = extractArgValue(args, 'charset-file');
         var msdf = extractArgFlag(args, 'msdf');
         var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
+        var offsetX:Float = extractArgValue(args, 'offset-x') != null ? Std.parseFloat(extractArgValue(args, 'offset-x')) : 0;
+        var offsetY:Float = extractArgValue(args, 'offset-y') != null ? Std.parseFloat(extractArgValue(args, 'offset-y')) : 0;
 
         if (fontPath == null) {
             fail('--font argument is required');
@@ -159,7 +163,7 @@ class Font extends Task {
 
         fnt += 'common';
         fnt += ' lineHeight=' + Math.round(Std.parseFloat(json.common.lineHeight) * factor);
-        fnt += ' base=' + json.common.base;
+        fnt += ' base=' + Math.round(Std.parseFloat(json.common.base) * factor);
         fnt += ' scaleW=' + json.common.scaleW;
         fnt += ' scaleH=' + json.common.scaleH;
         fnt += ' pages=' + json.common.pages;
@@ -207,8 +211,8 @@ class Font extends Task {
                     fnt += ' width=' + (Std.parseFloat(char.width) * factor);
                     fnt += ' height=' + (Std.parseFloat(char.height) * factor);
                 }
-                fnt += ' xoffset=' + (Std.parseFloat(char.xoffset) * factor);
-                fnt += ' yoffset=' + (Std.parseFloat(char.yoffset) * factor);
+                fnt += ' xoffset=' + (Std.parseFloat(char.xoffset) * factor + offsetX);
+                fnt += ' yoffset=' + (Std.parseFloat(char.yoffset) * factor + offsetY);
                 fnt += ' xadvance=' + (Std.parseFloat(char.xadvance) * factor);
                 fnt += ' chnl=' + char.chnl;
                 fnt += ' x=' + char.x;
