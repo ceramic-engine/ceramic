@@ -448,6 +448,8 @@ class View extends Quad {
 
     }
 
+/// Autorun internals
+
     function _immediateAutorunLayout() {
 
         app.onceImmediate(_autorunLayout);
@@ -459,6 +461,20 @@ class View extends Quad {
         layoutDirty = true;
         requestLayout();
 
+    }
+
+/// Parent view helper
+
+    var customParentView:Null<View> = null;
+
+    public var parentView(get, never):Null<View>;
+
+    function get_parentView():Null<View> {
+        if (customParentView != null)
+            return customParentView;
+        if (Std.is(parent, View))
+            return cast parent;
+        return null;
     }
 
 /// Lifecycle
@@ -495,6 +511,9 @@ class View extends Quad {
     override function destroy() {
 
         super.destroy();
+
+        // Clean, if it was not null
+        customParentView = null;
 
         // Remove view from global list
         _allViews.splice(_allViews.indexOf(this), 1);
@@ -834,9 +853,11 @@ class View extends Quad {
         if (view.layoutDirty) {
             var root = view;
 
-            while (root.parent != null && Std.is(root.parent, View)) {
-                root = cast root.parent;
+            var parentView = root.parentView;
+            while (parentView != null) {
+                root = parentView;
                 root.layoutDirty = true;
+                parentView = root.parentView;
             }
         }
 
@@ -844,8 +865,9 @@ class View extends Quad {
 
     static function _layoutParentThenSelf(view:View):Void {
 
-        if (view.parent != null && Std.is(view.parent, View)) {
-            _layoutParentThenSelf(cast view.parent);
+        var parentView = view.parentView;
+        if (parentView != null) {
+            _layoutParentThenSelf(parentView);
         }
 
         if (view.layoutDirty && view.canLayout) {

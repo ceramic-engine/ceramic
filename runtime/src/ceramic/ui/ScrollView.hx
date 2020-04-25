@@ -9,7 +9,18 @@ class ScrollView extends View {
 
     public var scroller:Scroller;
 
-    public var contentView:View;
+    public var contentView(default,set):View;
+    function set_contentView(contentView:View):View {
+        if (this.contentView == contentView) return contentView;
+        if (this.contentView != null && this.contentView.customParentView == this) {
+            this.contentView.customParentView = null;
+        }
+        this.contentView = contentView;
+        if (this.contentView != null) {
+            this.contentView.customParentView = this;
+        }
+        return contentView;
+    }
 
     public var contentSize(default,set):Float = -1;
     inline function set_contentSize(contentSize:Float):Float {
@@ -42,6 +53,7 @@ class ScrollView extends View {
     function initContentView() {
 
         contentView = new View();
+        contentView.customParentView = this;
 
     }
 
