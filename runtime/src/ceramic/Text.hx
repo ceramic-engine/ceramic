@@ -285,7 +285,7 @@ class Text extends Visual {
         var usePrerenderedSize = scaledPreRenderedSize > 0 && font.msdf && !font.needsToPreRenderAtSize(scaledPreRenderedSize);
 
         var content = this.content;
-        if (content == '' || content.endsWith("\n")) {
+        if (content == '' || (content.length > 0 && content.charAt(content.length - 1) == "\n")) {
             addTrailingSpace = true;
             content += ' ';
         }
@@ -478,8 +478,12 @@ class Text extends Visual {
             var lineWidth = lineWidths.unsafeGet(i);
             maxLineWidth = Math.max(lineWidth, maxLineWidth);
         }
-        this.width = maxLineWidth;
-        this.height = (lineWidths.length - 1) * lineHeight * font.lineHeight * sizeFactor + font.lineHeight * sizeFactor;
+        this.width = Math.round(maxLineWidth * 1000) / 1000;
+        this.height = Math.round(((lineWidths.length - 1) * lineHeight * font.lineHeight * sizeFactor + font.lineHeight * sizeFactor) * 1000) / 1000;
+
+        if (content.startsWith('il ')) {
+            log.debug('height: ${_height}');
+        }
 
         // Align quads as requested
         switch (align) {
