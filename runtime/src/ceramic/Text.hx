@@ -53,7 +53,7 @@ class Text extends Visual {
         return content;
     }
 
-    @editable
+    @editable({ slider: [6, 600] })
     public var pointSize(default, set):Float = 20;
     function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
@@ -62,7 +62,7 @@ class Text extends Visual {
         return pointSize;
     }
 
-    @editable
+    @editable({ slider: [0, 10] })
     public var lineHeight(default, set):Float = 1.0;
     function set_lineHeight(lineHeight:Float):Float {
         if (this.lineHeight == lineHeight) return lineHeight;
@@ -71,7 +71,7 @@ class Text extends Visual {
         return lineHeight;
     }
 
-    @editable
+    @editable({ slider: [-100, 100] })
     public var letterSpacing(default, set):Float = 0.0;
     function set_letterSpacing(letterSpacing:Float):Float {
         if (this.letterSpacing == letterSpacing) return letterSpacing;
