@@ -19,6 +19,7 @@ class Font extends Task {
             ['--out <output directory>', 'The output directory'],
             ['--msdf', 'If used, export with multichannel distance field'],
             ['--size <font size>', 'The font size to export (default: 42)'],
+            ['--factor <factor>', 'A precision factor (advanced usage, default: 4)'],
             ['--charset', 'Characters to use as charset'],
             ['--charset-file', 'A text file containing characters to use as charset'],
             ['--offset-x', 'Move every character by this X offset'],
@@ -56,8 +57,6 @@ class Font extends Task {
             charset = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿœŒ€£";
         }
 
-        var generate:Dynamic = untyped require('msdf-bmfont-xml');
-
         if (!Path.isAbsolute(fontPath))
             fontPath = Path.normalize(Path.join([cwd, fontPath]));
 
@@ -90,11 +89,14 @@ class Font extends Task {
         }
 
         var factor = 0.25;
+        var rawFactor = extractArgValue(args, 'factor');
+        if (rawFactor != null)
+            factor = 1.0 / Std.parseFloat(rawFactor);
 
         if (msdf) {
             // Run generator (export msdf with factor)
-            command(Path.join([context.ceramicToolsPath, 'npx']), [
-                'msdf-bmfont',
+            command('node', [
+                Path.join([context.ceramicToolsPath, 'node_modules/.bin/msdf-bmfont']),
                 tmpFontPath,
                 '-f', 'json',
                 '-s', '' + Math.round(size / factor),
