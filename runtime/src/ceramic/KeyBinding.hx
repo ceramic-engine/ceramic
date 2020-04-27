@@ -17,6 +17,16 @@ class KeyBinding extends Entity {
 
     var matches:Bool = false;
 
+    var leftShiftPressed:Bool = false;
+    
+    var rightShiftPressed:Bool = false;
+
+    var disableIfShiftPressed:Bool = false;
+
+    #if web
+    var cmdPressed:Int = 0;
+    #end
+
 /// Lifecycle
 
     private function new(accelerator:Array<KeyAcceleratorItem>) {
@@ -32,6 +42,8 @@ class KeyBinding extends Entity {
 /// Internal
 
     function bindKeyboardEvents():Void {
+
+        var hasShift = false;
         
         for (i in 0...accelerator.length) {
             pressedItems.push(0);
@@ -40,17 +52,16 @@ class KeyBinding extends Entity {
             switch (item) {
 
                 case SHIFT:
+                    hasShift = true;
                     bindScanCode(ScanCode.LSHIFT, i);
                     bindScanCode(ScanCode.RSHIFT, i);
 
                 case CMD_OR_CTRL:
-                    #if mac
+                    disableIfShiftPressed = true;
                     bindScanCode(ScanCode.LMETA, i);
                     bindScanCode(ScanCode.RMETA, i);
-                    #else
                     bindScanCode(ScanCode.LCTRL, i);
                     bindScanCode(ScanCode.RCTRL, i);
-                    #end
 
                 case SCAN(scanCode):
                     bindScanCode(scanCode, i);
@@ -60,17 +71,41 @@ class KeyBinding extends Entity {
             }
         }
 
+        if (hasShift)
+            disableIfShiftPressed = false;
+
+        if (disableIfShiftPressed) {
+            bindShift();
+        }
+
     }
 
     function bindScanCode(scanCode:Int, itemIndex:Int):Void {
 
         app.onKeyDown(this, function(key:Key) {
 
+            #if web
+            if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
+                cmdPressed++;
+            }
+            #end
+
             if (key.scanCode == scanCode) {
-                if (app.isKeyJustPressed(key)) {
+                if (app.isKeyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
+
+                    #if web
+                    if (cmdPressed > 0 && scanCode != ScanCode.LMETA && scanCode != ScanCode.RMETA && scanCode != ScanCode.LSHIFT && scanCode != ScanCode.RSHIFT) {
+                        app.onceUpdate(this, _ -> {
+                            if (pressedItems[itemIndex] > 0)
+                                pressedItems[itemIndex]--;
+                            
+                            checkStatus();
+                        });
+                    }
+                    #end
                 }
             }
 
@@ -78,8 +113,24 @@ class KeyBinding extends Entity {
 
         app.onKeyUp(this, function(key:Key) {
 
+            #if web
+            if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
+                cmdPressed--;
+
+                if (cmdPressed == 0) {
+                    for (i in 0...pressedItems.length) {
+                        pressedItems[itemIndex] = 0;
+                    }
+
+                    checkStatus();
+                    return;
+                }
+            }
+            #end
+
             if (key.scanCode == scanCode) {
-                pressedItems[itemIndex]--;
+                if (pressedItems[itemIndex] > 0)
+                    pressedItems[itemIndex]--;
 
                 checkStatus();
             }
@@ -93,22 +144,59 @@ class KeyBinding extends Entity {
         app.onKeyDown(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
-                if (app.isKeyJustPressed(key)) {
+                if (app.isKeyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
+
+                    #if web
+                    if (cmdPressed > 0 && keyCode != KeyCode.LMETA && keyCode != KeyCode.RMETA && keyCode != KeyCode.LSHIFT && keyCode != KeyCode.RSHIFT) {
+                        app.onceUpdate(this, _ -> {
+                            if (pressedItems[itemIndex] > 0)
+                                pressedItems[itemIndex]--;
+                            
+                            checkStatus();
+                        });
+                    }
+                    #end
                 }
             }
-
 
         });
 
         app.onKeyUp(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
-                pressedItems[itemIndex]--;
+                if (pressedItems[itemIndex] > 0)
+                    pressedItems[itemIndex]--;
 
                 checkStatus();
+            }
+
+        });
+
+    }
+
+    function bindShift() {
+
+        app.onKeyDown(this, function(key:Key) {
+
+            if (key.scanCode == ScanCode.LSHIFT) {
+                leftShiftPressed = true;
+            }
+            else if (key.scanCode == ScanCode.LSHIFT) {
+                rightShiftPressed = true;
+            }
+
+        });
+
+        app.onKeyUp(this, function(key:Key) {
+
+            if (key.scanCode == ScanCode.LSHIFT) {
+                leftShiftPressed = false;
+            }
+            else if (key.scanCode == ScanCode.LSHIFT) {
+                rightShiftPressed = false;
             }
 
         });
@@ -118,7 +206,7 @@ class KeyBinding extends Entity {
     function checkStatus() {
 
         var canTrigger = !matches;
-        var doesMatch = true;
+        var doesMatch = !disableIfShiftPressed || (!leftShiftPressed && !rightShiftPressed);
 
         for (i in 0...pressedItems.length) {
             if (pressedItems[i] <= 0) {
