@@ -124,4 +124,17 @@ class TrackerBackend {
 
     }
 
+    /**
+     * Execute a callback after the given delay in seconds.
+     * @param owner The entity that owns this delayed call
+     * @param seconds The time in seconds of delay before the call
+     * @param callback The callback to call
+     * @return Void->Void A callback to cancel the delayed call
+     */
+    inline public function delay(owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+
+        return Timer.delay(owner, seconds, callback);
+
+    }
+
 }
