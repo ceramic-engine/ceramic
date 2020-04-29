@@ -1,6 +1,10 @@
 package tools.tasks;
 
+import sys.FileSystem;
+import haxe.crypto.Md5;
 import tools.Helpers.*;
+import haxe.io.Path;
+import sys.io.File;
 
 class Build extends tools.Task {
 
@@ -88,6 +92,42 @@ class Build extends tools.Task {
         if (extractArgFlag(args, 'assets', true)) {
             var task = new Assets();
             task.run(cwd, ['assets', target.name, '--variant', context.variant]);
+        }
+
+        // Prevent running two things in parallel
+        var isRun = false;
+        for (i in 0...args.length) {
+            if (args[i] == 'run') {
+                isRun = true;
+                break;
+            }
+            else if (args[i] == 'clean' || args[i] == 'build') {
+                break;
+            }
+        }
+        if (isRun) {
+            // Keep a file updated in home directory to let other ceramic scripts detect
+            // that a haxe server is running
+            var homedir:String = untyped __js__("require('os').homedir()");
+            var time = '' + Date.now().getTime();
+            var hash = Md5.encode(cwd);
+            var ceramicRunDir = Path.join([homedir, '.ceramic-run']);
+            var ceramicRunFile = Path.join([ceramicRunDir, hash]);
+            if (FileSystem.exists(ceramicRunDir)) {
+                if (!FileSystem.isDirectory(ceramicRunDir)) {
+                    FileSystem.deleteFile(ceramicRunDir);
+                }
+            }
+            else {
+                FileSystem.createDirectory(ceramicRunDir);
+            }
+            File.saveContent(ceramicRunFile, time);
+            js.Node.setInterval(function() {
+                if (File.getContent(ceramicRunFile) != time) {
+                    print('Stop run task (a new one is being run).');
+                    Sys.exit(0);
+                }
+            }, 500);
         }
 
         // Get and run backend's build task
