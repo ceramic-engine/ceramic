@@ -653,14 +653,17 @@ class Renderer extends Entity {
 
         // Update num vertices
         var posFloats = this.posFloats;
+        var uvFloats = this.uvFloats;
         var customFloatAttributesSize = this.customFloatAttributesSize;
         var visualNumVertices = 6;
-        var countAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
+        var posFloatsAfter = posFloats + visualNumVertices * (4 + customFloatAttributesSize);
+        var uvFloatsAfter = uvFloats + visualNumVertices * 4;
 
         // Submit the current batch if we exceed the max buffer size
-        if (countAfter > maxVertFloats) {
+        if (posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
             flushAndCleanState();
             posFloats = this.posFloats;
+            uvFloats = this.uvFloats;
         }
 
         var w:Float;
@@ -840,7 +843,6 @@ class Renderer extends Entity {
         var uvY:Float = 0;
         var uvW:Float = 0;
         var uvH:Float = 0;
-        var uvFloats = this.uvFloats;
 
         if (quad.texture != null) {
 
@@ -1161,26 +1163,31 @@ class Renderer extends Entity {
         // Update num vertices
         var visualNumVertices = meshIndices.length;
         var posFloats = this.posFloats;
+        var uvFloats = this.uvFloats;
         var posList = draw.getPosList();
         var customFloatAttributesSize = this.customFloatAttributesSize;
         var meshCustomFloatAttributesSize = mesh.customFloatAttributesSize;
         var floatsPerVertex = (4 + customFloatAttributesSize);
-        var countAdd = visualNumVertices * floatsPerVertex;
-        var countAfter = posFloats + countAdd;
+        var posFloatsAdd = visualNumVertices * floatsPerVertex;
+        var posFloatsAfter = posFloats + posFloatsAdd;
+        var uvFloatsAfter = uvFloats + visualNumVertices * 4;
         var startVertices = 0;
         var meshDrawsRenderTexture:Bool = mesh.texture != null && mesh.texture.isRenderTexture;
         var endVertices = visualNumVertices;
+        // Divide and multiply by 3 (a triangle has 3 vertices, we want to split between 2 triangles)
         var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
 
         // Submit the current batch if we exceed the max buffer size
-        if (countAfter > maxVertFloats) {
+        if (posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
             flushAndCleanState();
             textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
             posFloats = this.posFloats;
-            countAfter = posFloats + countAdd;
+            uvFloats = this.uvFloats;
+            posFloatsAfter = posFloats + posFloatsAdd;
+            uvFloatsAfter = uvFloats + visualNumVertices * 4;
 
             // Check that our mesh is still not too large
-            if (countAfter > maxVertFloats) {
+            if (posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
                 endVertices = maxVertices;
             }
         }
@@ -1206,8 +1213,7 @@ class Renderer extends Entity {
             // Exit condition is at the end.
             while (true) {
             
-                var uvFloats = this.uvFloats;
-                var colorFloats = this.colorFloats; 
+                var colorFloats = this.colorFloats;
 
                 var i = startVertices;
                 while (i < endVertices) {
@@ -1382,6 +1388,7 @@ class Renderer extends Entity {
                     flushAndCleanState();
                     textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
                     posFloats = this.posFloats;
+                    uvFloats = this.uvFloats;
 
                     startVertices = endVertices;
                     endVertices = startVertices + maxVertices;
