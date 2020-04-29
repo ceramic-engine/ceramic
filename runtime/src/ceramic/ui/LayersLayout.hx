@@ -2,6 +2,14 @@ package ceramic.ui;
 
 class LayersLayout extends View {
 
+    public function new() {
+
+        super();
+
+        transparent = true;
+        
+    }
+
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, parentWidth);
