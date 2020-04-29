@@ -16,14 +16,6 @@ class Entity implements Events implements Lazy {
     #if (!macro && !display && !completion)
     /** Field info */
     @:noCompletion public static var _fieldInfo(default, null) = {
-        id: {
-            editable: [{
-                identifier: true,
-                temporize: true
-            }],
-            type: 'String',
-            index: 1
-        },
         components: {
             editable: [],
             type: 'ceramic.ImmutableMap<String,ceramic.Component>',
