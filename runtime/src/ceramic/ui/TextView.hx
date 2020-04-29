@@ -23,6 +23,15 @@ class TextView extends View {
         return font;
     }
 
+    public var preRenderedSize(get,set):Int;
+    inline function get_preRenderedSize():Int return text.preRenderedSize;
+    function set_preRenderedSize(preRenderedSize:Int):Int {
+        if (this.preRenderedSize == preRenderedSize) return preRenderedSize;
+        text.preRenderedSize = preRenderedSize;
+        layoutDirty = true;
+        return preRenderedSize;
+    }
+
     public var textColor(get,set):Color;
     inline function get_textColor():Color return text.color;
     function set_textColor(textColor:Color):Color {
