@@ -18,7 +18,8 @@ class Entity implements Events implements Lazy {
     @:noCompletion public static var _fieldInfo(default, null) = {
         id: {
             editable: [{
-                identifier: true
+                identifier: true,
+                temporize: true
             }],
             type: 'String',
             index: 1
