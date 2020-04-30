@@ -23,6 +23,8 @@ class Libs extends tools.Task {
 
         ensureCeramicProject(cwd, args, App);
 
+        checkProjectHaxelibSetup(cwd, args);
+
         function g(str:String) {
             return context.colors ? str.gray() : str;
         }
