@@ -48,6 +48,7 @@ class Tools {
             ceramicRunnerPath: Path.normalize(Path.join([ceramicPath, '../runner'])),
             ceramicGitDepsPath: Path.normalize(Path.join([ceramicPath, '../git'])),
             defaultPluginsPath: Path.normalize(Path.join([ceramicPath, '../plugins'])),
+            projectPluginsPath: Path.normalize(Path.join([cwd, 'plugins'])),
             homeDir: '' + js.Node.require('os').homedir(),
             isLocalDotCeramic: false,
             dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),

@@ -116,22 +116,20 @@ class Helpers {
             runtime:Dynamic // runtime additional config
         }> = new Map();
 
-        // Default plugins
-        var files = FileSystem.readDirectory(context.defaultPluginsPath);
-        for (file in files) {
-            var pluginProjectPath = Path.join([context.defaultPluginsPath, file, 'ceramic.yml']);
+        inline function handlePluginProjectPath(pluginsDir:String, pluginProjectPath:String, file:String) {
+
             if (FileSystem.exists(pluginProjectPath)) {
                 // Extract info
                 try {
                     var str = File.getContent(pluginProjectPath)
-                        .replace('{plugin:cwd}', Path.join([context.defaultPluginsPath, file]))
+                        .replace('{plugin:cwd}', Path.join([pluginsDir, file]))
                         .replace('{cwd}', context.cwd)
                     ;
                     var info = Yaml.parse(str);
                     if (info != null && info.plugin != null && info.plugin.name != null) {
                         plugins.set((''+info.plugin.name).toLowerCase(), {
                             name: info.plugin.name,
-                            path: Path.join([context.defaultPluginsPath, file]),
+                            path: Path.join([pluginsDir, file]),
                             runtime: info.plugin.runtime
                         });
                     }
@@ -143,10 +141,26 @@ class Helpers {
                     error('Failed to parse plugin config: ' + pluginProjectPath);
                 }
             }
+
         }
 
-        // Plugins as haxe libraries
-        // TODO
+        // Default plugins
+        var files = FileSystem.readDirectory(context.defaultPluginsPath);
+        for (file in files) {
+            var pluginProjectPath = Path.join([context.defaultPluginsPath, file, 'ceramic.yml']);
+            handlePluginProjectPath(context.defaultPluginsPath, pluginProjectPath, file);
+        }
+
+        // Project plugins
+        if (FileSystem.exists(Path.join([context.cwd, 'ceramic.yml']))) {
+            if (FileSystem.exists(context.projectPluginsPath) && FileSystem.isDirectory(context.projectPluginsPath)) {
+                var files = FileSystem.readDirectory(context.projectPluginsPath);
+                for (file in files) {
+                    var pluginProjectPath = Path.join([context.projectPluginsPath, file, 'ceramic.yml']);
+                    handlePluginProjectPath(context.projectPluginsPath, pluginProjectPath, file);
+                }
+            }
+        }
 
         for (key in plugins.keys()) {
             var info = plugins.get(key);
@@ -351,6 +365,15 @@ class Helpers {
         
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,0,52'])))
             haxelib(['install', 'hxcpp', '4.0.52', '--always'], {cwd: cwd});
+        
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '10,0,0'])))
+            haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
+        
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
+            haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always'], {cwd: cwd});
+        
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '2,3,0'])))
+            haxelib(['install', 'hscript', '2.3.0', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,6'])))
             haxelib(['install', 'bind', '0.4.6', '--always'], {cwd: cwd});

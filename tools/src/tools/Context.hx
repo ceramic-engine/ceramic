@@ -44,6 +44,9 @@ typedef Context = {
     
     /** Default plugins path (embedded with ceramic itself). */
     var defaultPluginsPath:String;
+
+    /** Project's plugins path (specific to the current project) */
+    var projectPluginsPath:String;
     
     /** Whether we are running a variant configuration or not. */
     var variant:String;
