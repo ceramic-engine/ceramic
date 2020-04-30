@@ -77,9 +77,19 @@ class Libs extends tools.Task {
         for (libName in libs.keys()) {
             var libVersion = libs.get(libName);
             
+            var isGit = false;
+            var isPath = false;
+            if (libVersion != null) {
+                if (libVersion.startsWith('git:')) {
+                    isGit = true;
+                }
+                else if (libVersion.startsWith('path:')) {
+                    isPath = true;
+                }
+            }
             // Check if library is installed
             var query = libName;
-            if (libVersion != null) query += ':' + libVersion;
+            if (libVersion != null && !isPath && !isGit) query += ':' + libVersion;
             var res = haxelib(['path', query], { mute: true, cwd: cwd });
             var path = (''+res.stdout).trim().split("\r").join("").split("\n")[0].trim();
 
@@ -93,13 +103,23 @@ class Libs extends tools.Task {
             }
             else {
                 // Library doesn't exist, install it
-                var installArgs = [libName];
-                if (libVersion != null) installArgs.push(libVersion);
-                res = haxelib(['install'].concat(installArgs), { cwd: cwd });
-
+                if (isPath) {
+                    var devArg = [libName, libVersion.substring('path:'.length)];
+                    res = haxelib(['dev'].concat(devArg), { cwd: cwd });
+                }
+                else if (isGit) {
+                    var gitArgs = [libName, libVersion.substring('git:'.length).replace('#', ' ')];
+                    res = haxelib(['git'].concat(gitArgs), { cwd: cwd });
+                }
+                else {
+                    var installArgs = [libName];
+                    if (libVersion != null) installArgs.push(libVersion);
+                    res = haxelib(['install'].concat(installArgs), { cwd: cwd });
+                }
+    
                 // Check again
                 query = libName;
-                if (libVersion != null) query += ':' + libVersion;
+                if (libVersion != null && !isGit && !isPath) query += ':' + libVersion;
                 res = haxelib(['path', query], { mute: true, cwd: cwd });
                 path = (''+res.stdout).trim().split("\r").join("").split("\n")[0].trim();
                 if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
