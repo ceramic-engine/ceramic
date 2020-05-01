@@ -158,9 +158,9 @@ class PlatformSpecific {
 
     #if (web && ceramic_use_electron)
     static var testedElectronAvailability:Bool = false;
-    static var electron:Dynamic = null;
+    static var electron:Null<Dynamic> = null;
 
-    public static function nodeRequire(module:String):Dynamic {
+    inline static function resolveElectron() {
 
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
@@ -169,6 +169,12 @@ class PlatformSpecific {
             }
             catch (e:Dynamic) {}
         }
+
+    }
+
+    public static function nodeRequire(module:String):Null<Dynamic> {
+
+        resolveElectron();
     
         if (electron != null) {
     
@@ -181,6 +187,20 @@ class PlatformSpecific {
         }
             
     }
+
+    public static function electronRemote():Null<Dynamic> {
+
+        resolveElectron();
+    
+        if (electron != null) {
+            return electron.remote;
+        }
+        else {
+            return null;
+        }
+
+    }
+
     #elseif js
     public static function nodeRequire(module:String):Dynamic {
         #if (node || nodejs || hxnodejs)
