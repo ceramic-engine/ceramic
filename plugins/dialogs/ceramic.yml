@@ -3,4 +3,4 @@ plugin:
 
     runtime:
         +libs:
-            - linc_dialogs: git:https://github.com/ceramic-engine/linc_dialogs.git
+            - linc_dialogs: path:{plugin:cwd}/../../git/linc_dialogs
