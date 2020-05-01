@@ -1697,7 +1697,7 @@ class Spine extends Visual {
     /** A more optimal way of listening to updated slots.
         With this method, we are targeting a specific slot by its name (global index internally).
         This allows the spine object to skip calls to the handler for every other slots we don't care about. */
-    inline public function onUpdateSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, slotName:String, handleInfo:SlotInfo->Void):Void {
+    inline public function onUpdateSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, slotName:String, handleInfo:SlotInfo->Void):Void {
 
         onUpdateSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
@@ -1706,7 +1706,7 @@ class Spine extends Visual {
     /** A more optimal way of listening to updated slots.
         With this method, we are targeting a specific slot by its global index.
         This allows the spine object to skip calls to the handler for every other slots we don't care about. */
-    public function onUpdateSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, index:Int, handleInfo:SlotInfo->Void):Void {
+    public function onUpdateSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
         if (updateSlotWithNameDispatchers == null) {
@@ -1753,14 +1753,14 @@ class Spine extends Visual {
     }
 
     /** Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`) */
-    inline public function onUpdateVisibleSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, slotName:String, handleInfo:SlotInfo->Void):Void {
+    inline public function onUpdateVisibleSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, slotName:String, handleInfo:SlotInfo->Void):Void {
 
         onUpdateVisibleSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
     }
 
     /** Same as `onUpdateSlotWithGlobalIndex`, but fired only for visible slots (`drawDefault=true`) */
-    public function onUpdateVisibleSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Entity #end, index:Int, handleInfo:SlotInfo->Void):Void {
+    public function onUpdateVisibleSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
         if (updateVisibleSlotWithNameDispatchers == null) {
