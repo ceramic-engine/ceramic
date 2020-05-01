@@ -1,0 +1,6 @@
+plugin:
+    name: Dialogs
+
+    runtime:
+        +libs:
+            - linc_dialogs: git:https://github.com/ceramic-engine/linc_dialogs.git
