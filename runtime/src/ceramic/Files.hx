@@ -373,4 +373,29 @@ class Files {
 
     }
 
+    public static function saveContent(path:String, content:String):Void {
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        sys.io.File.saveContent(path, content);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+        
+        if (fs == null) {
+            log.warning('saveContent() is not supported on this target without fs module');
+        }
+        else {
+            fs.writeFileSync(path, content);
+        }
+
+        #else
+
+        log.warning('saveContent() is not supported on this target');
+
+        #end
+
+    }
+
 }
