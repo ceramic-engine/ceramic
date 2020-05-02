@@ -107,11 +107,6 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadURL(appUrl);
 
-    // Ensure we keep the initial window title we set
-    mainWindow.on('page-title-updated', function (e) {
-        e.preventDefault();
-    });
-
     // Open the DevTools.
     //mainWindow.webContents.openDevTools()
 

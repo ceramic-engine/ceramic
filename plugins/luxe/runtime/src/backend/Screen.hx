@@ -54,6 +54,8 @@ class Screen implements tracker.Events implements spec.Screen {
         #if (cpp && linc_sdl)
         var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
         sdl.SDL.setWindowTitle(runtime.window, title);
+        #elseif web
+        untyped document.title = title;
         #end
 
     }
