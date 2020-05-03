@@ -259,6 +259,13 @@ class Main extends luxe.Game {
         }
 #end
 
+#if (linc_sdl && cpp)
+        var runtime:snow.modules.sdl.Runtime = cast Luxe.snow.runtime;
+        runtime.handle_sdl_event = event -> {
+            app.backend.emitSdlEvent(event);
+        };
+#end
+
         return config;
 
     }

@@ -64,6 +64,10 @@ class Backend implements tracker.Events implements spec.Backend {
     @event function controllerEnable(controllerId:Int, name:String);
     @event function controllerDisable(controllerId:Int);
 
+#if (linc_sdl && cpp)
+    @event function sdlEvent(event:sdl.Event);
+#end
+
 /// Internal update logic
 
     inline function willEmitUpdate(delta:Float) {
