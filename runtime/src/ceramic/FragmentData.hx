@@ -7,9 +7,6 @@ typedef FragmentData = {
     /** Identifier of the fragment. */
     public var id:String;
 
-    /** Name of the fragment. */
-    public var name:String;
-
     /** Arbitrary data hold by this fragment. */
     public var data:Dynamic<Dynamic>;
 

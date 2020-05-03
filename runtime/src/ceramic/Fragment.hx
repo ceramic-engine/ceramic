@@ -65,9 +65,9 @@ class Fragment extends Quad {
     function set_fragmentData(fragmentData:FragmentData):FragmentData {
 
         #if ceramic_debug_fragments
-        trace('set fragmentData ${fragmentData.name} / $fragmentData');
+        trace('set fragmentData ${fragmentData.id} / $fragmentData');
         onceReady(this, function() {
-            log.success('READY fragment ${fragmentData.name}');
+            log.success('READY fragment ${fragmentData.id}');
         });
         #end
         
