@@ -373,6 +373,33 @@ class Files {
 
     }
 
+    public static function getContent(path:String):Null<String> {
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        return sys.io.File.getContent(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+        
+        if (fs == null) {
+            log.warning('getContent() is not supported on this target without fs module');
+            return null;
+        }
+        else {
+            return fs.readFileSync(path, 'utf8');
+        }
+
+        #else
+
+        log.warning('getContent() is not supported on this target');
+        return null;
+
+        #end
+
+    }
+
     public static function saveContent(path:String, content:String):Void {
 
         #if (sys || node || nodejs || hxnodejs)
