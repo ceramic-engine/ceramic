@@ -11,6 +11,8 @@ using ceramic.Extensions;
 /** Various utilities. Some of them are used by ceramic itself or its backends. */
 class Utils {
 
+    static var RE_ASCII_CHAR = ~/^[a-zA-Z0-9]$/;
+
     public static function realPath(path:String):String {
 
         path = ceramic.Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
@@ -337,6 +339,78 @@ class Utils {
         }
 
         return list;
+
+    }
+
+    /** Transforms `SOME_IDENTIFIER` to `SomeIdentifier` */
+    public static function upperCaseToCamelCase(input:String, firstLetterUppercase:Bool = true):String {
+
+        var res = new StringBuf();
+        var len = input.length;
+        var i = 0;
+        var nextLetterUpperCase = firstLetterUppercase;
+
+        while (i < len) {
+
+            var c = input.charAt(i);
+            if (c == '_') {
+                nextLetterUpperCase = true;
+            }
+            else if (nextLetterUpperCase) {
+                nextLetterUpperCase = false;
+                res.add(c.toUpperCase());
+            }
+            else {
+                res.add(c.toLowerCase());
+            }
+
+            i++;
+        }
+
+        return res.toString();
+
+    }
+
+    /** Transforms `SomeIdentifier`/`someIdentifier`/`some identifier` to `SOME_IDENTIFIER` */
+    public static function camelCaseToUpperCase(input:String, firstLetterUppercase:Bool = true):String {
+
+        var res = new StringBuf();
+        var len = input.length;
+        var i = 0;
+        var canAddSpace = false;
+
+        while (i < len) {
+
+            var c = input.charAt(i);
+            if (c == '.') {
+                res.add('_');
+                canAddSpace = false;
+            }
+            else if (RE_ASCII_CHAR.match(c)) {
+
+                var uc = c.toUpperCase();
+                var isUpperCase = (c == uc);
+
+                if (canAddSpace && isUpperCase) {
+                    res.add('_');
+                    canAddSpace = false;
+                }
+
+                res.add(uc);
+                canAddSpace = !isUpperCase;
+            }
+            else {
+                res.add('_');
+                canAddSpace = false;
+            }
+
+            i++;
+        }
+
+        var str = res.toString();
+        while (str.endsWith('_')) str = str.substr(0, str.length - 1);
+
+        return str;
 
     }
 
