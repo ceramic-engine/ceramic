@@ -496,9 +496,13 @@ class View extends Quad {
 
         // Prevent layout from happening too early
         app.onceImmediate(function() {
+            if (destroyed)
+                return;
             // We use a 2-level onceImmediate call to ensure this
             // will be executed after "standard" `onceImmediate` calls.
             app.oncePostFlushImmediate(function() {
+                if (destroyed)
+                    return;
                 canLayout = true;
                 if (layoutDirty) {
                     View.requestLayout();
