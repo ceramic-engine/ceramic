@@ -516,6 +516,9 @@ class View extends Quad {
 
         super.destroy();
 
+        // No layout allowed anymore
+        canLayout = false;
+
         // Clean, if it was not null
         customParentView = null;
 
