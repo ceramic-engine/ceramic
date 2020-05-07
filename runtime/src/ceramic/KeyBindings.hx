@@ -6,6 +6,8 @@ using ceramic.Extensions;
 
 class KeyBindings extends Entity {
 
+    static var instances:Array<KeyBindings> = [];
+
 /// Internal properties
 
     var bindings:Array<KeyBinding> = [];
@@ -15,6 +17,16 @@ class KeyBindings extends Entity {
     public function new() {
 
         super();
+
+        instances.push(this);
+
+    }
+
+    override function destroy() {
+
+        super.destroy();
+
+        instances.splice(instances.indexOf(this), 1);
 
     }
 
@@ -33,6 +45,16 @@ class KeyBindings extends Entity {
         }
 
         return binding;
+
+    }
+
+    @:noCompletion public static function forceKeysUp() {
+
+        for (instance in instances) {
+            for (bind in instance.bindings) {
+                bind.forceKeysUp();
+            }
+        }
 
     }
 

@@ -39,6 +39,20 @@ class KeyBinding extends Entity {
 
     }
 
+/// Helpers
+
+    @:noCompletion public function forceKeysUp():Void {
+
+        leftShiftPressed = false;
+        rightShiftPressed = false;
+        for (i in 0...pressedItems.length) {
+            pressedItems[i] = 0;
+        }
+
+        checkStatus();
+
+    }
+
 /// Internal
 
     function bindKeyboardEvents():Void {

@@ -53,6 +53,7 @@ class Dialogs {
                 options.filters = filters;
             }
             var result:Dynamic = dialog.showOpenDialogSync(options);
+            ceramic.KeyBindings.forceKeysUp();
             if (Std.is(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
@@ -111,6 +112,7 @@ class Dialogs {
                 ]
             };
             var result:Dynamic = dialog.showOpenDialogSync(options);
+            ceramic.KeyBindings.forceKeysUp();
             if (Std.is(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
@@ -182,6 +184,7 @@ class Dialogs {
                 options.filters = filters;
             }
             var result:Dynamic = dialog.showSaveDialogSync(options);
+            ceramic.KeyBindings.forceKeysUp();
             if (Std.is(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
