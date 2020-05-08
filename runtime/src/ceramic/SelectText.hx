@@ -264,7 +264,7 @@ class SelectText extends Entity implements Component implements Observable {
                     createTextCursorIfNeeded();
                     textCursor.pos(
                         glyphQuad.glyphX + glyphQuad.glyphAdvance,
-                        glyphQuad.glyphY - cursorPad * 0.5
+                        glyphQuad.glyphY - cursorPad
                     );
                     textCursor.size(
                         cursorWidth,
