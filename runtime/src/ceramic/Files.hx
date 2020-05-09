@@ -425,4 +425,115 @@ class Files {
 
     }
 
+    public static function createDirectory(path:String):Void {
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        sys.FileSystem.createDirectory(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+        
+        if (fs == null) {
+            log.warning('createDirectory() is not supported on this target without fs module');
+        }
+        else {
+            fsCreateDirectory(fs, path);
+        }
+
+        #else
+
+        log.warning('createDirectory() is not supported on this target');
+
+        #end
+
+    }
+
+    #if (web && ceramic_use_electron)
+    static function fsCreateDirectory(fs:Dynamic, dir:String) {
+        try {
+            fs.mkdirSync(dir);
+        } catch (e:Dynamic) {
+            if (e.code == "ENOENT") {
+                // parent doesn't exist - create parent and then this dir
+                fsCreateDirectory(fs, Path.directory(dir));
+                fs.mkdirSync(dir);
+            } else {
+                // some other error - check if path is a dir, rethrow the error if not
+                // (the `(e : Error)` cast is here to avoid HaxeError wrapping, though we need to investigate this in Haxe itself)
+                var stat = try fs.statSync(dir) catch (_:Dynamic) throw(e : js.lib.Error);
+                if (!stat.isDirectory())
+                    throw(e : js.lib.Error);
+            }
+        }
+    }
+    #end
+
+    public static function exists(path:String):Bool {
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        return sys.FileSystem.exists(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+        
+        if (fs == null) {
+            log.warning('exists() is not supported on this target without fs module');
+            return false;
+        }
+        else {
+            try {
+                fs.accessSync(path);
+                return true;
+            }
+            catch (e:Dynamic) {
+                return false;
+            }
+        }
+
+        #else
+
+        log.warning('exists() is not supported on this target');
+        return false;
+
+        #end
+
+    }
+
+    public static function isDirectory(path:String):Bool {
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        return sys.FileSystem.isDirectory(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+        
+        if (fs == null) {
+            log.warning('isDirectory() is not supported on this target without fs module');
+            return false;
+        }
+        else {
+            try {
+                var stat = fs.statSync(path);
+                return stat.isDirectory();
+            }
+            catch (e:Dynamic) {
+                return false;
+            }
+        }
+
+        #else
+
+        log.warning('isDirectory() is not supported on this target');
+        return false;
+
+        #end
+
+    }
+
 }
