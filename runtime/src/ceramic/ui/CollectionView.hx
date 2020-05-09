@@ -309,11 +309,13 @@ class CollectionView extends ScrollView {
             case END:
                 targetScrollX = frame.x - width + frame.width;
             case ENSURE_VISIBLE:
-                if (targetScrollX > frame.x - width + frame.width) {
-                    targetScrollX = frame.x - width + frame.width;
+                var min = frame.x - width + frame.width;
+                var max = frame.x;
+                if (targetScrollX > max) {
+                    targetScrollX = max;
                 }
-                else if (targetScrollX < frame.x) {
-                    targetScrollX = frame.x;
+                else if (targetScrollX < min) {
+                    targetScrollX = min;
                 }
         }
 
@@ -352,11 +354,13 @@ class CollectionView extends ScrollView {
             case END:
                 targetScrollY = frame.y - height + frame.height;
             case ENSURE_VISIBLE:
-                if (targetScrollY > frame.y - height + frame.height) {
-                    targetScrollY = frame.y - height + frame.height;
+                var min = frame.y - height + frame.height;
+                var max = frame.y;
+                if (targetScrollY > max) {
+                    targetScrollY = max;
                 }
-                else if (targetScrollY < frame.y) {
-                    targetScrollY = frame.y;
+                else if (targetScrollY < min) {
+                    targetScrollY = min;
                 }
         }
 
