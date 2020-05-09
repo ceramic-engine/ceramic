@@ -92,6 +92,7 @@ class RuntimeAssets {
             case 'shader': app.backend.info.shaderExtensions();
             case 'font': ['fnt'];
             case 'database': ['csv'];
+            case 'fragments': ['fragments'];
             default: [];
         });
 

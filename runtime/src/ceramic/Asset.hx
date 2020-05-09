@@ -107,6 +107,7 @@ class Asset extends Entity implements Observable {
                 case 'shader': app.backend.info.shaderExtensions();
                 case 'font': ['fnt'];
                 case 'database': ['csv'];
+                case 'fragments': ['fragments'];
                 default: null;
             }
         }

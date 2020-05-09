@@ -7,7 +7,7 @@ class FragmentContext {
     public var assets:Assets;
 
     /** Whether the items are edited items or not */
-    public var editedItems:Bool;
+    public var editedItems:Bool = false;
 
     function toString() {
         return '' + {

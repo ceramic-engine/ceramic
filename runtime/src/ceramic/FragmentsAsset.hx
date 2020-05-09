@@ -2,15 +2,16 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+import haxe.Json;
 import haxe.DynamicAccess;
 
-class DatabaseAsset extends Asset {
+class FragmentsAsset extends Asset {
 
-    @observe public var database:Array<DynamicAccess<String>> = null;
+    @observe public var fragments:DynamicAccess<FragmentData> = null;
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('database', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('fragments', name, options #if ceramic_debug_entity_allocs , pos #end);
 
     }
 
@@ -19,7 +20,7 @@ class DatabaseAsset extends Asset {
         status = LOADING;
 
         if (path == null) {
-            log.warning('Cannot load database asset if path is undefined.');
+            log.warning('Cannot load fragments asset if path is undefined.');
             status = BROKEN;
             emitComplete(false);
             return;
@@ -34,15 +35,15 @@ class DatabaseAsset extends Asset {
             backendPath += '?hot=' + assetReloadedCount;
         }
 
-        log.info('Load database $backendPath');
+        log.info('Load fragments $backendPath');
         app.backend.texts.load(realPath, function(text) {
 
             if (text != null) {
                 try {
-                    this.database = Csv.parse(text);
+                    this.fragments = Json.parse(text);
                 } catch (e:Dynamic) {
                     status = BROKEN;
-                    log.error('Failed to parse database at path: $path');
+                    log.error('Failed to parse fragments at path: $path');
                     emitComplete(false);
                     return;
                 }
@@ -51,7 +52,7 @@ class DatabaseAsset extends Asset {
             }
             else {
                 status = BROKEN;
-                log.error('Failed to load database at path: $path');
+                log.error('Failed to load fragments at path: $path');
                 emitComplete(false);
             }
 
@@ -74,7 +75,7 @@ class DatabaseAsset extends Asset {
         }
 
         if (newTime > previousTime) {
-            log.info('Reload database (file has changed)');
+            log.info('Reload fragments (file has changed)');
             load();
         }
 
@@ -84,7 +85,7 @@ class DatabaseAsset extends Asset {
 
         super.destroy();
 
-        database = null;
+        fragments = null;
 
     }
 

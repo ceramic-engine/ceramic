@@ -89,6 +89,7 @@ class Assets extends Entity {
             case 'text': addText(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'sound': addSound(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'database': addDatabase(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'fragments': addFragments(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'font': addFont(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'shader': addShader(name, options #if ceramic_debug_entity_allocs , pos #end);
             default:
@@ -114,6 +115,7 @@ class Assets extends Entity {
         var shaderExtensions = info.shaderExtensions();
         var fontExtensions = ['fnt'];
         var databaseExtensions = ['csv'];
+        var fragmentsExtensions = ['fragments'];
 
         var customKindsExtensions = [];
         var customKindsAdd = [];
@@ -204,6 +206,16 @@ class Assets extends Entity {
             }
 
             if (!didAdd) {
+                for (i in 0...fragmentsExtensions.length) {
+                    if (fragmentsExtensions.unsafeGet(i) == assetExtension) {
+                        addFragments(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
                 for (j in 0...customKindsExtensions.length) {
                     var extensions = customKindsExtensions.unsafeGet(j);
                     for (i in 0...extensions.length) {
@@ -254,6 +266,13 @@ class Assets extends Entity {
         
         if (name.startsWith('database:')) name = name.substr(9);
         addAsset(new DatabaseAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+
+    }
+
+    public function addFragments(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+        
+        if (name.startsWith('fragments:')) name = name.substr(10);
+        addAsset(new FragmentsAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
@@ -591,6 +610,19 @@ class Assets extends Entity {
         if (asset == null) return null;
 
         return asset.database;
+
+    }
+
+    public function fragments(name:Either<String,AssetId<String>>):DynamicAccess<FragmentData> {
+
+        var realName:String = cast name;
+        if (realName.startsWith('fragments:')) realName = realName.substr(10);
+        
+        if (!assetsByKindAndName.exists('fragments')) return null;
+        var asset:FragmentsAsset = cast assetsByKindAndName.get('fragments').get(realName);
+        if (asset == null) return null;
+
+        return asset.fragments;
 
     }
 
