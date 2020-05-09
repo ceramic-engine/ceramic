@@ -4,10 +4,6 @@ import ceramic.BitmapFont;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
-#if (haxe_ver < 4)
-using unifill.Unifill;
-#end
-
 using ceramic.Extensions;
 using StringTools;
 
@@ -276,7 +272,7 @@ class Text extends Visual {
         var isLineBreak = false;
         var isWhiteSpace = false;
         var justDidBreakToFit = false;
-        var hasSpaceInLine = false;
+        var hasSpaceInLine = 0;
         var wasWhiteSpace = false;
         var numCharsBeforeLine = 0;
         var addTrailingSpace = false;
@@ -289,72 +285,51 @@ class Text extends Visual {
             addTrailingSpace = true;
             content += ' ';
         }
-        #if (haxe_ver >= 4)
         var len = content.length;
-        #else
-        var len = content.uLength();
-        #end
         
         while (i < len) {
 
             prevChar = char;
             prevCode = code;
             
-            #if (haxe_ver >= 4)
             char = content.charAt(i);   
             code = char.charCodeAt(0);
-            #else
-            char = content.uCharAt(i);
-            code = char.uCharCodeAt(0);
-            #end
 
             isLineBreak = (char == "\n");
             isWhiteSpace = (char == ' ');
 
-            if (!hasSpaceInLine && isWhiteSpace) hasSpaceInLine = true;
+            if (isWhiteSpace) hasSpaceInLine++;
 
             if (isLineBreak || isWhiteSpace || i == len - 1) {
-                if (!justDidBreakToFit && fitWidth >= 0 && xVisible > 1 && xVisible > fitWidth - 1 && hasSpaceInLine) {
+                if (!justDidBreakToFit && fitWidth >= 0 && xVisible > 1 && xVisible > fitWidth - 1 && hasSpaceInLine > 0) {
                     justDidBreakToFit = true;
+                    hasSpaceInLine--;
                     // Rewind last word because it doesn't fit
                     while (i > 0) {
                         i--;
-                        #if (haxe_ver >= 4)
                         char = content.charAt(i);
                         code = char.charCodeAt(0);
-                        #else
-                        char = content.uCharAt(i);
-                        code = char.uCharCodeAt(0);
-                        #end
                         if (i > 0) {
-                            #if (haxe_ver >= 4)
                             prevChar = content.charAt(i - 1);
                             prevCode = prevChar.charCodeAt(0);
-                            #else
-                            prevChar = content.uCharAt(i - 1);
-                            prevCode = prevChar.uCharCodeAt(0);
-                            #end
-                            glyph = font.chars.get(prevCode);
                         } else {
                             prevChar = null;
                             prevCode = -1;
-                            glyph = null;
                         }
+                        glyph = font.chars.get(code);
                         if (prevChar != null) {
                             x -= font.kerning(prevCode, code) * sizeFactor;
                         }
                         if (glyph != null) {
                             x -= glyph.xAdvance * sizeFactor + letterSpacing;
-                            usedQuads--;
-                            lineQuads[lineQuads.length-1].pop();
                         }
+                        usedQuads--;
+                        lineQuads[lineQuads.length-1].pop();
                         if (char == ' ') {
                             char = "\n";
-                            #if (haxe_ver >= 4)
+                            glyph = font.chars.get("\n".code);
                             code = char.charCodeAt(0);
-                            #else
-                            code = char.uCharCodeAt(0);
-                            #end
+                            hasSpaceInLine--;
                             isLineBreak = true;
                             isWhiteSpace = false;
                             break;
@@ -367,7 +342,7 @@ class Text extends Visual {
             }
 
             if (isLineBreak) {
-                hasSpaceInLine = false;
+                hasSpaceInLine = 0;
                 prevChar = null;
                 prevCode = -1;
                 i++;
@@ -480,10 +455,6 @@ class Text extends Visual {
         }
         this.width = Math.round(maxLineWidth * 1000) / 1000;
         this.height = Math.round(((lineWidths.length - 1) * lineHeight * font.lineHeight * sizeFactor + font.lineHeight * sizeFactor) * 1000) / 1000;
-
-        if (content.startsWith('il ')) {
-            log.debug('height: ${_height}');
-        }
 
         // Align quads as requested
         switch (align) {
@@ -613,11 +584,7 @@ class Text extends Visual {
             }
         }
 
-        #if (haxe_ver >= 4)
         return content.length;
-        #else
-        return content.uLength();
-        #end
 
     }
 
