@@ -1,6 +1,6 @@
 package ceramic.ui;
 
-/** A layout that arranges its children horizontally in a single column.
+/** A layout that arranges its children horizontally in a single row.
     This class is a `LinearLayout` subclass, restricted to its horizontal direction. */
 class RowLayout extends LinearLayout {
 
