@@ -80,10 +80,12 @@ class Shape extends Mesh {
 
     }
 
-    public static function editorOptions() {
+    public static function editorEntityOptions() {
 
         return {
-            highlightPoints: 'points'
+            highlightPoints: 'points',
+            highlightMinPoints: 4,
+            highlightMaxPoints: -1
         };
 
     }
