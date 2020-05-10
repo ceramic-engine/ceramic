@@ -84,7 +84,7 @@ class Shape extends Mesh {
 
         return {
             highlightPoints: 'points',
-            highlightMinPoints: 4,
+            highlightMinPoints: 3,
             highlightMaxPoints: -1
         };
 
