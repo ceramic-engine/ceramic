@@ -6,6 +6,7 @@ import ceramic.Assert.*;
 using ceramic.Extensions;
 
 /** Draw anything composed of triangles/vertices. */
+@editable
 @:allow(ceramic.MeshPool)
 class Mesh extends Visual {
 
@@ -50,6 +51,7 @@ class Mesh extends Visual {
 /// Color
 
     /** Can be used instead of colors array when the mesh is only composed of a single color. */
+    @editable
     public var color(get,set):Color;
     inline function get_color():Color {
         if (colors == null || colors.length == 0) return 0;

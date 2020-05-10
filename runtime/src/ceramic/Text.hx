@@ -715,4 +715,16 @@ class Text extends Visual {
 
     }
 
+#if editor
+
+/// Editor
+
+    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
+
+        entityData.props.set('content', entityData.entityId);
+
+    }
+
+#end
+
 }

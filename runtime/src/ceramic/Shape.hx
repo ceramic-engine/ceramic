@@ -1,12 +1,14 @@
 package ceramic;
 
 /** Draw shapes by triangulating vertices automatically, with optional holes in it. */
+@editable
 class Shape extends Mesh {
 
     /** A flat array of vertex coordinates to describe the shape.
         `points = ...` is identical to `vertices = ... ; contentDirty = true ;`
         Note: when editing array content without reassigning it,
         `contentDirty` must be set to `true` to let the shape being updated accordingly. */
+    @editable
     public var points(get, set):Array<Float>;
     inline function get_points():Array<Float> {
         return vertices;
@@ -60,5 +62,32 @@ class Shape extends Mesh {
         contentDirty = false;
 
     }
+
+#if editor
+
+/// Editor
+
+    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
+
+        entityData.props.set('width', 100);
+        entityData.props.set('height', 100);
+        entityData.props.set('points', [
+            0.0, 0.0,
+            100.0, 0.0,
+            100.0, 100.0,
+            0.0, 100.0
+        ]);
+
+    }
+
+    public static function editorOptions() {
+
+        return {
+            highlightPoints: 'points'
+        };
+
+    }
+
+#end
 
 }
