@@ -469,7 +469,17 @@ class EntityMacro {
                                 typeStr += ',';
                             switch param {
                                 case TPType(t):
-                                    typeStr += complexTypeToString(t);
+                                    var isStdType = false;
+                                    switch t {
+                                        case TPath(p):
+                                            if (p.name == 'StdTypes') {
+                                                isStdType = true;
+                                                typeStr += p.sub;
+                                            }
+                                        default:
+                                    }
+                                    if (!isStdType)
+                                        typeStr += complexTypeToString(t);
                                 case TPExpr(e):
                                     typeStr += 'Dynamic';
                             }
