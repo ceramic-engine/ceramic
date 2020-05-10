@@ -54,7 +54,7 @@ class Mesh extends Visual {
     @editable
     public var color(get,set):Color;
     inline function get_color():Color {
-        if (colors == null || colors.length == 0) return 0;
+        if (colors == null || colors.length == 0) return Color.WHITE;
         return colors[0].color;
     }
     inline function set_color(color:Color):Color {
