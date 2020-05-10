@@ -7,6 +7,8 @@ import ceramic.Shortcuts.*;
 @:keep
 class Scroller extends Visual {
 
+    static var _point:Point = new Point(0, 0);
+
 /// Events
 
     @event function dragStart();
@@ -26,6 +28,21 @@ class Scroller extends Visual {
 /// Public properties
 
     public var content(default,null):Visual = null;
+
+    public var scrollbar(default, set):Visual = null;
+    function set_scrollbar(scrollbar:Visual):Visual {
+        if (this.scrollbar == scrollbar) return scrollbar;
+        if (this.scrollbar != null) {
+            this.scrollbar.destroy();
+        }
+        this.scrollbar = scrollbar;
+        if (this.scrollbar != null) {
+            add(this.scrollbar);
+            this.scrollbar.depth = 2;
+            bindScrollbar(this.scrollbar);
+        }
+        return this.scrollbar;
+    }
 
     public var direction = VERTICAL;
 
@@ -107,7 +124,10 @@ class Scroller extends Visual {
         content.anchor(0, 0);
         content.pos(0, 0);
         content.transform = scrollTransform;
+        content.depth = 1;
         add(content);
+
+        scrollTransform.onChange(this, updateScrollbar);
 
         // Just to ensure nothing behind the scroller
         // will catch pointerDown event
@@ -673,6 +693,95 @@ class Scroller extends Visual {
                 prevPointerX = -999999;
                 prevPointerY = -999999;
         }
+
+        updateScrollbar();
+
+    }
+
+    function updateScrollbar():Void {
+
+        if (scrollbar != null) {
+            if (direction == VERTICAL) {
+                scrollbar.x = width - scrollbar.width * (1 - scrollbar.anchorX);
+                if (content.height > 0) {
+                    scrollbar.height = Math.min(height, height * height / content.height);
+                    scrollbar.y = height * scrollY / content.height;
+                }
+                else {
+                    scrollbar.height = 0;
+                    scrollbar.y = 0;
+                }
+            }
+            else {
+                scrollbar.y = height - scrollbar.height * (1 - scrollbar.anchorY);
+                if (content.width > 0) {
+                    scrollbar.width = Math.min(width, width * width / content.width);
+                    scrollbar.x = width * scrollX / content.width;
+                }
+                else {
+                    scrollbar.width = 0;
+                    scrollbar.x = 0;
+                }
+            }
+        }
+
+    }
+
+    var scrollbarDownX:Float = -1;
+
+    var scrollbarDownY:Float = -1;
+
+    var scrollbarStartX:Float = -1;
+
+    var scrollbarStartY:Float = -1;
+
+    function bindScrollbar(scrollbar:Visual):Void {
+
+        scrollbarDownX = -1;
+        scrollbarDownY = -1;
+        
+        scrollbar.onPointerDown(this, handleScrollbarDown);
+        scrollbar.onPointerUp(this, handleScrollbarUp);
+
+    }
+
+    function handleScrollbarDown(info:TouchInfo) {
+
+        if (scrollEnabled) {
+
+            scrollbarStartX = scrollX;
+            scrollbarStartY = scrollY;
+
+            screenToVisual(info.x, info.y, _point);
+            scrollbarDownX = _point.x;
+            scrollbarDownY = _point.y;
+
+            screen.offPointerMove(handleScrollbarMove);
+            screen.onPointerMove(scrollbar, handleScrollbarMove);
+        }
+
+    }
+
+    function handleScrollbarUp(info:TouchInfo) {
+
+        screen.offPointerMove(handleScrollbarMove);
+
+    }
+
+    function handleScrollbarMove(info:TouchInfo) {
+
+        screenToVisual(info.x, info.y, _point);
+        var diffX = _point.x - scrollbarDownX;
+        var diffY = _point.y - scrollbarDownY;
+
+        if (direction == VERTICAL) {
+            scrollY = scrollbarStartY + diffY;
+        }
+        else {
+            scrollX = scrollbarStartX + diffX;
+        }
+
+        scrollToBounds();
 
     }
 
