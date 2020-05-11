@@ -85,3 +85,7 @@
 	path = git/linc_dialogs
 	url = https://github.com/ceramic-engine/linc_dialogs.git
 	branch = master
+[submodule "git/poly2tri"]
+	path = git/poly2tri
+	url = https://github.com/ceramic-engine/poly2tri.git
+	branch = master

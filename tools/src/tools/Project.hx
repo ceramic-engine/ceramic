@@ -41,13 +41,14 @@ class Project {
     public static var runtimeLibraries:Array<Dynamic> = [
         { 'unifill': '0.4.1' },
         { 'format': '3.4.2' },
-        { 'polyline': 'github:jeremyfa/polyline' },
-        { 'tracker': 'github:jeremyfa/tracker' },
-        { 'hotml': 'github:jeremyfa/hotml' },
-        { 'bind': 'github:jeremyfa/polyline' },
-        { 'earcut': 'github:ceramic-engine/earcut' },
-        { 'hsluv': 'github:ceramic-engine/hsluv' },
-        { 'format-tiled': 'github:ceramic-engine/format-tiled' }
+        { 'polyline': 'git:https://github.com/jeremyfa/polyline.git' },
+        { 'tracker': 'git:https://github.com/jeremyfa/tracker.git' },
+        { 'hotml': 'git:https://github.com/jeremyfa/hotml.git' },
+        { 'bind': 'git:https://github.com/jeremyfa/polyline.git' },
+        { 'earcut': 'git:https://github.com/ceramic-engine/earcut.git' },
+        { 'poly2tri': 'git:https://github.com/ceramic-engine/poly2tri.git' },
+        { 'hsluv': 'git:https://github.com/ceramic-engine/hsluv.git' },
+        { 'format-tiled': 'git:https://github.com/ceramic-engine/format-tiled.git' }
     ];
 
 /// Properties
@@ -318,7 +319,7 @@ class ProjectLoader {
                         libVersion = Reflect.field(item, key);
                         break;
                     }
-                    if (libVersion != null && libVersion.startsWith('github:')) {
+                    if (libVersion != null && libVersion.startsWith('git:')) {
                         app.libs.push(libName);
                     }
                     else {

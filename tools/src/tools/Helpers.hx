@@ -417,6 +417,9 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'earcut'])))
             haxelib(['dev', 'earcut', Path.join([context.ceramicGitDepsPath, 'earcut']), '--always'], {cwd: cwd});
 
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'poly2tri'])))
+            haxelib(['dev', 'poly2tri', Path.join([context.ceramicGitDepsPath, 'poly2tri']), '--always'], {cwd: cwd});
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'generate'])))
             haxelib(['dev', 'generate', Path.join([context.ceramicGitDepsPath, 'generate']), '--always'], {cwd: cwd});
 
