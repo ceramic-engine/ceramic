@@ -1,7 +1,7 @@
 package ceramic;
 
 /** Draw shapes by triangulating vertices automatically, with optional holes in it. */
-@editable
+@editable({ implicitSize: true })
 class Shape extends Mesh {
 
     /** A flat array of vertex coordinates to describe the shape.
@@ -17,6 +17,16 @@ class Shape extends Mesh {
         this.vertices = points;
         contentDirty = true;
         return points;
+    }
+
+    @editable
+    public var triangulation(default, set):TriangulateMethod = POLY2TRI;
+    inline function set_triangulation(triangulation:TriangulateMethod) {
+        if (this.triangulation != triangulation) {
+            this.triangulation = triangulation;
+            contentDirty = true;
+        }
+        return triangulation;
     }
 
     /** An array of hole indices, if any.
@@ -43,16 +53,16 @@ class Shape extends Mesh {
 
     override function computeContent() {
 
-        if (vertices != null && vertices.length >= 6) {
+        if (vertices != null && vertices.length >= 6 #if editor && !editor.components.Editable.canSkipRender #end) {
 
             if (indices == null)
                 indices = [];
 
             if (holes != null && holes.length > 0) {
-                Triangulate.triangulate(vertices, indices, holes);
+                Triangulate.triangulate(vertices, indices, holes, triangulation);
             }
             else {
-                Triangulate.triangulate(vertices, indices);
+                Triangulate.triangulate(vertices, indices, triangulation);
             }
         }
 
