@@ -8,7 +8,7 @@ class Shape extends Mesh {
         `points = ...` is identical to `vertices = ... ; contentDirty = true ;`
         Note: when editing array content without reassigning it,
         `contentDirty` must be set to `true` to let the shape being updated accordingly. */
-    @editable
+    @editable({ minItems: 6, points: true })
     public var points(get, set):Array<Float>;
     inline function get_points():Array<Float> {
         return vertices;
