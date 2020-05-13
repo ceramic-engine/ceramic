@@ -703,6 +703,9 @@ class View extends Quad {
 
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
+        // As soon as we compute size, layout gets dirty and should be recomputed again
+        layoutDirty = true;
+
         // Compute width
         if (ViewSize.isAuto(viewWidth)) {
             if (layoutMask.canDecreaseWidth()) {
