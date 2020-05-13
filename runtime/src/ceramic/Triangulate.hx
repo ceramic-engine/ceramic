@@ -6,6 +6,8 @@ import poly2tri.Sweep;
 import poly2tri.SweepContext;
 import poly2tri.Point as Poly2TriPoint;
 
+import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 /** An utility to triangulate indices from a set of vertices */
@@ -27,7 +29,7 @@ class Triangulate {
                 // Perform triangulation with earcut (approximative but fast)
                 Earcut.earcut(vertices, holes, 2, indices);
             
-            case POLY2TRI: {
+            case POLY2TRI: try {
                 // Perform triangulation with poly2tri (precise but less optimized)
                 // TODO optimize poly2tri (doing way to many allocations at the moment)
                 var sweepContext = new SweepContext();
@@ -36,6 +38,8 @@ class Triangulate {
                 var i = 0;
                 var n = 0;
                 var len = vertices.length;
+                var prevX = 0.0;
+                var prevY = 0.0;
                 while (i < len) {
                     var p = poly2triPointsPool[n];
                     if (p == null) {
@@ -46,6 +50,12 @@ class Triangulate {
                         p.x = vertices[i];
                         p.y = vertices[i+1];
                     }
+                    if (i > 0 && prevX == p.x && prevY == p.y) {
+                        log.warning('Skip triangulation because two adjacent points are identical');
+                        return;
+                    }
+                    prevX = p.x;
+                    prevY = p.y;
                     poly2triPoints[n] = p;
                     n++;
                     i += 2;
@@ -65,6 +75,9 @@ class Triangulate {
                         indices.push(points[i].id);
                     }
                 }
+            }
+            catch (e:Dynamic) {
+                log.warning('Failed to triangulate with poly2tri: $e');
             }
         }
 
