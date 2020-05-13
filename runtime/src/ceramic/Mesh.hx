@@ -139,7 +139,7 @@ class Mesh extends Visual {
 
     override function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
-        if (complexHit) {
+        if (complexHit #if editor || edited #end) {
             // Convert x and y coordinate
             var testX = matrix.transformX(x, y);
             var testY = matrix.transformY(x, y);
@@ -219,7 +219,10 @@ class Mesh extends Visual {
                     maxY = y;
                 i++;
             }
-            size(maxX, maxY);
+            size(
+                Math.round(maxX * 1000) / 1000,
+                Math.round(maxY * 1000) / 1000
+            );
         }
         else {
             size(0, 0);

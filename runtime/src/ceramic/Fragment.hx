@@ -259,13 +259,20 @@ class Fragment extends Quad {
             // Add instance (if new)
             entities.push(instance);
         }
+        var isVisual = Std.is(instance, Visual);
         // Add it to display tree if it is a visual
-        if (Std.is(instance, Visual) && !existingWasVisual) {
+        if (isVisual && !existingWasVisual) {
             add(cast instance);
         }
 
 #if editor
         // Update editable fields from instance
+        if (isVisual) {
+            var visual:Visual = cast instance;
+            if (visual.contentDirty) {
+                visual.computeContent();
+            }
+        }
         updateEditableFieldsFromInstance(item.id);
 #end
 
