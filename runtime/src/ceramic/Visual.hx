@@ -1666,7 +1666,7 @@ class Visual extends Entity {
 
 /// Display
 
-    function computeContent() {
+    public function computeContent() {
         
         contentDirty = false;
 
