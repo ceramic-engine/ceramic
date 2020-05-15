@@ -159,7 +159,7 @@ class LinearLayout extends View {
             subLayoutMask.canIncreaseHeight(false);
             subLayoutMask.canDecreaseHeight(false);
             if (numFill > 0) {
-                var leftHeight = Math.max(0, computedHeight - childrenHeight - itemSpacing * Math.max(0, subviews.length - 1));
+                var leftHeight = Math.max(0, computedHeight - childrenHeight);
                 fillHeight = leftHeight / numFill;
                 if (fillHeight > 0) {
                     for (i in 0...subviews.length) {
@@ -300,7 +300,7 @@ class LinearLayout extends View {
             subLayoutMask.canIncreaseWidth(false);
             subLayoutMask.canDecreaseWidth(false);
             if (numFill > 0) {
-                var leftWidth = Math.max(0, computedWidth - childrenWidth - itemSpacing * Math.max(0, subviews.length - 1));
+                var leftWidth = Math.max(0, computedWidth - childrenWidth);
                 fillWidth = leftWidth / numFill;
                 if (fillWidth > 0) {
                     for (i in 0...subviews.length) {
