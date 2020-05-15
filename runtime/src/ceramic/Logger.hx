@@ -21,6 +21,8 @@ class Logger extends Entity {
     private static var _hasElectronRunner:Bool = false;
 #end
 
+    var indentPrefix:String = '';
+
     function new() {
 
         super();
@@ -94,13 +96,25 @@ class Logger extends Entity {
 
     }
 
+    inline public function pushIndent() {
+
+        indentPrefix += '    ';
+
+    }
+
+    inline public function popIndent() {
+
+        indentPrefix = indentPrefix.substring(0, indentPrefix.length - 4);
+
+    }
+
 /// Internal
 
     function prefixLines(prefix:String, input:Dynamic):String {
 
         var result = [];
         for (line in Std.string(input).split("\n")) {
-            result.push(prefix + line);
+            result.push(prefix + indentPrefix + line);
         }
         return result.join("\n");
 
