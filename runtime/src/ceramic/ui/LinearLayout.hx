@@ -74,6 +74,11 @@ class LinearLayout extends View {
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, parentWidth);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, parentHeight);
 
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.info('$this.computeSize($parentWidth $parentHeight $parentLayoutMask $persist) $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
+
         if (direction == VERTICAL) {
             super.computeSize(parentWidth, parentHeight, parentLayoutMask, persist);
             var layoutMask = ViewLayoutMask.FLEXIBLE_HEIGHT;
@@ -361,6 +366,11 @@ class LinearLayout extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
         }
 
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        ceramic.Shortcuts.log.info('/$this $computedWidth $computedHeight');
+        #end
+
     }
 
     override function layout() {
@@ -369,6 +379,11 @@ class LinearLayout extends View {
         var paddingTop = ViewSize.computeWithParentSize(paddingTop, height);
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, width);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, height);
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.debug('$this.layout() $width $height $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
 
         var paddedWidth = width - paddingLeft - paddingRight;
         var paddedHeight = height - paddingTop - paddingBottom;
@@ -493,6 +508,7 @@ class LinearLayout extends View {
             var w = 0.0;
             var numChildren = 0;
             var numFill = 0;
+
             var itemSpacing = ViewSize.computeWithParentSize(itemSpacing, width);
 
             // Layout each view
@@ -593,6 +609,10 @@ class LinearLayout extends View {
                 }
             }
         }
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        #end
 
     }
 

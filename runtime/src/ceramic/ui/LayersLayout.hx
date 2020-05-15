@@ -17,6 +17,11 @@ class LayersLayout extends View {
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, parentWidth);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, parentHeight);
 
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.info('$this.computeSize($parentWidth $parentHeight $parentLayoutMask $persist) $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
+
         super.computeSize(parentWidth, parentHeight, parentLayoutMask, persist);
 
         var layoutMask = ViewLayoutMask.FLEXIBLE;
@@ -99,6 +104,11 @@ class LayersLayout extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
         }
 
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        ceramic.Shortcuts.log.info('/$this $computedWidth $computedHeight');
+        #end
+
     }
 
     override function layout() {
@@ -110,6 +120,11 @@ class LayersLayout extends View {
         var paddedWidth = width - paddingLeft - paddingRight;
         var paddedHeight = height - paddingTop - paddingBottom;
         var d = 1.0;
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.debug('$this.layout() $width $height $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
 
         // Layout each view
         if (subviews != null) {
@@ -133,6 +148,10 @@ class LayersLayout extends View {
                 }
             }
         }
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        #end
 
     }
 

@@ -117,7 +117,12 @@ class TextView extends View {
     var persistedFitWidth:Float = -1;
 
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
-        
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.info('$this.computeSize($parentWidth $parentHeight $layoutMask $persist) $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
+
         super.computeSize(parentWidth, parentHeight, layoutMask, persist);
 
         var shouldComputeWidth = false;
@@ -207,6 +212,11 @@ class TextView extends View {
             persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
         }
 
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        ceramic.Shortcuts.log.info('/$this $computedWidth $computedHeight ${text.fitWidth}');
+        #end
+
     }
 
     override function layout() {
@@ -215,6 +225,11 @@ class TextView extends View {
         var paddingTop = ViewSize.computeWithParentSize(paddingTop, height);
         var paddingRight = ViewSize.computeWithParentSize(paddingRight, width);
         var paddingBottom = ViewSize.computeWithParentSize(paddingBottom, height);
+
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.debug('$this.layout() $width $height $paddingTop $paddingRight $paddingBottom $paddingLeft');
+        ceramic.Shortcuts.log.pushIndent();
+        #end
 
         // Match text fit width with persisted computed width, if any
         if (persistedComputedWidth != -1) {
@@ -285,6 +300,10 @@ class TextView extends View {
             text.anchorX = 0.5;
             text.x = width * 0.5 + paddingLeft - paddingRight;
         }
+        
+        #if ceramic_debug_layout
+        ceramic.Shortcuts.log.popIndent();
+        #end
 
     }
 
