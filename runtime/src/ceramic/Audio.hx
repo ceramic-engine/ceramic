@@ -26,6 +26,7 @@ class Audio extends Entity {
 
     public function mixer(index:Int):AudioMixer {
 
+        initMixerIfNeeded(index);
         return mixers.getInline(index);
 
     }
