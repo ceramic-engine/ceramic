@@ -37,8 +37,8 @@ class Line extends Mesh {
         return thickness;
     }
 
-    /** The join type, can be `MITER` or `BEVEL`. Default `MITER` */
-    public var join(default, set):LineJoin = MITER;
+    /** The join type, can be `MITER` or `BEVEL`. Default `BEVEL` */
+    public var join(default, set):LineJoin = BEVEL;
     inline function set_join(join:LineJoin):LineJoin {
         if (this.join == join) return join;
         this.join = join;
