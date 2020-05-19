@@ -148,7 +148,7 @@ class Mesh extends Visual {
             var i = 0;
             var j = 0;
             var k:Int;
-            var numTriangles = indices.length / 3;
+            var numTriangles = Std.int(indices.length / 3);
             var na:Int;
             var nb:Int;
             var nc:Int;
