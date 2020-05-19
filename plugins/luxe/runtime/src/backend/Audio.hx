@@ -92,6 +92,7 @@ class Audio implements spec.Audio {
 
         var audioResource:luxe.resource.Resource.AudioResource = audio;
         var isStream = audioResource.source.data.is_stream;
+        volume = toBackendVolume(volume);
 
         // These options are ignored on streamed sounds
         // at the moment
@@ -237,7 +238,7 @@ class Audio implements spec.Audio {
             handle = loopHandles.get(handle);
         }
 
-        return Luxe.audio.volume_of(handle);
+        return fromBackendVolume(Luxe.audio.volume_of(handle));
 
     }
 
@@ -250,7 +251,7 @@ class Audio implements spec.Audio {
             handle = loopHandles.get(handle);
         }
 
-        Luxe.audio.volume(handle, volume);
+        Luxe.audio.volume(handle, toBackendVolume(volume));
 
     }
 
@@ -329,6 +330,18 @@ class Audio implements spec.Audio {
         }
 
         Luxe.audio.position(handle, position);
+
+    }
+
+    inline function toBackendVolume(volume:Float):Float {
+
+        return volume < 1.0 ? volume * volume : volume * 1.0;
+
+    }
+
+    inline function fromBackendVolume(volume:Float):Float {
+
+        return volume < 1.0 ? Math.sqrt(volume) : volume * 1.0;
 
     }
 
