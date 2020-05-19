@@ -104,7 +104,8 @@ class Audio implements spec.Audio {
         var handle:AudioHandle = null;
         if (loop) {
 
-            /*if (true) {
+            #if cpp
+            if (isStream) {
 
                 // At the moment, looping a stream doesn't seem reliable in luxe/snow/openal.
                 // When looping a stream, let's manage ourselve the loop by
@@ -156,11 +157,14 @@ class Audio implements spec.Audio {
                     }
 
                 };
-                ceramic.App.app.onUpdate(onUpdate);
+                ceramic.App.app.onUpdate(null, onUpdate);
 
-            } else {*/
+            } else {
+            #end
                 handle = Luxe.audio.loop(audioResource.source, volume, false);
-            //}
+            #if cpp
+            }
+            #end
 
         } else {
             handle = Luxe.audio.play(audioResource.source, volume, false);
