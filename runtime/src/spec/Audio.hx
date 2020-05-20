@@ -10,6 +10,8 @@ interface Audio {
 
     function supportsHotReloadPath():Bool;
 
+    function getDuration(audio:AudioResource):Float;
+
     function destroy(audio:AudioResource):Void;
 
     function mute(audio:AudioResource):AudioHandle;

@@ -18,6 +18,12 @@ class Audio implements spec.Audio {
 
     }
 
+    inline public function getDuration(audio:AudioResource):Float {
+
+        return 0;
+        
+    }
+
     inline public function destroy(audio:AudioResource):Void {
 
         //

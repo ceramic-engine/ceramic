@@ -49,6 +49,12 @@ class Sound extends Entity {
     /** Default pitch when playing this sound. */
     public var pitch:Float = 1;
 
+    /** Sound duration. */
+    public var duration(get, never):Float;
+    inline function get_duration():Float {
+        return app.backend.audio.getDuration(backendItem);
+    }
+
     /** Play the sound at requested position. If volume/pan/pitch are not provided,
         sound instance properties will be used instead. */
     public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float):SoundPlayer {

@@ -43,6 +43,12 @@ class Audio implements spec.Audio {
 
     }
 
+    inline public function getDuration(audio:AudioResource):Float {
+
+        return (audio:luxe.resource.Resource.AudioResource).source.duration();
+        
+    }
+
     #if web
     public function resumeAudioContext(done:Bool->Void):Void {
 
