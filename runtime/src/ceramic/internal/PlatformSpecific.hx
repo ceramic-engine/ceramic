@@ -160,7 +160,7 @@ class PlatformSpecific {
     static var testedElectronAvailability:Bool = false;
     static var electron:Null<Dynamic> = null;
 
-    inline static function resolveElectron() {
+    inline public static function resolveElectron():Null<Dynamic> {
 
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
@@ -169,6 +169,8 @@ class PlatformSpecific {
             }
             catch (e:Dynamic) {}
         }
+
+        return electron;
 
     }
 
