@@ -36,7 +36,12 @@ class Clipboard implements spec.Clipboard {
 
     public function getText():String {
 
-        #if (cpp && linc_sdl)
+        #if (web && ceramic_use_electron)
+        var electron = ceramic.internal.PlatformSpecific.resolveElectron();
+        if (electron != null) {
+            return electron.clipboard.readText();
+        }
+        #elseif (cpp && linc_sdl)
         if (SDL.hasClipboardText()) {
             return SDL.getClipboardText();
         }
@@ -50,7 +55,12 @@ class Clipboard implements spec.Clipboard {
 
         clipboardText = text;
 
-        #if (cpp && linc_sdl)
+        #if (web && ceramic_use_electron)
+        var electron = ceramic.internal.PlatformSpecific.resolveElectron();
+        if (electron != null) {
+            electron.clipboard.writeText(text);
+        }
+        #elseif (cpp && linc_sdl)
         SDL.setClipboardText(text);
         #end
 
