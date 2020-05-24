@@ -1,7 +1,12 @@
 package ceramic;
 
 /** Draw shapes by triangulating vertices automatically, with optional holes in it. */
-@editable({ implicitSize: true })
+@editable({
+    implicitSize: true,
+    highlightPoints: 'points',
+    highlightMinPoints: 3,
+    highlightMaxPoints: -1
+})
 class Shape extends Mesh {
 
     /** A flat array of vertex coordinates to describe the shape.
@@ -89,16 +94,6 @@ class Shape extends Mesh {
             100.0, 100.0,
             0.0, 100.0
         ]);
-
-    }
-
-    public static function editorEntityOptions() {
-
-        return {
-            highlightPoints: 'points',
-            highlightMinPoints: 3,
-            highlightMaxPoints: -1
-        };
 
     }
 
