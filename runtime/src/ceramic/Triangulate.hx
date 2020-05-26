@@ -26,11 +26,6 @@ class Triangulate {
             indices.setArrayLength(0);
         }
 
-        if (holes != null && holes.length > 0) {
-            // Holes are only supported with earcut at the moment
-            method = EARCUT;
-        }
-
         switch method {
             case EARCUT:
                 // Perform triangulation with earcut (approximative but fast)
@@ -45,36 +40,66 @@ class Triangulate {
                 else {
                     poly2triSweepContext.reset();
                 }
-                
-                var i = 0;
-                var n = 0;
-                var len = vertices.length;
-                var prevX = 0.0;
-                var prevY = 0.0;
-                while (i < len) {
-                    var p = poly2triPointsPool[n];
-                    if (p == null) {
-                        p = new Poly2TriPoint(vertices[i], vertices[i+1]);
-                        p.id = n;
+
+                var poolIndex = 0;
+                inline function toPoly2TriPoints(rawPoints:Array<Float>) {
+                    var i = 0;
+                    var len = rawPoints.length;
+                    var prevX = 0.0;
+                    var prevY = 0.0;
+                    var skip = false;
+                    while (i < len) {
+                        var p = poly2triPointsPool[poolIndex];
+                        if (p == null) {
+                            p = new Poly2TriPoint(rawPoints[i], rawPoints[i+1]);
+                            p.id = poolIndex;
+                        }
+                        else {
+                            p.x = rawPoints[i];
+                            p.y = rawPoints[i+1];
+                        }
+                        if (i > 0 && prevX == p.x && prevY == p.y) {
+                            log.warning('Skip triangulation because two adjacent points are identical');
+                            skip = true;
+                        }
+                        else {
+                            prevX = p.x;
+                            prevY = p.y;
+                            poly2triPoints[poolIndex] = p;
+                            poolIndex++;
+                            i += 2;
+                        }
                     }
-                    else {
-                        p.x = vertices[i];
-                        p.y = vertices[i+1];
+                    if (!skip) {
+                        var numPoints = Std.int(len / 2);
+                        if (poly2triPoints.length > numPoints)
+                            poly2triPoints.setArrayLength(numPoints);
                     }
-                    if (i > 0 && prevX == p.x && prevY == p.y) {
-                        log.warning('Skip triangulation because two adjacent points are identical');
-                        return;
-                    }
-                    prevX = p.x;
-                    prevY = p.y;
-                    poly2triPoints[n] = p;
-                    n++;
-                    i += 2;
+                    return !skip;
                 }
-                var numPoints = Std.int(len / 2);
-                if (poly2triPoints.length > numPoints)
-                    poly2triPoints.setArrayLength(numPoints);
+
+                // Shape
+                toPoly2TriPoints(vertices);
                 poly2triSweepContext.addPolyline(poly2triPoints);
+
+                // Holes
+                if (holes != null) {
+                    var numVertices = Std.int(vertices.length / 2);
+                    var numHoles = holes.length;
+                    for (h in 0...numHoles) {
+                        var start = holes[h];
+                        var end = h < numHoles - 1 ? holes[h + 1] : numVertices;
+                        var numIndices = 0;
+                        for (indice in start...end) {
+                            poly2triPoints[numIndices] = poly2triPointsPool[indice];
+                            numIndices++;
+                        }
+                        if (poly2triPoints.length > numIndices)
+                            poly2triPoints.setArrayLength(numIndices);
+                        poly2triSweepContext.addPolyline(poly2triPoints);
+                    }
+                }
+
                 poly2triSweep.triangulate();
     
                 var triangles = poly2triSweepContext.triangles;
