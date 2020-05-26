@@ -7,7 +7,8 @@ package ceramic;
         points: 'points',
         minPoints: 3,
         maxPoints: -1
-    }
+    },
+    disable: ['texture', 'vertices', 'indices', 'uvs']
 })
 class Shape extends Mesh {
 
@@ -41,6 +42,7 @@ class Shape extends Mesh {
         one hole with vertices 5–7 and another with 8–11).
         Note: when editing array content without reassigning it,
         `contentDirty` must be set to `true` to let the shape being updated accordingly. */
+    @editable
     public var holes:Array<Int> = null;
     inline function set_holes(holes:Array<Int>):Array<Int> {
         this.holes = holes;
@@ -49,6 +51,7 @@ class Shape extends Mesh {
     }
 
     /** If set to `true`, width and heigh will be computed from shape points. */
+    @editable
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {
         if (this.autoComputeSize == autoComputeSize) return autoComputeSize;

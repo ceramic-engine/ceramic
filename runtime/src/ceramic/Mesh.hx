@@ -6,7 +6,37 @@ import ceramic.Assert.*;
 using ceramic.Extensions;
 
 /** Draw anything composed of triangles/vertices. */
-@editable
+@editable({
+    helpers: [{
+        name: 'Grid',
+        method: 'grid',
+        params: [{
+            name: 'Columns',
+            type: 'Int',
+            value: 1,
+            slider: [1, 64]
+        }, {
+            name: 'Rows',
+            type: 'Int',
+            value: 1,
+            slider: [1, 64]
+        }]
+    },{
+        name: 'Grid From Texture',
+        method: 'gridFromTexture',
+        params: [{
+            name: 'Columns',
+            type: 'Int',
+            value: 1,
+            slider: [1, 64]
+        }, {
+            name: 'Rows',
+            type: 'Int',
+            value: 1,
+            slider: [1, 64]
+        }]
+    }]
+})
 @:allow(ceramic.MeshPool)
 class Mesh extends Visual {
 
@@ -16,9 +46,8 @@ class Mesh extends Visual {
 
 /// Settings
 
+    @editable
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
-
-    public var primitiveType:MeshPrimitiveType = MeshPrimitiveType.TRIANGLE;
 
     /** The number of floats to add to fill float attributes in vertices array.
         Default is zero: no custom attributes. Update this value when using shaders with custom attributes. */
@@ -27,6 +56,7 @@ class Mesh extends Visual {
     /** When set to `true` hit test on this mesh will be performed at vertices level instead
         of simply using bounds. This make the test substancially more expensive however.
         Use only when needed. */
+    @editable
     public var complexHit:Bool = false;
 
 /// Lifecycle
@@ -67,9 +97,11 @@ class Mesh extends Visual {
 /// Vertices
 
     /** An array of floats where each pair of numbers is treated as a coordinate location (x,y) */
+    @editable
     public var vertices:Array<Float> = [];
 
     /** An array of integers or indexes, where every three indexes define a triangle. */
+    @editable
     public var indices:Array<Int> = [];
 
     /** An array of colors for each vertex. */
@@ -78,6 +110,7 @@ class Mesh extends Visual {
 /// Texture
 
     /** The texture used on the mesh (optional) */
+    @editable
     public var texture(default,set):Texture = null;
     #if !debug inline #end function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
@@ -124,6 +157,7 @@ class Mesh extends Visual {
 
     /** An array of normalized coordinates used to apply texture mapping.
         Required if the texture is set. */
+    @editable
     public var uvs:Array<Float> = [];
 
 /// Texture destroyed
@@ -229,5 +263,137 @@ class Mesh extends Visual {
         }
 
     }
+
+    /**
+     * Compute vertices and indices to obtain a grid with `cols` columns
+     * and `rows` rows at the requested `width` and `height`.
+     * @param cols The number of columnns in the grid
+     * @param rows The number of rows in the grid
+     * @param width The width of the grid
+     * @param height The height of the grid
+     */
+    public function grid(cols:Int, rows:Int, width:Float = -1, height:Float = -1):Void {
+
+        if (width == -1)
+            width = _width;
+
+        if (height == -1)
+            height = _height;
+
+        var stepX:Float = width / cols;
+        var stepY:Float = height / rows;
+        
+        var v:Int = 0;
+        var i:Int = 0;
+
+        for (r in 0...rows+1) {
+
+            var y = r * stepY;
+            
+            vertices[v] = 0;
+            v++;
+            vertices[v] = y;
+            v++;
+
+            for (c in 1...cols+1) {
+
+                vertices[v] = c * stepX;
+                v++;
+                vertices[v] = y;
+                v++;
+
+                if (r < rows) {
+
+                    var n = r * cols + c;
+    
+                    indices[i] = n - 1;
+                    i++;
+                    indices[i] = n;
+                    i++;
+                    indices[i] = n + cols - 1;
+                    i++;
+    
+                    indices[i] = n;
+                    i++;
+                    indices[i] = n + cols;
+                    i++;
+                    indices[i] = n + cols - 1;
+                    i++;
+                }
+
+            }
+
+        }
+
+        if (vertices.length > v) {
+            vertices.setArrayLength(v);
+        }
+
+        if (indices.length > i) {
+            indices.setArrayLength(i);
+        }
+
+    }
+
+    /**
+     * Compute vertices, indices and uvs to obtain a grid with `cols` columns
+     * and `rows` rows to fit the given texture or mesh's current texture.
+     * @param cols The number of columnns in the grid
+     * @param rows The number of rows in the grid
+     * @param texture The texture used to generate the grid. If not provided, will use mesh's current texture
+     */
+    public function gridFromTexture(cols:Int, rows:Int, ?texture:Texture):Void {
+
+        if (texture == null)
+            texture = this.texture;
+
+        grid(cols, rows, texture.width, texture.height);
+        
+        var u:Int = 0;
+        var stepX:Float = 1.0 / cols;
+        var stepY:Float = 1.0 / rows;
+
+        for (r in 0...rows+1) {
+
+            var y = r * stepY;
+            
+            uvs[u] = 0;
+            u++;
+            uvs[u] = y;
+            u++;
+
+            for (c in 1...cols+1) {
+
+                uvs[u] = c * stepX;
+                u++;
+                uvs[u] = y;
+                u++;
+
+            }
+
+        }
+
+    }
+
+#if editor
+
+/// Editor
+
+    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
+
+        entityData.props.set('width', 100);
+        entityData.props.set('height', 100);
+        entityData.props.set('anchorX', 0);
+        entityData.props.set('anchorY', 0);
+        entityData.props.set('points', [
+            0.0, 0.0,
+            100.0, 0.0,
+            100.0, 100.0,
+            0.0, 100.0
+        ]);
+
+    }
+
+#end
 
 }
