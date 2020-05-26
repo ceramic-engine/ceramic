@@ -26,6 +26,11 @@ class Triangulate {
             indices.setArrayLength(0);
         }
 
+        if (holes != null && holes.length > 0) {
+            // Holes are only supported with earcut at the moment
+            method = EARCUT;
+        }
+
         switch method {
             case EARCUT:
                 // Perform triangulation with earcut (approximative but fast)
