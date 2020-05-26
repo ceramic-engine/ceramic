@@ -3,9 +3,11 @@ package ceramic;
 /** Draw shapes by triangulating vertices automatically, with optional holes in it. */
 @editable({
     implicitSize: true,
-    highlightPoints: 'points',
-    highlightMinPoints: 3,
-    highlightMaxPoints: -1
+    highlight: {
+        points: 'points',
+        minPoints: 3,
+        maxPoints: -1
+    }
 })
 class Shape extends Mesh {
 
