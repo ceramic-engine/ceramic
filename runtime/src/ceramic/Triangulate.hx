@@ -15,6 +15,8 @@ class Triangulate {
 
     static var poly2triPointsPool:Array<Poly2TriPoint> = [];
     static var poly2triPoints:Array<Poly2TriPoint> = [];
+    static var poly2triSweepContext:SweepContext;
+    static var poly2triSweep:Sweep;
 
     /** Triangulate the given vertices and fills the indices array accordingly */
     public static function triangulate(vertices:Array<Float>, indices:Array<Int>, ?holes:Array<Int>, method:TriangulateMethod = POLY2TRI):Void {
@@ -30,10 +32,14 @@ class Triangulate {
                 Earcut.earcut(vertices, holes, 2, indices);
             
             case POLY2TRI: try {
-                // Perform triangulation with poly2tri (precise but less optimized)
-                // TODO optimize poly2tri (doing way to many allocations at the moment)
-                var sweepContext = new SweepContext();
-                var sweep = new Sweep(sweepContext);
+                // Perform triangulation with poly2tri (precise but maybe slightly slower)
+                if (poly2triSweepContext == null) {
+                    poly2triSweepContext = new SweepContext();
+                    poly2triSweep = new Sweep(poly2triSweepContext);
+                }
+                else {
+                    poly2triSweepContext.reset();
+                }
                 
                 var i = 0;
                 var n = 0;
@@ -63,10 +69,10 @@ class Triangulate {
                 var numPoints = Std.int(len / 2);
                 if (poly2triPoints.length > numPoints)
                     poly2triPoints.setArrayLength(numPoints);
-                sweepContext.addPolyline(poly2triPoints);
-                sweep.triangulate();
+                poly2triSweepContext.addPolyline(poly2triPoints);
+                poly2triSweep.triangulate();
     
-                var triangles = sweepContext.triangles;
+                var triangles = poly2triSweepContext.triangles;
                 for (t in 0...triangles.length)
                 {
                     var points = triangles[t].points;
@@ -79,6 +85,8 @@ class Triangulate {
             catch (e:Dynamic) {
                 log.warning('Failed to triangulate with poly2tri: $e');
             }
+
+            poly2tri.Pool.recycleAll();
         }
 
     }
