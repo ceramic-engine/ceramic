@@ -749,8 +749,8 @@ class Scroller extends Visual {
 
         if (scrollEnabled) {
 
-            scrollbarStartX = scrollX;
-            scrollbarStartY = scrollY;
+            scrollbarStartX = scrollbar.x;
+            scrollbarStartY = scrollbar.y;
 
             screenToVisual(info.x, info.y, _point);
             scrollbarDownX = _point.x;
@@ -775,10 +775,10 @@ class Scroller extends Visual {
         var diffY = _point.y - scrollbarDownY;
 
         if (direction == VERTICAL) {
-            scrollY = scrollbarStartY + diffY;
+            scrollY = ((scrollbarStartY + diffY) * content.height) / height;
         }
         else {
-            scrollX = scrollbarStartX + diffX;
+            scrollX = ((scrollbarStartX + diffX) * content.width) / width;
         }
 
         scrollToBounds();
