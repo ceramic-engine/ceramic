@@ -122,14 +122,11 @@ class WatchDirectory extends Entity {
         });
 
         watcher.on('unlink', name -> {
-            var stats = fs.statSync(Path.join([path, name]));
-            if (!stats.isDirectory()) {
-                chokidarUpdatedFilesByWatchedDirectory.get(path).push({
-                    status: UNLINK,
-                    lastModified: stats.mtime.getTime() / 1000,
-                    name: name
-                });
-            }
+            chokidarUpdatedFilesByWatchedDirectory.get(path).push({
+                status: UNLINK,
+                lastModified: -1,
+                name: name
+            });
         });
 
     }
