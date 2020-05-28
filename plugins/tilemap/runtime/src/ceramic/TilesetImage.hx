@@ -1,6 +1,8 @@
 package ceramic;
 
-class TilesetImage extends Entity {
+import tracker.Model;
+
+class TilesetImage extends Model {
 
     /** The texture used for this image, if loaded and ready to display */
     public var texture(default,set):Texture = null;
@@ -24,13 +26,13 @@ class TilesetImage extends Entity {
     }
 
     /** The image width in points */
-    public var width:Int = -1;
+    @serialize public var width:Int = -1;
 
     /** The image height in points */
-    public var height:Int = -1;
+    @serialize public var height:Int = -1;
 
     /** The reference to the tileset image file, if any */
-    public var source:String = null;
+    @serialize public var source:String = null;
 
     override function destroy() {
 
