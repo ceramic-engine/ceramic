@@ -7,6 +7,9 @@ using ceramic.Extensions;
 
 /** Draw anything composed of triangles/vertices. */
 @editable({
+    highlight: {
+        points: 'vertices'
+    },
     helpers: [{
         name: 'Grid',
         method: 'grid',
@@ -46,7 +49,6 @@ class Mesh extends Visual {
 
 /// Settings
 
-    @editable
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
     /** The number of floats to add to fill float attributes in vertices array.
@@ -385,11 +387,21 @@ class Mesh extends Visual {
         entityData.props.set('height', 100);
         entityData.props.set('anchorX', 0);
         entityData.props.set('anchorY', 0);
-        entityData.props.set('points', [
+        entityData.props.set('vertices', [
             0.0, 0.0,
             100.0, 0.0,
             100.0, 100.0,
             0.0, 100.0
+        ]);
+        entityData.props.set('indices', [
+            0, 1, 3,
+            1, 2, 3
+        ]);
+        entityData.props.set('uvs', [
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0
         ]);
 
     }

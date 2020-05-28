@@ -1048,6 +1048,7 @@ class Visual extends Entity {
     }
 
     /** Assign a shader to this visual. */
+    @editable
     public var shader:Shader = null;
 
 /// Flags

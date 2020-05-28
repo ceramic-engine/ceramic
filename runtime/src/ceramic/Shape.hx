@@ -6,7 +6,7 @@ package ceramic;
     highlight: {
         points: 'points',
         minPoints: 3,
-        maxPoints: -1
+        maxPoints: 999999999
     },
     disable: ['texture', 'vertices', 'indices', 'uvs']
 })
@@ -51,7 +51,7 @@ class Shape extends Mesh {
     }
 
     /** If set to `true`, width and heigh will be computed from shape points. */
-    @editable
+    @editable({ label: 'Auto Size' })
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {
         if (this.autoComputeSize == autoComputeSize) return autoComputeSize;
