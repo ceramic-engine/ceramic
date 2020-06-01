@@ -33,10 +33,6 @@ class ToolsPlugin {
     public function extendProject(project:Project):Void {
 
         var app = project.app;
-        
-        if (app.web) {
-            // Do web stuff
-        }
 
     }
 

@@ -32,13 +32,6 @@ class ToolsPlugin {
 
     public function extendProject(project:Project):Void {
 
-        var app = project.app;
-        
-        // Could be useful later
-        /*if (app.mac) {
-            app.paths.push(Path.join([context.plugins.get('Mac').path, 'runtime/src']));
-        }*/
-
     }
 
 }

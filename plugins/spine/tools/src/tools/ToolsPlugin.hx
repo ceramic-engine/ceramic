@@ -35,9 +35,12 @@ class ToolsPlugin {
 
         var app = project.app;
         
-        if (app.spine) {
-            app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
-            app.editable.push('ceramic.Spine');
+        if (app.plugins != null && Std.is(app.plugins, Array)) {
+            var plugins:Array<String> = app.plugins;
+            if (plugins.indexOf('spine') != -1) {
+                app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
+                app.editable.push('ceramic.Spine');
+            }
         }
 
     }

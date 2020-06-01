@@ -37,12 +37,6 @@ class ToolsPlugin {
 
     public function extendProject(project:Project):Void {
 
-        var app = project.app;
-        
-        if (app.ios) {
-            app.paths.push(Path.join([context.plugins.get('iOS').path, 'runtime/src']));
-        }
-
     }
 
 }

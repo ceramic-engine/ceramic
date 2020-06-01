@@ -33,8 +33,11 @@ class ToolsPlugin {
 
         var app = project.app;
         
-        if (app.dialogs) {
-            app.paths.push(Path.join([context.plugins.get('Dialogs').path, 'runtime/src']));
+        if (app.plugins != null && Std.is(app.plugins, Array)) {
+            var plugins:Array<String> = app.plugins;
+            if (plugins.indexOf('dialogs') != -1) {
+                app.paths.push(Path.join([context.plugins.get('Dialogs').path, 'runtime/src']));
+            }
         }
 
     }
