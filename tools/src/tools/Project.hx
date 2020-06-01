@@ -279,6 +279,17 @@ class ProjectLoader {
                 app.defines = {};
             }
 
+            // Create `plugin_{plugin}` define from every plugin entry explicitly put in project file
+            if (app.plugins != null && Std.is(app.plugins, Array)) {
+                var pluginList:Array<String> = app.plugins;
+                for (pluginName in pluginList) {
+                    var key = 'plugin_' + pluginName;
+                    if (!defines.exists(key)) {
+                        defines.set(key, '');
+                    }
+                }
+            }
+
             // Add plugin runtime extra config
             if (plugins != null) {
                 var pluginI = 0;
@@ -476,10 +487,10 @@ class ProjectLoader {
 
 /// Internal
 
-    static function evaluateConditionals(app:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
+    static function evaluateConditionals(data:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
         // Parse conditionals
-        for (key in Reflect.fields(app)) {
+        for (key in Reflect.fields(data)) {
             if (key.startsWith('if ')) {
                 // Check if condition evaluates to true with current context
                 //
@@ -513,17 +524,17 @@ class ProjectLoader {
 
                 // Merge config if condition is true
                 if (result) {
-                    mergeConfigs(app, Reflect.field(app, key), defines, isRoot);
+                    mergeConfigs(data, Reflect.field(data, key), defines, isRoot);
                 }
 
                 // Remove condition from keys
-                Reflect.deleteField(app, key);
+                Reflect.deleteField(data, key);
             }
         }
 
     }
 
-    static function mergeConfigs(app:Dynamic, extra:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
+    static function mergeConfigs(data:Dynamic, extra:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
         // Evaluate conditionals of extra (if any)
         evaluateConditionals(extra, defines, false);
@@ -540,7 +551,7 @@ class ProjectLoader {
                 key = key.substring(1);
             }
             var origKey = isRoot || modifier == null ? key : modifier + key;
-            var orig:Dynamic = Reflect.field(app, origKey);
+            var orig:Dynamic = Reflect.field(data, origKey);
             var value:Dynamic = Reflect.field(extra, (modifier != null ? modifier : '') + key);
 
             // Ensure defines is a map and not an array
@@ -575,7 +586,7 @@ class ProjectLoader {
                     var origStr:String = cast orig;
                     origStr = origStr.rtrim() + "\n" + str.ltrim();
                     orig = origStr;
-                    Reflect.setField(app, origKey, orig);
+                    Reflect.setField(data, origKey, orig);
                 }
                 // Add in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
@@ -603,7 +614,7 @@ class ProjectLoader {
                     var origStr:String = cast orig;
                     origStr = origStr.replace(str, '');
                     orig = origStr;
-                    Reflect.setField(app, origKey, orig);
+                    Reflect.setField(data, origKey, orig);
                 }
                 // Remove in mapping
                 else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
@@ -624,7 +635,7 @@ class ProjectLoader {
             }
             else {
                 // Replace
-                Reflect.setField(app, origKey, value);
+                Reflect.setField(data, origKey, value);
             }
 
         }

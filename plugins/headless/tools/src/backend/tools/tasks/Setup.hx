@@ -168,8 +168,8 @@ class Setup extends tools.Task {
         else if (target.name == 'node') {
             finalHxml.push('-js app.js');
             finalHxml.push('--macro allowPackage("sys")');
-            if (variant == 'scripts') {
-                finalHxml.push('--macro include("scripts", true)');
+            if (variant == 'tasks') {
+                finalHxml.push('--macro include("tasks", true)');
             }
         }
         else {

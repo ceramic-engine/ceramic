@@ -8,24 +8,24 @@ import tools.Files;
 
 using StringTools;
 
-class Script extends tools.Task {
+class HeadlessTask extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Run script (headless).";
+        return "Run task (headless).";
 
     }
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var scriptName = args[1];
+        var taskName = args[1];
         var debug = context.debug;
 
         var prevVariant = context.variant;
-        setVariant('scripts');
+        setVariant('tasks');
 
-        if (scriptName == null) {
-            fail('Script name argument is required');
+        if (taskName == null) {
+            fail('Task name argument is required');
         }
 
         var task = context.tasks.get('headless run');
@@ -36,9 +36,9 @@ class Script extends tools.Task {
             "--setup",
             "--assets",
             "--variant",
-            "scripts",
-            "--script",
-            scriptName
+            "tasks",
+            "--task",
+            taskName
         ];
 
         if (debug) taskArgs.push('--debug');

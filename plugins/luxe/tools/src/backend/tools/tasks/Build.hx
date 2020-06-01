@@ -53,7 +53,7 @@ class Build extends tools.Task {
 		var outPath = Path.join([cwd, 'out']);
 		var action = null;
 		var debug = context.debug;
-		var noSkip = extractArgFlag(args, 'no-skip');
+		var noSkip = extractArgFlag(args, 'no-skip') || context.defines.exists('ceramic_no_skip');
 		var archs = extractArgValue(args, 'archs');
 
 		switch (config) {

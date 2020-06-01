@@ -173,6 +173,22 @@ class Main extends luxe.Game {
             var containerPixelRatio:Float = 0;
             var resizing = 0;
             var shouldFixSize = false;
+
+            var appEl:js.html.CanvasElement = cast document.getElementById('app');
+            if (appEl != null)
+                appEl.style.visibility = 'hidden';
+
+            /*
+            var forceResize = false;
+            var didForceResizeOnce = false;
+
+            // Hacky resize stuff again.
+            // Sticking with this for now until we find a smarter
+            ceramic.Timer.delay(null, 0.5, () -> {
+                forceResize = true;
+                didForceResizeOnce = true;
+            });
+            */
             
             app.onUpdate(null, function(delta) {
                 var containerEl = document.getElementById(containerElId);
@@ -180,6 +196,12 @@ class Main extends luxe.Game {
                     var width:Int = containerEl.offsetWidth;
                     var height:Int = containerEl.offsetHeight;
                     var appEl:js.html.CanvasElement = cast document.getElementById('app');
+
+                    /*
+                    if (!didForceResizeOnce && !forceResize) {
+                        appEl.style.visibility = 'hidden';
+                    }
+                    */
 
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
@@ -198,7 +220,7 @@ class Main extends luxe.Game {
                     if (width != containerWidth || height != containerHeight || window.devicePixelRatio != containerPixelRatio) {
                         var onlyDensityChanged = (width == containerWidth && height == containerHeight);
                         var pixelRatioUndefined = containerPixelRatio == 0;
-                        shouldFixSize = onlyDensityChanged || pixelRatioUndefined;
+                        shouldFixSize = (onlyDensityChanged || pixelRatioUndefined);
                         containerWidth = width;
                         containerHeight = height;
                         containerPixelRatio = window.devicePixelRatio;
@@ -220,11 +242,19 @@ class Main extends luxe.Game {
                         if (lastResizeTime != -1) {
                             appEl.style.visibility = 'hidden';
                         }
-                        ceramic.Timer.delay(null, 0.1, function() {
-                            resizing--;
+                        var fn = null;
+                        fn = function() {
+                            /*if (!didForceResizeOnce) {
+                                ceramic.Timer.delay(null, 0.1, fn);
+                                return;
+                            }*/
                             if (resizing == 0) {
                                 appEl.style.visibility = 'visible';
                             }
+                        };
+                        ceramic.Timer.delay(null, 0.1, () -> {
+                            resizing--;
+                            fn();
                         });
 
                         lastResizeTime = ceramic.Timer.now;

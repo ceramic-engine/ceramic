@@ -175,8 +175,8 @@ class Setup extends tools.Task {
             finalHxml.push('-D net-ver=20');
             finalHxml.push('-D erase-generics');
             //finalHxml.push('--macro allowPackage("sys")');
-            if (variant == 'scripts') {
-                finalHxml.push('--macro include("scripts", true)');
+            if (variant == 'tasks') {
+                finalHxml.push('--macro include("tasks", true)');
             }
         } else {
             finalHxml.push('-cpp bin');
