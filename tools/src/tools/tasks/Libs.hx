@@ -76,6 +76,16 @@ class Libs extends tools.Task {
             libs.set(libName, libVersion);
         }
 
+        function extractPath(rawPathData:String):String {
+            var parts = rawPathData.trim().split("\r").join("").split("\n");
+            for (part in parts) {
+                if (!part.startsWith('-')) {
+                    return part.trim();
+                }
+            }
+            return null;
+        }
+
         for (libName in libs.keys()) {
             var libVersion = libs.get(libName);
             
@@ -93,7 +103,7 @@ class Libs extends tools.Task {
             var query = libName;
             if (libVersion != null && !isPath && !isGit) query += ':' + libVersion;
             var res = haxelib(['path', query], { mute: true, cwd: cwd });
-            var path = (''+res.stdout).trim().split("\r").join("").split("\n")[0].trim();
+            var path = extractPath(''+res.stdout);
 
             // Library exists
             if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
@@ -123,7 +133,7 @@ class Libs extends tools.Task {
                 query = libName;
                 if (libVersion != null && !isGit && !isPath) query += ':' + libVersion;
                 res = haxelib(['path', query], { mute: true, cwd: cwd });
-                path = (''+res.stdout).trim().split("\r").join("").split("\n")[0].trim();
+                path = extractPath(''+res.stdout);
                 if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
                     // Now installed \o/
                     if (libVersion != null) {
