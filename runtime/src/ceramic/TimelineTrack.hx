@@ -7,7 +7,7 @@ using ceramic.Extensions;
 /** A track meant to be updated by a timeline.
     Base implementation doesn't do much by itself.
     Create subclasses to implement details */
-class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
+class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     /** Track duration. Default `0`, meaning this track won't do anything.
         By default, because `autoFitDuration` is `true`, adding new keyframes to this
@@ -35,13 +35,13 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     public var time(default, null):Float = 0;
 
     /** The key frames on this track. */
-    public var keyframes(default, null):ImmutableArray<Keyframe> = [];
+    public var keyframes(default, null):ImmutableArray<K> = [];
 
     /** The keyframe right before or equal to current time, if any. */
-    public var before(default, null):Keyframe = null;
+    public var before(default, null):K = null;
 
     /** The keyframe right after current time, if any. */
-    public var after(default, null):Keyframe = null;
+    public var after(default, null):K = null;
 
     /** The index of the last resolved `key frame before`. Used internally. */
     private var keyframeBeforeIndex:Int = -1;
@@ -103,7 +103,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     }
 
     /** Add a keyframe to this track */
-    public function add(keyframe:Keyframe):Void {
+    public function add(keyframe:K):Void {
 
         var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.mutable;
 
@@ -161,9 +161,9 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     }
 
     /** Find the keyframe right before or equal to given `time` */
-    public function findKeyframeBefore(time:Float):Null<Keyframe> {
+    public function findKeyframeBefore(time:Float):Null<K> {
 
-        var result:Keyframe = null;
+        var result:K = null;
 
         var index = -1;
         var len = keyframes.length;
@@ -184,9 +184,9 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     }
 
     /** Find the keyframe right after given `time` */
-    public function findKeyframeAfter(time:Float):Null<Keyframe> {
+    public function findKeyframeAfter(time:Float):Null<K> {
 
-        var result:Keyframe = null;
+        var result:K = null;
 
         var index = -1;
         var len = keyframes.length;
@@ -209,14 +209,14 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     /** Internal. Compute `before` keyframe, if any matching. */
     inline function computeKeyframeBefore():Void {
         
-        var result:Keyframe = null;
+        var result:K = null;
         var index = keyframeBeforeIndex;
 
         // Check if last used keyframe is still valid
         if (index != -1) {
             result = keyframes[index];
             if (result.time <= time) {
-                // Keyframe was before, check that the following one is not before as well
+                // K was before, check that the following one is not before as well
                 var keyframeAfter= keyframes[index + 1];
                 while (keyframeAfter != null && keyframeAfter.time <= time) {
                     // Yes, it is! Increment index.
@@ -226,7 +226,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
                 }
             }
             else {
-                // Keyframe time is later, not valid
+                // K time is later, not valid
                 result = null;
             }
         }
@@ -257,7 +257,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
     /** Internal. Compute `after` keyframe, if any matching. */
     inline function computeKeyframeAfter():Void {
         
-        var result:Keyframe = null;
+        var result:K = null;
         var index = keyframeAfterIndex;
 
         // Check if last used keyframe is still valid
@@ -265,7 +265,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
             result = keyframes[index];
             if (result != null) {
                 if (result.time > time) {
-                    // Keyframe is still later, check that the previous one is not later as well
+                    // K is still later, check that the previous one is not later as well
                     if (index > 0) {
                         var keyframeBefore = keyframes[index - 1];
                         while (keyframeBefore != null && keyframeBefore.time > time) {
@@ -277,7 +277,7 @@ class TimelineTrack<Keyframe:TimelineKeyframe> extends Entity {
                     }
                 }
                 else {
-                    // Keyframe time is before, not valid
+                    // K time is before, not valid
                     result = null;
                 }
             }

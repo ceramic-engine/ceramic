@@ -4,7 +4,7 @@ package ceramic.scriptable;
  * Same feature-set as `ceramic.Color`, but used through static methods
  * in environments when abstract is not usable (hscript)
  */
-class Color {
+class ScriptableColor {
 
     public static function random(minSatutation:Float = 0.5, minBrightness:Float = 0.5):Color
     {
@@ -108,12 +108,12 @@ class Color {
 
     private static function getGreen(color:Color):Int
     {
-        return color.green,
+        return color.green;
     }
 
     private static function getBlue(color:Color):Int
     {
-        return color.blue,
+        return color.blue;
     }
 
     private static function getRedFloat(color:Color):Float

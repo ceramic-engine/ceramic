@@ -458,6 +458,16 @@ class EntityMacro {
             switch (type) {
                 case TPath(p):
                     typeStr = p.name;
+                    if (typeStr == 'StdTypes' && p.params != null) {
+                        for (param in p.params) {
+                            switch param {
+                                case TPType(t):
+                                    return complexTypeToString(t);
+                                case TPExpr(e):
+                                    return 'Dynamic';
+                            }
+                        }
+                    }
                     if (p.pack != null && p.pack.length > 0) {
                         typeStr = p.pack.join('.') + '.' + typeStr;
                     }

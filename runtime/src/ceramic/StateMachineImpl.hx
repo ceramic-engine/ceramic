@@ -1,6 +1,10 @@
 package ceramic;
 
+import tracker.Observable;
+
+#if !macro
 @:autoBuild(ceramic.macros.StateMachineMacro.buildFields())
+#end
 class StateMachineImpl<T> extends Entity implements Observable implements Component {
 
     /** The current state */

@@ -7,7 +7,7 @@ import ceramic.Shortcuts.*;
 using StringTools;
 
 /** Utility to track a tree of entity objects and perform specific actions when some entities get untracked */
-class TrackEntities extends Component {
+class TrackEntities extends Entity implements Component {
 
 /// Properties
 
@@ -17,7 +17,7 @@ class TrackEntities extends Component {
 
 /// Lifecycle
 
-    function init() {
+    function bindAsComponent() {
 
         // Perform first scan to get initial data
         scan();

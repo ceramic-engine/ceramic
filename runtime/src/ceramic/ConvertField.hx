@@ -6,15 +6,15 @@ import ceramic.Fragment;
 
 import haxe.DynamicAccess;
 
-/** Interface to convert from/to basic type and field values with complex types. */
-interface ConvertField<BasicType,FieldType> {
+/** Interface to convert basic type `T` to field type `U` and vice versa. */
+interface ConvertField<T,U> {
 
     /** Get field value from basic type. As this may require loading assets,
         A usable `Assets` instance must be provided and the result will only be
         provided asynchronously by calling `done` callback. */
-    function basicToField(assets:Assets, basic:BasicType, done:FieldType->Void):Void;
+    function basicToField(assets:Assets, basic:T, done:U->Void):Void;
 
     /** Get a basic type from the field value. */
-    function fieldToBasic(value:FieldType):BasicType;
+    function fieldToBasic(value:U):T;
 
 }
