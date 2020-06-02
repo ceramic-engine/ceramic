@@ -322,8 +322,6 @@ class Textures implements spec.Textures {
             GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, maxUnits);
             _maxTexturesByBatch = Std.int(Math.min(32, maxUnits[0]));
 
-            trace('computed max textures by batch: ' + _maxTexturesByBatch);
-
             #else
             _maxTexturesByBatch = Std.int(Math.min(32, GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)));
             #end
