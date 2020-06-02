@@ -291,35 +291,30 @@ class Mesh extends Visual {
         for (r in 0...rows+1) {
 
             var y = r * stepY;
-            
-            vertices[v] = 0;
-            v++;
-            vertices[v] = y;
-            v++;
 
-            for (c in 1...cols+1) {
+            for (c in 0...cols+1) {
 
                 vertices[v] = c * stepX;
                 v++;
                 vertices[v] = y;
                 v++;
 
-                if (r < rows) {
+                if (r > 0 && c > 0) {
 
-                    var n = r * cols + c;
-    
-                    indices[i] = n - 1;
-                    i++;
-                    indices[i] = n;
-                    i++;
-                    indices[i] = n + cols - 1;
-                    i++;
+                    var n = (r - 1) * (cols + 1) + c - 1;
     
                     indices[i] = n;
                     i++;
-                    indices[i] = n + cols;
+                    indices[i] = n + 1;
                     i++;
-                    indices[i] = n + cols - 1;
+                    indices[i] = n + (cols + 1);
+                    i++;
+    
+                    indices[i] = n + 1;
+                    i++;
+                    indices[i] = n + (cols + 1);
+                    i++;
+                    indices[i] = n + (cols + 1) + 1;
                     i++;
                 }
 
@@ -373,6 +368,10 @@ class Mesh extends Visual {
 
             }
 
+        }
+
+        if (uvs.length > u) {
+            uvs.setArrayLength(u);
         }
 
     }
