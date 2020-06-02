@@ -246,7 +246,11 @@ class Build extends tools.Task {
         // Compile c++ for host platform on default architecture (expecting 64bit)
         if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
 			// Could move that to some plugin later, maybe
-            var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
+			var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
+			if (target.name == 'mac') {
+				hxcppArgs.push('-DHXCPP_CPP11');
+				hxcppArgs.push('-DHXCPP_CLANG');
+			}
             if (debug) {
                 hxcppArgs.push('-Ddebug');
             }

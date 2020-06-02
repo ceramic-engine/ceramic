@@ -149,12 +149,12 @@ class Build extends tools.Task {
 
             // Use node command
             var cmdArgs = ['app.js'];
-            var script = extractArgValue(args, 'script');
+            var task = extractArgValue(args, 'task');
             var debug = extractArgFlag(args, 'debug');
             if (!debug) cmdArgs.push('NODE_ENV=production');
-            if (script != null && script.trim() != '') {
-                cmdArgs.push('--script');
-                cmdArgs.push(script);
+            if (task != null && task.trim() != '') {
+                cmdArgs.push('--task');
+                cmdArgs.push(task);
             }
 
             var status = 0;

@@ -23,10 +23,15 @@ class Tasks {
         if (task != null) {
             run(task);
         }
+        else {
+            log.warning('No task to run (missing --task argument)');
+        }
 
     }
 
     public static function run(taskName:String):Void {
+
+        trace('RUN TASK $taskName');
 
         var clazz = Type.resolveClass('tasks.$taskName');
 
@@ -37,7 +42,7 @@ class Tasks {
         }
 
         try {
-            var instance:Script = Type.createInstance(clazz, []);
+            var instance:Task = Type.createInstance(clazz, []);
 
             instance.onceDone(null, function() {
                 instance.destroy();
