@@ -9,7 +9,7 @@ import tracker.Observable;
         maxPoints: 999999999
     }
 })
-class Points extends Visual implements Observable {
+class Points extends Visual {
 
     /** An array of floats to describe points */
     @editable public var points:Array<Float> = [];

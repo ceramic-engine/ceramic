@@ -8,6 +8,8 @@ import ceramic.Shortcuts.*;
 
 class Script extends Entity implements Component {
 
+    public static var errorHandlers:Array<(error:String,line:Int,char:Int)->Void> = [];
+
     static var parser:Parser = null;
 
     public var content(default, null):String;
@@ -46,7 +48,10 @@ class Script extends Entity implements Component {
             ready = true;
         }
         catch (e:Dynamic) {
-            log.error('Failed to init script: $e');
+            log.error('Failed to parse script: $e');
+            for (handler in errorHandlers) {
+                handler('Failed to parse script: $e', -1, -1);
+            }
         }
 
     }
@@ -78,6 +83,9 @@ class Script extends Entity implements Component {
         }
         catch (e:Dynamic) {
             log.error('Failed to run script: $e');
+            for (handler in errorHandlers) {
+                handler('Failed to run script: ' + e, -1, -1);
+            }
         }
 
     }
@@ -120,6 +128,9 @@ class Interp extends hscript.Interp {
 			return super.exprReturn(e);
 		} catch( e : Dynamic ) {
             log.error('Error when running script function: $e');
+            for (handler in Script.errorHandlers) {
+                handler('Error when running script function: $e', -1, -1);
+            }
             owner.destroy();
             owner = null;
 		}
