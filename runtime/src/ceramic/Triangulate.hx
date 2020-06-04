@@ -42,33 +42,40 @@ class Triangulate {
                 }
 
                 var poolIndex = 0;
+                var pId = 0;
                 inline function toPoly2TriPoints(rawPoints:Array<Float>) {
                     var i = 0;
                     var len = rawPoints.length;
                     var prevX = 0.0;
                     var prevY = 0.0;
                     var skip = false;
+                    var firstP:Poly2TriPoint = null;
                     while (i < len) {
                         var p = poly2triPointsPool[poolIndex];
                         if (p == null) {
                             p = new Poly2TriPoint(rawPoints[i], rawPoints[i+1]);
-                            p.id = poolIndex;
                         }
                         else {
                             p.x = rawPoints[i];
                             p.y = rawPoints[i+1];
                         }
+                        p.id = pId++;
+                        if (i == 0) {
+                            firstP = p;
+                        }
                         if (i > 0 && prevX == p.x && prevY == p.y) {
-                            log.warning('Skip triangulation because two adjacent points are identical');
-                            skip = true;
+                            // Skip identical point
+                        }
+                        else if (i == len - 2 && firstP.x == p.x && firstP.y == p.y) {
+                            // Skip identical start & end points
                         }
                         else {
                             prevX = p.x;
                             prevY = p.y;
                             poly2triPoints[poolIndex] = p;
                             poolIndex++;
-                            i += 2;
                         }
+                        i += 2;
                     }
                     if (!skip) {
                         var numPoints = Std.int(len / 2);
