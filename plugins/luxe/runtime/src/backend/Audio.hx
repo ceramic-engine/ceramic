@@ -340,14 +340,21 @@ class Audio implements spec.Audio {
     }
 
     inline function toBackendVolume(volume:Float):Float {
-
+#if !ceramic_audio_volume_linear
         return volume < 1.0 ? volume * volume : volume * 1.0;
+#else
+        return volume * 1.0;
+#end
 
     }
 
     inline function fromBackendVolume(volume:Float):Float {
 
+#if !ceramic_audio_volume_linear
         return volume < 1.0 ? Math.sqrt(volume) : volume * 1.0;
+#else
+        return volume * 1.0;
+#end
 
     }
 
