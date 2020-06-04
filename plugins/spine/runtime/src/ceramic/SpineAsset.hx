@@ -153,7 +153,6 @@ class SpineAsset extends Asset {
                         var prevSpineData = spineData;
 
                         // Create final spine data with all info
-                        trace('- new SpineData ($name) -');
                         spineData = new SpineData(
                             spineAtlas,
                             json,

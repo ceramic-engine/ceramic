@@ -41,6 +41,7 @@ class Project {
     public static var runtimeLibraries:Array<Dynamic> = [
         { 'unifill': '0.4.1' },
         { 'format': '3.4.2' },
+        { 'hscript': '2.4.0' },
         { 'polyline': 'git:https://github.com/jeremyfa/polyline.git' },
         { 'tracker': 'git:https://github.com/jeremyfa/tracker.git' },
         { 'hotml': 'git:https://github.com/jeremyfa/hotml.git' },
@@ -150,11 +151,14 @@ class Project {
             }
         }
 
+        app.editable.push('ceramic.Visual');
         app.editable.push('ceramic.Fragment');
         app.editable.push('ceramic.Quad');
         app.editable.push('ceramic.Text');
         app.editable.push('ceramic.Mesh');
         app.editable.push('ceramic.Shape');
+        app.editable.push('ceramic.Line');
+        app.editable.push('ceramic.Points');
 
         if (app.hxml == null) app.hxml = '';
 

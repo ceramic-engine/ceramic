@@ -373,8 +373,8 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
             haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always'], {cwd: cwd});
         
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,3,0'])))
-            haxelib(['install', 'hscript', '2.3.0', '--always'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,4,0'])))
+            haxelib(['install', 'hscript', '2.4.0', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,7'])))
             haxelib(['install', 'bind', '0.4.7', '--always'], {cwd: cwd});

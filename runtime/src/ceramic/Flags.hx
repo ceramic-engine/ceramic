@@ -22,4 +22,17 @@ abstract Flags(Int) from Int to Int {
 
     }
 
+    inline public static function getBool(flags:Flags, bit:Int):Bool {
+
+        return flags.bool(bit);
+
+    }
+
+    inline public static function setBoolAndGetFlags(flags:Flags, bit:Int, bool:Bool):Int {
+
+        flags.setBool(bit, bool);
+        return flags;
+
+    }
+
 }

@@ -19,6 +19,11 @@ class Entity implements Events implements Lazy {
         components: {
             editable: [],
             type: 'ceramic.ImmutableMap<String,ceramic.Component>',
+            index: 1
+        },
+        script: {
+            editable: [],
+            type: 'ceramic.ScriptContent',
             index: 2
         }
     };
@@ -41,6 +46,31 @@ class Entity implements Events implements Lazy {
      - -3: Entity root is destroyed (Entity.destroy() was called). Additional calls to destroy() are ignored
      */
     var _lifecycleState:Int = 0;
+
+#if ceramic_entity_script
+    public var script(get,set):ScriptContent;
+    #if !haxe_server inline #end function get_script():ScriptContent {
+        var comp = component('script');
+        var content:ScriptContent = null;
+        if (comp != null && Std.is(comp, Script)) {
+            var scriptComp:Script = cast comp;
+            content = scriptComp.content;
+        }
+        return content;
+    }
+    #if !haxe_server inline #end function set_script(script:ScriptContent):ScriptContent {
+        var prevScript = get_script();
+        if (prevScript != script) {
+            if (script == null) {
+                removeComponent('script');
+            }
+            else {
+                component('script', new Script(script));
+            }
+        }
+        return script;
+    }
+#end
 
     public var destroyed(get,never):Bool;
     #if !haxe_server inline #end function get_destroyed():Bool {

@@ -93,6 +93,8 @@ class ExportApi {
             dts.add('function trace(str: String): Void;\n');
             dts.add('\n');
             dts.add('const self: Entity;\n');
+            dts.add('const entity: Entity;\n');
+            dts.add('const visual: Visual;\n');
             dts.add('\n');
             dts.add('const app: App;\n');
             dts.add('const screen: Screen;\n');
@@ -100,6 +102,37 @@ class ExportApi {
             dts.add('const settings: Settings;\n');
             dts.add('const collections: Collections;\n');
             dts.add('const log: Logger;\n');
+            dts.add('\n');
+            dts.add('interface Array<T> {\n');
+            dts.add('    [index: number]: T;\n');
+            dts.add('}\n');
+            dts.add('\n');
+            dts.add('var a: number;\n');
+            dts.add('var b: number;\n');
+            dts.add('var c: number;\n');
+            dts.add('var d: number;\n');
+            dts.add('var e: number;\n');
+            dts.add('var f: number;\n');
+            dts.add('var g: number;\n');
+            dts.add('var h: number;\n');
+            dts.add('var i: number;\n');
+            dts.add('var j: number;\n');
+            dts.add('var k: number;\n');
+            dts.add('var l: number;\n');
+            dts.add('var m: number;\n');
+            dts.add('var n: number;\n');
+            dts.add('var o: number;\n');
+            dts.add('var p any;\n');
+            dts.add('var q: number;\n');
+            dts.add('var r: number;\n');
+            dts.add('var s: number;\n');
+            dts.add('var t: number;\n');
+            dts.add('var u: number;\n');
+            dts.add('var v: number;\n');
+            dts.add('var w: number;\n');
+            dts.add('var x: number;\n');
+            dts.add('var y: number;\n');
+            dts.add('var z: number;\n');
             dts.add('\n');
             
             for (typeName in typesToExport.keys()) {
@@ -217,7 +250,7 @@ class ExportApi {
                                 dts.add(classType.doc);
                                 dts.add('*/\n');
                             }
-                            if (classType.isInterface) {
+                            if (classType.isInterface || classType.name == 'Array') {
                                 dts.add('interface ');
                             }
                             else {

@@ -16,4 +16,4 @@ package ceramic;
     /** Extra button pressed (5) */
     var EXTRA2 = 5;
 
-} //MouseButton
+}

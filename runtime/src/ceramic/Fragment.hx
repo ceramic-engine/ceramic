@@ -40,7 +40,8 @@ class Fragment extends Quad {
         'Int' => true,
         'Float' => true,
         'String' => true,
-        'ceramic.Color' => true
+        'ceramic.Color' => true,
+        'ceramic.ScriptContent' => true
     ];
 
 /// Lifecycle
@@ -326,7 +327,7 @@ class Fragment extends Quad {
                             }
                             if (instance.components != null) {
                                 for (k in instance.components.keys()) {
-                                    if (k != 'editable') {
+                                    if (k != 'editable' && k != 'script') {
                                         if (map == null || map.get(k) == null) {
                                             instance.removeComponent(k);
                                         }
