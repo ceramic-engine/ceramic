@@ -1768,6 +1768,19 @@ class Visual extends Entity {
 
     }
 
+    public function hasIndirectParent(targetParent:Visual):Bool {
+
+        var parent = this.parent;
+        do {
+            if (parent == targetParent) return true;
+            parent = parent.parent;
+        }
+        while (parent != null);
+
+        return false;
+
+    }
+
     public function add(visual:Visual):Void {
 
         App.app.hierarchyDirty = true;
