@@ -1781,6 +1781,18 @@ class Visual extends Entity {
 
     }
 
+    public function firstParentWithClass<T>(clazz:Class<T>):T {
+
+        var parent = this.parent;
+        while (parent != null) {
+            if (Std.is(parent, clazz)) return cast parent;
+            parent = parent.parent;
+        }
+
+        return null;
+
+    }
+
     public function add(visual:Visual):Void {
 
         App.app.hierarchyDirty = true;
