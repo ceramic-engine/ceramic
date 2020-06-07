@@ -14,13 +14,15 @@ class Script extends Entity implements Component {
 
     public var content(default, null):String;
 
-    var program:Expr;
+    public var program(default, null):Expr;
 
-    var interp:Interp;
+    public var interp(default, null):Interp;
 
     var ready:Bool = false;
 
     var running:Bool = false;
+
+    var broken:Bool = false;
 
     public function new(content:String) {
 
@@ -48,10 +50,12 @@ class Script extends Entity implements Component {
             ready = true;
         }
         catch (e:Dynamic) {
+            broken = true;
             log.error('Failed to parse script: $e');
             for (handler in errorHandlers) {
                 handler('Failed to parse script: $e', -1, -1);
             }
+            app.onceImmediate(destroy);
         }
 
     }
@@ -80,12 +84,31 @@ class Script extends Entity implements Component {
 
         try {
             interp.execute(program);
+
+            var initCb = interp.variables.get('init');
+            if (initCb != null && Reflect.isFunction(initCb)) {
+                initCb();
+            }
+
+            var updateCb = interp.variables.get('update');
+            if (updateCb != null && Reflect.isFunction(updateCb)) {
+                app.onUpdate(this, updateCb);
+            }
+
+            var destroyCb = interp.variables.get('destroy');
+            if (destroyCb != null && Reflect.isFunction(destroyCb)) {
+                onDestroy(this, _ -> {
+                    destroyCb();
+                });
+            }
         }
         catch (e:Dynamic) {
+            broken = true;
             log.error('Failed to run script: $e');
             for (handler in errorHandlers) {
                 handler('Failed to run script: ' + e, -1, -1);
             }
+            destroy();
         }
 
     }
@@ -127,6 +150,7 @@ class Interp extends hscript.Interp {
 		try {
 			return super.exprReturn(e);
 		} catch( e : Dynamic ) {
+            @:privateAccess owner.broken = true;
             log.error('Error when running script function: $e');
             for (handler in Script.errorHandlers) {
                 handler('Error when running script function: $e', -1, -1);
