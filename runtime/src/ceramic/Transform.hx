@@ -175,7 +175,7 @@ class Transform implements Events {
 
     inline public function setFromDecomposed(decomposed:DecomposedTransform):Void {
 
-        setFromValues(decomposed.x, decomposed.y, decomposed.pivotX, decomposed.pivotY, decomposed.scaleX, decomposed.scaleY, decomposed.rotation, decomposed.skewX, decomposed.skewY);
+        setFromValues(decomposed.x, decomposed.y, decomposed.scaleX, decomposed.scaleY, decomposed.rotation, decomposed.skewX, decomposed.skewY, decomposed.pivotX, decomposed.pivotY);
 
     }
 
