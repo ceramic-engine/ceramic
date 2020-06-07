@@ -259,8 +259,10 @@ class VisualTransition extends Entity implements Component {
         if (!transformChanged && transformTarget != null) {
             if (transformTarget.changedDirty)
                 transformTarget.computeChanged();
-            if (transformTarget.changed)
+            if (transformTarget.changed) {
                 transformChanged = true;
+                anyPropertyChanged = true;
+            }
         }
 
         // Create tween if any value was changed
@@ -316,9 +318,11 @@ class VisualTransition extends Entity implements Component {
                                 transformInTransition = TransformPool.get();
                             entity.transform = transformInTransition;
                         }
+                        var interpolateTransformStart = transformStart != null ? transformStart : _identityTransform;
+                        var interpolateTransformEnd = transformEnd != null ? transformEnd : _identityTransform;
                         entity.transform.setFromInterpolated(
-                            transformStart != null ? transformStart : _identityTransform,
-                            transformEnd != null ? transformEnd : _identityTransform,
+                            interpolateTransformStart,
+                            interpolateTransformEnd,
                             value
                         );
                     }
