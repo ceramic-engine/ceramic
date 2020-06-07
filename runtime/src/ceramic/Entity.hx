@@ -72,6 +72,18 @@ class Entity implements Events implements Lazy {
     }
 #end
 
+#if ceramic_entity_dynamic_events
+    public var events(get,never):DynamicEvents<String>;
+    function get_events():DynamicEvents<String> {
+        var eventsComp:DynamicEvents<String> = cast component('events');
+        if (eventsComp == null) {
+            eventsComp = new DynamicEvents<String>();
+            component('events', eventsComp);
+        }
+        return eventsComp;
+    }
+#end
+
     public var destroyed(get,never):Bool;
     #if !haxe_server inline #end function get_destroyed():Bool {
         return _lifecycleState < 0;
