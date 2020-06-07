@@ -2,7 +2,9 @@ package ceramic;
 
 import ceramic.Assert.*;
 
-@editable({ implicitSizeUnlessNull: 'texture' })
+@editable({
+    implicitSizeUnlessNull: 'texture'
+})
 class Quad extends Visual {
 
     static var _matrix = Visual._matrix;
