@@ -53,7 +53,7 @@ class Entity implements Events implements Lazy {
 
 #if ceramic_entity_script
     public var script(get,set):ScriptContent;
-    #if !haxe_server inline #end function get_script():ScriptContent {
+    function get_script():ScriptContent {
         var comp = component('script');
         var content:ScriptContent = null;
         if (comp != null && Std.is(comp, Script)) {
@@ -62,7 +62,7 @@ class Entity implements Events implements Lazy {
         }
         return content;
     }
-    #if !haxe_server inline #end function set_script(script:ScriptContent):ScriptContent {
+    function set_script(script:ScriptContent):ScriptContent {
         var prevScript = get_script();
         if (prevScript != script) {
             if (script == null) {
