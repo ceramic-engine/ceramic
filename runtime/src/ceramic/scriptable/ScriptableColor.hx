@@ -5,6 +5,24 @@ package ceramic.scriptable;
  * in environments when abstract is not usable (hscript)
  */
 class ScriptableColor {
+    
+    public static final NONE:Color =        -1;
+
+    public static final WHITE:Color =       0xFFFFFF;
+    public static final GRAY:Color =        0x808080;
+    public static final BLACK:Color =       0x000000;
+
+    public static final GREEN:Color =       0x008000;
+    public static final LIME:Color =        0x00FF00;
+    public static final YELLOW:Color =      0xFFFF00;
+    public static final ORANGE:Color =      0xFFA500;
+    public static final RED:Color =         0xFF0000;
+    public static final PURPLE:Color =      0x800080;
+    public static final BLUE:Color =        0x0000FF;
+    public static final BROWN:Color =       0x8B4513;
+    public static final PINK:Color =        0xFFC0CB;
+    public static final MAGENTA:Color =     0xFF00FF;
+    public static final CYAN:Color =        0x00FFFF;
 
     public static function random(minSatutation:Float = 0.5, minBrightness:Float = 0.5):Color
     {

@@ -90,7 +90,7 @@ class ExportApi {
             dts.add('type Dynamic = any;\n');
             dts.add('type Void = void;\n');
             dts.add('\n');
-            dts.add('function trace(str: String): Void;\n');
+            dts.add('function trace(msg: any): Void;\n');
             dts.add('\n');
             dts.add('const self: Entity;\n');
             dts.add('const entity: Entity;\n');
