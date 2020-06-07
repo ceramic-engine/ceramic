@@ -175,8 +175,10 @@ class Main extends luxe.Game {
             var shouldFixSize = false;
 
             var appEl:js.html.CanvasElement = cast document.getElementById('app');
-            if (appEl != null)
+            if (appEl != null) {
+                document.body.classList.add('ceramic-invisible');
                 appEl.style.visibility = 'hidden';
+            }
 
             /*
             var forceResize = false;
@@ -206,6 +208,7 @@ class Main extends luxe.Game {
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
                             if (lastNewWidth != -1 || lastNewHeight != -1) {
+                                document.body.classList.add('ceramic-invisible');
                                 appEl.style.visibility = 'hidden';
                             }
                             lastResizeTime = ceramic.Timer.now;
@@ -240,6 +243,7 @@ class Main extends luxe.Game {
                         // That's not the best option but let's get away with this for now.
                         resizing++;
                         if (lastResizeTime != -1) {
+                            document.body.classList.add('ceramic-invisible');
                             appEl.style.visibility = 'hidden';
                         }
                         var fn = null;
@@ -249,6 +253,7 @@ class Main extends luxe.Game {
                                 return;
                             }*/
                             if (resizing == 0) {
+                                document.body.classList.remove('ceramic-invisible');
                                 appEl.style.visibility = 'visible';
                             }
                         };
