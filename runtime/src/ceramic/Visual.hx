@@ -11,7 +11,7 @@ using ceramic.Extensions;
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
 @:allow(ceramic.MeshPool)
-@editable
+@editable()
 #if lua
 @dynamicEvents
 @:dce
@@ -1130,6 +1130,7 @@ class Visual extends Entity {
 
     public var children(default,null):ImmutableArray<Visual> = null;
 
+    //@editable
     public var parent(default,null):Visual = null;
 
 /// Internal
@@ -1771,11 +1772,10 @@ class Visual extends Entity {
     public function hasIndirectParent(targetParent:Visual):Bool {
 
         var parent = this.parent;
-        do {
+        while (parent != null) {
             if (parent == targetParent) return true;
             parent = parent.parent;
         }
-        while (parent != null);
 
         return false;
 
