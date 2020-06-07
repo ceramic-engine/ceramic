@@ -12,7 +12,7 @@ using ceramic.Extensions;
 @editable({
     implicitSizeUnlessTrue: 'resizable'
 })
-class Fragment extends Quad {
+class Fragment extends Layer {
 
     public var entities(default,null):Array<Entity>;
 
@@ -58,7 +58,6 @@ class Fragment extends Quad {
         this.context = context;
         entities = [];
         items = [];
-        transparent = true;
 
         #if ceramic_debug_fragments
         trace('new Fragment(context=$context)');
