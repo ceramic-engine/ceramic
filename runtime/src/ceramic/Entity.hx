@@ -3,6 +3,10 @@ package ceramic;
 import tracker.Events;
 import tracker.Autorun;
 
+#if ceramic_entity_dynamic_events
+import tracker.DynamicEvents;
+#end
+
 using ceramic.Extensions;
 
 @editable
