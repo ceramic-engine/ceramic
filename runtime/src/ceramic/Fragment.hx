@@ -9,7 +9,9 @@ import haxe.DynamicAccess;
 using ceramic.Extensions;
 
 /** A fragment is a group of visuals rendered from data (.fragment file) */
-@editable({ implicitSize: true })
+@editable({
+    implicitSizeUnlessTrue: 'resizable'
+})
 class Fragment extends Quad {
 
     public var entities(default,null):Array<Entity>;
@@ -20,6 +22,9 @@ class Fragment extends Quad {
 
     @editable
     public var fragmentData(default,set):FragmentData = null;
+
+    @editable
+    public var resizable:Bool = false;
 
     public var pendingLoads(default,null):Int = 0;
 
