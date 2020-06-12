@@ -23,7 +23,7 @@ class CollectionView extends ScrollView {
 
     public var frames:ImmutableArray<CollectionViewItemFrame> = [];
 
-    public var freezeVisibleItems:Bool = false;
+    public var itemsBehavior:CollectionViewItemsBehavior = RECYCLE;
 
     var reusableViews:Array<View> = [];
 
@@ -180,7 +180,7 @@ class CollectionView extends ScrollView {
         inline function handleVisible(itemIndex:Int, frame:CollectionViewItemFrame) {
             if (frame.visible) {
                 // Add/Recycle views that become visible
-                if (!freezeVisibleItems && frame.view == null) {
+                if (itemsBehavior != FREEZE && frame.view == null) {
                     if (reusableViews.length > 0) {
                         var reusableView = reusableViews.pop();
                         frame.view = dataSource.collectionViewItemAtIndex(this, itemIndex, reusableView);
@@ -256,7 +256,7 @@ class CollectionView extends ScrollView {
 
                 // We first handle all invisible frames, so that we can harvest reusable views
                 // and provide them on new frames right after
-                if (!freezeVisibleItems) handleInvisible(i, frame);
+                if (itemsBehavior != FREEZE && itemsBehavior != LAZY) handleInvisible(i, frame);
             }
 
             for (i in 0...frames.length) {
@@ -275,7 +275,7 @@ class CollectionView extends ScrollView {
 
                 // We first handle all invisible frames, so that we can harvest reusable views
                 // and provide them on new frames right after
-                if (!freezeVisibleItems) handleInvisible(i, frame);
+                if (itemsBehavior != FREEZE && itemsBehavior != LAZY) handleInvisible(i, frame);
             }
 
             for (i in 0...frames.length) {
