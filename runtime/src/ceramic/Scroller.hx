@@ -901,7 +901,7 @@ class Scroller extends Visual {
                     }
                     else if (isOverScrollingTop() || isOverScrollingBottom()) {
                         // bounce
-                        bounce();
+                        bounceScroll();
                     }
                     else {
                         // Regular scroll
@@ -921,7 +921,7 @@ class Scroller extends Visual {
                     }
                     else if (isOverScrollingLeft() || isOverScrollingRight()) {
                         // bounce
-                        bounce();
+                        bounceScroll();
                     }
                     else {
                         // Regular scroll
@@ -1044,7 +1044,7 @@ class Scroller extends Visual {
 
     }
 
-    public function bounce():Void {
+    public function bounceScroll():Void {
 
         var momentum = this.momentum;
         this.momentum = 0;
