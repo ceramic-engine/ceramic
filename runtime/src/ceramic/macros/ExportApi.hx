@@ -92,9 +92,11 @@ class ExportApi {
             dts.add('\n');
             dts.add('function trace(msg: any): Void;\n');
             dts.add('\n');
+            dts.add('type AnyVisual = Visual & Text & Mesh & Quad;\n');
+            dts.add('\n');
             dts.add('const self: Entity;\n');
             dts.add('const entity: Entity;\n');
-            dts.add('const visual: Visual;\n');
+            dts.add('const visual: AnyVisual;\n');
             dts.add('\n');
             dts.add('const app: App;\n');
             dts.add('const screen: Screen;\n');
@@ -256,7 +258,12 @@ class ExportApi {
                             else {
                                 dts.add('class ');
                             }
-                            dts.add(classType.name);
+                            if (classType.name.startsWith('Scriptable')) {
+                                dts.add(classType.name.substring('Scriptable'.length));
+                            }
+                            else {
+                                dts.add(classType.name);
+                            }
                             if (classType.params != null && classType.params.length > 0) {
                                 dts.add('<');
                                 var paramI = 0;
@@ -297,6 +304,16 @@ class ExportApi {
                                 }
                                 dts.add(' extends ');
                                 dts.add(convertType(typesToExport, superClassTypeStr));
+                                if (classType.superClass.params != null && classType.superClass.params.length > 0) {
+                                    dts.add('<');
+                                    var paramI = 0;
+                                    for (param in classType.superClass.params) {
+                                        if (paramI++ > 0)
+                                            dts.add(', ');
+                                        dts.add(typeToString(typesToExport, param));
+                                    }
+                                    dts.add('>');
+                                }
                             }
                             if (classType.interfaces != null && classType.interfaces.length > 0) {
                                 dts.add(' implements ');
@@ -790,6 +807,12 @@ class ExportApi {
 
         if (typeStr.charAt(typeStr.length - 2) == '.') {
             typeStr = typeStr.charAt(typeStr.length - 1);
+        }
+        else if (typeStr.startsWith('ceramic.') && typesToExport.exists('ceramic.scriptable.Scriptable' + typeStr.substring('ceramic.'.length))) {
+            typeStr = typesToExport.get('ceramic.scriptable.Scriptable' + typeStr.substring('ceramic.'.length));
+            if (typeStr.startsWith('Scriptable')) {
+                typeStr = typeStr.substring('Scriptable'.length);
+            }
         }
         else if (typesToExport.exists(typeStr)) {
             typeStr = typesToExport.get(typeStr);

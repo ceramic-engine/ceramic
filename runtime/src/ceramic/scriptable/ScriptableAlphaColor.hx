@@ -1,8 +1,8 @@
 package ceramic.scriptable;
 
-/**
- * Same feature-set as `ceramic.AlphaColor`, but used through static methods
- * in environments when abstract is not usable (hscript)
- */
+
+/** RGBA Color stored as integer.
+    Can be decomposed to Color/Int (RGB) + Float (A) and
+    constructed from Color/Int (RGB) + Float (A). */
 class ScriptableAlphaColor {
 }
