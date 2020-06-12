@@ -40,7 +40,7 @@ class Line extends Mesh {
     }
 
     /** The line thickness */
-    @editable
+    @editable({ slider: [1, 64] })
     public var thickness(default, set):Float = 1;
     inline function set_thickness(thickness:Float):Float {
         if (this.thickness == thickness) return thickness;
@@ -148,8 +148,7 @@ class Line extends Mesh {
 
     public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
 
-        entityData.props.set('anchorX', 0);
-        entityData.props.set('anchorY', 0);
+        entityData.props.set('thickness', 4);
         entityData.props.set('points', [
             0.0, 0.0,
             100.0, 0.0

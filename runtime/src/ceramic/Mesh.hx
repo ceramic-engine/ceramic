@@ -82,7 +82,7 @@ class Mesh extends Visual {
 
 /// Color
 
-    /** Can be used instead of colors array when the mesh is only composed of a single color. */
+    /** On `Mesh` instances, can be used instead of colors array when the mesh is only composed of a single color. */
     @editable
     public var color(get,set):Color;
     inline function get_color():Color {
@@ -384,8 +384,6 @@ class Mesh extends Visual {
 
         entityData.props.set('width', 100);
         entityData.props.set('height', 100);
-        entityData.props.set('anchorX', 0);
-        entityData.props.set('anchorY', 0);
         entityData.props.set('vertices', [
             0.0, 0.0,
             100.0, 0.0,

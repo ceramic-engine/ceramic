@@ -91,8 +91,6 @@ class Shape extends Mesh {
 
         entityData.props.set('width', 100);
         entityData.props.set('height', 100);
-        entityData.props.set('anchorX', 0);
-        entityData.props.set('anchorY', 0);
         entityData.props.set('points', [
             0.0, 0.0,
             100.0, 0.0,

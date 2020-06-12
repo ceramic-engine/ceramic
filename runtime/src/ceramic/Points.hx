@@ -72,8 +72,6 @@ class Points extends Visual {
 
     public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
 
-        entityData.props.set('anchorX', 0);
-        entityData.props.set('anchorY', 0);
         entityData.props.set('points', [
             0.0, 0.0,
             100.0, 0.0

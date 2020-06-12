@@ -6,10 +6,7 @@ import ceramic.Shortcuts.*;
  * Just a regular quad (transparent by default) with a few addition to make it more convenient when used as a layer
  */
 @editable({
-    implicitSizeUnlessNull: 'texture',
-    highlight: {
-        resizeInsteadOfScaleUnlessNull: 'texture'
-    }
+    implicitSizeUnlessNull: 'texture'
 })
 class Layer extends Quad {
 
@@ -62,8 +59,6 @@ class Layer extends Quad {
 
     public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
 
-        entityData.props.set('anchorX', 0);
-        entityData.props.set('anchorY', 0);
         entityData.props.set('width', 100);
         entityData.props.set('height', 100);
 
