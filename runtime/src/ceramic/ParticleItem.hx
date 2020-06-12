@@ -3,7 +3,7 @@ package ceramic;
 /** A particle item.
     You should not instanciate this yourself as
     it is managed by a `Particles` emitter object. */
-@:allow(ceramic.Particles)
+@:allow(ceramic.ParticleEmitter)
 class ParticleItem {
 
     public var visual:Visual = null;
