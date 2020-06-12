@@ -84,6 +84,13 @@ class Timer {
 
     private static function schedule(owner:Entity, seconds:Float, callback:Void->Void, interval:Float):Void->Void {
 
+        // Check handler
+        #if ceramic_check_handlers
+        if (!Reflect.isFunction(callback)) {
+            throw callback + " is not a function!";
+        }
+        #end
+
         var time = now + seconds;
         next = Math.min(time, next);
 
