@@ -19,6 +19,12 @@ typedef FragmentData = {
     /** Fragment-level components */
     public var components:DynamicAccess<String>;
 
+    /** Fragment color (if not transparent, default `BLACK`) */
+    @:optional public var color:Color;
+
+    /** Fragment being transparent or not (default `true`) */
+    @:optional public var transparent:Bool;
+
     /** Fragment items (visuals or other entities) */
     @:optional public var items:Array<FragmentItem>;
 

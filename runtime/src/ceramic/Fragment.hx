@@ -86,6 +86,20 @@ class Fragment extends Layer {
             width = fragmentData.width;
             height = fragmentData.height;
 
+            if (fragmentData.color != null) {
+                color = fragmentData.color;
+            }
+            else {
+                color = Color.BLACK;
+            }
+
+            if (fragmentData.transparent != null) {
+                transparent = fragmentData.transparent;
+            }
+            else {
+                transparent = true;
+            }
+
             if (fragmentData.items != null) {
                 // Add/Update items
                 for (item in fragmentData.items) {
@@ -365,6 +379,7 @@ class Fragment extends Layer {
 
     }
 
+    @:noCompletion @:deprecated
     public function getItemInstanceByName(name:String):Entity {
 
         for (entity in entities) {
