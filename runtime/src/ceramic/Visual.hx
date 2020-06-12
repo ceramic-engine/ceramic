@@ -509,11 +509,6 @@ class Visual extends Entity {
         return collideWorldBounds;
     }
 
-    /** Sets acceleration, velocity (and speed) to 0. */
-    inline public function stop():Void {
-        if (arcade != null) arcade.body.stop;
-    }
-
     /** Dispatched when this visual body collides with another visual's body. */
     inline public function onCollide(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
         if (arcade == null) initArcadePhysics();
@@ -738,6 +733,16 @@ class Visual extends Entity {
         this.inheritAlpha = inheritAlpha;
         visibilityDirty = true;
         return inheritAlpha;
+    }
+
+    /**
+     * Stop this visual, whatever that means (override in subclasses).
+     * When arcade physics are enabled, they are also stopped from this call.
+     */
+    public function stop():Void {
+#if ceramic_arcade_physics
+        if (arcade != null) arcade.body.stop;
+#end
     }
 
 #if ceramic_debug_rendering_option
