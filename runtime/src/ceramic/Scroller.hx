@@ -954,7 +954,9 @@ class Scroller extends Visual {
 
 /// Helpers
 
-    public function stop():Void {
+    override public function stop():Void {
+
+        super.stop();
 
         status = IDLE;
         animating = false;
