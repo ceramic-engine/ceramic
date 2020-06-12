@@ -177,6 +177,11 @@ class ScriptUtils {
                     i++;
                 }
             }
+            else if (cc == '=>') {
+                // Convert js/ts arrow functions
+                result.add('->');
+                i += 2;
+            }
             else if (cc == '//') {
                 inSingleLineComment = true;
                 result.add('//');
