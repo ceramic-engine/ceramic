@@ -70,7 +70,7 @@ class Sound extends Entity {
         if (pitch == null) pitch = this.pitch;
 
         // Apply mixer settings
-        volume += mixer.volume - 0.5;
+        volume *= mixer.volume * 2;
         pan += mixer.pan;
         pitch += mixer.pitch - 1;
 
