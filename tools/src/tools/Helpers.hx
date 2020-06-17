@@ -376,8 +376,8 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,4,0'])))
             haxelib(['install', 'hscript', '2.4.0', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,7'])))
-            haxelib(['install', 'bind', '0.4.7', '--always'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,8'])))
+            haxelib(['install', 'bind', '0.4.8', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
