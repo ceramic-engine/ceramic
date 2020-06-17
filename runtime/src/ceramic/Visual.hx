@@ -91,6 +91,20 @@ class Visual extends Entity {
         return arcade != null ? arcade.body : null;
     }
 
+    public var group(get,set):arcade.Group;
+    function get_group():arcade.Group {
+        var body = this.body;
+        return body != null
+            ? body.group
+            : null
+        ;
+    }
+    function set_group(group:arcade.Group):arcade.Group {
+        if (arcade == null) initArcadePhysics();
+        body.group = group;
+        return group;
+    }
+
     /** Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc... */
     public var allowRotation(get,set):Bool;
     inline function get_allowRotation():Bool {

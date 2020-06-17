@@ -23,6 +23,9 @@ class ArcadePhysics extends Entity {
     /** Default world used for arcade physics */
     public var world:arcade.World = null;
 
+    /** Groups by id */
+    public var groups:Map<String, arcade.Group> = new Map();
+
     /** If `true`, default world (`world`) bounds will be
         updated automatically to match screen size. */
     public var autoUpdateWorldBounds:Bool = true;
@@ -35,6 +38,24 @@ class ArcadePhysics extends Entity {
 
     }
 
+    public function group(name:String):arcade.Group {
+
+        var existing = groups.get(name);
+        if (existing != null)
+            return existing;
+
+        var newGroup = createGroup();
+        groups.set(name, newGroup);
+        return newGroup;
+
+    }
+
+    public function createGroup():arcade.Group {
+
+        var group = new arcade.Group();
+        return group;
+
+    }
 
     public function createWorld(autoAdd:Bool = true):arcade.World {
 

@@ -25,22 +25,22 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
 /// Configuration shorthands
 
-	// /**
-	//  * The width and height of the emission area.
-    //  * If not defined (`-1`), will use visual's width and height bound to this `ParticleEmitter` object, if any
-	//  */
-    // inline public function size(width:Float, height:Float):Void {
-    //     this.width = width;
-    //     this.height = height;
-    // }
-
-	// /**
-	//  * The x and y position of the emission, relative to particles parent (if any)
-	//  */
-    // inline public function pos(x:Float, y:Float):Void {
-    //     this.x = x;
-    //     this.y = y;
-    // }
+	/**
+	 * The width and height of the emission area.
+     * If not defined (`-1`), will use visual's width and height bound to this `ParticleEmitter` object, if any
+	 */
+    inline public function size(width:Float, height:Float):Void {
+        this.width = width;
+        this.height = height;
+    }
+  
+	/**
+	 * The x and y position of the emission, relative to particles parent (if any)
+	 */
+    inline public function pos(x:Float, y:Float):Void {
+        this.x = x;
+        this.y = y;
+    }
 
 	/**
 	 * If you are using `acceleration`, you can use `maxVelocity` with it

@@ -188,6 +188,11 @@ import ceramic.VisualNapePhysics;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 
+#if ceramic_arcade_physics
+import arcade.Body;
+import arcade.Group;
+import arcade.World;
+#end
 
 class AllApi {
 
