@@ -123,7 +123,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         } else {
             library = "libmain.so";
         }
-        return getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
+
+        return library;
+        // http://hg.libsdl.org/SDL/rev/d9e69bf4c6d4
+        //return getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
     }
 
     /**
