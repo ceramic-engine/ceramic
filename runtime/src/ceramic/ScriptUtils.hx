@@ -197,6 +197,17 @@ class ScriptUtils {
                 result.add('~/');
                 i += 2;
             }
+            else if (c == '(') {
+                after = code.substring(i);
+                if (RE_ARROW_FUNC_NO_ARG.match(after)) {
+                    result.add('function()');
+                    i += RE_ARROW_FUNC_NO_ARG.matched(0).length;
+                }
+                else {
+                    result.add(c);
+                    i++;
+                }
+            }
             /*else if (c == '/') {
                 // js/ts regex
                 inRegex = true;
@@ -242,5 +253,7 @@ class ScriptUtils {
     static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)'|`(?:[^`\\]*(?:\\.[^`\\]*)*)`)/;
 
     static var RE_FOR_OF = ~/^for\s*\(\s*(var\s+)?([a-zA-Z0-9_]+)\s*(of|in)\s+/;
+
+    static var RE_ARROW_FUNC_NO_ARG = ~/^\(\s*\)\s*=>/;
 
 }
