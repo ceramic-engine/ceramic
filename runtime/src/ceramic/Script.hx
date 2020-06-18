@@ -18,6 +18,8 @@ class Script extends Entity implements Component {
 
     public var interp(default, null):Interp;
 
+    public var module(default, null):ScriptModule;
+
     var ready:Bool = false;
 
     var running:Bool = false;
@@ -29,6 +31,7 @@ class Script extends Entity implements Component {
         super();
 
         this.content = content;
+        this.module = new ScriptModule(this);
 
         if (parser == null) {
             parser = new Parser();
@@ -58,6 +61,12 @@ class Script extends Entity implements Component {
             app.onceImmediate(destroy);
         }
 
+    }
+
+    override function destroy() {
+
+        super.destroy();
+        
     }
 
     function bindAsComponent():Void {
@@ -113,6 +122,59 @@ class Script extends Entity implements Component {
 
     }
 
+    public function call(name:String, ?args:Array<Dynamic>):Dynamic {
+
+        if (args == null) {
+            return callScriptMethod(name, 0);
+        }
+        else {
+            var numArgs = args.length;
+            if (numArgs == 0) {
+                return callScriptMethod(name, numArgs);
+            }
+            else if (numArgs == 1) {
+                return callScriptMethod(name, numArgs, args[0]);
+            }
+            else if (numArgs == 2) {
+                return callScriptMethod(name, numArgs, args[0], args[1]);
+            }
+            else if (numArgs == 3) {
+                return callScriptMethod(name, numArgs, args[0], args[1], args[2]);
+            }
+            else {
+                return callScriptMethod(name, numArgs, args);
+            }
+        }
+
+    }
+
+    public function callScriptMethod(name:String, numArgs:Int, ?arg1:Dynamic, ?arg2:Dynamic, ?arg3:Dynamic):Dynamic {
+
+        var method:Dynamic = interp.variables.get(name);
+        if (method != null) {
+            if (numArgs == 0) {
+                return method();
+            }
+            else if (numArgs == 1) {
+                return method(arg1);
+            }
+            else if (numArgs == 2) {
+                return method(arg1, arg2);
+            }
+            else if (numArgs == 3) {
+                return method(arg1, arg2, arg3);
+            }
+            else {
+                var args:Array<Dynamic> = arg1;
+                return Reflect.callMethod(null, method, args);
+            }
+        }
+        else {
+            return null;
+        }
+
+    }
+
 }
 
 class Interp extends hscript.Interp {
@@ -127,9 +189,23 @@ class Interp extends hscript.Interp {
 
     }
 
-	override function cnew( cl : String, args : Array<Dynamic> ) : Dynamic {
+    override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic {
+
+        if (o != null && Std.is(o, ScriptModule)) {
+            var module:ScriptModule = cast o;
+            return module.owner.call(f, args);
+        }
+        else {
+            return call(o, get(o, f), args);
+        }
+
+    }
+
+    override function cnew(cl:String, args:Array<Dynamic>):Dynamic {
+
         if (owner == null)
             return null;
+
         var instance = super.cnew(cl, args);
 
         // When creating an entity from script, tie it to the script
@@ -142,14 +218,15 @@ class Interp extends hscript.Interp {
         }
 
         return instance;
-	}
+    }
 
-	override function exprReturn(e) : Dynamic {
+    override function exprReturn(e):Dynamic {
+
         // Catch any error thrown from a function call in order to prevent
         // crashing the whole app when a script is failing
-		try {
-			return super.exprReturn(e);
-		} catch( e : Dynamic ) {
+        try {
+            return super.exprReturn(e);
+        } catch (e:Dynamic) {
             @:privateAccess owner.broken = true;
             log.error('Error when running script function: $e');
             for (handler in Script.errorHandlers) {
@@ -157,8 +234,9 @@ class Interp extends hscript.Interp {
             }
             owner.destroy();
             owner = null;
-		}
-		return null;
-	}
+        }
+        return null;
+
+    }
 
 }

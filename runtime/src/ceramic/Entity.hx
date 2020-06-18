@@ -25,8 +25,10 @@ class Entity implements Events implements Lazy {
             type: 'ceramic.ImmutableMap<String,ceramic.Component>',
             index: 1
         },
-        script: {
-            editable: [],
+        scriptContent: {
+            editable: [{
+                label: 'Script'
+            }],
             type: 'ceramic.ScriptContent',
             index: 2
         }
@@ -52,8 +54,8 @@ class Entity implements Events implements Lazy {
     var _lifecycleState:Int = 0;
 
 #if ceramic_entity_script
-    public var script(get,set):ScriptContent;
-    function get_script():ScriptContent {
+    public var scriptContent(get,set):ScriptContent;
+    function get_scriptContent():ScriptContent {
         var comp = component('script');
         var content:ScriptContent = null;
         if (comp != null && Std.is(comp, Script)) {
@@ -62,15 +64,33 @@ class Entity implements Events implements Lazy {
         }
         return content;
     }
-    function set_script(script:ScriptContent):ScriptContent {
-        var prevScript = get_script();
-        if (prevScript != script) {
-            if (script == null) {
+    function set_scriptContent(content:ScriptContent):ScriptContent {
+        var prevContent = get_scriptContent();
+        if (prevContent != content) {
+            if (content == null) {
                 removeComponent('script');
             }
             else {
-                component('script', new Script(script));
+                component('script', new Script(content));
             }
+        }
+        return content;
+    }
+
+    public var script(get,set):Script;
+    function get_script():Script {
+        var comp = component('script');
+        if (comp != null && Std.is(comp, Script)) {
+            return cast comp;
+        }
+        return null;
+    }
+    function set_script(script:Script):Script {
+        if (script == null) {
+            removeComponent('script');
+        }
+        else {
+            component('script', script);
         }
         return script;
     }
