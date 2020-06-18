@@ -18,10 +18,10 @@ class ArcadePhysics extends Entity {
     public var items(default, null):Array<VisualArcadePhysics> = [];
 
     /** All worlds used with arcade physics */
-    public var worlds(default, null):Array<arcade.World> = [];
+    public var worlds(default, null):Array<ArcadeWorld> = [];
 
     /** Default world used for arcade physics */
-    public var world:arcade.World = null;
+    public var world:ArcadeWorld = null;
 
     /** Groups by id */
     public var groups:Map<String, arcade.Group> = new Map();
@@ -38,28 +38,9 @@ class ArcadePhysics extends Entity {
 
     }
 
-    public function group(name:String):arcade.Group {
+    public function createWorld(autoAdd:Bool = true):ArcadeWorld {
 
-        var existing = groups.get(name);
-        if (existing != null)
-            return existing;
-
-        var newGroup = createGroup();
-        groups.set(name, newGroup);
-        return newGroup;
-
-    }
-
-    public function createGroup():arcade.Group {
-
-        var group = new arcade.Group();
-        return group;
-
-    }
-
-    public function createWorld(autoAdd:Bool = true):arcade.World {
-
-        var world = new arcade.World(0, 0, screen.width, screen.height);
+        var world = new ArcadeWorld(0, 0, screen.width, screen.height);
 
         if (autoAdd) {
             addWorld(world);
@@ -69,7 +50,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    public function addWorld(world:arcade.World):Void {
+    public function addWorld(world:ArcadeWorld):Void {
 
         if (worlds.indexOf(world) == -1) {
             worlds.push(world);
@@ -80,7 +61,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    public function removeWorld(world:arcade.World):Void {
+    public function removeWorld(world:ArcadeWorld):Void {
 
         if (!worlds.remove(world)) {
             log.warning('World not removed from ArcadePhysics because it was not added at the first place');
@@ -97,7 +78,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    inline function updateWorld(world:arcade.World, delta:Float):Void {
+    inline function updateWorld(world:ArcadeWorld, delta:Float):Void {
 
         world.elapsed = delta;
 

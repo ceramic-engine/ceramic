@@ -1,10 +1,10 @@
 package ceramic;
 
-class Particles extends Visual {
+class Particles<T:ParticleEmitter> extends Visual {
 
-    @component public var emitter:ParticleEmitter;
+    @component public var emitter:T;
 
-    public function new(?emitter:ParticleEmitter) {
+    public function new(?emitter:T) {
 
         super();
 
@@ -12,7 +12,7 @@ class Particles extends Visual {
             this.emitter = emitter;
         }
         else {
-            this.emitter = new ParticleEmitter();
+            this.emitter = cast new ParticleEmitter();
         }
 
         // When the emitter is destroyed, visual gets destroyed as well

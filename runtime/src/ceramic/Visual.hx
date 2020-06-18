@@ -16,7 +16,7 @@ using ceramic.Extensions;
 @dynamicEvents
 @:dce
 #end
-class Visual extends Entity {
+class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collidable #end {
     
     /** A factor applied to every computed depth. This factor is used to avoid having
         all computed depth values being too small and risking to create precision issues.
@@ -56,7 +56,7 @@ class Visual extends Entity {
     }
 
     /** Init arcade physics (body) bound to this visual. */
-    public function initArcadePhysics(?world:arcade.World):VisualArcadePhysics {
+    public function initArcadePhysics(?world:ArcadeWorld):VisualArcadePhysics {
 
         if (arcade != null) {
             arcade.destroy();
@@ -89,20 +89,6 @@ class Visual extends Entity {
     public var body(get,never):arcade.Body;
     inline function get_body():arcade.Body {
         return arcade != null ? arcade.body : null;
-    }
-
-    public var group(get,set):arcade.Group;
-    function get_group():arcade.Group {
-        var body = this.body;
-        return body != null
-            ? body.group
-            : null
-        ;
-    }
-    function set_group(group:arcade.Group):arcade.Group {
-        if (arcade == null) initArcadePhysics();
-        body.group = group;
-        return group;
     }
 
     /** Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc... */
@@ -1107,12 +1093,27 @@ class Visual extends Entity {
         if (active) {
             visible = flags.bool(1);
             touchable = flags.bool(2);
+#if ceramic_arcade_physics
+            var body = this.body;
+            if (body != null) {
+                body.enable = flags.bool(3);
+            }
+#end
         }
         else {
             flags.setBool(1, visible);
             flags.setBool(2, touchable);
             visible = false;
             touchable = false;
+#if ceramic_arcade_physics
+            var body = this.body;
+            if (body != null) {
+                flags.setBool(3, body.enable);
+            }
+            else {
+                flags.setBool(3, false);
+            }
+#end
         }
         return active;
     }

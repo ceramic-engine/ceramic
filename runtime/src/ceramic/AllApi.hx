@@ -82,6 +82,7 @@ import ceramic.Fragments;
 import ceramic.FragmentsAsset;
 import ceramic.GeometryUtils;
 import ceramic.GlyphQuad;
+import ceramic.Group;
 import ceramic.HashedString;
 import ceramic.ImageAsset;
 import ceramic.Images;
@@ -123,9 +124,9 @@ import ceramic.RuntimeAssets;
 import ceramic.ScanCode;
 import ceramic.Screen;
 import ceramic.ScreenScaling;
+import ceramic.Script;
 import ceramic.ScriptContent;
-//import ceramic.Script;
-//import ceramic.Scripts;
+import ceramic.ScriptModule;
 import ceramic.ScrollDirection;
 import ceramic.Scroller;
 import ceramic.ScrollerStatus;
@@ -189,9 +190,12 @@ import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 
 #if ceramic_arcade_physics
+import ceramic.ArcadePhysics;
+import ceramic.ArcadeWorld;
 import arcade.Body;
-import arcade.Group;
 import arcade.World;
+import arcade.SortDirection;
+import arcade.Collidable;
 #end
 
 class AllApi {

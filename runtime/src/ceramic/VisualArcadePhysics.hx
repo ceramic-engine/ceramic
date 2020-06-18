@@ -25,7 +25,7 @@ class VisualArcadePhysics extends Entity {
 
     public var body(default, null):arcade.Body = null;
 
-    public var world:arcade.World = null;
+    public var world:ArcadeWorld = null;
 
     public function new(x:Float, y:Float, width:Float, height:Float, rotation:Float) {
 

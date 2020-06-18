@@ -285,6 +285,9 @@ class App extends Entity {
     /** Visuals (ordered) */
     public var visuals(default,null):Array<Visual> = [];
 
+    /** Groups */
+    public var groups(default,null):Array<Group<Entity>> = [];
+
     /** Render Textures */
     public var renderTextures(default,null):Array<RenderTexture> = [];
 
@@ -944,6 +947,22 @@ class App extends Entity {
     public function isKeyJustPressed(key:Key):Bool {
 
         return pressedScanCodes.get(key.scanCode) == 1;
+
+    }
+
+    public function group(id:String, createIfNeeded:Bool = true):Group<Entity> {
+
+        for (i in 0...groups.length) {
+            var group = groups.unsafeGet(i);
+            if (group.id == id)
+                return group;
+        }
+
+        if (createIfNeeded) {
+            return new Group<Entity>(id);
+        }
+
+        return null;
 
     }
 

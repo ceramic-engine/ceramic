@@ -89,6 +89,7 @@ class ExportApi {
             dts.add('type String = string;\n');
             dts.add('type Dynamic = any;\n');
             dts.add('type Void = void;\n');
+            dts.add('type ReadOnlyArray = ReadonlyArray;\n');
             dts.add('\n');
             dts.add('function trace(msg: any): Void;\n');
             dts.add('\n');
