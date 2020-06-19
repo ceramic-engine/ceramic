@@ -151,6 +151,8 @@ class Project {
             }
         }
 
+        app.editable.push('ceramic.Entity');
+        
         app.editable.push('ceramic.Visual');
         app.editable.push('ceramic.Layer');
         app.editable.push('ceramic.Fragment');
