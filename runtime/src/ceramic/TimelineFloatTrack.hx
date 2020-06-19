@@ -7,7 +7,6 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
     public var value:Float = 0.0;
 
     override function apply():Void {
-            trace('apply ${time}');
 
         var prevValue:Float = value;
 
