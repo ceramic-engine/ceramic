@@ -78,7 +78,10 @@ class Script extends Entity implements Component {
                 interp.variables.set('visual', entity);
             }
 
-            run();
+            interp.variables.set('get', getEntity);
+            interp.variables.set('module', getModule);
+
+            app.onceImmediate(run);
         }
 
     }
@@ -96,7 +99,7 @@ class Script extends Entity implements Component {
 
             var initCb = interp.variables.get('init');
             if (initCb != null && Reflect.isFunction(initCb)) {
-                initCb();
+                app.oncePostFlushImmediate(initCb);
             }
 
             var updateCb = interp.variables.get('update');
@@ -120,6 +123,36 @@ class Script extends Entity implements Component {
             destroy();
         }
 
+    }
+
+    public function getEntity(itemId:String):Entity {
+
+        if (Std.is(entity, Visual)) {
+            var visual:Visual = cast entity;
+            var fragment = visual.firstParentWithClass(Fragment);
+            if (fragment != null) {
+                var item = fragment.get(itemId);
+                return item;
+            }
+        }
+
+        return null;
+        
+    }
+
+    public function getModule(itemId:String):ScriptModule {
+
+        var entity = getEntity(itemId);
+
+        if (entity != null) {
+            var script = entity.script;
+            if (script != null) {
+                return script.module;
+            }
+        }
+        
+        return null;
+        
     }
 
     public function call(name:String, ?args:Array<Dynamic>):Dynamic {

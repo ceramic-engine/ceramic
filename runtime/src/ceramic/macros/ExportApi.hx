@@ -93,6 +93,9 @@ class ExportApi {
             dts.add('\n');
             dts.add('function trace(msg: any): Void;\n');
             dts.add('\n');
+            dts.add('function get(id: String): Entity;\n');
+            dts.add('function module(id: String): ScriptModule;\n');
+            dts.add('\n');
             dts.add('type AnyVisual = Visual & Text & Mesh & Quad;\n');
             dts.add('\n');
             dts.add('const self: Entity;\n');

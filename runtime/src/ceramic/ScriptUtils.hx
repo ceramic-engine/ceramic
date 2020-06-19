@@ -107,6 +107,10 @@ class ScriptUtils {
                 if (word == 'for') {
                     consumeFor();
                 }
+                else if (word == 'const') {
+                    result.add('var');
+                    i += word.length;
+                }
                 else {
                     result.add(c);
                     i++;
