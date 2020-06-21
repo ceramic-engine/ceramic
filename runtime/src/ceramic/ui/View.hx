@@ -450,12 +450,14 @@ class View extends Quad {
 
 /// Autorun internals
 
+    @:noCompletion
     function _immediateAutorunLayout() {
 
         app.onceImmediate(_autorunLayout);
 
     }
 
+    @:noCompletion
     function _autorunLayout() {
 
         layoutDirty = true;
