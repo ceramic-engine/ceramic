@@ -106,8 +106,16 @@ class CollectionView extends ScrollView {
 
         if (direction == VERTICAL) {
             contentView.height = Math.max(height, contentSize);
+
+            if (contentView.height - scroller.scrollY < height) {
+                scroller.scrollY = contentView.height - height;
+            }
         } else {
             contentView.width = Math.max(width, contentSize);
+            
+            if (contentView.width - scroller.scrollX < width) {
+                scroller.scrollX = contentView.width - width;
+            }
         }
 
         //scroller.scrollToBounds();
