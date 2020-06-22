@@ -821,8 +821,8 @@ class ExportApi {
         else if (typesToExport.exists(typeStr)) {
             typeStr = typesToExport.get(typeStr);
         }
-        else if (typeStr.startsWith('ceramic.Immutable')) {
-            typeStr = typeStr.substring('ceramic.Immutable'.length);
+        else if (typeStr.startsWith('ceramic.ReadOnly')) {
+            typeStr = typeStr.substring('ceramic.ReadOnly'.length);
         }
         return typeStr;
 
