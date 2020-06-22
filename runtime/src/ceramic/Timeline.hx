@@ -24,7 +24,7 @@ class Timeline extends Entity implements Component {
     public var time(default, null):Float = 0;
 
     /** The tracks updated by this timeline */
-    public var tracks(default, null):ImmutableArray<TimelineTrack<Dynamic>> = [];
+    public var tracks(default, null):ReadOnlyArray<TimelineTrack<Dynamic>> = [];
 
     /** Whether this timeline is paused or not. */
     public var paused(default, set):Bool = false;
@@ -121,7 +121,7 @@ class Timeline extends Entity implements Component {
             track.timeline.remove(track);
         }
         if (track.timeline != this) {
-            tracks.mutable.push(track);
+            tracks.original.push(track);
             track.timeline = this;
         }
 
@@ -135,7 +135,7 @@ class Timeline extends Entity implements Component {
     public function remove(track:TimelineTrack<Dynamic>):Void {
 
         if (track.timeline == this) {
-            tracks.mutable.remove(track);
+            tracks.original.remove(track);
             track.timeline = null;
         }
 

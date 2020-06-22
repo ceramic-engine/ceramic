@@ -35,7 +35,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     public var time(default, null):Float = 0;
 
     /** The key frames on this track. */
-    public var keyframes(default, null):ImmutableArray<K> = [];
+    public var keyframes(default, null):ReadOnlyArray<K> = [];
 
     /** The keyframe right before or equal to current time, if any. */
     public var before(default, null):K = null;
@@ -105,7 +105,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     /** Add a keyframe to this track */
     public function add(keyframe:K):Void {
 
-        var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.mutable;
+        var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.original;
 
         // Insert keyframe at correct location
         var len = mutableKeyframes.length;

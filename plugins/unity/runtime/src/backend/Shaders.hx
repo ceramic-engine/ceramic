@@ -8,7 +8,7 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute>):Shader {
+    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader {
 
         return new ShaderImpl();
 

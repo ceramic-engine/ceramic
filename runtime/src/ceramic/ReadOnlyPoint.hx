@@ -2,7 +2,7 @@ package ceramic;
 
 @:structInit
 @:allow(ceramic.Screen)
-class ImmutablePoint {
+class ReadOnlyPoint {
 
     public var x(default,null):Float;
 

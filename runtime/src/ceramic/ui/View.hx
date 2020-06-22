@@ -14,7 +14,7 @@ class View extends Quad {
 /// Properties
 
     /** Same as `children` but typed as a list of `View` instances instead of `Visual` (thus only contains children that are of `View` type). */
-    public var subviews:ImmutableArray<View> = null;
+    public var subviews:ReadOnlyArray<View> = null;
 
     /** Width after being computed by View layout engine from constraints and `viewWidth`/`viewHeight` */
     public var computedWidth:Float = -1;
@@ -403,7 +403,7 @@ class View extends Quad {
             if (subviews == null) {
                 subviews = [];
             }
-            @:privateAccess subviews.mutable.push(view);
+            @:privateAccess subviews.original.push(view);
             view.layoutDirty = true;
         }
         layoutDirty = true;
@@ -413,7 +413,7 @@ class View extends Quad {
         super.remove(visual);
         if (Std.is(visual,View)) {
             var view:View = cast visual;
-            @:privateAccess subviews.mutable.splice(subviews.indexOf(view), 1);
+            @:privateAccess subviews.original.splice(subviews.indexOf(view), 1);
             view.layoutDirty = true;
         }
         layoutDirty = true;

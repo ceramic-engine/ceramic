@@ -20,7 +20,7 @@ class CollectionViewFlowLayout implements CollectionViewLayout {
 
     }
 
-    public function collectionViewLayout(collectionView:CollectionView, frames:ImmutableArray<CollectionViewItemFrame>):Void {
+    public function collectionViewLayout(collectionView:CollectionView, frames:ReadOnlyArray<CollectionViewItemFrame>):Void {
 
         var x = 0.0;
         var y = 0.0;

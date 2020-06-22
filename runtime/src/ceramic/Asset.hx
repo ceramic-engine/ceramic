@@ -281,7 +281,7 @@ class Asset extends Entity implements Observable {
 
     }
 
-    function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+    function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         // Override
 

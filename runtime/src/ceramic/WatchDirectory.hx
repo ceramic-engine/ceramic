@@ -5,11 +5,11 @@ import ceramic.Assert.assert;
 
 class WatchDirectory extends Entity {
 
-    @event function directoryChange(path:String, newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>);
+    @event function directoryChange(path:String, newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>);
 
     public var updateInterval(default, null):Float;
 
-    public var watchedDirectories(default, null):ImmutableMap<String, ImmutableMap<String, Float>> = null;
+    public var watchedDirectories(default, null):ReadOnlyMap<String, ReadOnlyMap<String, Float>> = null;
 
     var startingToWatchDirectories:Map<String, Bool> = null;
 
@@ -64,7 +64,7 @@ class WatchDirectory extends Entity {
                 if (!startingToWatchDirectories.exists(path))
                     return;
                 startingToWatchDirectories.remove(path);
-                watchedDirectories.mutable.set(path, newFilesModificationTime);
+                watchedDirectories.original.set(path, newFilesModificationTime);
                 
                 #if js
                 if (chokidar != null) {
@@ -144,7 +144,7 @@ class WatchDirectory extends Entity {
         #end
 
         if (watchedDirectories == null && watchedDirectories.exists(path)) {
-            watchedDirectories.mutable.remove(path);
+            watchedDirectories.original.remove(path);
             if (startingToWatchDirectories != null && startingToWatchDirectories.exists(path)) {
                 startingToWatchDirectories.remove(path);
             }
@@ -184,7 +184,7 @@ class WatchDirectory extends Entity {
                 if (list.length > 0) {
                     var previousFilesModificationTime = watchedDirectories.get(path);
                     var newFilesModificationTime = new Map<String,Float>();
-                    for (key => value in previousFilesModificationTime.mutable) {
+                    for (key => value in previousFilesModificationTime) {
                         newFilesModificationTime.set(key, value);
                     }
                     for (info in list) {
@@ -196,7 +196,7 @@ class WatchDirectory extends Entity {
                         }
                     }
                     if (watchedDirectories.exists(path)) {
-                        watchedDirectories.mutable.set(path, cast newFilesModificationTime);
+                        watchedDirectories.original.set(path, cast newFilesModificationTime);
                         emitDirectoryChange(path, newFilesModificationTime, previousFilesModificationTime);
                     }
                     list.splice(0, list.length);
@@ -215,7 +215,7 @@ class WatchDirectory extends Entity {
             var didChange = false;
 
             // Compare new files with previous ones
-            for (path => mtime in newFilesModificationTime.mutable) {
+            for (path => mtime in newFilesModificationTime) {
                 if (!previousFilesModificationTime.exists(path)) {
                     // This is a new file
                     didChange = true;
@@ -230,7 +230,7 @@ class WatchDirectory extends Entity {
 
             if (!didChange) {
                 // Check if some files were removed
-                for (path => mtime in previousFilesModificationTime.mutable) {
+                for (path => mtime in previousFilesModificationTime) {
                     if (!newFilesModificationTime.exists(path)) {
                         // This file was removed
                         didChange = true;
@@ -242,7 +242,7 @@ class WatchDirectory extends Entity {
             if (didChange) {
                 Runner.runInMain(() -> {
                     if (watchedDirectories.exists(path)) {
-                        watchedDirectories.mutable.set(path, newFilesModificationTime);
+                        watchedDirectories.original.set(path, newFilesModificationTime);
                         emitDirectoryChange(path, newFilesModificationTime, previousFilesModificationTime);
                     }
                 });
@@ -255,7 +255,7 @@ class WatchDirectory extends Entity {
         
     }
 
-    function computeFilesModificationTime(path:String):ImmutableMap<String, Float> {
+    function computeFilesModificationTime(path:String):ReadOnlyMap<String, Float> {
 
         var result = new Map<String, Float>();
 

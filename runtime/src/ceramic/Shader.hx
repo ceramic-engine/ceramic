@@ -30,15 +30,15 @@ class Shader extends Entity {
 
     public var asset:ShaderAsset;
 
-    public var attributes:ImmutableArray<ShaderAttribute>;
+    public var attributes:ReadOnlyArray<ShaderAttribute>;
 
-    public var customAttributes:ImmutableArray<ShaderAttribute>;
+    public var customAttributes:ReadOnlyArray<ShaderAttribute>;
 
     public var customFloatAttributesSize(default, null):Int;
 
 /// Lifecycle
 
-    public function new(backendItem:backend.Shader, ?customAttributes:ImmutableArray<ShaderAttribute>) {
+    public function new(backendItem:backend.Shader, ?customAttributes:ReadOnlyArray<ShaderAttribute>) {
 
         super();
 

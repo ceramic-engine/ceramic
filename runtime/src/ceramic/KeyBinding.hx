@@ -11,7 +11,7 @@ class KeyBinding extends Entity {
 
 /// Internal properties
 
-    var accelerator:ImmutableArray<KeyAcceleratorItem>;
+    var accelerator:ReadOnlyArray<KeyAcceleratorItem>;
 
     var pressedItems:Array<Int> = [];
 

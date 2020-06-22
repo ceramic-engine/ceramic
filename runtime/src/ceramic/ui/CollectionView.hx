@@ -21,7 +21,7 @@ class CollectionView extends ScrollView {
         return childrenDepth;
     }
 
-    public var frames:ImmutableArray<CollectionViewItemFrame> = [];
+    public var frames:ReadOnlyArray<CollectionViewItemFrame> = [];
 
     public var itemsBehavior:CollectionViewItemsBehavior = RECYCLE;
 

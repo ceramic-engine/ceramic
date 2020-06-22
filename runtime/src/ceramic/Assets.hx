@@ -19,7 +19,7 @@ class Assets extends Entity {
 
     @event function update(asset:Asset);
 
-    @event function assetFilesChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>);
+    @event function assetFilesChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>);
 
 /// Properties
 
@@ -699,7 +699,7 @@ class Assets extends Entity {
             // Init last modified by real asset path if needed
             if (lastModifiedByRealAssetPath == null) {
                 lastModifiedByRealAssetPath = new Map();
-                for (key => value in previousFiles.mutable) {
+                for (key => value in previousFiles) {
                     var realPathKey = realAssetPath(key, runtimeAssets);
                     lastModifiedByRealAssetPath.set(realPathKey, value);
                 }
@@ -707,7 +707,7 @@ class Assets extends Entity {
 
             // Create new list and increment reload counts if any relevant changes
             var newLastModifiedByRealAssetPath = new Map();
-            for (key => value in newFiles.mutable) {
+            for (key => value in newFiles) {
                 var realPathKey = realAssetPath(key, runtimeAssets);
                 newLastModifiedByRealAssetPath.set(realPathKey, value);
                 if (lastModifiedByRealAssetPath.exists(realPathKey)) {

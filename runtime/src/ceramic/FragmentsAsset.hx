@@ -60,7 +60,7 @@ class FragmentsAsset extends Asset {
 
     }
 
-    override function assetFilesDidChange(newFiles:ImmutableMap<String, Float>, previousFiles:ImmutableMap<String, Float>):Void {
+    override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())
             return;

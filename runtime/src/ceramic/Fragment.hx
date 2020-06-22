@@ -127,7 +127,7 @@ class Fragment extends Layer {
         // Add fragment-level components
         if (fragmentData != null #if editor && edited #end) {
             pendingLoads++;
-            var converter = app.converters.get('ceramic.ImmutableMap<String,ceramic.Component>');
+            var converter = app.converters.get('ceramic.ReadOnlyMap<String,ceramic.Component>');
             converter.basicToField(
                 context.assets,
                 fragmentData.components,
@@ -561,7 +561,7 @@ class Fragment extends Layer {
 
     // We need to override this setter to ensure a component is not accidentally destroyed
     // if provided from fragmentComponents property
-    override function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+    override function set_components(components:ReadOnlyMap<String,Component>):ReadOnlyMap<String,Component> {
         if (_components == components) return components;
 
         // Remove older components
@@ -603,8 +603,8 @@ class Fragment extends Layer {
 
     /** Fragment components mapping. Does not contain components
         created separatelywith `component()` or macro-based components or components property. */
-    public var fragmentComponents(default,set):ImmutableMap<String,Component> = null;
-    function set_fragmentComponents(fragmentComponents:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+    public var fragmentComponents(default,set):ReadOnlyMap<String,Component> = null;
+    function set_fragmentComponents(fragmentComponents:ReadOnlyMap<String,Component>):ReadOnlyMap<String,Component> {
         if (this.fragmentComponents == fragmentComponents) return fragmentComponents;
 
         // Remove older components

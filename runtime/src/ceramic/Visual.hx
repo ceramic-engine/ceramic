@@ -1148,7 +1148,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
 /// Properties (Children)
 
-    public var children(default,null):ImmutableArray<Visual> = null;
+    public var children(default,null):ReadOnlyArray<Visual> = null;
 
     //@editable
     public var parent(default,null):Visual = null;
@@ -1828,7 +1828,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         if (children == null) {
             children = [];
         }
-        @:privateAccess children.mutable.push(visual);
+        @:privateAccess children.original.push(visual);
         clipDirty = true;
 
     }
@@ -1841,7 +1841,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
         var index = children.indexOf(visual);
         if (index != -1) {
-            @:privateAccess children.mutable.splice(children.indexOf(visual), 1);
+            @:privateAccess children.original.splice(children.indexOf(visual), 1);
         }
         else {
             ceramic.Shortcuts.log.warning('Cannot remove visual $visual, index is -1');

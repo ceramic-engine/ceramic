@@ -22,7 +22,7 @@ class Entity implements Events implements Lazy {
     @:noCompletion public static var _fieldInfo(default, null) = {
         components: {
             editable: [],
-            type: 'ceramic.ImmutableMap<String,ceramic.Component>',
+            type: 'ceramic.ReadOnlyMap<String,ceramic.Component>',
             index: 1
         },
         scriptContent: {
@@ -478,11 +478,11 @@ class Entity implements Events implements Lazy {
     /** Public components mapping. Contain components
         created separately with `component()` or macro-based components as well. */
     @editable
-    public var components(get,set):ImmutableMap<String,Component>;
-    #if !haxe_server inline #end function get_components():ImmutableMap<String,Component> {
+    public var components(get,set):ReadOnlyMap<String,Component>;
+    #if !haxe_server inline #end function get_components():ReadOnlyMap<String,Component> {
         return _components;
     }
-    function set_components(components:ImmutableMap<String,Component>):ImmutableMap<String,Component> {
+    function set_components(components:ReadOnlyMap<String,Component>):ReadOnlyMap<String,Component> {
         if (_components == components) return components;
 
         // Remove older components

@@ -25,17 +25,28 @@ package ceramic;
 **/
 
 /**
- * ImmutableArray
- * @see https://github.com/AxGord/Pony/blob/d4334fa606289505d047735543936334ad8060ab/pony/ImmutableArray.hx
+ `ReadOnlyArray` is an abstract over an ordinary `Array` which only exposes
+ APIs that don't modify the instance, hence "read-only".
+ 
+ Note that this doesn't necessarily mean that the instance is *immutable*.
+ Other code holding a reference to the underlying `Array` can still modify it,
+ and the reference can be obtained with a `cast`.
  */
-@:forward(length, concat, join, toString, indexOf, lastIndexOf, copy, iterator, map, filter)
-abstract ImmutableArray<T>(Array<T>) from Array<T> to Iterable<T> {
+@:forward(get, concat, copy, filter, indexOf, iterator, keyValueIterator, join, lastIndexOf, map, slice, contains, toString)
+abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
     @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
 
     /** Returns the underlying (and mutable) data. Use at your own risk! */
-    public var mutable(get,never):Array<T>;
-    inline private function get_mutable():Array<T> return this;
+    public var original(get,never):Array<T>;
+    inline private function get_original():Array<T> return this;
+
+	/**
+		The length of `this` Array.
+	**/
+	public var length(get, never):Int;
+	inline function get_length()
+        return this.length;
 
 /// Array extensions
 

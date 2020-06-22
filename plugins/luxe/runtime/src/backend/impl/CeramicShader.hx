@@ -6,7 +6,7 @@ import snow.modules.opengl.GL;
 
 class CeramicShader extends phoenix.Shader {
 
-    public var customAttributes:ceramic.ImmutableArray<ceramic.ShaderAttribute> = null;
+    public var customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
 
     public var isBatchingMultiTexture:Bool = false;
 
