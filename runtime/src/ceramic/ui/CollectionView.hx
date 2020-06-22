@@ -27,6 +27,10 @@ class CollectionView extends ScrollView {
 
     var reusableViews:Array<View> = [];
 
+    var prevLayoutWidth:Float = -1;
+
+    var prevLayoutHeight:Float = -1;
+
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -92,6 +96,13 @@ class CollectionView extends ScrollView {
 
     override function layout() {
 
+        var didResize = false;
+        if (prevLayoutWidth != width || prevLayoutHeight != height) {
+            prevLayoutWidth = width;
+            prevLayoutHeight = height;
+            didResize = true;
+        }
+
         scroller.pos(0, 0);
         scroller.size(width, height);
 
@@ -107,13 +118,13 @@ class CollectionView extends ScrollView {
         if (direction == VERTICAL) {
             contentView.height = Math.max(height, contentSize);
 
-            if (contentView.height - scroller.scrollY < height) {
+            if (didResize && contentView.height - scroller.scrollY < height) {
                 scroller.scrollY = contentView.height - height;
             }
         } else {
             contentView.width = Math.max(width, contentSize);
             
-            if (contentView.width - scroller.scrollX < width) {
+            if (didResize && contentView.width - scroller.scrollX < width) {
                 scroller.scrollX = contentView.width - width;
             }
         }
