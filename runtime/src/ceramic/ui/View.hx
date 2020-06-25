@@ -300,7 +300,10 @@ class View extends Quad {
             border.pos(0, 0);
         }
         else {
-            if (border != null) border.destroy();
+            if (border != null) {
+                border.destroy();
+                border = null;
+            }
         }
 
     }
