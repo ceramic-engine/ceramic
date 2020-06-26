@@ -19,6 +19,9 @@ typedef FragmentData = {
     /** Fragment-level components */
     public var components:DynamicAccess<String>;
 
+    /** Timeline tracks */
+    @:optional public var tracks:Array<TimelineTrackData>;
+
     /** Fragment color (if not transparent, default `BLACK`) */
     @:optional public var color:Color;
 

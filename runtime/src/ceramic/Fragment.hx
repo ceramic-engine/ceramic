@@ -299,7 +299,7 @@ class Fragment extends Layer {
 
     }
 
-   private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
+    private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
 
         pendingLoads++;
         converter.basicToField(
@@ -640,6 +640,14 @@ class Fragment extends Layer {
         this.fragmentComponents = fragmentComponents;
 
         return fragmentComponents;
+    }
+
+/// Timeline
+
+    public function putTrack(track:TimelineTrackData):Void {
+
+        trace('put track: $track');
+
     }
 
 }
