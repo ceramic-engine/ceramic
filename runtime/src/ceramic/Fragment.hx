@@ -18,6 +18,10 @@ class Fragment extends Layer {
 
     public var items(default,null):Array<FragmentItem>;
 
+    public var tracks(default,null):Array<TimelineTrackData>;
+
+    public var fps(default,set):Int = 30;
+
     public var context:FragmentContext;
 
     @editable
@@ -27,6 +31,8 @@ class Fragment extends Layer {
     public var resizable:Bool = false;
 
     public var pendingLoads(default,null):Int = 0;
+
+    public var timeline:Timeline = null;
 
     @event function ready();
 
@@ -144,11 +150,36 @@ class Fragment extends Layer {
             );
         }
 
+        // Set FPS (if any)
+        if (fragmentData != null && fragmentData.fps != null) {
+            fps = fragmentData.fps;
+        }
+
+        // Add tracks (if any)
+        if (fragmentData != null && fragmentData.tracks != null) {
+            for (track in fragmentData.tracks) {
+                putTrack(track);
+            }
+        }
+
         pendingLoads--;
         if (pendingLoads == 0) emitReady();
 
         return fragmentData;
 
+    }
+
+    function set_fps(fps:Int):Int {
+        if (this.fps != fps) {
+            this.fps = fps;
+            // When fps changes, we need to update track data
+            if (tracks != null) {
+                for (track in tracks) {
+                    putTrack(track);
+                }
+            }
+        }
+        return fps;
     }
 
 /// Public API
@@ -463,6 +494,11 @@ class Fragment extends Layer {
 
         super.destroy();
 
+        if (timeline != null) {
+            timeline.destroy();
+            timeline = null;
+        }
+
         removeAllItems();
 
     }
@@ -647,6 +683,59 @@ class Fragment extends Layer {
     public function putTrack(track:TimelineTrackData):Void {
 
         trace('put track: $track');
+
+        var existingIndexes:Map<Int,Bool> = null;
+
+        var existing = getTrack(track.entity, track.field);
+        if (existing == null) {
+            // Add track data
+            if (tracks == null) {
+                tracks = [];
+            }
+            tracks.push(track);
+        }
+        else {
+            // Keep references of existing keyframes
+            existingIndexes = new Map<Int,Bool>();
+            for (keyframe in existing.keyframes) {
+                existingIndexes.set(keyframe.index, true);
+            }
+
+            // Replace track data
+            var indexOfTrack = tracks.indexOf(existing);
+            tracks[indexOfTrack] = track;
+        }
+
+        // Update keyframes
+        if (track.keyframes != null && track.keyframes.length > 0) {
+            if (timeline == null) {
+                timeline = new Timeline();
+            }
+            for (keyframe in track.keyframes) {
+                var index = keyframe.index;
+                
+            }
+        }
+
+    }
+
+    public function getTrack(entity:String, field:String):TimelineTrackData {
+
+        if (tracks != null) {
+            for (track in tracks) {
+                if (track.entity == entity && track.field == field) {
+                    return track;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function removeTrack(entity:String, field:String):Void {
+
+        trace('remove track $entity # $field');
 
     }
 

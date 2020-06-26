@@ -22,6 +22,14 @@ typedef FragmentData = {
     /** Timeline tracks */
     @:optional public var tracks:Array<TimelineTrackData>;
 
+    /**
+     * Frames per second (used in timeline, default is 30).
+     * Note that this is only affecting how long a frame in the timeline lasts.
+     * Using 30FPS doesn't mean the screen will be rendered at 30FPS.
+     * Frame values are interpolated to match screen frame rate.
+     */
+    @:optional public var fps:Int;
+
     /** Fragment color (if not transparent, default `BLACK`) */
     @:optional public var color:Color;
 
