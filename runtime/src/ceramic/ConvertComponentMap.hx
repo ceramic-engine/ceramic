@@ -21,6 +21,8 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
             // TODO extract arguments from value instead of treating it as initializer name directly
             var initializerName = basic.get(name);
 
+            log.error('Not using component initializers anymore. Need to implement event based solution!');
+            /*
             if (app.componentInitializers.exists(initializerName)) {
                 var component = app.componentInitializers.get(initializerName)([]);
                 if (component != null) {
@@ -33,6 +35,7 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
                 log.warning('Missing component initializer: ' + initializerName);
             }
             #end
+            */
         }
 
         done(value);

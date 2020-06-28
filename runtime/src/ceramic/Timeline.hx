@@ -24,7 +24,7 @@ class Timeline extends Entity implements Component {
     public var time(default, null):Float = 0;
 
     /** The tracks updated by this timeline */
-    public var tracks(default, null):ReadOnlyArray<TimelineTrack<Dynamic>> = [];
+    public var tracks(default, null):ReadOnlyArray<TimelineTrack<TimelineKeyframe>> = [];
 
     /** Whether this timeline is paused or not. */
     public var paused(default, set):Bool = false;
@@ -115,7 +115,7 @@ class Timeline extends Entity implements Component {
     }
 
     /** Add a track to this timeline */
-    public function add(track:TimelineTrack<Dynamic>):Void {
+    public function add(track:TimelineTrack<TimelineKeyframe>):Void {
 
         if (track.timeline != null) {
             track.timeline.remove(track);
@@ -131,8 +131,21 @@ class Timeline extends Entity implements Component {
 
     }
 
+    public function get(trackId:String):TimelineTrack<TimelineKeyframe> {
+
+        for (i in 0...tracks.length) {
+            var track = tracks[i];
+            if (track.id == trackId) {
+                return track;
+            }
+        }
+
+        return null;
+
+    }
+
     /** Remove a track from this timeline */
-    public function remove(track:TimelineTrack<Dynamic>):Void {
+    public function remove(track:TimelineTrack<TimelineKeyframe>):Void {
 
         if (track.timeline == this) {
             tracks.original.remove(track);

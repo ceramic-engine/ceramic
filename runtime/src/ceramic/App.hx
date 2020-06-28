@@ -319,7 +319,7 @@ class App extends Entity {
 
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
 
-    public var componentInitializers:Map<String,Array<Dynamic>->Component> = new Map();
+    public var timelines:Timelines = new Timelines();
 
 #if ceramic_arcade_physics
 
@@ -424,9 +424,6 @@ class App extends Entity {
         // Init field converters
         initFieldConverters();
 
-        // Init component initializers
-        initComponentInitializers();
-
         // Init collections
         initCollections();
 
@@ -493,12 +490,6 @@ class App extends Entity {
         converters.set('ceramic.ReadOnlyMap<String,String>', new ConvertMap<String>());
         converters.set('ceramic.ReadOnlyMap<String,Bool>', new ConvertMap<Bool>());
         converters.set('ceramic.ReadOnlyMap<String,ceramic.Component>', new ConvertComponentMap());
-
-    }
-
-    function initComponentInitializers():Void {
-
-        // Nothing to do for now
 
     }
 

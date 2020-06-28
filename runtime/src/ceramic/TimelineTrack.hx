@@ -55,6 +55,16 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
+    override function destroy() {
+
+        if (timeline != null && !timeline.destroyed) {
+            timeline.remove(cast this);
+        }
+
+        super.destroy();
+
+    }
+
     /** Seek the given time (in seconds) in the track.
         Will take care of clamping `time` or looping it depending on `duration` and `loop` properties. */
     final public function seek(targetTime:Float):Void {
@@ -140,6 +150,20 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
+    /** Remove a keyframe from this track */
+    public function remove(keyframe:K):Void {
+
+        var index = keyframes.indexOf(keyframe);
+        if (index != -1) {
+            var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.original;
+            mutableKeyframes.splice(index, 1);
+        }
+        else {
+            log.warning('Failed to remove keyframe: keyframe not found in list');
+        }
+
+    }
+
     /** Update `duration` property to make it fit
         the time of the last keyframe on this track. */
     public function fitDuration():Void {
@@ -157,6 +181,16 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     public function apply():Void {
 
         // Override in subclasses
+
+    }
+
+    public function findKeyframeAtTime(time:Float):Null<K> {
+
+        var keyframe = findKeyframeBefore(time);
+        if (keyframe != null && keyframe.time == time) {
+            return keyframe;
+        }
+        return null;
 
     }
 

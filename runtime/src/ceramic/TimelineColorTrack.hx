@@ -2,7 +2,7 @@ package ceramic;
 
 class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
 
-    @event function change(track:TimelineTrack<TimelineColorKeyframe>);
+    @event function change(track:TimelineColorTrack);
 
     public var value:Color = Color.WHITE;
 

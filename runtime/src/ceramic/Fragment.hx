@@ -450,6 +450,19 @@ class Fragment extends Layer {
 
     }
 
+    public function typeOfItem(itemId:String):String {
+
+        var item = getItem(itemId);
+        if (item != null) {
+            return item.entity;
+        }
+        else {
+            log.warning('Failed to resolve entity type for item $itemId');
+            return null;
+        }
+
+    }
+
     public function removeItem(itemId:String):Void {
 
         for (entity in entities) {
@@ -680,9 +693,32 @@ class Fragment extends Layer {
 
 /// Timeline
 
-    public function putTrack(track:TimelineTrackData):Void {
+    /**
+     * Internal value used to hold timeline tracks created from `createTrack` events
+     */
+    static var _trackResult = new Value<TimelineTrack<TimelineKeyframe>>();
 
-        trace('put track: $track');
+    /**
+     * Internal value used to hold timeline keyframes created from `createKeyframe` events
+     */
+    static var _keyframeResult = new Value<TimelineKeyframe>();
+
+    /**
+     * Internal list used to keep track of used keyframes when updating a track,
+     * then be able to remove the keyframes that are not used anymore
+     */
+    static var _usedKeyframes:Array<TimelineKeyframe> = [];
+
+    /**
+     * Create or update a timeline track from the provided track data
+     * @param entityType
+     *      (optional) entity type being targeted by the track.
+     *      If not provided, will try to resolve it from track's target entity id
+     * @param track Track data used to create or update timeline track
+     */
+    public function putTrack(?entityType:String, track:TimelineTrackData):Void {
+
+        //trace('put track: $track');
 
         var existingIndexes:Map<Int,Bool> = null;
 
@@ -708,12 +744,153 @@ class Fragment extends Layer {
 
         // Update keyframes
         if (track.keyframes != null && track.keyframes.length > 0) {
+            // Create timeline is not created already
             if (timeline == null) {
                 timeline = new Timeline();
             }
+
+            var field = track.field;
+            var trackId = track.entity + '#' + field;
+
+            if (entityType == null) {
+                entityType = typeOfItem(track.entity);
+            }
+            if (entityType == null) {
+                log.warning('Cannot update timeline track $trackId: failed to resolve entity type');
+                return;
+            }
+            var entityEditableInfo = FieldInfo.editableFieldInfo(entityType);
+            var fieldEditableInfo = entityEditableInfo != null ? entityEditableInfo.get(field) : null;
+            if (fieldEditableInfo == null) {
+                log.warning('Cannot update timeline track $trackId: failed to resolve info for $field of entity type $entityType');
+                return;
+            }
+
+            // Create timeline track if not created yet
+            var timelineTrack = timeline.get(trackId);
+            if (timelineTrack == null) {
+                var entity = get(track.entity);
+                if (entity == null) {
+                    log.warning('Failed to create timeline track $trackId because there is no entity with id ${track.entity}');
+                    return;
+                }
+
+                _trackResult.value = null;
+                app.timelines.emitCreateTrack(fieldEditableInfo.type, fieldEditableInfo.meta, _trackResult);
+                timelineTrack = _trackResult.value;
+                if (timelineTrack == null) {
+                    log.warning('Failed to create timeline track $trackId for $field of entity type $entityType');
+                    return;
+                }
+
+                // Configure new track
+                timelineTrack.id = trackId;
+                app.timelines.emitBindTrack(fieldEditableInfo.type, fieldEditableInfo.meta, timelineTrack, entity, field);
+
+                // Add track to timeline
+                timeline.add(timelineTrack);
+            }
+
+            timelineTrack.loop = track.loop;
+
+            // Add/update keyframes
+            if (_usedKeyframes.length > 0) {
+                for (i in 0..._usedKeyframes.length) {
+                    _usedKeyframes.unsafeSet(i, null);
+                }
+                _usedKeyframes.setArrayLength(0);
+            }
+            var prevTime:Float = -1;
+            var isSorted = true;
             for (keyframe in track.keyframes) {
                 var index = keyframe.index;
-                
+                var time = index / fps;
+
+                if (time < prevTime) {
+                    isSorted = false;
+                }
+                prevTime = time;
+
+                var existing = timelineTrack.findKeyframeAtTime(time);
+                _keyframeResult.value = null;
+                app.timelines.emitCreateKeyframe(fieldEditableInfo.type, fieldEditableInfo.meta, keyframe.value, time, EasingUtils.easingFromString(keyframe.easing), existing, _keyframeResult);
+                var timelineKeyframe = _keyframeResult.value;
+
+                if (timelineKeyframe != null) {
+                    _usedKeyframes.push(timelineKeyframe);
+                    if (existing != null) {
+                        if (existing != timelineKeyframe) {
+                            timelineTrack.remove(existing);
+                            timelineTrack.add(timelineKeyframe);
+                        }
+                        else {
+                            // Keeping the same keyframe, just changed its internal values!
+                        }
+                    }
+                    else {
+                        timelineTrack.add(timelineKeyframe);
+                    }
+                }
+                else {
+                    log.warning('Failed to create or update keyframe #$index of track $trackId for field $field of entity type $entityType');
+                    return;
+                }  
+            }
+
+            // Check if some keyframes should be removed
+            var toRemove:Array<TimelineKeyframe> = null;
+            var timelineKeyframes = timelineTrack.keyframes;
+            if (isSorted) {
+                // When input keyframes array is properly sorted in ascending order, we can efficiently check keyframes
+                // that should be kept and keyframes that should be removed
+                var usedIndex = 0;
+                for (i in 0...timelineKeyframes.length) {
+                    var timelineKeyframe = timelineKeyframes[i];
+                    if (_usedKeyframes[usedIndex] == timelineKeyframe) {
+                        // Allright, this is a keyframe we want to keep
+                        usedIndex++;
+                    }
+                    else {
+                        // This keyframe is not used anymore, remove it
+                        if (toRemove == null) {
+                            toRemove = [];
+                        }
+                        toRemove.push(timelineKeyframe);
+                    }
+                }
+            }
+            else {
+                // When input keyframes array is not sorted in ascending order,
+                // we need to walk used keyframe array at each iteration!
+                log.warning('Input keyframe array should be sorted by time in ascending order!');
+                for (i in 0...timelineKeyframes.length) {
+                    var timelineKeyframe = timelineKeyframes[i];
+                    if (_usedKeyframes.indexOf(timelineKeyframe) == -1) {
+                        // This keyframe is not used anymore, remove it
+                        if (toRemove == null) {
+                            toRemove = [];
+                        }
+                        toRemove.push(timelineKeyframe);
+                    }
+                }
+            }
+
+            // So, is there anything to remove?
+            if (toRemove != null) {
+                // Yes!
+                for (timelineKeyframe in toRemove) {
+                    log.debug('remove keyframe $timelineKeyframe');
+                    timelineTrack.remove(timelineKeyframe);
+                }
+                toRemove = null;
+            }
+        
+            // Cleanup used keyframes array
+            if (_usedKeyframes.length > 0) {
+                for (i in 0..._usedKeyframes.length) {
+                    _usedKeyframes.unsafeSet(i, null);
+                }
+                _usedKeyframes.setArrayLength(0);
             }
         }
 
@@ -735,7 +912,7 @@ class Fragment extends Layer {
 
     public function removeTrack(entity:String, field:String):Void {
 
-        trace('remove track $entity # $field');
+        //trace('remove track $entity # $field');
 
     }
 

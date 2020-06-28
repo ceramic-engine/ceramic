@@ -1013,7 +1013,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         return height;
     }
 
-    @editable({ slider: [-360, 360] })
+    @editable({ slider: [-360, 360], degrees: true })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
         if (this.rotation == rotation) return rotation;

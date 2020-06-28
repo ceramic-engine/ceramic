@@ -46,4 +46,4 @@ enum Easing {
 
     CUSTOM(easing:Float->Float);
 
-} //Easing
+}
