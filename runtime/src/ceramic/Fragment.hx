@@ -759,7 +759,7 @@ class Fragment extends Layer {
                 log.warning('Cannot update timeline track $trackId: failed to resolve entity type');
                 return;
             }
-            var entityEditableInfo = FieldInfo.editableFieldInfo(entityType);
+            var entityEditableInfo = #if editor FieldInfo.editableFieldInfo(entityType) #else null #end;
             var fieldEditableInfo = entityEditableInfo != null ? entityEditableInfo.get(field) : null;
             if (fieldEditableInfo == null) {
                 log.warning('Cannot update timeline track $trackId: failed to resolve info for $field of entity type $entityType');
