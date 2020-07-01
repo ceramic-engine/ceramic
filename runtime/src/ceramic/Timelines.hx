@@ -15,50 +15,51 @@ class Timelines extends Entity {
      * Used to expand how timeline tracks are created from raw data (from `Fragment` instances).
      * Respond to this event by assigning a value to the `result` argument.
      * @param type Type of the field being modified by the track
-     * @param meta Meta of the field. Can be used to configure timeline track creation
+     * @param options Can be used to configure timeline track creation
      * @param result The object that will hold the resulting track.
      */
-    @event public function createTrack(type:String, meta:DynamicAccess<Dynamic>, result:Value<TimelineTrack<TimelineKeyframe>>);
+    @event public function createTrack(type:String, options:Dynamic<Dynamic>, result:Value<TimelineTrack<TimelineKeyframe>>);
 
     /**
      * Used to expand how timeline tracks are bound to objects.
      * @param type Type of the field being modified by the track
-     * @param meta Meta of the field. Can be used to configure timeline track creation
+     * @param options Can be used to configure timeline track binding
      * @param track The track on which we bind the entity
      * @param entity The entity to bind to this track
      * @param field The entity field that should be updated by this track
      */
-    @event public function bindTrack(type:String, meta:DynamicAccess<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String);
+    @event public function bindTrack(type:String, options:Dynamic<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String);
 
     /**
      * Used to expand how timeline keyframes are created from raw data (from `Fragment` instances).
      * Respond to this event by assigning a value to the `result` argument.
      * @param type Type of the field being modified by the keyframe
-     * @param meta Meta of the field. Can be used to configure timeline keyframe creation
+     * @param options Can be used to configure timeline keyframe creation
      * @param value Value of the keyframe
      * @param time Time (in seconds) of the keyframe
      * @param easing Easing of the keyframe
      * @param existing Existing keyframe instance at the same position/time. Can be reused to prevent new allocation of keyframe instance
      * @param result The object that will hold the resulting keyframe.
      */
-    @event public function createKeyframe(type:String, meta:DynamicAccess<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>);
+    @event public function createKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>);
 
     public function new() {
 
         super();
 
         onCreateTrack(this, handleCreateTrack);
+        onBindTrack(this, handleBindTrack);
         onCreateKeyframe(this, handleCreateKeyframe);
 
     }
 
-    function handleCreateTrack(type:String, meta:DynamicAccess<Dynamic>, result:Value<TimelineTrack<TimelineKeyframe>>) {
+    function handleCreateTrack(type:String, options:Dynamic<Dynamic>, result:Value<TimelineTrack<TimelineKeyframe>>) {
 
         // Track already created?
         if (result.value != null)
             return;
 
-        if (meta.get('degrees') == true) {
+        if (options != null && options.degrees == true) {
             result.value = cast new TimelineDegreesTrack();
         }
         else if (type == 'Float') {
@@ -70,18 +71,20 @@ class Timelines extends Entity {
 
     }
 
-    function handleBindTrack(type:String, meta:DynamicAccess<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String) {
+    function handleBindTrack(type:String, options:Dynamic<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String) {
 
         if (Std.is(track, TimelineFloatTrack)) {
             var floatTrack:TimelineFloatTrack = cast track;
             floatTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
+                //trace('SET FLOAT $field = ${track.value}');
                 entity.setProperty(field, track.value);
             });
         }
         else if (Std.is(track, TimelineColorTrack)) {
             var colorTrack:TimelineColorTrack = cast track;
             colorTrack.onChange(entity, track -> {
+                //trace('SET COLOR $field = ${track.value}');
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
             });
@@ -89,7 +92,7 @@ class Timelines extends Entity {
 
     }
 
-    function handleCreateKeyframe(type:String, meta:DynamicAccess<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>) {
+    function handleCreateKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>) {
 
         // Keyframe already created?
         if (result.value != null)

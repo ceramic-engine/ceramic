@@ -140,13 +140,19 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
             mutableKeyframes.push(keyframe);
         }
 
+        if (autoFitDuration) {
+            fitDuration();
+        }
+
         if (timeline != null && timeline.autoFitDuration) {
             timeline.fitDuration();
         }
 
-        if (autoFitDuration) {
-            fitDuration();
-        }
+        keyframeBeforeIndex = -1;
+        keyframeAfterIndex = -1;
+
+        computeKeyframeBefore();
+        computeKeyframeAfter();
 
     }
 
@@ -157,6 +163,20 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         if (index != -1) {
             var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.original;
             mutableKeyframes.splice(index, 1);
+
+            if (autoFitDuration) {
+                fitDuration();
+            }
+    
+            if (timeline != null && timeline.autoFitDuration) {
+                timeline.fitDuration();
+            }
+
+            keyframeBeforeIndex = -1;
+            keyframeAfterIndex = -1;
+    
+            computeKeyframeBefore();
+            computeKeyframeAfter();
         }
         else {
             log.warning('Failed to remove keyframe: keyframe not found in list');

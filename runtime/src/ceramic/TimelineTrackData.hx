@@ -20,7 +20,12 @@ typedef TimelineTrackData = {
     var field:String;
 
     /**
-     * Track keyframes. They are expected to be sorted by frame index ascending
+     * Track options
+     */
+    @:optional var options:Dynamic<Dynamic>;
+
+    /**
+     * Track keyframes. They should be sorted by frame index in ascending order
      */
     var keyframes:Array<TimelineKeyframeData>;
 

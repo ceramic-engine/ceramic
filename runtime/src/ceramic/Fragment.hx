@@ -315,14 +315,14 @@ class Fragment extends Layer {
             add(cast instance);
         }
 
+        // Also ensure track is up to date, if there is any and the item is new
+        if (existing == null) {
+            putTracksForItem(item.id);
+        }
+
 #if editor
         // Update editable fields from instance
-        if (isVisual) {
-            var visual:Visual = cast instance;
-            if (visual.contentDirty) {
-                visual.computeContent();
-            }
-        }
+        computeInstanceContentIfNeeded(item.id, instance);
         updateEditableFieldsFromInstance(item.id);
 #end
 
@@ -519,6 +519,24 @@ class Fragment extends Layer {
 #if editor
 
     var emitEditableItemUpdateScheduled:Bool = false;
+
+    public function computeInstanceContentIfNeeded(itemId:String, ?entity:Entity) {
+
+        // Update editable fields from instance
+        if (entity == null) {
+            entity = get(itemId);
+        }
+        if (entity != null) {
+            var isVisual = Std.is(entity, Visual);
+            if (isVisual) {
+                var visual:Visual = cast entity;
+                if (visual.contentDirty) {
+                    visual.computeContent();
+                }
+            }
+        }
+
+    }
 
     public function updateEditableFieldsFromInstance(itemId:String):Void {
 
@@ -742,6 +760,10 @@ class Fragment extends Layer {
             tracks[indexOfTrack] = track;
         }
 
+        // Retrieve entity instance
+        var entityId = track.entity;
+        var entity = get(entityId);
+
         // Update keyframes
         if (track.keyframes != null && track.keyframes.length > 0) {
             // Create timeline is not created already
@@ -750,7 +772,8 @@ class Fragment extends Layer {
             }
 
             var field = track.field;
-            var trackId = track.entity + '#' + field;
+            var trackId = entityId + '#' + field;
+            var trackOptions = track.options;
 
             if (entityType == null) {
                 entityType = typeOfItem(track.entity);
@@ -759,9 +782,9 @@ class Fragment extends Layer {
                 log.warning('Cannot update timeline track $trackId: failed to resolve entity type');
                 return;
             }
-            var entityEditableInfo = #if editor FieldInfo.editableFieldInfo(entityType) #else null #end;
-            var fieldEditableInfo = entityEditableInfo != null ? entityEditableInfo.get(field) : null;
-            if (fieldEditableInfo == null) {
+            var entityInfo = #if editor FieldInfo.types(entityType) #else null #end;
+            var entityFieldType = entityInfo != null ? entityInfo.get(field) : null;
+            if (entityFieldType == null) {
                 log.warning('Cannot update timeline track $trackId: failed to resolve info for $field of entity type $entityType');
                 return;
             }
@@ -769,23 +792,27 @@ class Fragment extends Layer {
             // Create timeline track if not created yet
             var timelineTrack = timeline.get(trackId);
             if (timelineTrack == null) {
-                var entity = get(track.entity);
                 if (entity == null) {
                     log.warning('Failed to create timeline track $trackId because there is no entity with id ${track.entity}');
                     return;
                 }
 
                 _trackResult.value = null;
-                app.timelines.emitCreateTrack(fieldEditableInfo.type, fieldEditableInfo.meta, _trackResult);
+                app.timelines.emitCreateTrack(entityFieldType, trackOptions, _trackResult);
                 timelineTrack = _trackResult.value;
                 if (timelineTrack == null) {
                     log.warning('Failed to create timeline track $trackId for $field of entity type $entityType');
                     return;
                 }
 
+                // When entity is destroyed, destroy track as well
+                entity.onDestroy(timelineTrack, _ -> {
+                    timelineTrack.destroy();
+                });
+
                 // Configure new track
                 timelineTrack.id = trackId;
-                app.timelines.emitBindTrack(fieldEditableInfo.type, fieldEditableInfo.meta, timelineTrack, entity, field);
+                app.timelines.emitBindTrack(entityFieldType, trackOptions, timelineTrack, entity, field);
 
                 // Add track to timeline
                 timeline.add(timelineTrack);
@@ -813,7 +840,7 @@ class Fragment extends Layer {
 
                 var existing = timelineTrack.findKeyframeAtTime(time);
                 _keyframeResult.value = null;
-                app.timelines.emitCreateKeyframe(fieldEditableInfo.type, fieldEditableInfo.meta, keyframe.value, time, EasingUtils.easingFromString(keyframe.easing), existing, _keyframeResult);
+                app.timelines.emitCreateKeyframe(entityFieldType, trackOptions, keyframe.value, time, EasingUtils.easingFromString(keyframe.easing), existing, _keyframeResult);
                 var timelineKeyframe = _keyframeResult.value;
 
                 if (timelineKeyframe != null) {
@@ -879,7 +906,6 @@ class Fragment extends Layer {
             if (toRemove != null) {
                 // Yes!
                 for (timelineKeyframe in toRemove) {
-                    log.debug('remove keyframe $timelineKeyframe');
                     timelineTrack.remove(timelineKeyframe);
                 }
                 toRemove = null;
@@ -891,6 +917,28 @@ class Fragment extends Layer {
                     _usedKeyframes.unsafeSet(i, null);
                 }
                 _usedKeyframes.setArrayLength(0);
+            }
+
+            // Apply timeline track changes to entity
+            timelineTrack.apply();
+        }
+
+        #if editor
+        // Update editable fields from instance
+        computeInstanceContentIfNeeded(entityId, entity);
+        updateEditableFieldsFromInstance(entityId);
+        #end
+
+    }
+    
+    function putTracksForItem(itemId:String):Void {
+
+        if (tracks != null) {
+            for (i in 0...tracks.length) {
+                var track = tracks[i];
+                if (track.entity == itemId) {
+                    putTrack(track);
+                }
             }
         }
 
