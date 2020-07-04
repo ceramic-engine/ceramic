@@ -911,6 +911,64 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         return depthRange;
     }
 
+    /**
+     * Visual X translation.
+     * This is a shorthand equivalent to assigning a `Transform` object to
+     * the visual with a `tx` value of `translateX`
+     */
+    @editable({ group: 'translate' })
+    public var translateX(get, set):Float;
+    inline function get_translateX():Float {
+        return transform != null ? transform.tx : 0;
+    }
+    inline function set_translateX(translateX:Float):Float {
+        if (translateX == 0) {
+            if (transform != null && transform.tx != 0) {
+                transform.tx = 0;
+                transform.changedDirty = true;
+            }
+        }
+        else {
+            if (transform == null) {
+                transform = new Transform();
+            }
+            if (transform.tx != translateX) {
+                transform.tx = translateX;
+                transform.changedDirty = true;
+            }
+        }
+        return translateX;
+    }
+
+    /**
+     * Visual Y translation.
+     * This is a shorthand equivalent to assigning a `Transform` object to
+     * the visual with a `ty` value of `translateY`
+     */
+    @editable({ group: 'translate' })
+    public var translateY(get, set):Float;
+    inline function get_translateY():Float {
+        return transform != null ? transform.ty : 0;
+    }
+    inline function set_translateY(translateY:Float):Float {
+        if (translateY == 0) {
+            if (transform != null && transform.ty != 0) {
+                transform.ty = 0;
+                transform.changedDirty = true;
+            }
+        }
+        else {
+            if (transform == null) {
+                transform = new Transform();
+            }
+            if (transform.ty != translateY) {
+                transform.ty = translateY;
+                transform.changedDirty = true;
+            }
+        }
+        return translateY;
+    }
+
     @editable({ group: 'position' })
     public var x(default,set):Float = 0;
     function set_x(x:Float):Float {
@@ -1195,6 +1253,13 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
         this.skewX = skewX;
         this.skewY = skewY;
+
+    }
+
+    inline public function translate(translateX:Float, translateY:Float):Void {
+
+        this.translateX = translateX;
+        this.translateY = translateY;
 
     }
 

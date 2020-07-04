@@ -63,4 +63,4 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
 
     }
 
-} //TimelineDegreesTrack
+}

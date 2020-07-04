@@ -51,4 +51,4 @@ class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
 
     }
 
-} //TimelineColorTrack
+}

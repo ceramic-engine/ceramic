@@ -1,14 +1,14 @@
 package ceramic;
 
-class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
+class TimelineBoolTrack extends TimelineTrack<TimelineBoolKeyframe> {
 
-    @event function change(track:TimelineFloatTrack);
+    @event function change(track:TimelineBoolTrack);
 
-    public var value:Float = 0.0;
+    public var value:Bool = false;
 
     override function apply():Void {
 
-        var prevValue:Float = value;
+        var prevValue = value;
 
         if (before != null && after != null) {
             // Perform interpolation between two keyframes surrounding current time
@@ -23,13 +23,12 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
             }
 
             // Compute value
-            // (Use `after`'s easing function to interpolate)
-            value = 
-                before.value
-                + (after.value - before.value) * Tween.ease(
-                    after.easing,
-                    ratio
-                );
+            if (ratio >= 1) {
+                value = after.value;
+            }
+            else {
+                value = before.value;
+            }
         }
         else if (after != null) {
             // Current time lower than first keyframe's time

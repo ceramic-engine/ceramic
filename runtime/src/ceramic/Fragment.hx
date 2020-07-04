@@ -209,7 +209,8 @@ class Fragment extends Layer {
             if (isFragment) {
                 var subContext:FragmentContext = {
                     assets: context.assets,
-                    editedItems: false
+                    editedItems: false,
+                    parent: this
                 };
                 newArgs.push(subContext);
                 #if ceramic_debug_fragments

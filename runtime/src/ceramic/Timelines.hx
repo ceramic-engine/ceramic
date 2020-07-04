@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
 import haxe.DynamicAccess;
 
 using ceramic.Extensions;
@@ -68,6 +69,12 @@ class Timelines extends Entity {
         else if (type == 'ceramic.Color') {
             result.value = cast new TimelineColorTrack();
         }
+        else if (type == 'Bool') {
+            result.value = cast new TimelineBoolTrack();
+        }
+        else if (type == 'Array<Float>') {
+            result.value = cast new TimelineFloatArrayTrack();
+        }
 
     }
 
@@ -77,16 +84,48 @@ class Timelines extends Entity {
             var floatTrack:TimelineFloatTrack = cast track;
             floatTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
-                //trace('SET FLOAT $field = ${track.value}');
                 entity.setProperty(field, track.value);
             });
         }
         else if (Std.is(track, TimelineColorTrack)) {
             var colorTrack:TimelineColorTrack = cast track;
             colorTrack.onChange(entity, track -> {
-                //trace('SET COLOR $field = ${track.value}');
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
+            });
+        }
+        else if (Std.is(track, TimelineBoolTrack)) {
+            var boolTrack:TimelineBoolTrack = cast track;
+            boolTrack.onChange(entity, track -> {
+                // TODO optimize / avoid using reflection on visual properties etc...
+                entity.setProperty(field, track.value);
+            });
+        }
+        else if (Std.is(track, TimelineFloatArrayTrack)) {
+            var copyArray:Bool = (options != null && options.copyArray == true);
+            var floatArrayTrack:TimelineFloatArrayTrack = cast track;
+            floatArrayTrack.onChange(entity, track -> {
+                // TODO optimize / avoid using reflection on visual properties etc...
+                var array:Array<Float> = null;
+                if (copyArray) {
+                    array = [];
+                }
+                else {
+                    array = entity.getProperty(field);
+                    if (array == null) {
+                        array = [];
+                    }
+                }
+                var value = track.value;
+                var valueLen = value.length;
+                if (array.length != valueLen) {
+                    array.setArrayLength(valueLen);
+                }
+                for (i in 0...valueLen) {
+                    var val = value.unsafeGet(i);
+                    array.unsafeSet(i, val);
+                }
+                entity.setProperty(field, array);
             });
         }
 
@@ -120,6 +159,31 @@ class Timelines extends Entity {
             }
             else {
                 result.value = new TimelineColorKeyframe(value, time, easing);
+            }
+        }
+        else if (type == 'Bool') {
+            if (existing != null && Std.is(existing, TimelineBoolKeyframe)) {
+                var boolKeyframe:TimelineBoolKeyframe = cast existing;
+                boolKeyframe.value = value;
+                boolKeyframe.time = time;
+                boolKeyframe.easing = easing;
+                result.value = boolKeyframe;
+            }
+            else {
+                result.value = new TimelineBoolKeyframe(value, time, easing);
+            }
+        }
+        else if (type == 'Array<Float>') {
+            if (existing != null && Std.is(existing, TimelineFloatArrayKeyframe)) {
+                var floatArrayKeyframe:TimelineFloatArrayKeyframe = cast existing;
+                var floatArrayValue:Array<Float> = cast value;
+                floatArrayKeyframe.value = [].concat(floatArrayValue);
+                floatArrayKeyframe.time = time;
+                floatArrayKeyframe.easing = easing;
+                result.value = floatArrayKeyframe;
+            }
+            else {
+                result.value = new TimelineFloatArrayKeyframe(value, time, easing);
             }
         }
 
