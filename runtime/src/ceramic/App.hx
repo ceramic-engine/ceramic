@@ -345,6 +345,8 @@ class App extends Entity {
 
     var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    var pressedKeyCodes:IntIntMap = new IntIntMap(16, 0.5, false);
+
 #if (web && hotml && ceramic_hotreload)
     var hotReloadClient:hotml.client.Client;
 #end
@@ -595,7 +597,9 @@ class App extends Entity {
         // Forward key events
         //
         backend.onKeyDown(this, function(key) {
-            beginUpdateCallbacks.push(function() emitKeyDown(key));
+            beginUpdateCallbacks.push(function() {
+                emitKeyDown(key);
+            });
         });
         backend.onKeyUp(this, function(key) {
             beginUpdateCallbacks.push(function() emitKeyUp(key));
@@ -919,23 +923,64 @@ class App extends Entity {
 
     function willEmitKeyDown(key:Key):Void {
 
-        pressedScanCodes.set(key.scanCode, pressedScanCodes.get(key.scanCode) + 1);
+        var prevScan = pressedScanCodes.get(key.scanCode);
+        var prevKey = pressedKeyCodes.get(key.keyCode);
+
+        pressedScanCodes.set(key.scanCode, prevScan + 1);
+        pressedKeyCodes.set(key.keyCode, prevKey + 1);
+
+        if (prevScan == 0) {
+            // Used to differenciate "pressed" and "just pressed" states
+            beginUpdateCallbacks.push(function() {
+                if (pressedScanCodes.get(key.scanCode) == 1) {
+                    pressedScanCodes.set(key.scanCode, 2);
+                }
+                if (pressedKeyCodes.get(key.keyCode) == 1) {
+                    pressedKeyCodes.set(key.keyCode, 2);
+                }
+            });
+        }
 
     }
 
     function willEmitKeyUp(key:Key):Void {
 
         pressedScanCodes.set(key.scanCode, 0);
+        pressedKeyCodes.set(key.keyCode, 0);
 
     }
 
-    public function isKeyPressed(key:Key):Bool {
+    public function keyCodePressed(keyCode:Int):Bool {
+
+        return pressedKeyCodes.get(keyCode) > 0;
+
+    }
+
+    public function keyCodeJustPressed(keyCode:Int):Bool {
+
+        return pressedKeyCodes.get(keyCode) == 1;
+
+    }
+
+    public function scanCodePressed(scanCode:Int):Bool {
+
+        return pressedScanCodes.get(scanCode) > 0;
+
+    }
+
+    public function scanCodeJustPressed(scanCode:Int):Bool {
+
+        return pressedScanCodes.get(scanCode) == 1;
+
+    }
+
+    public function keyPressed(key:Key):Bool {
 
         return pressedScanCodes.get(key.scanCode) > 0;
 
     }
 
-    public function isKeyJustPressed(key:Key):Bool {
+    public function keyJustPressed(key:Key):Bool {
 
         return pressedScanCodes.get(key.scanCode) == 1;
 
