@@ -1,8 +1,8 @@
 package ceramic;
 
-import haxe.Json;
+using StringTools;
 
-// Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/luxe/importers/bitmapfont/BitmapFontParser.hx)
+// Some portions of this code taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/luxe/importers/bitmapfont/BitmapFontParser.hx)
 
 class BitmapFontParser {
 
@@ -14,16 +14,19 @@ class BitmapFontParser {
             throw "BitmapFont: fontData is 0 length";
         }
 
-        var info : BitmapFontData = {
-            face : null,
-            chars : new Map(),
-            distanceField : null,
-            pointSize : 0, baseSize : 0,
-            charCount : 0, lineHeight : 0,
-            pages : [], kernings : new Map()
+        var info:BitmapFontData = {
+            face: null,
+            chars: new Map(),
+            distanceField: null,
+            pointSize: 0,
+            baseSize: 0,
+            charCount: 0,
+            lineHeight: 0,
+            pages: [],
+            kernings: new Map()
         };
 
-        var lines : Array<String> = rawFontData.split("\n");
+        var lines:Array<String> = rawFontData.replace("\r", '').replace("\t", ' ').split("\n");
 
         if (lines.length == 0) {
             throw "BitmapFont: invalid font data specified for parser.";
@@ -35,11 +38,7 @@ class BitmapFontParser {
         }
 
         for (line in lines) {
-            var tokens = line.split(" ");
-            for (current in tokens) {
-                parseToken(current, tokens, info);
-            }
-            tokens = null;
+            parseLine(line, info);
         }
 
         lines = null;
@@ -50,14 +49,12 @@ class BitmapFontParser {
 
 /// Internal
 
-    static function parseToken(token:String, tokens:Array<String>, info:BitmapFontData) {
+    static function parseLine(line:String, info:BitmapFontData) {
 
-        // Remove the first token
-        tokens.shift();
-        // Fetch the items from the line
-        var items = tokenizeLine(tokens);
+        var items = new Map();
+        var firstToken = extractLineTokens(line, items);
 
-        switch (token) {
+        switch (firstToken) {
 
             case 'info': {
                 info.face = unquote(items['face']);
@@ -71,8 +68,8 @@ class BitmapFontParser {
 
             case 'page': {
                 info.pages.push({
-                    id : Std.parseInt(items['id']),
-                    file : trim(unquote(items['file']))
+                    id: Std.parseInt(items['id']),
+                    file: StringTools.trim(unquote(items['file']))
                 });
             }
 
@@ -82,17 +79,17 @@ class BitmapFontParser {
 
             case 'char': {
 
-                var char : BitmapFontCharacter = {
-                    id : Std.parseInt(items["id"]),
-                    x : Std.parseFloat(items["x"]),
-                    y : Std.parseFloat(items["y"]),
-                    width : Std.parseFloat(items["width"]),
-                    height : Std.parseFloat(items["height"]),
-                    xOffset : Std.parseFloat(items["xoffset"]),
-                    yOffset : Std.parseFloat(items["yoffset"]),
-                    xAdvance : Std.parseFloat(items["xadvance"]),
-                    page : Std.parseInt(items["page"])
-                }
+                var char: BitmapFontCharacter = {
+                    id: Std.parseInt(items["id"]),
+                    x: Std.parseFloat(items["x"]),
+                    y: Std.parseFloat(items["y"]),
+                    width: Std.parseFloat(items["width"]),
+                    height: Std.parseFloat(items["height"]),
+                    xOffset: Std.parseFloat(items["xoffset"]),
+                    yOffset: Std.parseFloat(items["yoffset"]),
+                    xAdvance: Std.parseFloat(items["xadvance"]),
+                    page: Std.parseInt(items["page"])
+                };
 
                 info.chars.set(char.id, char);
 
@@ -129,39 +126,96 @@ class BitmapFontParser {
             default:
         }
 
-        items = null;
-
     }
 
-    static function tokenizeLine( tokens:Array<String> ) {
+    static function extractLineTokens(line:String, map:Map<String,String>):String {
 
-        var itemMap : Map<String, String> = new Map();
+        var i = 0;
+        var len = line.length;
+        var firstToken:String = null;
+        var keyToken:String = null;
+        var nextToken:StringBuf = null;
+        var inQuotes = false;
 
-        for (token in tokens) {
-            var items = token.split("=");
-            itemMap.set( items[0], removeQuotes(items[1]) );
-            items = null;
+        while (i < len) {
+
+            var c = line.charCodeAt(i);
+
+            if (inQuotes) {
+                if (c == '"'.code) {
+                    inQuotes = false;
+                }
+                if (nextToken == null) {
+                    throw 'Invalid bitmap font line: $line';
+                }
+                nextToken.add(line.charAt(i));
+            }
+            else if (c == ' '.code) {
+                if (nextToken != null) {
+                    if (firstToken == null) {
+                        firstToken = nextToken.toString();
+                    }
+                    else if (keyToken == null) {
+                        keyToken = nextToken.toString();
+                        map.set(keyToken, null);
+                    }
+                    else {
+                        map.set(keyToken, nextToken.toString());
+                    }
+                    keyToken = null;
+                    nextToken = null;
+                }
+            }
+            else if (keyToken == null && c == '='.code) {
+                if (nextToken == null) {
+                    throw 'Invalid bitmap font line: $line';
+                }
+                keyToken = nextToken.toString();
+                nextToken = null;
+            }
+            else {
+                if (c == '"'.code) {
+                    inQuotes = true;
+                }
+                if (nextToken == null) {
+                    nextToken = new StringBuf();
+                }
+                nextToken.add(line.charAt(i));
+            }
+
+            i++;
+
         }
 
-        return itemMap;
-
-    }
-
-    inline static function removeQuotes(token:String) {
-
-        var result = token;
-        if (token != null && token.length >= 2 && token.charCodeAt(0) == '"'.code && token.charCodeAt(token.length-1) == '"'.code) {
-            result = Json.parse(token);
+        if (nextToken != null) {
+            if (firstToken == null) {
+                firstToken = nextToken.toString();
+            }
+            else if (keyToken == null) {
+                keyToken = nextToken.toString();
+                map.set(keyToken, null);
+            }
+            else {
+                map.set(keyToken, nextToken.toString());
+            }
+            keyToken = null;
+            nextToken = null;
         }
-        return result;
+
+        return firstToken;
 
     }
 
-    inline static function trim(s:String) { return StringTools.trim(s); }
     inline static function unquote(s:String) {
-        if (s.indexOf('"') != -1) {
-            s = StringTools.replace(s,'"', '');
-        } return s;
+
+        var len = s.length;
+
+        if (s.charCodeAt(0) == '"'.code && s.charCodeAt(len - 1) == '"'.code) {
+            s = s.substring(1, len - 1);
+        }
+
+        return s;
+
     }
 
 }
