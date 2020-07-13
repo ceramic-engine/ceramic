@@ -545,7 +545,7 @@ class Screen extends Entity implements Observable {
 
 /// Match visuals to x,y
 
-    function matchFirstDownListener(x:Float, y:Float):Visual {
+    function matchFirstDownListener(x:Float, y:Float, touchIndex:Int = -1, buttonId:Int = -1):Visual {
 
         app.computeHierarchy();
 
@@ -569,7 +569,7 @@ class Screen extends Entity implements Observable {
                     if (visualListensPointerDown) {
                         visualHits = visual.hits(x, y);
                         if (visualHits) {
-                            visualIntercepts = visual.interceptPointerDown(visual, x, y);
+                            visualIntercepts = visual.interceptPointerDown(visual, x, y, touchIndex, buttonId);
                             #if ceramic_debug_touch
                             log.debug('visual intercepts pointer down: $visual (parent=${visual.parent})');
                             #end
@@ -584,7 +584,7 @@ class Screen extends Entity implements Observable {
                         if (visualListensPointerDown) {
                             var parent = visual.parent;
                             while (parent != null) {
-                                intercepts = parent.interceptPointerDown(visual, x, y);
+                                intercepts = parent.interceptPointerDown(visual, x, y, touchIndex, buttonId);
                                 if (intercepts) {
                                     #if ceramic_debug_touch
                                     log.debug('visual parent intercepts pointer down: $parent (parent=${parent.parent})');
@@ -823,7 +823,7 @@ class Screen extends Entity implements Observable {
 
     inline function didEmitMouseDown(buttonId:Int, x:Float, y:Float):Void {
 
-        var matched = matchFirstDownListener(x, y);
+        var matched = matchFirstDownListener(x, y, -1, buttonId);
         if (matched != null) {
             matched._numPointerDown++;
             if (matched._numPointerDown == 1 || matched.multiTouch) {
@@ -903,7 +903,7 @@ class Screen extends Entity implements Observable {
 
     inline function didEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
 
-        var matched = matchFirstDownListener(x, y);
+        var matched = matchFirstDownListener(x, y, touchIndex, -1);
         if (matched != null) {
             matched._numPointerDown++;
             if (matched._numPointerDown == 1 || matched.multiTouch) {

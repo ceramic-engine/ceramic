@@ -1564,7 +1564,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
     /** Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
         Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
-    function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
+    function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float, touchIndex:Int, buttonId:Int):Bool {
 
         return false;
 

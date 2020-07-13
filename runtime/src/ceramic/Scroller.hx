@@ -181,7 +181,7 @@ class Scroller extends Visual {
 
     }
 
-    override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float):Bool {
+    override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float, touchIndex:Int, buttonId:Int):Bool {
 
         if (!allowPointerOutside && !hits(x, y)) {
             return true;
@@ -488,7 +488,7 @@ class Scroller extends Visual {
 
         // Does this touch intersect with our scroller?
         var hits = this.hits(info.x, info.y);
-        var firstDownListener = hits && touchableStrictHierarchy ? matchFirstDownListener(info.x, info.y) : null;
+        var firstDownListener = hits && touchableStrictHierarchy ? @:privateAccess screen.matchFirstDownListener(info.x, info.y) : null;
 
         if (hits && (!touchableStrictHierarchy || firstDownListener == this || this.contains(firstDownListener, true))) {
             // If it was bouncing, snapping..., it is not anymore
@@ -531,26 +531,6 @@ class Scroller extends Visual {
             
             emitScrollerPointerDown(info);
         }
-
-    }
-
-    function matchFirstDownListener(x:Float, y:Float):Visual {
-
-        app.computeHierarchy();
-
-        var visuals = app.visuals;
-        var i = visuals.length - 1;
-        while (i >= 0) {
-
-            var visual = visuals[i];
-            if (visual == this || (visual.computedTouchable && visual.listensPointerDown() && visual.hits(x, y))) {
-                return visual;
-            }
-
-            i--;
-        }
-
-        return null;
 
     }
 
