@@ -120,6 +120,10 @@ class Spine extends Visual {
 
     // Not sure this is needed, but it may prevent some unnecessary allocation
     function runScheduledRender():Void {
+        if (destroyed) {
+            // Could happen when called as immediate callback
+            return;
+        }
         renderScheduled = false;
         if (renderDirtyAgressive) {
             if (!renderWhenInvisible && visibilityDirty) {
@@ -689,7 +693,7 @@ class Spine extends Visual {
             
             if (!muteEvents) {
                 if (deferEvents) {
-                    app.onceImmediate(emitComplete);
+                    app.onceImmediate(emitCompleteIfNotDestroyed);
                 }
                 else {
                     emitComplete();
@@ -707,7 +711,9 @@ class Spine extends Visual {
             if (!muteEvents) {
                 if (deferEvents) {
                     app.onceImmediate(() -> {
-                        emitSpineEvent(track, event);
+                        if (!destroyed) {
+                            emitSpineEvent(track, event);
+                        }
                     });
                 }
                 else {
@@ -739,6 +745,14 @@ class Spine extends Visual {
         render(0, 0, true);
 
         renderDirty = true;
+
+    }
+
+    function emitCompleteIfNotDestroyed() {
+
+        if (!destroyed) {
+            emitComplete();
+        }
 
     }
 
@@ -809,7 +823,9 @@ class Spine extends Visual {
             if (canFreeze()) {
                 frozen = true;
                 app.onceImmediate(function() {
-                    if (!muteEvents) emitComplete();
+                    if (!destroyed && !muteEvents) {
+                        emitComplete();
+                    }
                 });
             } else {
                 frozen = false;
