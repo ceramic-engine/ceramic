@@ -35,7 +35,7 @@ package ceramic;
 @:forward(get, concat, copy, filter, indexOf, iterator, keyValueIterator, join, lastIndexOf, map, slice, contains, toString)
 abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
-    @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
+    @:noCompletion @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
 
     /** Returns the underlying (and mutable) data. Use at your own risk! */
     public var original(get,never):Array<T>;
