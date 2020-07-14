@@ -37,6 +37,16 @@ class DoubleClick extends Entity implements Component {
 
     }
 
+/// Public API
+
+    public function cancel():Void {
+        
+        screen.offPointerMove(handlePointerMove);
+        pressed = false;
+        firstClickTime = -1;
+
+    }
+
 /// Internal
 
     function handlePointerDown(info:TouchInfo) {
