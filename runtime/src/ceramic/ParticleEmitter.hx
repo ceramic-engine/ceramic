@@ -970,6 +970,17 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
 /// Managing particles and visuals
 
+    /**
+     * Instanciate and return a new ParticleItem object.
+     * Override this method if you want to instanciate a custom ParticleItem subclass
+     * @return ParticleItem
+     */
+    function createParticleItem():ParticleItem {
+
+        return new ParticleItem();
+
+    }
+
     function getParticle():ParticleItem {
 
         var particle:ParticleItem;
@@ -978,7 +989,7 @@ class ParticleEmitter extends Entity implements Component implements Observable 
             particle = _recycledParticles.pop();
         }
         else {
-            particle = new ParticleItem();
+            particle = createParticleItem();
         }
 
         particle.visual = getParticleVisual(particle.visual);
