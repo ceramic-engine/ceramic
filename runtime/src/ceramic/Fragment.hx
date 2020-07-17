@@ -362,7 +362,7 @@ class Fragment extends Layer {
                     }
                     else {
                         onceReady(this, function() {
-                            #if editor
+                            // #if editor
                             var map:Map<String,Component> = null;
                             if (value != null) {
                                 map = cast value;
@@ -375,6 +375,8 @@ class Fragment extends Layer {
                                     }
                                 }
                             }
+                            /*
+                            // For now don't remove any component, may change this later
                             if (instance.components != null) {
                                 for (k in instance.components.keys()) {
                                     if (k != 'editable' && k != 'script') {
@@ -384,10 +386,13 @@ class Fragment extends Layer {
                                     }
                                 }
                             }
+                            */
+                            #if editor
                             updateEditableFieldsFromInstance(item.id);
-                            #else
-                            instance.setProperty(field, value);
                             #end
+                            // #else
+                            // instance.setProperty(field, value);
+                            // #end
                         });
                     }
                 }
@@ -708,6 +713,10 @@ class Fragment extends Layer {
         this.fragmentComponents = fragmentComponents;
 
         return fragmentComponents;
+    }
+
+    function isManagedComponent() {
+
     }
 
 /// Timeline
