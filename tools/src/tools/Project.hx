@@ -162,6 +162,7 @@ class Project {
         app.editable.push('ceramic.Shape');
         app.editable.push('ceramic.Line');
         app.editable.push('ceramic.Points');
+        app.editable.push('ceramic.Particles');
 
         if (app.hxml == null) app.hxml = '';
 
