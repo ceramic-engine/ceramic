@@ -39,7 +39,8 @@ class Clipboard implements spec.Clipboard {
         #if (web && ceramic_use_electron)
         var electron = ceramic.internal.PlatformSpecific.resolveElectron();
         if (electron != null) {
-            return electron.clipboard.readText();
+            var text = electron.clipboard.readText();
+            return text;
         }
         #elseif (cpp && linc_sdl)
         if (SDL.hasClipboardText()) {
@@ -59,6 +60,11 @@ class Clipboard implements spec.Clipboard {
         var electron = ceramic.internal.PlatformSpecific.resolveElectron();
         if (electron != null) {
             electron.clipboard.writeText(text);
+            ceramic.Timer.delay(null, 0.1, () -> {
+                // Somehow, this is needed to ensure clipboard is
+                // not overwritten by some default behavior
+                electron.clipboard.writeText(text);
+            });
         }
         #elseif (cpp && linc_sdl)
         SDL.setClipboardText(text);
