@@ -18,6 +18,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     @event function update(content:String);
 
+    @event function start();
+
     @event function stop();
 
 /// Public properties
@@ -122,6 +124,13 @@ class EditText extends Entity implements Component implements TextInputDelegate 
                 startInput(selectionStart, selectionEnd);
             });
             return;
+        }
+
+        emitStart();
+
+        // In case we changed content in start event handler
+        if (selectionEnd > entity.content.length) {
+            selectionEnd = entity.content.length;
         }
 
         _activeEditTextInput = this;
