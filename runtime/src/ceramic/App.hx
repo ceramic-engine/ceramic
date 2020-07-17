@@ -147,6 +147,10 @@ class App extends Entity {
         (before elements are drawn onto screen) */
     public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
+        if (handleImmediate == null) {
+            throw 'Immediate callback should not be null!';
+        }
+
         #if ceramic_debug_immediate
         immediateCallbacks[immediateCallbacksLen++] = function() {
             haxe.Log.trace('immediate flush', pos);
