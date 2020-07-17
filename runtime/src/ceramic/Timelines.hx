@@ -87,6 +87,13 @@ class Timelines extends Entity {
                 entity.setProperty(field, track.value);
             });
         }
+        else if (Std.is(track, TimelineDegreesTrack)) {
+            var degreesTrack:TimelineDegreesTrack = cast track;
+            degreesTrack.onChange(entity, track -> {
+                // TODO optimize / avoid using reflection on visual properties etc...
+                entity.setProperty(field, track.value);
+            });
+        }
         else if (Std.is(track, TimelineColorTrack)) {
             var colorTrack:TimelineColorTrack = cast track;
             colorTrack.onChange(entity, track -> {

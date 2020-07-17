@@ -8,7 +8,7 @@ class TimelineFloatArrayTrack extends TimelineTrack<TimelineFloatArrayKeyframe> 
 
     public var value:Array<Float> = [];
 
-    override function apply():Void {
+    override function apply(forceChange:Bool = false):Void {
 
         var didChange = false;
 
@@ -110,7 +110,7 @@ class TimelineFloatArrayTrack extends TimelineTrack<TimelineFloatArrayKeyframe> 
         }
 
         // Emit updateValue event if value has changed
-        if (didChange) {
+        if (forceChange || didChange) {
             emitChange(this);
         }
 

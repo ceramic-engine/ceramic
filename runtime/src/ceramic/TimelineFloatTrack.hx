@@ -6,7 +6,7 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
 
     public var value:Float = 0.0;
 
-    override function apply():Void {
+    override function apply(forceChange:Bool = false):Void {
 
         var prevValue:Float = value;
 
@@ -43,7 +43,7 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
         }
 
         // Emit updateValue event if value has changed
-        if (prevValue != value) {
+        if (forceChange || prevValue != value) {
             emitChange(this);
         }
 

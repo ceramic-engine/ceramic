@@ -6,7 +6,7 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
 
     public var value:Float = 0.0;
 
-    override function apply():Void {
+    override function apply(forceChange:Bool = false):Void {
 
         var prevValue:Float = value;
         var newValue:Float = value;
@@ -43,6 +43,8 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
                     after.easing,
                     ratio
                 );
+            
+            newValue = Utils.clampDegrees(newValue);
         }
         else if (after != null) {
             // Current time lower than first keyframe's time
@@ -56,7 +58,7 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
         }
 
         // Emit updateValue event if value has changed
-        if (prevValue != newValue) {
+        if (forceChange || prevValue != newValue) {
             value = newValue;
             emitChange(this);
         }

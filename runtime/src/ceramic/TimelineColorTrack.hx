@@ -6,7 +6,7 @@ class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
 
     public var value:Color = Color.WHITE;
 
-    override function apply():Void {
+    override function apply(forceChange:Bool = false):Void {
 
         var prevValue = value;
 
@@ -45,7 +45,7 @@ class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
         }
 
         // Emit updateValue event if value has changed
-        if (prevValue != value) {
+        if (forceChange || prevValue != value) {
             emitChange(this);
         }
 

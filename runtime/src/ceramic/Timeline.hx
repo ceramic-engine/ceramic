@@ -75,10 +75,17 @@ class Timeline extends Entity implements Component {
 
     }
 
-    inline function inlineSeek(targetTime:Float):Void {
+    /** Apply (or re-apply) every track of this timeline at the current time */
+    final public function apply(forceChange:Bool = false):Void {
+
+        inlineSeek(time, true, forceChange);
+
+    }
+
+    inline function inlineSeek(targetTime:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
 
         // Continue only if target time is different than current time
-        if (targetTime != time) {
+        if (forceSeek || targetTime != time) {
 
             if (duration > 0) {
                 if (targetTime > duration) {
@@ -106,7 +113,7 @@ class Timeline extends Entity implements Component {
                 for (i in 0...tracks.length) {
                     var track = tracks.unsafeGet(i);
                     if (!track.locked) {
-                        track.inlineSeek(time);
+                        track.inlineSeek(time, forceSeek, forceChange);
                     }
                 }
             }
@@ -162,7 +169,7 @@ class Timeline extends Entity implements Component {
         the duration of the longuest track. */
     public function fitDuration():Void {
 
-        var newDuration = duration;
+        var newDuration = 0.0;
 
         for (i in 0...tracks.length) {
             var track = tracks.unsafeGet(i);

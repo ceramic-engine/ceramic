@@ -74,10 +74,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     @:allow(ceramic.Timeline)
-    inline function inlineSeek(targetTime:Float):Void {
+    inline function inlineSeek(targetTime:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
 
         // Continue only if target time is different than current time
-        if (targetTime != time) {
+        if (forceSeek || targetTime != time) {
 
             if (duration > 0) {
                 if (targetTime > duration) {
@@ -106,7 +106,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
                 computeKeyframeAfter();
 
                 // Apply changes
-                apply();
+                apply(forceChange);
             }
         }
 
@@ -154,6 +154,8 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         computeKeyframeBefore();
         computeKeyframeAfter();
 
+        apply(true);
+
     }
 
     /** Remove a keyframe from this track */
@@ -177,6 +179,8 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     
             computeKeyframeBefore();
             computeKeyframeAfter();
+
+            apply(true);
         }
         else {
             log.warning('Failed to remove keyframe: keyframe not found in list');
@@ -198,7 +202,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /** Apply changes that this track is responsible of. Usually called after `update(delta)` or `seek(time)`. */
-    public function apply():Void {
+    public function apply(forceChange:Bool = false):Void {
 
         // Override in subclasses
 

@@ -6,7 +6,7 @@ class TimelineBoolTrack extends TimelineTrack<TimelineBoolKeyframe> {
 
     public var value:Bool = false;
 
-    override function apply():Void {
+    override function apply(forceChange:Bool = false):Void {
 
         var prevValue = value;
 
@@ -42,7 +42,7 @@ class TimelineBoolTrack extends TimelineTrack<TimelineBoolKeyframe> {
         }
 
         // Emit updateValue event if value has changed
-        if (prevValue != value) {
+        if (forceChange || prevValue != value) {
             emitChange(this);
         }
 
