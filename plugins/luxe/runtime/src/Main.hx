@@ -575,6 +575,10 @@ class Main extends luxe.Game {
 
     }
 
+    static var backgroundStatus:Int = -1;
+
+    static var foregroundStatus:Int = -1;
+
     override function onevent(event:snow.types.Types.SystemEvent) {
 
         switch (event.type) {
@@ -594,12 +598,40 @@ class Main extends luxe.Game {
             case se_app_lowmemory:
                 @:privateAccess ceramic.App.app.emitLowMemory();
             case se_app_willenterbackground:
+                #if android
+                if (backgroundStatus < 0) {
+                    backgroundStatus = 0;
+                    foregroundStatus = -1;
+                    return;
+                }
+                #end
                 @:privateAccess ceramic.App.app.emitBeginEnterBackground();
             case se_app_didenterbackground:
+                #if android
+                if (backgroundStatus < 1) {
+                    backgroundStatus = 1;
+                    foregroundStatus = -1;
+                    return;
+                }
+                #end
                 @:privateAccess ceramic.App.app.emitFinishEnterBackground();
             case se_app_willenterforeground:
+                #if android
+                if (foregroundStatus < 0) {
+                    foregroundStatus = 0;
+                    backgroundStatus = -1;
+                    return;
+                }
+                #end
                 @:privateAccess ceramic.App.app.emitBeginEnterForeground();
             case se_app_didenterforeground:
+                #if android
+                if (foregroundStatus < 1) {
+                    foregroundStatus = 1;
+                    backgroundStatus = -1;
+                    return;
+                }
+                #end
                 @:privateAccess ceramic.App.app.emitFinishEnterForeground();
         }
 
