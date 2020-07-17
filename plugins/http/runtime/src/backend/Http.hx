@@ -23,7 +23,16 @@ class Http implements spec.Http {
 
     public function new() {}
 
-    public function request(options:HttpRequestOptions, done:HttpResponse->Void):Void {
+    public function request(options:HttpRequestOptions, requestDone:HttpResponse->Void):Void {
+
+        var done:HttpResponse->Void = null;
+        done = (response:HttpResponse) -> {
+            ceramic.App.app.onceUpdate(null, _ -> {
+                requestDone(response);
+                requestDone = null;
+                done = null;
+            });
+        };
 
 #if (nodejs || hxnodejs || node)
 
