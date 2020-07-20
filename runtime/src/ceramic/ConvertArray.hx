@@ -16,7 +16,7 @@ class ConvertArray<T> implements ConvertField<Array<T>,Array<T>> {
         var value:Array<T> = [];
         value = value.concat(basic);
 
-        done(basic);
+        done(value);
 
     }
 
@@ -27,7 +27,7 @@ class ConvertArray<T> implements ConvertField<Array<T>,Array<T>> {
         var basic:Array<T> = [];
         basic = basic.concat(value);
 
-        return value;
+        return basic;
 
     }
 
