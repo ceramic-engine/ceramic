@@ -7,12 +7,25 @@ import ceramic.Assets;
 import haxe.DynamicAccess;
 
 using ceramic.Extensions;
+using StringTools;
 
 /** A fragment is a group of visuals rendered from data (.fragment file) */
 @editable({
     implicitSizeUnlessTrue: 'resizable'
 })
 class Fragment extends Layer {
+
+    @event function floatAChange(floatA:Float, prevFloatA:Float);
+
+    @event function floatBChange(floatB:Float, prevFloatB:Float);
+
+    @event function floatCChange(floatC:Float, prevFloatC:Float);
+
+    @event function floatDChange(floatD:Float, prevFloatD:Float);
+
+    public var editedItems(default,null):Bool = false;
+
+    public var assets(default,null):Assets = null;
 
     public var entities(default,null):Array<Entity>;
 
@@ -22,13 +35,79 @@ class Fragment extends Layer {
 
     public var fps(default,set):Int = 30;
 
-    public var context:FragmentContext;
-
     @editable
     public var fragmentData(default,set):FragmentData = null;
 
     @editable
     public var resizable:Bool = false;
+
+    @editable
+    public var autoUpdateTimeline(default, set):Bool = true;
+    function set_autoUpdateTimeline(autoUpdateTimeline:Bool):Bool {
+        if (this.autoUpdateTimeline != autoUpdateTimeline) {
+            this.autoUpdateTimeline = autoUpdateTimeline;
+            if (timeline != null) {
+                timeline.autoUpdate = autoUpdateTimeline;
+            }
+        }
+        return autoUpdateTimeline;
+    }
+
+    /**
+     * Custom float value that can be used in editor
+     */
+    @editable({ group: 'floatsAB' })
+    public var floatA(default, set):Float = 0.0;
+    function set_floatA(floatA:Float):Float {
+        if (this.floatA != floatA) {
+            var prevFloatA = this.floatA;
+            this.floatA = floatA;
+            emitFloatAChange(floatA, prevFloatA);
+        }
+        return floatA;
+    }
+
+    /**
+     * Custom float value that can be used in editor
+     */
+    @editable({ group: 'floatsAB' })
+    public var floatB(default, set):Float = 0.0;
+    function set_floatB(floatB:Float):Float {
+        if (this.floatB != floatB) {
+            var prevFloatA = this.floatB;
+            this.floatB = floatB;
+            emitFloatBChange(floatB, prevFloatA);
+        }
+        return floatB;
+    }
+
+    /**
+     * Custom float value that can be used in editor
+     */
+    @editable({ group: 'floatsCD' })
+    public var floatC(default, set):Float = 0.0;
+    function set_floatC(floatC:Float):Float {
+        if (this.floatC != floatC) {
+            var prevFloatC = this.floatC;
+            this.floatC = floatC;
+            emitFloatCChange(floatC, prevFloatC);
+        }
+        return floatC;
+    }
+
+    /**
+     * Custom float value that can be used in editor
+     */
+    @editable({ group: 'floatsCD' })
+    public var floatD(default, set):Float = 0.0;
+    function set_floatD(floatD:Float):Float {
+        if (this.floatD != floatD) {
+            var prevFloatD = this.floatD;
+            this.floatD = floatD;
+            emitFloatDChange(floatD, prevFloatD);
+        }
+        return floatD;
+    }
 
     public var pendingLoads(default,null):Int = 0;
 
@@ -55,13 +134,55 @@ class Fragment extends Layer {
         'ceramic.ScriptContent' => true
     ];
 
+/// Create from data
+
+    static var cachedFragmentData:Map<String,FragmentData> = new Map();
+
+    public static function cacheData(fragmentData:FragmentData) {
+
+        cachedFragmentData.set(fragmentData.id, fragmentData);
+
+    }
+
+    /**
+     * A static helper to get a fragment data object from fragment id.
+     * Fragments need to be cached first with `cacheFragmentData()`,
+     * unless an editor instance is being active.
+     * @param fragmentId 
+     * @return Null<FragmentData>
+     */
+    public static function getData(fragmentId:String):Null<FragmentData> {
+
+        #if editor
+        // When using editor, check if fragment exists in editor first
+        var editorInstance = editor.Editor.editor;
+        if (editorInstance != null) {
+            var model = editorInstance.model;
+            if (model != null) {
+                var project = model.project;
+                if (project != null) {
+                    var editorFragment = project.fragmentById(fragmentId);
+                    if (editorFragment != null) {
+                        return editorFragment.toFragmentData();
+                    }
+                }
+            }
+        }
+        #end
+
+        return cachedFragmentData.get(fragmentId);
+
+    }
+
 /// Lifecycle
 
-    public function new(context:FragmentContext) {
+    public function new(?assets:Assets, editedItems:Bool = false) {
 
         super();
 
-        this.context = context;
+        this.editedItems = editedItems;
+        this.assets = assets;
+
         entities = [];
         items = [];
 
@@ -135,7 +256,7 @@ class Fragment extends Layer {
             pendingLoads++;
             var converter = app.converters.get('ceramic.ReadOnlyMap<String,ceramic.Component>');
             converter.basicToField(
-                context.assets,
+                assets,
                 fragmentData.components,
                 function(value) {
                     if (destroyed) return;
@@ -205,14 +326,10 @@ class Fragment extends Layer {
         var instance:Entity = existing != null ? existing : null;
         var isFragment = item.entity == 'ceramic.Fragment';
         if (instance == null) {
-            var newArgs = [];
+            var newArgs:Array<Dynamic> = [];
             if (isFragment) {
-                var subContext:FragmentContext = {
-                    assets: context.assets,
-                    editedItems: false,
-                    parent: this
-                };
-                newArgs.push(subContext);
+                newArgs.push(assets);
+                newArgs.push(false);
                 #if ceramic_debug_fragments
                 if (isFragment) log.info('load item (fragment) ${item.id}');
                 #end
@@ -230,7 +347,7 @@ class Fragment extends Layer {
         }
 
 #if editor
-        instance.edited = context.editedItems;
+        instance.edited = editedItems;
 #end
 
         // Set name
@@ -304,7 +421,7 @@ class Fragment extends Layer {
 
             // If instance has an assets property, set it from our fragment context
             if (FieldInfo.typeOf(item.entity, 'assets') == 'ceramic.Assets') {
-                instance.setProperty('assets', context.assets);
+                instance.setProperty('assets', assets);
             }
 
             // Add instance (if new)
@@ -316,6 +433,20 @@ class Fragment extends Layer {
             add(cast instance);
         }
 
+        #if ceramic_entity_script
+        // If there is a script object, give access to fragment
+        var script = instance.script;
+        if (script != null) {
+            var interp = script.interp;
+            if (interp != null) {
+                var variables = interp.variables;
+                if (variables != null) {
+                    variables.set('fragment', this);
+                }
+            }
+        }
+        #end
+
         // Also ensure track is up to date, if there is any and the item is new
         if (existing == null) {
             putTracksForItem(item.id);
@@ -324,7 +455,9 @@ class Fragment extends Layer {
 #if editor
         // Update editable fields from instance
         computeInstanceContentIfNeeded(item.id, instance);
-        updateEditableFieldsFromInstance(item.id);
+        if (editedItems) {
+            updateEditableFieldsFromInstance(item.id);
+        }
 #end
 
         return instance;
@@ -335,7 +468,7 @@ class Fragment extends Layer {
 
         pendingLoads++;
         converter.basicToField(
-            context.assets,
+            assets,
             value,
             function(value:Dynamic) {
 
@@ -357,7 +490,10 @@ class Fragment extends Layer {
                         instance.setProperty(field, value);
 
                         #if editor
-                        updateEditableFieldsFromInstance(item.id);
+                        computeInstanceContentIfNeeded(item.id, instance);
+                        if (editedItems) {
+                            updateEditableFieldsFromInstance(item.id);
+                        }
                         #end
                     }
                     else {
@@ -388,7 +524,10 @@ class Fragment extends Layer {
                             }
                             */
                             #if editor
-                            updateEditableFieldsFromInstance(item.id);
+                            computeInstanceContentIfNeeded(item.id, instance);
+                            if (editedItems) {
+                                updateEditableFieldsFromInstance(item.id);
+                            }
                             #end
                             // #else
                             // instance.setProperty(field, value);
@@ -777,9 +916,7 @@ class Fragment extends Layer {
         // Update keyframes
         if (track.keyframes != null && track.keyframes.length > 0) {
             // Create timeline is not created already
-            if (timeline == null) {
-                timeline = new Timeline();
-            }
+            createTimelineIfNeeded();
 
             var field = track.field;
             var trackId = entityId + '#' + field;
@@ -936,7 +1073,9 @@ class Fragment extends Layer {
         #if editor
         // Update editable fields from instance
         computeInstanceContentIfNeeded(entityId, entity);
-        updateEditableFieldsFromInstance(entityId);
+        if (editedItems) {
+            updateEditableFieldsFromInstance(entityId);
+        }
         #end
 
     }
@@ -972,6 +1111,28 @@ class Fragment extends Layer {
 
         //trace('remove track $entity # $field');
 
+    }
+    
+    public function createTimelineIfNeeded() {
+        
+        if (timeline == null) {
+            timeline = new Timeline();
+            timeline.autoUpdate = autoUpdateTimeline;
+        }
+
+    }
+
+    public var paused(get, set):Bool;
+    function get_paused():Bool {
+        return timeline != null && timeline.paused;
+    }
+    function set_paused(paused:Bool):Bool {
+        var prevPaused = timeline != null && timeline.paused;
+        if (prevPaused != paused) {
+            createTimelineIfNeeded();
+            timeline.paused = paused;
+        }
+        return paused;
     }
 
 }
