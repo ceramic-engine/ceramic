@@ -29,6 +29,7 @@ class ScriptUtils {
         var word = '';
         var openBraces:Int = 0;
         var openParens:Int = 0;
+        var loopIndex:Int = 0;
 
         inline function updateWord() {
 
@@ -60,6 +61,46 @@ class ScriptUtils {
                 result.add(RE_FOR_OF.matched(2));
                 result.add(' in ');
                 i += RE_FOR_OF.matched(0).length;
+            }
+            else {
+                result.add(c);
+                i++;
+            }
+
+        }
+
+        inline function consumeWhile() {
+
+            if (RE_WHILE_START.match(after)) {
+                var targetParens = openParens;
+                openParens++;
+                i += RE_WHILE_START.matched(0).length;
+                result.add(RE_WHILE_START.matched(0));
+                result.add('_checkLoop($loopIndex) && (');
+                while (i < len) {
+                    c = code.charAt(i);
+                    if (c == '(') {
+                        openParens++;
+                        result.add('(');
+                        i++;
+                    }
+                    else if (c == ')') {
+                        openParens--;
+                        if (openParens == targetParens) {
+                            result.add('))');
+                            i++;
+                            break;
+                        }
+                        else {
+                            result.add(')');
+                            i++;
+                        }
+                    }
+                    else {
+                        result.add(c);
+                        i++;
+                    }
+                }
             }
             else {
                 result.add(c);
@@ -110,6 +151,9 @@ class ScriptUtils {
                 else if (word == 'const') {
                     result.add('var');
                     i += word.length;
+                }
+                else if (word == 'while') {
+                    consumeWhile();
                 }
                 else {
                     result.add(c);
@@ -257,6 +301,8 @@ class ScriptUtils {
     static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)'|`(?:[^`\\]*(?:\\.[^`\\]*)*)`)/;
 
     static var RE_FOR_OF = ~/^for\s*\(\s*(var\s+)?([a-zA-Z0-9_]+)\s*(of|in)\s+/;
+
+    static var RE_WHILE_START = ~/^while\s*\(/;
 
     static var RE_ARROW_FUNC_NO_ARG = ~/^\(\s*\)\s*=>/;
 

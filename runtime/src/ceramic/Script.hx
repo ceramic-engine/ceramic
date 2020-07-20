@@ -8,7 +8,13 @@ import ceramic.Shortcuts.*;
 
 class Script extends Entity implements Component {
 
+    static var MAX_LOOP_ITERATIONS:Int = 1999999;
+
     public static var errorHandlers:Array<(error:String,line:Int,char:Int)->Void> = [];
+
+    public static var traceHandlers:Array<(v:Dynamic,?pos:haxe.PosInfos)->Void> = [];
+
+    public static var log(default, null):Logger = new Logger();
 
     static var parser:Parser = null;
 
@@ -25,6 +31,8 @@ class Script extends Entity implements Component {
     var running:Bool = false;
 
     var broken:Bool = false;
+
+    var loopStates:IntIntMap = null;
 
     public function new(content:String) {
 
@@ -49,6 +57,18 @@ class Script extends Entity implements Component {
 
             interp.variables.set('this', this);
             interp.variables.set('self', this);
+
+            interp.variables.set('_checkLoop', checkLoop);
+
+            interp.variables.set('trace', function(v:Dynamic, ?pos:haxe.PosInfos) {
+                if (traceHandlers != null) {
+                    for (i in 0...traceHandlers.length) {
+                        traceHandlers[i](v, pos);
+                    }
+                }
+                haxe.Log.trace(v, pos);
+            });
+            interp.variables.set('log', Script.log);
 
             ready = true;
         }
@@ -128,11 +148,26 @@ class Script extends Entity implements Component {
     public function getEntity(itemId:String):Entity {
 
         if (Std.is(entity, Visual)) {
+            // Try to get fragment from visual
             var visual:Visual = cast entity;
             var fragment = visual.firstParentWithClass(Fragment);
             if (fragment != null) {
+                // Then get entity from fragment
                 var item = fragment.get(itemId);
                 return item;
+            }
+        }
+
+        // Try to get fragment from variables
+        if (interp != null) {
+            var variables = interp.variables;
+            if (variables != null) {
+                var rawFragment = variables.get('fragment');
+                if (rawFragment != null && Std.is(rawFragment, Fragment)) {
+                    var fragment:Fragment = rawFragment;
+                    var item = fragment.get(itemId);
+                    return item;
+                }
             }
         }
 
@@ -153,6 +188,12 @@ class Script extends Entity implements Component {
         
         return null;
         
+    }
+
+    public function get(name:String):Dynamic {
+        
+        return interp != null && interp.variables.get(name);
+
     }
 
     public function call(name:String, ?args:Array<Dynamic>):Dynamic {
@@ -208,6 +249,30 @@ class Script extends Entity implements Component {
 
     }
 
+    function checkLoop(index:Int):Bool {
+
+        if (loopStates == null) {
+            app.onUpdate(this, resetCheckLoop);
+            loopStates = new IntIntMap();
+        }
+
+        var iterations = loopStates.get(index);
+        if (iterations > MAX_LOOP_ITERATIONS) {
+            throw 'Infinite loop!';
+        }
+        iterations++;
+        loopStates.set(index, iterations);
+
+        return true;
+
+    }
+
+    function resetCheckLoop(_) {
+
+        loopStates.clear();
+
+    }
+
 }
 
 class Interp extends hscript.Interp {
@@ -233,6 +298,26 @@ class Interp extends hscript.Interp {
         }
 
     }
+
+	override function get(o:Dynamic, f:String):Dynamic {
+        if (o == null) error(EInvalidAccess(f));
+        if (Std.is(o, ScriptModule)) {
+            var module:ScriptModule = cast o;
+            return module.owner.get(f);
+        }
+		return {
+			#if php
+				// https://github.com/HaxeFoundation/haxe/issues/4915
+				try {
+					Reflect.getProperty(o, f);
+				} catch (e:Dynamic) {
+					Reflect.field(o, f);
+				}
+			#else
+				Reflect.getProperty(o, f);
+			#end
+		}
+	}
 
     override function cnew(cl:String, args:Array<Dynamic>):Dynamic {
 
@@ -260,13 +345,15 @@ class Interp extends hscript.Interp {
         try {
             return super.exprReturn(e);
         } catch (e:Dynamic) {
-            @:privateAccess owner.broken = true;
-            log.error('Error when running script function: $e');
-            for (handler in Script.errorHandlers) {
-                handler('Error when running script function: $e', -1, -1);
+            if (owner != null) {
+                @:privateAccess owner.broken = true;
+                log.error('Error when running script function: $e');
+                for (handler in Script.errorHandlers) {
+                    handler('Error when running script function: $e', -1, -1);
+                }
+                owner.destroy();
+                owner = null;
             }
-            owner.destroy();
-            owner = null;
         }
         return null;
 

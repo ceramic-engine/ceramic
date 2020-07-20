@@ -23,15 +23,20 @@ class Logger extends Entity {
 
     var indentPrefix:String = '';
 
-    function new() {
+    static var didInitOnce:Bool = false;
+
+    public function new() {
 
         super();
         
+        if (!didInitOnce) {
+            didInitOnce = true;
 #if unity
-        haxe.Log.trace = function(v:Dynamic, ?infos:haxe.PosInfos):Void {
-            untyped __cs__('UnityEngine.Debug.Log({0})', v);
-        };
+            haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
+                untyped __cs__('UnityEngine.Debug.Log({0})', v);
+            };
 #end
+        }
     }
 
 /// Public API
