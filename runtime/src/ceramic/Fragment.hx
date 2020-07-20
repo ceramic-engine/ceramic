@@ -5,6 +5,7 @@ import ceramic.Entity;
 import ceramic.Assets;
 
 import haxe.DynamicAccess;
+import haxe.Json;
 
 using ceramic.Extensions;
 using StringTools;
@@ -163,7 +164,7 @@ class Fragment extends Layer {
                 if (project != null) {
                     var editorFragment = project.fragmentById(fragmentId);
                     if (editorFragment != null) {
-                        return editorFragment.toFragmentData();
+                        return Json.parse(Json.stringify(editorFragment.toFragmentData()));
                     }
                 }
             }
