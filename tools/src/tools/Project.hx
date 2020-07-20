@@ -160,6 +160,8 @@ class Project {
         app.editable.push('ceramic.Text');
         app.editable.push('ceramic.Mesh');
         app.editable.push('ceramic.Shape');
+        app.editable.push('ceramic.Ngon');
+        app.editable.push('ceramic.Arc');
         app.editable.push('ceramic.Line');
         app.editable.push('ceramic.Points');
         app.editable.push('ceramic.Particles');
