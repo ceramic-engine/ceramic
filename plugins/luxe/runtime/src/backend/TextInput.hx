@@ -37,8 +37,10 @@ class TextInput implements spec.TextInput {
 
         inputRectX = Std.int(x);
         inputRectY = Std.int(y);
-        inputRectW = Std.int(w);
-        inputRectH = Std.int(h);
+
+        // On Android (again), width & height must be above zero
+        inputRectW = Std.int(Math.max(1, w));
+        inputRectH = Std.int(Math.max(1, h));
 
 #if cpp
         SDL.setTextInputRect(
