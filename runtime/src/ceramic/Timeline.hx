@@ -19,6 +19,16 @@ class Timeline extends Entity implements Component {
     /** Whether this timeline should loop. Ignored if timeline's `duration` is `-1` (not defined). */
     public var loop:Bool = true;
 
+    /** Whether this timeline should bind itself to update cycle automatically or not (default `true`). */
+    public var autoUpdate(default, set):Bool = true;
+    function set_autoUpdate(autoUpdate:Bool):Bool {
+        if (this.autoUpdate != autoUpdate) {
+            this.autoUpdate = autoUpdate;
+            bindOrUnbindUpdateIfNeeded();
+        }
+        return autoUpdate;
+    }
+
     /** Elapsed time on this timeline.
         Gets back to zero when `loop=true` and time reaches a defined `duration`. */
     public var time(default, null):Float = 0;
@@ -53,15 +63,15 @@ class Timeline extends Entity implements Component {
         update event depending on current settings */
     inline function bindOrUnbindUpdateIfNeeded():Void {
 
-        app.offUpdate(update);
+        app.offPreUpdate(update);
 
-        if (!paused) {
-            app.onUpdate(this, update);
+        if (!paused && autoUpdate) {
+            app.onPreUpdate(this, update);
         }
 
     }
 
-    function update(delta:Float):Void {
+    public function update(delta:Float):Void {
 
         inlineSeek(time + delta);
 
