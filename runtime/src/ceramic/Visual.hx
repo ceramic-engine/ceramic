@@ -1880,6 +1880,10 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
     public function add(visual:Visual):Void {
 
+        if (visual == this) {
+            throw 'A visual cannot add itself as child!';
+        }
+
         App.app.hierarchyDirty = true;
 
         if (visual.parent != null) {
