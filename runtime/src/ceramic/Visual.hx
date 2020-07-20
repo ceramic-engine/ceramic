@@ -1013,7 +1013,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         return height;
     }
 
-    @editable({ slider: [-360, 360], degrees: true })
+    @editable({ slider: [0, 360], degrees: true })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
         if (this.rotation == rotation) return rotation;
@@ -1513,6 +1513,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
     public function hits(x:Float, y:Float):Bool {
 
         // A visuals that renders to texture never hits by default
+        // unless the render texture is managed by a `Filter` instance, re-routing touch
         if (renderTargetDirty) computeRenderTarget();
         if (computedRenderTarget != null) {
             var parent = this.parent;
@@ -1581,7 +1582,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 /// Screen to visual positions and vice versa
 
     /** Assign X and Y to given point after converting them from screen coordinates to current visual coordinates. */
-    public function screenToVisual(x:Float, y:Float, point:Point):Void {
+    public function screenToVisual(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
         if (matrixDirty) {
             computeMatrix();
@@ -1593,20 +1594,63 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
 
+        if (handleFilters) {
+            // A visuals that renders to texture never hits by default
+            // unless the render texture is managed by a `Filter` instance, re-routing touch
+            if (renderTargetDirty) computeRenderTarget();
+            if (computedRenderTarget != null) {
+                var parent = this.parent;
+                if (parent != null) {
+                    do {
+                        if (parent.asQuad != null && Std.is(parent, Filter)) {
+                            var filter:Filter = cast parent;
+                            if (filter.renderTexture == computedRenderTarget) {
+                                filter.screenToVisual(point.x, point.y, point);
+                                break;
+                            }
+                        }
+                        parent = parent.parent;
+                    }
+                    while (parent != null);
+                }
+            }
+        }
+
     }
 
     /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
-    public function visualToScreen(x:Float, y:Float, point:Point):Void {
+    public function visualToScreen(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
         if (matrixDirty) {
             computeMatrix();
         }
 
-        _matrix.identity();
         _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
 
         point.x = _matrix.transformX(x, y);
         point.y = _matrix.transformY(x, y);
+
+        if (handleFilters) {
+            // A visuals that renders to texture never hits by default
+            // unless the render texture is managed by a `Filter` instance, re-routing touch
+            if (renderTargetDirty) computeRenderTarget();
+            if (computedRenderTarget != null) {
+                var parent = this.parent;
+                if (parent != null) {
+                    do {
+                        if (parent.asQuad != null && Std.is(parent, Filter)) {
+                            var filter:Filter = cast parent;
+                            if (filter.renderTexture == computedRenderTarget) {
+                                filter.visualToScreen(point.x, point.y, point);
+                                break;
+                            }
+                        }
+                        parent = parent.parent;
+                    }
+                    while (parent != null);
+                }
+            }
+        }
 
     }
 
