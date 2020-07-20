@@ -42,7 +42,7 @@ class IO implements spec.IO {
             keyValue.destroy();
 
             // Try to locate a file in assets
-            var assetsFilePath = ceramic.internal.PlatformSpecific.getAssetsPath();
+            var assetsFilePath = ceramic.PlatformSpecific.getAssetsPath();
             if (assetsFilePath != null) {
                 var dbInAssets = ceramic.Path.join([assetsFilePath, 'data.db']);
                 if (!FileSystem.exists(dbInAssets)) {
@@ -58,7 +58,7 @@ class IO implements spec.IO {
             }
             else {
                 // No assets file path on this platform. Try to get bytes directly
-                var bytes = ceramic.internal.PlatformSpecific.readBytesFromAsset('data.db');
+                var bytes = ceramic.PlatformSpecific.readBytesFromAsset('data.db');
                 if (bytes == null) {
                     throw 'Failed to extract bytes from data.db asset';
                 }

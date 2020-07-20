@@ -37,7 +37,7 @@ class Clipboard implements spec.Clipboard {
     public function getText():String {
 
         #if (web && ceramic_use_electron)
-        var electron = ceramic.internal.PlatformSpecific.resolveElectron();
+        var electron = ceramic.PlatformSpecific.resolveElectron();
         if (electron != null) {
             var text = electron.clipboard.readText();
             return text;
@@ -57,7 +57,7 @@ class Clipboard implements spec.Clipboard {
         clipboardText = text;
 
         #if (web && ceramic_use_electron)
-        var electron = ceramic.internal.PlatformSpecific.resolveElectron();
+        var electron = ceramic.PlatformSpecific.resolveElectron();
         if (electron != null) {
             electron.clipboard.writeText(text);
             ceramic.Timer.delay(null, 0.1, () -> {

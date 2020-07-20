@@ -1,6 +1,6 @@
 package ceramic;
 
-import ceramic.internal.PlatformSpecific;
+import ceramic.PlatformSpecific;
 import haxe.rtti.CType;
 import haxe.CallStack;
 import ceramic.Shortcuts.*;

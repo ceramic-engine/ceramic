@@ -1,6 +1,6 @@
 package ceramic;
 
-import ceramic.internal.PlatformSpecific;
+import ceramic.PlatformSpecific;
 import ceramic.App.app;
 
 #if (sys || node || nodejs)

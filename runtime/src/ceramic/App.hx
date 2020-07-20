@@ -9,7 +9,7 @@ import hxtelemetry.HxTelemetry;
 import sdl.SDL;
 #end
 
-import ceramic.internal.PlatformSpecific;
+import ceramic.PlatformSpecific;
 
 import ceramic.Settings;
 import ceramic.Assets;

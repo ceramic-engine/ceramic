@@ -5,7 +5,7 @@ import dialogs.Dialogs as LincDialogs;
 #end
 
 #if (web && ceramic_use_electron)
-import ceramic.internal.PlatformSpecific;
+import ceramic.PlatformSpecific;
 #end
 
 import ceramic.Shortcuts.*;

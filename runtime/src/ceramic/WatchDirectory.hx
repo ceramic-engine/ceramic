@@ -34,9 +34,9 @@ class WatchDirectory extends Entity {
         #if js
         if (!didTryRequireChokidar) {
             didTryRequireChokidar = true;
-            fs = ceramic.internal.PlatformSpecific.nodeRequire('fs');
+            fs = ceramic.PlatformSpecific.nodeRequire('fs');
             if (fs != null)
-                chokidar = ceramic.internal.PlatformSpecific.nodeRequire('chokidar');
+                chokidar = ceramic.PlatformSpecific.nodeRequire('chokidar');
         }
         #end
 

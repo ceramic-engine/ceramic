@@ -1,4 +1,4 @@
-package ceramic.internal;
+package ceramic;
 
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;

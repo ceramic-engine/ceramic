@@ -10,7 +10,7 @@ import js.node.ChildProcess;
 #end
 
 import ceramic.Path;
-import ceramic.internal.PlatformSpecific;
+import ceramic.PlatformSpecific;
 import ceramic.Shortcuts.*;
 
 using StringTools;
