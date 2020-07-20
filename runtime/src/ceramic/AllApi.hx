@@ -4,7 +4,8 @@ import Std;
 import StringTools;
 import Math;
 import Array;
-import haxe.ds.Map;
+import haxe.ds.StringMap;
+import ceramic.scriptable.ScriptableMap;
 
 import tracker.Autorun;
 import tracker.DynamicEvents;
@@ -75,7 +76,6 @@ import ceramic.Float32Array;
 import ceramic.FontAsset;
 import ceramic.Fonts;
 import ceramic.Fragment;
-import ceramic.FragmentContext;
 import ceramic.FragmentData;
 import ceramic.FragmentItem;
 import ceramic.Fragments;
@@ -91,6 +91,7 @@ import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntMap;
 import ceramic.IntIntMap;
+import ceramic.Json;
 import ceramic.Key;
 import ceramic.KeyAcceleratorItem;
 import ceramic.KeyBinding;
@@ -102,6 +103,7 @@ import ceramic.Line;
 import ceramic.LineCap;
 import ceramic.LineJoin;
 import ceramic.Logger;
+import ceramic.scriptable.ScriptableMap;
 import ceramic.Mesh;
 import ceramic.scriptable.ScriptableMeshColorMapping;
 import ceramic.MeshPool;
@@ -212,6 +214,7 @@ class AllApi {
         interp.variables.set('Std', ceramic.scriptable.ScriptableStd);
         interp.variables.set('StringTools', StringTools);
         interp.variables.set('Math', Math);
+        interp.variables.set('StringMap', haxe.ds.StringMap);
         
         interp.variables.set('Autorun', tracker.Autorun);
         interp.variables.set('DynamicEvents', tracker.DynamicEvents);
@@ -277,7 +280,6 @@ class AllApi {
         interp.variables.set('FontAsset', ceramic.FontAsset);
         interp.variables.set('Fonts', ceramic.Fonts);
         interp.variables.set('Fragment', ceramic.Fragment);
-        interp.variables.set('FragmentContext', ceramic.FragmentContext);
         interp.variables.set('Fragments', ceramic.Fragments);
         interp.variables.set('FragmentsAsset', ceramic.FragmentsAsset);
         interp.variables.set('GeometryUtils', ceramic.GeometryUtils);
@@ -286,6 +288,7 @@ class AllApi {
         interp.variables.set('ImageAsset', ceramic.ImageAsset);
         interp.variables.set('Images', ceramic.Images);
         interp.variables.set('InitSettings', ceramic.InitSettings);
+        interp.variables.set('Json', ceramic.Json);
         interp.variables.set('Key', ceramic.Key);
         interp.variables.set('KeyAcceleratorItem', ceramic.KeyAcceleratorItem);
         interp.variables.set('KeyBinding', ceramic.KeyBinding);

@@ -10,7 +10,6 @@ import haxe.macro.TypedExprTools;
 import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.io.Path;
-import haxe.Json;
 import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
@@ -101,6 +100,7 @@ class ExportApi {
             dts.add('const self: Entity;\n');
             dts.add('const entity: Entity;\n');
             dts.add('const visual: AnyVisual;\n');
+            dts.add('const fragment: Fragment;\n');
             dts.add('\n');
             dts.add('const app: App;\n');
             dts.add('const screen: Screen;\n');
@@ -558,6 +558,13 @@ class ExportApi {
                         case TDynamic(t):
                         case TLazy(f):
                         case TAbstract(t, params):
+                            // TODO
+                            //trace('TABSTRACT $t $params');
+                            var type = t.get();
+                            var impl = type.impl.get();
+                            for (field in impl.statics.get()) {
+                                //trace('field: ' + field.name);
+                            }
                     }
                 }
             }
