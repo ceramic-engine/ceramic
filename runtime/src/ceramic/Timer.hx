@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 class Timer {
@@ -41,7 +43,16 @@ class Timer {
                     if (callback.time <= now) {
                         if (callback.interval >= 0) {
                             while (callback.time <= now && !callback.cleared) {
-                                callback.callback();
+                                #if ceramic_check_handlers
+                                try {
+                                #end
+                                    callback.callback();
+                                #if ceramic_check_handlers
+                                }
+                                catch (e:Dynamic) {
+                                    log.error('Error in timer callback: ' + e);
+                                }
+                                #end
                                 if (callback.interval == 0) break;
                                 callback.time += callback.interval;
                             }
@@ -51,7 +62,16 @@ class Timer {
                             }
                         }
                         else {
-                            callback.callback();
+                            #if ceramic_check_handlers
+                            try {
+                            #end
+                                callback.callback();
+                            #if ceramic_check_handlers
+                            }
+                            catch (e:Dynamic) {
+                                log.error('Error in timer callback: ' + e);
+                            }
+                            #end
                         }
                     }
                     else {
