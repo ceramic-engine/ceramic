@@ -467,6 +467,11 @@ class Fragment extends Layer {
 
     private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
 
+        #if editor
+        var isStillSync = true;
+        var shouldUpdateFromFields = false;
+        #end
+
         pendingLoads++;
         converter.basicToField(
             assets,
@@ -491,9 +496,14 @@ class Fragment extends Layer {
                         instance.setProperty(field, value);
 
                         #if editor
-                        computeInstanceContentIfNeeded(item.id, instance);
-                        if (editedItems) {
-                            updateEditableFieldsFromInstance(item.id);
+                        if (isStillSync) {
+                            shouldUpdateFromFields = true;
+                        }
+                        else {
+                            computeInstanceContentIfNeeded(item.id, instance);
+                            if (editedItems) {
+                                updateEditableFieldsFromInstance(item.id);
+                            }
                         }
                         #end
                     }
@@ -540,6 +550,16 @@ class Fragment extends Layer {
                 if (pendingLoads == 0) emitReady();
             }
         );
+
+        #if editor
+        isStillSync = false;
+        if (shouldUpdateFromFields) {
+            computeInstanceContentIfNeeded(item.id, instance);
+            if (editedItems) {
+                updateEditableFieldsFromInstance(item.id);
+            }
+        }
+        #end
 
     }
 
@@ -744,7 +764,7 @@ class Fragment extends Layer {
                 // TODO?
             }
             else {
-                if (Reflect.field(item.props, field) != value || !Reflect.hasField(item.props, field)) {
+                if (!Equal.equal(Reflect.field(item.props, field), value) || !Reflect.hasField(item.props, field)) {
                     hasChanged = true;
                     Reflect.setField(item.props, field, value);
                 }
