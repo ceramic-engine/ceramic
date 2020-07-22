@@ -1272,9 +1272,9 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         if (this.anchorX == anchorX && this.anchorY == anchorY) return;
 
         // Get initial pos
-        visualToScreen(0, 0, _point);
+        visualToScreen(0, 0, _point, false);
         if (parent != null) {
-            parent.screenToVisual(_point.x, _point.y, _point);
+            parent.screenToVisual(_point.x, _point.y, _point, false);
         }
         
         var prevX = _point.x;
@@ -1283,9 +1283,9 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         this.anchorY = anchorY;
 
         // Get new pos
-        this.visualToScreen(0, 0, _point);
+        this.visualToScreen(0, 0, _point, false);
         if (parent != null) {
-            parent.screenToVisual(_point.x, _point.y, _point);
+            parent.screenToVisual(_point.x, _point.y, _point, false);
         }
 
         // Move visual accordingly
@@ -2024,7 +2024,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
                             x = vertices[i];
                             y = vertices[i + 1];
 
-                            child.visualToScreen(x, y, point);
+                            child.visualToScreen(x, y, point, false);
                             if (point.x > maxX) maxX = point.x;
                             if (point.y > maxY) maxY = point.y;
                             if (point.x < minX) minX = point.x;
@@ -2035,25 +2035,25 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
                     }
                     else {
-                        child.visualToScreen(0, 0, point);
+                        child.visualToScreen(0, 0, point, false);
                         if (point.x > maxX) maxX = point.x;
                         if (point.y > maxY) maxY = point.y;
                         if (point.x < minX) minX = point.x;
                         if (point.y < minY) minY = point.y;
 
-                        child.visualToScreen(child.width, 0, point);
+                        child.visualToScreen(child.width, 0, point, false);
                         if (point.x > maxX) maxX = point.x;
                         if (point.y > maxY) maxY = point.y;
                         if (point.x < minX) minX = point.x;
                         if (point.y < minY) minY = point.y;
 
-                        child.visualToScreen(0, child.height, point);
+                        child.visualToScreen(0, child.height, point, false);
                         if (point.x > maxX) maxX = point.x;
                         if (point.y > maxY) maxY = point.y;
                         if (point.x < minX) minX = point.x;
                         if (point.y < minY) minY = point.y;
 
-                        child.visualToScreen(child.width, child.height, point);
+                        child.visualToScreen(child.width, child.height, point, false);
                         if (point.x > maxX) maxX = point.x;
                         if (point.y > maxY) maxY = point.y;
                         if (point.x < minX) minX = point.x;
@@ -2063,15 +2063,15 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
             }
 
             // Keep absolute position to restore it after we update anchor
-            visualToScreen(0, 0, point);
+            visualToScreen(0, 0, point, false);
             var origX = point.x;
             var origY = point.y;
 
-            screenToVisual(minX, minY, point);
+            screenToVisual(minX, minY, point, false);
             minX = point.x;
             minY = point.y;
 
-            screenToVisual(maxX, maxY, point);
+            screenToVisual(maxX, maxY, point, false);
             maxX = point.x;
             maxY = point.y;
 
@@ -2094,7 +2094,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
             anchorY = _height != 0 ? -minY / _height : 0;
 
             // Restore position
-            screenToVisual(origX, origY, point);
+            screenToVisual(origX, origY, point, false);
             this.x = point.x - _width * anchorX;
             this.y = point.y - _height * anchorY;
 
