@@ -25,6 +25,7 @@ class KeyBinding extends Entity {
 
     #if web
     var cmdPressed:Int = 0;
+    var ctrlPressed:Int = 0;
     #end
 
 /// Lifecycle
@@ -102,6 +103,9 @@ class KeyBinding extends Entity {
             if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
                 cmdPressed++;
             }
+            else if (scanCode == ScanCode.LCTRL || scanCode == ScanCode.RCTRL) {
+                ctrlPressed++;
+            }
             #end
 
             if (key.scanCode == scanCode) {
@@ -111,7 +115,7 @@ class KeyBinding extends Entity {
                     checkStatus();
 
                     #if web
-                    if (cmdPressed > 0 && scanCode != ScanCode.LMETA && scanCode != ScanCode.RMETA && scanCode != ScanCode.LSHIFT && scanCode != ScanCode.RSHIFT) {
+                    if ((cmdPressed > 0 || ctrlPressed > 0) && scanCode != ScanCode.LMETA && scanCode != ScanCode.RMETA && scanCode != ScanCode.LCTRL && scanCode != ScanCode.RCTRL && scanCode != ScanCode.LSHIFT && scanCode != ScanCode.RSHIFT) {
                         app.onceUpdate(this, _ -> {
                             if (pressedItems[itemIndex] > 0)
                                 pressedItems[itemIndex]--;
@@ -131,7 +135,19 @@ class KeyBinding extends Entity {
             if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
                 cmdPressed--;
 
-                if (cmdPressed == 0) {
+                if (cmdPressed == 0 && ctrlPressed == 0) {
+                    for (i in 0...pressedItems.length) {
+                        pressedItems[itemIndex] = 0;
+                    }
+
+                    checkStatus();
+                    return;
+                }
+            }
+            else if (scanCode == ScanCode.LCTRL || scanCode == ScanCode.RCTRL) {
+                ctrlPressed--;
+
+                if (cmdPressed == 0 && ctrlPressed == 0) {
                     for (i in 0...pressedItems.length) {
                         pressedItems[itemIndex] = 0;
                     }
@@ -164,7 +180,7 @@ class KeyBinding extends Entity {
                     checkStatus();
 
                     #if web
-                    if (cmdPressed > 0 && keyCode != KeyCode.LMETA && keyCode != KeyCode.RMETA && keyCode != KeyCode.LSHIFT && keyCode != KeyCode.RSHIFT) {
+                    if ((cmdPressed > 0 || ctrlPressed > 0) && keyCode != KeyCode.LMETA && keyCode != KeyCode.RMETA && keyCode != ScanCode.LCTRL && keyCode != ScanCode.RCTRL && keyCode != KeyCode.LSHIFT && keyCode != KeyCode.RSHIFT) {
                         app.onceUpdate(this, _ -> {
                             if (pressedItems[itemIndex] > 0)
                                 pressedItems[itemIndex]--;
@@ -198,7 +214,7 @@ class KeyBinding extends Entity {
             if (key.scanCode == ScanCode.LSHIFT) {
                 leftShiftPressed = true;
             }
-            else if (key.scanCode == ScanCode.LSHIFT) {
+            else if (key.scanCode == ScanCode.RSHIFT) {
                 rightShiftPressed = true;
             }
 
@@ -209,7 +225,7 @@ class KeyBinding extends Entity {
             if (key.scanCode == ScanCode.LSHIFT) {
                 leftShiftPressed = false;
             }
-            else if (key.scanCode == ScanCode.LSHIFT) {
+            else if (key.scanCode == ScanCode.RSHIFT) {
                 rightShiftPressed = false;
             }
 
