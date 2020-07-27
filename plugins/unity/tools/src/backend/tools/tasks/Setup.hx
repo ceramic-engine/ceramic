@@ -40,7 +40,7 @@ class Setup extends tools.Task {
         var ceramicPath = context.ceramicToolsPath;
 
         var outPath = Path.join([cwd, 'out']);
-        var targetPath = target.outPath('luxe', cwd, context.debug, variant);
+        var targetPath = target.outPath('unity', cwd, context.debug, variant);
         var hxmlPath = Path.join([targetPath, 'build.hxml']);
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
@@ -164,9 +164,13 @@ class Setup extends tools.Task {
             finalHxml.push('-D no-root');
             
             if (Sys.systemName() == 'Mac') {
-                finalHxml.push('-D csharp-compiler=/Applications/Unity/Unity.app/Contents/Mono/bin/gmcs');
-                finalHxml.push('-D net-std=/Applications/Unity/Unity.app/Contents/Mono/lib/mono/unity');
-                finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEngine.dll');
+                // TODO smarter unity detection
+                var unityAppPath = '/Applications/Unity/Hub/Editor/2019.4.5f1/Unity.app'; // LTS
+
+                //finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/Mono/bin/gmcs');
+                finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/MonoBleedingEdge/bin/mcs');
+                finalHxml.push('-D net-std=$unityAppPath/Contents/Mono/lib/mono/unity');
+                finalHxml.push('-net-lib=$unityAppPath/Contents/Managed/UnityEngine.dll');
                 //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll');
             }
             // TODO windows

@@ -114,4 +114,10 @@ class Audio implements spec.Audio {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+        
+        return false;
+
+    }
+
 } //Audio

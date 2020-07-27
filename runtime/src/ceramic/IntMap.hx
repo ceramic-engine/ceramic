@@ -21,7 +21,11 @@ class IntMap<V> {
     /** Values as they are stored.
         Can be used to iterate on values directly,
         but can contain null values. */
+    #if cs
+    public var values(default,null):Vector<Dynamic>;
+    #else
     public var values(default,null):Vector<V>;
+    #end
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 

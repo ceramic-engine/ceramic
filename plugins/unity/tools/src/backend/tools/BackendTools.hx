@@ -180,7 +180,7 @@ class BackendTools implements tools.spec.BackendTools {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
 
-        trace('context.project: ' + context.project.app.unity.project);
+        print('context.project: ' + context.project.app.unity.project);
 
         // Add/update missing assets
         //

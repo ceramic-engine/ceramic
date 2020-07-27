@@ -97,5 +97,17 @@ class Shaders implements spec.Shaders {
         return customFloatAttributesSize;
 
     }
+    
+    public function maxIfStatementsByFragmentShader():Int {
+
+        return 0;
+
+    }
+
+    public function canBatchWithMultipleTextures(shader:Shader):Bool {
+
+        return false;
+        
+    }
 
 }

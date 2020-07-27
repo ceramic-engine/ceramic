@@ -97,6 +97,7 @@ class Renderer extends Entity {
 #if ceramic_debug_draw
         if (isMainRender) {
             if (ceramic.Timer.now - lastDebugTime > 10) {
+                trace('--- DEBUG DRAW ---');
                 debugDraw = true;
                 lastDebugTime = ceramic.Timer.now;
             } else {

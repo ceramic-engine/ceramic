@@ -6,11 +6,11 @@ import unityengine.Texture2D;
 
 using StringTools;
 
-class Images implements spec.Images {
+class Textures implements spec.Textures {
 
     public function new() {}
 
-    public function load(path:String, ?options:backend.LoadImageOptions, done:Image->Void):Void {
+    public function load(path:String, ?options:backend.LoadTextureOptions, done:Texture->Void):Void {
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
@@ -34,7 +34,7 @@ class Images implements spec.Images {
         // Is texture currently loading?
         if (loadingTextureCallbacks.exists(path)) {
             // Yes, just bind it
-            loadingTextureCallbacks.get(path).push(function(texture:Image) {
+            loadingTextureCallbacks.get(path).push(function(texture:Texture) {
                 if (texture != null) {
                     var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
                     loadedTexturesRetainCount.set(path, retain + 1);
@@ -45,7 +45,7 @@ class Images implements spec.Images {
         }
 
         // Create callbacks list with first entry
-        loadingTextureCallbacks.set(path, [function(texture:Image) {
+        loadingTextureCallbacks.set(path, [function(texture:Texture) {
             if (texture != null) {
                 var retain = loadedTexturesRetainCount.exists(path) ? loadedTexturesRetainCount.get(path) : 0;
                 loadedTexturesRetainCount.set(path, retain + 1);
@@ -61,12 +61,13 @@ class Images implements spec.Images {
             if (unityPath.toLowerCase().endsWith('.png')) {
                 unityPath = unityPath.substr(0, unityPath.length - '.png'.length);
             }
+            trace('TEXTURE PATH $unityPath');
             var unityTexture:Texture2D = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.Texture2D>({0})', unityPath);
 
             if (unityTexture != null) {
 
                 function doCreate() {
-                    var texture = new ImageImpl(path, unityTexture);
+                    var texture = new TextureImpl(path, unityTexture);
 
                     loadedTextures.set(path, texture);
                     var callbacks = loadingTextureCallbacks.get(path);
@@ -98,13 +99,13 @@ class Images implements spec.Images {
 
     var nextRenderIndex:Int = 0;
 
-    public function createImage(width:Int, height:Int):Image {
+    public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         return null;
 
     }
 
-    inline public function createRenderTarget(width:Int, height:Int):Image {
+    inline public function createRenderTarget(width:Int, height:Int):Texture {
 
         // TODO
 
@@ -112,55 +113,83 @@ class Images implements spec.Images {
 
     }
 
-    public function destroyImage(texture:Image):Void {
+    public function destroyTexture(texture:Texture):Void {
 
-        var id = (texture:ImageImpl).path;
+        var id = (texture:TextureImpl).path;
         if (loadedTexturesRetainCount.get(id) > 1) {
             loadedTexturesRetainCount.set(id, loadedTexturesRetainCount.get(id) - 1);
         }
         else {
             loadedTextures.remove(id);
             loadedTexturesRetainCount.remove(id);
-            untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:ImageImpl).unityTexture);
+            untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:TextureImpl).unityTexture);
         }
 
     }
 
-    inline public function getImageWidth(texture:Image):Int {
+    inline public function getTextureWidth(texture:Texture):Int {
 
-        return (texture:ImageImpl).width;
-
-    }
-
-    inline public function getImageHeight(texture:Image):Int {
-
-        return (texture:ImageImpl).height;
+        return (texture:TextureImpl).width;
 
     }
 
-    inline public function getImagePixels(texture:Image):Null<UInt8Array> {
+    inline public function getTextureHeight(texture:Texture):Int {
 
-        return null;
+        return (texture:TextureImpl).height;
 
     }
 
-    inline public function setTextureFilter(texture:Image, filter:ceramic.TextureFilter):Void {
+    public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
+
+        // TODO
+
+        return result;
+
+    }
+
+    public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
+
+        // TODO
+
+    }
+
+    inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
         switch (filter) {
             case LINEAR:
-                (texture:ImageImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
+                (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
             case NEAREST:
-                (texture:ImageImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
+                (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
         }
+
+    }
+
+    inline public function supportsHotReloadPath():Bool {
+        
+        return false;
+
+    }
+
+    /** If this returns a value above 1, that means this backend supports multi-texture batching. */
+    public function maxTexturesByBatch():Int {
+
+        // Multi-texture not supported for now
+        return 1;
+
+    }
+
+    inline public function getTextureIndex(texture:Texture):Int {
+
+        return (texture:TextureImpl).index;
 
     }
 
 /// Internal
 
-    var loadingTextureCallbacks:Map<String,Array<Image->Void>> = new Map();
+    var loadingTextureCallbacks:Map<String,Array<Texture->Void>> = new Map();
 
-    var loadedTextures:Map<String,ImageImpl> = new Map();
+    var loadedTextures:Map<String,TextureImpl> = new Map();
 
     var loadedTexturesRetainCount:Map<String,Int> = new Map();
 
-} //Images
+} //Textures

@@ -16,7 +16,7 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public var texts(default,null) = new backend.Texts();
 
-    public var images(default,null) = new backend.Textures();
+    public var textures(default,null) = new backend.Textures();
 
     public var shaders(default,null) = new backend.Shaders();
 

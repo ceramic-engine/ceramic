@@ -32,4 +32,11 @@ interface Textures {
 
     function createRenderTarget(width:Int, height:Int):Texture;
 
+    /**
+     * If this returns a value above 1, that means this backend supports multi-texture batching.
+     */
+    function maxTexturesByBatch():Int;
+
+    function getTextureIndex(texture:Texture):Int;
+
 }

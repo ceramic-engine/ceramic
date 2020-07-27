@@ -26,6 +26,22 @@ class Shaders implements spec.Shaders {
 
     }
 
+    inline public function customFloatAttributesSize(shader:ShaderImpl):Int {
+
+        var customFloatAttributesSize = 0;
+
+        var allAttrs = shader.customAttributes;
+        if (allAttrs != null) {
+            for (ii in 0...allAttrs.length) {
+                var attr = allAttrs.unsafeGet(ii);
+                customFloatAttributesSize += attr.size;
+            }
+        }
+
+        return customFloatAttributesSize;
+
+    }
+
 /// Public API
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {
@@ -80,6 +96,18 @@ class Shaders implements spec.Shaders {
         
         //
 
+    }
+
+    public function maxIfStatementsByFragmentShader():Int {
+
+        return 0;
+
+    }
+
+    public function canBatchWithMultipleTextures(shader:Shader):Bool {
+        
+        return false;
+        
     }
 
 }

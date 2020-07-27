@@ -31,5 +31,9 @@ interface Shaders {
     function setTexture(shader:Shader, name:String, texture:Texture):Void;
 
     function customFloatAttributesSize(shader:Shader):Int;
+    
+    function maxIfStatementsByFragmentShader():Int;
+
+    function canBatchWithMultipleTextures(shader:Shader):Bool;
 
 }

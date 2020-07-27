@@ -66,4 +66,16 @@ class Textures implements spec.Textures {
 
     }
 
+    public function maxTexturesByBatch():Int {
+
+        return 1;
+
+    }
+
+    inline public function getTextureIndex(texture:Texture):Int {
+
+        return -1;
+
+    }
+
 } //Textures

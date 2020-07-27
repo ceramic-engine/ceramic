@@ -8,6 +8,14 @@ class Main {
 
     static var _lastUpdateTime:Float = -1;
 
+    public static var unityObject:Dynamic = null;
+
+    public static function setUnityObject(unityObject:Dynamic):Void {
+
+        Main.unityObject = unityObject;
+
+    }
+
     public static function main():Void {
 
         var settings = ceramic.App.init();
@@ -15,7 +23,7 @@ class Main {
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..'])); // Fix this TODO
 
         // Init last update time
-        _lastUpdateTime = Sys.time();
+        _lastUpdateTime = Sys.cpuTime();
 
         // Emit ready event
         ceramic.App.app.backend.emitReady();
@@ -24,8 +32,8 @@ class Main {
 
     public static function update() {
 
-        var time:Float = Sys.time();
-        var delta = (time - _lastUpdateTime) * 0.001;
+        var time:Float = Sys.cpuTime();
+        var delta = (time - _lastUpdateTime);
         _lastUpdateTime = time;
 
         // Update

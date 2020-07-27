@@ -41,4 +41,10 @@ class Texts implements spec.Texts {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+        
+        return false;
+
+    }
+
 } //Textures
