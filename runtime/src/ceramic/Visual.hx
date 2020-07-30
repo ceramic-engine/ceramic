@@ -21,7 +21,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
     /** A factor applied to every computed depth. This factor is used to avoid having
         all computed depth values being too small and risking to create precision issues.
         It is expected to work best with use of `depthRange = 1` on visuals (default) */
-    inline static final DEPTH_FACTOR:Float = 10000000;
+    inline static final DEPTH_FACTOR:Float = 2000000;
     
     /** A garanteed margin between max inner computed depth and container depth range,
         and min inner depth and container's computed depth. */
