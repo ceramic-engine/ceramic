@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId "mycompany.myapp"
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion 29
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
         }
