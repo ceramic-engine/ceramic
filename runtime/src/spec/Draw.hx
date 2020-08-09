@@ -40,18 +40,6 @@ interface Draw {
 
     function setRenderWireframe(value:Bool):Void;
 
-    function getPosList():backend.ArrayBuffer;
-
-    function putInPosList(posList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
-    function getUvList():backend.ArrayBuffer;
-
-    function putInUvList(uvList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
-    function getColorList():backend.ArrayBuffer;
-
-    function putInColorList(colorList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
     function beginDrawQuad(quad:ceramic.Quad):Void;
 
     function endDrawQuad():Void;
@@ -68,8 +56,24 @@ interface Draw {
 
     function drawWithoutStencilTest():Void;
 
+#if ceramic_render_pos_indice
+
+#else
     function maxPosFloats():Int;
 
     function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void;
+
+    function getPosList():backend.ArrayBuffer;
+
+    function putInPosList(posList:backend.ArrayBuffer, index:Int, value:Float):Void;
+
+    function getUvList():backend.ArrayBuffer;
+
+    function putInUvList(uvList:backend.ArrayBuffer, index:Int, value:Float):Void;
+
+    function getColorList():backend.ArrayBuffer;
+
+    function putInColorList(colorList:backend.ArrayBuffer, index:Int, value:Float):Void;
+#end
 
 }

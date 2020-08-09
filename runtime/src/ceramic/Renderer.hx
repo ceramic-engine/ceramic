@@ -234,7 +234,9 @@ class Renderer extends Entity {
                                 else if (lastClip.asMesh != null) {
                                     mesh = lastClip.asMesh;
                                     stencilClip = true;
+                                    #if !ceramic_no_mesh
                                     drawMesh(draw, mesh);
+                                    #end
                                     stencilClip = false;
                                     mesh = visual.asMesh;
                                 }
@@ -257,7 +259,9 @@ class Renderer extends Entity {
 
                         else if (mesh != null) {
 
+                            #if !ceramic_no_mesh
                             drawMesh(draw, mesh);
+                            #end
 
                         }
                     }
@@ -645,10 +649,8 @@ class Renderer extends Entity {
         }
 
         // Submit the current batch if we exceed the max buffer size
-        if (draw.shouldFlush(visualNumVertices, visualNumIndices, customFloatAttributesSize)) {
+        if (draw.shouldFlush(4, 6, customFloatAttributesSize)) {
             flushAndCleanState();
-            posFloats = this.posFloats;
-            uvFloats = this.uvFloats;
         }
 
         var w:Float;
@@ -672,7 +674,6 @@ class Renderer extends Entity {
         var matTX:Float = quad.matTX;
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
-        var posList = draw.getPosList();
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
         var quadDrawsRenderTexture:Bool = quad.texture != null && quad.texture.isRenderTexture;
 
@@ -689,6 +690,8 @@ class Renderer extends Entity {
             and let haxe compiler evaluate `hasCustomAttributes` and `hasTextureSlot`
             at compile time. */
         inline function batchQuadVertices(hasCustomAttributes:Bool, hasTextureSlot:Bool) {
+
+            var numPos = draw.getNumPos();
 
             //tl
             draw.putPos(
@@ -716,7 +719,7 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(l, customFloatAttributesSize, 0.0);
+                    draw.putFloatAttribute(0.0);
                 }
             }
 
@@ -734,7 +737,7 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(l, customFloatAttributesSize, 0.0);
+                    draw.putFloatAttribute(0.0);
                 }
             }
 
@@ -749,23 +752,20 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(l, customFloatAttributesSize, 0.0);
+                    draw.putFloatAttribute(0.0);
                 }
             }
-
-            numPos += 4;
 
             draw.putIndice(numPos);
             draw.putIndice(numPos + 1);
             draw.putIndice(numPos + 2);
-            draw.putIndice(numPos + 1);
+            draw.putIndice(numPos + 0);
             draw.putIndice(numPos + 2);
             draw.putIndice(numPos + 3);
 
         }
 
         // Position
-        var n = posFloats;
         if (customFloatAttributesSize == 0) {
             if (textureSlot != -1) {
                 batchQuadVertices(false, true);
@@ -782,8 +782,6 @@ class Renderer extends Entity {
                 batchQuadVertices(true, false);
             }
         }
-
-        this.posFloats = posFloats;
 
         var uvX:Float = 0;
         var uvY:Float = 0;
@@ -811,73 +809,25 @@ class Renderer extends Entity {
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
             }
 
-            var uvList = draw.getUvList();
-
             //tl
-            draw.putInUvList(uvList, uvFloats, uvX);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
+            draw.putUVs(uvX, uvY);
             //tr
-            draw.putInUvList(uvList, uvFloats, uvX + uvW);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
+            draw.putUVs(uvX + uvW, uvY);
             //br
-            draw.putInUvList(uvList, uvFloats, uvX + uvW);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY + uvH);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
+            draw.putUVs(uvX + uvW, uvY + uvH);
             //bl
-            draw.putInUvList(uvList, uvFloats, uvX);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY + uvH);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            //tl2
-            draw.putInUvList(uvList, uvFloats, uvX);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            //br2
-            draw.putInUvList(uvList, uvFloats, uvX + uvW);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, uvY + uvH);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
-            draw.putInUvList(uvList, uvFloats, 0);
-            uvFloats++;
+            draw.putUVs(uvX, uvY + uvH);
 
         } else {
-            var uvList = draw.getUvList();
-            var i = 0;
-            while (i++ < 24) {
-                draw.putInUvList(uvList, uvFloats, 0);
-                uvFloats++;
-            }
+            //tl
+            draw.putUVs(0, 0);
+            //tr
+            draw.putUVs(0, 0);
+            //br
+            draw.putUVs(0, 0);
+            //bl
+            draw.putUVs(0, 0);
         }
-
-        this.uvFloats = uvFloats;
 
         // Colors
         //
@@ -907,23 +857,11 @@ class Renderer extends Entity {
             if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
         }
 
-        var colorFloats = this.colorFloats; 
-        var colorList = draw.getColorList();
-
         var i = 0;
-        while (i < 24) {
-            draw.putInColorList(colorList, colorFloats, r);
-            colorFloats++;
-            draw.putInColorList(colorList, colorFloats, g);
-            colorFloats++;
-            draw.putInColorList(colorList, colorFloats, b);
-            colorFloats++;
-            draw.putInColorList(colorList, colorFloats, a);
-            colorFloats++;
-            i += 4;
+        while (i < 4) {
+            draw.putColor(r, g, b, a);
+            i++;
         }
-
-        this.colorFloats = colorFloats;
 
         // Let backend know we did finish sending quad data
         draw.endDrawQuad();
@@ -933,6 +871,7 @@ class Renderer extends Entity {
 
     }
 
+#if !ceramic_no_mesh
     #if !ceramic_debug_draw inline #end function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
 
     #if ceramic_debug_draw
@@ -1356,6 +1295,7 @@ class Renderer extends Entity {
         this.z = z + 0.001;
 
     }
+#end
 
     #if !ceramic_debug_draw inline #end function computeQuadBlending(quad:ceramic.Quad):ceramic.Blending {
 
@@ -1420,6 +1360,10 @@ class Renderer extends Entity {
 
     #if !ceramic_debug_draw inline #end function flush(draw:backend.Draw):Bool {
 
+        if (!draw.hasAnythingToFlush()) {
+            return false;
+        }
+
         draw.flush();
         drawCalls++;
 
@@ -1427,7 +1371,7 @@ class Renderer extends Entity {
         var flushingQuadsNow = drawnQuads - flushedQuads;
         var flushingMeshesNow = drawnMeshes - flushedMeshes;
         if (debugDraw) {
-            log.info('flush - #$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
+            log.info('flush - #$drawCalls(${flushingQuadsNow + flushingMeshesNow}) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
         }
         flushedQuads = drawnQuads;
         flushedMeshes = drawnMeshes;

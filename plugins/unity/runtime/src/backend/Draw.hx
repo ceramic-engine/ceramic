@@ -18,14 +18,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function new() {
 
-        //renderer = new ceramic.Renderer();
+        renderer = new ceramic.Renderer();
 
         commandBuffer = untyped __cs__('new UnityEngine.Rendering.CommandBuffer()');
         untyped __cs__('UnityEngine.Camera.main.AddCommandBuffer(UnityEngine.Rendering.CameraEvent.AfterEverything, (UnityEngine.Rendering.CommandBuffer){0})', commandBuffer);
 
     }
 
-    inline public function getItem(visual:ceramic.Visual):VisualItem {
+    /*inline*/ public function getItem(visual:ceramic.Visual):VisualItem {
 
         // The backend decides how each visual should be drawn.
         // Instead of checking instance type at each draw iteration,
@@ -47,7 +47,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
-        //renderer.render(true, visuals);
+        renderer.render(true, visuals);
 
     }
 
@@ -60,6 +60,7 @@ class Draw #if !completion implements spec.Draw #end {
 /// Rendering
 
     static var _maxVerts:Int = 0;
+    static var _maxIndices:Int = 0;
 
     static var _meshes:Array<Mesh> = null;
     static var _currentMeshIndex:Int = -1;
@@ -70,6 +71,9 @@ class Draw #if !completion implements spec.Draw #end {
     static var _meshUVs:NativeArray<Vector2> = null;
     static var _meshColors:NativeArray<Color> = null;
 
+    static var _currentMaterial:Dynamic = null;
+    static var _currentMatrix:Dynamic = null;
+
     static var _numPos:Int = 0;
     static var _numIndices:Int = 0;
     static var _numUVs:Int = 0;
@@ -77,7 +81,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _numFloatAttributes:Int = 0;
 
-    inline public function putPos(x:Float, y:Float, z:Float):Void {
+    /*inline*/ public function getNumPos():Int {
+
+        return _numPos;
+
+    }
+
+    /*inline*/ public function putPos(x:Float, y:Float, z:Float):Void {
 
         _numFloatAttributes = 0;
         _meshVertices[_numPos] = new Vector3(x, y, z);
@@ -85,30 +95,39 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putIndice(i:Int):Void {
+    /*inline*/ public function putIndice(i:Int):Void {
 
         _meshIndices[_numIndices] = i;
         _numIndices++;
 
     }
 
-    inline public function putUVs(uvX:Float, uvY:Float):Void {
+    /*inline*/ public function putUVs(uvX:Float, uvY:Float):Void {
 
         _meshUVs[_numUVs] = new Vector2(uvX, uvY);
         _numUVs++;
 
     }
 
-    inline public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
+    /*inline*/ public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
-        _meshColors[_numUVs] = new Color(r, g, b, a);
-        _numUVs++;
+        _meshColors[_numColors] = new Color(r, g, b, a);
+        _numColors++;
 
     }
 
-    inline public function initBuffers(maxVerts:Int):Void {
+    /*inline*/ public function putFloatAttribute(value:Float):Void {
+
+        _numFloatAttributes++;
+
+        // TODO
+
+    }
+
+    /*inline*/ public function initBuffers(maxVerts:Int):Void {
 
         _maxVerts = maxVerts;
+        _maxIndices = Std.int(Math.floor(maxVerts / 3) * 3);
 
         if (_meshes == null) {
             _meshes = [];
@@ -129,7 +148,7 @@ class Draw #if !completion implements spec.Draw #end {
             mesh = new Mesh();
             _meshes[_currentMeshIndex] = mesh;
             mesh.vertices = new NativeArray<Vector3>(_maxVerts);
-            mesh.triangles = new NativeArray<Int>(_maxVerts);
+            mesh.triangles = new NativeArray<Int>(_maxIndices);
             mesh.uv = new NativeArray<Vector2>(_maxVerts);
             mesh.colors = new NativeArray<Color>(_maxVerts);
         }
@@ -143,21 +162,39 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function beginRender():Void {
+    /*inline*/ public function beginRender():Void {
 
         _numPos = 0;
         _numIndices = 0;
         _numUVs = 0;
         _numColors = 0;
 
+        //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
+        _currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
+
+		untyped __cs__('UnityEngine.Camera.main.orthographicSize = UnityEngine.Camera.main.pixelHeight * 0.5f');
+
+		untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
+        untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
+
+        // TODO no alloc
+		untyped __cs__('UnityEngine.Matrix4x4 matrix = UnityEngine.Matrix4x4.identity');
+
+		// Translate to top left and change from y down to y top
+		untyped __cs__('matrix[12] = cameraWidth * -0.5f');
+		untyped __cs__('matrix[13] = cameraHeight * 0.5f');
+        untyped __cs__('matrix[5] = matrix[5] * -1f');
+        
+        _currentMatrix = untyped __cs__('matrix');
+          
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.Clear()');
 
         untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
 
-        // TODO color
-        untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(0.5f, 0.9f, 0.5f, 1f), 1f)');
-
+        var bg = ceramic.App.app.settings.background;
+        untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color((float){0}, (float){1}, (float){2}, 1f), 1f)', bg.redFloat, bg.greenFloat, bg.blueFloat);
+        
         // untyped __cs__('UnityEngine.Vector3[] meshVertices = new UnityEngine.Vector3[3]');
         // untyped __cs__('UnityEngine.Vector2[] meshUV = new UnityEngine.Vector2[3]');
         // untyped __cs__('int[] meshTriangles = new int[3]');
@@ -227,43 +264,48 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+    /*inline*/ public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+
+        // TODO
+
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        
+        untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
+
+    }
+
+    /*inline*/ public function useShader(shader:backend.ShaderImpl):Void {
 
         // TODO
 
     }
 
-    inline public function useShader(shader:backend.ShaderImpl):Void {
+    /*inline*/ public function clear():Void {
+
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(1f, 1f, 1f, 0f), 1f)');
+
+    }
+
+    /*inline*/ public function enableBlending():Void {
 
         // TODO
 
     }
 
-    inline public function clear():Void {
+    /*inline*/ public function disableBlending():Void {
 
         // TODO
 
     }
 
-    inline public function enableBlending():Void {
+    /*inline*/ public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         // TODO
 
     }
 
-    inline public function disableBlending():Void {
-
-        // TODO
-
-    }
-
-    inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
-
-        // TODO
-
-    }
-
-    inline public function getActiveTexture():Int {
+    /*inline*/ public function getActiveTexture():Int {
 
         // TODO
         return 0;
@@ -273,7 +315,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function setActiveTexture(slot:Int):Void {
+    /*inline*/ public function setActiveTexture(slot:Int):Void {
 
         /*
         activeTextureSlot = slot;
@@ -282,137 +324,109 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
+    /*inline*/ public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem:TextureImpl).textureId == textureId;
 
     }
 
-    inline public function getTextureId(backendItem:backend.Texture):backend.TextureId {
+    /*inline*/ public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem:TextureImpl).textureId;
 
     }
 
-    inline public function getTextureWidth(texture:backend.Texture):Int {
+    /*inline*/ public function getTextureWidth(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    inline public function getTextureHeight(texture:backend.Texture):Int {
+    /*inline*/ public function getTextureHeight(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    inline public function getTextureWidthActual(texture:backend.Texture):Int {
+    /*inline*/ public function getTextureWidthActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    inline public function getTextureHeightActual(texture:backend.Texture):Int {
+    /*inline*/ public function getTextureHeightActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    inline public function bindTexture(backendItem:backend.Texture):Void {
+    /*inline*/ public function bindTexture(backendItem:backend.Texture):Void {
+
+        // TODO
+
+        //_currentMaterial.mainTexture = backendItem.unityTexture;
+        trace('BIND TEXTURE $backendItem');
+        untyped __cs__('((UnityEngine.Material){0}).mainTexture = {1}', _currentMaterial, backendItem.unityTexture);
+
+    }
+
+    /*inline*/ public function bindNoTexture():Void {
+
+        // TODO
+        trace('BIND NO TEXTURE');
+
+		//_currentMaterial.mainTexture = null;
+        //untyped __cs__('((UnityEngine.Material){0}).mainTexture = null', _currentMaterial);
+
+    }
+
+    /*inline*/ public function setRenderWireframe(value:Bool):Void {
 
         // TODO
 
     }
 
-    inline public function bindNoTexture():Void {
-
-        // TODO
+    /*inline*/ public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     }
 
-    inline public function setRenderWireframe(value:Bool):Void {
-
-        // TODO
+    /*inline*/ public function endDrawQuad():Void {
 
     }
 
-    inline public function getPosList():ArrayBuffer {
-
-        return null;
+    /*inline*/ public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
     }
 
-    inline public function putInPosList(posList:ArrayBuffer, index:Int, value:Float):Void {
-
-        //posList[index] = value;
+    /*inline*/ public function endDrawMesh():Void {
 
     }
 
-    inline public function getUvList():ArrayBuffer {
-
-        return null;
-
-    }
-
-    inline public function putInUvList(uvList:ArrayBuffer, index:Int, value:Float):Void {
-
-        //uvList[index] = value;
-
-    }
-
-    inline public function getColorList():ArrayBuffer {
-
-        return null;
-
-    }
-
-    inline public function putInColorList(colorList:ArrayBuffer, index:Int, value:Float):Void {
-
-        //
-
-    }
-
-    inline public function beginDrawQuad(quad:ceramic.Quad):Void {
-
-    }
-
-    inline public function endDrawQuad():Void {
-
-    }
-
-    inline public function beginDrawMesh(mesh:ceramic.Mesh):Void {
-
-    }
-
-    inline public function endDrawMesh():Void {
-
-    }
-
-    inline public function beginDrawingInStencilBuffer():Void {
+    /*inline*/ public function beginDrawingInStencilBuffer():Void {
         
         // TODO
 
     }
 
-    inline public function endDrawingInStencilBuffer():Void {
+    /*inline*/ public function endDrawingInStencilBuffer():Void {
         
         // TODO
 
     }
 
-    inline public function drawWithStencilTest():Void {
+    /*inline*/ public function drawWithStencilTest():Void {
 
         // TODO
 
     }
 
-    inline public function drawWithoutStencilTest():Void {
+    /*inline*/ public function drawWithoutStencilTest():Void {
 
         // TODO
 
     }
 
-    inline public function maxPosFloats():Int {
+    /*inline*/ public function maxPosFloats():Int {
 
         // TODO
 
@@ -420,15 +434,43 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {
+    /*inline*/ public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
+        
+        return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > _maxIndices);
 
-        // TODO
+    }
+
+    inline public function hasAnythingToFlush():Bool {
+
+        return _numPos > 0;
+
+    }
+
+    /*inline*/ public function flush():Void {
+
+        var mesh = _currentMesh;
+
+        mesh.vertices = _meshVertices;
+        mesh.triangles = _meshIndices;
+        mesh.uv = _meshUVs;
+        mesh.colors = _meshColors;
+        
+        trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, _currentMaterial);
+
+        _numPos = 0;
+        _numIndices = 0;
+        _numUVs = 0;
+        _numColors = 0;
+
+        prepareNextMesh();
 
     }
 
 /// Internal
 
-    //var renderer:ceramic.Renderer;
+    var renderer:ceramic.Renderer;
 
     var commandBuffer:Dynamic;
 
