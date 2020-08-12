@@ -4,6 +4,10 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function new() {}
 
+    var width:Int = 0;
+
+    var height:Int = 0;
+
 /// Events
 
     @event function resize();
@@ -21,31 +25,50 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     inline public function getWidth():Int {
 
-        return ceramic.App.app.settings.targetWidth;
+        return width;
 
     }
 
     inline public function getHeight():Int {
 
-        return ceramic.App.app.settings.targetHeight;
+        return height;
 
     }
 
     inline public function getDensity():Float {
 
-        return 1.0;
+        return 1.0; // TODO retrieve native screen density
 
     }
 
     public function setBackground(background:Int):Void {
 
-        //
+        // Background will be updated when drawing
 
     }
 
     public function setWindowTitle(title:String):Void {
 
-        //
+        // TODO
+
+    }
+
+/// Internal
+
+    @:allow(backend.Backend)
+    function update() {
+
+        var newWidth = untyped __cs__('UnityEngine.Screen.width');
+        var newHeight = untyped __cs__('UnityEngine.Screen.height');
+
+        var didResize = (width != newWidth) || (height != newHeight);
+
+        width = newWidth;
+        height = newHeight;
+
+        if (didResize) {
+            emitResize();
+        }
 
     }
 

@@ -4,10 +4,10 @@ import unityengine.Vector2Int;
 import unityengine.Mesh;
 import unityengine.Color;
 import unityengine.Vector2;
-import cs.StdTypes.Int16;
-import ceramic.RotateFrame;
-import cs.NativeArray;
 import unityengine.Vector3;
+import ceramic.Transform;
+import cs.StdTypes.Int16;
+import cs.NativeArray;
 
 using ceramic.Extensions;
 
@@ -73,6 +73,16 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
+
+    static var _currentRenderTarget:ceramic.RenderTexture = null;
+
+    static var _projectionMatrix:Dynamic = null;
+
+    static var _modelViewMatrix:Dynamic = null;
+
+    static var _modelViewTransform = new ceramic.Transform();
+    
+    static var _renderTargetTransform = new ceramic.Transform();
 
     static var _numPos:Int = 0;
     static var _numIndices:Int = 0;
@@ -164,6 +174,10 @@ class Draw #if !completion implements spec.Draw #end {
 
     /*inline*/ public function beginRender():Void {
 
+        // Reset command buffer
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        untyped __cs__('cmd.Clear()');
+
         _numPos = 0;
         _numIndices = 0;
         _numUVs = 0;
@@ -177,100 +191,189 @@ class Draw #if !completion implements spec.Draw #end {
 		untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
         untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
 
-        // TODO no alloc
-		untyped __cs__('UnityEngine.Matrix4x4 matrix = UnityEngine.Matrix4x4.identity');
+        if (_projectionMatrix == null) {
+            _projectionMatrix = untyped __cs__('UnityEngine.Matrix4x4.identity');
+        }
+        if (_modelViewMatrix == null) {
+            _modelViewMatrix = untyped __cs__('UnityEngine.Matrix4x4.identity');
+        }
 
-		// Translate to top left and change from y down to y top
-		untyped __cs__('matrix[12] = cameraWidth * -0.5f');
-		untyped __cs__('matrix[13] = cameraHeight * 0.5f');
-        untyped __cs__('matrix[5] = matrix[5] * -1f');
-        
-        _currentMatrix = untyped __cs__('matrix');
-          
-        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
-        untyped __cs__('cmd.Clear()');
+    }
 
-        untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
+    inline public function clearAndApplyBackground():Void {
 
         var bg = ceramic.App.app.settings.background;
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color((float){0}, (float){1}, (float){2}, 1f), 1f)', bg.redFloat, bg.greenFloat, bg.blueFloat);
         
-        // untyped __cs__('UnityEngine.Vector3[] meshVertices = new UnityEngine.Vector3[3]');
-        // untyped __cs__('UnityEngine.Vector2[] meshUV = new UnityEngine.Vector2[3]');
-        // untyped __cs__('int[] meshTriangles = new int[3]');
-
-        // untyped __cs__('meshVertices[0] = new UnityEngine.Vector3(5, 5, 0);');
-        // untyped __cs__('meshVertices[1] = new UnityEngine.Vector3(10, 4, 0);');
-        // untyped __cs__('meshVertices[2] = new UnityEngine.Vector3(7, 9, 0);');
-
-        // untyped __cs__('meshUV[0] = new UnityEngine.Vector2(0, 0);');
-        // untyped __cs__('meshUV[1] = new UnityEngine.Vector2(0, 0);');
-        // untyped __cs__('meshUV[2] = new UnityEngine.Vector2(0, 0);');
-
-        // untyped __cs__('meshTriangles[0] = 0;');
-        // untyped __cs__('meshTriangles[1] = 1;');
-        // untyped __cs__('meshTriangles[2] = 2;');
-
-        // untyped __cs__('UnityEngine.Mesh mesh = new UnityEngine.Mesh()');
-        // untyped __cs__('mesh.vertices = meshVertices');
-        // untyped __cs__('mesh.uv = meshUV');
-        // untyped __cs__('mesh.triangles = meshTriangles');
-
-        // /*
-        // untyped __cs__('
-        // UnityEngine.List<UnityEngine.Color32> colors = new UnityEngine.List<UnityEngine.Color32>();
-        // for (int i = 0; i < 3; i++)
-        // {
-        //     colors.Add(new UnityEngine.Color32(128, 128, 128, 128));
-        // }
-        // ');
-        // untyped __cs__('mesh.SetColors(colors)');
-        // */
-
-        // untyped __cs__('UnityEngine.Material material = new UnityEngine.Material(UnityEngine.Shader.Find("Unlit/Color"));');
-
-        // untyped __cs__('cmd.DrawMesh(
-        //     mesh,
-        //     ((UnityEngine.MonoBehaviour){0}).transform.localToWorldMatrix,
-        //     material,
-        //     0,
-        //     -1
-        // );', Main.unityObject);
-
-        // untyped __cs__('UnityEngine.Graphics.ExecuteCommandBuffer(cmd)');
-
-        /*
-        untyped __cs__('mesh.UV[0] = 0;');
-        untyped __cs__('mesh.UV[1] = 0;');
-        untyped __cs__('mesh.UV[2] = 0;');
-        untyped __cs__('mesh.UV[3] = 0;');
-        untyped __cs__('mesh.UV[4] = 0;');
-        untyped __cs__('mesh.UV[5] = 0;');
-
-        untyped __cs__('mesh.UV[0] = 0;');
-        untyped __cs__('mesh.UV[1] = 0;');
-        untyped __cs__('mesh.UV[2] = 0;');
-        untyped __cs__('mesh.UV[3] = 0;');
-        untyped __cs__('mesh.UV[4] = 0;');
-        untyped __cs__('mesh.UV[5] = 0;');
-        */
-
-        // TODO
-        /*
-        defaultTransformScaleX = view.transform.scale.x;
-        defaultTransformScaleY = view.transform.scale.y;
-        defaultViewport = view.viewport;
-        */
-
     }
 
     /*inline*/ public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
-        // TODO
+        if (_currentRenderTarget != renderTarget || force) {
+            _currentRenderTarget = renderTarget;
+            if (renderTarget != null) {
 
-        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                // TODO update unity render target
+                //var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
+                //luxeRenderer.target = renderTexture;
+
+                updateProjectionMatrix(
+                    renderTarget.width,
+                    renderTarget.height
+                );
+
+                _renderTargetTransform.identity();
+                _renderTargetTransform.scale(renderTarget.density, renderTarget.density);
+
+                updateViewMatrix(
+                    renderTarget.density,
+                    renderTarget.width,
+                    renderTarget.height,
+                    _renderTargetTransform,
+                    -1
+                );
+
+                updateCurrentMatrix();
+
+                // TODO Update unity camera matrix
+                // GL.viewport(
+                //     0, 0,
+                //     Std.int(renderTarget.width * renderTarget.density),
+                //     Std.int(renderTarget.height * renderTarget.density)
+                // );
+                // TODO clear
+                //if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);
+                if (renderTarget.clearOnRender) {
+                    untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                    untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(0f, 0f, 0f, 0f), 1f)');
+                }
+                
+            } else {
+                // TODO update unity render target
+                //luxeRenderer.target = null;
+          
+                untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
+                
+                updateProjectionMatrix(
+                    ceramic.App.app.backend.screen.getWidth(),
+                    ceramic.App.app.backend.screen.getHeight()
+                );
+                updateViewMatrix(
+                    ceramic.App.app.backend.screen.getDensity(),
+                    ceramic.App.app.backend.screen.getWidth(),
+                    ceramic.App.app.backend.screen.getHeight(),
+                    @:privateAccess ceramic.App.app.screen.matrix
+                );
+
+                updateCurrentMatrix();
+
+                // TODO Update unity camera matrix
+                // GL.viewport(
+                //     0, 0,
+                //     Std.int(ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity()),
+                //     Std.int(ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity())
+                // );
+            }
+        }
+
+    }
+
+    inline function updateProjectionMatrix(width:Float, height:Float):Void {
+
+        // // Making orthographic projection
+        // //
+
+        // var left = 0.0;
+        // var top = 0.0;
+        // var right = width;
+        // var bottom = height;
+        // var near = 1000.0;
+        // var far = -1000.0;
+
+        // var w = right - left;
+        // var h = top - bottom;
+        // var p = far - near;
+
+        // var tx = (right + left)   / w;
+        // var ty = (top   + bottom) / h;
+        // var tz = (far   + near)   / p;
+
+        // untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
+
+        // untyped __cs__('
+        // m[0] = (float)(2.0 / {0});  m[4] = 0f;      m[8] = 0f;       m[12] = (float)-{1};
+        // m[1] = 0f;      m[5] = (float)(2.0 / {2});  m[9] = 0f;       m[13] = (float)-{3};
+        // m[2] = 0f;      m[6] = 0f;        m[10] = (float)(-2 / {4}); m[14] = (float)-{5};
+        // m[3] = 0f;      m[7] = 0f;        m[11] = 0f;      m[15] = 1f;
+        // ', w, tx, h, ty, p, tz);
+
+        untyped __cs__('
+        UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity;
+		m[12] = (float){0} * -0.5f;
+		m[13] = (float){1} * 0.5f;
+        m[5] = m[5] * -1f;
+        ', width, height);
+
+        _projectionMatrix = untyped __cs__('m');
+
+    }
+
+    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
+
+        if (transform != null) {
+            _modelViewTransform.setToTransform(transform);
+            _modelViewTransform.invert();
+        }
+        else {
+            _modelViewTransform.identity();
+        }
+        var tx = _modelViewTransform.tx;
+        var ty = _modelViewTransform.ty;
+        _modelViewTransform.translate(-tx, -ty);
+        _modelViewTransform.scale(density, density);
+        _modelViewTransform.translate(tx, ty);
+
+        if (flipY == -1) {
+            // Flip vertically (needed when we are rendering to texture)
+            _modelViewTransform.translate(
+                -width * 0.5,
+                -height * 0.5
+            );
+            _modelViewTransform.scale(1, -1);
+            _modelViewTransform.translate(
+                width * 0.5,
+                height * 0.5
+            );
+        }
+
+        _modelViewTransform.invert();
+
+        _modelViewMatrix = transformToMatrix4x4(_modelViewTransform);
+
+    }
+
+    inline function updateCurrentMatrix():Void {
+
+        untyped __cs__('UnityEngine.Matrix4x4 matrix = ((UnityEngine.Matrix4x4){0}) * ((UnityEngine.Matrix4x4){1})', _projectionMatrix, _modelViewMatrix);
         
-        untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
+        _currentMatrix = untyped __cs__('matrix');
+
+    }
+
+    inline function transformToMatrix4x4(transform:Transform):Dynamic {
+
+        untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
+
+        untyped __cs__('
+        m[0] = (float){0}; m[4] = (float){1}; m[8] = 0f;  m[12] = (float){2};
+        m[1] = (float){3}; m[5] = (float){4}; m[9] = 0f;  m[13] = (float){5};
+        m[2] = 0f;  m[6] = 0f;  m[10] = 1f; m[14] = 0f;
+        m[3] = 0f;  m[7] = 0f;  m[11] = 0f; m[15] = 1f;
+        ', transform.a, transform.c, transform.tx, transform.b, transform.d, transform.ty);
+
+        return untyped __cs__('m');
 
     }
 
@@ -365,7 +468,6 @@ class Draw #if !completion implements spec.Draw #end {
         // TODO
 
         //_currentMaterial.mainTexture = backendItem.unityTexture;
-        trace('BIND TEXTURE $backendItem');
         untyped __cs__('((UnityEngine.Material){0}).mainTexture = {1}', _currentMaterial, backendItem.unityTexture);
 
     }
@@ -373,8 +475,7 @@ class Draw #if !completion implements spec.Draw #end {
     /*inline*/ public function bindNoTexture():Void {
 
         // TODO
-        trace('BIND NO TEXTURE');
-
+        
 		//_currentMaterial.mainTexture = null;
         //untyped __cs__('((UnityEngine.Material){0}).mainTexture = null', _currentMaterial);
 

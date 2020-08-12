@@ -155,6 +155,7 @@ class Renderer extends Entity {
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
         draw.setRenderTarget(null, true);
+        draw.clearAndApplyBackground();
         draw.enableBlending();
         activeShader = null;
         lastShader = null;
