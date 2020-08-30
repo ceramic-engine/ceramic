@@ -113,10 +113,13 @@ class AndroidProject {
 
     public static function copyMainBinariesIfNeeded(cwd:String, project:Project) {
 
-        var srcJni = Path.join([context.cwd, 'out/luxe/android/cpp']);
+        var debug = context.debug;
+        var variant = context.variant;
+        var libPrefix = context.debug ? 'libMain-debug' : 'libMain';
+        var builtOutPath = BuildTargetExtensions.outPathWithName('luxe', 'android', cwd, debug, variant);
+        var srcJni = Path.join([builtOutPath, 'cpp']);
         var dstJni = Path.join([context.cwd, 'project/android/app/src/main/jniLibs']);
         var jniLibName = 'lib' + project.app.name + '.so';
-        var libPrefix = context.debug ? 'libMain-debug' : 'libMain';
         var builtFile:String;
         var targetFile:String;
 
