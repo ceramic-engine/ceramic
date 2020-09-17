@@ -545,6 +545,8 @@ class App extends Entity {
                                     collection.push(instance);
                                 }
 
+                                collection.synchronize();
+
                             }
                         }
                     }

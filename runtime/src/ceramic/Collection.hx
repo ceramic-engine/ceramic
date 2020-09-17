@@ -134,6 +134,13 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    public function synchronize():Void {
+
+        if (entriesDirty) computeEntries();
+        if (indexDirty) computeIndex();
+
+    }
+
     public function get(id:String):T {
 
         checkCombined();
