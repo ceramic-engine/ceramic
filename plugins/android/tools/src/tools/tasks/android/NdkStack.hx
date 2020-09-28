@@ -70,8 +70,10 @@ class NdkStack extends tools.Task {
         var adbPath = Path.join([sdkDir, 'platform-tools/adb']);
         var ndkStackPath = Path.join([ndkDir, 'ndk-stack']);
 
-        var abi = 'armeabi-v7a'; // Most common ABI
+        var abi = 'arm64-v8a'; // Most common ABI
+        /*
         var acceptedAbis = [
+            'arm64-v8a' => true,
             'armeabi-v7a' => true,
             'x86' => true
         ];
@@ -89,6 +91,7 @@ class NdkStack extends tools.Task {
         catch (e:Dynamic) {
             warning('Failed to resolve device ABI: ' + e);
         }
+        */
 
         var status = 0;
         var symbolsPath = Path.join([cwd, 'project/android/app/src/main/jniLibs/$abi']);
