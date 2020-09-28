@@ -177,6 +177,7 @@ class Script extends Entity implements Component {
 
     public function getModule(itemId:String):ScriptModule {
 
+        #if ceramic_entity_script
         var entity = getEntity(itemId);
 
         if (entity != null) {
@@ -185,6 +186,7 @@ class Script extends Entity implements Component {
                 return script.module;
             }
         }
+        #end
         
         return null;
         
