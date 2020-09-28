@@ -21,6 +21,7 @@ import tracker.SerializeModel;
 import tracker.Tracker;
 
 import ceramic.scriptable.ScriptableAlphaColor;
+#if ceramic_cppia_host import ceramic.AlphaColor; #end
 import ceramic.App;
 import ceramic.ArcadePhysics;
 import ceramic.Asset;
@@ -39,6 +40,7 @@ import ceramic.BitmapFontData;
 import ceramic.BitmapFontDistanceFieldData;
 import ceramic.BitmapFontParser;
 import ceramic.scriptable.ScriptableBlending;
+#if ceramic_cppia_host import ceramic.Blending; #end
 import ceramic.Border;
 import ceramic.BorderPosition;
 import ceramic.Click;
@@ -46,6 +48,7 @@ import ceramic.Collection;
 import ceramic.CollectionEntry;
 import ceramic.Collections;
 import ceramic.scriptable.ScriptableColor;
+#if ceramic_cppia_host import ceramic.Color; #end
 import ceramic.Component;
 import ceramic.ComputeFps;
 import ceramic.ConvertComponentMap;
@@ -59,6 +62,7 @@ import ceramic.CustomAssetKind;
 import ceramic.DatabaseAsset;
 import ceramic.Databases;
 import ceramic.scriptable.ScriptableDebugRendering;
+#if ceramic_cppia_host import ceramic.DebugRendering; #end
 import ceramic.DecomposedTransform;
 import ceramic.DoubleClick;
 import ceramic.Easing;
@@ -72,6 +76,7 @@ import ceramic.Files;
 import ceramic.FileWatcher;
 import ceramic.Filter;
 import ceramic.scriptable.ScriptableFlags;
+#if ceramic_cppia_host import ceramic.Flags; #end
 import ceramic.Float32Array;
 import ceramic.FontAsset;
 import ceramic.Fonts;
@@ -103,11 +108,12 @@ import ceramic.Line;
 import ceramic.LineCap;
 import ceramic.LineJoin;
 import ceramic.Logger;
-import ceramic.scriptable.ScriptableMap;
 import ceramic.Mesh;
 import ceramic.scriptable.ScriptableMeshColorMapping;
+#if ceramic_cppia_host import ceramic.MeshColorMapping; #end
 import ceramic.MeshPool;
 import ceramic.scriptable.ScriptableMouseButton;
+#if ceramic_cppia_host import ceramic.MouseButton; #end
 import ceramic.NapePhysics;
 import ceramic.ParticleItem;
 import ceramic.Particles;
@@ -121,6 +127,7 @@ import ceramic.Renderer;
 import ceramic.RenderTexture;
 import ceramic.ReusableArray;
 import ceramic.scriptable.ScriptableRotateFrame;
+#if ceramic_cppia_host import ceramic.RotateFrame; #end
 import ceramic.Runner;
 import ceramic.RuntimeAssets;
 import ceramic.ScanCode;

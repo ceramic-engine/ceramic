@@ -355,6 +355,10 @@ class App extends Entity {
     var hotReloadClient:hotml.client.Client;
 #end
 
+#if (cppia || ceramic_cppia_host)
+    @:noCompletion public var initSettings:InitSettings;
+#end
+
 /// Public initializer
 
     public static function init():InitSettings {
@@ -368,7 +372,11 @@ class App extends Entity {
 #end
 
         app = new App();
-        return new InitSettings(app.settings);
+        var initSettings = new InitSettings(app.settings);
+#if ceramic_cppia_host
+        app.initSettings = initSettings;
+#end
+        return initSettings;
         
     }
     

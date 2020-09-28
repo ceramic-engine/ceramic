@@ -22,7 +22,11 @@ class Main extends luxe.Game {
 
     }
 
+    #if scriptable
+    public static var project:CPPIAHostProject = null;
+    #else
     public static var project:Project = null;
+    #end
 
 #if web
 
@@ -126,7 +130,11 @@ class Main extends luxe.Game {
 #end
 
         instance = this;
+        #if scriptable
+        project = @:privateAccess new CPPIAHostProject(ceramic.App.init());
+        #else
         project = @:privateAccess new Project(ceramic.App.init());
+        #end
         var app = @:privateAccess ceramic.App.app;
 
 

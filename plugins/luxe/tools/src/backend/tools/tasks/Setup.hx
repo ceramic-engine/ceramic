@@ -190,7 +190,12 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '--macro snow.Set.io("snow.core.web.io.IO")';
         }
         else {
-            targetFlags = '-cpp cpp';
+            if (target.name == 'cppia') {
+                targetFlags = '-cppia app.cppia';
+            }
+            else {
+                targetFlags = '-cpp cpp';
+            }
             targetFlags += '\n' + '-lib hxcpp';
             targetFlags += '\n' + '-D target-cpp';
             targetFlags += '\n' + '-D hxcpp_static_std';
@@ -218,7 +223,7 @@ class Setup extends tools.Task {
         }
 
         var hxmlFileContent = ('
--main Main
+-main ${target.name == 'cppia' ? 'CPPIAMain' : 'Main'}
 $targetFlags
 -D ${target.name}
 -D snow_no_main
