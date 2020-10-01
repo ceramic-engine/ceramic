@@ -106,7 +106,7 @@ class ExportApi {
             dts.add('const screen: Screen;\n');
             dts.add('const audio: Audio;\n');
             dts.add('const settings: Settings;\n');
-            dts.add('const collections: Collections;\n');
+            //dts.add('const collections: Collections;\n');
             dts.add('const log: Logger;\n');
             dts.add('\n');
             dts.add('interface Array<T> {\n');

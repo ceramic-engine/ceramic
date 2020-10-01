@@ -17,7 +17,7 @@ import ceramic.Fragment;
 import ceramic.Texture;
 import ceramic.BitmapFont;
 import ceramic.ConvertField;
-import ceramic.Collections;
+import ceramic.CollectionEntry;
 import ceramic.Shortcuts.*;
 
 import tracker.Tracker;
@@ -298,9 +298,6 @@ class App extends Entity {
     /** App level assets. Used to load default bitmap font */
     public var assets(default,null):Assets = new Assets();
 
-    /** App level collections */
-    public var collections(default,null):Collections = new Collections();
-
     /** Default textured shader **/
     public var defaultTexturedShader(default,null):Shader = null;
 
@@ -439,7 +436,9 @@ class App extends Entity {
         initFieldConverters();
 
         // Init collections
-        initCollections();
+        if (settings.collections != null) {
+            initCollections(settings.collections);
+        }
 
 #if ceramic_arcade_physics
         arcade = new ArcadePhysics();
@@ -507,7 +506,7 @@ class App extends Entity {
 
     }
 
-    function initCollections():Void {
+    function initCollections(collections:AutoCollections):Void {
 
         var addedAssets = new Map<String,Bool>();
         var numAdded = 0;
@@ -516,6 +515,7 @@ class App extends Entity {
         //
         for (key in Reflect.fields(info.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
+                log.debug('EXTRACT CLASS FOR COLLECTION $collectionName');
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
                 if (!Std.is(collectionInfo, String)) {
                     var dataName = collectionInfo.data;
@@ -538,13 +538,16 @@ class App extends Entity {
                 //
                 for (key in Reflect.fields(info.collections)) {
                     for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
+                        log.debug('EXTRACT DATA FOR COLLECTION $collectionName');
                         var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
                         if (!Std.is(collectionInfo, String)) {
                             var dataName = collectionInfo.data;
                             if (dataName != null) {
                                 
                                 var data = assets.database(dataName);
+                                log.debug('READ DATABASE $dataName -> ${data.length} items');
                                 var collection:Collection<CollectionEntry> = Reflect.field(collections, collectionName);
+                                
                                 var entryClass = Type.resolveClass(collectionInfo.type);
 
                                 for (item in data) {

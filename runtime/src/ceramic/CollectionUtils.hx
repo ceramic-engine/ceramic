@@ -6,10 +6,9 @@ import haxe.rtti.Meta;
 
 using ceramic.Extensions;
 
-@:build(ceramic.macros.CollectionsMacro.build())
 @:keep
 @:keepSub
-class Collections {
+class CollectionUtils {
 
     static var combinedCollections:Map<String,Dynamic> = new Map();
 
@@ -32,6 +31,8 @@ class Collections {
     /** Returns a filtered collection from the provided collection and filter. */
     public static function filtered<T:CollectionEntry>(collection:Collection<T>, filter:Array<T>->Array<T>, ?cacheKey:String):Collection<T> {
 
+        cacheKey = null; // TODO remove
+
         if (cacheKey != null) {
             var cached:CollectionImpl<T> = filteredCollections.get(cacheKey);
             if (cached != null) {
@@ -46,8 +47,8 @@ class Collections {
         } else {
             combinedCollection = combined([collection]);
         }
-        var collection = combined([combinedCollection], false);
-        var impl:CollectionImpl<T> = cast collection;
+        var newCollection = combined([combinedCollection], false);
+        var impl:CollectionImpl<T> = cast newCollection;
 
         impl.filter = filter;
 
@@ -55,7 +56,7 @@ class Collections {
             filteredCollections.set(cacheKey, impl);
         }
 
-        return collection;
+        return newCollection;
 
     }
 
@@ -63,6 +64,8 @@ class Collections {
     public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
     //public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
 
+        cache = false; // TODO remove
+        
         // Create key to check if the combined collection already exists
         var keyBuf = new StringBuf();
         var i = 0;
@@ -73,6 +76,7 @@ class Collections {
             i++;
         }
         var key = keyBuf.toString();
+        trace('COMBINE FOR KEY $key (cache=$cache)');
 
         // Try to get existing collection from key
         var collection:CollectionImpl<T> = combinedCollections.get(key);

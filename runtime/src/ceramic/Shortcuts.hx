@@ -25,10 +25,6 @@ class Shortcuts {
     public static var settings(get,never):Settings;
     #if !haxe_server inline #end static function get_settings():Settings { return App.app.settings; }
 
-    /** Shared collections instance */
-    public static var collections(get,never):Collections;
-    #if !haxe_server inline #end static function get_collections():Collections { return App.app.collections; }
-
     /** Shared logger instance */
     public static var log(get,never):Logger;
     #if !haxe_server inline #end static function get_log():Logger { return App.app.logger; }

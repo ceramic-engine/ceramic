@@ -9,7 +9,6 @@ import ceramic.Timer;
 import ceramic.Quad;
 import ceramic.Text;
 import ceramic.Collection;
-import ceramic.Collections;
 import ceramic.CollectionEntry;
 import ceramic.Visual;
 import ceramic.RuntimeAssets;

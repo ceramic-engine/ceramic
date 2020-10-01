@@ -62,14 +62,14 @@ class CollectionsMacro {
                     //
                     var fieldType = TPath({
                         name: 'Collection',
-                        pack: [],
+                        pack: ['ceramic'],
                         params: [TPType(collectionType)]
                     });
 
                     fields.push({
                         pos: pos,
                         name: collectionFieldName,
-                        kind: FVar(fieldType, macro new Collection()),
+                        kind: FVar(fieldType, macro new ceramic.Collection()),
                         access: [APublic],
                         doc: 'Collection',
                         meta: []

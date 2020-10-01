@@ -85,6 +85,15 @@ class InitSettings {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
+    /** App collections. */
+    public var collections(get,set):AutoCollections;
+    inline function get_collections():AutoCollections {
+        return settings.collections;
+    }
+    inline function set_collections(collections:AutoCollections):AutoCollections {
+        return @:privateAccess settings.collections = collections;
+    }
+
     /** Whether the window can be resized or not. */
     public var resizable(get,set):Bool;
     inline function get_resizable():Bool {

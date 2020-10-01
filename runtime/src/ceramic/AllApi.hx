@@ -46,7 +46,6 @@ import ceramic.BorderPosition;
 import ceramic.Click;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
-import ceramic.Collections;
 import ceramic.scriptable.ScriptableColor;
 #if ceramic_cppia_host import ceramic.Color; #end
 import ceramic.Component;
@@ -256,7 +255,6 @@ class AllApi {
         interp.variables.set('BorderPosition', ceramic.BorderPosition);
         interp.variables.set('Click', ceramic.Click);
         interp.variables.set('CollectionEntry', ceramic.CollectionEntry);
-        interp.variables.set('Collections', ceramic.Collections);
         interp.variables.set('Color', ceramic.scriptable.ScriptableColor);
         interp.variables.set('Component', ceramic.Component);
         interp.variables.set('ComputeFps', ceramic.ComputeFps);

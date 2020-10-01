@@ -61,8 +61,10 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 }
 
 @:allow(ceramic.Collection)
-@:allow(ceramic.Collections)
+@:allow(ceramic.CollectionUtils)
 class CollectionImpl<T:CollectionEntry> implements Events {
+
+    public static var CLOTHES_ID:Int = -1;
 
     static var _lastCheckedCombined:Dynamic = null;
 
@@ -189,6 +191,9 @@ class CollectionImpl<T:CollectionEntry> implements Events {
                 }
                 _lastCheckedCombined = this;
             }
+
+            if (CLOTHES_ID == internalId)
+                entriesDirty = true; // TODO remove 
         }
 
     }
@@ -212,6 +217,8 @@ class CollectionImpl<T:CollectionEntry> implements Events {
     function computeEntries() {
 
         assert(combinedCollections != null, 'Entries only need to be computed on combined collections');
+
+        ceramic.Shortcuts.log.info('COMPUTE ENTRIES ($internalId)');
 
         entries = [];
         for (i in 0...combinedCollections.length) {

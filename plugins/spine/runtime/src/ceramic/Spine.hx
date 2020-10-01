@@ -16,7 +16,6 @@ import ceramic.AlphaColor;
 import ceramic.Blending;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
-import ceramic.Collections;
 import ceramic.Shader;
 import ceramic.Shaders;
 import ceramic.Triangulate;
