@@ -437,7 +437,7 @@ class App extends Entity {
 
         // Init collections
         if (settings.collections != null) {
-            initCollections(settings.collections);
+            initCollections(settings.collections());
         }
 
 #if ceramic_arcade_physics

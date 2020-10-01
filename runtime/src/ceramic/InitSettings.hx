@@ -86,11 +86,11 @@ class InitSettings {
     }
 
     /** App collections. */
-    public var collections(get,set):AutoCollections;
-    inline function get_collections():AutoCollections {
+    public var collections(get,set):Void->AutoCollections;
+    inline function get_collections():Void->AutoCollections {
         return settings.collections;
     }
-    inline function set_collections(collections:AutoCollections):AutoCollections {
+    inline function set_collections(collections:Void->AutoCollections):Void->AutoCollections {
         return @:privateAccess settings.collections = collections;
     }
 

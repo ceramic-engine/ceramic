@@ -33,7 +33,7 @@ class Settings implements Observable {
     @observe public var title:String = 'App';
 
     /** App collections. */
-    public var collections(default,null):AutoCollections = null;
+    public var collections(default,null):Void->AutoCollections = null;
 
     /** Antialiasing value (0 means disabled). */
     public var antialiasing(default,null):Int = 0;

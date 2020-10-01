@@ -31,8 +31,6 @@ class CollectionUtils {
     /** Returns a filtered collection from the provided collection and filter. */
     public static function filtered<T:CollectionEntry>(collection:Collection<T>, filter:Array<T>->Array<T>, ?cacheKey:String):Collection<T> {
 
-        cacheKey = null; // TODO remove
-
         if (cacheKey != null) {
             var cached:CollectionImpl<T> = filteredCollections.get(cacheKey);
             if (cached != null) {
@@ -64,8 +62,6 @@ class CollectionUtils {
     public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
     //public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
 
-        cache = false; // TODO remove
-        
         // Create key to check if the combined collection already exists
         var keyBuf = new StringBuf();
         var i = 0;
@@ -76,7 +72,6 @@ class CollectionUtils {
             i++;
         }
         var key = keyBuf.toString();
-        trace('COMBINE FOR KEY $key (cache=$cache)');
 
         // Try to get existing collection from key
         var collection:CollectionImpl<T> = combinedCollections.get(key);

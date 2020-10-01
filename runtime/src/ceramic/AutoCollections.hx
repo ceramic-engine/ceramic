@@ -4,4 +4,5 @@ package ceramic;
 @:keep
 @:keepSub
 #end
+@:autoBuild(ceramic.macros.CollectionsMacro.build())
 interface AutoCollections {}
