@@ -515,7 +515,6 @@ class App extends Entity {
         //
         for (key in Reflect.fields(info.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
-                log.debug('EXTRACT CLASS FOR COLLECTION $collectionName');
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
                 if (!Std.is(collectionInfo, String)) {
                     var dataName = collectionInfo.data;
@@ -538,14 +537,12 @@ class App extends Entity {
                 //
                 for (key in Reflect.fields(info.collections)) {
                     for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
-                        log.debug('EXTRACT DATA FOR COLLECTION $collectionName');
                         var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
                         if (!Std.is(collectionInfo, String)) {
                             var dataName = collectionInfo.data;
                             if (dataName != null) {
                                 
                                 var data = assets.database(dataName);
-                                log.debug('READ DATABASE $dataName -> ${data.length} items');
                                 var collection:Collection<CollectionEntry> = Reflect.field(collections, collectionName);
                                 
                                 var entryClass = Type.resolveClass(collectionInfo.type);
