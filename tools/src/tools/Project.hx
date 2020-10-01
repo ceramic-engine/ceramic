@@ -352,6 +352,13 @@ class ProjectLoader {
             if (app.paths == null) {
                 app.paths = [];
             }
+
+            var genPath = Path.join([context.cwd, 'gen']);
+            if (FileSystem.exists(genPath) && FileSystem.isDirectory(genPath)) {
+                var paths:Array<String> = app.paths;
+                paths.push('gen');
+            }
+
             if (app.icon == null) {
                 app.icon = 'resources/AppIcon.png';
             }
