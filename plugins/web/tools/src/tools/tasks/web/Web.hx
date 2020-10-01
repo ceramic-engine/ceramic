@@ -164,7 +164,7 @@ class Web extends tools.Task {
                     cwd: cwd
                 });
     
-                var scheduledDelay:js.Node.TimeoutObject = null;
+                var scheduledDelay:Dynamic = null;
                 var building = false;
     
                 function doBuild() {

@@ -23,7 +23,7 @@ class Sync {
 
         // Create callback function
         var callback = function() {
-            var args:Array<Dynamic> = untyped __js__('Array.prototype.slice.call(arguments)');
+            var args:Array<Dynamic> = untyped js.Syntax.code('Array.prototype.slice.call(arguments)');
             if (!sent) {
                 if (simplify) {
                     payload = args[0];

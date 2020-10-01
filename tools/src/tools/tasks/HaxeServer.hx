@@ -51,7 +51,7 @@ class HaxeServer extends tools.Task {
 
         // Keep a file updated in home directory to let other ceramic scripts detect
         // that a haxe server is running
-        var homedir:String = untyped __js__("require('os').homedir()");
+        var homedir:String = untyped js.Syntax.code("require('os').homedir()");
         js.Node.setTimeout(function() {
             File.saveContent(Path.join([homedir, '.ceramic-haxe-server']), '' + port);
         }, 100);

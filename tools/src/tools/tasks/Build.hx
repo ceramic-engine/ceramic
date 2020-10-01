@@ -108,7 +108,7 @@ class Build extends tools.Task {
         if (isRun) {
             // Keep a file updated in home directory to let other ceramic scripts detect
             // that a haxe server is running
-            var homedir:String = untyped __js__("require('os').homedir()");
+            var homedir:String = untyped js.Syntax.code("require('os').homedir()");
             var time = '' + Date.now().getTime();
             var hash = Md5.encode(cwd);
             var ceramicRunDir = Path.join([homedir, '.ceramic-run']);

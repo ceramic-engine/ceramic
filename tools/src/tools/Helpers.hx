@@ -310,7 +310,7 @@ class Helpers {
 
     public static function runningHaxeServerPort():Int {
 
-        var homedir:String = untyped __js__("require('os').homedir()");
+        var homedir:String = untyped js.Syntax.code("require('os').homedir()");
         var infoPath = Path.join([homedir, '.ceramic-haxe-server']);
         var mtime = Files.getLastModified(infoPath);
         var currentTime = Date.now().getTime() / 1000;
@@ -367,8 +367,8 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,1,15'])))
             haxelib(['install', 'hxcpp', '4.1.15', '--always'], {cwd: cwd});
         
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '10,0,0'])))
-            haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12.1.0'])))
+            haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
         
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
             haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always'], {cwd: cwd});
