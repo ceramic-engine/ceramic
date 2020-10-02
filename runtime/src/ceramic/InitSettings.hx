@@ -94,6 +94,15 @@ class InitSettings {
         return @:privateAccess settings.collections = collections;
     }
 
+    /** App info (useful when dynamically loaded, not needed otherwise). */
+    public var appInfo(get,set):Dynamic;
+    inline function get_appInfo():Dynamic {
+        return settings.appInfo;
+    }
+    inline function set_appInfo(appInfo:Dynamic):Dynamic {
+        return @:privateAccess settings.appInfo = appInfo;
+    }
+
     /** Whether the window can be resized or not. */
     public var resizable(get,set):Bool;
     inline function get_resizable():Bool {

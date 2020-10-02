@@ -437,7 +437,7 @@ class App extends Entity {
 
         // Init collections
         if (settings.collections != null) {
-            initCollections(settings.collections());
+            initCollections(settings.collections(), settings.appInfo);
         }
 
 #if ceramic_arcade_physics
@@ -506,7 +506,10 @@ class App extends Entity {
 
     }
 
-    function initCollections(collections:AutoCollections):Void {
+    function initCollections(collections:AutoCollections, ?info:Dynamic):Void {
+
+        if (info == null)
+            info = this.info;
 
         var addedAssets = new Map<String,Bool>();
         var numAdded = 0;

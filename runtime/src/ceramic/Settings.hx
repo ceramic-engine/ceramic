@@ -35,6 +35,9 @@ class Settings implements Observable {
     /** App collections. */
     public var collections(default,null):Void->AutoCollections = null;
 
+    /** App info (useful when dynamically loaded, not needed otherwise). */
+    public var appInfo(default,null):Dynamic = null;
+
     /** Antialiasing value (0 means disabled). */
     public var antialiasing(default,null):Int = 0;
 
