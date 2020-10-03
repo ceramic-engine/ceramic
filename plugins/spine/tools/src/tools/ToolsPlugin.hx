@@ -28,6 +28,7 @@ class ToolsPlugin {
         var tasks = context.tasks;
         tasks.set('spine export', new tools.tasks.spine.ExportSpine());
         tasks.set('spine run', new tools.tasks.spine.RunSpine());
+        tasks.set('spine setup', new tools.tasks.spine.SetupSpine());
 
     }
 
@@ -38,8 +39,18 @@ class ToolsPlugin {
         if (app.plugins != null && Std.is(app.plugins, Array)) {
             var plugins:Array<String> = app.plugins;
             if (plugins.indexOf('spine') != -1) {
+                // Spine enabled
+
+                // Add spine files module path
                 app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
                 app.editable.push('ceramic.Spine');
+
+                // Add hook to generate Spines.hx
+                app.hooks.push({
+                    'when': 'begin build',
+                    'command': 'ceramic',
+                    'args': ['spine', 'setup']
+                });
             }
         }
 

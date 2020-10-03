@@ -65,7 +65,7 @@ class Bind extends tools.Task {
 
                         // Yes! Save files.
                         //
-                        var projectSrcPath = Path.join([cwd, 'src']);
+                        var projectGenPath = Path.join([cwd, 'gen']);
                         var allInfo:Array<{path:String,content:String}> = [];
 
                         try {
@@ -76,7 +76,7 @@ class Bind extends tools.Task {
 
                         for (fileInfo in allInfo) {
 
-                            var filePath = Path.join([projectSrcPath, fileInfo.path]);
+                            var filePath = Path.join([projectGenPath, fileInfo.path]);
                             if (fileInfo.path.startsWith('java/')) {
                                 filePath = Path.join([cwd, 'project/android/app/src/bind', fileInfo.path]);
                             }

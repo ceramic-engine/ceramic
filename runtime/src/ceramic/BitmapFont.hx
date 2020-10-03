@@ -107,7 +107,7 @@ class BitmapFont extends Entity {
             this.pages.set(pageInfo.id, texture);
 
             if (fontData.distanceField != null) {
-                var shader = ceramic.App.app.assets.shader(Shaders.MSDF).clone();
+                var shader = ceramic.App.app.assets.shader('shader:msdf').clone();
                 shader.setFloat('pxRange', fontData.distanceField.distanceRange);
                 shader.setVec2('texSize', texture.width * texture.density, texture.height * texture.density);
                 this.pageShaders.set(pageInfo.id, shader);

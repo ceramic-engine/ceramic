@@ -17,7 +17,6 @@ import ceramic.Blending;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
 import ceramic.Shader;
-import ceramic.Shaders;
 import ceramic.Triangulate;
 import ceramic.Shortcuts.*;
 
@@ -574,7 +573,7 @@ class Spine extends Visual {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(Shaders.TINT_BLACK);
+        if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader('shader:tintBlack');
 
         bindOrUnbindUpdateIfNeeded();
 

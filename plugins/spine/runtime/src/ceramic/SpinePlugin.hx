@@ -10,7 +10,6 @@ import ceramic.Either;
 
 import ceramic.SpineAsset;
 import ceramic.SpineData;
-import ceramic.Spines;
 import ceramic.ConvertSpineData;
 
 import spine.Bone;
@@ -39,9 +38,10 @@ class SpinePlugin {
             log.info('Init spine plugin');
 
             // Generate spine asset ids
-            var clazz = Type.resolveClass('ceramic.Spines');
-            for (key in @:privateAccess Spines._ids.keys()) {
-                var id = @:privateAccess Spines._ids.get(key);
+            var clazz = Type.resolveClass('assets.Spines');
+            var spineIds:Map<String,String> = Reflect.field(clazz, '_ids');
+            for (key in spineIds.keys()) {
+                var id = spineIds.get(key);
                 var info:Dynamic = Reflect.field(clazz, key);
                 Reflect.setField(info, '_id', id);
             }
@@ -55,7 +55,7 @@ class SpinePlugin {
 
             // Load additional shaders required by spine
             ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
-                assets.add(ceramic.Shaders.TINT_BLACK, {
+                assets.add('shader:tintBlack', {
                     customAttributes: [
                         { size: 4, name: 'vertexDarkColor' }
                     ]

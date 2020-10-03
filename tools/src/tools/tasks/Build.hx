@@ -94,6 +94,18 @@ class Build extends tools.Task {
             task.run(cwd, ['assets', target.name, '--variant', context.variant]);
         }
 
+        // Check generated files
+        var generatedTplPath = Path.join([context.ceramicToolsPath, 'tpl', 'generated']);
+        var generatedFiles = Files.getFlatDirectory(generatedTplPath);
+        var projectGenPath = Path.join([context.cwd, 'gen']);
+        for (file in generatedFiles) {
+            var sourceFile = Path.join([generatedTplPath, file]);
+            var destFile = Path.join([projectGenPath, file]);
+            if (!FileSystem.exists(destFile)) {
+                Files.copyIfNeeded(sourceFile, destFile);
+            }
+        }
+
         // Prevent running two things in parallel
         var isRun = false;
         for (i in 0...args.length) {

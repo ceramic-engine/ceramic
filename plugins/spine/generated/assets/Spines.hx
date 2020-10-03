@@ -1,4 +1,4 @@
-package ceramic;
+package assets;
 
 import ceramic.AssetId;
 

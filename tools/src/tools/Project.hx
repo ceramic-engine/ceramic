@@ -353,6 +353,10 @@ class ProjectLoader {
                 app.paths = [];
             }
 
+            if (app.hooks == null) {
+                app.hooks = [];
+            }
+
             var genPath = Path.join([context.cwd, 'gen']);
             if (FileSystem.exists(genPath) && FileSystem.isDirectory(genPath)) {
                 var paths:Array<String> = app.paths;

@@ -1,4 +1,4 @@
-package ceramic;
+package assets;
 
 #if !macro
 @:build(ceramic.macros.AssetsMacro.buildNames('text'))

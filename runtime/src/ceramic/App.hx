@@ -453,14 +453,14 @@ class App extends Entity {
 
         // Default shaders (need to load these first because font loading needs MSDF shader)
         assets.add(settings.defaultShader);
-        assets.add(Shaders.MSDF);
+        assets.add('shader:msdf');
 
         assets.onceComplete(this, function(success) {
             // Default font
             assets.add(settings.defaultFont);
     
             // Default textures
-            assets.add(Images.WHITE);
+            assets.add('image:white');
     
             assets.onceComplete(this, function(success) {
     
@@ -468,7 +468,7 @@ class App extends Entity {
     
                     // Get default asset instances now that they are loaded
                     defaultFont = assets.font(settings.defaultFont);
-                    defaultWhiteTexture = assets.texture(Images.WHITE);
+                    defaultWhiteTexture = assets.texture('image:white');
                     defaultTexturedShader = assets.shader(settings.defaultShader);
     
                     logger.success('Default assets loaded.');

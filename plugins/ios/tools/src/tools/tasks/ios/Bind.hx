@@ -73,7 +73,7 @@ class Bind extends tools.Task {
 
                         // Yes! Save files.
                         //
-                        var projectSrcPath = isAppProject ? Path.join([cwd, 'src']) : Path.join([cwd, 'runtime/src']);
+                        var projectGenPath = isAppProject ? Path.join([cwd, 'gen']) : Path.join([cwd, 'runtime/gen']);
                         var allInfo:Array<{path:String,content:String}> = [];
 
                         try {
@@ -86,7 +86,7 @@ class Bind extends tools.Task {
 
                         for (fileInfo in allInfo) {
 
-                            var filePath = Path.join([projectSrcPath, fileInfo.path]);
+                            var filePath = Path.join([projectGenPath, fileInfo.path]);
 
                             success('export $filePath');
 
