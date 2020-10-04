@@ -178,7 +178,8 @@ class Utils {
         var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
 
         #if (luxe && !completion)
-        electronRunner = @:privateAccess Main.electronRunner;
+        var mainClazz = Type.resolveClass('Main');
+        electronRunner = Reflect.field(mainClazz, 'electronRunner');
         #end
         
         while (i >= 2) { // Skip first two entries because they point to the thrown error and printStackTrace() call

@@ -2,6 +2,8 @@ package assets;
 
 import ceramic.AssetId;
 
+import assets.AllAssets;
+
 #if !macro
 @:build(ceramic.macros.SpineMacros.buildNames())
 #end

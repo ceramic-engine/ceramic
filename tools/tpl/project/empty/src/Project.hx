@@ -6,6 +6,9 @@ import ceramic.Quad;
 import ceramic.InitSettings;
 import ceramic.Shortcuts.*;
 
+import assets.AllAssets;
+import assets.*;
+
 class Project extends Entity {
 
     function new(settings:InitSettings) {

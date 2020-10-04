@@ -7,11 +7,16 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 using StringTools;
 
-#if !macro
-@:build(ceramic.macros.AssetsMacro.buildLists())
-#end
 @:allow(ceramic.Asset)
 class Assets extends Entity {
+
+    public static var all:Array<String> = [];
+
+    public static var allDirs:Array<String> = [];
+
+    public static var allByName:Map<String,Array<String>> = new Map();
+
+    public static var allDirsByName:Map<String,Array<String>> = new Map();
 
 /// Events
 

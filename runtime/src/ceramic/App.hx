@@ -368,6 +368,10 @@ class App extends Entity {
         SDL.setLCNumericCLocale();
 #end
 
+#if !ceramic_cppia_host
+        assets.AllAssets.bind();
+#end
+
         app = new App();
         var initSettings = new InitSettings(app.settings);
 #if ceramic_cppia_host

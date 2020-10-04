@@ -4,6 +4,8 @@ import Std;
 import StringTools;
 import Math;
 import Array;
+import Type;
+import haxe.io.Bytes;
 import haxe.ds.StringMap;
 import ceramic.scriptable.ScriptableMap;
 
@@ -19,6 +21,15 @@ import tracker.Serializable;
 import tracker.SerializeChangeset;
 import tracker.SerializeModel;
 import tracker.Tracker;
+
+/*
+import assets.Databases;
+import assets.Fonts;
+import assets.Images;
+import assets.Shaders;
+import assets.Sounds;
+import assets.Texts;
+*/
 
 import ceramic.scriptable.ScriptableAlphaColor;
 #if ceramic_cppia_host import ceramic.AlphaColor; #end
@@ -59,7 +70,6 @@ import ceramic.ConvertTexture;
 import ceramic.Csv;
 import ceramic.CustomAssetKind;
 import ceramic.DatabaseAsset;
-import ceramic.Databases;
 import ceramic.scriptable.ScriptableDebugRendering;
 #if ceramic_cppia_host import ceramic.DebugRendering; #end
 import ceramic.DecomposedTransform;
@@ -78,7 +88,6 @@ import ceramic.scriptable.ScriptableFlags;
 #if ceramic_cppia_host import ceramic.Flags; #end
 import ceramic.Float32Array;
 import ceramic.FontAsset;
-import ceramic.Fonts;
 import ceramic.Fragment;
 import ceramic.FragmentData;
 import ceramic.FragmentItem;
@@ -89,7 +98,6 @@ import ceramic.GlyphQuad;
 import ceramic.Group;
 import ceramic.HashedString;
 import ceramic.ImageAsset;
-import ceramic.Images;
 import ceramic.InitSettings;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
@@ -144,7 +152,6 @@ import ceramic.Settings;
 import ceramic.Shader;
 import ceramic.ShaderAsset;
 import ceramic.ShaderAttribute;
-import ceramic.Shaders;
 import ceramic.Shape;
 import ceramic.Shortcuts;
 import ceramic.SortRenderTextures;
@@ -152,7 +159,6 @@ import ceramic.SortVisuals;
 import ceramic.Sound;
 import ceramic.SoundAsset;
 import ceramic.SoundPlayer;
-import ceramic.Sounds;
 // import ceramic.SqliteKeyValue;
 // import ceramic.State;
 // import ceramic.StateMachine;
@@ -162,7 +168,6 @@ import ceramic.TextAlign;
 import ceramic.TextAsset;
 import ceramic.TextInput;
 import ceramic.TextInputDelegate;
-import ceramic.Texts;
 import ceramic.Texture;
 import ceramic.TextureFilter;
 import ceramic.TextureTile;
@@ -197,6 +202,11 @@ import ceramic.VisualNapePhysics;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 
+import ceramic.Http;
+import ceramic.HttpMethod;
+import ceramic.HttpRequestOptions;
+import ceramic.HttpResponse;
+
 #if ceramic_arcade_physics
 import ceramic.ArcadePhysics;
 import ceramic.ArcadeWorld;
@@ -206,7 +216,16 @@ import arcade.SortDirection;
 import arcade.Collidable;
 #end
 
+@:keep
 class AllApi {
+
+    @:keep
+    public static function apiCallCache() {
+
+        var allEnums = Type.allEnums(null);
+        var ofHex = Bytes.ofHex(null);
+
+    }
 
     public static function configureHscript(interp:hscript.Interp):Void {
 
@@ -214,7 +233,7 @@ class AllApi {
         interp.variables.set('screen', ceramic.Shortcuts.screen);
         interp.variables.set('audio', ceramic.Shortcuts.audio);
         interp.variables.set('settings', ceramic.Shortcuts.settings);
-        interp.variables.set('collections', ceramic.Shortcuts.collections);
+        //interp.variables.set('collections', ceramic.Shortcuts.collections);
         interp.variables.set('log', ceramic.Shortcuts.log);
         
         interp.variables.set('Std', ceramic.scriptable.ScriptableStd);
@@ -267,7 +286,7 @@ class AllApi {
         interp.variables.set('Csv', ceramic.Csv);
         interp.variables.set('CustomAssetKind', ceramic.CustomAssetKind);
         interp.variables.set('DatabaseAsset', ceramic.DatabaseAsset);
-        interp.variables.set('Databases', ceramic.Databases);
+        //interp.variables.set('Databases', assets.Databases);
         interp.variables.set('DebugRendering', ceramic.scriptable.ScriptableDebugRendering);
         interp.variables.set('DecomposedTransform', ceramic.DecomposedTransform);
         interp.variables.set('DoubleClick', ceramic.DoubleClick);
@@ -283,7 +302,7 @@ class AllApi {
         interp.variables.set('Filter', ceramic.Filter);
         interp.variables.set('Flags', ceramic.scriptable.ScriptableFlags);
         interp.variables.set('FontAsset', ceramic.FontAsset);
-        interp.variables.set('Fonts', ceramic.Fonts);
+        //interp.variables.set('Fonts', assets.Fonts);
         interp.variables.set('Fragment', ceramic.Fragment);
         interp.variables.set('Fragments', ceramic.Fragments);
         interp.variables.set('FragmentsAsset', ceramic.FragmentsAsset);
@@ -291,7 +310,7 @@ class AllApi {
         interp.variables.set('GlyphQuad', ceramic.GlyphQuad);
         interp.variables.set('HashedString', ceramic.HashedString);
         interp.variables.set('ImageAsset', ceramic.ImageAsset);
-        interp.variables.set('Images', ceramic.Images);
+        //interp.variables.set('Images', assets.Images);
         interp.variables.set('InitSettings', ceramic.InitSettings);
         interp.variables.set('Json', ceramic.Json);
         interp.variables.set('Key', ceramic.Key);
@@ -338,7 +357,7 @@ class AllApi {
         interp.variables.set('Shader', ceramic.Shader);
         interp.variables.set('ShaderAsset', ceramic.ShaderAsset);
         interp.variables.set('ShaderAttribute', ceramic.ShaderAttribute);
-        interp.variables.set('Shaders', ceramic.Shaders);
+        //interp.variables.set('Shaders', assets.Shaders);
         interp.variables.set('Shape', ceramic.Shape);
         interp.variables.set('Shortcuts', ceramic.Shortcuts);
         interp.variables.set('SortRenderTextures', ceramic.SortRenderTextures);
@@ -346,7 +365,7 @@ class AllApi {
         interp.variables.set('Sound', ceramic.Sound);
         interp.variables.set('SoundAsset', ceramic.SoundAsset);
         // TODO interp.variables.set('SoundPlayer', ceramic.SoundPlayer);
-        interp.variables.set('Sounds', ceramic.Sounds);
+        //interp.variables.set('Sounds', assets.Sounds);
         // interp.variables.set('SqliteKeyValue', ceramic.SqliteKeyValue);
         // interp.variables.set('State', ceramic.State);
         // interp.variables.set('StateMachine', ceramic.StateMachine);
@@ -356,7 +375,7 @@ class AllApi {
         interp.variables.set('TextAsset', ceramic.TextAsset);
         interp.variables.set('TextInput', ceramic.TextInput);
         interp.variables.set('TextInputDelegate', ceramic.TextInputDelegate);
-        interp.variables.set('Texts', ceramic.Texts);
+        //interp.variables.set('Texts', assets.Texts);
         interp.variables.set('Texture', ceramic.Texture);
         interp.variables.set('TextureFilter', ceramic.TextureFilter);
         interp.variables.set('TextureTile', ceramic.TextureTile);
