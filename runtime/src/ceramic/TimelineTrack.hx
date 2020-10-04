@@ -20,7 +20,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     public var autoFitDuration:Bool = true;
 
     /** Whether this track should loop. Ignored if track's `duration` is `-1` (not defined). */
-    public var loop:Bool = true;
+    public var loop:Bool = false;
 
     /** Whether this track is locked or not.
         A locked track doesn't get updated by the timeline it is attached to, if any. */
