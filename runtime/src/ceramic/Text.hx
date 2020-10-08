@@ -1,7 +1,6 @@
 package ceramic;
 
 import ceramic.BitmapFont;
-import ceramic.Assets;
 import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
@@ -102,6 +101,45 @@ class Text extends Visual {
         }
 
         return font;
+    }
+
+    public var clipTextX(default,set):Float = -1;
+    function set_clipTextX(clipTextX:Float):Float {
+        if (this.clipTextX == clipTextX) return clipTextX;
+        this.clipTextX = clipTextX;
+        contentDirty = true;
+        return clipTextX;
+    }
+
+    public var clipTextY(default,set):Float = -1;
+    function set_clipTextY(clipTextY:Float):Float {
+        if (this.clipTextY == clipTextY) return clipTextY;
+        this.clipTextY = clipTextY;
+        contentDirty = true;
+        return clipTextY;
+    }
+
+    public var clipTextWidth(default,set):Float = -1;
+    function set_clipTextWidth(clipTextWidth:Float):Float {
+        if (this.clipTextWidth == clipTextWidth) return clipTextWidth;
+        this.clipTextWidth = clipTextWidth;
+        contentDirty = true;
+        return clipTextWidth;
+    }
+
+    public var clipTextHeight(default,set):Float = -1;
+    function set_clipTextHeight(clipTextHeight:Float):Float {
+        if (this.clipTextHeight == clipTextHeight) return clipTextHeight;
+        this.clipTextHeight = clipTextHeight;
+        contentDirty = true;
+        return clipTextHeight;
+    }
+
+    public function clipText(x:Float, y:Float, width:Float, height:Float):Void {
+        clipTextX = x;
+        clipTextY = y;
+        clipTextWidth = width;
+        clipTextHeight = height;
     }
 
     public var preRenderedSize(default, set):Int = -1;
@@ -277,6 +315,17 @@ class Text extends Visual {
         var numCharsBeforeLine = 0;
         var addTrailingSpace = false;
 
+        var quadX:Float = 0;
+        var quadY:Float = 0;
+        var quadWidth:Float = 0;
+        var quadHeight:Float = 0;
+
+        var quadClip = 0;
+        var hasClipping = false;
+        if (clipTextX != -1 && clipTextY != -1 && clipTextWidth != -1 && clipTextHeight != -1) {
+            hasClipping = true;
+        }
+
         var scaledPreRenderedSize = Std.int(preRenderedSize * screen.texturesDensity);
         var usePrerenderedSize = scaledPreRenderedSize > 0 && font.msdf && !font.needsToPreRenderAtSize(scaledPreRenderedSize);
 
@@ -365,6 +414,40 @@ class Text extends Visual {
                 x += font.kerning(prevCode, code) * sizeFactor;
             }
 
+            // Compute quad position and size
+            quadX = x + glyph.xOffset * sizeFactor;
+            quadY = y + glyph.yOffset * sizeFactor;
+            quadWidth = glyph.width * sizeFactor;
+            quadHeight = glyph.height * sizeFactor;
+
+            quadClip = 0;
+            if (hasClipping) {
+                if (quadX >= clipTextX + clipTextWidth) {
+                    quadClip = 2;
+                }
+                else if (quadX + quadWidth < clipTextX) {
+                    quadClip = 2;
+                }
+                else if (quadY >= clipTextY + clipTextHeight) {
+                    quadClip = 2;
+                }
+                else if (quadY + quadHeight < clipTextY) {
+                    quadClip = 2;
+                }
+                else if (clipTextX > quadX && clipTextX <= quadX + quadWidth) {
+                    quadClip = 1;
+                }
+                else if (clipTextY > quadY && clipTextY <= quadY + quadHeight) {
+                    quadClip = 1;
+                }
+                else if (clipTextX + clipTextWidth > quadX && clipTextX + clipTextWidth <= quadX + quadWidth) {
+                    quadClip = 1;
+                }
+                else if (clipTextY + clipTextHeight > quadY && clipTextY + clipTextHeight <= quadY + quadHeight) {
+                    quadClip = 1;
+                }
+            }
+
             // Reuse or create quad
             var quad:GlyphQuad = usedQuads < glyphQuads.length ? glyphQuads[usedQuads] : null;
             if (quad == null) {
@@ -378,7 +461,7 @@ class Text extends Visual {
             quad.char = char;
             quad.code = code;
             quad.index = i;
-            quad.visible = true;
+            quad.visible = quadClip != 2;
             quad.transparent = false;
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
@@ -391,26 +474,70 @@ class Text extends Visual {
             quad.glyphY = y;
             quad.glyphAdvance = glyph.xAdvance * sizeFactor + letterSpacing;
             quad.glyph = glyph;
-            if (usePrerenderedSize) {
-                var originalTexture = font.pages.get(glyph.page);
+            if (quadClip == 1) {
+                var clippedQuadX = Math.max(clipTextX, quadX);
+                var clippedQuadY = Math.max(clipTextY, quadY);
+                var clippedQuadWidth = Math.min(clipTextX + clipTextWidth, quadX + quadWidth) - clippedQuadX;
+                var clippedQuadHeight = Math.min(clipTextY + clipTextHeight, quadY + quadHeight) - clippedQuadY;
+                
+                var clippedFrameX:Float;
+                var clippedFrameY:Float;
+                var clippedFrameWidth:Float;
+                var clippedFrameHeight:Float;
+                if (usePrerenderedSize) {
+                    var originalTexture = font.pages.get(glyph.page);
+                    clippedFrameX = glyph.x * quad.texture.width / originalTexture.width;
+                    clippedFrameY = glyph.y * quad.texture.height / originalTexture.height;
+                    clippedFrameWidth = glyph.width * quad.texture.width / originalTexture.width;
+                    clippedFrameHeight = glyph.height * quad.texture.height / originalTexture.height;
+                }
+                else {
+                    clippedFrameX = glyph.x / quad.texture.density;
+                    clippedFrameY = glyph.y / quad.texture.density;
+                    clippedFrameWidth = glyph.width / quad.texture.density;
+                    clippedFrameHeight = glyph.height / quad.texture.density;
+                }
+
+                var clippedFrameXOffset = (clippedQuadX - quadX) * clippedFrameWidth / quadWidth;
+                clippedFrameX += clippedFrameXOffset;
+                clippedFrameWidth -= clippedFrameXOffset + (quadX + quadWidth - clippedQuadX - clippedQuadWidth) * clippedFrameWidth / quadWidth;
+                
+                var clippedFrameYOffset = (clippedQuadY - quadY) * clippedFrameHeight / quadHeight;
+                clippedFrameY += clippedFrameYOffset;
+                clippedFrameHeight -= clippedFrameYOffset + (quadY + quadHeight - clippedQuadY - clippedQuadHeight) * clippedFrameHeight / quadHeight;
+
                 quad.frame(
-                    glyph.x * quad.texture.width / originalTexture.width,
-                    glyph.y * quad.texture.height / originalTexture.height,
-                    glyph.width * quad.texture.width / originalTexture.width,
-                    glyph.height * quad.texture.height / originalTexture.height
+                    clippedFrameX,
+                    clippedFrameY,
+                    clippedFrameWidth,
+                    clippedFrameHeight
                 );
+                quad.pos(clippedQuadX, clippedQuadY);
+                quad.size(clippedQuadWidth, clippedQuadHeight);
             }
             else {
-                quad.frame(
-                    glyph.x / quad.texture.density,
-                    glyph.y / quad.texture.density,
-                    glyph.width / quad.texture.density,
-                    glyph.height / quad.texture.density
-                );
+                if (usePrerenderedSize) {
+                    var originalTexture = font.pages.get(glyph.page);
+                    quad.frame(
+                        glyph.x * quad.texture.width / originalTexture.width,
+                        glyph.y * quad.texture.height / originalTexture.height,
+                        glyph.width * quad.texture.width / originalTexture.width,
+                        glyph.height * quad.texture.height / originalTexture.height
+                    );
+                }
+                else {
+                    quad.frame(
+                        glyph.x / quad.texture.density,
+                        glyph.y / quad.texture.density,
+                        glyph.width / quad.texture.density,
+                        glyph.height / quad.texture.density
+                    );
+                }
+                quad.pos(quadX, quadY);
+                quad.size(quadWidth, quadHeight);
             }
             quad.anchor(0, 0);
-            quad.pos(x + glyph.xOffset * sizeFactor, y + glyph.yOffset * sizeFactor);
-            quad.size(glyph.width * sizeFactor, glyph.height * sizeFactor);
+            lineQuads[lineQuads.length-1].push(quad);
 
             xVisible = x + Math.max(
                 (glyph.xOffset + glyph.width) * sizeFactor,
@@ -418,7 +545,6 @@ class Text extends Visual {
             );
             
             x += glyph.xAdvance * sizeFactor + letterSpacing;
-            lineQuads[lineQuads.length-1].push(quad);
 
             i++;
 
