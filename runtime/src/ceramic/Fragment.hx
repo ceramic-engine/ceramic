@@ -704,7 +704,7 @@ class Fragment extends Layer {
 
     }
 
-    public function updateEditableFieldsFromInstance(itemId:String):Void {
+    public function updateEditableFieldsFromInstance(itemId:String, forceChange:Bool = false):Void {
 
         if (!emitEditableItemUpdateScheduled) {
             emitEditableItemUpdateScheduled = true;
@@ -771,7 +771,7 @@ class Fragment extends Layer {
             }
         }
 
-        if (hasChanged) {
+        if (hasChanged || forceChange) {
             if (updatedEditableItems == null) {
                 updatedEditableItems = new Map();
                 app.onceUpdate(this, function(delta) {
