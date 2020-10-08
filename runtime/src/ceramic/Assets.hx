@@ -24,6 +24,8 @@ class Assets extends Entity {
 
     @event function update(asset:Asset);
 
+    @event function progress(loaded:Int, total:Int, success:Bool);
+
     @event function assetFilesChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>);
 
 /// Properties
@@ -36,6 +38,12 @@ class Assets extends Entity {
     public var runtimeAssets:RuntimeAssets = null;
 
     public var defaultImageOptions:AssetOptions = null;
+
+    /**
+     * If set to `true`, will ensure asset loading is non blocking, at least between each asset.
+     * This is useful when we need to update screen during asset loading
+     */
+    public var nonBlocking:Bool = false;
 
 /// Internal
 
@@ -382,6 +390,7 @@ class Assets extends Entity {
 
     public function load():Void {
 
+        var total = 0;
         var pending = 0;
         var allSuccess = true;
 
@@ -398,12 +407,16 @@ class Assets extends Entity {
                     }
 
                     pending--;
+
+                    emitProgress(total - pending, total, allSuccess);
+
                     if (pending == 0) {
                         emitComplete(allSuccess);
                     }
 
                 });
                 pending++;
+                total++;
 
             }
 
@@ -412,12 +425,39 @@ class Assets extends Entity {
         // Load
         if (pending > 0) {
 
-            for (asset in addedAssets) {
-
-                if (asset.status == NONE) {
-                    asset.load();
+            if (nonBlocking) {
+                var toLoad = [].concat(addedAssets);
+                var loadNext:Void->Void = null;
+                loadNext = function() {
+                    var asset = toLoad.shift();
+                    if (asset.status == NONE) {
+                        asset.load();
+                        asset.onceComplete(this, function(success) {
+                            if (toLoad.length > 0) {
+                                app.onceUpdate(this, function(delta) {
+                                    app.onceUpdate(this, function(delta) {
+                                        loadNext();
+                                    });
+                                });
+                            }
+                        });
+                    }
+                    else {
+                        if (toLoad.length > 0) {
+                            loadNext();
+                        }
+                    }
                 }
-
+                loadNext();
+            }
+            else {
+                for (asset in addedAssets) {
+    
+                    if (asset.status == NONE) {
+                        asset.load();
+                    }
+    
+                }
             }
 
         } else {
