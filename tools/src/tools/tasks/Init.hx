@@ -84,14 +84,26 @@ app:
 
         File.saveContent(Path.join([projectPath, 'ceramic.yml']), content);
 
-        success('Project created at path: ' + projectPath);
-
         var backends = [];
         while (true) {
             var aBackend = extractArgValue(args, 'backend', true);
             if (aBackend == null || aBackend.trim() == '') break;
             backends.push(aBackend);
         }
+
+        // Check generated files
+        var generatedTplPath = Path.join([context.ceramicToolsPath, 'tpl', 'generated']);
+        var generatedFiles = Files.getFlatDirectory(generatedTplPath);
+        var projectGenPath = Path.join([projectPath, 'gen']);
+        for (file in generatedFiles) {
+            var sourceFile = Path.join([generatedTplPath, file]);
+            var destFile = Path.join([projectGenPath, file]);
+            if (!FileSystem.exists(destFile)) {
+                Files.copyIfNeeded(sourceFile, destFile);
+            }
+        }
+
+        success('Project created at path: ' + projectPath);
 
         // Init backend?
         for (backendName in backends) {
