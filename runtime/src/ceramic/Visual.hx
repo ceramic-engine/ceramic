@@ -1425,6 +1425,10 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
             _matrix.ty += y - anchorY * h;
         }
         else {
+            #if ceramic_visual_legacy_matrix
+
+            // This will be removed eventually
+
             _matrix.translate(-anchorX * w, -anchorY * h);
 
             if (skewX != 0 || skewY != 0) {
@@ -1438,6 +1442,27 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
                 x - (anchorX * w * scaleX),
                 y - (anchorY * h * scaleY)
             );
+
+            #else
+
+            // Newer way of applying transformations
+            // Simpler and with a better order of transformations
+            // (order matches better existing editors and standards so far)
+
+            _matrix.translate(-anchorX * w, -anchorY * h);
+
+            if (scaleX != 1.0 || scaleY != 1.0)
+                _matrix.scale(scaleX, scaleY);
+
+            if (skewX != 0 || skewY != 0)
+                _matrix.skew(skewX * _degToRad, skewY * _degToRad);
+
+            if (rotation != 0)
+                _matrix.rotate(rotation * _degToRad);
+
+            _matrix.translate(x, y);
+
+            #end
         }
 
         if (transform != null) {
