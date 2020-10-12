@@ -159,10 +159,7 @@ class KeyCode {
 
             default: {
 
-                var decoder = new haxe.Utf8();
-                    decoder.addChar(keyCode);
-
-                return decoder.toString();
+                return String.fromCharCode(keyCode);
 
             }
 

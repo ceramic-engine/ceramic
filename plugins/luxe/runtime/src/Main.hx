@@ -77,7 +77,7 @@ class Main extends luxe.Game {
         var userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             try {
-                var electronApp:Dynamic = untyped __js__("require('electron').remote.require('./app.js');");
+                var electronApp:Dynamic = untyped js.Syntax.code("require('electron').remote.require('./app.js');");
                 if (electronApp.isCeramicRunner) {
                     electronRunner = electronApp;
                 }
@@ -88,7 +88,7 @@ class Main extends luxe.Game {
         if (electronRunner != null) {
 
             // Add css class in html tag to let page change its style as needed
-            untyped __js__("document.getElementsByTagName('html')[0].className += ' in-electron-runner';");
+            untyped js.Syntax.code("document.getElementsByTagName('html')[0].className += ' in-electron-runner';");
 
             // Patch ceramic logger
             @:privateAccess ceramic.Logger._hasElectronRunner = true;

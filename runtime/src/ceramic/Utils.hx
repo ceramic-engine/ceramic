@@ -162,7 +162,7 @@ class Utils {
 
 #if web
         var jsError:Dynamic = null;
-        untyped __js__('
+        untyped js.Syntax.code('
             try {
                 throw new Error();
             } catch (e) {

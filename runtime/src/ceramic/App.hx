@@ -9,6 +9,10 @@ import hxtelemetry.HxTelemetry;
 import sdl.SDL;
 #end
 
+#if (!ceramic_cppia_host && !ceramic_no_bind_assets)
+import assets.AllAssets;
+#end
+
 import ceramic.PlatformSpecific;
 
 import ceramic.Settings;
@@ -369,7 +373,7 @@ class App extends Entity {
 #end
 
 #if (!ceramic_cppia_host && !ceramic_no_bind_assets)
-        assets.AllAssets.bind();
+        AllAssets.bind();
 #end
 
         app = new App();
