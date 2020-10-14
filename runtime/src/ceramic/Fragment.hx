@@ -1130,7 +1130,30 @@ class Fragment extends Layer {
 
     public function removeTrack(entity:String, field:String):Void {
 
-        //trace('remove track $entity # $field');
+        if (tracks != null) {
+            var index = -1;
+            for (i in 0...tracks.length) {
+                var track = tracks[i];
+                if (track.entity == entity && track.field == field) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index != -1) {
+                tracks.splice(index, 1);
+
+                // Remove the actual timeline track
+                if (timeline != null) {
+                    var trackId = entity + '#' + field;
+                    var timelineTrack = timeline.get(trackId);
+                    if (timelineTrack != null) {
+                        timeline.remove(timelineTrack);
+                        timelineTrack.destroy();
+                    }
+                }
+            }
+        }
 
     }
     
