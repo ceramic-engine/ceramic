@@ -1,5 +1,6 @@
 package ceramic;
 
+import tracker.Observable;
 import ceramic.RenderTexture;
 import ceramic.Quad;
 import ceramic.Visual;
@@ -8,7 +9,7 @@ import ceramic.Shortcuts.*;
 
 /** A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
     allowing to process the result through a shader, apply blending or alpha on the final result... */
-class Filter extends Quad {
+class Filter extends Quad implements Observable {
 
 /// Internal
 
@@ -104,7 +105,7 @@ class Filter extends Quad {
 
     public var textureTile(default,null):TextureTile = null;
 
-    public var renderTexture(default,null):RenderTexture = null;
+    @observe public var renderTexture(default,null):RenderTexture = null;
 
     public var density(default,set):Float = -1;
     function set_density(density:Float):Float {
@@ -133,15 +134,26 @@ class Filter extends Quad {
 
         hitVisual = this;
 
+        screen.onTexturesDensityChange(this, handleTexturesDensityChange);
+
     }
 
 /// Internal
+
+    function handleTexturesDensityChange(density:Float, prevDensity:Float):Void {
+
+        if (density != prevDensity && this.density == -1) {
+            filterSize(Math.ceil(width), Math.ceil(height), density);
+            contentDirty = false;
+        }
+
+    }
 
     function filterSize(filterWidth:Int, filterHeight:Int, density:Float):Void {
 
         if (enabled) {
             if (renderTexture == null ||
-                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight)) ||
+                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density))) ||
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
                 ) {
