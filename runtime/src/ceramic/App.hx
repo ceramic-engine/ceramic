@@ -771,7 +771,7 @@ class App extends Entity {
     }
 
     @:noCompletion
-    #if !debug inline #end public function updateVisuals(visuals:Array<Visual>) {
+    #if (!debug && !ceramic_debug_perf) inline #end public function updateVisuals(visuals:Array<Visual>) {
 
         var numIterations = 0;
         var didFlush = false;
@@ -885,7 +885,7 @@ class App extends Entity {
     }
 
     @:noCompletion
-    #if !debug inline #end public function computeHierarchy() {
+    #if (!debug && !ceramic_debug_perf) inline #end public function computeHierarchy() {
 
         if (hierarchyDirty) {
 
@@ -913,7 +913,7 @@ class App extends Entity {
     }
 
     @:noCompletion
-    #if !debug inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
+    #if (!debug && !ceramic_debug_perf) inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
 
         if (renderTextures.length == 0)
             return;
@@ -931,7 +931,7 @@ class App extends Entity {
     }
 
     @:noCompletion
-    #if !debug inline #end public function sortVisuals(visuals:Array<Visual>) {
+    #if (!debug && !ceramic_debug_perf) inline #end public function sortVisuals(visuals:Array<Visual>) {
 
         // Emit event before sorting visuals (last moment we can tweak visuals sorting)
         emitBeginSortVisuals();
