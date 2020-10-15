@@ -367,7 +367,7 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,1,15'])))
             haxelib(['install', 'hxcpp', '4.1.15', '--always'], {cwd: cwd});
         
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12.1.0'])))
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
             haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
         
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
