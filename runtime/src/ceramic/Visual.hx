@@ -1488,7 +1488,13 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
             // Concat matrix with parent's computed matrix data
             //
-            if (translatesOnly && transform == null) {
+            if (parent.matA == 1 && parent.matB == 0 && parent.matC == 0 && parent.matD == 1) {
+
+                _matrix.tx += parent.matTX;
+                _matrix.ty += parent.matTY;
+
+            }
+            else if (translatesOnly && transform == null) {
 
                 _matrix.a = parent.matA;
                 _matrix.b = parent.matB;
