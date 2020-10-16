@@ -184,6 +184,7 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-D arch-web';
             targetFlags += '\n' + '-D luxe_web';
             targetFlags += '\n' + '-D snow_web';
+            targetFlags += '\n' + '-D ceramic_soft_inline';
             targetFlags += '\n' + '--macro snow.Set.assets("snow.core.web.assets.Assets")';
             targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.webaudio.Audio")';
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.core.web.Runtime")';
