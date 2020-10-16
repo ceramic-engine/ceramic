@@ -3,3 +3,9 @@ plugin:
 ide:
     tools: true
     runtime: true
+
+runtime:
+    # Haxe inlining is counter-productive when targeting js
+    if web:
+        +defines:
+            - spine_no_inline
