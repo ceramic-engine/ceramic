@@ -3,6 +3,7 @@ package org.libsdl.app;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.lang.reflect.Method;
 import java.lang.Math;
@@ -11,6 +12,7 @@ import android.app.*;
 import android.content.*;
 import android.content.res.Configuration;
 import android.text.InputType;
+import android.text.Layout;
 import android.view.*;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
@@ -124,9 +126,11 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             library = "libmain.so";
         }
 
-        return library;
+        //return library;
         // http://hg.libsdl.org/SDL/rev/d9e69bf4c6d4
-        //return getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
+        library = getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
+
+        return library;
     }
 
     /**
@@ -631,7 +635,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
                 //---:snow:start
                 // Explicit request fullscreen when keyboard is hidden
-                new Handler().post(new Runnable() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
 
@@ -1605,7 +1609,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     @Override
     public void surfaceChanged(SurfaceHolder holder,
                                int format, int width, int height) {
-        Log.v("SDL", "surfaceChanged()");
+        Log.v("SDL", "surfaceChanged() " + format + " / " + width + " x " + height);
 
         if (SDLActivity.mSingleton == null) {
             return;

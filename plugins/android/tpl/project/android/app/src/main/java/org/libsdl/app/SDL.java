@@ -72,7 +72,23 @@ public class SDL {
                 System.loadLibrary(libraryName);
             }
             catch (final UnsatisfiedLinkError ule) {
-                throw ule;
+                if (libraryName.replace('\\', '/').contains("/")) {
+                    String cleaned = libraryName.replace('\\', '/');
+                    int index = cleaned.lastIndexOf('/');
+                    String newLibraryName = cleaned.substring(index + 1);
+                    try {
+                        System.loadLibrary(newLibraryName);
+                    }
+                    catch (final UnsatisfiedLinkError ule2) {
+                        throw ule2;
+                    }
+                    catch (final SecurityException se2) {
+                        throw se2;
+                    }
+                }
+                else {
+                    throw ule;
+                }
             }
             catch (final SecurityException se) {
                 throw se;

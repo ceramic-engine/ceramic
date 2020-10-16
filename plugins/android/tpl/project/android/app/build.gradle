@@ -3,12 +3,12 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 29
+    buildToolsVersion '29.0.3'
 
     defaultConfig {
         applicationId "mycompany.myapp"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 29
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
@@ -63,5 +63,4 @@ tasks.whenTaskAdded { task ->
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:support-v4:26.1.0'
 }
