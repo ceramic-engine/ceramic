@@ -1016,7 +1016,7 @@ class Screen extends Entity implements Observable {
 
     }
 
-    inline public function isHitVisual(visual:Visual):Bool {
+    public function isHitVisual(visual:Visual):Bool {
 
         return visual.internalFlag(3);
 
