@@ -95,11 +95,11 @@ class SortVisuals {
 
         If `a` or `cmp` are null, the result is unspecified.
     **/
-    static public function sort(a:Array<Visual>) {
-        inline rec0(a, 0, a.length);
+    static inline public function sort(a:Array<Visual>) {
+        rec(a, 0, a.length);
     }
 
-    static function rec0(a:Array<Visual>, from:Int, to:Int) {
+    static function rec(a:Array<Visual>, from:Int, to:Int) {
         var middle = (from + to) >> 1;
         if (to - from < 12) {
             if (to <= from) return;
@@ -115,75 +115,12 @@ class SortVisuals {
             }
             return;
         }
-        rec1(a, from, middle);
-        rec1(a, middle, to);
-        inline doMerge0(a, from, middle, to, middle - from, to - middle);
+        rec(a, from, middle);
+        rec(a, middle, to);
+        doMerge(a, from, middle, to, middle - from, to - middle);
     }
 
-    static inline function rec1(a:Array<Visual>, from:Int, to:Int) {
-        var middle = (from + to) >> 1;
-        if (to - from < 12) {
-            if (to <= from) return;
-            for (i in (from + 1)...to) {
-                var j = i;
-                while (j > from) {
-                    if (compare(a, j, j - 1) < 0)
-                        swap(a, j - 1, j);
-                    else
-                        break;
-                    j--;
-                }
-            }
-            return;
-        }
-        rec2(a, from, middle);
-        rec2(a, middle, to);
-        inline doMerge0(a, from, middle, to, middle - from, to - middle);
-    }
-
-    static inline function rec2(a:Array<Visual>, from:Int, to:Int) {
-        var middle = (from + to) >> 1;
-        if (to - from < 12) {
-            if (to <= from) return;
-            for (i in (from + 1)...to) {
-                var j = i;
-                while (j > from) {
-                    if (compare(a, j, j - 1) < 0)
-                        swap(a, j - 1, j);
-                    else
-                        break;
-                    j--;
-                }
-            }
-            return;
-        }
-        rec3(a, from, middle);
-        rec3(a, middle, to);
-        inline doMerge0(a, from, middle, to, middle - from, to - middle);
-    }
-
-    static inline function rec3(a:Array<Visual>, from:Int, to:Int) {
-        var middle = (from + to) >> 1;
-        if (to - from < 12) {
-            if (to <= from) return;
-            for (i in (from + 1)...to) {
-                var j = i;
-                while (j > from) {
-                    if (compare(a, j, j - 1) < 0)
-                        swap(a, j - 1, j);
-                    else
-                        break;
-                    j--;
-                }
-            }
-            return;
-        }
-        rec0(a, from, middle);
-        rec0(a, middle, to);
-        inline doMerge0(a, from, middle, to, middle - from, to - middle);
-    }
-
-    static function doMerge0(a:Array<Visual>, from, pivot, to, len1, len2) {
+    static function doMerge(a:Array<Visual>, from, pivot, to, len1, len2) {
         var first_cut, second_cut, len11, len22, new_mid;
         if (len1 == 0 || len2 == 0)
             return;
@@ -205,86 +142,8 @@ class SortVisuals {
         }
         rotate(a, first_cut, pivot, second_cut);
         new_mid = first_cut + len22;
-        doMerge1(a, from, first_cut, new_mid, len11, len22);
-        doMerge1(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
-    }
-
-    static inline function doMerge1(a:Array<Visual>, from, pivot, to, len1, len2) {
-        var first_cut, second_cut, len11, len22, new_mid;
-        if (len1 == 0 || len2 == 0)
-            return;
-        if (len1 + len2 == 2) {
-            if (compare(a, pivot, from) < 0)
-                swap(a, pivot, from);
-            return;
-        }
-        if (len1 > len2) {
-            len11 = len1 >> 1;
-            first_cut = from + len11;
-            second_cut = lower(a, pivot, to, first_cut);
-            len22 = second_cut - pivot;
-        } else {
-            len22 = len2 >> 1;
-            second_cut = pivot + len22;
-            first_cut = upper(a, from, pivot, second_cut);
-            len11 = first_cut - from;
-        }
-        rotate(a, first_cut, pivot, second_cut);
-        new_mid = first_cut + len22;
-        doMerge2(a, from, first_cut, new_mid, len11, len22);
-        doMerge2(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
-    }
-
-    static inline function doMerge2(a:Array<Visual>, from, pivot, to, len1, len2) {
-        var first_cut, second_cut, len11, len22, new_mid;
-        if (len1 == 0 || len2 == 0)
-            return;
-        if (len1 + len2 == 2) {
-            if (compare(a, pivot, from) < 0)
-                swap(a, pivot, from);
-            return;
-        }
-        if (len1 > len2) {
-            len11 = len1 >> 1;
-            first_cut = from + len11;
-            second_cut = lower(a, pivot, to, first_cut);
-            len22 = second_cut - pivot;
-        } else {
-            len22 = len2 >> 1;
-            second_cut = pivot + len22;
-            first_cut = upper(a, from, pivot, second_cut);
-            len11 = first_cut - from;
-        }
-        rotate(a, first_cut, pivot, second_cut);
-        new_mid = first_cut + len22;
-        doMerge3(a, from, first_cut, new_mid, len11, len22);
-        doMerge3(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
-    }
-
-    static inline function doMerge3(a:Array<Visual>, from, pivot, to, len1, len2) {
-        var first_cut, second_cut, len11, len22, new_mid;
-        if (len1 == 0 || len2 == 0)
-            return;
-        if (len1 + len2 == 2) {
-            if (compare(a, pivot, from) < 0)
-                swap(a, pivot, from);
-            return;
-        }
-        if (len1 > len2) {
-            len11 = len1 >> 1;
-            first_cut = from + len11;
-            second_cut = lower(a, pivot, to, first_cut);
-            len22 = second_cut - pivot;
-        } else {
-            len22 = len2 >> 1;
-            second_cut = pivot + len22;
-            first_cut = upper(a, from, pivot, second_cut);
-            len11 = first_cut - from;
-        }
-        rotate(a, first_cut, pivot, second_cut);
-        new_mid = first_cut + len22;
-        doMerge0(a, from, first_cut, new_mid, len11, len22);
-        doMerge0(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
+        doMerge(a, from, first_cut, new_mid, len11, len22);
+        doMerge(a, new_mid, second_cut, to, len1 - len11, len2 - len22);
     }
 
     static inline function rotate(a:Array<Visual>, from, mid, to) {
