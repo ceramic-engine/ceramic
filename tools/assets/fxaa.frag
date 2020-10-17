@@ -5,7 +5,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D tex0;
-uniform vec2 u_resolution;
+uniform vec2 resolution;
 varying vec2 tcoord;
 varying vec4 color;
 
@@ -96,10 +96,10 @@ vec4 apply(sampler2D tex, vec2 fragCoord, vec2 resolution) {
 }
 
 void main() { 
-    vec2 fragCoord = tcoord * u_resolution;
+    vec2 fragCoord = tcoord * resolution;
     
     //vec4 texcolor = texture2D(tex0, tcoord);
-    vec4 texcolor = apply(tex0, fragCoord, u_resolution);
+    vec4 texcolor = apply(tex0, fragCoord, resolution);
 
     gl_FragColor = color * texcolor;
 }
