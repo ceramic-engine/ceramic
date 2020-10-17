@@ -1013,6 +1013,19 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         return height;
     }
 
+    /**
+     * If `true`, matrix translation (tx & ty) will be rounded.
+     * May be useful to render pixel perfect scenes onto `ceramic.Filter`.
+     */
+    @editable
+    public var roundTranslation(default,set):Bool = false;
+    function set_roundTranslation(roundTranslation:Bool):Bool {
+        if (this.roundTranslation == roundTranslation) return roundTranslation;
+        this.roundTranslation = roundTranslation;
+        matrixDirty = true;
+        return roundTranslation;
+    }
+
     @editable({ slider: [0, 360], degrees: true })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
@@ -1532,6 +1545,11 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         matD = _matrix.d;
         matTX = _matrix.tx;
         matTY = _matrix.ty;
+        
+        if (roundTranslation) {
+            matTX = Math.round(matTX);
+            matTY = Math.round(matTY);
+        }
 
         // Matrix is up to date
         matrixDirty = false;
