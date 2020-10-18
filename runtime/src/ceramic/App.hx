@@ -463,6 +463,11 @@ class App extends Entity {
         assets.add(settings.defaultShader);
         assets.add('shader:msdf');
 
+#if !ceramic_no_pixel_art_shader
+        // Pixel art shader
+        assets.add('shader:pixelArt');
+#end
+
         assets.onceComplete(this, function(success) {
             // Default font
             assets.add(settings.defaultFont);
