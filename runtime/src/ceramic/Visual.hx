@@ -2152,6 +2152,30 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
     }
 
+/// Screen size helpers
+
+    /** Will set this visual size to screen size */
+    public function bindToScreenSize():Void {
+
+        // Bind to screen size
+        ceramic.App.app.screen.onResize(this, function() {
+            size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
+        });
+        size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
+
+    }
+
+    /** Will set this visual size to target size (`settings.targetWidth` and `settings.targetHeight`) */
+    public function bindToTargetSize():Void {
+
+        // Bind to screen size
+        ceramic.App.app.screen.onResize(this, function() {
+            size(ceramic.App.app.settings.targetWidth, ceramic.App.app.settings.targetHeight);
+        });
+        size(ceramic.App.app.settings.targetWidth, ceramic.App.app.settings.targetHeight);
+
+    }
+
 #if editor
 
 /// Editor

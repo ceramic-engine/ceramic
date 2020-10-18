@@ -895,7 +895,7 @@ class View extends Quad {
 /// Screen size helpers
 
     /** Will set this view size to screen size, and update view size each time screen size changes. */
-    public function bindToScreenSize():Void {
+    override public function bindToScreenSize():Void {
 
         // Bind to screen size
         screen.onResize(this, function() {
@@ -903,6 +903,22 @@ class View extends Quad {
             View.requestLayout();
         });
         size(screen.width, screen.height);
+        View.requestLayout();
+
+    }
+
+    /**
+     * Will set this visual size to target size (`settings.targetWidth` and `settings.targetHeight`),
+     * and update view size each time it changes.
+     */
+    override public function bindToTargetSize():Void {
+
+        // Bind to screen size
+        screen.onResize(this, function() {
+            size(settings.targetWidth, settings.targetHeight);
+            View.requestLayout();
+        });
+        size(settings.targetWidth, settings.targetHeight);
         View.requestLayout();
 
     }
