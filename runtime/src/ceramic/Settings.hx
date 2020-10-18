@@ -7,15 +7,23 @@ class Settings implements Observable {
     @:allow(ceramic.App)
     private function new() {}
 
-    /** Target width. Affects window size at startup
+    /** Target width. Affects window size at startup (unless `windowWidth` is specified)
         and affects screen scaling at any time.
         Ignored if set to 0 (default) */
     @observe public var targetWidth:Int = 0;
 
-    /** Target height. Affects window size at startup
+    /** Target height. Affects window size at startup (unless `windowHeight` is specified)
         and affects screen scaling at any time.
         Ignored if set to 0 (default) */
     @observe public var targetHeight:Int = 0;
+
+    /** Target window width at startup
+        Use `targetWidth` as fallback if set to 0 (default) */
+    @observe public var windowWidth(default,null):Int = 0;
+
+    /** Target window height at startup
+        Use `targetHeight` as fallback if set to 0 (default) */
+    @observe public var windowHeight(default,null):Int = 0;
 
     /** Target density. Affects the quality of textures
         being loaded. Changing it at runtime will update

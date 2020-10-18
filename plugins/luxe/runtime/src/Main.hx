@@ -149,8 +149,14 @@ class Main extends luxe.Game {
         // Configure luxe
         config.render.antialiasing = app.settings.antialiasing;
         config.window.borderless = false;
-        if (app.settings.targetWidth > 0) config.window.width = cast app.settings.targetWidth;
-        if (app.settings.targetHeight > 0) config.window.height = cast app.settings.targetHeight;
+        if (app.settings.windowWidth > 0)
+            config.window.width = cast app.settings.windowWidth;
+        else if (app.settings.targetWidth > 0)
+            config.window.width = cast app.settings.targetWidth;
+        if (app.settings.windowHeight > 0)
+            config.window.height = cast app.settings.windowHeight;
+        else if (app.settings.targetHeight > 0)
+            config.window.height = cast app.settings.targetHeight;
         config.window.resizable = app.settings.resizable;
         config.window.title = cast app.settings.title;
         config.render.stencil = 2;
@@ -296,8 +302,8 @@ class Main extends luxe.Game {
                 },
                 title: app.settings.title,
                 resizable: app.settings.resizable,
-                targetWidth: app.settings.targetWidth,
-                targetHeight: app.settings.targetHeight
+                targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
+                targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
             });
         }
 #end

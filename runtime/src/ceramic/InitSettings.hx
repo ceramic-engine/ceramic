@@ -37,6 +37,26 @@ class InitSettings {
         return settings.targetHeight = targetHeight;
     }
 
+    /** Target window width at startup
+        Use `targetWidth` as fallback if set to 0 (default) */
+    public var windowWidth(get,set):Int;
+    inline function get_windowWidth():Int {
+        return settings.windowWidth;
+    }
+    inline function set_windowWidth(windowWidth:Int):Int {
+        return @:privateAccess settings.windowWidth = windowWidth;
+    }
+
+    /** Target window height at startup
+        Use `targetHeight` as fallback if set to 0 (default) */
+    public var windowHeight(get,set):Int;
+    inline function get_windowHeight():Int {
+        return settings.windowHeight;
+    }
+    inline function set_windowHeight(windowHeight:Int):Int {
+        return @:privateAccess settings.windowHeight = windowHeight;
+    }
+
     /** Target density. Affects the quality of textures
         being loaded. Changing it at runtime will update
         texture quality if needed.
