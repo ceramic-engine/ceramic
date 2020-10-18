@@ -475,6 +475,8 @@ class Screen extends Entity implements Observable {
                 else if (nativeRatio < targetRatio) {
                     targetWidth = targetHeight / nativeRatio;
                 }
+                targetWidth = Math.ceil(targetWidth);
+                targetHeight = Math.ceil(targetHeight);
                 scale = Math.max(targetWidth / (nativeWidth * nativeDensity), targetHeight / (nativeHeight * nativeDensity));
         }
 
