@@ -52,6 +52,7 @@ class Filter extends Layer implements Observable {
     function set_enabled(enabled:Bool):Bool {
         if (this.enabled == enabled) return enabled;
         this.enabled = enabled;
+        transparent = !enabled;
         contentDirty = true;
         return enabled;
     }
