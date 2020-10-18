@@ -9,7 +9,7 @@ import ceramic.Shortcuts.*;
 
 /** A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
     allowing to process the result through a shader, apply blending or alpha on the final result... */
-class Filter extends Quad implements Observable {
+class Filter extends Layer implements Observable {
 
 /// Internal
 
@@ -126,6 +126,8 @@ class Filter extends Quad implements Observable {
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
+
+        transparent = false;
 
         content = new Quad();
         content.transparent = true;
