@@ -167,7 +167,23 @@ class Project {
 
         if (app.hxml == null) app.hxml = '';
 
-        app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(app));
+        var appInfo:Dynamic = {};
+        if (Reflect.field(app, 'package') != null)
+            Reflect.setField(appInfo, 'package', Reflect.field(appInfo, 'package'));
+        if (app.name != null)
+            appInfo.name = app.name;
+        if (app.displayName != null)
+            appInfo.displayName = app.displayName;
+        if (app.author != null)
+            appInfo.author = app.author;
+        if (app.version != null)
+            appInfo.version = app.version;
+        if (app.collections != null)
+            appInfo.collections = app.collections;
+        if (app.editable != null)
+            appInfo.editable = app.editable;
+
+        app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(appInfo));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
 
         app.hxml += '\n' + '-D tracker_ceramic';
