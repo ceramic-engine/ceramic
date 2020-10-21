@@ -490,7 +490,7 @@ class Scroller extends Visual {
         var hits = this.hits(info.x, info.y);
         var firstDownListener = hits && touchableStrictHierarchy ? @:privateAccess screen.matchFirstDownListener(info.x, info.y) : null;
 
-        if (hits && (!touchableStrictHierarchy || firstDownListener == this || this.contains(firstDownListener, true))) {
+        if (hits && firstDownListener != null && (!touchableStrictHierarchy || firstDownListener == this || this.contains(firstDownListener, true))) {
             // If it was bouncing, snapping..., it is not anymore
             animating = false;
             snapping = false;
