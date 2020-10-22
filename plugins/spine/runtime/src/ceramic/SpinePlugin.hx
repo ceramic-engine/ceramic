@@ -37,6 +37,7 @@ class SpinePlugin {
 
             log.info('Init spine plugin');
 
+            /*
             // Generate spine asset ids
             var clazz = Type.resolveClass('assets.Spines');
             var spineIds:Map<String,String> = Reflect.field(clazz, '_ids');
@@ -45,6 +46,7 @@ class SpinePlugin {
                 var info:Dynamic = Reflect.field(clazz, key);
                 Reflect.setField(info, '_id', id);
             }
+            */
 
             // Extend assets with `spine` kind
             Assets.addAssetKind('spine', addSpine, ['spine'], true, ['ceramic.SpineData']);

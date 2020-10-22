@@ -991,4 +991,58 @@ class Helpers {
 
     }
 
+    public static function toAssetConstName(input:String):String {
+
+        var res = new StringBuf();
+        var len = input.length;
+        var i = 0;
+        var canAddSpace = false;
+
+        while (i < len) {
+
+            var c = input.charAt(i);
+            if (c == '/') {
+                res.add('__');
+                canAddSpace = false;
+            }
+            else if (c == '.') {
+                res.add('_');
+                canAddSpace = false;
+            }
+            else if (isAsciiChar(c)) {
+
+                var uc = c.toUpperCase();
+                var isUpperCase = (c == uc);
+
+                if (canAddSpace && isUpperCase) {
+                    res.add('_');
+                    canAddSpace = false;
+                }
+
+                res.add(uc);
+                canAddSpace = !isUpperCase;
+            }
+            else {
+                res.add('_');
+                canAddSpace = false;
+            }
+
+            i++;
+        }
+
+        var str = res.toString();
+        if (str.endsWith('_')) str = str.substr(0, str.length - 1);
+
+        return str;
+
+    }
+
+    public static function isAsciiChar(c:String):Bool {
+
+        var code = c.charCodeAt(0);
+        return (code >= '0'.code && code <= '9'.code)
+            || (code >= 'A'.code && code <= 'Z'.code)
+            || (code >= 'a'.code && code <= 'z'.code);
+
+    }
 }

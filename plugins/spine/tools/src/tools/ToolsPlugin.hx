@@ -28,7 +28,7 @@ class ToolsPlugin {
         var tasks = context.tasks;
         tasks.set('spine export', new tools.tasks.spine.ExportSpine());
         tasks.set('spine run', new tools.tasks.spine.RunSpine());
-        tasks.set('spine setup', new tools.tasks.spine.SetupSpine());
+        tasks.set('spine names', new tools.tasks.spine.GenerateNames());
 
     }
 
@@ -45,11 +45,11 @@ class ToolsPlugin {
                 app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
                 app.editable.push('ceramic.Spine');
 
-                // Add hook to generate Spines.hx
+                // Add hook to generate gen/assets/Spines.hx & related
                 app.hooks.push({
                     'when': 'begin build',
                     'command': 'ceramic',
-                    'args': ['spine', 'setup']
+                    'args': ['spine', 'names']
                 });
             }
         }

@@ -1,5 +1,8 @@
 plugin:
     name: Spine
+    libs:
+        - generate
+
 ide:
     tools: true
     runtime: true
