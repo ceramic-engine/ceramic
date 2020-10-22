@@ -47,9 +47,10 @@ function postInstall() {
     var ceramic = process.platform == 'win32' ? 'ceramic.cmd' : './ceramic';
     spawnSync(ceramic, ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
 
-    // Install electron runner
-    var npm = process.platform == 'win32' ? 'npm.cmd' : '../tools/npm';
-    spawnSync(npm, ['install'], { stdio: "inherit", cwd: __dirname + '/../runner' });
+    // Not installing electron runner from here anymore, because it doesn't work :(
+    // Run `npm install` directly from `runner/` directory
+    //var npm = process.platform == 'win32' ? 'npm.cmd' : '../tools/npm';
+    //spawnSync(npm, ['install'], { stdio: "inherit", cwd: __dirname + '/../runner' });
 
 }
 
