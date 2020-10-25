@@ -5,9 +5,9 @@ class TimelineBoolKeyframe extends TimelineKeyframe {
 
     public var value:Bool;
 
-    public function new(value:Bool, time:Float, easing:Easing) {
+    public function new(value:Bool, index:Int, easing:Easing) {
 
-        super(time, easing);
+        super(index, easing);
         
         this.value = value;
 

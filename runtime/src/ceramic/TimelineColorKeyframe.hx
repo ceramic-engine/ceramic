@@ -5,9 +5,9 @@ class TimelineColorKeyframe extends TimelineKeyframe {
 
     public var value:Color;
 
-    public function new(value:Color, time:Float, easing:Easing) {
+    public function new(value:Color, index:Int, easing:Easing) {
 
-        super(time, easing);
+        super(index, easing);
         
         this.value = value;
 

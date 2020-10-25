@@ -9,17 +9,17 @@ using ceramic.Extensions;
     Create subclasses to implement details */
 class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
-    /** Track duration. Default `0`, meaning this track won't do anything.
-        By default, because `autoFitDuration` is `true`, adding new keyframes to this
-        track will update `duration` accordingly so it may not be needed to update `duration` explicitly.
-        Setting `duration` to `-1` means the track will never finish. */
-    public var duration:Float = 0;
+    /** Track size. Default `0`, meaning this track won't do anything.
+        By default, because `autoFitSize` is `true`, adding new keyframes to this
+        track will update `size` accordingly so it may not be needed to update `size` explicitly.
+        Setting `size` to `-1` means the track will never finish. */
+    public var size:Float = 0;
 
     /** If set to `true` (default), adding keyframes to this track will update
-        its duration accordingly to match last keyframe time. */
-    public var autoFitDuration:Bool = true;
+        its size accordingly to match last keyframe time. */
+    public var autoFitSize:Bool = true;
 
-    /** Whether this track should loop. Ignored if track's `duration` is `-1` (not defined). */
+    /** Whether this track should loop. Ignored if track's `size` is `-1` (not defined). */
     public var loop:Bool = false;
 
     /** Whether this track is locked or not.
@@ -30,9 +30,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     @:allow(ceramic.Timeline)
     public var timeline(default, null):Timeline = null;
 
-    /** Elapsed time on this track.
-        Gets back to zero when `loop=true` and time reaches a defined `duration`. */
-    public var time(default, null):Float = 0;
+    /** Position on this track.
+        Gets back to zero when `loop=true` and position reaches a defined `size`. */
+    public var position(default, null):Float = 0;
 
     /** The key frames on this track. */
     public var keyframes(default, null):ReadOnlyArray<K> = [];
@@ -43,10 +43,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     /** The keyframe right after current time, if any. */
     public var after(default, null):K = null;
 
-    /** The index of the last resolved `key frame before`. Used internally. */
+    /** The index of the last resolved `key index before`. Used internally. */
     private var keyframeBeforeIndex:Int = -1;
 
-    /** The index of the last resolved `key frame after`. Used internally. */
+    /** The index of the last resolved `key index after`. Used internally. */
     private var keyframeAfterIndex:Int = -1;
 
     public function new() {
@@ -65,41 +65,41 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Seek the given time (in seconds) in the track.
-        Will take care of clamping `time` or looping it depending on `duration` and `loop` properties. */
-    final public function seek(targetTime:Float):Void {
+    /** Seek the given position (in frames) in the track.
+        Will take care of clamping `position` or looping it depending on `size` and `loop` properties. */
+    final public function seek(targetPosition:Float):Void {
 
-        inlineSeek(targetTime);
+        inlineSeek(targetPosition);
 
     }
 
     @:allow(ceramic.Timeline)
-    inline function inlineSeek(targetTime:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
+    inline function inlineSeek(targetPosition:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
 
-        // Continue only if target time is different than current time
-        if (forceSeek || targetTime != time) {
+        // Continue only if target position is different than current position
+        if (forceSeek || targetPosition != position) {
 
-            if (duration > 0) {
-                if (targetTime > duration) {
+            if (size > 0) {
+                if (targetPosition > size) {
                     if (loop) {
-                        targetTime = targetTime % duration;
+                        targetPosition = targetPosition % size;
                     }
                     else {
-                        targetTime = duration;
+                        targetPosition = size;
                     }
                 }
             }
-            else if (duration == 0) {
-                targetTime = 0;
+            else if (size == 0) {
+                targetPosition = 0;
             }
 
-            if (targetTime < 0) {
-                targetTime = 0;
+            if (targetPosition < 0) {
+                targetPosition = 0;
             }
 
-            // If time has changed, compute surrounding keyframes and apply changes
-            if (targetTime != time) {
-                time = targetTime;
+            // If position has changed, compute surrounding keyframes and apply changes
+            if (targetPosition != position) {
+                position = targetPosition;
 
                 // Compute before/after keyframes
                 computeKeyframeBefore();
@@ -123,13 +123,13 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         var didInsert = false;
         while (i < len) {
             var next = mutableKeyframes.unsafeGet(i);
-            if (next.time == keyframe.time) {
-                log.warning('Replacing existing keyframe at time ${keyframe.time}');
+            if (next.index == keyframe.index) {
+                log.warning('Replacing existing keyframe at index ${keyframe.index}');
                 mutableKeyframes.unsafeSet(i, keyframe);
                 didInsert = true;
                 break;
             }
-            else if (next.time > keyframe.time) {
+            else if (next.index > keyframe.index) {
                 mutableKeyframes.insert(i, keyframe);
                 didInsert = true;
                 break;
@@ -140,12 +140,12 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
             mutableKeyframes.push(keyframe);
         }
 
-        if (autoFitDuration) {
-            fitDuration();
+        if (autoFitSize) {
+            fitSize();
         }
 
-        if (timeline != null && timeline.autoFitDuration) {
-            timeline.fitDuration();
+        if (timeline != null && timeline.autoFitSize) {
+            timeline.fitSize();
         }
 
         keyframeBeforeIndex = -1;
@@ -166,12 +166,12 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
             var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.original;
             mutableKeyframes.splice(index, 1);
 
-            if (autoFitDuration) {
-                fitDuration();
+            if (autoFitSize) {
+                fitSize();
             }
     
-            if (timeline != null && timeline.autoFitDuration) {
-                timeline.fitDuration();
+            if (timeline != null && timeline.autoFitSize) {
+                timeline.fitSize();
             }
 
             keyframeBeforeIndex = -1;
@@ -188,15 +188,15 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Update `duration` property to make it fit
-        the time of the last keyframe on this track. */
-    public function fitDuration():Void {
+    /** Update `size` property to make it fit
+        the index of the last keyframe on this track. */
+    public function fitSize():Void {
 
         if (keyframes.length > 0) {
-            duration = keyframes[keyframes.length - 1].time;
+            size = keyframes[keyframes.length - 1].index;
         }
         else {
-            duration = 0;
+            size = 0;
         }
 
     }
@@ -208,18 +208,18 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    public function findKeyframeAtTime(time:Float):Null<K> {
+    public function findKeyframeAtIndex(index:Int):Null<K> {
 
-        var keyframe = findKeyframeBefore(time);
-        if (keyframe != null && keyframe.time == time) {
+        var keyframe = findKeyframeBefore(index);
+        if (keyframe != null && keyframe.index == index) {
             return keyframe;
         }
         return null;
 
     }
 
-    /** Find the keyframe right before or equal to given `time` */
-    public function findKeyframeBefore(time:Float):Null<K> {
+    /** Find the keyframe right before or equal to given `position` */
+    public function findKeyframeBefore(position:Float):Null<K> {
 
         var result:K = null;
 
@@ -227,7 +227,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         var len = keyframes.length;
         while (index + 1 < len) {
             var keyframe = keyframes[index + 1];
-            if (keyframe.time > time) {
+            if (keyframe.index > position) {
                 // Not valid, stop
                 break;
             }
@@ -241,8 +241,8 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Find the keyframe right after given `time` */
-    public function findKeyframeAfter(time:Float):Null<K> {
+    /** Find the keyframe right after given `position` */
+    public function findKeyframeAfter(position:Float):Null<K> {
 
         var result:K = null;
 
@@ -250,7 +250,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         var len = keyframes.length;
         while (index + 1 < len) {
             var keyframe = keyframes[index + 1];
-            if (keyframe.time > time) {
+            if (keyframe.index > position) {
                 // Not valid, stop
                 break;
             }
@@ -273,10 +273,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         // Check if last used keyframe is still valid
         if (index != -1) {
             result = keyframes[index];
-            if (result.time <= time) {
+            if (result.index <= position) {
                 // K was before, check that the following one is not before as well
                 var keyframeAfter= keyframes[index + 1];
-                while (keyframeAfter != null && keyframeAfter.time <= time) {
+                while (keyframeAfter != null && keyframeAfter.index <= position) {
                     // Yes, it is! Increment index.
                     result = keyframeAfter;
                     index++;
@@ -284,7 +284,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
                 }
             }
             else {
-                // K time is later, not valid
+                // K index is later, not valid
                 result = null;
             }
         }
@@ -295,7 +295,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
             var len = keyframes.length;
             while (index + 1 < len) {
                 var keyframe = keyframes[index + 1];
-                if (keyframe.time > time) {
+                if (keyframe.index > position) {
                     // Not valid, stop
                     break;
                 }
@@ -322,11 +322,11 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         if (index != -1) {
             result = keyframes[index];
             if (result != null) {
-                if (result.time > time) {
+                if (result.index > position) {
                     // K is still later, check that the previous one is not later as well
                     if (index > 0) {
                         var keyframeBefore = keyframes[index - 1];
-                        while (keyframeBefore != null && keyframeBefore.time > time) {
+                        while (keyframeBefore != null && keyframeBefore.index > position) {
                             // Yes, it is! Decrement index.
                             result = keyframeBefore;
                             index--;
@@ -335,7 +335,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
                     }
                 }
                 else {
-                    // K time is before, not valid
+                    // K index is before, not valid
                     result = null;
                 }
             }
@@ -347,7 +347,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
             index = len;
             while (index - 1 >= 0) {
                 var keyframe = keyframes[index - 1];
-                if (keyframe.time <= time) {
+                if (keyframe.index <= position) {
                     // Not valid, stop
                     break;
                 }

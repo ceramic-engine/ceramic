@@ -12,8 +12,8 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
         var newValue:Float = value;
 
         if (before != null && after != null) {
-            // Perform interpolation between two keyframes surrounding current time
-            var ratio = (time - before.time) / (after.time - before.time);
+            // Perform interpolation between two keyframes surrounding current position
+            var ratio = (position - before.index) / (after.index - before.index);
 
             // Clamp
             if (ratio > 1) {

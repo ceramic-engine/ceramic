@@ -6,17 +6,17 @@ using ceramic.Extensions;
 
 class Timeline extends Entity implements Component {
 
-    /** Timeline duration. Default `0`, meaning this timeline won't do anything.
-        By default, because `autoFitDuration` is `true`, adding or updating tracks on this
-        timeline will update timeline `duration` accordingly so it may not be needed to update `duration` explicitly.
-        Setting `duration` to `-1` means the timeline will never finish. */
-    public var duration:Float = 0;
+    /** Timeline size. Default `0`, meaning this timeline won't do anything.
+        By default, because `autoFitSize` is `true`, adding or updating tracks on this
+        timeline will update timeline `size` accordingly so it may not be needed to update `size` explicitly.
+        Setting `size` to `-1` means the timeline will never finish. */
+    public var size:Float = 0;
 
     /** If set to `true` (default), adding or updating tracks on this timeline will update
-        timeline duration accordingly to match longest track duration. */
-    public var autoFitDuration:Bool = true;
+        timeline size accordingly to match longest track size. */
+    public var autoFitSize:Bool = true;
 
-    /** Whether this timeline should loop. Ignored if timeline's `duration` is `-1` (not defined). */
+    /** Whether this timeline should loop. Ignored if timeline's `size` is `-1` (not defined). */
     public var loop:Bool = true;
 
     /** Whether this timeline should bind itself to update cycle automatically or not (default `true`). */
@@ -29,9 +29,16 @@ class Timeline extends Entity implements Component {
         return autoUpdate;
     }
 
-    /** Elapsed time on this timeline.
-        Gets back to zero when `loop=true` and time reaches a defined `duration`. */
-    public var time(default, null):Float = 0;
+    /**
+     * Frames per second on this timeline.
+     * Note: a lower fps doesn't mean animations won't be interpolated between frames.
+     * Thus using 30 fps is still fine even if screen refreshes at 60 fps.
+     **/
+    public var fps:Int = 30;
+
+    /** Position on this timeline.
+        Gets back to zero when `loop=true` and position reaches a defined `size`. */
+    public var position(default, null):Float = 0;
 
     /** The tracks updated by this timeline */
     public var tracks(default, null):ReadOnlyArray<TimelineTrack<TimelineKeyframe>> = [];
@@ -73,57 +80,57 @@ class Timeline extends Entity implements Component {
 
     public function update(delta:Float):Void {
 
-        inlineSeek(time + delta);
+        inlineSeek(position + delta * fps);
 
     }
 
-    /** Seek the given time (in seconds) in the timeline.
-        Will take care of clamping `time` or looping it depending on `duration` and `loop` properties. */
-    final public function seek(targetTime:Float):Void {
+    /** Seek the given position (in frames) in the timeline.
+        Will take care of clamping `position` or looping it depending on `size` and `loop` properties. */
+    final public function seek(targetPosition:Float):Void {
 
-        inlineSeek(targetTime);
+        inlineSeek(targetPosition);
 
     }
 
-    /** Apply (or re-apply) every track of this timeline at the current time */
+    /** Apply (or re-apply) every track of this timeline at the current position */
     final public function apply(forceChange:Bool = false):Void {
 
-        inlineSeek(time, true, forceChange);
+        inlineSeek(position, true, forceChange);
 
     }
 
-    inline function inlineSeek(targetTime:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
+    inline function inlineSeek(targetPosition:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
 
-        // Continue only if target time is different than current time
-        if (forceSeek || targetTime != time) {
+        // Continue only if target position is different than current position
+        if (forceSeek || targetPosition != position) {
 
-            if (duration > 0) {
-                if (targetTime > duration) {
+            if (size > 0) {
+                if (targetPosition > size) {
                     if (loop) {
-                        targetTime = targetTime % duration;
+                        targetPosition = targetPosition % size;
                     }
                     else {
-                        targetTime = duration;
+                        targetPosition = size;
                     }
                 }
             }
-            else if (duration == 0) {
-                targetTime = 0;
+            else if (size == 0) {
+                targetPosition = 0;
             }
 
-            if (targetTime < 0) {
-                targetTime = 0;
+            if (targetPosition < 0) {
+                targetPosition = 0;
             }
 
-            // If time has changed, apply changes to tracks
-            if (targetTime != time) {
-                time = targetTime;
+            // If position has changed, apply changes to tracks
+            if (targetPosition != position) {
+                position = targetPosition;
 
                 // Update each track
                 for (i in 0...tracks.length) {
                     var track = tracks.unsafeGet(i);
                     if (!track.locked) {
-                        track.inlineSeek(time, forceSeek, forceChange);
+                        track.inlineSeek(position, forceSeek, forceChange);
                     }
                 }
             }
@@ -142,8 +149,8 @@ class Timeline extends Entity implements Component {
             track.timeline = this;
         }
 
-        if (autoFitDuration) {
-            fitDuration();
+        if (autoFitSize) {
+            fitSize();
         }
 
     }
@@ -169,26 +176,26 @@ class Timeline extends Entity implements Component {
             track.timeline = null;
         }
 
-        if (autoFitDuration) {
-            fitDuration();
+        if (autoFitSize) {
+            fitSize();
         }
 
     }
 
-    /** Update `duration` property to make it fit
-        the duration of the longuest track. */
-    public function fitDuration():Void {
+    /** Update `size` property to make it fit
+        the size of the longuest track. */
+    public function fitSize():Void {
 
-        var newDuration = 0.0;
+        var newSize = 0.0;
 
         for (i in 0...tracks.length) {
             var track = tracks.unsafeGet(i);
-            if (track.duration > newDuration) {
-                newDuration = track.duration;
+            if (track.size > newSize) {
+                newSize = track.size;
             }
         }
 
-        duration = newDuration;
+        size = newSize;
 
     }
 

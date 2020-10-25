@@ -294,6 +294,9 @@ class Fragment extends Layer {
     function set_fps(fps:Int):Int {
         if (this.fps != fps) {
             this.fps = fps;
+            if (timeline != null) {
+                timeline.fps = fps;
+            }
             // When fps changes, we need to update track data
             if (tracks != null) {
                 for (track in tracks) {
@@ -995,20 +998,19 @@ class Fragment extends Layer {
                 }
                 _usedKeyframes.setArrayLength(0);
             }
-            var prevTime:Float = -1;
+            var prevIndex:Int = -1;
             var isSorted = true;
             for (keyframe in track.keyframes) {
                 var index = keyframe.index;
-                var time = index / fps;
 
-                if (time < prevTime) {
+                if (index < prevIndex) {
                     isSorted = false;
                 }
-                prevTime = time;
+                prevIndex = index;
 
-                var existing = timelineTrack.findKeyframeAtTime(time);
+                var existing = timelineTrack.findKeyframeAtIndex(index);
                 _keyframeResult.value = null;
-                app.timelines.emitCreateKeyframe(entityFieldType, trackOptions, keyframe.value, time, EasingUtils.easingFromString(keyframe.easing), existing, _keyframeResult);
+                app.timelines.emitCreateKeyframe(entityFieldType, trackOptions, keyframe.value, index, EasingUtils.easingFromString(keyframe.easing), existing, _keyframeResult);
                 var timelineKeyframe = _keyframeResult.value;
 
                 if (timelineKeyframe != null) {
@@ -1027,7 +1029,7 @@ class Fragment extends Layer {
                     }
                 }
                 else {
-                    log.warning('Failed to create or update keyframe #$index of track $trackId for field $field of entity type $entityType');
+                    log.warning('Failed to create or update keyframe #$frame of track $trackId for field $field of entity type $entityType');
                     return;
                 }  
             }
@@ -1161,6 +1163,7 @@ class Fragment extends Layer {
         
         if (timeline == null) {
             timeline = new Timeline();
+            timeline.fps = fps;
             timeline.autoUpdate = autoUpdateTimeline;
         }
 

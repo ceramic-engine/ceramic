@@ -42,7 +42,7 @@ class Timelines extends Entity {
      * @param existing Existing keyframe instance at the same position/time. Can be reused to prevent new allocation of keyframe instance
      * @param result The object that will hold the resulting keyframe.
      */
-    @event public function createKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>);
+    @event public function createKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, index:Int, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>);
 
     public function new() {
 
@@ -138,7 +138,7 @@ class Timelines extends Entity {
 
     }
 
-    function handleCreateKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, time:Float, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>) {
+    function handleCreateKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, index:Int, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>) {
 
         // Keyframe already created?
         if (result.value != null)
@@ -148,36 +148,36 @@ class Timelines extends Entity {
             if (existing != null && Std.is(existing, TimelineFloatKeyframe)) {
                 var floatKeyframe:TimelineFloatKeyframe = cast existing;
                 floatKeyframe.value = value;
-                floatKeyframe.time = time;
+                floatKeyframe.index = index;
                 floatKeyframe.easing = easing;
                 result.value = floatKeyframe;
             }
             else {
-                result.value = new TimelineFloatKeyframe(value, time, easing);
+                result.value = new TimelineFloatKeyframe(value, index, easing);
             }
         }
         else if (type == 'ceramic.Color') {
             if (existing != null && Std.is(existing, TimelineColorKeyframe)) {
                 var colorKeyframe:TimelineColorKeyframe = cast existing;
                 colorKeyframe.value = value;
-                colorKeyframe.time = time;
+                colorKeyframe.index = index;
                 colorKeyframe.easing = easing;
                 result.value = colorKeyframe;
             }
             else {
-                result.value = new TimelineColorKeyframe(value, time, easing);
+                result.value = new TimelineColorKeyframe(value, index, easing);
             }
         }
         else if (type == 'Bool') {
             if (existing != null && Std.is(existing, TimelineBoolKeyframe)) {
                 var boolKeyframe:TimelineBoolKeyframe = cast existing;
                 boolKeyframe.value = value;
-                boolKeyframe.time = time;
+                boolKeyframe.index = index;
                 boolKeyframe.easing = easing;
                 result.value = boolKeyframe;
             }
             else {
-                result.value = new TimelineBoolKeyframe(value, time, easing);
+                result.value = new TimelineBoolKeyframe(value, index, easing);
             }
         }
         else if (type == 'Array<Float>') {
@@ -185,12 +185,12 @@ class Timelines extends Entity {
                 var floatArrayKeyframe:TimelineFloatArrayKeyframe = cast existing;
                 var floatArrayValue:Array<Float> = cast value;
                 floatArrayKeyframe.value = [].concat(floatArrayValue);
-                floatArrayKeyframe.time = time;
+                floatArrayKeyframe.index = index;
                 floatArrayKeyframe.easing = easing;
                 result.value = floatArrayKeyframe;
             }
             else {
-                result.value = new TimelineFloatArrayKeyframe(value, time, easing);
+                result.value = new TimelineFloatArrayKeyframe(value, index, easing);
             }
         }
 

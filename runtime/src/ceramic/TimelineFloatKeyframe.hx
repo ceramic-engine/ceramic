@@ -5,9 +5,9 @@ class TimelineFloatKeyframe extends TimelineKeyframe {
 
     public var value:Float;
 
-    public function new(value:Float, time:Float, easing:Easing) {
+    public function new(value:Float, index:Int, easing:Easing) {
 
-        super(time, easing);
+        super(index, easing);
         
         this.value = value;
 

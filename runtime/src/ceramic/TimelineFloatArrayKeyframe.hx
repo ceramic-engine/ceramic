@@ -5,9 +5,9 @@ class TimelineFloatArrayKeyframe extends TimelineKeyframe {
 
     public var value:Array<Float>;
 
-    public function new(value:Array<Float>, time:Float, easing:Easing) {
+    public function new(value:Array<Float>, index:Int, easing:Easing) {
 
-        super(time, easing);
+        super(index, easing);
         
         this.value = value;
 
