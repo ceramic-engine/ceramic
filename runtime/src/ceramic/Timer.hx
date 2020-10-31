@@ -31,37 +31,24 @@ class Timer {
         timestamp += delta;
 
         if (next <= now) {
+            ceramic.App.app.beginUpdateCallbacks.push(flush);
+        }
 
-            next = 999999999;
-            var prevCallbacks = callbacks;
-            callbacks = [];
+    }
 
-            for (i in 0...prevCallbacks.length) {
-                var callback = prevCallbacks.unsafeGet(i);
+    static function flush():Void {
 
-                if (!callback.cleared) {
-                    if (callback.time <= now) {
-                        if (callback.interval >= 0) {
-                            while (callback.time <= now && !callback.cleared) {
-                                #if ceramic_check_handlers
-                                try {
-                                #end
-                                    callback.callback();
-                                #if ceramic_check_handlers
-                                }
-                                catch (e:Dynamic) {
-                                    log.error('Error in timer callback: ' + e);
-                                }
-                                #end
-                                if (callback.interval == 0) break;
-                                callback.time += callback.interval;
-                            }
-                            if (!callback.cleared) {
-                                callbacks.push(callback);
-                                next = Math.min(callback.time, next);
-                            }
-                        }
-                        else {
+        next = 999999999;
+        var prevCallbacks = callbacks;
+        callbacks = [];
+
+        for (i in 0...prevCallbacks.length) {
+            var callback = prevCallbacks.unsafeGet(i);
+
+            if (!callback.cleared) {
+                if (callback.time <= now) {
+                    if (callback.interval >= 0) {
+                        while (callback.time <= now && !callback.cleared) {
                             #if ceramic_check_handlers
                             try {
                             #end
@@ -72,12 +59,30 @@ class Timer {
                                 log.error('Error in timer callback: ' + e);
                             }
                             #end
+                            if (callback.interval == 0) break;
+                            callback.time += callback.interval;
+                        }
+                        if (!callback.cleared) {
+                            callbacks.push(callback);
+                            next = Math.min(callback.time, next);
                         }
                     }
                     else {
-                        callbacks.push(callback);
-                        next = Math.min(callback.time, next);
+                        #if ceramic_check_handlers
+                        try {
+                        #end
+                            callback.callback();
+                        #if ceramic_check_handlers
+                        }
+                        catch (e:Dynamic) {
+                            log.error('Error in timer callback: ' + e);
+                        }
+                        #end
                     }
+                }
+                else {
+                    callbacks.push(callback);
+                    next = Math.min(callback.time, next);
                 }
             }
         }
