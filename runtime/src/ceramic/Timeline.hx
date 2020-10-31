@@ -52,6 +52,16 @@ class Timeline extends Entity implements Component {
         return paused;
     }
 
+    /**
+     * Used in pair with `labelIndexes` to manage timeline labels
+     */
+    var labelNames:Array<String> = null;
+
+    /**
+     * Used in pair with `labelNames` to manage timeline labels
+     */
+    var labelIndexes:Array<Int> = null;
+
     public function new() {
 
         super();
@@ -196,6 +206,129 @@ class Timeline extends Entity implements Component {
         }
 
         size = newSize;
+
+    }
+
+    public function labelAtIndex(index:Int):String {
+
+        if (labelIndexes == null)
+            return null;
+
+        for (i in 0...labelIndexes.length) {
+            var anIndex = labelIndexes.unsafeGet(i);
+
+            // There is a label at the given index, return it
+            if (anIndex == index)
+                return labelNames.unsafeGet(i);
+
+            // Already reached an index higher than the searched one, stop.
+            if (anIndex > index)
+                break;
+        }
+
+        return null;
+
+    }
+
+    public function indexOfLabel(name:String):Int {
+
+        if (labelIndexes == null)
+            return -1;
+
+        for (i in 0...labelNames.length) {
+            var aName = labelNames.unsafeGet(i);
+            if (name == aName)
+                return labelIndexes.unsafeGet(i);
+        }
+
+        return -1;
+        
+    }
+
+    public function setLabel(index:Int, name:String):Void {
+
+        removeLabel(name);
+
+        if (labelIndexes == null) {
+            labelIndexes = [];
+            labelNames = [];
+        }
+        
+        labelIndexes.push(index);
+        labelNames.push(name);
+
+        sortLabels();
+
+    }
+
+    public function removeLabelAtIndex(index:Int):Bool {
+
+        var didRemove = false;
+
+        if (labelIndexes != null) {
+            var i = labelIndexes.indexOf(index);
+            if (i != -1) {
+                labelNames.splice(i, 1);
+                labelIndexes.splice(i, 1);
+                didRemove = true;
+            }
+        }
+
+        return didRemove;
+
+    }
+
+    public function removeLabel(name:String):Bool {
+
+        var didRemove = false;
+
+        if (labelNames != null) {
+            var i = labelNames.indexOf(name);
+            if (i != -1) {
+                labelNames.splice(i, 1);
+                labelIndexes.splice(i, 1);
+                didRemove = true;
+            }
+        }
+
+        return didRemove;
+
+    }
+
+    function sortLabels():Void {
+
+        // Maybe this could be better,
+        // but it is only needed when changing labels so that should be fine.
+        labelIndexes.sort(compareLabelIndexes);
+        labelNames.sort(compareLabelNames);
+
+    }
+
+    function compareLabelIndexes(a:Int, b:Int):Int {
+
+        if (a > b)
+            return 1;
+        else if (a < b)
+            return -1;
+        else
+            return 0;
+
+    }
+
+    function compareLabelNames(nameA:String, nameB:String):Int {
+
+        var iA = labelNames.indexOf(nameA);
+        var a = labelIndexes.unsafeGet(iA);
+
+        var iB = labelNames.indexOf(nameB);
+        var b = labelIndexes.unsafeGet(iB);
+
+        if (a > b)
+            return 1;
+        else if (a < b)
+            return -1;
+        else
+            return 0;
 
     }
 
