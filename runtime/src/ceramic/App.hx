@@ -674,6 +674,9 @@ class App extends Entity {
 
         Runner.tick();
 
+        // Screen pointer over/out events detection
+        screen.updatePointerOverState(delta);
+
         // Run 'begin update' callbacks, like touch/mouse/key events etc...
         if (beginUpdateCallbacks.length > 0) {
             var callbacks = beginUpdateCallbacks;
@@ -682,9 +685,6 @@ class App extends Entity {
                 callback();
             }
         }
-
-        // Screen pointer over/out events detection
-        screen.updatePointerOverState(delta);
 
         inUpdate = true;
         shouldUpdateAndDrawAgain = true;
