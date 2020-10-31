@@ -19,6 +19,9 @@ class Assert {
 
         return macro @:pos(Context.currentPos()) {
             if (!$expr) {
+                #if ceramic_assert_print_stack
+                ceramic.Utils.printStackTrace();
+                #end
                 ceramic.App.app.logger.error('$str' + $reason);
                 throw '$str' + $reason;
             }
