@@ -383,8 +383,10 @@ class Screen extends Entity implements Observable {
 
     function updatePointerOverState(delta:Float):Void {
 
+ #if (!ios && !android)
         // Update mouse over state
         updateMouseOver(mouseX, mouseY);
+#end
 
         // Update touch over state
         var numTouches = touches.values.length;
