@@ -351,6 +351,7 @@ class App extends Entity {
     var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
     var pressedKeyCodes:IntIntMap = new IntIntMap(16, 0.5, false);
+    var disposedEntities:Array<Entity> = [];
 
 #if (web && hotml && ceramic_hotreload)
     var hotReloadClient:hotml.client.Client;
@@ -738,6 +739,12 @@ class App extends Entity {
 
             // Flush immediate callbacks
             flushImmediate();
+
+            // Destroy disposed entities
+            while (disposedEntities.length > 0) {
+                var toDestroy = disposedEntities.shift();
+                toDestroy.destroy();
+            }
 
             // Update visuals
             updateVisuals(visuals);

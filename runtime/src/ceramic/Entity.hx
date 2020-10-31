@@ -113,6 +113,11 @@ class Entity implements Events implements Lazy {
         return _lifecycleState < 0;
     }
 
+    public var disposed(get,never):Bool;
+    #if !haxe_server inline #end function get_disposed():Bool {
+        return _lifecycleState == 1;
+    }
+
     #if ceramic_debug_entity_allocs
     var posInfos:haxe.PosInfos;
     var reusedPosInfos:haxe.PosInfos;
@@ -127,6 +132,8 @@ class Entity implements Events implements Lazy {
     #end
 
 /// Events
+
+    @event function dispose(entity:ceramic.Entity);
 
     @event function destroy(entity:ceramic.Entity);
 
@@ -326,6 +333,20 @@ class Entity implements Events implements Lazy {
 
         clearComponents();
         unbindEvents();
+
+    }
+
+    /**
+     * Schedules destroy, at the end of the current frame.
+     */
+    public function dispose():Void {
+
+        if (_lifecycleState == 0) {
+            _lifecycleState = 1; // Mark as disposed
+            ceramic.App.app.disposedEntities.push(this);
+        }
+
+        emitDispose(this);
 
     }
 
