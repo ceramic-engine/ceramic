@@ -62,6 +62,18 @@ class Timeline extends Entity implements Component {
      */
     var labelIndexes:Array<Int> = null;
 
+    /**
+     * If >= 0, timeline will start from this index.
+     * When timeline is looping, it will reset to this index as well at each iteration.
+     */
+    var startPosition:Int = -1;
+
+    /**
+     * If provided, timeline will stop at this index.
+     * When timeline is looping, it will reset to startIndex (if >= 0).
+     */
+    var endPosition:Int = -1;
+
     public function new() {
 
         super();
@@ -114,8 +126,20 @@ class Timeline extends Entity implements Component {
         // Continue only if target position is different than current position
         if (forceSeek || targetPosition != position) {
 
+            // Check that targetPosition is within startPosition and endPosition (if applicable)
+            if (startPosition >= 0 && targetPosition < startPosition)
+                targetPosition = startPosition;
+            if (endPosition >= startPosition && startPosition >= 0 && targetPosition >= endPosition) {
+                if (loop) {
+                    targetPosition = startPosition + (targetPosition - startPosition) % (endPosition - startPosition);
+                }
+                else {
+                    targetPosition = endPosition;
+                }
+            }
+
             if (size > 0) {
-                if (targetPosition > size) {
+                if (targetPosition >= size) {
                     if (loop) {
                         targetPosition = targetPosition % size;
                     }
@@ -206,6 +230,19 @@ class Timeline extends Entity implements Component {
         }
 
         size = newSize;
+
+    }
+
+    public function seekLabel(name:String):Void {
+
+        var index = indexOfLabel(name);
+        if (index != -1) {
+            seek(index);
+        }
+        else {
+            log.warning('Failed to seek to label: $name (not found)');
+            seek(0);
+        }
 
     }
 
