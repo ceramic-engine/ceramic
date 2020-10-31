@@ -21,6 +21,10 @@ class Shortcuts {
     public static var audio(get,never):Audio;
     #if !haxe_server inline #end static function get_audio():Audio { return App.app.audio; }
 
+    /** Shared input instance */
+    public static var input(get,never):Input;
+    #if !haxe_server inline #end static function get_input():Input { return App.app.input; }
+
     /** Shared settings instance */
     public static var settings(get,never):Settings;
     #if !haxe_server inline #end static function get_settings():Settings { return App.app.settings; }

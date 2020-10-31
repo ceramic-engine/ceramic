@@ -97,7 +97,7 @@ class KeyBinding extends Entity {
 
     function bindScanCode(scanCode:Int, itemIndex:Int):Void {
 
-        app.onKeyDown(this, function(key:Key) {
+        input.onKeyDown(this, function(key:Key) {
 
             #if web
             if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
@@ -109,7 +109,7 @@ class KeyBinding extends Entity {
             #end
 
             if (key.scanCode == scanCode) {
-                if (app.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
@@ -129,7 +129,7 @@ class KeyBinding extends Entity {
 
         });
 
-        app.onKeyUp(this, function(key:Key) {
+        input.onKeyUp(this, function(key:Key) {
 
             #if web
             if (scanCode == ScanCode.LMETA || scanCode == ScanCode.RMETA) {
@@ -171,10 +171,10 @@ class KeyBinding extends Entity {
 
     function bindKeyCode(keyCode:Int, itemIndex:Int):Void {
 
-        app.onKeyDown(this, function(key:Key) {
+        input.onKeyDown(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
-                if (app.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
@@ -194,7 +194,7 @@ class KeyBinding extends Entity {
 
         });
 
-        app.onKeyUp(this, function(key:Key) {
+        input.onKeyUp(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
                 if (pressedItems[itemIndex] > 0)
@@ -209,7 +209,7 @@ class KeyBinding extends Entity {
 
     function bindShift() {
 
-        app.onKeyDown(this, function(key:Key) {
+        input.onKeyDown(this, function(key:Key) {
 
             if (key.scanCode == ScanCode.LSHIFT) {
                 leftShiftPressed = true;
@@ -220,7 +220,7 @@ class KeyBinding extends Entity {
 
         });
 
-        app.onKeyUp(this, function(key:Key) {
+        input.onKeyUp(this, function(key:Key) {
 
             if (key.scanCode == ScanCode.LSHIFT) {
                 leftShiftPressed = false;

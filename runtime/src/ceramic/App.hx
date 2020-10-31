@@ -40,6 +40,8 @@ using ceramic.Extensions;
 #end
 @:allow(ceramic.Visual)
 @:allow(ceramic.Screen)
+@:allow(ceramic.Entity)
+@:allow(ceramic.Timer)
 #if lua
 @dynamicEvents
 @:dce
@@ -90,25 +92,6 @@ class App extends Entity {
      * @param delta The elapsed delta time since last frame
      */
     @event function postUpdate(delta:Float);
-
-    /**
-     * @event keyDown
-     * Triggered when a key from the keyboard is being pressed.
-     * @param key The key being pressed
-     */
-    @event function keyDown(key:Key);
-    /**
-     * @event keyUp
-     * Triggered when a key from the keyboard is being released.
-     * @param key The key being released
-     */
-    @event function keyUp(key:Key);
-
-    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
-    @event function controllerDown(controllerId:Int, buttonId:Int);
-    @event function controllerUp(controllerId:Int, buttonId:Int);
-    @event function controllerEnable(controllerId:Int, name:String);
-    @event function controllerDisable(controllerId:Int);
 
     /** Assets events */
     @event function defaultAssetsLoad(assets:Assets);
@@ -296,6 +279,9 @@ class App extends Entity {
     /** Groups */
     public var groups(default,null):Array<Group<Entity>> = [];
 
+    /** Input */
+    public var input(default,null):Input;
+
     /** Render Textures */
     public var renderTextures(default,null):Array<RenderTexture> = [];
 
@@ -348,9 +334,6 @@ class App extends Entity {
         Useful to run some specific code once exactly before update event is sent. */
     var beginUpdateCallbacks:Array<Void->Void> = [];
 
-    var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
-
-    var pressedKeyCodes:IntIntMap = new IntIntMap(16, 0.5, false);
     var disposedEntities:Array<Entity> = [];
 
 #if (web && hotml && ceramic_hotreload)
@@ -405,6 +388,7 @@ class App extends Entity {
         settings = new Settings();
         screen = new Screen();
         audio = new Audio();
+        input = new Input();
 
         backend = new Backend();
         backend.onceReady(this, backendReady);
@@ -629,28 +613,28 @@ class App extends Entity {
         //
         backend.onKeyDown(this, function(key) {
             beginUpdateCallbacks.push(function() {
-                emitKeyDown(key);
+                input.emitKeyDown(key);
             });
         });
         backend.onKeyUp(this, function(key) {
-            beginUpdateCallbacks.push(function() emitKeyUp(key));
+            beginUpdateCallbacks.push(function() input.emitKeyUp(key));
         });
 
         // Forward controller events
         backend.onControllerEnable(this, function(controllerId, name) {
-            beginUpdateCallbacks.push(function() emitControllerEnable(controllerId, name));
+            beginUpdateCallbacks.push(function() input.emitControllerEnable(controllerId, name));
         });
         backend.onControllerDisable(this, function(controllerId) {
-            beginUpdateCallbacks.push(function() emitControllerDisable(controllerId));
+            beginUpdateCallbacks.push(function() input.emitControllerDisable(controllerId));
         });
         backend.onControllerDown(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() emitControllerDown(controllerId, buttonId));
+            beginUpdateCallbacks.push(function() input.emitControllerDown(controllerId, buttonId));
         });
         backend.onControllerUp(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() emitControllerUp(controllerId, buttonId));
+            beginUpdateCallbacks.push(function() input.emitControllerUp(controllerId, buttonId));
         });
         backend.onControllerAxis(this, function(controllerId, axisId, value) {
-            beginUpdateCallbacks.push(function() emitControllerAxis(controllerId, axisId, value));
+            beginUpdateCallbacks.push(function() input.emitControllerAxis(controllerId, axisId, value));
         });
 
     }
@@ -956,72 +940,7 @@ class App extends Entity {
 
     }
 
-/// Keyboard
-
-    function willEmitKeyDown(key:Key):Void {
-
-        var prevScan = pressedScanCodes.get(key.scanCode);
-        var prevKey = pressedKeyCodes.get(key.keyCode);
-
-        pressedScanCodes.set(key.scanCode, prevScan + 1);
-        pressedKeyCodes.set(key.keyCode, prevKey + 1);
-
-        if (prevScan == 0) {
-            // Used to differenciate "pressed" and "just pressed" states
-            beginUpdateCallbacks.push(function() {
-                if (pressedScanCodes.get(key.scanCode) == 1) {
-                    pressedScanCodes.set(key.scanCode, 2);
-                }
-                if (pressedKeyCodes.get(key.keyCode) == 1) {
-                    pressedKeyCodes.set(key.keyCode, 2);
-                }
-            });
-        }
-
-    }
-
-    function willEmitKeyUp(key:Key):Void {
-
-        pressedScanCodes.set(key.scanCode, 0);
-        pressedKeyCodes.set(key.keyCode, 0);
-
-    }
-
-    public function keyCodePressed(keyCode:Int):Bool {
-
-        return pressedKeyCodes.get(keyCode) > 0;
-
-    }
-
-    public function keyCodeJustPressed(keyCode:Int):Bool {
-
-        return pressedKeyCodes.get(keyCode) == 1;
-
-    }
-
-    public function scanCodePressed(scanCode:Int):Bool {
-
-        return pressedScanCodes.get(scanCode) > 0;
-
-    }
-
-    public function scanCodeJustPressed(scanCode:Int):Bool {
-
-        return pressedScanCodes.get(scanCode) == 1;
-
-    }
-
-    public function keyPressed(key:Key):Bool {
-
-        return pressedScanCodes.get(key.scanCode) > 0;
-
-    }
-
-    public function keyJustPressed(key:Key):Bool {
-
-        return pressedScanCodes.get(key.scanCode) == 1;
-
-    }
+/// Groups
 
     public function group(id:String, createIfNeeded:Bool = true):Group<Entity> {
 
