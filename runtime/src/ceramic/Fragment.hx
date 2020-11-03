@@ -24,6 +24,12 @@ class Fragment extends Layer {
 
     @event function floatDChange(floatD:Float, prevFloatD:Float);
 
+    /**
+     * Emit this event to change current location.
+     * Behavior depends on how this event is handled and does nothing by default.
+     */
+    @event public function location(location:String);
+
     public var editedItems(default,null):Bool = false;
 
     public var assets(default,null):Assets = null;
