@@ -22,8 +22,8 @@ typedef FragmentData = {
     /** Timeline tracks */
     @:optional public var tracks:Array<TimelineTrackData>;
 
-    /** Timeline tracks for each named animation */
-    @:optional public var animationTracks:DynamicAccess<Array<TimelineTrackData>>;
+    /** Timeline labels */
+    @:optional public var labels:DynamicAccess<Int>;
 
     /**
      * Frames per second (used in timeline, default is 30).

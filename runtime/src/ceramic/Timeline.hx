@@ -6,11 +6,26 @@ using ceramic.Extensions;
 
 class Timeline extends Entity implements Component {
 
+    /**
+     * Triggered when position reaches an existing label
+     * @param index label index (position)
+     * @param name label name
+     */
+    @event function startLabel(index:Int, name:String);
+
+    /**
+     * Triggered when position reaches the end of an area following the given label.
+     * Either when a new label was reached or when end of timeline was reached
+     * @param index label index (position)
+     * @param name label name
+     */
+    @event function endLabel(index:Int, name:String);
+
     /** Timeline size. Default `0`, meaning this timeline won't do anything.
         By default, because `autoFitSize` is `true`, adding or updating tracks on this
         timeline will update timeline `size` accordingly so it may not be needed to update `size` explicitly.
         Setting `size` to `-1` means the timeline will never finish. */
-    public var size:Float = 0;
+    public var size:Int = 0;
 
     /** If set to `true` (default), adding or updating tracks on this timeline will update
         timeline size accordingly to match longest track size. */
@@ -66,13 +81,38 @@ class Timeline extends Entity implements Component {
      * If >= 0, timeline will start from this index.
      * When timeline is looping, it will reset to this index as well at each iteration.
      */
-    var startPosition:Int = -1;
+    var startPosition(default, set):Int = -1;
+    function set_startPosition(startPosition:Int):Int {
+        if (this.startPosition != startPosition) {
+            this.startPosition = startPosition;
+            apply();
+        }
+        return startPosition;
+    }
 
     /**
      * If provided, timeline will stop at this index.
      * When timeline is looping, it will reset to startIndex (if >= 0).
      */
-    var endPosition:Int = -1;
+    var endPosition(default, set):Int = -1;
+    function set_endPosition(endPosition:Int):Int {
+        if (this.endPosition != endPosition) {
+            this.endPosition = endPosition;
+            apply();
+        }
+        return endPosition;
+    }
+
+    /**
+     * Internal array of complete handlers
+     */
+    var completeHandlers:Array<Void->Void> = null;
+
+
+    /**
+     * Internal array of complete handler label indexes
+     */
+    var completeHandlerIndexes:Array<Int> = null;
 
     public function new() {
 
@@ -114,6 +154,87 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Animate starting from the given label name and calls complete when
+     * reaching the end of label area (= when animation finishes).
+     * If animation is interrupted (by playing another animation, seeking another position...),
+     * complete won't be called.
+     * @param name Label name
+     * @param complete callback fired when animation finishes.
+     */
+    public function animate(name:String, complete:Void->Void):Void {
+
+        clearCompleteHandlers();
+
+        var index = indexOfLabel(name);
+
+        if (index != -1) {
+            seek(index);
+
+            if (completeHandlers == null) {
+                completeHandlers = [];
+                completeHandlerIndexes = [];
+            }
+            completeHandlers.push(complete);
+            completeHandlerIndexes.push(index);
+        }
+        else {
+            log.warning('Failed to animate whith label: $name (not found)');
+        }
+
+    }
+
+    /**
+     * Seek position to match the given label
+     * @param name Label name
+     * @return The index (position) of the looping label, or -1 if no label was found
+     */
+    public function seekLabel(name:String):Int {
+
+        var index = indexOfLabel(name);
+
+        if (index != -1) {
+            seek(index);
+        }
+        else {
+            log.warning('Failed to seek label: $name (not found)');
+        }
+
+        return index;
+
+    }
+
+    /**
+     * Seek position to match the given label and set startPosition and endPosition
+     * so that it will loop through the whole area following this label, up to the
+     * position of the next label or the end of the timeline.
+     * @param name Label name
+     * @return The index (position) of the looping label, or -1 if no label was found
+     */
+    public function loopLabel(name:String):Int {
+
+        if (labelNames == null) {
+            log.warning('Cannot loop label $name (there is no label at all)');
+            return -1;
+        }
+
+        var i = labelNames.indexOf(name);
+
+        if (i == -1) {
+            log.warning('Cannot loop label $name (no such label)');
+            return -1;
+        }
+
+        var index = labelIndexes[i];
+
+        startPosition = index;
+        endPosition = index < labelIndexes.length - 1 ? labelIndexes[i + 1] : size;
+        seek(index);
+
+        return index;
+
+    }
+
     /** Apply (or re-apply) every track of this timeline at the current position */
     final public function apply(forceChange:Bool = false):Void {
 
@@ -124,6 +245,7 @@ class Timeline extends Entity implements Component {
     inline function inlineSeek(targetPosition:Float, forceSeek:Bool = false, forceChange:Bool = false):Void {
 
         // Continue only if target position is different than current position
+        var prevPosition = position;
         if (forceSeek || targetPosition != position) {
 
             // Check that targetPosition is within startPosition and endPosition (if applicable)
@@ -168,6 +290,75 @@ class Timeline extends Entity implements Component {
                     }
                 }
             }
+        }
+
+        // Check if we reached a label start/end at new position
+        if (position != prevPosition) {
+            var newIndex = Math.floor(position);
+            var prevIndex = Math.floor(prevPosition);
+            if (newIndex != prevIndex) {
+                var label = labelAtIndex(newIndex);
+                if (label != null) {
+                    var prevLabelIndex = indexOfLabelBeforeIndex(newIndex);
+                    if (prevLabelIndex != -1) {
+                        emitEndLabel(prevLabelIndex, labelAtIndex(prevLabelIndex));
+                    }
+                    emitStartLabel(newIndex, label);
+                }
+            }
+        }
+
+    }
+
+    inline function clearCompleteHandlers():Void {
+
+        if (completeHandlers != null && completeHandlers.length > 0) {
+            // Reset handlers arrays
+            completeHandlers.setArrayLength(0);
+            completeHandlerIndexes.setArrayLength(0);
+        }
+
+    }
+
+    function didEmitEndLabel(index:Int, name:String):Void {
+
+        if (completeHandlers != null && completeHandlers.length > 0) {
+
+            var pool:ArrayPool = null;
+            var toCall:ReusableArray<Dynamic> = null;
+            var toCallLen = 0;
+
+            for (i in 0...completeHandlerIndexes.length) {
+                var anIndex = completeHandlerIndexes.unsafeGet(i);
+                if (anIndex == index) {
+
+                    // Request a reusable array to keep handlers
+                    // that we will call without allocating another array
+                    if (toCall == null) {
+                        pool = ArrayPool.pool(completeHandlers.length);
+                        toCall = pool.get();
+                    }
+
+                    var handler = completeHandlers.unsafeGet(i);
+                    toCall.set(toCallLen, handler);
+                    completeHandlers.unsafeSet(i, null);
+                    toCallLen++;
+                }
+            }
+
+            clearCompleteHandlers();
+
+            // Call!
+            for (i in 0...toCallLen) {
+                var handler = toCall.get(i);
+                handler();
+            }
+
+            // Release reusable array, if any used
+            if (toCall != null) {
+                pool.release(toCall);
+            }
+
         }
 
     }
@@ -220,7 +411,7 @@ class Timeline extends Entity implements Component {
         the size of the longuest track. */
     public function fitSize():Void {
 
-        var newSize = 0.0;
+        var newSize = 0;
 
         for (i in 0...tracks.length) {
             var track = tracks.unsafeGet(i);
@@ -233,16 +424,28 @@ class Timeline extends Entity implements Component {
 
     }
 
-    public function seekLabel(name:String):Void {
+    public function indexOfLabelBeforeIndex(index:Int):Int {
 
-        var index = indexOfLabel(name);
-        if (index != -1) {
-            seek(index);
+        if (labelIndexes == null)
+            return null;
+
+        var prevIndex = -1;
+
+        for (i in 0...labelIndexes.length) {
+            var anIndex = labelIndexes.unsafeGet(i);
+
+            // There is a label at the given index, return it
+            if (anIndex == index)
+                return prevIndex;
+
+            // Already reached an index higher than the searched one, stop.
+            if (anIndex > index)
+                break;
+
+            prevIndex = anIndex;
         }
-        else {
-            log.warning('Failed to seek to label: $name (not found)');
-            seek(0);
-        }
+
+        return prevIndex;
 
     }
 

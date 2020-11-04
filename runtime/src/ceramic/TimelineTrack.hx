@@ -13,7 +13,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         By default, because `autoFitSize` is `true`, adding new keyframes to this
         track will update `size` accordingly so it may not be needed to update `size` explicitly.
         Setting `size` to `-1` means the track will never finish. */
-    public var size:Float = 0;
+    public var size:Int = 0;
 
     /** If set to `true` (default), adding keyframes to this track will update
         its size accordingly to match last keyframe time. */
