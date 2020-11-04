@@ -39,6 +39,9 @@ typedef FragmentData = {
     /** Fragment being transparent or not (default `true`) */
     @:optional public var transparent:Bool;
 
+    /** Whether fragment background overflows (no effect on fragment itself, depends on player implementation) */
+    @:optional public var overflow:Bool;
+
     /** Fragment items (visuals or other entities) */
     @:optional public var items:Array<FragmentItem>;
 
