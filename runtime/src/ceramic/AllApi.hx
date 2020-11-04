@@ -34,6 +34,7 @@ import assets.Texts;
 import ceramic.scriptable.ScriptableAlphaColor;
 #if ceramic_cppia_host import ceramic.AlphaColor; #end
 import ceramic.App;
+import ceramic.Arc;
 import ceramic.ArcadePhysics;
 import ceramic.Asset;
 import ceramic.AssetId;
@@ -119,6 +120,7 @@ import ceramic.Mesh;
 import ceramic.scriptable.ScriptableMeshColorMapping;
 #if ceramic_cppia_host import ceramic.MeshColorMapping; #end
 import ceramic.MeshPool;
+import ceramic.Ngon;
 import ceramic.scriptable.ScriptableMouseButton;
 #if ceramic_cppia_host import ceramic.MouseButton; #end
 import ceramic.NapePhysics;
