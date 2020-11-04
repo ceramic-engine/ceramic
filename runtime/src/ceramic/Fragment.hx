@@ -290,6 +290,15 @@ class Fragment extends Layer {
             }
         }
 
+        // Add labels (if any)
+        if (fragmentData != null && fragmentData.labels != null) {
+            var rawLabels = fragmentData.labels;
+            for (name in rawLabels.keys()) {
+                var index = rawLabels.get(name);
+                putLabel(index, name);
+            }
+        }
+
         pendingLoads--;
         if (pendingLoads == 0) emitReady();
 
@@ -1171,6 +1180,75 @@ class Fragment extends Layer {
             timeline = new Timeline();
             timeline.fps = fps;
             timeline.autoUpdate = autoUpdateTimeline;
+        }
+
+    }
+
+    /**
+     * Create or update a timeline label from the provided label index and name
+     * @param index Label index (position)
+     * @param name Label name
+     */
+    public function putLabel(index:Int, name:String):Void {
+
+        // Create timeline is not created already
+        createTimelineIfNeeded();
+
+        // Update timeline with given label
+        timeline.setLabel(index, name);
+
+    }
+
+    /**
+     * Return the index (position) of the given label name or -1 if no such label exists.
+     * @param name 
+     * @return Int
+     */
+    public function indexOfLabel(name:String):Int {
+
+        if (timeline != null) {
+            return timeline.indexOfLabel(name);
+        }
+
+        return -1;
+
+    }
+
+    /**
+     * Return the label at the given index (position), if any exists.
+     * @param index 
+     * @return Int
+     */
+    public function labelAtIndex(index:Int):String {
+
+        if (timeline != null) {
+            return timeline.labelAtIndex(index);
+        }
+
+        return null;
+
+    }
+
+    /**
+     * Remove label with the given name
+     * @param name Label name
+     */
+    public function removeLabel(name:String):Void {
+
+        if (timeline != null) {
+            timeline.removeLabel(name);
+        }
+
+    }
+
+    /**
+     * Remove label at the given index (position)
+     * @param index Label index
+     */
+    public function removeLabelAtIndex(index:Int):Void {
+
+        if (timeline != null) {
+            timeline.removeLabelAtIndex(index);
         }
 
     }
