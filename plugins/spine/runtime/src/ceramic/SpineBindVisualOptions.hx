@@ -44,6 +44,9 @@ class SpineBindVisualOptions {
     /** If set to `true` transform assigned to visual will be set to `identity` on unbind. */
     public var resetTransformOnUnbind:Bool = true;
 
+    /** If set to `true` bound visual will be destroyed when unboud. */
+    public var destroyVisualOnUnbind:Bool = false;
+
     /// Managed internally
     public var slotName(default, null):String = null;
 
@@ -67,7 +70,10 @@ class SpineBindVisualOptions {
                 spine.offBeginRender(handleBeginRender);
                 spine.offEndRender(handleEndRender);
                 handleUpdateSlot = null;
-                if (resetTransformOnUnbind && visual != null && visual.transform != null) {
+                if (destroyVisualOnUnbind && visual != null) {
+                    visual.destroy();
+                }
+                else if (resetTransformOnUnbind && visual != null && visual.transform != null) {
                     visual.transform.identity();
                 }
             }
