@@ -70,10 +70,10 @@ class Timeline extends Entity implements Component {
     /**
      * Used in pair with `labelIndexes` to manage timeline labels
      */
-    var labelNames:Array<String> = null;
+    public var labels(default, null):ReadOnlyArray<String> = null;
 
     /**
-     * Used in pair with `labelNames` to manage timeline labels
+     * Used in pair with `labels` to manage timeline labels
      */
     var labelIndexes:Array<Int> = null;
 
@@ -213,12 +213,12 @@ class Timeline extends Entity implements Component {
      */
     public function loopLabel(name:String):Int {
 
-        if (labelNames == null) {
+        if (labels == null) {
             log.warning('Cannot loop label $name (there is no label at all)');
             return -1;
         }
 
-        var i = labelNames.indexOf(name);
+        var i = labels.indexOf(name);
 
         if (i == -1) {
             log.warning('Cannot loop label $name (no such label)');
@@ -427,7 +427,7 @@ class Timeline extends Entity implements Component {
     public function indexOfLabelBeforeIndex(index:Int):Int {
 
         if (labelIndexes == null)
-            return null;
+            return -1;
 
         var prevIndex = -1;
 
@@ -459,7 +459,7 @@ class Timeline extends Entity implements Component {
 
             // There is a label at the given index, return it
             if (anIndex == index)
-                return labelNames.unsafeGet(i);
+                return labels.unsafeGet(i);
 
             // Already reached an index higher than the searched one, stop.
             if (anIndex > index)
@@ -475,8 +475,8 @@ class Timeline extends Entity implements Component {
         if (labelIndexes == null)
             return -1;
 
-        for (i in 0...labelNames.length) {
-            var aName = labelNames.unsafeGet(i);
+        for (i in 0...labels.length) {
+            var aName = labels.unsafeGet(i);
             if (name == aName)
                 return labelIndexes.unsafeGet(i);
         }
@@ -491,11 +491,11 @@ class Timeline extends Entity implements Component {
 
         if (labelIndexes == null) {
             labelIndexes = [];
-            labelNames = [];
+            labels = [];
         }
         
         labelIndexes.push(index);
-        labelNames.push(name);
+        labels.original.push(name);
 
         sortLabels();
 
@@ -508,7 +508,7 @@ class Timeline extends Entity implements Component {
         if (labelIndexes != null) {
             var i = labelIndexes.indexOf(index);
             if (i != -1) {
-                labelNames.splice(i, 1);
+                labels.original.splice(i, 1);
                 labelIndexes.splice(i, 1);
                 didRemove = true;
             }
@@ -522,10 +522,10 @@ class Timeline extends Entity implements Component {
 
         var didRemove = false;
 
-        if (labelNames != null) {
-            var i = labelNames.indexOf(name);
+        if (labels != null) {
+            var i = labels.indexOf(name);
             if (i != -1) {
-                labelNames.splice(i, 1);
+                labels.original.splice(i, 1);
                 labelIndexes.splice(i, 1);
                 didRemove = true;
             }
@@ -540,7 +540,7 @@ class Timeline extends Entity implements Component {
         // Maybe this could be better,
         // but it is only needed when changing labels so that should be fine.
         labelIndexes.sort(compareLabelIndexes);
-        labelNames.sort(compareLabelNames);
+        labels.original.sort(compareLabelNames);
 
     }
 
@@ -557,10 +557,10 @@ class Timeline extends Entity implements Component {
 
     function compareLabelNames(nameA:String, nameB:String):Int {
 
-        var iA = labelNames.indexOf(nameA);
+        var iA = labels.indexOf(nameA);
         var a = labelIndexes.unsafeGet(iA);
 
-        var iB = labelNames.indexOf(nameB);
+        var iB = labels.indexOf(nameB);
         var b = labelIndexes.unsafeGet(iB);
 
         if (a > b)

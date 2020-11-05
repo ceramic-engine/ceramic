@@ -247,14 +247,18 @@ class Fragment extends Layer {
         // Keep items if fragmentData is provided with no property 'items'
         if (fragmentData == null || Reflect.hasField(fragmentData, 'items')) {
             // Remove unused items
-            var toRemove = [];
+            var toRemove = null;
             for (entity in entities) {
                 if (!usedIds.exists(entity.id)) {
+                    if (toRemove == null)
+                        toRemove = [];
                     toRemove.push(entity.id);
                 }
             }
-            for (id in toRemove) {
-                removeItem(id);
+            if (toRemove != null) {
+                for (id in toRemove) {
+                    removeItem(id);
+                }
             }
         }
 
@@ -284,18 +288,50 @@ class Fragment extends Layer {
         }
 
         // Add tracks (if any)
+        var usedTrackIds:Map<String,Bool> = null;
         if (fragmentData != null && fragmentData.tracks != null) {
             for (track in fragmentData.tracks) {
+                if (usedTrackIds == null)
+                    usedTrackIds = new Map();
+                usedTrackIds.set(track.entity + '#' + track.field, true);
                 putTrack(track);
             }
         }
 
+        // Remove unused tracks
+        if (timeline != null && timeline.tracks.length > 0) {
+            for (existingTrack in [].concat(timeline.tracks.original)) {
+                if (usedTrackIds == null || !usedTrackIds.exists(existingTrack.id)) {
+                    var parts = existingTrack.id.split('#');
+                    if (parts.length == 2) {
+                        removeTrack(parts[0], parts[1]);
+                    }
+                    else {
+                        log.warning('Cannot remove track with unhandled id: ${existingTrack.id}');
+                    }
+                }
+            }
+        }
+
         // Add labels (if any)
+        var usedLabels:Map<String,Bool> = null;
         if (fragmentData != null && fragmentData.labels != null) {
             var rawLabels = fragmentData.labels;
             for (name in rawLabels.keys()) {
+                if (usedLabels == null)
+                    usedLabels = new Map();
+                usedLabels.set(name, true);
                 var index = rawLabels.get(name);
                 putLabel(index, name);
+            }
+        }
+
+        // Remove unused labels
+        if (timeline != null && timeline.labels != null) {
+            for (existingLabel in [].concat(timeline.labels.original)) {
+                if (usedLabels == null || !usedLabels.exists(existingLabel)) {
+                    timeline.removeLabel(existingLabel);
+                }
             }
         }
 
