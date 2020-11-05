@@ -164,6 +164,26 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    public function indexOfId(id:String):Int {
+
+        var entry = get(id);
+        if (entry == null)
+            return -1;
+
+        return indexOf(entry);
+
+    }
+
+    public function indexOf(entry:T):Int {
+
+        checkCombined();
+
+        if (entriesDirty) computeEntries();
+
+        return entries.indexOf(entry);
+
+    }
+
 	inline public function iterator():Iterator<T> {
 
         checkCombined();
