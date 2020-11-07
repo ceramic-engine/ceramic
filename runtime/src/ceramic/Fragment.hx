@@ -296,18 +296,18 @@ class Fragment extends Layer {
                 usedTrackIds.set(track.entity + '#' + track.field, true);
                 putTrack(track);
             }
-        }
 
-        // Remove unused tracks
-        if (timeline != null && timeline.tracks.length > 0) {
-            for (existingTrack in [].concat(timeline.tracks.original)) {
-                if (usedTrackIds == null || !usedTrackIds.exists(existingTrack.id)) {
-                    var parts = existingTrack.id.split('#');
-                    if (parts.length == 2) {
-                        removeTrack(parts[0], parts[1]);
-                    }
-                    else {
-                        log.warning('Cannot remove track with unhandled id: ${existingTrack.id}');
+            // Remove unused tracks
+            if (timeline != null && timeline.tracks.length > 0) {
+                for (existingTrack in [].concat(timeline.tracks.original)) {
+                    if (usedTrackIds == null || !usedTrackIds.exists(existingTrack.id)) {
+                        var parts = existingTrack.id.split('#');
+                        if (parts.length == 2) {
+                            removeTrack(parts[0], parts[1]);
+                        }
+                        else {
+                            log.warning('Cannot remove track with unhandled id: ${existingTrack.id}');
+                        }
                     }
                 }
             }
@@ -324,13 +324,13 @@ class Fragment extends Layer {
                 var index = rawLabels.get(name);
                 putLabel(index, name);
             }
-        }
 
-        // Remove unused labels
-        if (timeline != null && timeline.labels != null) {
-            for (existingLabel in [].concat(timeline.labels.original)) {
-                if (usedLabels == null || !usedLabels.exists(existingLabel)) {
-                    timeline.removeLabel(existingLabel);
+            // Remove unused labels
+            if (timeline != null && timeline.labels != null) {
+                for (existingLabel in [].concat(timeline.labels.original)) {
+                    if (usedLabels == null || !usedLabels.exists(existingLabel)) {
+                        timeline.removeLabel(existingLabel);
+                    }
                 }
             }
         }
