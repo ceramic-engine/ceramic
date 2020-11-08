@@ -80,7 +80,7 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
         if (forceSeek || targetPosition != position) {
 
             if (size > 0) {
-                if (targetPosition >= size) {
+                if (targetPosition > size) {
                     if (loop) {
                         targetPosition = targetPosition % size;
                     }

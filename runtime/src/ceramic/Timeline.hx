@@ -81,7 +81,7 @@ class Timeline extends Entity implements Component {
      * If >= 0, timeline will start from this index.
      * When timeline is looping, it will reset to this index as well at each iteration.
      */
-    var startPosition(default, set):Int = -1;
+    public var startPosition(default, set):Int = -1;
     function set_startPosition(startPosition:Int):Int {
         if (this.startPosition != startPosition) {
             this.startPosition = startPosition;
@@ -94,7 +94,7 @@ class Timeline extends Entity implements Component {
      * If provided, timeline will stop at this index.
      * When timeline is looping, it will reset to startIndex (if >= 0).
      */
-    var endPosition(default, set):Int = -1;
+    public var endPosition(default, set):Int = -1;
     function set_endPosition(endPosition:Int):Int {
         if (this.endPosition != endPosition) {
             this.endPosition = endPosition;
@@ -205,6 +205,16 @@ class Timeline extends Entity implements Component {
     }
 
     /**
+     * Reset `startPosition` and `endPosition`
+     */
+    public function resetStartAndEndPositions():Void {
+
+        startPosition = -1;
+        endPosition = -1;
+
+    }
+
+    /**
      * Seek position to match the given label and set startPosition and endPosition
      * so that it will loop through the whole area following this label, up to the
      * position of the next label or the end of the timeline.
@@ -217,7 +227,6 @@ class Timeline extends Entity implements Component {
             log.warning('Cannot loop label $name (there is no label at all)');
             return -1;
         }
-
         var i = labels.indexOf(name);
 
         if (i == -1) {
@@ -228,7 +237,7 @@ class Timeline extends Entity implements Component {
         var index = labelIndexes[i];
 
         startPosition = index;
-        endPosition = index < labelIndexes.length - 1 ? labelIndexes[i + 1] : size;
+        endPosition = i < labelIndexes.length - 1 ? labelIndexes[i + 1] : size;
         seek(index);
 
         return index;
@@ -251,7 +260,7 @@ class Timeline extends Entity implements Component {
             // Check that targetPosition is within startPosition and endPosition (if applicable)
             if (startPosition >= 0 && targetPosition < startPosition)
                 targetPosition = startPosition;
-            if (endPosition >= startPosition && startPosition >= 0 && targetPosition >= endPosition) {
+            if (endPosition >= startPosition && startPosition >= 0 && targetPosition > endPosition) {
                 if (loop) {
                     targetPosition = startPosition + (targetPosition - startPosition) % (endPosition - startPosition);
                 }
@@ -261,7 +270,7 @@ class Timeline extends Entity implements Component {
             }
 
             if (size > 0) {
-                if (targetPosition >= size) {
+                if (targetPosition > size) {
                     if (loop) {
                         targetPosition = targetPosition % size;
                     }
