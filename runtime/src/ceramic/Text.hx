@@ -336,7 +336,7 @@ class Text extends Visual {
         }
         var len = content.length;
         
-        while (i < len) {
+        while (i < len && usedQuads < len * 2) {
 
             prevChar = char;
             prevCode = code;
@@ -353,6 +353,7 @@ class Text extends Visual {
                 if (!justDidBreakToFit && fitWidth >= 0 && xVisible > 1 && xVisible > fitWidth - 1 && hasSpaceInLine > 0) {
                     justDidBreakToFit = true;
                     hasSpaceInLine--;
+                    
                     // Rewind last word because it doesn't fit
                     while (i > 0) {
                         i--;
@@ -372,8 +373,14 @@ class Text extends Visual {
                         if (glyph != null) {
                             x -= glyph.xAdvance * sizeFactor + letterSpacing;
                         }
-                        usedQuads--;
-                        lineQuads[lineQuads.length-1].pop();
+                        if (lineQuads[lineQuads.length-1].length > 0) {
+                            usedQuads--;
+                            lineQuads[lineQuads.length-1].pop();
+                        }
+                        else {
+                            i = len;
+                            break;
+                        }
                         if (char == ' ') {
                             char = "\n";
                             glyph = font.chars.get("\n".code);
