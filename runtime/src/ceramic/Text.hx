@@ -378,7 +378,6 @@ class Text extends Visual {
                             lineQuads[lineQuads.length-1].pop();
                         }
                         else {
-                            i = len;
                             break;
                         }
                         if (char == ' ') {
