@@ -142,7 +142,11 @@ class BitmapFontParser {
             var c = line.charCodeAt(i);
 
             if (inQuotes) {
-                if (c == '"'.code) {
+                if (c == '\\'.code) {
+                    c = line.charCodeAt(i);
+                    i++;
+                }
+                else if (c == '"'.code) {
                     inQuotes = false;
                 }
                 if (nextToken == null) {
