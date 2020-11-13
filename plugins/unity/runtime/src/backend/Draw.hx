@@ -25,7 +25,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function getItem(visual:ceramic.Visual):VisualItem {
+    inline public function getItem(visual:ceramic.Visual):VisualItem {
 
         // The backend decides how each visual should be drawn.
         // Instead of checking instance type at each draw iteration,
@@ -95,13 +95,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _numFloatAttributes:Int = 0;
 
-    /*inline*/ public function getNumPos():Int {
+    inline public function getNumPos():Int {
 
         return _numPos;
 
     }
 
-    /*inline*/ public function putPos(x:Float, y:Float, z:Float):Void {
+    inline public function putPos(x:Float, y:Float, z:Float):Void {
 
         _numFloatAttributes = 0;
         _meshVertices[_numPos] = new Vector3(x, y, z);
@@ -109,28 +109,28 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function putIndice(i:Int):Void {
+    inline public function putIndice(i:Int):Void {
 
         _meshIndices[_numIndices] = i;
         _numIndices++;
 
     }
 
-    /*inline*/ public function putUVs(uvX:Float, uvY:Float):Void {
+    inline public function putUVs(uvX:Float, uvY:Float):Void {
 
-        _meshUVs[_numUVs] = new Vector2(uvX, uvY);
+        _meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
         _numUVs++;
 
     }
 
-    /*inline*/ public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
+    inline public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
         _meshColors[_numColors] = new Color(r, g, b, a);
         _numColors++;
 
     }
 
-    /*inline*/ public function putFloatAttribute(value:Float):Void {
+    inline public function putFloatAttribute(value:Float):Void {
 
         _numFloatAttributes++;
 
@@ -138,7 +138,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function initBuffers(maxVerts:Int):Void {
+    inline public function initBuffers(maxVerts:Int):Void {
 
         _maxVerts = maxVerts;
         _maxIndices = Std.int(Math.floor(maxVerts / 3) * 3);
@@ -176,7 +176,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function beginRender():Void {
+    inline public function beginRender():Void {
 
         // Reset command buffer
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
@@ -212,7 +212,7 @@ class Draw #if !completion implements spec.Draw #end {
         
     }
 
-    /*inline*/ public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         if (_currentRenderTarget != renderTarget || force) {
             _currentRenderTarget = renderTarget;
@@ -381,38 +381,38 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function useShader(shader:backend.ShaderImpl):Void {
+    inline public function useShader(shader:backend.ShaderImpl):Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function clear():Void {
+    inline public function clear():Void {
 
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(1f, 1f, 1f, 0f), 1f)');
 
     }
 
-    /*inline*/ public function enableBlending():Void {
+    inline public function enableBlending():Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function disableBlending():Void {
+    inline public function disableBlending():Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
+    inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function getActiveTexture():Int {
+    inline public function getActiveTexture():Int {
 
         // TODO
         return 0;
@@ -422,7 +422,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function setActiveTexture(slot:Int):Void {
+    inline public function setActiveTexture(slot:Int):Void {
 
         /*
         activeTextureSlot = slot;
@@ -431,43 +431,43 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
+    inline public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem:TextureImpl).textureId == textureId;
 
     }
 
-    /*inline*/ public function getTextureId(backendItem:backend.Texture):backend.TextureId {
+    inline public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem:TextureImpl).textureId;
 
     }
 
-    /*inline*/ public function getTextureWidth(texture:backend.Texture):Int {
+    inline public function getTextureWidth(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    /*inline*/ public function getTextureHeight(texture:backend.Texture):Int {
+    inline public function getTextureHeight(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    /*inline*/ public function getTextureWidthActual(texture:backend.Texture):Int {
+    inline public function getTextureWidthActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    /*inline*/ public function getTextureHeightActual(texture:backend.Texture):Int {
+    inline public function getTextureHeightActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    /*inline*/ public function bindTexture(backendItem:backend.Texture):Void {
+    inline public function bindTexture(backendItem:backend.Texture):Void {
 
         // TODO
 
@@ -477,7 +477,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function bindNoTexture():Void {
+    inline public function bindNoTexture():Void {
 
         // TODO
         
@@ -487,53 +487,53 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function setRenderWireframe(value:Bool):Void {
+    inline public function setRenderWireframe(value:Bool):Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function beginDrawQuad(quad:ceramic.Quad):Void {
+    inline public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     }
 
-    /*inline*/ public function endDrawQuad():Void {
+    inline public function endDrawQuad():Void {
 
     }
 
-    /*inline*/ public function beginDrawMesh(mesh:ceramic.Mesh):Void {
+    inline public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
     }
 
-    /*inline*/ public function endDrawMesh():Void {
+    inline public function endDrawMesh():Void {
 
     }
 
-    /*inline*/ public function beginDrawingInStencilBuffer():Void {
+    inline public function beginDrawingInStencilBuffer():Void {
         
         // TODO
 
     }
 
-    /*inline*/ public function endDrawingInStencilBuffer():Void {
+    inline public function endDrawingInStencilBuffer():Void {
         
         // TODO
 
     }
 
-    /*inline*/ public function drawWithStencilTest():Void {
+    inline public function drawWithStencilTest():Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function drawWithoutStencilTest():Void {
+    inline public function drawWithoutStencilTest():Void {
 
         // TODO
 
     }
 
-    /*inline*/ public function maxPosFloats():Int {
+    inline public function maxPosFloats():Int {
 
         // TODO
 
@@ -541,7 +541,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
+    inline public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
         
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > _maxIndices);
 
@@ -565,7 +565,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function flush():Void {
+    inline public function flush():Void {
 
         var mesh = _currentMesh;
 
