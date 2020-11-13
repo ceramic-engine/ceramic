@@ -8,6 +8,8 @@ using StringTools;
 
 class Textures implements spec.Textures {
 
+    var imageExtensions:Array<String> = null;
+
     public function new() {}
 
     public function load(path:String, ?options:backend.LoadTextureOptions, done:Texture->Void):Void {
@@ -57,11 +59,14 @@ class Textures implements spec.Textures {
         function doLoad() {
 
             // Load texture from Unity API
+            var extension = Path.extension(path);
+            if (imageExtensions == null)
+                imageExtensions = ceramic.App.app.backend.info.imageExtensions();
             var unityPath = path;
-            if (unityPath.toLowerCase().endsWith('.png')) {
-                unityPath = unityPath.substr(0, unityPath.length - '.png'.length);
+            if (extension != null && imageExtensions.indexOf(extension.toLowerCase()) != -1) {
+                unityPath = unityPath.substr(0, unityPath.length - extension.length - 1);
             }
-            trace('TEXTURE PATH $unityPath');
+            trace('TEXTURE PATH $unityPath (extension=$extension)');
             var unityTexture:Texture2D = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.Texture2D>({0})', unityPath);
 
             if (unityTexture != null) {
