@@ -71,7 +71,11 @@ class Draw #if !completion implements spec.Draw #end {
     static var _meshUVs:NativeArray<Vector2> = null;
     static var _meshColors:NativeArray<Color> = null;
 
-    static var _currentMaterial:Dynamic = null;
+    static var _materials:Materials = new Materials();
+
+    static var _materialCurrentTexture:backend.Texture = null;
+
+    //static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
 
     static var _currentRenderTarget:ceramic.RenderTexture = null;
@@ -184,7 +188,7 @@ class Draw #if !completion implements spec.Draw #end {
         _numColors = 0;
 
         //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
-        _currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
+        //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
 
 		untyped __cs__('UnityEngine.Camera.main.orthographicSize = UnityEngine.Camera.main.pixelHeight * 0.5f');
 
@@ -467,8 +471,9 @@ class Draw #if !completion implements spec.Draw #end {
 
         // TODO
 
+        _materialCurrentTexture = backendItem;
         //_currentMaterial.mainTexture = backendItem.unityTexture;
-        untyped __cs__('((UnityEngine.Material){0}).mainTexture = {1}', _currentMaterial, backendItem.unityTexture);
+        //untyped __cs__('((UnityEngine.Material){0}).mainTexture = {1}', _currentMaterial, backendItem.unityTexture);
 
     }
 
@@ -476,6 +481,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         // TODO
         
+        _materialCurrentTexture = null;
 		//_currentMaterial.mainTexture = null;
         //untyped __cs__('((UnityEngine.Material){0}).mainTexture = null', _currentMaterial);
 
@@ -563,14 +569,25 @@ class Draw #if !completion implements spec.Draw #end {
 
         var mesh = _currentMesh;
 
+        var material = _materials.get(
+            _materialCurrentTexture,
+
+            // TODO shader & blending
+            null,
+            ONE,
+            ONE_MINUS_SRC_ALPHA,
+            ONE,
+            ONE_MINUS_SRC_ALPHA
+        ).material;
+
         mesh.vertices = _meshVertices;
         mesh.triangles = _meshIndices;
         mesh.uv = _meshUVs;
         mesh.colors = _meshColors;
         
-        trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
+        //trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
-        untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, _currentMaterial);
+        untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, material);
 
         _numPos = 0;
         _numIndices = 0;

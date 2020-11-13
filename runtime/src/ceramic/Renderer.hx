@@ -778,23 +778,19 @@ class Renderer extends Entity {
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
             }
 
-            //tl
-            draw.putUVs(uvX, uvY);
-            //tr
-            draw.putUVs(uvX + uvW, uvY);
-            //br
-            draw.putUVs(uvX + uvW, uvY + uvH);
             //bl
             draw.putUVs(uvX, uvY + uvH);
+            //br
+            draw.putUVs(uvX + uvW, uvY + uvH);
+            //tr
+            draw.putUVs(uvX + uvW, uvY);
+            //tl
+            draw.putUVs(uvX, uvY);
 
         } else {
-            //tl
             draw.putUVs(0, 0);
-            //tr
             draw.putUVs(0, 0);
-            //br
             draw.putUVs(0, 0);
-            //bl
             draw.putUVs(0, 0);
         }
 
