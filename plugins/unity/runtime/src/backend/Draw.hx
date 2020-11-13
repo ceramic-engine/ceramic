@@ -541,6 +541,18 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    inline public function remainingVertices():Int {
+        
+        return _maxVerts - _numPos;
+
+    }
+
+    inline public function remainingIndices():Int {
+        
+        return _maxIndices - _numIndices;
+
+    }
+
     inline public function hasAnythingToFlush():Bool {
 
         return _numPos > 0;

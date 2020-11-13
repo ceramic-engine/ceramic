@@ -351,38 +351,6 @@ class Renderer extends Entity {
                 throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
         }
 
-        /*
-        if (blending == ceramic.Blending.ADD) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE
-            );
-        } else if (blending == ceramic.Blending.SET) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.SRC_ALPHA
-            );
-        } else if (blending == ceramic.Blending.AUTO) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA
-            );
-        } else {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.SRC_ALPHA,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA
-            );
-        }
-        */
-
     }
 
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
@@ -1048,33 +1016,29 @@ class Renderer extends Entity {
 
         // Update num vertices
         var visualNumVertices = meshIndices.length;
-        var posFloats = this.posFloats;
-        var uvFloats = this.uvFloats;
-        var posList = draw.getPosList();
+        //var posFloats = this.posFloats;
+        //var uvFloats = this.uvFloats;
+        //var posList = draw.getPosList();
         var customFloatAttributesSize = this.customFloatAttributesSize;
         var meshCustomFloatAttributesSize = mesh.customFloatAttributesSize;
-        var floatsPerVertex = (4 + customFloatAttributesSize);
-        var posFloatsAdd = visualNumVertices * floatsPerVertex;
-        var posFloatsAfter = posFloats + posFloatsAdd;
-        var uvFloatsAfter = uvFloats + visualNumVertices * 4;
+        //var floatsPerVertex = (4 + customFloatAttributesSize);
+        //var posFloatsAdd = visualNumVertices * floatsPerVertex;
+        //var posFloatsAfter = posFloats + posFloatsAdd;
+        //var uvFloatsAfter = uvFloats + visualNumVertices * 4;
         var startVertices = 0;
         var meshDrawsRenderTexture:Bool = mesh.texture != null && mesh.texture.isRenderTexture;
         var endVertices = visualNumVertices;
         // Divide and multiply by 3 (a triangle has 3 vertices, we want to split between 2 triangles)
-        var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
+        //var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
 
         // Submit the current batch if we exceed the max buffer size
-        if (posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
+        if (draw.shouldFlush(visualNumVertices, visualNumVertices, customFloatAttributesSize)) {//posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
             flushAndCleanState();
             textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
-            posFloats = this.posFloats;
-            uvFloats = this.uvFloats;
-            posFloatsAfter = posFloats + posFloatsAdd;
-            uvFloatsAfter = uvFloats + visualNumVertices * 4;
 
             // Check that our mesh is still not too large
-            if (posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
-                endVertices = maxVertices;
+            if (visualNumVertices > draw.remainingVertices() || visualNumVertices > draw.remainingIndices()) {
+                endVertices = Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
             }
         }
 
@@ -1088,8 +1052,8 @@ class Renderer extends Entity {
             uvFactorY = texHeight / texHeightActual;
         }
 
-        var uvList = draw.getUvList();
-        var colorList = draw.getColorList();
+        //var uvList = draw.getUvList();
+        //var colorList = draw.getColorList();
 
         inline function batchMeshVertices() {
 
@@ -1099,9 +1063,10 @@ class Renderer extends Entity {
             // Exit condition is at the end.
             while (true) {
             
-                var colorFloats = this.colorFloats;
+                //var colorFloats = this.colorFloats;
 
                 var i = startVertices;
+                var numPos = draw.getNumPos();
                 while (i < endVertices) {
 
                     var j = meshIndices.unsafeGet(i);
@@ -1113,16 +1078,18 @@ class Renderer extends Entity {
                     var x = meshVertices.unsafeGet(l++);
                     var y = meshVertices.unsafeGet(l++);
 
-                    draw.putInPosList(posList, posFloats, matTX + matA * x + matC * y);
-                    posFloats++;
-                    draw.putInPosList(posList, posFloats, matTY + matB * x + matD * y);
-                    posFloats++;
-                    draw.putInPosList(posList, posFloats, z);
-                    posFloats++;
+                    draw.putPos(
+                        matTX + matA * x + matC * y,
+                        matTY + matB * x + matD * y,
+                        z
+                    );
                     if (textureSlot != -1) {
-                        draw.putInPosList(posList, posFloats, textureSlot);
-                        posFloats++;
+                        draw.putFloatAttribute(textureSlot);
                     }
+
+                    draw.putIndice(numPos);
+                    numPos++;
+
                     //draw.putInPosList(posList, posFloats, 0);
 
                     // Custom (float) attributes
@@ -1130,12 +1097,11 @@ class Renderer extends Entity {
                     if (customFloatAttributesSize != 0) {
                         for (n in 0...customFloatAttributesSize) {
                             if (n < meshCustomFloatAttributesSize) {
-                                draw.putInPosList(posList, posFloats, meshVertices.unsafeGet(l++));
+                                draw.putFloatAttribute(meshVertices.unsafeGet(l++));
                             }
                             else {
-                                draw.putInPosList(posList, posFloats, 0.0);
+                                draw.putFloatAttribute(0.0);
                             }
-                            posFloats++;
                         }
                     }
 
@@ -1144,14 +1110,7 @@ class Renderer extends Entity {
                     if (texture != null) {
                         var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
                         var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                        draw.putInUvList(uvList, uvFloats, uvX);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, uvY);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
+                        draw.putUVs(uvX, uvY);
                     }
 
                     // Color
@@ -1178,40 +1137,21 @@ class Renderer extends Entity {
                             if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                         }
 
-                        draw.putInColorList(colorList, colorFloats, r);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, g);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, b);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, a);
-                        colorFloats++;
+                        draw.putColor(r, g, b, a);
                     }
 
                     i++;
                 }
-
-                this.posFloats = posFloats;
-                var uvList = draw.getUvList();
 
                 // No texture, all uvs to zero
                 //
                 if (texture == null) {
                     i = startVertices;
                     while (i < endVertices) {
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
-                        draw.putInUvList(uvList, uvFloats, 0);
-                        uvFloats++;
+                        draw.putUVs(0, 0);
                         i++;
                     }
                 }
-
-                this.uvFloats = uvFloats;
 
                 // Single color
                 //
@@ -1245,22 +1185,12 @@ class Renderer extends Entity {
                         if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                     }
 
-                    var colorList = draw.getColorList();
                     i = startVertices;
                     while (i < endVertices) {
-                        draw.putInColorList(colorList, colorFloats, r);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, g);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, b);
-                        colorFloats++;
-                        draw.putInColorList(colorList, colorFloats, a);
-                        colorFloats++;
+                        draw.putColor(r, g, b, a);
                         i++;
                     }
                 }
-
-                this.colorFloats = colorFloats;
 
                 if (endVertices == visualNumVertices) {
                     // No need to submit more data, exit loop
@@ -1273,11 +1203,9 @@ class Renderer extends Entity {
 
                     flushAndCleanState();
                     textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
-                    posFloats = this.posFloats;
-                    uvFloats = this.uvFloats;
 
                     startVertices = endVertices;
-                    endVertices = startVertices + maxVertices;
+                    endVertices = startVertices + Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
                     if (endVertices > visualNumVertices) {
                         endVertices = visualNumVertices;
                     }
@@ -1726,38 +1654,6 @@ class Renderer extends Entity {
             case AUTO:
                 throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
         }
-
-        /*
-        if (blending == ceramic.Blending.ADD) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE
-            );
-        } else if (blending == ceramic.Blending.SET) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.SRC_ALPHA
-            );
-        } else if (blending == ceramic.Blending.AUTO) {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA
-            );
-        } else {
-            draw.setBlendFuncSeparate(
-                backend.BlendMode.SRC_ALPHA,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                backend.BlendMode.ONE,
-                backend.BlendMode.ONE_MINUS_SRC_ALPHA
-            );
-        }
-        */
 
     }
 
