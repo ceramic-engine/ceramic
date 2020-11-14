@@ -27,7 +27,6 @@ Shader "pixelArt"
 		CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile _ PIXELSNAP_ON
 			#include "UnityCG.cginc"
 			
 			struct appdata_t

@@ -4,6 +4,8 @@ Shader "msdf"
 	{
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
+		texSize ("texSize", Vector) = (0,0,0,0)
+		pxRange ("pxRange", Float) = 0.0
 	}
 
 	SubShader
@@ -27,7 +29,6 @@ Shader "msdf"
 		CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile _ PIXELSNAP_ON
 			#include "UnityCG.cginc"
 			
 			struct appdata_t
@@ -57,17 +58,24 @@ Shader "msdf"
 			}
 
 			sampler2D _MainTex;
+			float2 texSize;
+			float pxRange;
 
-			fixed4 SampleSpriteTexture (float2 uv)
-			{
-				fixed4 color = tex2D (_MainTex, uv);
-				return color;
+			float median(float r, float g, float b) {
+				return max(min(r, g), min(max(r, g), b));
 			}
 
 			fixed4 frag(v2f IN) : SV_Target
 			{
-				fixed4 c = SampleSpriteTexture (IN.texcoord) * IN.color;
-				c.rgb *= c.a;
+				float2 msdfUnit;
+				float3 sample;
+				msdfUnit = pxRange/texSize;
+				sample = tex2D(_MainTex, IN.texcoord).rgb;
+				float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
+				sigDist = mul(sigDist, dot(msdfUnit, 0.5/fwidth(IN.texcoord)));
+				float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
+				fixed4 bgColor = fixed4(0.0, 0.0, 0.0, 0.0);
+				fixed4 c = lerp(bgColor, IN.color, opacity);
 				return c;
 			}
 		ENDCG
