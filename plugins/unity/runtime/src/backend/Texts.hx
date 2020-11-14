@@ -12,7 +12,14 @@ class Texts implements spec.Texts {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextOptions, done:String->Void):Void {
+    public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
+
+        var done = function(text:String) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(text);
+                _done = null;
+            });
+        };
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path

@@ -189,6 +189,7 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.webaudio.Audio")';
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.core.web.Runtime")';
             targetFlags += '\n' + '--macro snow.Set.io("snow.core.web.io.IO")';
+            targetFlags += '\n' + '-D ceramic_shader_vert_frag';
         }
         else {
             if (target.name == 'cppia') {
@@ -221,6 +222,7 @@ class Setup extends tools.Task {
                 targetFlags += '\n' + '-D desktop';
                 targetFlags += '\n' + '-D snow_use_glew';
             }
+            targetFlags += '\n' + '-D ceramic_shader_vert_frag';
         }
 
         var hxmlFileContent = ('

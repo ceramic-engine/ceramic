@@ -8,9 +8,28 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader {
+    public function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, _done:(shader:backend.Shader)->Void):Void {
 
-        return new ShaderImpl();
+        var done = function(shader:Shader) {
+            ceramic.App.app.onceImmediate(function() {
+                trace('- run shader done -');
+                _done(shader);
+                _done = null;
+            });
+        };
+
+        var unityPath = Path.withoutExtension(path);
+        var unityShader:Dynamic = untyped __cs__('UnityEngine.Shader.Find({0})', unityPath);
+
+        trace('UNITY SHADER: $unityShader');
+        if (unityShader != null) {
+            var shader = new ShaderImpl(unityShader, customAttributes);
+            shader.path = path;
+            done(shader);
+        }
+        else {
+            done(null);
+        }
 
     }
 
@@ -22,7 +41,7 @@ class Shaders implements spec.Shaders {
 
     inline public function clone(shader:Shader):Shader {
 
-        return new ShaderImpl();
+        return ShaderImpl.clone(shader);
 
     }
 
@@ -46,55 +65,55 @@ class Shaders implements spec.Shaders {
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {
         
-        //
+        (shader:ShaderImpl).setInt(name, value);
 
     }
 
     inline public function setFloat(shader:Shader, name:String, value:Float):Void {
         
-        //
+        (shader:ShaderImpl).setFloat(name, value);
 
     }
 
     inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
         
-        //
+        (shader:ShaderImpl).setColor(name, r, g, b, a);
 
     }
 
     inline public function setVec2(shader:Shader, name:String, x:Float, y:Float):Void {
         
-        //
+        (shader:ShaderImpl).setVec2(name, x, y);
 
     }
 
     inline public function setVec3(shader:Shader, name:String, x:Float, y:Float, z:Float):Void {
         
-        //
+        (shader:ShaderImpl).setVec3(name, x, y, z);
 
     }
 
     inline public function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void {
         
-        //
+        (shader:ShaderImpl).setVec4(name, x, y, z, w);
 
     }
 
     inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
         
-        //
+        (shader:ShaderImpl).setFloatArray(name, array);
 
     }
 
     inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
         
-        //
+        (shader:ShaderImpl).setTexture(name, texture);
 
     }
 
     inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
         
-        //
+        (shader:ShaderImpl).setMat4FromTransform(name, transform);
 
     }
 

@@ -12,7 +12,14 @@ class Audio implements spec.Audio {
 
 /// Public API
 
-    public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
+    public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
+
+        var done = function(resource:AudioResource) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(resource);
+                _done = null;
+            });
+        };
 
         done(new AudioResourceImpl());
 

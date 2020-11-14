@@ -153,6 +153,8 @@ class Utils {
             } else {
                 untyped console.log(''+data);
             }
+            #elseif cs
+            trace(data);
             #elseif sys
             Sys.println(''+data);
             #else

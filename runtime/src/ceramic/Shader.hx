@@ -12,6 +12,7 @@ class Shader extends Entity {
 
 /// Static helpers
 
+#if ceramic_shader_vert_frag
     /** Instanciates a shader from source.
         Although it would expect `GLSL` code in default ceramic backends (luxe backend),
         Expected shading language could be different in some future backend implementations. */
@@ -23,6 +24,7 @@ class Shader extends Entity {
         return new Shader(backendItem);
 
     }
+#end
 
 /// Properties
 

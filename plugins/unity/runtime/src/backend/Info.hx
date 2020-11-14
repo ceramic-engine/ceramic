@@ -25,7 +25,7 @@ class Info #if !completion implements spec.Info #end {
     }
 
     inline public function shaderExtensions():Array<String> {
-        return ['glsl', 'frag', 'vert'];
+        return ['shader'];
     }
 
 }

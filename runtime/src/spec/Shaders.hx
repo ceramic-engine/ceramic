@@ -8,8 +8,12 @@ interface Shaders {
     
     function destroy(shader:Shader):Void;
     
+#if ceramic_shader_vert_frag
     function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader;
-    
+#else
+    function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, done:(shader:backend.Shader)->Void):Void;
+#end
+
     function clone(shader:Shader):Shader;
 
 /// Public API

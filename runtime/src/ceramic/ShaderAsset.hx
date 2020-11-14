@@ -26,7 +26,21 @@ class ShaderAsset extends Asset {
             emitComplete(false);
             return;
         }
+
+        var customAttributes:Array<ShaderAttribute> = null;
+        if (options.customAttributes != null) {
+            customAttributes = [];
+            var rawAttributes:Array<Dynamic> = options.customAttributes;
+            for (i in 0...rawAttributes.length) {
+                var rawAttr = rawAttributes.unsafeGet(i);
+                customAttributes.push({
+                    size: rawAttr.size,
+                    name: rawAttr.name
+                });
+            }
+        }
         
+#if ceramic_shader_vert_frag
         // Compute vertex and fragment shader paths
         if (path != null && (path.toLowerCase().endsWith('.frag') || path.toLowerCase().endsWith('.vert'))) {
             var paths = Assets.allByName.get(name);
@@ -85,19 +99,6 @@ class ShaderAsset extends Asset {
                     return;
                 }
 
-                var customAttributes:Array<ShaderAttribute> = null;
-                if (options.customAttributes != null) {
-                    customAttributes = [];
-                    var rawAttributes:Array<Dynamic> = options.customAttributes;
-                    for (i in 0...rawAttributes.length) {
-                        var rawAttr = rawAttributes.unsafeGet(i);
-                        customAttributes.push({
-                            size: rawAttr.size,
-                            name: rawAttr.name
-                        });
-                    }
-                }
-
                 var backendItem = app.backend.shaders.fromSource(vertSource, fragSource, customAttributes);
                 if (backendItem == null) {
                     status = BROKEN;
@@ -114,6 +115,24 @@ class ShaderAsset extends Asset {
 
             });
         });
+#else
+        app.backend.shaders.load(Assets.realAssetPath(path, runtimeAssets), customAttributes, function(backendItem) {
+
+            if (backendItem == null) {
+                status = BROKEN;
+                log.error('Failed to load shader at path: $path');
+                emitComplete(false);
+                return;
+            }
+
+            this.shader = new Shader(backendItem, customAttributes);
+            this.shader.asset = this;
+            this.shader.id = 'shader:' + path;
+            status = READY;
+            emitComplete(true);
+
+        });
+#end
 
     }
 

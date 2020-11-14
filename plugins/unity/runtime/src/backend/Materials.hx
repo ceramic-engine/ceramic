@@ -42,7 +42,12 @@ class Materials {
         materialData.srcAlpha = srcAlpha;
         materialData.dstAlpha = dstAlpha;
 
-        untyped __cs__('UnityEngine.Material material = new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
+        var shaderImpl:ShaderImpl = shader;
+        trace('shader: $shaderImpl (${shaderImpl.path})');
+        trace('unity shader: ${shaderImpl != null ? shaderImpl.unityShader : null}');
+
+        //untyped __cs__('UnityEngine.Material material = new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
+        untyped __cs__('UnityEngine.Material material = new UnityEngine.Material((UnityEngine.Shader){0})', shaderImpl.unityShader);
         
         materialData.material = untyped __cs__('material');
         repository.push(materialData);

@@ -74,6 +74,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _materials:Materials = new Materials();
 
     static var _materialCurrentTexture:backend.Texture = null;
+    static var _materialCurrentShader:backend.Shader = null;
 
     //static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
@@ -383,7 +384,10 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function useShader(shader:backend.ShaderImpl):Void {
 
-        // TODO
+        if (shader == null) {
+            trace('----- SHADER IS NULL -----');
+        }
+        _materialCurrentShader = shader;
 
     }
 
@@ -571,9 +575,9 @@ class Draw #if !completion implements spec.Draw #end {
 
         var material = _materials.get(
             _materialCurrentTexture,
+            _materialCurrentShader,
 
-            // TODO shader & blending
-            null,
+            // TODO blending
             ONE,
             ONE_MINUS_SRC_ALPHA,
             ONE,

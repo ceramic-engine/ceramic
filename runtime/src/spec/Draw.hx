@@ -58,6 +58,8 @@ interface Draw {
 
 #if ceramic_render_pos_indice
 
+    // TODO?
+
 #else
     function maxPosFloats():Int;
 
