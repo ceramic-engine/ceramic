@@ -481,10 +481,12 @@ class App extends Entity {
             emitDefaultAssetsLoad(assets);
             
             assets.load();
+            flushImmediate();
             
         });
 
         assets.load();
+        flushImmediate();
 
     }
 
