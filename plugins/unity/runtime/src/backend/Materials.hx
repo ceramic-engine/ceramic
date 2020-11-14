@@ -29,6 +29,7 @@ class Materials {
             var materialData = repository.unsafeGet(i);
 
             if (materialData.matches(texture, shader, srcRgb, dstRgb, srcAlpha, dstAlpha)) {
+                materialData.syncShaderParams();
                 return materialData;
             }
         }
@@ -43,10 +44,7 @@ class Materials {
         materialData.dstAlpha = dstAlpha;
 
         var shaderImpl:ShaderImpl = shader;
-        trace('shader: $shaderImpl (${shaderImpl.path})');
-        trace('unity shader: ${shaderImpl != null ? shaderImpl.unityShader : null}');
 
-        //untyped __cs__('UnityEngine.Material material = new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
         untyped __cs__('UnityEngine.Material material = new UnityEngine.Material((UnityEngine.Shader){0})', shaderImpl.unityShader);
         
         materialData.material = untyped __cs__('material');
@@ -58,6 +56,8 @@ class Materials {
         else {
             untyped __cs__('material.mainTexture = {1}', material, null);
         }
+        
+        materialData.syncShaderParams();
 
         return materialData;
 

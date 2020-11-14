@@ -2,7 +2,10 @@ package backend;
 
 using ceramic.Extensions;
 
+@:allow(backend.MaterialData)
 class ShaderImpl {
+
+    static final MAX_PARAMS_DIRTY:Int = 999999999;
 
     public var path:String = null;
 
@@ -10,7 +13,7 @@ class ShaderImpl {
 
     public var customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
 
-    var paramsDirty:Bool = false;
+    var paramsVersion:Int = 0;
 
     var intParams:Map<String,Int> = null;
 
@@ -24,7 +27,7 @@ class ShaderImpl {
 
     var vec4Params:Map<String,unityengine.Vector4> = null;
 
-    var floatArrayParams:Map<String,cs.NativeArray<Float>> = null;
+    var floatArrayParams:Map<String,cs.NativeArray<Single>> = null;
 
     var textureParams:Map<String,backend.Texture> = null;
 
@@ -53,7 +56,9 @@ class ShaderImpl {
 
         if (!intParams.exists(name) || intParams.get(name) != value) {
             intParams.set(name, value);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -65,7 +70,9 @@ class ShaderImpl {
         
         if (!floatParams.exists(name) || floatParams.get(name) != value) {
             floatParams.set(name, value);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -78,7 +85,9 @@ class ShaderImpl {
         var unityColor = new unityengine.Color(r, g, b, a);
         if (!colorParams.exists(name) || colorParams.get(name) != unityColor) {
             colorParams.set(name, unityColor);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -91,7 +100,9 @@ class ShaderImpl {
         var unityVec2 = new unityengine.Vector2(x, y);
         if (!vec2Params.exists(name) || vec2Params.get(name) != unityVec2) {
             vec2Params.set(name, unityVec2);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -104,7 +115,9 @@ class ShaderImpl {
         var unityVec3 = new unityengine.Vector3(x, y, z);
         if (!vec3Params.exists(name) || vec3Params.get(name) != unityVec3) {
             vec3Params.set(name, unityVec3);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -117,7 +130,9 @@ class ShaderImpl {
         var unityVec4 = new unityengine.Vector4(x, y, z, w);
         if (!vec4Params.exists(name) || vec4Params.get(name) != unityVec4) {
             vec4Params.set(name, unityVec4);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -127,13 +142,15 @@ class ShaderImpl {
         if (floatArrayParams == null)
             floatArrayParams = new Map();
         
-        var nativeArray = new cs.NativeArray(array.length);
+        var nativeArray = new cs.NativeArray<Single>(array.length);
         for (i in 0...array.length) {
             nativeArray[i] = array.unsafeGet(i);
         }
         if (!floatArrayParams.exists(name) || floatArrayParams.get(name) != nativeArray) {
             floatArrayParams.set(name, nativeArray);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -145,7 +162,9 @@ class ShaderImpl {
         
         if (!textureParams.exists(name) || textureParams.get(name) != texture) {
             textureParams.set(name, texture);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
@@ -168,7 +187,9 @@ class ShaderImpl {
         
         if (!mat4Params.exists(name) || mat4Params.get(name) != unityMat4) {
             mat4Params.set(name, unityMat4);
-            paramsDirty = true;
+            paramsVersion++;
+            if (paramsVersion > MAX_PARAMS_DIRTY)
+                paramsVersion = 1;
         }
 
     }
