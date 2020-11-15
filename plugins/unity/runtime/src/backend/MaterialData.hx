@@ -104,4 +104,33 @@ class MaterialData {
 
     }
 
+    public static function blendingToUnityBlending(blending:backend.BlendMode):unityengine.rendering.BlendMode {
+
+        return switch blending {
+            case ZERO:
+                unityengine.rendering.BlendMode.Zero;
+            case ONE:
+                unityengine.rendering.BlendMode.One;
+            case SRC_COLOR:
+                unityengine.rendering.BlendMode.SrcColor;
+            case ONE_MINUS_SRC_COLOR:
+                unityengine.rendering.BlendMode.OneMinusSrcColor;
+            case SRC_ALPHA:
+                unityengine.rendering.BlendMode.SrcAlpha;
+            case ONE_MINUS_SRC_ALPHA:
+                unityengine.rendering.BlendMode.OneMinusSrcAlpha;
+            case DST_ALPHA:
+                unityengine.rendering.BlendMode.DstAlpha;
+            case ONE_MINUS_DST_ALPHA:
+                unityengine.rendering.BlendMode.OneMinusDstAlpha;
+            case DST_COLOR:
+                unityengine.rendering.BlendMode.DstColor;
+            case ONE_MINUS_DST_COLOR:
+                unityengine.rendering.BlendMode.OneMinusDstColor;
+            case SRC_ALPHA_SATURATE:
+                unityengine.rendering.BlendMode.SrcAlphaSaturate;
+        }
+
+    }
+
 }

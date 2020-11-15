@@ -4,6 +4,10 @@ Shader "textured"
 	{
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
+		_SrcBlendRgb ("Src Rgb", Int) = 0
+     	_DstBlendRgb ("Dst Rgb", Int) = 0
+		_SrcBlendAlpha ("Src Alpha", Int) = 0
+     	_DstBlendAlpha ("Dst Alpha", Int) = 0
 	}
 
 	SubShader
@@ -20,7 +24,7 @@ Shader "textured"
 		Cull Off
 		Lighting Off
 		ZWrite Off
-		Blend One OneMinusSrcAlpha
+		Blend [_SrcBlendRgb] [_DstBlendRgb], [_SrcBlendAlpha] [_DstBlendAlpha]
 
 		Pass
 		{

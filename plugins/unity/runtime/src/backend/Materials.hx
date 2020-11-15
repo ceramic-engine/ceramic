@@ -51,13 +51,18 @@ class Materials {
         repository.push(materialData);
 
         if (texture != null) {
-            untyped __cs__('material.mainTexture = {1}', material, texture.unityTexture);
+            untyped __cs__('material.mainTexture = {0}', texture.unityTexture);
         }
         else {
-            untyped __cs__('material.mainTexture = {1}', material, null);
+            untyped __cs__('material.mainTexture = {0}', null);
         }
         
         materialData.syncShaderParams();
+
+        untyped __cs__('material.SetInt("_SrcBlendRgb", (int){0})', MaterialData.blendingToUnityBlending(materialData.srcRgb));
+        untyped __cs__('material.SetInt("_DstBlendRgb", (int){0})', MaterialData.blendingToUnityBlending(materialData.dstRgb));
+        untyped __cs__('material.SetInt("_SrcBlendAlpha", (int){0})', MaterialData.blendingToUnityBlending(materialData.srcAlpha));
+        untyped __cs__('material.SetInt("_DstBlendAlpha", (int){0})', MaterialData.blendingToUnityBlending(materialData.dstAlpha));
 
         return materialData;
 
