@@ -1,5 +1,6 @@
 package backend.tools;
 
+import tools.UnityMeta;
 import tools.Helpers.*;
 import tools.Images;
 import tools.Files;
@@ -223,6 +224,16 @@ class BackendTools implements tools.spec.BackendTools {
                     sys.io.File.copy(srcPath, dstPath);
                 }
 
+                if (ext == 'png' || ext == 'jpg' || ext == 'jpeg') {
+                    // Generate texture meta if none exists already
+                    // (needed to ensure we have correct texture settings on unity side)
+                    var dstMetaPath = dstPath + '.meta';
+                    if (!sys.FileSystem.exists(dstMetaPath)) {
+                        var metaContent = UnityMeta.generateTextureMeta();
+                        File.saveContent(dstMetaPath, metaContent);
+                    }
+                }
+
                 tools.Files.setToSameLastModified(srcPath, dstPath);
             }
 
@@ -231,23 +242,20 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         if (!listOnly) {
-            // TODO don't delete meta files
-            // Remove outdated assets
+            // Remove outdated assets (keep meta files of remaining assets)
             //
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
                 var dstPath = Path.join([dstAssetsPath, name]);
-                if (!validDstPaths.exists(dstPath)) {
+                var isMeta = name.endsWith('.meta');
+                if (!isMeta && !validDstPaths.exists(dstPath)) {
+                    tools.Files.deleteRecursive(dstPath);
+                }
+                else if (isMeta && !validDstPaths.exists(dstPath.substring(0, dstPath.length - '.meta'.length))) {
                     tools.Files.deleteRecursive(dstPath);
                 }
             }
             tools.Files.removeEmptyDirectories(dstAssetsPath);
         }
-
-        // Copy rtti data (if any)
-        /*var rttiPath = Path.join([hxmlProjectPath, '.cache', 'rtti']);
-        if (FileSystem.exists(rttiPath)) {
-            tools.Files.copyDirectory(rttiPath, Path.join([dstAssetsPath, 'rtti']), true);
-        }*/
 
         return newAssets;
 
