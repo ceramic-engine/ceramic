@@ -12,7 +12,6 @@ class Shaders implements spec.Shaders {
 
         var done = function(shader:Shader) {
             ceramic.App.app.onceImmediate(function() {
-                trace('- run shader done -');
                 _done(shader);
                 _done = null;
             });
@@ -21,7 +20,6 @@ class Shaders implements spec.Shaders {
         var unityPath = Path.withoutExtension(path);
         var unityShader:Dynamic = untyped __cs__('UnityEngine.Shader.Find({0})', unityPath);
 
-        trace('UNITY SHADER: $unityShader');
         if (unityShader != null) {
             var shader = new ShaderImpl(unityShader, customAttributes);
             shader.path = path;
