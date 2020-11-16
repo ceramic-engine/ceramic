@@ -1,3 +1,3 @@
 package backend;
 
-typedef UInt8Array = Array<Int>;
+typedef UInt8Array = cs.NativeArray<Int>;
