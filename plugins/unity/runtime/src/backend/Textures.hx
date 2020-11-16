@@ -73,13 +73,12 @@ class Textures implements spec.Textures {
             if (extension != null && imageExtensions.indexOf(extension.toLowerCase()) != -1) {
                 unityPath = unityPath.substr(0, unityPath.length - extension.length - 1);
             }
-            trace('TEXTURE PATH $unityPath (extension=$extension)');
             var unityTexture:Texture2D = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.Texture2D>({0})', unityPath);
 
             if (unityTexture != null) {
 
                 function doCreate() {
-                    var texture = new TextureImpl(path, unityTexture);
+                    var texture = new TextureImpl(path, unityTexture, null);
 
                     loadedTextures.set(path, texture);
                     var callbacks = loadingTextureCallbacks.get(path);
@@ -111,17 +110,29 @@ class Textures implements spec.Textures {
 
     var nextRenderIndex:Int = 0;
 
+    var nextPixelsIndex:Int = 0;
+
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
-        return null;
+        var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', width, height);
+
+        unityTexture.SetPixelData(pixels, 0, 0);
+        unityTexture.Apply(false, false);
+
+        var texture = new TextureImpl('pixels:' + (nextPixelsIndex++), unityTexture, null);
+
+        return texture;
 
     }
 
     inline public function createRenderTarget(width:Int, height:Int):Texture {
 
-        // TODO
+        untyped __cs__('var renderTexture = new UnityEngine.RenderTexture({0}, {1}, 24, UnityEngine.RenderTextureFormat.Default)', width, height);
+        untyped __cs__('renderTexture.Create()');
 
-        return null;
+        var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'));
+
+        return texture;
 
     }
 
@@ -134,7 +145,12 @@ class Textures implements spec.Textures {
         else {
             loadedTextures.remove(id);
             loadedTexturesRetainCount.remove(id);
-            untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:TextureImpl).unityTexture);
+            if (id.startsWith('pixels:') || id.startsWith('render:')) {
+                untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityTexture);
+            }
+            else {
+                untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:TextureImpl).unityTexture);
+            }
         }
 
     }
@@ -153,7 +169,33 @@ class Textures implements spec.Textures {
 
     public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
 
-        // TODO
+        var unityTexture = (texture:TextureImpl).unityTexture;
+
+        untyped __cs__('var rawData = {0}.GetRawTextureData<UnityEngine.Color32>()', unityTexture);
+        var width = (texture:TextureImpl).width;
+        var height = (texture:TextureImpl).height;
+
+        if (result == null) {
+            result = new backend.UInt8Array(width * height);
+        }
+
+        var i = 0;
+        var n = 0;
+        untyped __cs__('var color32 = new UnityEngine.Color32(0, 0, 0, 0)');
+        for (y in 0...height) {
+            for (x in 0...width) {
+                untyped __cs__('color32 = rawData[{0}]', i);
+                untyped __cs__('{0}[{1}] = color32.r', result, n);
+                n++;
+                untyped __cs__('{0}[{1}] = color32.g', result, n);
+                n++;
+                untyped __cs__('{0}[{1}] = color32.b', result, n);
+                n++;
+                untyped __cs__('{0}[{1}] = color32.a', result, n);
+                n++;
+                i++;
+            }
+        }
 
         return result;
 
@@ -161,7 +203,10 @@ class Textures implements spec.Textures {
 
     public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
-        // TODO
+        var unityTexture = (texture:TextureImpl).unityTexture;
+
+        unityTexture.SetPixelData(pixels, 0, 0);
+        unityTexture.Apply(false, false);
 
     }
 

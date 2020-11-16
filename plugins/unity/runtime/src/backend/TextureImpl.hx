@@ -11,25 +11,31 @@ class TextureImpl {
 
     public var unityTexture:Texture2D;
 
+    public var unityRenderTexture:Dynamic;
+
     public var path:String;
 
     public var textureId:TextureId;
 
-    public var width(get,never):Int;
-    inline function get_width():Int {
-        return unityTexture.width;
-    }
+    public var width(default,null):Int;
 
-    public var height(get,never):Int;
-    inline function get_height():Int {
-        return unityTexture.height;
-    }
+    public var height(default,null):Int;
 
-    public function new(path:String, unityTexture:Texture2D) {
+    public function new(path:String, unityTexture:Texture2D, unityRenderTexture:Dynamic) {
 
         this.textureId = unityTexture.GetInstanceID();
         this.path = path;
         this.unityTexture = unityTexture;
+        this.unityRenderTexture = unityRenderTexture;
+
+        if (unityTexture != null) {
+            this.width = unityTexture.width;
+            this.height = unityTexture.height;
+        }
+        else if (unityRenderTexture != null) {
+            this.width = untyped __cs__('((UnityEngine.RenderTexture){0}).width', unityRenderTexture);
+            this.height = untyped __cs__('((UnityEngine.RenderTexture){0}).height', unityRenderTexture);
+        }
 
     }
 
