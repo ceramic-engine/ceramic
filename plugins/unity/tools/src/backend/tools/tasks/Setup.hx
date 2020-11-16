@@ -162,6 +162,7 @@ class Setup extends tools.Task {
             finalHxml.push('-cs bin');
             finalHxml.push('-D dll');
             finalHxml.push('-D no-root');
+            finalHxml.push('-D ceramic_render_pos_indice');
             
             if (Sys.systemName() == 'Mac') {
                 // TODO smarter unity detection
