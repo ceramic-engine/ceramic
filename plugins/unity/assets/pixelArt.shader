@@ -4,10 +4,10 @@ Shader "pixelArt"
 	{
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
-		_SrcBlendRgb ("Src Rgb", Int) = 0
-     	_DstBlendRgb ("Dst Rgb", Int) = 0
-		_SrcBlendAlpha ("Src Alpha", Int) = 0
-     	_DstBlendAlpha ("Dst Alpha", Int) = 0
+		_SrcBlendRgb ("Src Rgb", Float) = 0
+     	_DstBlendRgb ("Dst Rgb", Float) = 0
+		_SrcBlendAlpha ("Src Alpha", Float) = 0
+     	_DstBlendAlpha ("Dst Alpha", Float) = 0
 	}
 
 	SubShader

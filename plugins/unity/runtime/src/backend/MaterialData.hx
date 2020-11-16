@@ -16,6 +16,8 @@ class MaterialData {
 
     public var dstAlpha:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
 
+    public var stencil:backend.StencilState = NONE;
+
     public var paramsVersion:Int = -1;
 
     public function new() {}
@@ -26,7 +28,8 @@ class MaterialData {
         srcRgb:backend.BlendMode,
         dstRgb:backend.BlendMode,
         srcAlpha:backend.BlendMode,
-        dstAlpha:backend.BlendMode
+        dstAlpha:backend.BlendMode,
+        stencil:backend.StencilState
         ):Bool {
         
         return this.texture == texture
@@ -34,7 +37,8 @@ class MaterialData {
             && this.srcRgb == srcRgb
             && this.dstRgb == dstRgb
             && this.srcAlpha == srcAlpha
-            && this.dstAlpha == dstAlpha;
+            && this.dstAlpha == dstAlpha
+            && this.stencil == stencil;
     }
 
     inline public function syncShaderParams():Void {

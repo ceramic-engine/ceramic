@@ -75,6 +75,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _materialCurrentTexture:backend.Texture = null;
     static var _materialCurrentShader:backend.Shader = null;
+    static var _materialSrcRgb:backend.BlendMode = ONE;
+    static var _materialDstRgb:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
+    static var _materialSrcAlpha:backend.BlendMode = ONE;
+    static var _materialDstAlpha:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
+    static var _materialStencilTest:Bool = false;
+    static var _materialStencilWrite:Int = 0;
+
+    static var _stencilShader:backend.Shader;
 
     //static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
@@ -384,9 +392,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function useShader(shader:backend.ShaderImpl):Void {
 
-        if (shader == null) {
-            trace('----- SHADER IS NULL -----');
-        }
         _materialCurrentShader = shader;
 
     }
@@ -400,19 +405,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function enableBlending():Void {
 
-        // TODO
+        // Blending always enabled
 
     }
 
     inline public function disableBlending():Void {
 
-        // TODO
+        // Blending always enabled
 
     }
 
     inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
-        // TODO
+        _materialSrcRgb = srcRgb;
+        _materialDstRgb = dstRgb;
+        _materialSrcAlpha = srcAlpha;
+        _materialDstAlpha = dstAlpha;
 
     }
 
@@ -514,26 +522,39 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     inline public function beginDrawingInStencilBuffer():Void {
-        
-        // TODO
+
+        if (hasAnythingToFlush())
+            flush();
+
+        // Clear before writing
+        _materialStencilWrite = 2; 
+        var w = ceramic.App.app.backend.screen.getWidth();
+        var h = ceramic.App.app.backend.screen.getHeight();
+        draw.putPos(0, 0, 1);
+        draw.putPos(w, 0, 1);
+        draw.putPos(w, h, 1);
+        draw.putPos(0, h, 1);
+
+        // Write
+        _materialStencilWrite = 1;
 
     }
 
     inline public function endDrawingInStencilBuffer():Void {
         
-        // TODO
+        _materialStencilWrite = 0;
 
     }
 
     inline public function drawWithStencilTest():Void {
 
-        // TODO
+        _materialStencilTest = true;
 
     }
 
     inline public function drawWithoutStencilTest():Void {
 
-        // TODO
+        _materialStencilTest = false;
 
     }
 
@@ -573,15 +594,28 @@ class Draw #if !completion implements spec.Draw #end {
 
         var mesh = _currentMesh;
 
+        var stencil:backend.StencilState = NONE;
+        var shader:backend.Shader = _materialCurrentShader;
+
+        if (_materialStencilWrite != 0) {
+            stencil = _materialStencilWrite == 2 ? CLEAR : WRITE;
+            if (_stencilShader == null) {
+                _stencilShader = ceramic.App.app.assets.shader('shader:stencil').backendItem;
+            }
+            shader = _stencilShader;
+        }
+        else if (_materialStencilTest) {
+            stencil = TEST;
+        }
+
         var material = _materials.get(
             _materialCurrentTexture,
-            _materialCurrentShader,
-
-            // TODO blending
-            ONE,
-            ONE_MINUS_SRC_ALPHA,
-            ONE,
-            ONE_MINUS_SRC_ALPHA
+            shader,
+            _materialSrcRgb,
+            _materialDstRgb,
+            _materialSrcAlpha,
+            _materialDstAlpha,
+            stencil
         ).material;
 
         mesh.vertices = _meshVertices;
