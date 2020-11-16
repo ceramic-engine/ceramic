@@ -521,7 +521,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function beginDrawingInStencilBuffer():Void {
+    public function beginDrawingInStencilBuffer():Void {
 
         if (hasAnythingToFlush())
             flush();
@@ -530,12 +530,27 @@ class Draw #if !completion implements spec.Draw #end {
         _materialStencilWrite = 2; 
         var w = ceramic.App.app.backend.screen.getWidth();
         var h = ceramic.App.app.backend.screen.getHeight();
-        draw.putPos(0, 0, 1);
-        draw.putPos(w, 0, 1);
-        draw.putPos(w, h, 1);
-        draw.putPos(0, h, 1);
+        putPos(0, 0, 1);
+        putPos(w, 0, 1);
+        putPos(w, h, 1);
+        putPos(0, h, 1);
+        putIndice(0);
+        putIndice(1);
+        putIndice(2);
+        putIndice(0);
+        putIndice(2);
+        putIndice(3);
+        putUVs(0, 0);
+        putUVs(0, 0);
+        putUVs(0, 0);
+        putUVs(0, 0);
+        putColor(1, 1, 1, 1);
+        putColor(1, 1, 1, 1);
+        putColor(1, 1, 1, 1);
+        putColor(1, 1, 1, 1);
+        flush();
 
-        // Write
+        // Start writing
         _materialStencilWrite = 1;
 
     }
