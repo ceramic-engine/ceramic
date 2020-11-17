@@ -1,11 +1,15 @@
 package backend;
 
-import unityengine.rendering.MeshUpdateFlags;
+import unityengine.rendering.SubMeshDescriptor;
+import cs.types.UInt16;
 import unityengine.Vector2Int;
 import unityengine.Mesh;
 import unityengine.Color;
 import unityengine.Vector2;
 import unityengine.Vector3;
+import unityengine.MeshTopology;
+import unityengine.rendering.IndexFormat;
+import unityengine.rendering.MeshUpdateFlags;
 import unityengine.rendering.VertexAttributeDescriptor;
 import unityengine.rendering.VertexAttribute;
 import unityengine.rendering.VertexAttributeFormat;
@@ -63,20 +67,21 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
+    inline static var MAX_VERTS_SIZE:Int = 65536;
+    inline static var MAX_INDICES:Int = 16384;
+
     static var _stencilBufferDirty:Bool = false;
 
-    static var _maxVertsSize:Int = 16384 * 4;
-
     static var _maxVerts:Int = 0;
-    static var _maxIndices:Int = 0;
 
     static var _meshes:Array<Mesh> = null;
     static var _meshesVertices:Array<backend.Float32Array> = null;
+    static var _meshesIndices:Array<backend.UInt16Array> = null;
     static var _currentMeshIndex:Int = -1;
     static var _currentMesh:Mesh = null;
 
     static var _meshVertices:backend.Float32Array = null;
-    static var _meshIndices:NativeArray<Int> = null;
+    static var _meshIndices:backend.UInt16Array = null;
     //static var _meshUVs:NativeArray<Vector2> = null;
     //static var _meshColors:NativeArray<Color> = null;
 
@@ -140,7 +145,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function putIndice(i:Int):Void {
 
-        _meshIndices[_numIndices] = i;
+        _meshIndices[_numIndices] = untyped __cs__('(ushort){0}', i);
         _numIndices++;
 
     }
@@ -180,6 +185,7 @@ class Draw #if !completion implements spec.Draw #end {
         if (_meshes == null) {
             _meshes = [];
             _meshesVertices = [];
+            _meshesIndices = [];
         }
 
         _currentMeshIndex = -1;
@@ -198,17 +204,19 @@ class Draw #if !completion implements spec.Draw #end {
         if (mesh == null) {
             mesh = new Mesh();
             _meshes[_currentMeshIndex] = mesh;
-            _meshesVertices[_currentMeshIndex] = new Float32Array(_maxVerts);
+            _meshesVertices[_currentMeshIndex] = new backend.Float32Array(MAX_VERTS_SIZE);
+            _meshesIndices[_currentMeshIndex] = new backend.UInt16Array(MAX_INDICES);
 
             //mesh.vertices = new NativeArray<Vector3>(_maxVerts);
-            mesh.triangles = new NativeArray<Int>(_maxIndices);
+            //mesh.triangles = new NativeArray<Int>(MAX_INDICES);
             //mesh.uv = new NativeArray<Vector2>(_maxVerts);
             //mesh.colors = new NativeArray<Color>(_maxVerts);
         }
 
         //_meshVertices = mesh.vertices;
         _meshVertices = _meshesVertices[_currentMeshIndex];
-        _meshIndices = mesh.triangles;
+        _meshIndices = _meshesIndices[_currentMeshIndex];
+        //_meshIndices = mesh.triangles;
         //_meshUVs = mesh.uv;
         //_meshColors = mesh.colors;
 
@@ -463,8 +471,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         _vertexSize = 9 + attributesSize;
 
-        _maxVerts = Std.int(Math.floor(_maxVertsSize / _vertexSize));
-        _maxIndices = Std.int(Math.floor(_maxVerts / 3) * 3);
+        _maxVerts = Std.int(Math.floor(MAX_VERTS_SIZE / _vertexSize));
 
     }
 
@@ -658,7 +665,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
         
-        return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > _maxIndices);
+        return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
@@ -670,7 +677,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function remainingIndices():Int {
         
-        return _maxIndices - _numIndices;
+        return MAX_INDICES - _numIndices;
 
     }
 
@@ -698,7 +705,7 @@ class Draw #if !completion implements spec.Draw #end {
             stencil = TEST;
         }
 
-        var material = _materials.get(
+        var materialData = _materials.get(
             _materialCurrentTexture,
             shader,
             _materialSrcRgb,
@@ -706,22 +713,35 @@ class Draw #if !completion implements spec.Draw #end {
             _materialSrcAlpha,
             _materialDstAlpha,
             stencil
-        ).material;
+        );
 
         //mesh.vertices = _meshVertices;
-        mesh.triangles = _meshIndices;
+        //mesh.triangles = _meshIndices;
         //mesh.uv = _meshUVs;
         //mesh.colors = _meshColors;
 
         // Vertex buffer layout (positions, colors, uvs & custom float attributes)
-        mesh.SetVertexBufferParams(_numPos, material.vertexBufferAttributes);
+        mesh.SetVertexBufferParams(_numPos, materialData.vertexBufferAttributes);
 
         // Vertex buffer data
         mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos, 0, MeshUpdateFlags.Default); // TODO change flags to remove checks
         
+        // Index buffer layout
+        mesh.SetIndexBufferParams(_numIndices, IndexFormat.UInt16);
+
+        // Index buffer data
+        mesh.SetIndexBufferData(_meshIndices, 0, 0, _numIndices, MeshUpdateFlags.Default); // TODO change flags to remove checks
+
+        // Configure sub mesh
+        mesh.subMeshCount = 1;
+        var submesh:SubMeshDescriptor = new SubMeshDescriptor(
+            0, _numIndices, MeshTopology.Triangles
+        );
+        mesh.SetSubMesh(0, submesh, MeshUpdateFlags.Default);
+
         //trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
-        untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, material);
+        untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, materialData.material);
 
         resetIndexes();
 
