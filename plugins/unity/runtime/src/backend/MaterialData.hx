@@ -1,5 +1,8 @@
 package backend;
 
+import unityengine.rendering.VertexAttributeDescriptor;
+import cs.NativeArray;
+
 class MaterialData {
     
     public var material:Dynamic = null;
@@ -17,6 +20,8 @@ class MaterialData {
     public var dstAlpha:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
 
     public var stencil:backend.StencilState = NONE;
+
+    public var vertexBufferAttributes:NativeArray<VertexAttributeDescriptor> = null;
 
     public var paramsVersion:Int = -1;
 

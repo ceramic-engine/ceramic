@@ -10,7 +10,7 @@ interface Draw {
 
     function getItem(visual:ceramic.Visual):VisualItem;
 
-    function initBuffers(maxVerts:Int):Void;
+    function initBuffers(#if !ceramic_render_pos_indice maxVerts:Int #end):Void;
 
     function beginRender():Void;
 

@@ -1,10 +1,14 @@
 package backend;
 
+import unityengine.rendering.MeshUpdateFlags;
 import unityengine.Vector2Int;
 import unityengine.Mesh;
 import unityengine.Color;
 import unityengine.Vector2;
 import unityengine.Vector3;
+import unityengine.rendering.VertexAttributeDescriptor;
+import unityengine.rendering.VertexAttribute;
+import unityengine.rendering.VertexAttributeFormat;
 import ceramic.Transform;
 import cs.StdTypes.Int16;
 import cs.NativeArray;
@@ -61,17 +65,20 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _stencilBufferDirty:Bool = false;
 
+    static var _maxVertsSize:Int = 16384 * 4;
+
     static var _maxVerts:Int = 0;
     static var _maxIndices:Int = 0;
 
     static var _meshes:Array<Mesh> = null;
+    static var _meshesVertices:Array<backend.Float32Array> = null;
     static var _currentMeshIndex:Int = -1;
     static var _currentMesh:Mesh = null;
 
-    static var _meshVertices:NativeArray<Vector3> = null;
+    static var _meshVertices:backend.Float32Array = null;
     static var _meshIndices:NativeArray<Int> = null;
-    static var _meshUVs:NativeArray<Vector2> = null;
-    static var _meshColors:NativeArray<Color> = null;
+    //static var _meshUVs:NativeArray<Vector2> = null;
+    //static var _meshColors:NativeArray<Color> = null;
 
     static var _materials:Materials = new Materials();
 
@@ -99,10 +106,18 @@ class Draw #if !completion implements spec.Draw #end {
     
     static var _renderTargetTransform = new ceramic.Transform();
 
-    static var _numPos:Int = 0;
+    static var _vertexSize:Int = 0;
     static var _numIndices:Int = 0;
+
+    static var _numPos:Int = 0;
+    static var _posIndex:Int = 0;
+
     static var _numUVs:Int = 0;
+    static var _uvIndex:Int = 0;
+
     static var _numColors:Int = 0;
+    static var _colorIndex:Int = 0;
+
 
     static var _numFloatAttributes:Int = 0;
 
@@ -115,7 +130,10 @@ class Draw #if !completion implements spec.Draw #end {
     inline public function putPos(x:Float, y:Float, z:Float):Void {
 
         _numFloatAttributes = 0;
-        _meshVertices[_numPos] = new Vector3(x, y, z);
+        _meshVertices[_posIndex] = x;
+        _meshVertices[_posIndex+1] = y;
+        _meshVertices[_posIndex+2] = z;
+        _posIndex += _vertexSize;
         _numPos++;
 
     }
@@ -129,15 +147,23 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function putUVs(uvX:Float, uvY:Float):Void {
 
-        _meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
+        //_meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
+        _meshVertices[_uvIndex] = uvX;
+        _meshVertices[_uvIndex+1] = uvY;
         _numUVs++;
+        _uvIndex += _vertexSize;
 
     }
 
     inline public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
-        _meshColors[_numColors] = new Color(r, g, b, a);
+        //_meshColors[_numColors] = new Color(r, g, b, a);
+        _meshVertices[_colorIndex] = r;
+        _meshVertices[_colorIndex+1] = g;
+        _meshVertices[_colorIndex+2] = b;
+        _meshVertices[_colorIndex+3] = a;
         _numColors++;
+        _colorIndex += _vertexSize;
 
     }
 
@@ -149,13 +175,11 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function initBuffers(maxVerts:Int):Void {
-
-        _maxVerts = maxVerts;
-        _maxIndices = Std.int(Math.floor(maxVerts / 3) * 3);
+    inline public function initBuffers():Void {
 
         if (_meshes == null) {
             _meshes = [];
+            _meshesVertices = [];
         }
 
         _currentMeshIndex = -1;
@@ -174,18 +198,36 @@ class Draw #if !completion implements spec.Draw #end {
         if (mesh == null) {
             mesh = new Mesh();
             _meshes[_currentMeshIndex] = mesh;
-            mesh.vertices = new NativeArray<Vector3>(_maxVerts);
+            _meshesVertices[_currentMeshIndex] = new Float32Array(_maxVerts);
+
+            //mesh.vertices = new NativeArray<Vector3>(_maxVerts);
             mesh.triangles = new NativeArray<Int>(_maxIndices);
-            mesh.uv = new NativeArray<Vector2>(_maxVerts);
-            mesh.colors = new NativeArray<Color>(_maxVerts);
+            //mesh.uv = new NativeArray<Vector2>(_maxVerts);
+            //mesh.colors = new NativeArray<Color>(_maxVerts);
         }
 
-        _meshVertices = mesh.vertices;
+        //_meshVertices = mesh.vertices;
+        _meshVertices = _meshesVertices[_currentMeshIndex];
         _meshIndices = mesh.triangles;
-        _meshUVs = mesh.uv;
-        _meshColors = mesh.colors;
+        //_meshUVs = mesh.uv;
+        //_meshColors = mesh.colors;
 
         _currentMesh = mesh;
+
+    }
+
+    inline function resetIndexes():Void {
+
+        _numIndices = 0;
+
+        _numPos = 0;
+        _posIndex = 0;
+
+        _numColors = 0;
+        _colorIndex = 3;
+
+        _numUVs = 0;
+        _uvIndex = 7;
 
     }
 
@@ -195,10 +237,7 @@ class Draw #if !completion implements spec.Draw #end {
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.Clear()');
 
-        _numPos = 0;
-        _numIndices = 0;
-        _numUVs = 0;
-        _numColors = 0;
+        resetIndexes();
 
         //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
         //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
@@ -418,6 +457,14 @@ class Draw #if !completion implements spec.Draw #end {
     inline public function useShader(shader:backend.ShaderImpl):Void {
 
         _materialCurrentShader = shader;
+
+        var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(shader);
+        if (attributesSize % 2 == 1) attributesSize++;
+
+        _vertexSize = 9 + attributesSize;
+
+        _maxVerts = Std.int(Math.floor(_maxVertsSize / _vertexSize));
+        _maxIndices = Std.int(Math.floor(_maxVerts / 3) * 3);
 
     }
 
@@ -661,19 +708,22 @@ class Draw #if !completion implements spec.Draw #end {
             stencil
         ).material;
 
-        mesh.vertices = _meshVertices;
+        //mesh.vertices = _meshVertices;
         mesh.triangles = _meshIndices;
-        mesh.uv = _meshUVs;
-        mesh.colors = _meshColors;
+        //mesh.uv = _meshUVs;
+        //mesh.colors = _meshColors;
+
+        // Vertex buffer layout (positions, colors, uvs & custom float attributes)
+        mesh.SetVertexBufferParams(_numPos, material.vertexBufferAttributes);
+
+        // Vertex buffer data
+        mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos, 0, MeshUpdateFlags.Default); // TODO change flags to remove checks
         
         //trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, material);
 
-        _numPos = 0;
-        _numIndices = 0;
-        _numUVs = 0;
-        _numColors = 0;
+        resetIndexes();
 
         prepareNextMesh();
 

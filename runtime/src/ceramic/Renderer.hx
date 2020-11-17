@@ -10,8 +10,6 @@ class Renderer extends Entity {
 
 #if ceramic_render_pos_indice
 
-    public var maxVerts:Int = 16384;
-
     var drawCalls:Int = 0;
 
     var activeShader:backend.Shader = null;
@@ -35,8 +33,6 @@ class Renderer extends Entity {
     //var defaultPlainShader:backend.Shader = null;
     var defaultTexturedShader:backend.Shader = null;
     var defaultWhiteTexture:ceramic.Texture = null;
-
-    var maxVertFloats:Int = 0;
 
     var quad:ceramic.Quad = null;
     var mesh:ceramic.Mesh = null;
@@ -111,8 +107,7 @@ class Renderer extends Entity {
 
         drawCalls = 0;
 
-        maxVertFloats = maxVerts * 4;
-        draw.initBuffers(maxVerts);
+        draw.initBuffers();
 
         quad = null;
         mesh = null;
@@ -752,6 +747,40 @@ class Renderer extends Entity {
             }
         }
 
+        // Colors
+        //
+        var r:Float;
+        var g:Float;
+        var b:Float;
+        var a:Float;
+
+        if (stencilClip) {
+            a = 1;
+            r = 1;
+            g = 0;
+            b = 0;
+        }
+        else if (quadDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+            a = quad.computedAlpha;
+            r = quad.color.redFloat;
+            g = quad.color.greenFloat;
+            b = quad.color.blueFloat;
+            if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+        }
+        else {
+            a = quad.computedAlpha;
+            r = quad.color.redFloat * a;
+            g = quad.color.greenFloat * a;
+            b = quad.color.blueFloat * a;
+            if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+        }
+
+        var i = 0;
+        while (i < 4) {
+            draw.putColor(r, g, b, a);
+            i++;
+        }
+
         var uvX:Float = 0;
         var uvY:Float = 0;
         var uvW:Float = 0;
@@ -792,40 +821,6 @@ class Renderer extends Entity {
             draw.putUVs(0, 0);
             draw.putUVs(0, 0);
             draw.putUVs(0, 0);
-        }
-
-        // Colors
-        //
-        var r:Float;
-        var g:Float;
-        var b:Float;
-        var a:Float;
-
-        if (stencilClip) {
-            a = 1;
-            r = 1;
-            g = 0;
-            b = 0;
-        }
-        else if (quadDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-            a = quad.computedAlpha;
-            r = quad.color.redFloat;
-            g = quad.color.greenFloat;
-            b = quad.color.blueFloat;
-            if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-        }
-        else {
-            a = quad.computedAlpha;
-            r = quad.color.redFloat * a;
-            g = quad.color.greenFloat * a;
-            b = quad.color.blueFloat * a;
-            if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-        }
-
-        var i = 0;
-        while (i < 4) {
-            draw.putColor(r, g, b, a);
-            i++;
         }
 
         // Let backend know we did finish sending quad data
@@ -1061,102 +1056,14 @@ class Renderer extends Entity {
             
                 //var colorFloats = this.colorFloats;
 
-                var i = startVertices;
-                var numPos = draw.getNumPos();
-                while (i < endVertices) {
-
-                    var j = meshIndices.unsafeGet(i);
-                    var k = j * 2;
-                    var l = j * (2 + meshCustomFloatAttributesSize);
-
-                    // Position
-                    //
-                    var x = meshVertices.unsafeGet(l++);
-                    var y = meshVertices.unsafeGet(l++);
-
-                    draw.putPos(
-                        matTX + matA * x + matC * y,
-                        matTY + matB * x + matD * y,
-                        z
-                    );
-                    if (textureSlot != -1) {
-                        draw.putFloatAttribute(textureSlot);
-                    }
-
-                    draw.putIndice(numPos);
-                    numPos++;
-
-                    //draw.putInPosList(posList, posFloats, 0);
-
-                    // Custom (float) attributes
-                    //
-                    if (customFloatAttributesSize != 0) {
-                        for (n in 0...customFloatAttributesSize) {
-                            if (n < meshCustomFloatAttributesSize) {
-                                draw.putFloatAttribute(meshVertices.unsafeGet(l++));
-                            }
-                            else {
-                                draw.putFloatAttribute(0.0);
-                            }
-                        }
-                    }
-
-                    // UV
-                    //
-                    if (texture != null) {
-                        var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
-                        var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                        draw.putUVs(uvX, uvY);
-                    }
-
-                    // Color
-                    //
-                    if (!meshSingleColor) {
-                        var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
-
-                        var a:Float;
-                        var r:Float;
-                        var g:Float;
-                        var b:Float;
-                        if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat;
-                            g = meshAlphaColor.greenFloat;
-                            b = meshAlphaColor.blueFloat;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                        }
-                        else {
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat * a;
-                            g = meshAlphaColor.greenFloat * a;
-                            b = meshAlphaColor.blueFloat * a;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                        }
-
-                        draw.putColor(r, g, b, a);
-                    }
-
-                    i++;
-                }
-
-                // No texture, all uvs to zero
-                //
-                if (texture == null) {
-                    i = startVertices;
-                    while (i < endVertices) {
-                        draw.putUVs(0, 0);
-                        i++;
-                    }
-                }
+                var a:Float = 0;
+                var r:Float = 0;
+                var g:Float = 0;
+                var b:Float = 0;
 
                 // Single color
                 //
                 if (meshSingleColor) {
-
-                    var r:Float;
-                    var g:Float;
-                    var b:Float;
-                    var a:Float;
 
                     if (stencilClip) {
                         a = 1;
@@ -1180,12 +1087,82 @@ class Renderer extends Entity {
                         b = meshAlphaColor.blueFloat * a;
                         if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
                     }
+                }
 
-                    i = startVertices;
-                    while (i < endVertices) {
-                        draw.putColor(r, g, b, a);
-                        i++;
+                var i = startVertices;
+                var numPos = draw.getNumPos();
+                while (i < endVertices) {
+
+                    var j = meshIndices.unsafeGet(i);
+                    var k = j * 2;
+                    var l = j * (2 + meshCustomFloatAttributesSize);
+
+                    // Position
+                    //
+                    var x = meshVertices.unsafeGet(l++);
+                    var y = meshVertices.unsafeGet(l++);
+
+                    draw.putIndice(numPos);
+                    numPos++;
+
+                    draw.putPos(
+                        matTX + matA * x + matC * y,
+                        matTY + matB * x + matD * y,
+                        z
+                    );
+                    if (textureSlot != -1) {
+                        draw.putFloatAttribute(textureSlot);
                     }
+
+                    //draw.putInPosList(posList, posFloats, 0);
+
+                    // Color
+                    //
+                    if (!meshSingleColor) {
+                        var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+
+                        if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat;
+                            g = meshAlphaColor.greenFloat;
+                            b = meshAlphaColor.blueFloat;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
+                        else {
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat * a;
+                            g = meshAlphaColor.greenFloat * a;
+                            b = meshAlphaColor.blueFloat * a;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
+                    }
+                    draw.putColor(r, g, b, a);
+
+                    // UV
+                    //
+                    if (texture != null) {
+                        var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
+                        var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                        draw.putUVs(uvX, uvY);
+                    }
+                    else {
+                        draw.putUVs(0, 0);
+                    }
+
+                    // Custom (float) attributes
+                    //
+                    if (customFloatAttributesSize != 0) {
+                        for (n in 0...customFloatAttributesSize) {
+                            if (n < meshCustomFloatAttributesSize) {
+                                draw.putFloatAttribute(meshVertices.unsafeGet(l++));
+                            }
+                            else {
+                                draw.putFloatAttribute(0.0);
+                            }
+                        }
+                    }
+
+                    i++;
                 }
 
                 if (endVertices == visualNumVertices) {
