@@ -234,21 +234,43 @@ class Draw #if !completion implements spec.Draw #end {
                 // TODO update unity render target
                 //var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
                 //luxeRenderer.target = renderTexture;
+                var backendItem:TextureImpl = renderTarget.backendItem;
+                var unityRenderTexture = backendItem.unityRenderTexture;
+
+                untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                untyped __cs__('cmd.SetRenderTarget((UnityEngine.RenderTexture){0})', unityRenderTexture);
+
+                untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
+                untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
+
+                var camWidth:Int = untyped __cs__('(int)cameraWidth');
+                var camHeight:Int = untyped __cs__('(int)cameraHeight');
 
                 updateProjectionMatrix(
                     renderTarget.width,
                     renderTarget.height
                 );
 
+                // Not really ideal, we invert main camera transformation
+                // because it is used for everything, including render targets
+                // That works though
+
+                var translateX = ((backendItem.width * camWidth / renderTarget.width) - backendItem.width) * 0.5;
+                var translateY = ((backendItem.height * camHeight / renderTarget.height) - backendItem.height) * 0.5;
+
                 _renderTargetTransform.identity();
-                _renderTargetTransform.scale(renderTarget.density, renderTarget.density);
+                _renderTargetTransform.scale(
+                    renderTarget.density * camWidth / renderTarget.width,
+                    renderTarget.density * camHeight / renderTarget.height
+                );
+                _renderTargetTransform.translate(-translateX, -translateY);
 
                 updateViewMatrix(
                     renderTarget.density,
                     renderTarget.width,
                     renderTarget.height,
                     _renderTargetTransform,
-                    -1
+                    -1, -1
                 );
 
                 updateCurrentMatrix();
@@ -262,7 +284,6 @@ class Draw #if !completion implements spec.Draw #end {
                 // TODO clear
                 //if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);
                 if (renderTarget.clearOnRender) {
-                    untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
                     untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(0f, 0f, 0f, 0f), 1f)');
                 }
                 
@@ -337,7 +358,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
+    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipX:Float = 1, flipY:Float = 1):Void {
 
         if (transform != null) {
             _modelViewTransform.setToTransform(transform);
@@ -352,13 +373,13 @@ class Draw #if !completion implements spec.Draw #end {
         _modelViewTransform.scale(density, density);
         _modelViewTransform.translate(tx, ty);
 
-        if (flipY == -1) {
-            // Flip vertically (needed when we are rendering to texture)
+        if (flipX == -1 || flipY == -1) {
+            // Flip vertically/horizontally (may be needed when we are rendering to texture)
             _modelViewTransform.translate(
                 -width * 0.5,
                 -height * 0.5
             );
-            _modelViewTransform.scale(1, -1);
+            _modelViewTransform.scale(flipX, flipY);
             _modelViewTransform.translate(
                 width * 0.5,
                 height * 0.5

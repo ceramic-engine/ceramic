@@ -17,7 +17,7 @@ class Materials {
      * If such material doesn't exist yet, creates and instance
      */
     public function get(
-        texture:backend.Texture,
+        texture:backend.TextureImpl,
         shader:backend.Shader,
         srcRgb:backend.BlendMode,
         dstRgb:backend.BlendMode,
@@ -53,7 +53,12 @@ class Materials {
         repository.push(materialData);
 
         if (texture != null) {
-            untyped __cs__('material.mainTexture = {0}', texture.unityTexture);
+            if (texture.unityTexture != null) {
+                untyped __cs__('material.mainTexture = (UnityEngine.Texture2D){0}', texture.unityTexture);
+            }
+            else if (texture.unityRenderTexture != null) {
+                untyped __cs__('material.mainTexture = (UnityEngine.RenderTexture){0}', texture.unityRenderTexture);
+            }
         }
         else {
             untyped __cs__('material.mainTexture = {0}', null);

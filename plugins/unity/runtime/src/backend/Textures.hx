@@ -145,8 +145,11 @@ class Textures implements spec.Textures {
         else {
             loadedTextures.remove(id);
             loadedTexturesRetainCount.remove(id);
-            if (id.startsWith('pixels:') || id.startsWith('render:')) {
+            if (id.startsWith('pixels:')) {
                 untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityTexture);
+            }
+            else if (id.startsWith('render:')) {
+                untyped __cs__('((UnityEngine.RenderTexture){0}).Release()', (texture:TextureImpl).unityRenderTexture);
             }
             else {
                 untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:TextureImpl).unityTexture);

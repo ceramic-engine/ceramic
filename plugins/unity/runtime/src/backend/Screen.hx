@@ -2,7 +2,12 @@ package backend;
 
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
-    public function new() {}
+    public function new() {
+        
+        width = untyped __cs__('UnityEngine.Screen.width');
+        height = untyped __cs__('UnityEngine.Screen.height');
+        
+    }
 
     var width:Int = 0;
 
