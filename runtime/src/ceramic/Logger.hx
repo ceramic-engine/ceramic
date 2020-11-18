@@ -33,7 +33,7 @@ class Logger extends Entity {
             didInitOnce = true;
 #if unity
             haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
-                untyped __cs__('UnityEngine.Debug.Log({0})', v);
+                untyped __cs__('UnityEngine.Debug.Log({0}+{1}+{2}+":"+{3})', v, '\n', pos.fileName, pos.lineNumber);
             };
 #end
         }
@@ -45,7 +45,11 @@ class Logger extends Entity {
         
         emitDebug(value, pos);
 
+#if unity
+        untyped __cs__('UnityEngine.Debug.Log("<color=magenta>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#else
         haxe.Log.trace(prefixLines('[debug] ', value), pos);
+#end
 
     }
 
@@ -53,7 +57,11 @@ class Logger extends Entity {
         
         emitInfo(value, pos);
 
+#if unity
+        untyped __cs__('UnityEngine.Debug.Log("<color=cyan>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#else
         haxe.Log.trace(prefixLines('[info] ', value), pos);
+#end
 
     }
 
@@ -61,7 +69,11 @@ class Logger extends Entity {
         
         emitSuccess(value, pos);
 
+#if unity
+        untyped __cs__('UnityEngine.Debug.Log("<color=lime>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#else
         haxe.Log.trace(prefixLines('[success] ', value), pos);
+#end
 
     }
 
@@ -69,7 +81,9 @@ class Logger extends Entity {
         
         emitWarning(value, pos);
 
-#if (web && luxe)
+#if unity
+        untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#elseif (web && luxe)
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[warning] ', value), pos);
         } else {
@@ -87,7 +101,9 @@ class Logger extends Entity {
         
         emitError(value, pos);
 
-#if (web && luxe)
+#if unity
+        untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#elseif (web && luxe)
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[error] ', value), pos);
         } else {
