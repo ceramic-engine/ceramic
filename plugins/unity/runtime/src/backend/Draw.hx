@@ -154,7 +154,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         //_meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
         _meshVertices[_uvIndex] = uvX;
-        _meshVertices[_uvIndex+1] = uvY;
+        _meshVertices[_uvIndex+1] = (1.0 - uvY);
         _numUVs++;
         _uvIndex += _vertexSize;
 
@@ -655,14 +655,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function maxPosFloats():Int {
-
-        // TODO
-
-        return 0;//maxFloats;
-
-    }
-
     inline public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
         
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
@@ -720,24 +712,26 @@ class Draw #if !completion implements spec.Draw #end {
         //mesh.uv = _meshUVs;
         //mesh.colors = _meshColors;
 
+        var updateFlags:MeshUpdateFlags = untyped __cs__('UnityEngine.Rendering.MeshUpdateFlags.DontValidateIndices | UnityEngine.Rendering.MeshUpdateFlags.DontResetBoneBounds | UnityEngine.Rendering.MeshUpdateFlags.DontNotifyMeshUsers | UnityEngine.Rendering.MeshUpdateFlags.DontRecalculateBounds');
+
         // Vertex buffer layout (positions, colors, uvs & custom float attributes)
         mesh.SetVertexBufferParams(_numPos, materialData.vertexBufferAttributes);
 
         // Vertex buffer data
-        mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos, 0, MeshUpdateFlags.Default); // TODO change flags to remove checks
-        
+        mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos * _vertexSize, 0, updateFlags); // TODO change flags to remove checks
+
         // Index buffer layout
         mesh.SetIndexBufferParams(_numIndices, IndexFormat.UInt16);
 
         // Index buffer data
-        mesh.SetIndexBufferData(_meshIndices, 0, 0, _numIndices, MeshUpdateFlags.Default); // TODO change flags to remove checks
+        mesh.SetIndexBufferData(_meshIndices, 0, 0, _numIndices, updateFlags); // TODO change flags to remove checks
 
         // Configure sub mesh
         mesh.subMeshCount = 1;
         var submesh:SubMeshDescriptor = new SubMeshDescriptor(
             0, _numIndices, MeshTopology.Triangles
         );
-        mesh.SetSubMesh(0, submesh, MeshUpdateFlags.Default);
+        mesh.SetSubMesh(0, submesh, updateFlags);
 
         //trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
