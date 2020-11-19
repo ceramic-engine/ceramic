@@ -118,12 +118,21 @@ class Shaders implements spec.Shaders {
                     if (conditionLines.length > 0) {
                         for (n in 0...maxConditions) {
 
+                            #if ceramic_multitexture_lowerthan
                             if (n == 0) {
                                 newLines.push('if (textureId < 0.5) {');
                             }
                             else {
                                 newLines.push('else if (textureId < ' + n + '.5) {');
                             }
+                            #else
+                            if (n == 0) {
+                                newLines.push('if (textureId == 0.0) {');
+                            }
+                            else {
+                                newLines.push('else if (textureId == ' + n + '.0) {');
+                            }
+                            #end
 
                             for (l in 0...conditionLines.length) {
                                 if (n == 0) {

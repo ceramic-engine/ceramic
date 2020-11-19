@@ -1,6 +1,7 @@
 package backend.tools;
 
 import tools.UnityMeta;
+import tools.UnityShader;
 import tools.Helpers.*;
 import tools.Images;
 import tools.Files;
@@ -199,6 +200,23 @@ class BackendTools implements tools.spec.BackendTools {
             if (txtExtensions.exists(ext)) {
                 // Unity needs a .txt extension to treat an asset as text, let's add it
                 dstPath += '.txt';
+            }
+
+            if (!listOnly && ext == 'shader') {
+                // If it's a shader, check if it's a multi-texture template
+                // and process it if needed
+                var shaderContent = sys.io.File.getContent(srcPath);
+                if (UnityShader.isMultiTextureTemplate(shaderContent)) {
+                    for (n in [8]) {
+                        var processedPath = dstPath.substring(0, dstPath.length - ext.length - 1) + '_mt' + n + '.shader';
+                        validDstPaths.set(processedPath, true);
+                        if (!tools.Files.haveSameLastModified(srcPath, processedPath)) {
+                            var processed = UnityShader.processMultiTextureTemplate(shaderContent, n);
+                            File.saveContent(processedPath, processed);
+                            tools.Files.setToSameLastModified(srcPath, processedPath);
+                        }
+                    }
+                }
             }
 
             if (!listOnly && !tools.Files.haveSameLastModified(srcPath, dstPath)) {

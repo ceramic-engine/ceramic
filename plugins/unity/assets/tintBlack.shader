@@ -13,7 +13,7 @@ Shader "tintBlack"
 	SubShader
 	{
 		Tags
-		{ 
+		{
 			"Queue"="Transparent" 
 			"IgnoreProjector"="True" 
 			"RenderType"="Transparent" 
@@ -58,7 +58,7 @@ Shader "tintBlack"
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = UnityObjectToClipPos(IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex.xyz);
 				OUT.texcoord = IN.texcoord;
 				OUT.color = IN.color;
 				OUT.darkColor = fixed4(IN.darkrg.xy, IN.darkba.xy);

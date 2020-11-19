@@ -1,7 +1,9 @@
+// ceramic: multiTexture
 Shader "textured"
 {
 	Properties
 	{
+		// ceramic: multiTexture/texture
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_SrcBlendRgb ("Src Rgb", Float) = 0
      	_DstBlendRgb ("Dst Rgb", Float) = 0
@@ -13,7 +15,7 @@ Shader "textured"
 	SubShader
 	{
 		Tags
-		{ 
+		{
 			"Queue"="Transparent" 
 			"IgnoreProjector"="True" 
 			"RenderType"="Transparent" 
@@ -43,37 +45,38 @@ Shader "textured"
 				float4 vertex   : POSITION;
 				float4 color    : COLOR;
 				float2 texcoord : TEXCOORD0;
+				// ceramic: multiTexture/textureId
 			};
 
 			struct v2f
 			{
 				float4 vertex   : SV_POSITION;
 				fixed4 color    : COLOR;
+				// ceramic: multiTexture/textureIdStruct
 				float2 texcoord  : TEXCOORD0;
 			};
 
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = UnityObjectToClipPos(IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex.xyz);
+				// ceramic: multiTexture/textureIdAssign
 				OUT.texcoord = IN.texcoord;
 				OUT.color = IN.color;
 
 				return OUT;
 			}
 
+			// ceramic: multiTexture/texture
 			sampler2D _MainTex;
-
-			fixed4 SampleSpriteTexture (float2 uv)
-			{
-				fixed4 color = tex2D (_MainTex, uv);
-				return color;
-			}
 
 			fixed4 frag(v2f IN) : SV_Target
 			{
-				fixed4 c = SampleSpriteTexture (IN.texcoord) * IN.color;
-				return c;
+				fixed4 c;
+				// ceramic: multiTexture/if
+				c = tex2D(_MainTex, IN.texcoord);
+				// ceramic: multiTexture/endif
+				return c * IN.color;
 			}
 		ENDCG
 		}
