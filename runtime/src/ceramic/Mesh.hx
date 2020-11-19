@@ -245,15 +245,29 @@ class Mesh extends Visual {
             var maxY:Float = 0;
             var i = 0;
             var lenMinus1 = vertices.length - 1;
-            while (i < lenMinus1) {
-                var x = vertices.unsafeGet(i);
-                if (x > maxX)
-                    maxX = x;
-                i++;
-                var y = vertices.unsafeGet(i);
-                if (y > maxY)
-                    maxY = y;
-                i++;
+            if (customFloatAttributesSize > 0) {
+                while (i < lenMinus1) {
+                    var x = vertices.unsafeGet(i);
+                    if (x > maxX)
+                        maxX = x;
+                    i++;
+                    var y = vertices.unsafeGet(i);
+                    if (y > maxY)
+                        maxY = y;
+                    i += 1 + customFloatAttributesSize;
+                }
+            }
+            else {
+                while (i < lenMinus1) {
+                    var x = vertices.unsafeGet(i);
+                    if (x > maxX)
+                        maxX = x;
+                    i++;
+                    var y = vertices.unsafeGet(i);
+                    if (y > maxY)
+                        maxY = y;
+                    i++;
+                }
             }
             size(
                 Math.round(maxX * 1000) / 1000,

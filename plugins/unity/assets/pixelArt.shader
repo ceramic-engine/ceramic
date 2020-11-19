@@ -3,7 +3,6 @@ Shader "pixelArt"
 	Properties
 	{
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
-		_Color ("Tint", Color) = (1,1,1,1)
 		_SrcBlendRgb ("Src Rgb", Float) = 0
      	_DstBlendRgb ("Dst Rgb", Float) = 0
 		_SrcBlendAlpha ("Src Alpha", Float) = 0
@@ -46,15 +45,13 @@ Shader "pixelArt"
 				fixed4 color    : COLOR;
 				float2 texcoord  : TEXCOORD0;
 			};
-			
-			fixed4 _Color;
 
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
 				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.texcoord = IN.texcoord;
-				OUT.color = IN.color * _Color;
+				OUT.color = IN.color;
 
 				return OUT;
 			}

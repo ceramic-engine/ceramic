@@ -25,6 +25,9 @@ class Renderer extends Entity {
     var lastClip:ceramic.Visual = null;
     var activeTextureSlot:Int = 0;
 
+    var backendTextures:backend.Textures;
+    var backendShaders:backend.Shaders;
+
     var texWidth:Int = 0;
     var texHeight:Int = 0;
     var texWidthActual:Int = 0;
@@ -68,14 +71,16 @@ class Renderer extends Entity {
     public function render(isMainRender:Bool, ceramicVisuals:Array<Visual>):Void {
 
         var draw = app.backend.draw;
+        backendTextures = app.backend.textures;
+        backendShaders = app.backend.shaders;
 
         //defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
         defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
         defaultWhiteTexture = ceramic.App.app.defaultWhiteTexture;
         
         maxUsableTexturesInBatch = Std.int(Math.min(
-            app.backend.textures.maxTexturesByBatch(),
-            app.backend.shaders.maxIfStatementsByFragmentShader()
+            backendTextures.maxTexturesByBatch(),
+            backendShaders.maxIfStatementsByFragmentShader()
         ));
 
         #if ceramic_avoid_last_texture_slot
@@ -90,7 +95,6 @@ class Renderer extends Entity {
     #if ceramic_debug_draw
         if (isMainRender) {
             if (ceramic.Timer.now - lastDebugTime > 10) {
-                trace('--- DEBUG DRAW ---');
                 debugDraw = true;
                 lastDebugTime = ceramic.Timer.now;
             } else {
@@ -277,219 +281,6 @@ class Renderer extends Entity {
 
     }
 
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useShader(draw:backend.Draw, shader:backend.Shader):Void {
-
-        #if ceramic_debug_draw
-        if (debugDraw) {
-            log.debug('(use shader $shader)');
-        }
-        #end
-
-        if (shader == null) {
-            shader = defaultTexturedShader;
-        }
-
-        //if (activeShader != shader) {
-            activeShader = shader;
-            draw.useShader(shader);
-            activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(shader);
-            customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(shader);
-        //}
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
-
-        #if ceramic_debug_draw
-        if (debugDraw) {
-            log.debug('(use blending $blending)');
-        }
-        #end
-
-        switch blending {
-            case PREMULTIPLIED_ALPHA:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
-                );
-            case ADD:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE
-                );
-            case SET:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.SRC_ALPHA
-                );
-            case RENDER_TO_TEXTURE:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE_MINUS_DST_ALPHA,
-                    backend.BlendMode.ONE
-                );
-            case ALPHA:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.SRC_ALPHA,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
-                );
-            case AUTO:
-                throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
-
-        if (renderTarget != null) {
-            draw.setRenderTarget(renderTarget);
-        }
-        else {
-            draw.setRenderTarget(null);
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
-
-        //if (texture != null) {
-            if (texture == null) {
-                texture = defaultWhiteTexture;
-            }
-            usedTextures = 1;
-            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-            usedTextureIndexes[0] = textureIndex;
-            draw.setActiveTexture(0);
-            activeTextureSlot = 0;
-            useTexture(draw, texture);
-        /*}
-        else {
-            usedTextures = 0;
-            draw.setActiveTexture(0);
-            activeTextureSlot = 0;
-            useTexture(draw, null);
-        }*/
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
-
-        if (texture != null) {
-    #if (ceramic_debug_draw && ceramic_debug_multitexture)
-            if (debugDraw && activeShaderCanBatchMultipleTextures) {
-                if (reusing) {
-                    log.success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
-                }
-                else {
-                    log.success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
-                }
-            }
-    #end
-            lastTexture = texture;
-            lastTextureId = draw.getTextureId(texture.backendItem);
-            texWidth = draw.getTextureWidth(texture.backendItem);
-            texHeight = draw.getTextureHeight(texture.backendItem);
-            texWidthActual = draw.getTextureWidthActual(texture.backendItem);
-            texHeightActual = draw.getTextureHeightActual(texture.backendItem);
-            if (!reusing) {
-                draw.bindTexture(texture.backendItem);
-            }
-        }
-        else {
-            lastTexture = null;
-            lastTextureId = backend.TextureId.DEFAULT;
-            draw.bindNoTexture();
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
-
-        var canKeepSameState = false;
-
-        if (texture == null) {
-            texture = defaultWhiteTexture;
-        }
-
-        if (usedTextures > 0) {
-            if (activeShaderCanBatchMultipleTextures) {
-
-                var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-
-                for (slot in 0...usedTextures) {
-                    if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
-                        // Texture already used in batch, all good
-                        canKeepSameState = true;
-                        break;
-                    }
-                }
-
-                if (!canKeepSameState && usedTextures < maxUsableTexturesInBatch) {
-                    canKeepSameState = true;
-                }
-            }
-        }
-
-        return canKeepSameState;
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
-
-        var alreadyUsed = false;
-
-        if (texture == null) {
-            texture = defaultWhiteTexture;
-        }
-
-        if (activeShaderCanBatchMultipleTextures) {
-
-            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-
-            for (slot in 0...usedTextures) {
-                if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
-                    // Texture already used in batch, all good
-                    draw.setActiveTexture(slot);
-                    activeTextureSlot = slot;
-                    useTexture(draw, texture, true);
-                    alreadyUsed = true;
-                    break;
-                }
-            }
-
-            if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
-                var slot = usedTextures++;
-                usedTextureIndexes[slot] = textureIndex;
-                draw.setActiveTexture(slot);
-                activeTextureSlot = slot;
-                useTexture(draw, texture);
-            }
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function unbindUsedTextures(draw:backend.Draw):Void {
-
-        while (usedTextures > 0) {
-            usedTextures--;
-            draw.setActiveTexture(usedTextures);
-            draw.bindNoTexture();
-        }
-        draw.setActiveTexture(0);
-        activeTextureSlot = 0;
-        useTexture(draw, null);
-
-    }
-
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
 
     #if ceramic_debug_draw
@@ -599,6 +390,11 @@ class Renderer extends Entity {
                             }
                         }
                     }
+    #if ceramic_debug_draw_flush_reason
+                    if (debugDraw && stateDirty) {
+                        log.debug('- dirty: texture not matching');
+                    }
+    #end
                 }
             }
 
@@ -638,7 +434,7 @@ class Renderer extends Entity {
         var matTX:Float = quad.matTX;
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
-        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var textureSlot:Int = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
         var quadDrawsRenderTexture:Bool = quad.texture != null && quad.texture.isRenderTexture;
 
     #if ceramic_debug_draw
@@ -664,12 +460,14 @@ class Renderer extends Entity {
                 z
             );
             if (hasTextureSlot) {
-                draw.putFloatAttribute(textureSlot);
+                draw.putTextureSlot(textureSlot);
             }
             if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(0.0);
+                    draw.putFloatAttribute(l, 0.0);
                 }
+                draw.endFloatAttributes();
             }
 
             //tr
@@ -679,12 +477,14 @@ class Renderer extends Entity {
                 z
             );
             if (hasTextureSlot) {
-                draw.putFloatAttribute(textureSlot);
+                draw.putTextureSlot(textureSlot);
             }
             if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(0.0);
+                    draw.putFloatAttribute(l, 0.0);
                 }
+                draw.endFloatAttributes();
             }
 
             //br
@@ -697,12 +497,14 @@ class Renderer extends Entity {
                 z
             );
             if (hasTextureSlot) {
-                draw.putFloatAttribute(textureSlot);
+                draw.putTextureSlot(textureSlot);
             }
             if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(0.0);
+                    draw.putFloatAttribute(l, 0.0);
                 }
+                draw.endFloatAttributes();
             }
 
             //bl
@@ -712,12 +514,14 @@ class Renderer extends Entity {
                 z
             );
             if (hasTextureSlot) {
-                draw.putFloatAttribute(textureSlot);
+                draw.putTextureSlot(textureSlot);
             }
             if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
                 for (l in 0...customFloatAttributesSize) {
-                    draw.putFloatAttribute(0.0);
+                    draw.putFloatAttribute(l, 0.0);
                 }
+                draw.endFloatAttributes();
             }
 
             draw.putIndice(numPos);
@@ -944,6 +748,11 @@ class Renderer extends Entity {
                             }
                         }
                     }
+    #if ceramic_debug_draw_flush_reason
+                    if (debugDraw && stateDirty) {
+                        log.debug('- dirty: texture not matching');
+                    }
+    #end
                 }
             }
 
@@ -966,7 +775,7 @@ class Renderer extends Entity {
         var matTX:Float = mesh.matTX;
         var matTY:Float = mesh.matTY;
         var z:Float = this.z;
-        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var textureSlot:Int = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
     #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_draw_all true #elseif ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
@@ -1111,7 +920,7 @@ class Renderer extends Entity {
                         z
                     );
                     if (textureSlot != -1) {
-                        draw.putFloatAttribute(textureSlot);
+                        draw.putTextureSlot(textureSlot);
                     }
 
                     //draw.putInPosList(posList, posFloats, 0);
@@ -1152,14 +961,16 @@ class Renderer extends Entity {
                     // Custom (float) attributes
                     //
                     if (customFloatAttributesSize != 0) {
+                        draw.beginFloatAttributes();
                         for (n in 0...customFloatAttributesSize) {
                             if (n < meshCustomFloatAttributesSize) {
-                                draw.putFloatAttribute(meshVertices.unsafeGet(l++));
+                                draw.putFloatAttribute(n, meshVertices.unsafeGet(l++));
                             }
                             else {
-                                draw.putFloatAttribute(0.0);
+                                draw.putFloatAttribute(n, 0.0);
                             }
                         }
+                        draw.endFloatAttributes();
                     }
 
                     i++;
@@ -1198,67 +1009,6 @@ class Renderer extends Entity {
 
     }
 #end
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function computeQuadBlending(quad:ceramic.Quad):ceramic.Blending {
-
-        var blending = quad.blending;
-
-        /*if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
-            // Keep explicit blending
-        }*/
-        /*else if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
-            blending = ceramic.Blending.ALPHA;
-        }
-        else */
-        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
-            if (quad.computedRenderTarget != null) {
-                blending = ceramic.Blending.RENDER_TO_TEXTURE;
-            }
-            else {
-                blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
-            }
-        }
-
-        return blending;
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function computeMeshBlending(mesh:ceramic.Mesh):ceramic.Blending {
-
-        var blending = mesh.blending;
-
-        /*
-        if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
-            // Keep explicit blending
-        }
-        else if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
-            blending = ceramic.Blending.ALPHA;
-        }
-        else if (blending == ceramic.Blending.ADD && (mesh.texture == null || !mesh.texture.isRenderTexture)) {
-            blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
-        }
-        */
-        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
-            if (mesh.computedRenderTarget != null) {
-                blending = ceramic.Blending.RENDER_TO_TEXTURE;
-            }
-            else {
-                blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
-            }
-        }
-
-        return blending;
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function isSameShader(shaderA:ceramic.Shader, shaderB:ceramic.Shader):Bool {
-
-        var backendItemA = shaderA != null ? shaderA.backendItem : defaultTexturedShader;
-        var backendItemB = shaderB != null ? shaderB.backendItem : defaultTexturedShader;
-
-        return backendItemA == backendItemB;
-
-    }
 
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function flush(draw:backend.Draw):Bool {
 
@@ -1305,6 +1055,9 @@ class Renderer extends Entity {
     var lastClip:ceramic.Visual = null;
     var activeTextureSlot:Int = 0;
 
+    var backendTextures:backend.Textures;
+    var backendShaders:backend.Shaders;
+
     var texWidth:Int = 0;
     var texHeight:Int = 0;
     var texWidthActual:Int = 0;
@@ -1350,14 +1103,16 @@ class Renderer extends Entity {
     public function render(isMainRender:Bool, ceramicVisuals:Array<Visual>):Void {
 
         var draw = app.backend.draw;
+        backendTextures = app.backend.textures;
+        backendShaders = app.backend.shaders;
 
         //defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
         defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
         defaultWhiteTexture = ceramic.App.app.defaultWhiteTexture;
         
         maxUsableTexturesInBatch = Std.int(Math.min(
-            app.backend.textures.maxTexturesByBatch(),
-            app.backend.shaders.maxIfStatementsByFragmentShader()
+            backendTextures.maxTexturesByBatch(),
+            backendShaders.maxIfStatementsByFragmentShader()
         ));
 
         #if ceramic_avoid_last_texture_slot
@@ -1372,7 +1127,6 @@ class Renderer extends Entity {
     #if ceramic_debug_draw
         if (isMainRender) {
             if (ceramic.Timer.now - lastDebugTime > 10) {
-                trace('--- DEBUG DRAW ---');
                 debugDraw = true;
                 lastDebugTime = ceramic.Timer.now;
             } else {
@@ -1559,219 +1313,6 @@ class Renderer extends Entity {
 
     }
 
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useShader(draw:backend.Draw, shader:backend.Shader):Void {
-
-        #if ceramic_debug_draw
-        if (debugDraw) {
-            log.debug('(use shader $shader)');
-        }
-        #end
-
-        if (shader == null) {
-            shader = defaultTexturedShader;
-        }
-
-        //if (activeShader != shader) {
-            activeShader = shader;
-            draw.useShader(shader);
-            activeShaderCanBatchMultipleTextures = app.backend.shaders.canBatchWithMultipleTextures(shader);
-            customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(shader);
-        //}
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
-
-        #if ceramic_debug_draw
-        if (debugDraw) {
-            log.debug('(use blending $blending)');
-        }
-        #end
-
-        switch blending {
-            case PREMULTIPLIED_ALPHA:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
-                );
-            case ADD:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE
-                );
-            case SET:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.SRC_ALPHA
-                );
-            case RENDER_TO_TEXTURE:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE_MINUS_DST_ALPHA,
-                    backend.BlendMode.ONE
-                );
-            case ALPHA:
-                draw.setBlendFuncSeparate(
-                    backend.BlendMode.SRC_ALPHA,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
-                    backend.BlendMode.ONE,
-                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
-                );
-            case AUTO:
-                throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
-
-        if (renderTarget != null) {
-            draw.setRenderTarget(renderTarget);
-        }
-        else {
-            draw.setRenderTarget(null);
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
-
-        //if (texture != null) {
-            if (texture == null) {
-                texture = defaultWhiteTexture;
-            }
-            usedTextures = 1;
-            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-            usedTextureIndexes[0] = textureIndex;
-            draw.setActiveTexture(0);
-            activeTextureSlot = 0;
-            useTexture(draw, texture);
-        /*}
-        else {
-            usedTextures = 0;
-            draw.setActiveTexture(0);
-            activeTextureSlot = 0;
-            useTexture(draw, null);
-        }*/
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
-
-        if (texture != null) {
-    #if (ceramic_debug_draw && ceramic_debug_multitexture)
-            if (debugDraw && activeShaderCanBatchMultipleTextures) {
-                if (reusing) {
-                    log.success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
-                }
-                else {
-                    log.success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
-                }
-            }
-    #end
-            lastTexture = texture;
-            lastTextureId = draw.getTextureId(texture.backendItem);
-            texWidth = draw.getTextureWidth(texture.backendItem);
-            texHeight = draw.getTextureHeight(texture.backendItem);
-            texWidthActual = draw.getTextureWidthActual(texture.backendItem);
-            texHeightActual = draw.getTextureHeightActual(texture.backendItem);
-            if (!reusing) {
-                draw.bindTexture(texture.backendItem);
-            }
-        }
-        else {
-            lastTexture = null;
-            lastTextureId = backend.TextureId.DEFAULT;
-            draw.bindNoTexture();
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
-
-        var canKeepSameState = false;
-
-        if (texture == null) {
-            texture = defaultWhiteTexture;
-        }
-
-        if (usedTextures > 0) {
-            if (activeShaderCanBatchMultipleTextures) {
-
-                var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-
-                for (slot in 0...usedTextures) {
-                    if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
-                        // Texture already used in batch, all good
-                        canKeepSameState = true;
-                        break;
-                    }
-                }
-
-                if (!canKeepSameState && usedTextures < maxUsableTexturesInBatch) {
-                    canKeepSameState = true;
-                }
-            }
-        }
-
-        return canKeepSameState;
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
-
-        var alreadyUsed = false;
-
-        if (texture == null) {
-            texture = defaultWhiteTexture;
-        }
-
-        if (activeShaderCanBatchMultipleTextures) {
-
-            var textureIndex = app.backend.textures.getTextureIndex(texture.backendItem);
-
-            for (slot in 0...usedTextures) {
-                if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
-                    // Texture already used in batch, all good
-                    draw.setActiveTexture(slot);
-                    activeTextureSlot = slot;
-                    useTexture(draw, texture, true);
-                    alreadyUsed = true;
-                    break;
-                }
-            }
-
-            if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
-                var slot = usedTextures++;
-                usedTextureIndexes[slot] = textureIndex;
-                draw.setActiveTexture(slot);
-                activeTextureSlot = slot;
-                useTexture(draw, texture);
-            }
-        }
-
-    }
-
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function unbindUsedTextures(draw:backend.Draw):Void {
-
-        while (usedTextures > 0) {
-            usedTextures--;
-            draw.setActiveTexture(usedTextures);
-            draw.bindNoTexture();
-        }
-        draw.setActiveTexture(0);
-        activeTextureSlot = 0;
-        useTexture(draw, null);
-
-    }
-
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function flushAndCleanQuadState(draw:backend.Draw, quad:ceramic.Quad) {
 
         flush(draw);
@@ -1881,6 +1422,11 @@ class Renderer extends Entity {
                             }
                         }
                     }
+    #if ceramic_debug_draw_flush_reason
+                    if (debugDraw && stateDirty) {
+                        log.debug('- dirty: texture not matching');
+                    }
+    #end
                 }
             }
 
@@ -2342,6 +1888,11 @@ class Renderer extends Entity {
                             }
                         }
                     }
+    #if ceramic_debug_draw_flush_reason
+                    if (debugDraw && stateDirty) {
+                        log.debug('- dirty: texture not matching');
+                    }
+    #end
                 }
             }
 
@@ -2654,6 +2205,41 @@ class Renderer extends Entity {
 
     }
 
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function flush(draw:backend.Draw):Bool {
+
+        var posFloats = this.posFloats;
+
+        if (posFloats == 0) {
+            return false;
+        }
+
+        if (posFloats > draw.maxPosFloats()) {
+            throw 'Too many floats are being submitted: max=${draw.maxPosFloats()} attempt=${this.posFloats}).';
+        }
+
+        draw.flush(posFloats, uvFloats, colorFloats);
+
+        drawCalls++;
+
+        this.posFloats = 0;
+        this.uvFloats = 0;
+        this.colorFloats = 0;
+
+    #if ceramic_debug_draw
+        var flushingQuadsNow = drawnQuads - flushedQuads;
+        var flushingMeshesNow = drawnMeshes - flushedMeshes;
+        if (debugDraw) {
+            log.info('flush - #$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
+        }
+        flushedQuads = drawnQuads;
+        flushedMeshes = drawnMeshes;
+    #end
+
+        return true;
+
+    }
+#end
+
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function computeQuadBlending(quad:ceramic.Quad):ceramic.Blending {
 
         var blending = quad.blending;
@@ -2715,39 +2301,221 @@ class Renderer extends Entity {
 
     }
 
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function flush(draw:backend.Draw):Bool {
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useShader(draw:backend.Draw, shader:backend.Shader):Void {
 
-        var posFloats = this.posFloats;
-
-        if (posFloats == 0) {
-            return false;
-        }
-
-        if (posFloats > draw.maxPosFloats()) {
-            throw 'Too many floats are being submitted: max=${draw.maxPosFloats()} attempt=${this.posFloats}).';
-        }
-
-        draw.flush(posFloats, uvFloats, colorFloats);
-
-        drawCalls++;
-
-        this.posFloats = 0;
-        this.uvFloats = 0;
-        this.colorFloats = 0;
-
-    #if ceramic_debug_draw
-        var flushingQuadsNow = drawnQuads - flushedQuads;
-        var flushingMeshesNow = drawnMeshes - flushedMeshes;
+        #if ceramic_debug_draw_shader_use
         if (debugDraw) {
-            log.info('flush - #$drawCalls(${flushingQuadsNow + flushingMeshesNow}/$posFloats) / $lastTexture / $lastShader / $lastRenderTarget / $lastComputedBlending / $lastClip');
+            log.debug('(use shader $shader)');
         }
-        flushedQuads = drawnQuads;
-        flushedMeshes = drawnMeshes;
-    #end
+        #end
 
-        return true;
+        if (shader == null) {
+            shader = defaultTexturedShader;
+        }
+
+        //if (activeShader != shader) {
+            activeShader = shader;
+            draw.useShader(shader);
+            activeShaderCanBatchMultipleTextures = backendShaders.canBatchWithMultipleTextures(shader);
+            customFloatAttributesSize = backendShaders.customFloatAttributesSize(shader);
+        //}
 
     }
-#end
 
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useBlending(draw:backend.Draw, blending:ceramic.Blending):Void {
+
+        #if ceramic_debug_draw_blending_use
+        if (debugDraw) {
+            log.debug('(use blending $blending)');
+        }
+        #end
+
+        switch blending {
+            case PREMULTIPLIED_ALPHA:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                );
+            case ADD:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE
+                );
+            case SET:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.SRC_ALPHA
+                );
+            case RENDER_TO_TEXTURE:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE_MINUS_DST_ALPHA,
+                    backend.BlendMode.ONE
+                );
+            case ALPHA:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.SRC_ALPHA,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                );
+            case AUTO:
+                throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
+        }
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
+
+        if (renderTarget != null) {
+            draw.setRenderTarget(renderTarget);
+        }
+        else {
+            draw.setRenderTarget(null);
+        }
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useFirstTextureInBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        //if (texture != null) {
+            if (texture == null) {
+                texture = defaultWhiteTexture;
+            }
+            usedTextures = 1;
+            var textureIndex = backendTextures.getTextureIndex(texture.backendItem);
+            usedTextureIndexes[0] = textureIndex;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, texture);
+        /*}
+        else {
+            usedTextures = 0;
+            draw.setActiveTexture(0);
+            activeTextureSlot = 0;
+            useTexture(draw, null);
+        }*/
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
+
+        if (texture != null) {
+    #if (ceramic_debug_draw && ceramic_debug_multitexture)
+            if (debugDraw && activeShaderCanBatchMultipleTextures) {
+                if (reusing) {
+                    log.success('REUSE Texture(${draw.getActiveTexture()}) -> ${texture}');
+                }
+                else {
+                    log.success('BIND Texture(${draw.getActiveTexture()}) -> ${texture}');
+                }
+            }
+    #end
+            lastTexture = texture;
+            lastTextureId = draw.getTextureId(texture.backendItem);
+            texWidth = draw.getTextureWidth(texture.backendItem);
+            texHeight = draw.getTextureHeight(texture.backendItem);
+            texWidthActual = draw.getTextureWidthActual(texture.backendItem);
+            texHeightActual = draw.getTextureHeightActual(texture.backendItem);
+            if (!reusing) {
+                draw.bindTexture(texture.backendItem);
+            }
+        }
+        else {
+            lastTexture = null;
+            lastTextureId = backend.TextureId.DEFAULT;
+            draw.bindNoTexture();
+        }
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function canUseTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Bool {
+
+        var canKeepSameState = false;
+
+        if (texture == null) {
+            texture = defaultWhiteTexture;
+        }
+
+        if (usedTextures > 0) {
+            if (activeShaderCanBatchMultipleTextures) {
+
+                var textureIndex = backendTextures.getTextureIndex(texture.backendItem);
+
+                for (slot in 0...usedTextures) {
+                    if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
+                        // Texture already used in batch, all good
+                        canKeepSameState = true;
+                        break;
+                    }
+                }
+
+                if (!canKeepSameState && usedTextures < maxUsableTexturesInBatch) {
+                    canKeepSameState = true;
+                }
+            }
+            else if (lastTexture == texture) {
+
+                canKeepSameState = true;
+            }
+        }
+
+        return canKeepSameState;
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTextureInSameBatch(draw:backend.Draw, texture:ceramic.Texture):Void {
+
+        var alreadyUsed = false;
+
+        if (texture == null) {
+            texture = defaultWhiteTexture;
+        }
+
+        if (activeShaderCanBatchMultipleTextures) {
+
+            var textureIndex = backendTextures.getTextureIndex(texture.backendItem);
+
+            for (slot in 0...usedTextures) {
+                if (textureIndex == usedTextureIndexes.unsafeGet(slot)) {
+                    // Texture already used in batch, all good
+                    draw.setActiveTexture(slot);
+                    activeTextureSlot = slot;
+                    useTexture(draw, texture, true);
+                    alreadyUsed = true;
+                    break;
+                }
+            }
+
+            if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
+                var slot = usedTextures++;
+                usedTextureIndexes[slot] = textureIndex;
+                draw.setActiveTexture(slot);
+                activeTextureSlot = slot;
+                useTexture(draw, texture);
+            }
+        }
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function unbindUsedTextures(draw:backend.Draw):Void {
+
+        while (usedTextures > 0) {
+            usedTextures--;
+            draw.setActiveTexture(usedTextures);
+            draw.bindNoTexture();
+        }
+        draw.setActiveTexture(0);
+        activeTextureSlot = 0;
+        useTexture(draw, null);
+
+    }
+    
 }

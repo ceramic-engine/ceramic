@@ -123,8 +123,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _numColors:Int = 0;
     static var _colorIndex:Int = 0;
 
-
-    static var _numFloatAttributes:Int = 0;
+    static var _floatAttributesIndex:Int = 0;
 
     inline public function getNumPos():Int {
 
@@ -134,7 +133,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function putPos(x:Float, y:Float, z:Float):Void {
 
-        _numFloatAttributes = 0;
         _meshVertices[_posIndex] = x;
         _meshVertices[_posIndex+1] = y;
         _meshVertices[_posIndex+2] = z;
@@ -172,11 +170,27 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putFloatAttribute(value:Float):Void {
-
-        _numFloatAttributes++;
+    inline public function putTextureSlot(value:Int):Void {
 
         // TODO
+
+    }
+
+    inline public function beginFloatAttributes():Void {
+
+        // Nothing to do here
+
+    }
+
+    inline public function putFloatAttribute(index:Int, value:Float):Void {
+
+        _meshVertices[_floatAttributesIndex+index] = value;
+
+    }
+
+    inline public function endFloatAttributes():Void {
+
+        _floatAttributesIndex += _vertexSize;
 
     }
 
@@ -236,6 +250,8 @@ class Draw #if !completion implements spec.Draw #end {
 
         _numUVs = 0;
         _uvIndex = 7;
+
+        _floatAttributesIndex = 9;
 
     }
 
