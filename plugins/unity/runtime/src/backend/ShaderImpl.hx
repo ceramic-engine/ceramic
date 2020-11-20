@@ -13,6 +13,8 @@ class ShaderImpl {
 
     public var customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
 
+    public var isBatchingMultiTexture:Bool = false;
+
     var paramsVersion:Int = 0;
 
     var intParams:Map<String,Int> = null;
@@ -44,6 +46,7 @@ class ShaderImpl {
 
         var newShader = new ShaderImpl(fromShader.unityShader, fromShader.customAttributes);
         newShader.path = fromShader.path;
+        newShader.isBatchingMultiTexture = fromShader.isBatchingMultiTexture;
 
         return newShader;
 
@@ -191,6 +194,12 @@ class ShaderImpl {
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
         }
+
+    }
+
+    function toString() {
+
+        return 'Shader($path)';
 
     }
 

@@ -374,6 +374,11 @@ class Renderer extends Entity {
                             if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
                                 // We could use multiple texture in same batch
                                 if (!canUseTextureInSameBatch(draw, quad.texture)) {
+    #if ceramic_debug_draw_flush_reason
+                                    if (debugDraw) {
+                                        log.debug('- dirty: texture not matching');
+                                    }
+    #end
                                     stateDirty = true;
                                 }
                                 else {
@@ -383,6 +388,11 @@ class Renderer extends Entity {
                         } else {
                             // We could use multiple texture in same batch
                             if (!canUseTextureInSameBatch(draw, quad.texture)) {
+    #if ceramic_debug_draw_flush_reason
+                                if (debugDraw) {
+                                    log.debug('- dirty: texture not matching');
+                                }
+    #end
                                 stateDirty = true;
                             }
                             else {
@@ -390,11 +400,6 @@ class Renderer extends Entity {
                             }
                         }
                     }
-    #if ceramic_debug_draw_flush_reason
-                    if (debugDraw && stateDirty) {
-                        log.debug('- dirty: texture not matching');
-                    }
-    #end
                 }
             }
 
@@ -434,7 +439,7 @@ class Renderer extends Entity {
         var matTX:Float = quad.matTX;
         var matTY:Float = quad.matTY;
         var z:Float = this.z;
-        var textureSlot:Int = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
         var quadDrawsRenderTexture:Bool = quad.texture != null && quad.texture.isRenderTexture;
 
     #if ceramic_debug_draw
@@ -454,13 +459,20 @@ class Renderer extends Entity {
             var numPos = draw.getNumPos();
 
             //tl
-            draw.putPos(
-                matTX,
-                matTY,
-                z
-            );
             if (hasTextureSlot) {
-                draw.putTextureSlot(textureSlot);
+                draw.putPosAndTextureSlot(
+                    matTX,
+                    matTY,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX,
+                    matTY,
+                    z
+                );
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
@@ -471,13 +483,20 @@ class Renderer extends Entity {
             }
 
             //tr
-            draw.putPos(
-                matTX + matA * w,
-                matTY + matB * w,
-                z
-            );
             if (hasTextureSlot) {
-                draw.putTextureSlot(textureSlot);
+                draw.putPosAndTextureSlot(
+                    matTX + matA * w,
+                    matTY + matB * w,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX + matA * w,
+                    matTY + matB * w,
+                    z
+                );
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
@@ -491,13 +510,20 @@ class Renderer extends Entity {
             var n8 = matTX + matA * w + matC * h;
             var n9 = matTY + matB * w + matD * h;
 
-            draw.putPos(
-                n8,
-                n9,
-                z
-            );
             if (hasTextureSlot) {
-                draw.putTextureSlot(textureSlot);
+                draw.putPosAndTextureSlot(
+                    n8,
+                    n9,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    n8,
+                    n9,
+                    z
+                );
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
@@ -508,13 +534,20 @@ class Renderer extends Entity {
             }
 
             //bl
-            draw.putPos(
-                matTX + matC * h,
-                matTY + matD * h,
-                z
-            );
             if (hasTextureSlot) {
-                draw.putTextureSlot(textureSlot);
+                draw.putPosAndTextureSlot(
+                    matTX + matC * h,
+                    matTY + matD * h,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX + matC * h,
+                    matTY + matD * h,
+                    z
+                );
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
@@ -732,6 +765,11 @@ class Renderer extends Entity {
                             if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
                                 // We could use multiple texture in same batch
                                 if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+    #if ceramic_debug_draw_flush_reason
+                                    if (debugDraw) {
+                                        log.debug('- dirty: texture not matching');
+                                    }
+    #end
                                     stateDirty = true;
                                 }
                                 else {
@@ -741,6 +779,11 @@ class Renderer extends Entity {
                         } else {
                             // We could use multiple texture in same batch
                             if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+    #if ceramic_debug_draw_flush_reason
+                                if (debugDraw) {
+                                    log.debug('- dirty: texture not matching');
+                                }
+    #end
                                 stateDirty = true;
                             }
                             else {
@@ -748,11 +791,6 @@ class Renderer extends Entity {
                             }
                         }
                     }
-    #if ceramic_debug_draw_flush_reason
-                    if (debugDraw && stateDirty) {
-                        log.debug('- dirty: texture not matching');
-                    }
-    #end
                 }
             }
 
@@ -775,7 +813,7 @@ class Renderer extends Entity {
         var matTX:Float = mesh.matTX;
         var matTY:Float = mesh.matTY;
         var z:Float = this.z;
-        var textureSlot:Int = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
     #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_draw_all true #elseif ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else mesh.id != null #end) {
@@ -914,13 +952,20 @@ class Renderer extends Entity {
                     draw.putIndice(numPos);
                     numPos++;
 
-                    draw.putPos(
-                        matTX + matA * x + matC * y,
-                        matTY + matB * x + matD * y,
-                        z
-                    );
                     if (textureSlot != -1) {
-                        draw.putTextureSlot(textureSlot);
+                        draw.putPosAndTextureSlot(
+                            matTX + matA * x + matC * y,
+                            matTY + matB * x + matD * y,
+                            z,
+                            textureSlot
+                        );
+                    }
+                    else {
+                        draw.putPos(
+                            matTX + matA * x + matC * y,
+                            matTY + matB * x + matD * y,
+                            z
+                        );
                     }
 
                     //draw.putInPosList(posList, posFloats, 0);
@@ -2445,6 +2490,7 @@ class Renderer extends Entity {
         }
 
         if (usedTextures > 0) {
+
             if (activeShaderCanBatchMultipleTextures) {
 
                 var textureIndex = backendTextures.getTextureIndex(texture.backendItem);

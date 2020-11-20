@@ -7,7 +7,20 @@ class MaterialData {
     
     public var material:Dynamic = null;
 
-    public var texture:backend.Texture = null;
+    public var textures(default, set):NativeArray<backend.Texture> = null;
+    inline function set_textures(textures:NativeArray<backend.Texture>):NativeArray<backend.Texture> {
+        if (textures != null) {
+            var copy:NativeArray<backend.Texture> = new NativeArray(textures.length);
+            for (i in 0...textures.length) {
+                copy[i] = textures[i];
+            }
+            this.textures = copy;
+        }
+        else {
+            this.textures = null;
+        }
+        return this.textures;
+    }
 
     public var shader:backend.Shader = null;
 
@@ -28,7 +41,7 @@ class MaterialData {
     public function new() {}
 
     inline public function matches(
-        texture:backend.Texture,
+        textures:NativeArray<backend.Texture>,
         shader:backend.Shader,
         srcRgb:backend.BlendMode,
         dstRgb:backend.BlendMode,
@@ -37,13 +50,36 @@ class MaterialData {
         stencil:backend.StencilState
         ):Bool {
         
-        return this.texture == texture
+        return this.texturesEqualTextures(textures)
             && this.shader == shader
             && this.srcRgb == srcRgb
             && this.dstRgb == dstRgb
             && this.srcAlpha == srcAlpha
             && this.dstAlpha == dstAlpha
             && this.stencil == stencil;
+    }
+
+    inline public function texturesEqualTextures(textures:NativeArray<backend.Texture>):Bool {
+
+        var equals = false;
+
+        if (this.textures != null && textures != null) {
+            if (this.textures.length == textures.length) {
+                equals = true;
+                for (i in 0...this.textures.length) {
+                    if (this.textures[i] != textures[i]) {
+                        equals = false;
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            equals = (this.textures == textures);
+        }
+
+        return equals;
+
     }
 
     inline public function syncShaderParams():Void {

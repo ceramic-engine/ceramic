@@ -1,7 +1,9 @@
+// ceramic: multiTexture
 Shader "tintBlack"
 {
 	Properties
 	{
+		// ceramic: multiTexture/texture
 		[PerRendererData] _MainTex ("Main Texture", 2D) = "white" {}
 		_SrcBlendRgb ("Src Rgb", Float) = 0
      	_DstBlendRgb ("Dst Rgb", Float) = 0
@@ -51,6 +53,7 @@ Shader "tintBlack"
 			{
 				float4 vertex   : SV_POSITION;
 				fixed4 color    : COLOR;
+				// ceramic: multiTexture/textureIdStruct
 				float2 texcoord  : TEXCOORD0;
 				fixed4 darkColor : TEXCOORD1;
 			};
@@ -59,6 +62,7 @@ Shader "tintBlack"
 			{
 				v2f OUT;
 				OUT.vertex = UnityObjectToClipPos(IN.vertex.xyz);
+				// ceramic: multiTexture/textureIdAssign
 				OUT.texcoord = IN.texcoord;
 				OUT.color = IN.color;
 				OUT.darkColor = fixed4(IN.darkrg.xy, IN.darkba.xy);
@@ -66,6 +70,7 @@ Shader "tintBlack"
 				return OUT;
 			}
 
+			// ceramic: multiTexture/texture
 			sampler2D _MainTex;
 
 			fixed4 SampleSpriteTexture (float2 uv)
@@ -76,7 +81,10 @@ Shader "tintBlack"
 
 			fixed4 frag(v2f IN) : SV_Target
 			{
-				fixed4 texColor = SampleSpriteTexture (IN.texcoord);
+				fixed4 texColor;
+				// ceramic: multiTexture/if
+				texColor = tex2D(_MainTex, IN.texcoord);
+				// ceramic: multiTexture/endif
 				fixed4 c = fixed4(
 					((texColor.a - 1.0) * IN.darkColor.a + 1.0 - texColor.rgb) * IN.darkColor.rgb + texColor.rgb, 
 					texColor.a * IN.color.a

@@ -87,7 +87,8 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _materials:Materials = new Materials();
 
-    static var _materialCurrentTexture:backend.Texture = null;
+    static var _activeTextureSlot:Int = 0;
+    static var _materialCurrentTextures:NativeArray<backend.Texture> = null;
     static var _materialCurrentShader:backend.Shader = null;
     static var _materialSrcRgb:backend.BlendMode = ONE;
     static var _materialDstRgb:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
@@ -141,6 +142,17 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    inline public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
+
+        _meshVertices[_posIndex] = x;
+        _meshVertices[_posIndex+1] = y;
+        _meshVertices[_posIndex+2] = z;
+        _meshVertices[_posIndex+3] = textureSlot;
+        _posIndex += _vertexSize;
+        _numPos++;
+
+    }
+
     inline public function putIndice(i:Int):Void {
 
         _meshIndices[_numIndices] = untyped __cs__('(ushort){0}', i);
@@ -170,12 +182,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putTextureSlot(value:Int):Void {
-
-        // TODO
-
-    }
-
     inline public function beginFloatAttributes():Void {
 
         // Nothing to do here
@@ -200,8 +206,10 @@ class Draw #if !completion implements spec.Draw #end {
             _meshes = [];
             _meshesVertices = [];
             _meshesIndices = [];
+            _materialCurrentTextures = new NativeArray(8);
         }
 
+        _activeTextureSlot = 0;
         _currentMeshIndex = -1;
         _currentMesh = null;
 
@@ -245,13 +253,25 @@ class Draw #if !completion implements spec.Draw #end {
         _numPos = 0;
         _posIndex = 0;
 
-        _numColors = 0;
-        _colorIndex = 3;
+        if (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(_materialCurrentShader)) {
+            _numColors = 0;
+            _colorIndex = 4;
+    
+            _numUVs = 0;
+            _uvIndex = 8;
 
-        _numUVs = 0;
-        _uvIndex = 7;
+            _floatAttributesIndex = 10;
+        }
+        else {
+            _numColors = 0;
+            _colorIndex = 3;
+    
+            _numUVs = 0;
+            _uvIndex = 7;
 
-        _floatAttributesIndex = 9;
+            _floatAttributesIndex = 9;
+        }
+
 
     }
 
@@ -260,8 +280,6 @@ class Draw #if !completion implements spec.Draw #end {
         // Reset command buffer
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.Clear()');
-
-        resetIndexes();
 
         //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
         //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
@@ -485,9 +503,13 @@ class Draw #if !completion implements spec.Draw #end {
         var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(shader);
         if (attributesSize % 2 == 1) attributesSize++;
 
-        _vertexSize = 9 + attributesSize;
+        _vertexSize = 9 + attributesSize + (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(shader) ? 1 : 0);
 
         _maxVerts = Std.int(Math.floor(MAX_VERTS_SIZE / _vertexSize));
+
+        if (_posIndex == 0) {
+            resetIndexes();
+        }
 
     }
 
@@ -521,20 +543,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function getActiveTexture():Int {
 
-        // TODO
-        return 0;
-        /*
-        return activeTextureSlot;
-        */
+        return _activeTextureSlot;
 
     }
 
     inline public function setActiveTexture(slot:Int):Void {
 
-        /*
-        activeTextureSlot = slot;
-        luxeRenderer.state.activeTexture(GL.TEXTURE0 + slot);
-        */
+        _activeTextureSlot = slot;
 
     }
 
@@ -578,19 +593,13 @@ class Draw #if !completion implements spec.Draw #end {
 
         // TODO
 
-        _materialCurrentTexture = backendItem;
-        //_currentMaterial.mainTexture = backendItem.unityTexture;
-        //untyped __cs__('((UnityEngine.Material){0}).mainTexture = {1}', _currentMaterial, backendItem.unityTexture);
+        _materialCurrentTextures[_activeTextureSlot] = backendItem;
 
     }
 
     inline public function bindNoTexture():Void {
-
-        // TODO
         
-        _materialCurrentTexture = null;
-		//_currentMaterial.mainTexture = null;
-        //untyped __cs__('((UnityEngine.Material){0}).mainTexture = null', _currentMaterial);
+        _materialCurrentTextures[_activeTextureSlot] = null;
 
     }
 
@@ -714,7 +723,7 @@ class Draw #if !completion implements spec.Draw #end {
         }
 
         var materialData = _materials.get(
-            _materialCurrentTexture,
+            _materialCurrentTextures,
             shader,
             _materialSrcRgb,
             _materialDstRgb,

@@ -5,6 +5,8 @@ import unityengine.rendering.VertexAttribute;
 import unityengine.rendering.VertexAttributeFormat;
 import cs.NativeArray;
 
+import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 class Materials {
@@ -22,7 +24,7 @@ class Materials {
      * If such material doesn't exist yet, creates and instance
      */
     public function get(
-        texture:backend.TextureImpl,
+        textures:NativeArray<backend.Texture>,
         shader:backend.Shader,
         srcRgb:backend.BlendMode,
         dstRgb:backend.BlendMode,
@@ -34,7 +36,7 @@ class Materials {
         for (i in 0...repository.length) {
             var materialData = repository.unsafeGet(i);
 
-            if (materialData.matches(texture, shader, srcRgb, dstRgb, srcAlpha, dstAlpha, stencil)) {
+            if (materialData.matches(textures, shader, srcRgb, dstRgb, srcAlpha, dstAlpha, stencil)) {
                 materialData.syncShaderParams();
                 return materialData;
             }
@@ -42,7 +44,7 @@ class Materials {
 
         // Nothing found, create a new one
         var materialData = new MaterialData();
-        materialData.texture = texture;
+        materialData.textures = textures;
         materialData.shader = shader;
         materialData.srcRgb = srcRgb;
         materialData.dstRgb = dstRgb;
@@ -57,16 +59,30 @@ class Materials {
         materialData.material = untyped __cs__('material');
         repository.push(materialData);
 
-        if (texture != null) {
-            if (texture.unityTexture != null) {
-                untyped __cs__('material.mainTexture = (UnityEngine.Texture2D){0}', texture.unityTexture);
+        var mainTexture:TextureImpl = textures[0];
+        if (mainTexture != null) {
+            if (mainTexture.unityTexture != null) {
+                untyped __cs__('material.mainTexture = (UnityEngine.Texture2D){0}', mainTexture.unityTexture);
             }
-            else if (texture.unityRenderTexture != null) {
-                untyped __cs__('material.mainTexture = (UnityEngine.RenderTexture){0}', texture.unityRenderTexture);
+            else if (mainTexture.unityRenderTexture != null) {
+                untyped __cs__('material.mainTexture = (UnityEngine.RenderTexture){0}', mainTexture.unityRenderTexture);
             }
         }
         else {
             untyped __cs__('material.mainTexture = {0}', null);
+        }
+
+        for (i in 1...textures.length) {
+            var texture:TextureImpl = textures[i];
+            if (texture != null) {
+                var textureName = '_Tex' + i;
+                if (texture.unityTexture != null) {
+                    untyped __cs__('material.SetTexture({0}, (UnityEngine.Texture2D){1})', textureName, texture.unityTexture);
+                }
+                else if (texture.unityRenderTexture != null) {
+                    untyped __cs__('material.SetTexture({0}, (UnityEngine.RenderTexture){1})', textureName, texture.unityRenderTexture);
+                }
+            }
         }
         
         materialData.syncShaderParams();
@@ -99,13 +115,24 @@ class Materials {
                 untyped __cs__('material.SetInt("_StencilWriteMask", (int){0})', 0xFF);
         }
 
-        var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(shader);
+        var backendShaders = ceramic.App.app.backend.shaders;
+
+        var attributesSize = backendShaders.customFloatAttributesSize(shader);
         var attributesEntries = Std.int(Math.ceil(attributesSize / 2));
 
+        var canBatchMultipleTextures = backendShaders.canBatchWithMultipleTextures(shader);
+
         var vertexBufferAttributes:NativeArray<VertexAttributeDescriptor> = new NativeArray(3 + attributesEntries);
-        vertexBufferAttributes[0] = new VertexAttributeDescriptor(
-            VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0
-        );
+        if (canBatchMultipleTextures) {
+            vertexBufferAttributes[0] = new VertexAttributeDescriptor(
+                VertexAttribute.Position, VertexAttributeFormat.Float32, 4, 0
+            );
+        }
+        else {
+            vertexBufferAttributes[0] = new VertexAttributeDescriptor(
+                VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0
+            );
+        }
         vertexBufferAttributes[1] = new VertexAttributeDescriptor(
             VertexAttribute.Color, VertexAttributeFormat.Float32, 4, 0
         );

@@ -86,7 +86,7 @@ class UnityShader {
                 }
             }
             else if (!didProcessShaderName && cleanedLine.startsWith('shader"') && cleanedLine.endsWith('"')) {
-                newLines.push('Shader "' + cleanedLine.substring('shader"'.length, cleanedLine.length - 1) + '_mt' + maxConditions + '"');
+                newLines.push('Shader "' + line.split('"')[1] + '_mt' + maxConditions + '"');
                 didProcessShaderName = true;
             }
             else {

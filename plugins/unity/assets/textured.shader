@@ -45,7 +45,6 @@ Shader "textured"
 				float4 vertex   : POSITION;
 				float4 color    : COLOR;
 				float2 texcoord : TEXCOORD0;
-				// ceramic: multiTexture/textureId
 			};
 
 			struct v2f

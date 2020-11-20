@@ -18,10 +18,29 @@ class Shaders implements spec.Shaders {
         };
 
         var unityPath = Path.withoutExtension(path);
-        var unityShader:Dynamic = untyped __cs__('UnityEngine.Shader.Find({0})', unityPath);
+        var unityPathMultiTexture = unityPath + '_mt8';
+        var unityShader:Dynamic = null;
+        #if !ceramic_no_multitexture
+        try {
+            unityShader = untyped __cs__('UnityEngine.Shader.Find({0})', unityPathMultiTexture);
+        }
+        catch (e:Dynamic) {
+            // No valid multi texture shader
+            trace('Failed to load multi texture shader: $unityPathMultiTexture');
+        }
+        #end
+        var isBatchingMultiTexture = (unityShader != null);
+        if (!isBatchingMultiTexture) {
+            trace('IS SINGLE TEXTURE: $unityPath');
+            unityShader = untyped __cs__('UnityEngine.Shader.Find({0})', unityPath);
+        }
+        else {
+            trace('IS MULTI TEXTURE: $unityPath');
+        }
 
         if (unityShader != null) {
             var shader = new ShaderImpl(unityShader, customAttributes);
+            shader.isBatchingMultiTexture = isBatchingMultiTexture;
             shader.path = path;
             done(shader);
         }
@@ -115,15 +134,15 @@ class Shaders implements spec.Shaders {
 
     }
 
-    public function maxIfStatementsByFragmentShader():Int {
+    inline public function maxIfStatementsByFragmentShader():Int {
 
-        return 0;
+        return 8;
 
     }
 
-    public function canBatchWithMultipleTextures(shader:Shader):Bool {
+    inline public function canBatchWithMultipleTextures(shader:Shader):Bool {
         
-        return false;
+        return (shader:ShaderImpl).isBatchingMultiTexture;
         
     }
 
