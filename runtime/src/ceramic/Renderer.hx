@@ -275,7 +275,7 @@ class Renderer extends Entity {
 
     #if ceramic_debug_draw
         if (debugDraw) {
-            log.success(' -- $drawCalls draw calls / $drawnQuads quads / $drawnMeshes meshes');
+            log.success(' -- $drawCalls draw call' + (drawCalls > 1 ? 's' : '') + ' / $drawnQuads quad' + (drawnQuads > 1 ? 's' : '') + ' / $drawnMeshes mesh' + (drawnMeshes > 1 ? 'es' : '') + '');
         }
     #end
 
