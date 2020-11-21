@@ -433,8 +433,8 @@ class Main extends luxe.Game {
 #end
 
         ceramic.App.app.backend.screen.emitMouseWheel(
-            event.x,
-            event.y
+            Math.round(event.x * 0.1),
+            Math.round(event.y * 0.1)
         );
 
     }
