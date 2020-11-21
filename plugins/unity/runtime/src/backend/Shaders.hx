@@ -31,11 +31,7 @@ class Shaders implements spec.Shaders {
         #end
         var isBatchingMultiTexture = (unityShader != null);
         if (!isBatchingMultiTexture) {
-            trace('IS SINGLE TEXTURE: $unityPath');
             unityShader = untyped __cs__('UnityEngine.Shader.Find({0})', unityPath);
-        }
-        else {
-            trace('IS MULTI TEXTURE: $unityPath');
         }
 
         if (unityShader != null) {
