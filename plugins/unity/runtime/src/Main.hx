@@ -18,6 +18,9 @@ class Main {
 
     public static function main():Void {
 
+        // Force to sync app fps with screen fps
+        untyped __cs__('UnityEngine.QualitySettings.vSyncCount = 1');
+
         var settings = ceramic.App.init();
         project = @:privateAccess new Project(settings);
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..'])); // Fix this TODO
