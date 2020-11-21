@@ -228,7 +228,7 @@ class Setup extends tools.Task {
         // Save hxml file
         File.saveContent(hxmlPath, finalHxml.join("\n"));
         Files.setToSameLastModified(projectPath, hxmlPath);
-        print('Updated unity project at: $hxmlPath');
+        print('Updated unity hxml at: $hxmlPath');
 
     }
 
