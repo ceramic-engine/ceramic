@@ -437,11 +437,21 @@ class Screen extends Entity implements Observable {
 
     function updateTexturesDensity():Void {
 
-        texturesDensity = (settings.targetDensity > 0) ?
-            settings.targetDensity
-        :
-            density
-        ;
+        if (settings.targetDensity > 0) {
+            this.texturesDensity = settings.targetDensity;
+        }
+        else {
+            var texturesDensity = density;
+
+            if (texturesDensity < 1) {
+                texturesDensity = 1;
+            }
+            else {
+                texturesDensity = Math.round(texturesDensity);
+            }
+    
+            this.texturesDensity = texturesDensity;
+        }
 
     }
 
