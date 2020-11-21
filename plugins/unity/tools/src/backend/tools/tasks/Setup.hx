@@ -164,22 +164,60 @@ class Setup extends tools.Task {
             finalHxml.push('-D no-root');
             finalHxml.push('-D ceramic_render_pos_indice');
             
+            var unityVersion:String = null;
+            if (project.app.unity != null &&
+                project.app.unity.version != null) {
+                unityVersion = '' + project.app.unity.version;
+            }
+            
             if (Sys.systemName() == 'Mac') {
-                // TODO smarter unity detection
-                var unityAppPath = '/Applications/Unity/Hub/Editor/2019.4.5f1/Unity.app'; // LTS
+                var unityEditorsPath = '/Applications/Unity/Hub/Editor/';
 
-                //finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/Mono/bin/gmcs');
+                if (!FileSystem.exists(unityEditorsPath) || !FileSystem.isDirectory(unityEditorsPath)) {
+                    fail('Cannot build for Unity: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
+                }
+
+                var availableVersions = [];
+                for (file in FileSystem.readDirectory(unityEditorsPath)) {
+                    if (file.startsWith('20')) {
+                        var fullPath = Path.join([unityEditorsPath, file, 'Unity.app']);
+                        if (FileSystem.exists(fullPath)) {
+                            print('Available Unity version: $file');
+                            availableVersions.push(file);
+                        }
+                    }
+                }
+                availableVersions.sort(compareSemVerAscending);
+
+                if (availableVersions.length == 0) {
+                    fail('Cannot build for Unity: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
+                }
+
+                print('Available Unity versions: ' + availableVersions.join(', '));
+                if (unityVersion != null && availableVersions.indexOf(unityVersion) == -1) {
+                    warning('Requested version $unityVersion not installed. Using ${availableVersions[availableVersions.length-1]} instead!');
+                }
+                else {
+                    success('Using version ${availableVersions[availableVersions.length-1]}');
+                }
+
+                unityVersion = availableVersions[availableVersions.length-1];
+
+                var unityAppPath = Path.join([unityEditorsPath, unityVersion, 'Unity.app']);
+
+                //finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/Mono/bin/gmcs'); // Was used for legacy unity
                 finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/MonoBleedingEdge/bin/mcs');
+
                 finalHxml.push('-D net-std=$unityAppPath/Contents/Mono/lib/mono/unity');
                 finalHxml.push('-net-lib=$unityAppPath/Contents/Managed/UnityEngine.dll');
-                //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll');
+                //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll'); // Not needed for compilation
             }
-            // TODO windows
-            // TODO handle custom Unity path
+            else {
+                fail('Building for Unity is not yet supported on system: ' + Sys.systemName());
+            }
 
             finalHxml.push('-D net-ver=20');
             finalHxml.push('-D erase-generics');
-            //finalHxml.push('--macro allowPackage("sys")');
             if (variant == 'tasks') {
                 finalHxml.push('--macro include("tasks", true)');
             }

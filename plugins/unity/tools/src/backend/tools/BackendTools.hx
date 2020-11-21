@@ -115,21 +115,30 @@ class BackendTools implements tools.spec.BackendTools {
         var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         defines.set('target_path', hxmlProjectPath);
 
+        var unityProjectPath = resolveUnityProjectPath(cwd);
+        defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']));
+
+        return defines;
+
+    }
+
+    function resolveUnityProjectPath(cwd:String) {
+
+        var unityProjectPath = Path.join([cwd, 'project/unity']);
+
         if (context.project != null
         && context.project.app != null
         && context.project.app.unity != null
         && context.project.app.unity.project != null) {
             // Allow to point to unity assets directly
-            var unityProjectPath:String = context.project.app.unity.project;
-            if (!Path.isAbsolute(unityProjectPath)) {
-                unityProjectPath = Path.join([cwd, unityProjectPath]);
+            var customUnityProjectPath:String = context.project.app.unity.project;
+            if (!Path.isAbsolute(customUnityProjectPath)) {
+                customUnityProjectPath = Path.join([cwd, customUnityProjectPath]);
             }
-            defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']));
-        } else {
-            defines.set('target_assets_path', Path.join([hxmlProjectPath, 'assets']));
+            unityProjectPath = customUnityProjectPath;
         }
 
-        return defines;
+        return unityProjectPath;
 
     }
 
@@ -168,21 +177,10 @@ class BackendTools implements tools.spec.BackendTools {
         if (dstAssetsPath == null) {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
-        if (context.project != null
-        && context.project.app != null
-        && context.project.app.unity != null
-        && context.project.app.unity.project != null) {
-            // Allow to copy assets right into Unity project
-            var unityProjectPath:String = context.project.app.unity.project;
-            if (!Path.isAbsolute(unityProjectPath)) {
-                unityProjectPath = Path.join([cwd, unityProjectPath]);
-            }
-            dstAssetsPath = Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']);
-        } else {
-            dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
-        }
 
-        print('context.project: ' + context.project.app.unity.project);
+        var unityProjectPath = resolveUnityProjectPath(cwd);
+        print('Unity Editor project path: ' + unityProjectPath);
+        dstAssetsPath = Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']);
 
         // Add/update missing assets
         //
