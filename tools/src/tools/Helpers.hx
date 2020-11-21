@@ -1045,4 +1045,35 @@ class Helpers {
             || (code >= 'a'.code && code <= 'z'.code);
 
     }
+
+    public static function compareSemVerAscending(a:String, b:String):Int {
+
+        var partsA = a.split('.');
+        var partsB = b.split('.');
+
+        var i = 0;
+        while (i < partsA.length && i < partsB.length) {
+            var partA = Std.parseInt(partsA[i]);
+            var partB = Std.parseInt(partsB[i]);
+
+            if (partA > partB) {
+                return 1;
+            }
+            else if (partA < partB) {
+                return -1;
+            }
+
+            i++;
+        }
+
+        if (partsA.length > partsB.length) {
+            return 1;
+        }
+        else if (partsA.length < partsB.length) {
+            return -1;
+        }
+
+        return 0;
+
+    }
 }
