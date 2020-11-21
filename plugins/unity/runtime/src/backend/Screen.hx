@@ -1,5 +1,7 @@
 package backend;
 
+import unityengine.Input;
+
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     public function new() {
@@ -73,6 +75,79 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         if (didResize) {
             emitResize();
+        }
+
+        updateInput();
+
+    }
+
+/// Input
+
+    var mouseLeftPressed:Bool = false;
+
+    var mouseMiddlePressed:Bool = false;
+
+    var mouseRightPressed:Bool = false;
+
+    var mouseX:Float = -1;
+
+    var mouseY:Float = -1;
+
+    function updateInput() {
+
+        var newMouseX = Input.mousePosition.x;
+        var newMouseY = height - Input.mousePosition.y;
+
+        var mouseScrollX = Math.floor(Input.mouseScrollDelta.x * 32);
+        var mouseScrollY = Math.floor(Input.mouseScrollDelta.y * 32);
+
+        if (mouseScrollX != 0 || mouseScrollY != 0) {
+            emitMouseWheel(mouseScrollX, mouseScrollY);
+        }
+
+        if (newMouseX != mouseX || newMouseY != mouseY) {
+            mouseX = newMouseX;
+            mouseY = newMouseY;
+            emitMouseMove(mouseX, mouseY);
+        }
+
+        if (Input.GetMouseButton(0)) {
+            if (!mouseLeftPressed) {
+                mouseLeftPressed = true;
+                emitMouseDown(1, mouseX, mouseY);
+            }
+        }
+        else {
+            if (mouseLeftPressed) {
+                mouseLeftPressed = false;
+                emitMouseUp(1, mouseX, mouseY);
+            }
+        }
+
+        if (Input.GetMouseButton(2)) {
+            if (!mouseMiddlePressed) {
+                mouseMiddlePressed = true;
+                emitMouseDown(1, mouseX, mouseY);
+            }
+        }
+        else {
+            if (mouseMiddlePressed) {
+                mouseMiddlePressed = false;
+                emitMouseUp(1, mouseX, mouseY);
+            }
+        }
+
+        if (Input.GetMouseButton(1)) {
+            if (!mouseRightPressed) {
+                mouseRightPressed = true;
+                emitMouseDown(3, mouseX, mouseY);
+            }
+        }
+        else {
+            if (mouseRightPressed) {
+                mouseRightPressed = false;
+                emitMouseUp(3, mouseX, mouseY);
+            }
         }
 
     }
