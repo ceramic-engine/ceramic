@@ -77,6 +77,11 @@ class RenderTexture extends Texture {
         // have been prepared for update, but before this is applied
         app.onceUpdate(this, function(_) {
 
+        // On some backends, we need to wait one more frame to get stamp result
+        #if ceramic_texture_stamp_delayed
+        app.onceUpdate(this, function(_) {
+        #end
+
             renderDirty = true;
 
             app.onceFinishDraw(this, function() {
@@ -95,6 +100,9 @@ class RenderTexture extends Texture {
                 done = null;
 
             });
+        #if ceramic_texture_stamp_delayed
+        });
+        #end
         });
 
     }
