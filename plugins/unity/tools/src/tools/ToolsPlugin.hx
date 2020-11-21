@@ -45,6 +45,8 @@ class ToolsPlugin {
         tasks.set('unity update', new tools.tasks.Update());
         tasks.set('unity info', new tools.tasks.Info());
         tasks.set('unity libs', new tools.tasks.Libs());
+        
+        tasks.set('unity project', new tools.tasks.unity.Project());
 
         // Restore default backend
         context.backend = prevBackend;

@@ -2,6 +2,7 @@ package backend.tools;
 
 import tools.UnityMeta;
 import tools.UnityShader;
+import tools.UnityProject;
 import tools.Helpers.*;
 import tools.Images;
 import tools.Files;
@@ -115,30 +116,10 @@ class BackendTools implements tools.spec.BackendTools {
         var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         defines.set('target_path', hxmlProjectPath);
 
-        var unityProjectPath = resolveUnityProjectPath(cwd);
-        defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']));
+        var unityProjectPath = UnityProject.resolveUnityProjectPath(cwd, context.project);
+        defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets', 'Ceramic', 'Resources', 'assets']));
 
         return defines;
-
-    }
-
-    function resolveUnityProjectPath(cwd:String) {
-
-        var unityProjectPath = Path.join([cwd, 'project/unity']);
-
-        if (context.project != null
-        && context.project.app != null
-        && context.project.app.unity != null
-        && context.project.app.unity.project != null) {
-            // Allow to point to unity assets directly
-            var customUnityProjectPath:String = context.project.app.unity.project;
-            if (!Path.isAbsolute(customUnityProjectPath)) {
-                customUnityProjectPath = Path.join([cwd, customUnityProjectPath]);
-            }
-            unityProjectPath = customUnityProjectPath;
-        }
-
-        return unityProjectPath;
 
     }
 
@@ -178,9 +159,9 @@ class BackendTools implements tools.spec.BackendTools {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
 
-        var unityProjectPath = resolveUnityProjectPath(cwd);
+        var unityProjectPath = UnityProject.resolveUnityProjectPath(cwd, context.project);
         print('Unity Editor project path: ' + unityProjectPath);
-        dstAssetsPath = Path.join([unityProjectPath, 'Assets/Ceramic/Resources/assets']);
+        dstAssetsPath = Path.join([unityProjectPath, 'Assets', 'Ceramic', 'Resources', 'assets']);
 
         // Add/update missing assets
         //

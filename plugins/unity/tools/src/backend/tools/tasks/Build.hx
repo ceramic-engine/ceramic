@@ -149,6 +149,9 @@ class Build extends tools.Task {
             // Not implemented
         }
 
+        // Update unity project
+        runTask('unity project', action == 'run' ? ['--run'] : []);
+
     }
 
 }

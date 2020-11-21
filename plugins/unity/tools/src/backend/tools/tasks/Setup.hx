@@ -182,7 +182,6 @@ class Setup extends tools.Task {
                     if (file.startsWith('20')) {
                         var fullPath = Path.join([unityEditorsPath, file, 'Unity.app']);
                         if (FileSystem.exists(fullPath)) {
-                            print('Available Unity version: $file');
                             availableVersions.push(file);
                         }
                     }
