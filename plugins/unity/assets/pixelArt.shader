@@ -7,6 +7,8 @@ Shader "pixelArt"
      	_DstBlendRgb ("Dst Rgb", Float) = 0
 		_SrcBlendAlpha ("Src Alpha", Float) = 0
      	_DstBlendAlpha ("Dst Alpha", Float) = 0
+		resolution ("resolution", Vector) = (0,0,0,0)
+		sharpness ("sharpness", Float) = 0.0
 	}
 
 	SubShader
@@ -49,7 +51,7 @@ Shader "pixelArt"
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = UnityObjectToClipPos(IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex.xyz);
 				OUT.texcoord = IN.texcoord;
 				OUT.color = IN.color;
 
@@ -57,17 +59,23 @@ Shader "pixelArt"
 			}
 
 			sampler2D _MainTex;
+			float2 resolution;
+			float sharpness;
 
-			fixed4 SampleSpriteTexture (float2 uv)
-			{
-				fixed4 color = tex2D (_MainTex, uv);
-				return color;
+			// Ported from: https://gist.github.com/Beefster09/7264303ee4b4b2086f372f1e70e8eddd
+			float sharpen(float px) {
+				float norm = (frac(px) - 0.5) * 2.0;
+				float norm2 = norm * norm;
+				return floor(px) + norm * pow(norm2, sharpness) / 2.0 + 0.5;
 			}
 
 			fixed4 frag(v2f IN) : SV_Target
 			{
-				fixed4 c = SampleSpriteTexture (IN.texcoord) * IN.color;
-				return c;
+				fixed4 texColor = tex2D(_MainTex, float2(
+					sharpen(IN.texcoord.x * resolution.x) / resolution.x,
+					sharpen(IN.texcoord.y * resolution.y) / resolution.y
+				));
+				return texColor * IN.color;
 			}
 		ENDCG
 		}
