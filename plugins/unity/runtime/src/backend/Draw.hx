@@ -339,19 +339,21 @@ class Draw #if !completion implements spec.Draw #end {
                 var translateX = ((backendItem.width * camWidth / renderTarget.width) - backendItem.width) * 0.5;
                 var translateY = ((backendItem.height * camHeight / renderTarget.height) - backendItem.height) * 0.5;
 
+                var density = renderTarget.density;
+
                 _renderTargetTransform.identity();
                 _renderTargetTransform.scale(
-                    renderTarget.density * camWidth / renderTarget.width,
-                    renderTarget.density * camHeight / renderTarget.height
+                    density * camWidth / renderTarget.width,
+                    density * camHeight / renderTarget.height
                 );
                 _renderTargetTransform.translate(-translateX, -translateY);
 
                 updateViewMatrix(
-                    renderTarget.density,
+                    density,
                     renderTarget.width,
                     renderTarget.height,
                     _renderTargetTransform,
-                    -1, -1
+                    1, 1
                 );
 
                 updateCurrentMatrix();
