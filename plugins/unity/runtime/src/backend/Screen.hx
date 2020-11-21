@@ -98,8 +98,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var newMouseX = Input.mousePosition.x;
         var newMouseY = height - Input.mousePosition.y;
 
-        var mouseScrollX = Math.floor(Input.mouseScrollDelta.x * 32);
-        var mouseScrollY = Math.floor(Input.mouseScrollDelta.y * 32);
+        // Use a factor to try to get a consistent value with other targets
+        var mouseScrollX = Math.floor(Input.mouseScrollDelta.x * 8);
+        var mouseScrollY = Math.floor(Input.mouseScrollDelta.y * 8);
 
         if (mouseScrollX != 0 || mouseScrollY != 0) {
             emitMouseWheel(mouseScrollX, mouseScrollY);
