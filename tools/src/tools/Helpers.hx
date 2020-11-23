@@ -324,7 +324,7 @@ class Helpers {
 
     }
 
-    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
         
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
@@ -338,14 +338,14 @@ class Helpers {
 
     }
 
-    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
         return command(Path.join([context.ceramicToolsPath, haxelib]), args, options);
 
     }
 
-    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
 
         return command('haxelib', args, options);
 
@@ -503,10 +503,10 @@ class Helpers {
 
     }
 
-    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool }) {
+    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
         
         if (options == null) {
-            options = { cwd: null, mute: false };
+            options = { cwd: null, mute: false, detached: false };
         }
 
         if (context.muted) options.mute = true;
@@ -529,45 +529,61 @@ class Helpers {
 
         var spawnOptions:Dynamic = { cwd: options.cwd };
 
-        // Needed for haxe/haxelib commands
-        /*var originalPATH:String = untyped process.env.PATH;
-        if (originalPATH != null) {
-            spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
-        }*/
+        if (options.detached) {
+            //var out = js.node.Fs.openSync('./out.log', 'a');
+            //var err = js.node.Fs.openSync('./out.log', 'a');
+            spawnOptions.detached = true;
+            spawnOptions.stdio = ['ignore', 'ignore', 'ignore'];
 
-        Sync.run(function(done) {
             var proc = null;
             if (args == null) {
                 proc = ChildProcess.spawn(name, spawnOptions);
             } else {
                 proc = ChildProcess.spawn(name, args, spawnOptions);
             }
-
-            proc.stdout.on('data', function(input) {
-                result.stdout += input.toString();
-                if (!options.mute) {
-                    stdoutWrite(input.toString());
+            proc.unref();
+        }
+        else {
+            // Needed for haxe/haxelib commands
+            /*var originalPATH:String = untyped process.env.PATH;
+            if (originalPATH != null) {
+                spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
+            }*/
+    
+            Sync.run(function(done) {
+                var proc = null;
+                if (args == null) {
+                    proc = ChildProcess.spawn(name, spawnOptions);
+                } else {
+                    proc = ChildProcess.spawn(name, args, spawnOptions);
                 }
+    
+                proc.stdout.on('data', function(input) {
+                    result.stdout += input.toString();
+                    if (!options.mute) {
+                        stdoutWrite(input.toString());
+                    }
+                });
+    
+                proc.stderr.on('data', function(input) {
+                    result.stderr += input.toString();
+                    if (!options.mute) {
+                        stderrWrite(input.toString());
+                    }
+                });
+    
+                proc.on('error', function(err) {
+                    error(err + ' (' + options.cwd + ')');
+                    fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
+                });
+    
+                proc.on('close', function(code) {
+                    result.status = code;
+                    done();
+                });
+    
             });
-
-            proc.stderr.on('data', function(input) {
-                result.stderr += input.toString();
-                if (!options.mute) {
-                    stderrWrite(input.toString());
-                }
-            });
-
-            proc.on('error', function(err) {
-                error(err + ' (' + options.cwd + ')');
-                fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
-            });
-
-            proc.on('close', function(code) {
-                result.status = code;
-                done();
-            });
-
-        });
+        }
 
         return result;
 
