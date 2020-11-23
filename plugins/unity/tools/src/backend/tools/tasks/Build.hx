@@ -145,8 +145,6 @@ class Build extends tools.Task {
 
         if (action == 'run') {
             runHooks(cwd, args, project.app.hooks, 'begin run');
-
-            // Not implemented
         }
 
         // Update unity project

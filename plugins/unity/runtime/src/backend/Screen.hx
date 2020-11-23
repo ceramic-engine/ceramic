@@ -1,5 +1,6 @@
 package backend;
 
+import unityengine.KeyCode as UnityKeyCode;
 import unityengine.Input;
 
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
@@ -77,11 +78,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             emitResize();
         }
 
-        updateInput();
+        updateKeyboardInput();
+        updateMouseInput();
 
     }
 
-/// Input
+/// Keyboard input
+
+    function updateKeyboardInput() {
+
+        
+
+    }
+
+/// Mouse input
 
     var mouseLeftPressed:Bool = false;
 
@@ -93,7 +103,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     var mouseY:Float = -1;
 
-    function updateInput() {
+    function updateMouseInput() {
 
         var newMouseX = Input.mousePosition.x;
         var newMouseY = height - Input.mousePosition.y;
