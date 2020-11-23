@@ -176,9 +176,13 @@ class Setup extends tools.Task {
                 var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project, true);
 
                 //finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/Mono/bin/gmcs'); // Was used for legacy unity
-                finalHxml.push('-D csharp-compiler=$unityEditorPath/Contents/MonoBleedingEdge/bin/mcs');
+                
+                // Not needed if not building a DLL
+                //finalHxml.push('-D csharp-compiler=$unityEditorPath/Contents/MonoBleedingEdge/bin/mcs');
 
                 finalHxml.push('-D net-std=$unityEditorPath/Contents/Mono/lib/mono/unity');
+                //finalHxml.push('-D net-std=$unityEditorPath/Contents/MonoBleedingEdge/lib/mono/2.0-api');
+                //finalHxml.push('-D net-std=$unityEditorPath/Contents/NetStandard/compat/2.0.0/shims/netfx');
                 finalHxml.push('-net-lib=$unityEditorPath/Contents/Managed/UnityEngine.dll');
                 //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll'); // Not needed for compilation
             }
@@ -187,12 +191,13 @@ class Setup extends tools.Task {
             }
 
             finalHxml.push('-D net-ver=20');
+            //finalHxml.push('-D net-target=net');
             finalHxml.push('-D erase-generics');
             if (variant == 'tasks') {
                 finalHxml.push('--macro include("tasks", true)');
             }
         } else {
-            finalHxml.push('-cpp bin');
+            finalHxml.push('-cs bin');
         }
 
         // Save hxml file

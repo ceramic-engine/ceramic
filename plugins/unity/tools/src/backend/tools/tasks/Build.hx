@@ -77,59 +77,29 @@ class Build extends tools.Task {
         var debug = extractArgFlag(args, 'debug');
         if (debug) cmdArgs.push('-debug');
 
-        //cmdArgs.push('--connect');
-        //cmdArgs.push('4061');
+        // Only generate C# files. No DLL compilation
+        cmdArgs.push('-D');
+        cmdArgs.push('no-compilation');
+
+        // Detect if a haxe compilation server is running
+        var haxeServerPort = runningHaxeServerPort();
+        if (haxeServerPort != -1) {
+            cmdArgs.push('--connect');
+            cmdArgs.push('' + haxeServerPort);
+            cmdArgs.push('-D');
+            cmdArgs.push('haxe_server=$haxeServerPort');
+        }
+
+        if (haxeServerPort != -1) {
+            print('Run haxe compiler (server on port $haxeServerPort)');
+        }
+        else {
+            print('Run haxe compiler');
+        }
 
         var status = 0;
-        var hasErrorLog = false;
 
-        Sync.run(function(done) {
-
-            var proc = ChildProcess.spawn(
-                'haxe',
-                cmdArgs,
-                { cwd: hxmlProjectPath }
-            );
-            proc.on('close', function(code:Int) {
-                status = code;
-            });
-
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.pipe(untyped out);
-            out.encoding = 'utf8';
-            out.on('token', function(token) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(hxmlProjectPath, token);
-                stdoutWrite(token + "\n");
-            });
-            out.on('done', function() {
-                done();
-            });
-            out.on('error', function(err) {
-                warning(''+err);
-            });
-
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.pipe(untyped err);
-            err.encoding = 'utf8';
-            err.on('token', function(token) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(hxmlProjectPath, token);
-                stderrWrite(token + "\n");
-            });
-            err.on('error', function(err) {
-                warning(''+err);
-            });
-
-        });
-
-        if (status == 0 && hasErrorLog) {
-            status = 1;
-        }
+        status = haxeWithChecksAndLogs(cmdArgs, {cwd: hxmlProjectPath});
         
         if (status != 0) {
             fail('Error when running unity $action.');
