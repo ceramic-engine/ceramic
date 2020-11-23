@@ -41,6 +41,23 @@ class Project extends tools.Task {
         var dstDllPath = Path.join([unityProjectPath, 'Assets', 'Main.dll']);
         Files.copyIfNeeded(srcDllPath, dstDllPath);
 
+        var run = extractArgFlag(args, 'run');
+
+        if (run) {
+
+            print('Open project with Unity Editor...');
+
+            var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
+            var projectPath = UnityProject.resolveUnityProjectPath(cwd, project);
+
+            // TODO windows
+            var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
+            var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+
+            command(cmd, ['-openfile', ceramicScenePath]);
+
+        }
+
     }
 
 }
