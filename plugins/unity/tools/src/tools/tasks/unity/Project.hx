@@ -34,27 +34,38 @@ class Project extends tools.Task {
         // Create unity project if needed
         UnityProject.createUnityProjectIfNeeded(cwd, project);
 
+        /*
         print('Copy Main.dll');
 
         // Copy dll
         var srcDllPath = Path.join([outTargetPath, 'bin', 'bin', 'Main.dll']);
         var dstDllPath = Path.join([unityProjectPath, 'Assets', 'Main.dll']);
         Files.copyIfNeeded(srcDllPath, dstDllPath);
+        */
 
         var run = extractArgFlag(args, 'run');
 
         if (run) {
 
-            print('Open project with Unity Editor...');
-
-            var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
             var projectPath = UnityProject.resolveUnityProjectPath(cwd, project);
+            var processDir = Path.join([projectPath, 'Temp', 'ProcessJobs']);
+            if (FileSystem.exists(processDir)) {
 
-            // TODO windows
-            var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
-            var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+                print('Project seems already open with Unity Editor');
 
-            command(cmd, ['-openfile', ceramicScenePath]);
+            }
+            else {
+
+                print('Open project with Unity Editor...');
+    
+                var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
+    
+                // TODO windows
+                var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
+                var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+    
+                command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+            }
 
         }
 
