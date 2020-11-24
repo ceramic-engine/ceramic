@@ -55,9 +55,9 @@ class Project extends tools.Task {
             var processDir = Path.join([projectPath, 'Temp', 'ProcessJobs']);
             if (FileSystem.exists(processDir)) {
 
-                print('Project seems already open with Unity Editor');
-
                 if (os == 'Mac') {
+
+                    print('Open project with Unity Editor...');
 
                     Sync.run(function(done) {
 

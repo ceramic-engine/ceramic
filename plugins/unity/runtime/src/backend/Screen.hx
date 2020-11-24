@@ -77,16 +77,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             emitResize();
         }
 
-        updateKeyboardInput();
         updateMouseInput();
-
-    }
-
-/// Keyboard input
-
-    function updateKeyboardInput() {
-
-        
 
     }
 

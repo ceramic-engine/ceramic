@@ -10,9 +10,13 @@ class Main {
 
     public static var unityObject:Dynamic = null;
 
-    public static function setUnityObject(unityObject:Dynamic):Void {
+    public static function sync(unityObject:Dynamic):Void {
 
         Main.unityObject = unityObject;
+
+        if (ceramic.App.app == null || ceramic.App.app.backend == null) {
+            main();
+        }
 
     }
 
