@@ -1,6 +1,5 @@
 package backend;
 
-import unityengine.KeyCode as UnityKeyCode;
 import unityengine.Input;
 
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {

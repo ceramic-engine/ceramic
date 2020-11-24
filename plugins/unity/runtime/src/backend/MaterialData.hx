@@ -152,6 +152,7 @@ class MaterialData {
     public static function blendingToUnityBlending(blending:backend.BlendMode):unityengine.rendering.BlendMode {
 
         return switch blending {
+
             case ZERO:
                 unityengine.rendering.BlendMode.Zero;
             case ONE:
@@ -174,6 +175,10 @@ class MaterialData {
                 unityengine.rendering.BlendMode.OneMinusDstColor;
             case SRC_ALPHA_SATURATE:
                 unityengine.rendering.BlendMode.SrcAlphaSaturate;
+
+            // Only needed to avoid compiled code to return null in function and let C# compiler screem
+            default:
+                unityengine.rendering.BlendMode.Zero;
         }
 
     }

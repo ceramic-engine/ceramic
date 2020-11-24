@@ -183,7 +183,7 @@ class Setup extends tools.Task {
                 finalHxml.push('-D net-std=$unityEditorPath/Contents/Mono/lib/mono/unity');
                 //finalHxml.push('-D net-std=$unityEditorPath/Contents/MonoBleedingEdge/lib/mono/2.0-api');
                 //finalHxml.push('-D net-std=$unityEditorPath/Contents/NetStandard/compat/2.0.0/shims/netfx');
-                finalHxml.push('-net-lib=$unityEditorPath/Contents/Managed/UnityEngine.dll');
+                //finalHxml.push('-net-lib=$unityEditorPath/Contents/Managed/UnityEngine.dll');
                 //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll'); // Not needed for compilation
             }
             else {

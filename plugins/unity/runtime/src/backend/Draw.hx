@@ -2,7 +2,6 @@ package backend;
 
 import unityengine.rendering.SubMeshDescriptor;
 import cs.types.UInt16;
-import unityengine.Vector2Int;
 import unityengine.Mesh;
 import unityengine.Color;
 import unityengine.Vector2;
