@@ -7,6 +7,7 @@ import haxe.io.Path;
 import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
+import npm.AppleScript;
 
 using StringTools;
 
@@ -42,10 +43,13 @@ class Project extends tools.Task {
         var dstDllPath = Path.join([unityProjectPath, 'Assets', 'Main.dll']);
         Files.copyIfNeeded(srcDllPath, dstDllPath);
         */
+        print('Export script files...');
+        UnityCSharp.exportScriptFilesToProject(cwd, project);
 
         var run = extractArgFlag(args, 'run');
 
         if (run) {
+            var os = Sys.systemName();
 
             var projectPath = UnityProject.resolveUnityProjectPath(cwd, project);
             var processDir = Path.join([projectPath, 'Temp', 'ProcessJobs']);
@@ -53,18 +57,41 @@ class Project extends tools.Task {
 
                 print('Project seems already open with Unity Editor');
 
+                if (os == 'Mac') {
+
+                    Sync.run(function(done) {
+
+                        var script = '
+                            activate application "Unity"
+                            tell application "Unity"
+                                open "$unityProjectPath"
+                            end tell
+';
+        
+                        AppleScript.execString(script, function(err, rtn) {
+                            if (err != null) {
+                                fail(''+err);
+                            }
+                            done();
+                        });
+                    });
+                }
+
             }
             else {
 
-                print('Open project with Unity Editor...');
-    
-                var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
-    
                 // TODO windows
-                var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
-                var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
-    
-                command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+                if (os == 'Mac') {
+
+                    print('Open project with Unity Editor...');
+        
+                    var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
+        
+                    var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
+                    var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+        
+                    command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+                }
             }
 
         }
