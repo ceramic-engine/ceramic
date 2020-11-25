@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.Key;
 import ceramic.KeyCode;
 import ceramic.ScanCode;
 import unityengine.inputsystem.Keyboard;
@@ -249,6 +250,72 @@ class Backend implements tracker.Events implements spec.Backend {
                 keyCode: keyCode != null ? keyCode : KeyCode.UNKNOWN,
                 scanCode: scanCode
             });
+        }
+
+    }
+
+    function willEmitKeyDown(key:Key) {
+
+        // Keyboard input could have been handled at ceramic cross-platform api level,
+        // but it looks more like implementation details that could vary
+        // depending on the backend so let's keep it in backend code
+
+        var scanCode = key.scanCode;
+
+        if (scanCode == ScanCode.BACKSPACE) {
+            // Backspace
+            ceramic.App.app.textInput.backspace();
+        }
+        else if (scanCode == ScanCode.SPACE) {
+            // Space
+            ceramic.App.app.textInput.space();
+        }
+        else if (scanCode == ScanCode.ENTER) {
+            // Enter
+            ceramic.App.app.textInput.enter();
+        }
+        else if (scanCode == ScanCode.ESCAPE) {
+            // Escape
+            ceramic.App.app.textInput.escape();
+        }
+        else if (scanCode == ScanCode.LEFT) {
+            // Left
+            ceramic.App.app.textInput.moveLeft();
+        }
+        else if (scanCode == ScanCode.RIGHT) {
+            // Right
+            ceramic.App.app.textInput.moveRight();
+        }
+        else if (scanCode == ScanCode.UP) {
+            // Up
+            ceramic.App.app.textInput.moveUp();
+        }
+        else if (scanCode == ScanCode.DOWN) {
+            // Down
+            ceramic.App.app.textInput.moveDown();
+        }
+        else if (scanCode == ScanCode.LSHIFT) {
+            // Left Shift
+            ceramic.App.app.textInput.lshiftDown();
+        }
+        else if (scanCode == ScanCode.RSHIFT) {
+            // Right Shift
+            ceramic.App.app.textInput.rshiftDown();
+        }
+
+    }
+
+    function willEmitKeyUp(key:Key) {
+
+        var scanCode = key.scanCode;
+
+        if (scanCode == ScanCode.LSHIFT) {
+            // Left Shift
+            ceramic.App.app.textInput.lshiftUp();
+        }
+        else if (scanCode == ScanCode.RSHIFT) {
+            // Right Shift
+            ceramic.App.app.textInput.rshiftUp();
         }
 
     }

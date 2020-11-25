@@ -32,7 +32,9 @@ class TextInput implements Events {
 
     var explicitPosLine:Int = 0;
 
-    var shiftPressed:Bool = false;
+    var lshiftPressed:Bool = false;
+
+    var rshiftPressed:Bool = false;
 
     var invertedSelection:Bool = false;
 
@@ -198,7 +200,7 @@ class TextInput implements Events {
 
         if (!allowMovingCursor) return;
 
-        if (shiftPressed) {
+        if (lshiftPressed || rshiftPressed) {
             if (invertedSelection) {
                 if (selectionStart > 0) {
                     selectionStart--;
@@ -252,7 +254,7 @@ class TextInput implements Events {
 
         if (!allowMovingCursor) return;
 
-        if (shiftPressed) {
+        if (lshiftPressed || rshiftPressed) {
             #if (haxe_ver >= 4)
             var textLength = text.length;
             #else
@@ -313,7 +315,7 @@ class TextInput implements Events {
 
         if (!allowMovingCursor) return;
 
-        if (shiftPressed) {
+        if (lshiftPressed || rshiftPressed) {
             var startLine = lineForPos(selectionStart);
             var endLine = lineForPos(selectionEnd);
             if (!invertedSelection && endLine > startLine) {
@@ -379,7 +381,7 @@ class TextInput implements Events {
         var textLength = text.uLength();
         #end
 
-        if (shiftPressed) {
+        if (lshiftPressed || rshiftPressed) {
             var startLine = lineForPos(selectionStart);
             var endLine = lineForPos(selectionEnd);
             if (!invertedSelection) {
@@ -484,15 +486,27 @@ class TextInput implements Events {
 
     }
 
-    public function shiftDown():Void {
+    public function lshiftDown():Void {
 
-        shiftPressed = true;
+        lshiftPressed = true;
 
     }
 
-    public function shiftUp():Void {
+    public function lshiftUp():Void {
 
-        shiftPressed = false;
+        lshiftPressed = false;
+
+    }
+
+    public function rshiftDown():Void {
+
+        rshiftPressed = true;
+
+    }
+
+    public function rshiftUp():Void {
+
+        rshiftPressed = false;
 
     }
 
