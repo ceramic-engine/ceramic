@@ -122,12 +122,19 @@ class Backend implements tracker.Events implements spec.Backend {
 
     function updateKeyboardInput() {
 
+        // Codes from: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/api/UnityEngine.InputSystem.Key.html
+
         var keyboard = Keyboard.current;
-        if (keyboard != null) {
+        if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame)) {
+            
             testKey(keyboard, 1, ScanCode.SPACE, KeyCode.SPACE);
             
             testKey(keyboard, 2, ScanCode.ENTER, KeyCode.ENTER);
             testKey(keyboard, 3, ScanCode.TAB, KeyCode.TAB);
+
+            // We don't provide keyCode when it depends on current keyboard layout.
+            // It will be resolved when event is triggered using KeyControl.displayName
+
             testKey(keyboard, 4, ScanCode.GRAVE);
             testKey(keyboard, 5, ScanCode.APOSTROPHE);
             testKey(keyboard, 6, ScanCode.SEMICOLON);
@@ -147,10 +154,61 @@ class Backend implements tracker.Events implements spec.Backend {
                 scanCode++;
             }
 
-            testKey(keyboard, 51, ScanCode.LSHIFT);
-            testKey(keyboard, 52, ScanCode.RSHIFT);
-            testKey(keyboard, 53, ScanCode.LALT);
-            testKey(keyboard, 54, ScanCode.RALT);
+            testKey(keyboard, 51, ScanCode.LSHIFT, KeyCode.LSHIFT);
+            testKey(keyboard, 52, ScanCode.RSHIFT, KeyCode.RSHIFT);
+            testKey(keyboard, 53, ScanCode.LALT, KeyCode.LALT);
+            testKey(keyboard, 54, ScanCode.RALT, KeyCode.RALT);
+            testKey(keyboard, 55, ScanCode.LCTRL, KeyCode.LCTRL);
+            testKey(keyboard, 56, ScanCode.RCTRL, KeyCode.RCTRL);
+            testKey(keyboard, 57, ScanCode.LMETA, KeyCode.LMETA);
+            testKey(keyboard, 58, ScanCode.RMETA, KeyCode.RMETA);
+            testKey(keyboard, 59, ScanCode.MENU, KeyCode.MENU);
+            testKey(keyboard, 60, ScanCode.ESCAPE, KeyCode.ESCAPE);
+            testKey(keyboard, 61, ScanCode.LEFT, KeyCode.LEFT);
+            testKey(keyboard, 62, ScanCode.RIGHT, KeyCode.RIGHT);
+            testKey(keyboard, 63, ScanCode.UP, KeyCode.UP);
+            testKey(keyboard, 64, ScanCode.DOWN, KeyCode.DOWN);
+            testKey(keyboard, 65, ScanCode.BACKSPACE, KeyCode.BACKSPACE);
+            testKey(keyboard, 66, ScanCode.PAGEDOWN, KeyCode.PAGEDOWN);
+            testKey(keyboard, 67, ScanCode.PAGEUP, KeyCode.PAGEUP);
+            testKey(keyboard, 68, ScanCode.HOME, KeyCode.HOME);
+            testKey(keyboard, 69, ScanCode.END, KeyCode.END);
+            testKey(keyboard, 70, ScanCode.INSERT, KeyCode.INSERT);
+            testKey(keyboard, 71, ScanCode.DELETE, KeyCode.DELETE);
+            testKey(keyboard, 72, ScanCode.CAPSLOCK, KeyCode.CAPSLOCK);
+            testKey(keyboard, 73, ScanCode.NUMLOCKCLEAR, KeyCode.NUMLOCKCLEAR);
+            testKey(keyboard, 74, ScanCode.PRINTSCREEN, KeyCode.PRINTSCREEN);
+            testKey(keyboard, 75, ScanCode.SCROLLLOCK, KeyCode.SCROLLLOCK);
+            testKey(keyboard, 76, ScanCode.PAUSE, KeyCode.PAUSE);
+            testKey(keyboard, 77, ScanCode.KP_ENTER, KeyCode.KP_ENTER);
+            testKey(keyboard, 78, ScanCode.KP_DIVIDE, KeyCode.KP_DIVIDE);
+            testKey(keyboard, 79, ScanCode.KP_MULTIPLY, KeyCode.KP_MULTIPLY);
+            testKey(keyboard, 80, ScanCode.KP_PLUS, KeyCode.KP_PLUS);
+            testKey(keyboard, 81, ScanCode.KP_MINUS, KeyCode.KP_MINUS);
+            testKey(keyboard, 82, ScanCode.KP_PERIOD, KeyCode.KP_PERIOD);
+            testKey(keyboard, 83, ScanCode.KP_EQUALS, KeyCode.KP_EQUALS);
+            testKey(keyboard, 84, ScanCode.KP_0, KeyCode.KP_0);
+            testKey(keyboard, 85, ScanCode.KP_1, KeyCode.KP_1);
+            testKey(keyboard, 86, ScanCode.KP_2, KeyCode.KP_2);
+            testKey(keyboard, 87, ScanCode.KP_3, KeyCode.KP_3);
+            testKey(keyboard, 88, ScanCode.KP_4, KeyCode.KP_4);
+            testKey(keyboard, 89, ScanCode.KP_5, KeyCode.KP_5);
+            testKey(keyboard, 90, ScanCode.KP_6, KeyCode.KP_6);
+            testKey(keyboard, 91, ScanCode.KP_7, KeyCode.KP_7);
+            testKey(keyboard, 92, ScanCode.KP_8, KeyCode.KP_8);
+            testKey(keyboard, 93, ScanCode.KP_9, KeyCode.KP_9);
+            testKey(keyboard, 94, ScanCode.F1, KeyCode.F1);
+            testKey(keyboard, 95, ScanCode.F2, KeyCode.F2);
+            testKey(keyboard, 96, ScanCode.F3, KeyCode.F3);
+            testKey(keyboard, 97, ScanCode.F4, KeyCode.F4);
+            testKey(keyboard, 98, ScanCode.F5, KeyCode.F5);
+            testKey(keyboard, 99, ScanCode.F6, KeyCode.F6);
+            testKey(keyboard, 100, ScanCode.F7, KeyCode.F7);
+            testKey(keyboard, 101, ScanCode.F8, KeyCode.F8);
+            testKey(keyboard, 102, ScanCode.F9, KeyCode.F9);
+            testKey(keyboard, 103, ScanCode.F10, KeyCode.F10);
+            testKey(keyboard, 104, ScanCode.F11, KeyCode.F11);
+            testKey(keyboard, 105, ScanCode.F12, KeyCode.F12);
         }
 
     }
