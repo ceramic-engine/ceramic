@@ -8,8 +8,6 @@ using StringTools;
 
 class Textures implements spec.Textures {
 
-    var imageExtensions:Array<String> = null;
-
     public function new() {}
 
     public function load(path:String, ?options:backend.LoadTextureOptions, _done:Texture->Void):Void {
@@ -245,6 +243,8 @@ class Textures implements spec.Textures {
     }
 
 /// Internal
+
+    var imageExtensions:Array<String> = null;
 
     var loadingTextureCallbacks:Map<String,Array<Texture->Void>> = new Map();
 
