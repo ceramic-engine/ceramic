@@ -12,8 +12,6 @@ extern class Texture2D extends Texture {
 
     var filterMode:FilterMode;
 
-    function GetInstanceID():Int;
-
     function SetPixelData(data:NativeArray<UInt8>, mipLevel:Int, sourceDataStartIndex:Int):Void;
 
     function Apply(updateMipmaps:Bool, makeNoLongerReadable:Bool):Void;
