@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.Path;
+import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -17,29 +18,83 @@ class Audio implements spec.Audio {
 
 /// Public API
 
-    public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
+    public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
+
+        var done = function(resource:AudioResource) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(resource);
+                _done = null;
+            });
+        };
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
-
-        // Remove ?something in path
-        var cleanedPath = path;
-        var questionMarkIndex = cleanedPath.indexOf('?');
-        if (questionMarkIndex != -1) {
-            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        
+        // Is resource already loaded?
+        if (loadedAudioResources.exists(path)) {
+            loadedAudioRetainCount.set(path, loadedAudioRetainCount.get(path) + 1);
+            var existing = loadedAudioResources.get(path);
+            done(existing);
+            return;
         }
 
-        Luxe.resources.load_audio(cleanedPath, {
-            is_stream: options != null ? options.stream : false
-        })
-        .then(function(audio:AudioResource) {
-            done(audio);
-        },
-        function(_) {
-            done(null);
-        });
+        // Is resource currently loading?
+        if (loadingAudioCallbacks.exists(path)) {
+            // Yes, just bind it
+            loadingAudioCallbacks.get(path).push(function(resource:AudioResource) {
+                if (resource != null) {
+                    var retain = loadedAudioRetainCount.exists(path) ? loadedAudioRetainCount.get(path) : 0;
+                    loadedAudioRetainCount.set(path, retain + 1);
+                }
+                done(resource);
+            });
+            return;
+        }
+
+        // Create callbacks list with first entry
+        loadingAudioCallbacks.set(path, [function(resource:AudioResource) {
+            if (resource != null) {
+                var retain = loadedAudioRetainCount.exists(path) ? loadedAudioRetainCount.get(path) : 0;
+                loadedAudioRetainCount.set(path, retain + 1);
+            }
+            done(resource);
+        }]);
+
+        // Load
+        function doLoad() {
+
+            // Remove ?something in path
+            var cleanedPath = path;
+            var questionMarkIndex = cleanedPath.indexOf('?');
+            if (questionMarkIndex != -1) {
+                cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+            }
+
+            Luxe.resources.load_audio(cleanedPath, {
+                is_stream: options != null ? options.stream : false
+            })
+            .then(function(audio:AudioResource) {
+                // Success
+                loadedAudioResources.set(path, audio);
+                var callbacks = loadingAudioCallbacks.get(path);
+                loadingAudioCallbacks.remove(path);
+                for (callback in callbacks) {
+                    callback(audio);
+                }
+            },
+            function(_) {
+                // Failure
+                var callbacks = loadingAudioCallbacks.get(path);
+                loadingAudioCallbacks.remove(path);
+                for (callback in callbacks) {
+                    callback(null);
+                }
+            });
+        }
+
+        doLoad();
 
     }
 
@@ -82,7 +137,25 @@ class Audio implements spec.Audio {
 
     inline public function destroy(audio:AudioResource):Void {
 
-        (audio:luxe.resource.Resource.AudioResource).destroy(true);
+        var id:String = null;
+        for (key => val in loadedAudioResources) {
+            if (val == audio) {
+                id = key;
+            }
+        }
+        if (id == null) {
+            log.error('Failed to destroy audio resource: $audio because id could not be resolved');
+        }
+        else {
+            if (loadedAudioRetainCount.get(id) > 1) {
+                loadedAudioRetainCount.set(id, loadedAudioRetainCount.get(id) - 1);
+            }
+            else {
+                loadedAudioResources.remove(id);
+                loadedAudioRetainCount.remove(id);
+                (audio:luxe.resource.Resource.AudioResource).destroy(true);
+            }
+        }
 
     }
 
@@ -357,5 +430,13 @@ class Audio implements spec.Audio {
 #end
 
     }
+
+/// Internal
+
+    var loadingAudioCallbacks:Map<String,Array<AudioResource->Void>> = new Map();
+
+    var loadedAudioResources:Map<String,AudioResource> = new Map();
+
+    var loadedAudioRetainCount:Map<String,Int> = new Map();
 
 } //Audio
