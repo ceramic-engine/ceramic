@@ -33,11 +33,11 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 ## Available backends
 
-At the moment, the only available backend is `luxe` (a stripped-down version of [luxe engine alpha](https://luxeengine.com/alpha/) written in `Haxe`, specifically edited for ceramic).
+- Current default backend is `luxe` (using OpenGL/WebGL some parts of [luxe engine alpha](https://luxeengine.com/alpha/) written in `Haxe`, specifically edited and maintained for ceramic). It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL). Internal parts depending on _luxe alpha_ may eventually be replaced by more tailored code in the future, and platform support improved either by using [ANGLE](https://github.com/google/angle) or an API like [sokol](https://github.com/floooh/sokol).
 
-It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL).
+- A `headless` backend allows to run ceramic as a server/cli app (via C++ or Node.js).
 
-More backends may be implemented in the future.
+- A `unity` backend is currently under development, which allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
 
 ## Credits
 
