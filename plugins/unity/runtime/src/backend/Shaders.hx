@@ -48,7 +48,7 @@ class Shaders implements spec.Shaders {
 
     inline public function destroy(shader:Shader):Void {
 
-        untyped __cs__('UnityEngine.Resources.UnloadAsset((UnityEngine.Shader){0})', (shader:ShaderImpl).unityShader);
+        // Shaders don't need to be unloaded
 
     }
 
