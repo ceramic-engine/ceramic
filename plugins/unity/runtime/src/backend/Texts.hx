@@ -31,12 +31,35 @@ class Texts implements spec.Texts {
             done(null);
             return;
         }
+
+        // Is text currently loading?
+        if (loadingTextCallbacks.exists(path)) {
+            // Yes, just bind it
+            loadingTextCallbacks.get(path).push(function(text:String) {
+                done(text);
+            });
+            return;
+        }
+        else {
+            // Add loading callbacks array
+            loadingTextCallbacks.set(path, []);
+        }
         
         var textFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', path);
 
         if (textFile == null) {
             ceramic.App.app.logger.error('Failed to load text file at path: $path');
-            done(null);
+            var callbacks = loadingTextCallbacks.get(path);
+            if (callbacks != null) {
+                loadingTextCallbacks.remove(path);
+                done(null);
+                for (callback in callbacks) {
+                    callback(null);
+                }
+            }
+            else {
+                done(null);
+            }
             return;
         }
 
@@ -44,7 +67,17 @@ class Texts implements spec.Texts {
         untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', textFile);
         textFile = null;
 
-        done(text);
+        var callbacks = loadingTextCallbacks.get(path);
+        if (callbacks != null) {
+            loadingTextCallbacks.remove(path);
+            done(text);
+            for (callback in callbacks) {
+                callback(text);
+            }
+        }
+        else {
+            done(text);
+        }
 
     }
 
@@ -53,5 +86,9 @@ class Texts implements spec.Texts {
         return false;
 
     }
+
+/// Internal
+
+    var loadingTextCallbacks:Map<String,Array<String->Void>> = new Map();
 
 } //Textures
