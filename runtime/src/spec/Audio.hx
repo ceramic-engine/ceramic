@@ -12,6 +12,8 @@ interface Audio {
 
     function getDuration(audio:AudioResource):Float;
 
+    function resumeAudioContext(done:Bool->Void):Void;
+
     function destroy(audio:AudioResource):Void;
 
     function mute(audio:AudioResource):AudioHandle;

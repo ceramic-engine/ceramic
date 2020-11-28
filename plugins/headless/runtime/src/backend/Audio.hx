@@ -30,6 +30,12 @@ class Audio implements spec.Audio {
         
     }
 
+    inline public function resumeAudioContext(done:Bool->Void):Void {
+
+        done(true);
+        
+    }
+
     inline public function destroy(audio:AudioResource):Void {
 
         //
