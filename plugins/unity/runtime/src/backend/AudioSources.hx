@@ -1,6 +1,5 @@
 package backend;
 
-import ceramic.Timer;
 import unityengine.AudioSource;
 
 #if ceramic_unity_debug_audiosource
@@ -8,8 +7,6 @@ import ceramic.Assert.assert;
 #end
 
 import unityengine.GameObject;
-
-import ceramic.Shortcuts.*;
 
 class AudioSources {
 
@@ -31,10 +28,6 @@ class AudioSources {
     public function new(gameObject:GameObject) {
 
         this.gameObject = gameObject;
-
-        Timer.interval(null, 1.0, function() {
-            log.info('CHECK AUDIO SOURCES all=${all.length} pool=${pool.length}');
-        });
 
     }
 
