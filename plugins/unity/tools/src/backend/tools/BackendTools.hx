@@ -149,7 +149,9 @@ class BackendTools implements tools.spec.BackendTools {
             'vert' => true,
             'frag' => true,
             'fnt' => true,
-            'json' => true
+            'json' => true,
+            'csv' => true,
+            'atlas' => true
         ];
 
         var newAssets:Array<tools.Asset> = [];
