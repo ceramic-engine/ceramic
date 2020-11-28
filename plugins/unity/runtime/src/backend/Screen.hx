@@ -1,6 +1,6 @@
 package backend;
 
-import unityengine.Input;
+import unityengine.inputsystem.Mouse;
 
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
@@ -95,12 +95,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     function updateMouseInput() {
 
-        var newMouseX = Input.mousePosition.x;
-        var newMouseY = height - Input.mousePosition.y;
+        var mouse = Mouse.current;
+
+        var newMouseX = mouse.position.x.ReadValue();
+        var newMouseY = height - mouse.position.y.ReadValue();
 
         // Use a factor to try to get a consistent value with other targets
-        var mouseScrollX = Math.floor(Input.mouseScrollDelta.x * 8);
-        var mouseScrollY = Math.floor(Input.mouseScrollDelta.y * 8);
+        var mouseScrollX = Math.floor(mouse.scroll.x.ReadValue());
+        var mouseScrollY = Math.floor(mouse.scroll.y.ReadValue());
 
         if (mouseScrollX != 0 || mouseScrollY != 0) {
             emitMouseWheel(mouseScrollX, mouseScrollY);
@@ -112,7 +114,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             emitMouseMove(mouseX, mouseY);
         }
 
-        if (Input.GetMouseButton(0)) {
+        if (mouse.leftButton.isPressed) {
             if (!mouseLeftPressed) {
                 mouseLeftPressed = true;
                 emitMouseDown(1, mouseX, mouseY);
@@ -125,20 +127,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             }
         }
 
-        if (Input.GetMouseButton(2)) {
+        if (mouse.middleButton.isPressed) {
             if (!mouseMiddlePressed) {
                 mouseMiddlePressed = true;
-                emitMouseDown(1, mouseX, mouseY);
+                emitMouseDown(2, mouseX, mouseY);
             }
         }
         else {
             if (mouseMiddlePressed) {
                 mouseMiddlePressed = false;
-                emitMouseUp(1, mouseX, mouseY);
+                emitMouseUp(2, mouseX, mouseY);
             }
         }
 
-        if (Input.GetMouseButton(1)) {
+        if (mouse.rightButton.isPressed) {
             if (!mouseRightPressed) {
                 mouseRightPressed = true;
                 emitMouseDown(3, mouseX, mouseY);
