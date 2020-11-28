@@ -67,6 +67,9 @@ class IosProject {
             if (project.app.company != null) {
                 replacementsInContents['My Company'] = project.app.company;
             }
+            else if (project.app.author != null) {
+                replacementsInContents['My Company'] = project.app.author;
+            }
             replacementsInContents['mycompany.MyApp'] = Reflect.field(project.app, 'package');
             replacementsInContents['MyApp'] = project.app.name;
             replacementsInContents['My App'] = project.app.displayName;

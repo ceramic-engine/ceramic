@@ -16,7 +16,7 @@ class Templates {
 
     public static function replaceInContents(path:String, replacements:Map<String,String>):Void {
 
-        var projectPath = context.cwd;
+        var projectPath = path;
 
         // Perform content replaces
         //
@@ -62,7 +62,7 @@ class Templates {
 
     public static function replaceInNames(path:String, replacements:Map<String,String>):Void {
 
-        var projectPath = context.cwd;
+        var projectPath = path;
 
         // Perform file/directory renames
         //
