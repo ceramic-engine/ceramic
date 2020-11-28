@@ -21,6 +21,7 @@ class Vscode extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
 
         var force = extractArgFlag(args, 'force');
+        var updateTasks = extractArgFlag(args, 'update-tasks');
         var settingsOnly = extractArgFlag(args, 'settings-only');
         var vscodeProjectRoot = extractArgValue(args, 'vscode-project-root');
         var vscodeDir = vscodeProjectRoot != null ? vscodeProjectRoot : Path.join([cwd, '.vscode']);
@@ -35,7 +36,7 @@ class Vscode extends tools.Task {
             backends.push(aBackend);
         }
 
-        if (!force && !settingsOnly) {
+        if (!force && !settingsOnly && !updateTasks) {
             if (FileSystem.exists(Path.join([vscodeDir, 'tasks.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'tasks-chooser.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'settings.json']))) {
@@ -74,12 +75,39 @@ class Vscode extends tools.Task {
                 }
             }
 
-            // Save tasks-chooser.json
-            //
-            if (!FileSystem.exists(vscodeDir)) {
-                FileSystem.createDirectory(vscodeDir);
+            var tasksChooserPath = Path.join([vscodeDir, 'tasks-chooser.json']);
+            if (updateTasks && FileSystem.exists(tasksChooserPath)) {
+                // Update existing tasks-chooser.json
+                // (add new entries only)
+                var existing = Json.parse(File.getContent(tasksChooserPath));
+                var items:Array<Dynamic> = existing.items;
+                var newItems:Array<Dynamic> = chooser.items;
+
+                // Record all used names
+                var usedNames:Map<String,Bool> = new Map();
+                for (item in items) {
+                    usedNames.set(item.displayName, true);
+                }
+
+                // Then add new items with new names
+                for (newItem in newItems) {
+                    if (!usedNames.exists(newItem.displayName)) {
+                        usedNames.set(newItem.displayName, true);
+                        items.push(newItem);
+                    }
+                }
+
+                // Save result
+                File.saveContent(tasksChooserPath, Json.stringify(existing, null, '    '));
             }
-            File.saveContent(Path.join([vscodeDir, 'tasks-chooser.json']), Json.stringify(chooser, null, '    '));
+            else {
+                // Save tasks-chooser.json
+                //
+                if (!FileSystem.exists(vscodeDir)) {
+                    FileSystem.createDirectory(vscodeDir);
+                }
+                File.saveContent(tasksChooserPath, Json.stringify(chooser, null, '    '));
+            }
 
             // Save tasks.json
             //

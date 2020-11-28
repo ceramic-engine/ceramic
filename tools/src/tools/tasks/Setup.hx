@@ -61,6 +61,17 @@ class Setup extends tools.Task {
             // Get and run backend's setup task
             context.backend.runSetup(cwd, args, target, context.variant);
 
+            // Update tasks?
+            if (extractArgFlag(args, 'vscode')) {
+    
+                var task = new Vscode();
+    
+                var taskArgs = ['--backend', context.backend.name, '--update-tasks'];
+    
+                task.run(cwd, taskArgs);
+    
+            }
+
         }
         /*else {
 
