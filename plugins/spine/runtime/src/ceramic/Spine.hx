@@ -1901,7 +1901,7 @@ class Spine extends Visual {
             var bindList = values.get(i);
             if (bindList != null) {
                 for (b in 0...bindList.length) {
-                    var bindItem = bindList.unsafeGet(b);
+                    var bindItem:BindSlot = bindList.unsafeGet(b);
                     if (bindItem.toLocalSlot > 0 && boundChildSlots.get(bindItem.toLocalSlot) == null) {
                         boundChildSlots.set(bindItem.toLocalSlot, bindItem);
                     }
