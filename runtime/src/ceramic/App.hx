@@ -555,7 +555,7 @@ class App extends Entity {
                                 var entryClass = Type.resolveClass(collectionInfo.type);
 
                                 for (item in data) {
-                                    var instance:CollectionEntry = Type.createInstance(entryClass, []);
+                                    var instance:CollectionEntry = Type.createInstance(entryClass, [null, null]);
                                     instance.setRawData(item);
                                     collection.push(instance);
                                 }
