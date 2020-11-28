@@ -17,7 +17,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     public var name(default,null):String = 'unity';
 
-    public var defaultTarget(default,null):String = null;
+    public var defaultTarget(default,null):String = 'unity';
 
     public function new() {}
 

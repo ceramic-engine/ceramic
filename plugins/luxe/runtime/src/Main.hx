@@ -455,7 +455,7 @@ class Main extends luxe.Game {
 
     override function onkeydown(event:KeyEvent) {
 
-        ceramic.App.app.backend.emitKeyDown({
+        @:privateAccess ceramic.App.app.backend.input.emitKeyDown({
             keyCode: event.keycode,
             scanCode: event.scancode
         });
@@ -464,7 +464,7 @@ class Main extends luxe.Game {
 
     override function onkeyup(event:KeyEvent) {
 
-        ceramic.App.app.backend.emitKeyUp({
+        @:privateAccess ceramic.App.app.backend.input.emitKeyUp({
             keyCode: event.keycode,
             scanCode: event.scancode
         });
@@ -532,10 +532,10 @@ class Main extends luxe.Game {
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            ceramic.App.app.backend.emitControllerEnable(id, name);
+            @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        ceramic.App.app.backend.emitControllerAxis(id, event.axis, event.value);
+        @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, event.axis, event.value);
 
     }
 
@@ -545,10 +545,10 @@ class Main extends luxe.Game {
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            ceramic.App.app.backend.emitControllerEnable(id, name);
+            @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        ceramic.App.app.backend.emitControllerDown(id, event.button);
+        @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, event.button);
 
     }
 
@@ -558,10 +558,10 @@ class Main extends luxe.Game {
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            ceramic.App.app.backend.emitControllerEnable(id, name);
+            @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        ceramic.App.app.backend.emitControllerUp(id, event.button);
+        @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, event.button);
 
     }
 
@@ -570,10 +570,10 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (event.type == GamepadEventType.device_removed) {
             if (activeControllers.exists(id)) {
-                ceramic.App.app.backend.emitControllerDisable(id);
+                @:privateAccess ceramic.App.app.backend.input.emitControllerDisable(id);
                 activeControllers.remove(id);
                 removedControllers.set(id, true);
-                ceramic.App.app.onceUpdate(null, function(_) {
+                @:privateAccess ceramic.App.app.onceUpdate(null, function(_) {
                     removedControllers.remove(id);
                 });
             }
@@ -583,7 +583,7 @@ class Main extends luxe.Game {
                 activeControllers.set(id, true);
                 removedControllers.remove(id);
                 var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-                ceramic.App.app.backend.emitControllerEnable(id, name);
+                @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
             }
         }
 

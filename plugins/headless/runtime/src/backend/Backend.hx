@@ -24,6 +24,8 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public var http(default,null) = new backend.Http();
 
+    public var input(default,null) = new backend.Input();
+
     public var textInput(default,null) = new backend.TextInput();
 
     public var clipboard(default,null) = new backend.Clipboard();
@@ -39,15 +41,6 @@ class Backend implements tracker.Events implements spec.Backend {
     @event function ready();
 
     @event function update(delta:Float);
-
-    @event function keyDown(key:ceramic.Key);
-    @event function keyUp(key:ceramic.Key);
-
-    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
-    @event function controllerDown(controllerId:Int, buttonId:Int);
-    @event function controllerUp(controllerId:Int, buttonId:Int);
-    @event function controllerEnable(controllerId:Int, name:String);
-    @event function controllerDisable(controllerId:Int);
 
 /// Internal update logic
 

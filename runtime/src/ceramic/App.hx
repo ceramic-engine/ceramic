@@ -617,29 +617,29 @@ class App extends Entity {
 
         // Forward key events
         //
-        backend.onKeyDown(this, function(key) {
+        backend.input.onKeyDown(this, function(key) {
             beginUpdateCallbacks.push(function() {
                 input.emitKeyDown(key);
             });
         });
-        backend.onKeyUp(this, function(key) {
+        backend.input.onKeyUp(this, function(key) {
             beginUpdateCallbacks.push(function() input.emitKeyUp(key));
         });
 
         // Forward controller events
-        backend.onControllerEnable(this, function(controllerId, name) {
+        backend.input.onControllerEnable(this, function(controllerId, name) {
             beginUpdateCallbacks.push(function() input.emitControllerEnable(controllerId, name));
         });
-        backend.onControllerDisable(this, function(controllerId) {
+        backend.input.onControllerDisable(this, function(controllerId) {
             beginUpdateCallbacks.push(function() input.emitControllerDisable(controllerId));
         });
-        backend.onControllerDown(this, function(controllerId, buttonId) {
+        backend.input.onControllerDown(this, function(controllerId, buttonId) {
             beginUpdateCallbacks.push(function() input.emitControllerDown(controllerId, buttonId));
         });
-        backend.onControllerUp(this, function(controllerId, buttonId) {
+        backend.input.onControllerUp(this, function(controllerId, buttonId) {
             beginUpdateCallbacks.push(function() input.emitControllerUp(controllerId, buttonId));
         });
-        backend.onControllerAxis(this, function(controllerId, axisId, value) {
+        backend.input.onControllerAxis(this, function(controllerId, axisId, value) {
             beginUpdateCallbacks.push(function() input.emitControllerAxis(controllerId, axisId, value));
         });
 

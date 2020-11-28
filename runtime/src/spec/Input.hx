@@ -1,0 +1,5 @@
+package spec;
+
+interface Input {
+
+}
