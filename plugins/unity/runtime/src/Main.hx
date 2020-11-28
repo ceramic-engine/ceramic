@@ -1,5 +1,6 @@
 package;
 
+import unityengine.MonoBehaviour;
 import ceramic.Path;
 
 class Main {
@@ -8,11 +9,11 @@ class Main {
 
     static var _lastUpdateTime:Float = -1;
 
-    public static var unityObject:Dynamic = null;
+    public static var monoBehaviour:MonoBehaviour = null;
 
-    public static function sync(unityObject:Dynamic):Void {
+    public static function sync(monoBehaviour:MonoBehaviour):Void {
 
-        Main.unityObject = unityObject;
+        Main.monoBehaviour = monoBehaviour;
 
         if (ceramic.App.app == null || ceramic.App.app.backend == null) {
             main();

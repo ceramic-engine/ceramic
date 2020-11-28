@@ -111,7 +111,7 @@ class Audio implements spec.Audio {
 
     inline public function getDuration(audio:AudioResource):Float {
 
-        return 0;
+        return (audio:AudioResourceImpl).unityResource.length;
         
     }
 
@@ -137,11 +137,14 @@ class Audio implements spec.Audio {
 
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
-        var handle = new AudioHandleImpl();
+        var handle = new AudioHandleImpl(audio);
+
         handle.volume = volume;
         handle.pan = pan;
         handle.pitch = pitch;
         handle.position = position;
+
+        handle.play();
 
         return handle;
 
@@ -149,19 +152,19 @@ class Audio implements spec.Audio {
 
     public function pause(handle:AudioHandle):Void {
                     
-        //
+        (handle:AudioHandleImpl).pause();
 
     }
 
     public function resume(handle:AudioHandle):Void {
                     
-        //
+        (handle:AudioHandleImpl).resume();
 
     }
 
     public function stop(handle:AudioHandle):Void {
                     
-        //
+        (handle:AudioHandleImpl).stop();
 
     }
 
