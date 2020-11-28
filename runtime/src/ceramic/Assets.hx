@@ -109,7 +109,7 @@ class Assets extends Entity {
                 if (customAssetKinds.exists(kind)) {
                     customAssetKinds.get(kind).add(this, name, options);
                 } else {
-                    throw "Assets: invalid asset kind for id: " + id;
+                    throw "Assets: invalid asset kind (" + kind + ") for id: " + id;
                 }
         }
 
