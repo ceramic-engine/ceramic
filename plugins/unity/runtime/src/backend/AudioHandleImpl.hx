@@ -18,6 +18,8 @@ class AudioHandleImpl {
 
     public var position:Float = 0;
 
+    public var loop:Bool = false;
+
     public var resource:AudioResourceImpl = null;
 
     var audioSource:AudioSource = null;
@@ -62,6 +64,7 @@ class AudioHandleImpl {
             audioSource.panStereo = pan;
             audioSource.pitch = pitch;
             audioSource.volume = volume;
+            audioSource.loop = loop;
         }
 
     }

@@ -149,6 +149,7 @@ class Audio implements spec.Audio {
         handle.pan = pan;
         handle.pitch = pitch;
         handle.position = position;
+        handle.loop = loop;
 
         handle.play();
 
