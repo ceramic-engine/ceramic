@@ -11,7 +11,7 @@ class Main {
 
     public static var monoBehaviour:MonoBehaviour = null;
 
-    public static function sync(monoBehaviour:MonoBehaviour):Void {
+    @:keep public static function sync(monoBehaviour:MonoBehaviour):Void {
 
         Main.monoBehaviour = monoBehaviour;
 
@@ -21,7 +21,7 @@ class Main {
 
     }
 
-    public static function main():Void {
+    @:keep public static function main():Void {
 
         // Force to sync app fps with screen fps
         untyped __cs__('UnityEngine.QualitySettings.vSyncCount = 1');
@@ -38,7 +38,7 @@ class Main {
 
     }
 
-    public static function update() {
+    @:keep public static function update() {
 
         var time:Float = Sys.cpuTime();
         var delta = (time - _lastUpdateTime);

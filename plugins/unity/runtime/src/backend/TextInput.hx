@@ -21,7 +21,7 @@ class TextInput implements spec.TextInput {
         
     }
 
-    function handleTextInput(csChar:Char16):Void {
+    @:keep function handleTextInput(csChar:Char16):Void {
 
         if (textInputActive) {
             var char:String = Std.string(csChar);
