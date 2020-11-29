@@ -381,6 +381,17 @@ class App extends Entity {
         hxt = new HxTelemetry(cfg);
 #end
 
+        // TODO find a way to insert this code with any enabled plugin
+        // (doable with macro that checks `plugin_*` defines and looks for `*Plugin` type)
+
+#if plugin_spine
+        @:privateAccess ceramic.SpinePlugin.pluginInit();
+#end
+
+#if plugin_tilemap
+        @:privateAccess ceramic.TilemapPlugin.pluginInit();
+#end
+
         Runner.init();
 
         Tracker.backend = new TrackerBackend();

@@ -16,14 +16,6 @@ using StringTools;
 class TilemapPlugin {
 
 /// Init plugin
-
-    static function __init__():Void {
-
-        // Calling a static method inside __init__ makes this snippet
-        // compatible with haxe-modular or similar bundling tools
-        TilemapPlugin.pluginInit();
-
-    }
     
     static function pluginInit() {
 
