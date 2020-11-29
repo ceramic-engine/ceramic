@@ -151,7 +151,7 @@ class IO implements spec.IO {
             output.close();
         }
         else {
-            File.saveContent(filePath, str);
+            File.saveContent(filePath, HashedString.encode(str));
         }
 
         return true;
