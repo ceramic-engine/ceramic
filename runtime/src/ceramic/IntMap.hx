@@ -22,7 +22,7 @@ class IntMap<V> {
         Can be used to iterate on values directly,
         but can contain null values. */
     #if cs
-    public var values(default,null):Vector<Dynamic>;
+    public var values(default,null):Vector<Any>;
     #else
     public var values(default,null):Vector<V>;
     #end
@@ -141,7 +141,12 @@ class IntMap<V> {
     function resizeValues(targetSize:Int) {
 
         var prevValues = values;
+        #if cs
+        var valuesDyn:Dynamic = new Vector<V>(targetSize);
+        values = valuesDyn;
+        #else
         values = new Vector<V>(targetSize);
+        #end
         for (i in 0...prevValues.length) {
             values.set(i, prevValues.get(i));
         }

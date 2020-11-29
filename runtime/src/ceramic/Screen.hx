@@ -808,7 +808,7 @@ class Screen extends Entity implements Observable {
         var pX = 0.0;
         var pY = 0.0;
         for (i in 0...touches.values.length) {
-            var pointer = touches.values.get(i);
+            var pointer:Touch = touches.values.get(i);
             if (pointer == null) continue;
             numTouchPointers++;
             pX += pointer.x;
