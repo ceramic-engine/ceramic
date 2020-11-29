@@ -6,8 +6,14 @@ class Info #if !completion implements spec.Info #end {
 
 /// System
 
-    inline public function storageDirectory():String {
+    public function storageDirectory():String {
+
+        #if cs
+        return untyped __cs__('UnityEngine.Application.persistentDataPath');
+        #else
         return null;
+        #end
+
     }
 
 /// Assets
