@@ -145,13 +145,22 @@ class BackendTools implements tools.spec.BackendTools {
 
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
-        var txtExtensions = [
-            'vert' => true,
-            'frag' => true,
-            'fnt' => true,
-            'json' => true,
-            'csv' => true,
-            'atlas' => true
+        var nonTxtExtensions = [
+            'shader' => true,
+            'png' => true,
+            'jpg' => true,
+            'jpeg' => true,
+            'gif' => true,
+            'm4a' => true,
+            'wav' => true,
+            'aiff' => true,
+            'flac' => true,
+            'mp3' => true,
+            'mp4' => true,
+            'mov' => true,
+            'zip' => true,
+            'ogg' => true,
+            'bin' => true
         ];
 
         var newAssets:Array<tools.Asset> = [];
@@ -178,7 +187,7 @@ class BackendTools implements tools.spec.BackendTools {
                 ext = srcPath.substr(dotIndex + 1).toLowerCase();
             }
 
-            if (txtExtensions.exists(ext)) {
+            if (!nonTxtExtensions.exists(ext)) {
                 // Unity needs a .txt extension to treat an asset as text, let's add it
                 dstPath += '.txt';
             }
