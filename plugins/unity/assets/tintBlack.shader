@@ -80,7 +80,7 @@ Shader "tintBlack"
 				texColor = tex2D(_MainTex, IN.texcoord);
 				// ceramic: multiTexture/endif
 				fixed4 c = fixed4(
-					((texColor.a - 1.0) * IN.darkColor.a + 1.0 - texColor.rgb) * IN.darkColor.rgb + texColor.rgb, 
+					((texColor.a - 1.0) * IN.darkColor.a + 1.0 - texColor.rgb) * IN.darkColor.rgb + texColor.rgb * IN.color.rgb, 
 					texColor.a * IN.color.a
 				);
 				return c;
