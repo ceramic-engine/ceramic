@@ -145,6 +145,17 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     public function get(id:String):T {
 
+        #if !ceramic_no_strict_collection_get
+        if (id == null) {
+            throw 'Cannot get a collection entry with a null id!';
+        }
+        #else
+        if (id == null) {
+            log.error('Cannot get a collection entry with a null id! Returning null instead...');
+            return null;
+        }
+        #end
+
         checkCombined();
 
         if (entriesDirty) computeEntries();
