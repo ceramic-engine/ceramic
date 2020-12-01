@@ -214,6 +214,10 @@ class Draw #if !completion implements spec.Draw #end {
 
         _stencilBufferDirty = false;
 
+        if (_stencilShader == null) {
+            _stencilShader = ceramic.App.app.assets.shader('shader:stencil').backendItem;
+        }
+
         prepareNextMesh();
 
     }
@@ -499,12 +503,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     inline public function useShader(shader:backend.ShaderImpl):Void {
 
-        _materialCurrentShader = shader;
+        _materialCurrentShader = _materialStencilWrite != 0 ? _stencilShader : shader;
 
-        var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(shader);
+        var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(_materialCurrentShader);
         if (attributesSize % 2 == 1) attributesSize++;
 
-        _vertexSize = 9 + attributesSize + (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(shader) ? 1 : 0);
+        _vertexSize = 9 + attributesSize + (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(_materialCurrentShader) ? 1 : 0);
 
         _maxVerts = Std.int(Math.floor(MAX_VERTS_SIZE / _vertexSize));
 
@@ -633,7 +637,8 @@ class Draw #if !completion implements spec.Draw #end {
 
         if (_stencilBufferDirty) {
             // Clear before writing
-            _materialStencilWrite = 2; 
+            _materialStencilWrite = 2;
+            useShader(null);
             var w = ceramic.App.app.backend.screen.getWidth();
             var h = ceramic.App.app.backend.screen.getHeight();
             putPos(0, 0, 1);
@@ -714,10 +719,6 @@ class Draw #if !completion implements spec.Draw #end {
 
         if (_materialStencilWrite != 0) {
             stencil = _materialStencilWrite == 2 ? CLEAR : WRITE;
-            if (_stencilShader == null) {
-                _stencilShader = ceramic.App.app.assets.shader('shader:stencil').backendItem;
-            }
-            shader = _stencilShader;
         }
         else if (_materialStencilTest) {
             stencil = TEST;
