@@ -9,6 +9,8 @@ class Main {
 
     static var _lastUpdateTime:Float = -1;
 
+    static var _hasCriticalError:Bool = false;
+
     public static var monoBehaviour:MonoBehaviour = null;
 
     @:keep public static function sync(monoBehaviour:MonoBehaviour):Void {
@@ -40,12 +42,29 @@ class Main {
 
     @:keep public static function update() {
 
-        var time:Float = Sys.cpuTime();
-        var delta = (time - _lastUpdateTime);
-        _lastUpdateTime = time;
+        if (_hasCriticalError)
+            return;
 
-        // Update
-        ceramic.App.app.backend.emitUpdate(delta);
+        #if !ceramic_no_unity_catch_exit
+        try {
+        #end
+
+            var time:Float = Sys.cpuTime();
+            var delta = (time - _lastUpdateTime);
+            _lastUpdateTime = time;
+    
+            // Update
+            ceramic.App.app.backend.emitUpdate(delta);
+
+        #if !ceramic_no_unity_catch_exit
+        }
+        catch (e:Dynamic) {
+
+            _hasCriticalError = true;
+            untyped __cs__('throw');
+
+        }
+        #end
 
     }
 
