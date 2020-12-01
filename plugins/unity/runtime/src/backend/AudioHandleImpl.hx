@@ -43,6 +43,7 @@ class AudioHandleImpl {
         for (i in 0..._handlesWithAudioSource.length) {
             var handle = _handlesWithAudioSource.unsafeGet(i);
             if (handle != null) {
+                handle.position = handle.audioSource.time;
                 if (!handle.audioSource.isPlaying) {
                     _handlesWithAudioSource.unsafeSet(i, null);
                     handle.recycleAudioSource();
@@ -119,7 +120,10 @@ class AudioHandleImpl {
 
     public function stop():Void {
 
-        audioSource.Stop();
+        position = 0;
+        if (audioSource != null) {
+            audioSource.Stop();
+        }
 
     }
 
