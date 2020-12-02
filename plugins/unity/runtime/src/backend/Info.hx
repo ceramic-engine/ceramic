@@ -8,7 +8,7 @@ class Info #if !completion implements spec.Info #end {
 
     public function storageDirectory():String {
 
-        #if cs
+        #if (cs && unity)
         return untyped __cs__('UnityEngine.Application.persistentDataPath');
         #else
         return null;

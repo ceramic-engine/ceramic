@@ -21,7 +21,7 @@ class IntMap<V> {
     /** Values as they are stored.
         Can be used to iterate on values directly,
         but can contain null values. */
-    #if cs
+    #if (cs && unity)
     public var values(default,null):Vector<Any>;
     #else
     public var values(default,null):Vector<V>;
@@ -141,7 +141,7 @@ class IntMap<V> {
     function resizeValues(targetSize:Int) {
 
         var prevValues = values;
-        #if cs
+        #if (cs && unity)
         var valuesDyn:Dynamic = new Vector<V>(targetSize);
         values = valuesDyn;
         #else

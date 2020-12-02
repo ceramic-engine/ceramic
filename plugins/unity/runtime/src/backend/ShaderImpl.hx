@@ -33,7 +33,7 @@ class ShaderImpl {
 
     var textureParams:Map<String,backend.Texture> = null;
 
-    var mat4Params:Map<String,Dynamic> = null;
+    var mat4Params:Map<String,unityengine.Matrix4x4> = null;
 
     public function new(unityShader:Dynamic, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>) {
 
@@ -186,7 +186,7 @@ class ShaderImpl {
         m[3] = 0f;  m[7] = 0f;  m[11] = 0f; m[15] = 1f;
         ', transform.a, transform.c, transform.tx, transform.b, transform.d, transform.ty);
 
-        var unityMat4:Dynamic = untyped __cs__('m');
+        var unityMat4:unityengine.Matrix4x4 = untyped __cs__('m');
         
         if (!mat4Params.exists(name) || mat4Params.get(name) != unityMat4) {
             mat4Params.set(name, unityMat4);

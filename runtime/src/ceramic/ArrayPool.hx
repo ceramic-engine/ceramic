@@ -51,7 +51,7 @@ class ArrayPool {
 
 /// Properties
 
-#if cs
+#if (cs && unity)
     var arrays:ReusableArray<Dynamic> = null; // Arrays of arrays seem to create problems in C#
 #else
     var arrays:ReusableArray<ReusableArray<Dynamic>> = null;
