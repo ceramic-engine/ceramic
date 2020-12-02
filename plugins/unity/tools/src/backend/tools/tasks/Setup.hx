@@ -192,7 +192,7 @@ class Setup extends tools.Task {
 
             finalHxml.push('-D net-ver=20');
             //finalHxml.push('-D net-target=net');
-            finalHxml.push('-D erase-generics');
+            //finalHxml.push('-D erase-generics');
             if (variant == 'tasks') {
                 finalHxml.push('--macro include("tasks", true)');
             }
