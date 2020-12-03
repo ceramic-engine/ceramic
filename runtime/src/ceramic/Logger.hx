@@ -43,7 +43,7 @@ class Logger extends Entity {
 
     public function debug(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
-        if (!Runner.currentIsMainThread())) {
+        if (!Runner.currentIsMainThread()) {
             if (listensDebug()) {
                 Runner.runInMain(function() {
                     emitDebug(value, pos);
@@ -64,7 +64,7 @@ class Logger extends Entity {
 
     public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        if (!Runner.currentIsMainThread())) {
+        if (!Runner.currentIsMainThread()) {
             if (listensInfo()) {
                 Runner.runInMain(function() {
                     emitInfo(value, pos);
@@ -85,7 +85,7 @@ class Logger extends Entity {
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        if (!Runner.currentIsMainThread())) {
+        if (!Runner.currentIsMainThread()) {
             if (listensSuccess()) {
                 Runner.runInMain(function() {
                     emitSuccess(value, pos);
@@ -106,7 +106,7 @@ class Logger extends Entity {
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        if (!Runner.currentIsMainThread())) {
+        if (!Runner.currentIsMainThread()) {
             if (listensWarning()) {
                 Runner.runInMain(function() {
                     emitWarning(value, pos);
@@ -135,7 +135,7 @@ class Logger extends Entity {
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        if (!Runner.currentIsMainThread())) {
+        if (!Runner.currentIsMainThread()) {
             if (listensError()) {
                 Runner.runInMain(function() {
                     emitError(value, pos);
