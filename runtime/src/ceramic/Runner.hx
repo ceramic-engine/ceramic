@@ -36,6 +36,20 @@ class Runner {
 
     #end
 
+    /**
+     * Returns `true` if current running thread is main thread
+     * @return Bool
+     */
+    public static function currentIsMainThread():Bool {
+        
+        #if cpp
+        return mainThread == null || mainThread == Thread.current();
+        #else
+        return true;
+        #end
+
+    }
+
     /** Call this on your thread to make primary,
         the calling thread will be used for callbacks. */
     @:noCompletion public static function init() {
