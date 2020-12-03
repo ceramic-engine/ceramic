@@ -417,4 +417,14 @@ class Utils {
 
     }
 
+    inline public static function functionEquals(functionA:Dynamic, functionB:Dynamic):Bool {
+
+        #if (js || cpp)
+        return functionA == functionB;
+        #else
+        return Reflect.compareMethods(functionA, functionB);
+        #end
+
+    }
+
 }
