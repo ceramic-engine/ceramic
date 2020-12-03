@@ -42,8 +42,17 @@ class Logger extends Entity {
 /// Public API
 
     public function debug(value:Dynamic, ?pos:haxe.PosInfos):Void {
-        
-        emitDebug(value, pos);
+
+        if (!Runner.currentIsMainThread())) {
+            if (listensDebug()) {
+                Runner.runInMain(function() {
+                    emitDebug(value, pos);
+                });
+            }
+        }
+        else {
+            emitDebug(value, pos);
+        }
 
 #if unity
         untyped __cs__('UnityEngine.Debug.Log("<color=magenta>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -55,7 +64,16 @@ class Logger extends Entity {
 
     public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        emitInfo(value, pos);
+        if (!Runner.currentIsMainThread())) {
+            if (listensInfo()) {
+                Runner.runInMain(function() {
+                    emitInfo(value, pos);
+                });
+            }
+        }
+        else {
+            emitInfo(value, pos);
+        }
 
 #if unity
         untyped __cs__('UnityEngine.Debug.Log("<color=cyan>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -67,7 +85,16 @@ class Logger extends Entity {
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        emitSuccess(value, pos);
+        if (!Runner.currentIsMainThread())) {
+            if (listensSuccess()) {
+                Runner.runInMain(function() {
+                    emitSuccess(value, pos);
+                });
+            }
+        }
+        else {
+            emitSuccess(value, pos);
+        }
 
 #if unity
         untyped __cs__('UnityEngine.Debug.Log("<color=lime>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -79,7 +106,16 @@ class Logger extends Entity {
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        emitWarning(value, pos);
+        if (!Runner.currentIsMainThread())) {
+            if (listensWarning()) {
+                Runner.runInMain(function() {
+                    emitWarning(value, pos);
+                });
+            }
+        }
+        else {
+            emitWarning(value, pos);
+        }
 
 #if unity
         untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -99,7 +135,16 @@ class Logger extends Entity {
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
         
-        emitError(value, pos);
+        if (!Runner.currentIsMainThread())) {
+            if (listensError()) {
+                Runner.runInMain(function() {
+                    emitError(value, pos);
+                });
+            }
+        }
+        else {
+            emitError(value, pos);
+        }
 
 #if unity
         untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);

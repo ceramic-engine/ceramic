@@ -40,7 +40,7 @@ class Runner {
      * Returns `true` if current running thread is main thread
      * @return Bool
      */
-    public static function currentIsMainThread():Bool {
+    public inline static function currentIsMainThread():Bool {
         
         #if cpp
         return mainThread == null || mainThread == Thread.current();
