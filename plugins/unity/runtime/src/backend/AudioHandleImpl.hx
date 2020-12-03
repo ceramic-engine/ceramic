@@ -10,13 +10,45 @@ class AudioHandleImpl {
 
     static var _handlesWithAudioSource:Array<AudioHandleImpl> = [];
 
-    public var volume:Float = 0.5;
+    public var volume(default, set):Float = 0.5;
+    function set_volume(volume:Float):Float {
+        if (this.volume != volume) {
+            this.volume = volume;
+            if (audioSource != null)
+                audioSource.volume = volume;
+        }
+        return volume;
+    }
 
-    public var pan:Float = 0;
+    public var pan(default, set):Float = 0;
+    function set_pan(pan:Float):Float {
+        if (this.pan != pan) {
+            this.pan = pan;
+            if (audioSource != null)
+                audioSource.panStereo = pan;
+        }
+        return pan;
+    }
 
-    public var pitch:Float = 1;
+    public var pitch(default, set):Float = 1;
+    function set_pitch(pitch:Float):Float {
+        if (this.pitch != pitch) {
+            this.pitch = pitch;
+            if (audioSource != null)
+                audioSource.pitch = pitch;
+        }
+        return pitch;
+    }
 
-    public var position:Float = 0;
+    public var position(default, set):Float = 0;
+    function set_position(position:Float):Float {
+        if (this.position != position) {
+            this.position = position;
+            if (audioSource != null)
+                audioSource.time = position;
+        }
+        return position;
+    }
 
     public var loop:Bool = false;
 
