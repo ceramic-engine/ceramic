@@ -641,6 +641,10 @@ class Draw #if !completion implements spec.Draw #end {
             useShader(null);
             var w = ceramic.App.app.backend.screen.getWidth();
             var h = ceramic.App.app.backend.screen.getHeight();
+            if (_currentRenderTarget != null) {
+                w = Math.ceil(_currentRenderTarget.width);
+                h = Math.ceil(_currentRenderTarget.height);
+            }
             putPos(0, 0, 1);
             putPos(w, 0, 1);
             putPos(w, h, 1);
