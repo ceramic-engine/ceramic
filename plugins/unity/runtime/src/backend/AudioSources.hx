@@ -28,6 +28,15 @@ class AudioSources {
     public function new(gameObject:GameObject) {
 
         this.gameObject = gameObject;
+        
+        removeExistingAudioSourceComponents();
+
+    }
+
+    function removeExistingAudioSourceComponents():Void {
+
+        untyped __cs__('UnityEngine.AudioSource[] _sources = {0}.GetComponents<UnityEngine.AudioSource>()', gameObject);
+        untyped __cs__('foreach(UnityEngine.AudioSource _source in _sources) UnityEngine.Object.Destroy(_source)');
 
     }
 
