@@ -1,5 +1,8 @@
 package backend;
 
+// Import needed to make reflection work as expected
+import backend.FieldLookup;
+
 @:allow(Main)
 @:allow(backend.Textures)
 class Backend implements tracker.Events implements spec.Backend {
@@ -34,7 +37,7 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public function init(app:ceramic.App) {
 
-        //
+        FieldLookup.keep();
 
     }
 
