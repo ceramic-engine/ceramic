@@ -40,12 +40,16 @@ class AudioHandleImpl {
         return pitch;
     }
 
+    var updateAudioSourceOnSetPosition:Bool = true;
+
     public var position(default, set):Float = 0;
     function set_position(position:Float):Float {
         if (this.position != position) {
+            position = Math.min(position, length - 0.00001); // Never set exactly to "length" because Unity doesn't like it
             this.position = position;
-            if (audioSource != null)
+            if (updateAudioSourceOnSetPosition && audioSource != null) {
                 audioSource.time = position;
+            }
         }
         return position;
     }
@@ -56,9 +60,12 @@ class AudioHandleImpl {
 
     var audioSource:AudioSource = null;
 
+    var length:Float = 0;
+
     public function new(resource:AudioResourceImpl) {
         
         this.resource = resource;
+        length = resource.unityResource.length;
 
         if (_audioSources == null) {
             _audioSources = new AudioSources(Main.monoBehaviour.gameObject);
@@ -75,7 +82,9 @@ class AudioHandleImpl {
         for (i in 0..._handlesWithAudioSource.length) {
             var handle = _handlesWithAudioSource.unsafeGet(i);
             if (handle != null) {
+                handle.updateAudioSourceOnSetPosition = false;
                 handle.position = handle.audioSource.time;
+                handle.updateAudioSourceOnSetPosition = true;
                 if (!handle.audioSource.isPlaying) {
                     _handlesWithAudioSource.unsafeSet(i, null);
                     handle.recycleAudioSource();
