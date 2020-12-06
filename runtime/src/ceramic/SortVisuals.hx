@@ -22,6 +22,8 @@
 
 package ceramic;
 
+using ceramic.Extensions;
+
 /**
     SortVisuals provides a stable implementation of merge sort through its `sort`
     method. It should be used instead of `Array.sort` in cases where the order
@@ -151,16 +153,17 @@ class SortVisuals {
         if (from == mid || mid == to) return;
         n = gcd(to - from, mid - from);
         while (n-- != 0) {
-            var val = a[from + n];
+            var k = from + n;
+            var val = a.unsafeGet(k);
             var shift = mid - from;
             var p1 = from + n, p2 = from + n + shift;
             while (p2 != from + n) {
-                a[p1] = a[p2];
+                a.unsafeSet(p1, a.unsafeGet(p2));
                 p1 = p2;
                 if (to - p2 > shift) p2 += shift;
                 else p2 = from + (shift - (to - p2));
             }
-            a[p1] = val;
+            a.unsafeSet(p1, val);
         }
     }
 
@@ -203,13 +206,13 @@ class SortVisuals {
     }
 
     static inline function swap(a:Array<Visual>, i, j) {
-        var tmp = a[i];
-        a[i] = a[j];
-        a[j] = tmp;
+        var tmp = a.unsafeGet(i);
+        a.unsafeSet(i, a.unsafeGet(j));
+        a.unsafeSet(j, tmp);
     }
 
     static inline function compare(a:Array<Visual>, i, j) {
-        return cmp(a[i], a[j]);
+        return cmp(a.unsafeGet(i), a.unsafeGet(j));
     }
 
 }
