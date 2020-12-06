@@ -1,6 +1,6 @@
 package ceramic;
 
-#if (sys || node || nodejs || hxnodejs)
+#if (cs || sys || node || nodejs || hxnodejs)
 import sys.FileSystem;
 #end
 
@@ -20,7 +20,7 @@ class Files {
 
     public static function haveSameContent(filePath1:String, filePath2:String):Bool {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         var file1Exists = FileSystem.exists(filePath1);
         var file2Exists = FileSystem.exists(filePath2);
@@ -42,7 +42,6 @@ class Files {
 
     }
 
-    /** Only works in nodejs for now. */
     public static function haveSameLastModified(filePath1:String, filePath2:String):Bool {
 
         #if (node || nodejs || hxnodejs)
@@ -57,6 +56,19 @@ class Files {
         var time2 = Fs.statSync(filePath2).mtime.getTime();
 
         return time1 == time2;
+
+        #elseif (cs || sys || (web && ceramic_use_electron))
+
+        var file1Exists = exists(filePath1);
+        var file2Exists = exists(filePath2);
+
+        if (file1Exists != file2Exists) return false;
+        if (!file1Exists && !file2Exists) return false;
+
+        var time1 = getLastModified(filePath1);
+        var time2 = getLastModified(filePath2);
+
+        return time1 == time2 && time1 != -1;
 
         #else
 
@@ -89,7 +101,7 @@ class Files {
 
     }
     
-    #if (sys || node || nodejs)
+    #if (cs || sys || node || nodejs)
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
         var result:Array<String> = [];
@@ -173,7 +185,7 @@ class Files {
      */
     public static function getLastModified(path:String):Float {
 
-        #if (sys || hxnodejs || nodejs || node)
+        #if (cs || sys || hxnodejs || nodejs || node)
         var stat = FileSystem.stat(path);
         if (stat == null) return -1;
         return stat.mtime.getTime() / 1000.0;
@@ -195,7 +207,7 @@ class Files {
 
     public static function removeEmptyDirectories(dir:String, excludeSystemFiles:Bool = true):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         for (name in FileSystem.readDirectory(dir)) {
 
@@ -220,7 +232,7 @@ class Files {
 
     public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true):Bool {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         for (name in FileSystem.readDirectory(dir)) {
 
@@ -242,7 +254,7 @@ class Files {
 
     public static function deleteRecursive(toDelete:String):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
         
         if (!FileSystem.exists(toDelete)) return;
 
@@ -286,7 +298,7 @@ class Files {
     public static function getRelativePath(absolutePath:String, relativeTo:String):String {
 
         var isWindows = false;
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
         isWindows = Sys.systemName() == 'Windows';
         #end
 
@@ -322,7 +334,7 @@ class Files {
 
     public static function copyFileWithIntermediateDirs(srcPath:String, dstPath:String):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         var dstDir = Path.directory(dstPath);
         if (!FileSystem.exists(dstDir)) {
@@ -341,7 +353,7 @@ class Files {
 
     public static function copyDirectory(srcDir:String, dstDir:String, removeExisting:Bool = false):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         if (FileSystem.exists(dstDir) && (removeExisting || !FileSystem.isDirectory(dstDir))) {
             deleteRecursive(dstDir);
@@ -375,7 +387,7 @@ class Files {
 
     public static function getContent(path:String):Null<String> {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         return sys.io.File.getContent(path);
 
@@ -402,7 +414,7 @@ class Files {
 
     public static function saveContent(path:String, content:String):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         sys.io.File.saveContent(path, content);
 
@@ -427,7 +439,7 @@ class Files {
 
     public static function createDirectory(path:String):Void {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         sys.FileSystem.createDirectory(path);
 
@@ -472,7 +484,7 @@ class Files {
 
     public static function exists(path:String):Bool {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         return sys.FileSystem.exists(path);
 
@@ -505,7 +517,7 @@ class Files {
 
     public static function isDirectory(path:String):Bool {
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         return sys.FileSystem.isDirectory(path);
 

@@ -1,6 +1,6 @@
 package ceramic;
 
-#if cpp
+#if (cpp || cs)
 #if (haxe_ver < 4)
 import cpp.vm.Mutex;
 #else
@@ -22,7 +22,7 @@ class BackgroundQueue extends Entity {
 
     var pending:Array<Void->Void> = []; 
 
-    #if cpp
+    #if (cpp || cs)
     var mutex:Mutex;
     #end
 
@@ -32,7 +32,7 @@ class BackgroundQueue extends Entity {
 
         this.checkInterval = 0.1;
         
-        #if cpp
+        #if (cpp || cs)
         mutex = new Mutex();
         runsInBackground = true;
         Runner.runInBackground(internalRunInBackground);
@@ -42,7 +42,7 @@ class BackgroundQueue extends Entity {
 
     public function schedule(fn:Void->Void):Void {
 
-        #if cpp
+        #if (cpp || cs)
 
         // Run in background with ceramic.Runner
         mutex.acquire();
@@ -58,7 +58,7 @@ class BackgroundQueue extends Entity {
 
     }
 
-    #if cpp
+    #if (cpp || cs)
 
     private function internalRunInBackground():Void {
 

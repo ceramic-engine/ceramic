@@ -2,7 +2,7 @@ package ceramic;
 
 // Original source: https://gist.github.com/underscorediscovery/e66e72ec702bdcedf5af45f8f4712109
 
-#if cpp
+#if (cpp || cs)
 #if (haxe_ver < 4)
     import cpp.vm.Thread;
     import cpp.vm.Deque;
@@ -28,7 +28,7 @@ Usage:
 */
 class Runner {
 
-    #if cpp
+    #if (cpp || cs)
 
     static var mainThread:Thread;
 
@@ -42,7 +42,7 @@ class Runner {
      */
     public inline static function currentIsMainThread():Bool {
         
-        #if cpp
+        #if (cpp || cs)
         return mainThread == null || mainThread == Thread.current();
         #else
         return true;
@@ -53,7 +53,7 @@ class Runner {
     /** Call this on your thread to make primary,
         the calling thread will be used for callbacks. */
     @:noCompletion public static function init() {
-        #if cpp
+        #if (cpp || cs)
         queue = new Deque<Void->Void>();
         mainThread = Thread.current();
         #end
@@ -63,7 +63,7 @@ class Runner {
         Returns the number of callbacks called. */
     @:noCompletion public static function tick():Void {
 
-        #if cpp
+        #if (cpp || cs)
         var more = true;
         var count = 0;
 
@@ -83,7 +83,7 @@ class Runner {
         running _background_ code in main thread instead of using background thread. */
     inline public static function isEmulatingBackgroundWithMain():Bool {
 
-        #if cpp
+        #if (cpp || cs)
         return false;
         #else
         return true;
@@ -95,7 +95,7 @@ class Runner {
         If you want return values see runInMainBlocking */
     public static function runInMain(_fn:Void->Void) {
 
-        #if cpp
+        #if (cpp || cs)
         queue.push(_fn);
         #else
         app.onceImmediate(_fn);
@@ -106,7 +106,7 @@ class Runner {
     /** Create a background thread using the given function, or just run (deferred) the function if threads are not supported */
     public static function runInBackground(fn:Void->Void):Void {
 
-        #if cpp
+        #if (cpp || cs)
         Thread.create(fn);
         #else
         app.onceImmediate(fn);
@@ -114,4 +114,4 @@ class Runner {
 
     }
 
-} //Runner
+}
