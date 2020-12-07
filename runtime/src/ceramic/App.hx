@@ -120,9 +120,13 @@ class App extends Entity {
 
     var immediateCallbacks:Array<Void->Void> = [];
 
+    var immediateCallbacksCapacity:Int = 0;
+
     var immediateCallbacksLen:Int = 0;
 
     var postFlushImmediateCallbacks:Array<Void->Void> = [];
+
+    var postFlushImmediateCallbacksCapacity:Int = 0;
 
     var postFlushImmediateCallbacksLen:Int = 0;
 
@@ -144,7 +148,14 @@ class App extends Entity {
             handleImmediate();
         };
         #else
-        immediateCallbacks[immediateCallbacksLen++] = handleImmediate;
+        if (immediateCallbacksLen < immediateCallbacksCapacity) {
+            immediateCallbacks.unsafeSet(immediateCallbacksLen, handleImmediate);
+            immediateCallbacksLen++;
+        }
+        else {
+            immediateCallbacks[immediateCallbacksLen++] = handleImmediate;
+            immediateCallbacksCapacity++;
+        }
         #end
 
     }
@@ -158,7 +169,15 @@ class App extends Entity {
                 handlePostFlushImmediate();
             }
             else {
-                postFlushImmediateCallbacks[postFlushImmediateCallbacksLen++] = handlePostFlushImmediate;
+                
+                if (postFlushImmediateCallbacksLen < postFlushImmediateCallbacksCapacity) {
+                    postFlushImmediateCallbacks.unsafeSet(postFlushImmediateCallbacksLen, handlePostFlushImmediate);
+                    immediateCallbacksLen++;
+                }
+                else {
+                    postFlushImmediateCallbacks[postFlushImmediateCallbacksLen++] = handlePostFlushImmediate;
+                    postFlushImmediateCallbacksCapacity++;
+                }
             }
         }
         else {
@@ -187,7 +206,7 @@ class App extends Entity {
 
             for (i in 0...len) {
                 callbacks.set(i, immediateCallbacks.unsafeGet(i));
-                immediateCallbacks[i] = null;
+                immediateCallbacks.unsafeSet(i, null);
             }
 
             for (i in 0...len) {
@@ -209,7 +228,7 @@ class App extends Entity {
 
             for (i in 0...len) {
                 callbacks.set(i, postFlushImmediateCallbacks.unsafeGet(i));
-                postFlushImmediateCallbacks[i] = null;
+                postFlushImmediateCallbacks.unsafeSet(i, null);
             }
 
             for (i in 0...len) {

@@ -239,8 +239,8 @@ class Draw #if !completion implements spec.Draw #end {
         }
 
         //_meshVertices = mesh.vertices;
-        _meshVertices = _meshesVertices[_currentMeshIndex];
-        _meshIndices = _meshesIndices[_currentMeshIndex];
+        _meshVertices = _meshesVertices.unsafeGet(_currentMeshIndex);
+        _meshIndices = _meshesIndices.unsafeGet(_currentMeshIndex);
         //_meshIndices = mesh.triangles;
         //_meshUVs = mesh.uv;
         //_meshColors = mesh.colors;

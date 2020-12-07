@@ -2,7 +2,7 @@ package ceramic;
 
 import ceramic.Assert.assert;
 
-#if cpp
+#if (cpp || cs)
 
 import haxe.ds.Vector;
 

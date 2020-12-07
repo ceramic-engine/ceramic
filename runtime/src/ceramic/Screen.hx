@@ -571,7 +571,7 @@ class Screen extends Entity implements Observable {
             var i = visuals.length - 1;
             while (i >= 0) {
 
-                var visual = visuals[i];
+                var visual = visuals.unsafeGet(i);
                 if (visual.computedTouchable) {
                     var visualListensPointerDown = visual.listensPointerDown();
                     var visualHits = false;
@@ -654,7 +654,7 @@ class Screen extends Entity implements Observable {
             var i = visuals.length - 1;
             while (i >= 0) {
 
-                var visual = visuals[i];
+                var visual = visuals.unsafeGet(i);
                 if (visual.computedTouchable) {
                     var visualListensPointerOver = visual.listensPointerOver();
                     var visualHits = false;
