@@ -172,7 +172,7 @@ class App extends Entity {
                 
                 if (postFlushImmediateCallbacksLen < postFlushImmediateCallbacksCapacity) {
                     postFlushImmediateCallbacks.unsafeSet(postFlushImmediateCallbacksLen, handlePostFlushImmediate);
-                    immediateCallbacksLen++;
+                    postFlushImmediateCallbacksLen++;
                 }
                 else {
                     postFlushImmediateCallbacks[postFlushImmediateCallbacksLen++] = handlePostFlushImmediate;
