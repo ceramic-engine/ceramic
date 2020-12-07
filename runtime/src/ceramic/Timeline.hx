@@ -334,7 +334,7 @@ class Timeline extends Entity implements Component {
         if (completeHandlers != null && completeHandlers.length > 0) {
 
             var pool:ArrayPool = null;
-            var toCall:ReusableArray<Dynamic> = null;
+            var toCall:ReusableArray<Any> = null;
             var toCallLen = 0;
 
             for (i in 0...completeHandlerIndexes.length) {
@@ -359,7 +359,7 @@ class Timeline extends Entity implements Component {
 
             // Call!
             for (i in 0...toCallLen) {
-                var handler = toCall.get(i);
+                var handler:Dynamic = toCall.get(i);
                 handler();
             }
 

@@ -30,9 +30,9 @@ class ShaderAsset extends Asset {
         var customAttributes:Array<ShaderAttribute> = null;
         if (options.customAttributes != null) {
             customAttributes = [];
-            var rawAttributes:Array<Dynamic> = options.customAttributes;
+            var rawAttributes:Array<Any> = options.customAttributes;
             for (i in 0...rawAttributes.length) {
-                var rawAttr = rawAttributes.unsafeGet(i);
+                var rawAttr:Dynamic = rawAttributes.unsafeGet(i);
                 customAttributes.push({
                     size: rawAttr.size,
                     name: rawAttr.name

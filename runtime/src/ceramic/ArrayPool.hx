@@ -51,11 +51,7 @@ class ArrayPool {
 
 /// Properties
 
-#if (cs && unity)
-    var arrays:ReusableArray<Dynamic> = null; // Arrays of arrays seem to create problems in C#
-#else
-    var arrays:ReusableArray<ReusableArray<Dynamic>> = null;
-#end
+    var arrays:ReusableArray<Any> = null;
 
     var nextFree:Int = 0;
 
@@ -71,7 +67,7 @@ class ArrayPool {
 
 /// Public API
 
-    public function get(#if ceramic_debug_array_pool ?pos:haxe.PosInfos #end):ReusableArray<Dynamic> {
+    public function get(#if ceramic_debug_array_pool ?pos:haxe.PosInfos #end):ReusableArray<Any> {
 
         #if ceramic_debug_array_pool
         haxe.Log.trace('pool.get', pos);
@@ -80,7 +76,7 @@ class ArrayPool {
         if (arrays == null) arrays = new ReusableArray(ALLOC_STEP);
         else if (nextFree >= arrays.length) arrays.length += ALLOC_STEP;
 
-        var result:ReusableArray<Dynamic> = arrays.get(nextFree);
+        var result:ReusableArray<Any> = arrays.get(nextFree);
         if (result == null) {
             result = new ReusableArray(arrayLengths);
             arrays.set(nextFree, result);
@@ -91,7 +87,7 @@ class ArrayPool {
         while (true) {
             nextFree++;
             if (nextFree == arrays.length) break;
-            var item = arrays.get(nextFree);
+            var item:ReusableArray<Any> = arrays.get(nextFree);
             if (item == null) break;
             if (@:privateAccess item._poolIndex == -1) break;
         }
@@ -100,7 +96,7 @@ class ArrayPool {
 
     }
 
-    public function release(array:ReusableArray<Dynamic>):Void {
+    public function release(array:ReusableArray<Any>):Void {
         
         #if ceramic_debug_array_pool
         haxe.Log.trace('pool.release', pos);
