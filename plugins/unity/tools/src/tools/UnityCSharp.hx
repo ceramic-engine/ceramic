@@ -198,8 +198,6 @@ class UnityCSharp {
 
         }
 
-        var toInt = 'public static int toInt(int val) { return val; }';
-
         return content;
 
     }
