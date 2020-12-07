@@ -11,6 +11,8 @@ class Extensions<T> {
 #end
 #if cpp
         return cpp.NativeArray.unsafeGet(array, index);
+#elseif cs
+        return cast untyped __cs__('{0}.__a[{1}]', array, index);
 #else
         return array[index];
 #end
@@ -22,6 +24,8 @@ class Extensions<T> {
 #end
 #if cpp
         cpp.NativeArray.unsafeSet(array, index, value);
+#elseif cs
+        return cast untyped __cs__('{0}.__a[{1}] = {2}', array, index, value);
 #else
         array[index] = value;
 #end
