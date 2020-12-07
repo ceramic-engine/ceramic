@@ -51,8 +51,12 @@ class UnityCSharp {
                 var srcFilePath = Path.join([srcCsPath, name]);
                 var srcContent = File.getContent(srcFilePath);
                 var processedContent = processScriptContent(srcContent);
-                if (Path.normalize(name) == 'cs/internal/FieldLookup.cs') {
+                var normalizedPath = Path.normalize(name);
+                if (normalizedPath == 'cs/internal/FieldLookup.cs') {
                     processedContent = patchFieldLookup(processedContent, dstResourcesPath);
+                }
+                else if (normalizedPath == 'cs/internal/Runtime.cs') {
+                    processedContent = patchRuntime(processedContent, dstResourcesPath);
                 }
                 var dstFilePath = Path.join([dstCsPath, name]);
                 var existingContent = null;
@@ -173,6 +177,28 @@ class UnityCSharp {
         else {
             warning('Failed to patch field lookup names');
         }
+
+        return content;
+
+    }
+
+    static function patchRuntime(content:String, dstResourcesPath:String):String {
+
+        var indexOfConstructor = content.indexOf('public Runtime() {');
+
+        if (indexOfConstructor != -1) {
+
+            var overloads = [];
+
+            overloads.push('public static int toInt(int val) { return val; }');
+            overloads.push('public static int toInt(float val) { return (int)val; }');
+            overloads.push('public static int toInt(double val) { return (int)val; }');
+
+            content = content.substring(0, indexOfConstructor) + overloads.join('\n') + '\n' + content.substring(indexOfConstructor);
+
+        }
+
+        var toInt = 'public static int toInt(int val) { return val; }';
 
         return content;
 
