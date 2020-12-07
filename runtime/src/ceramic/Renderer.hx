@@ -82,6 +82,10 @@ class Renderer extends Entity {
             backendTextures.maxTexturesByBatch(),
             backendShaders.maxIfStatementsByFragmentShader()
         ));
+        
+        while (usedTextureIndexes.length < maxUsableTexturesInBatch) {
+            usedTextureIndexes.push(0);
+        }
 
         #if ceramic_avoid_last_texture_slot
         if (maxUsableTexturesInBatch > 1) {
@@ -1159,6 +1163,10 @@ class Renderer extends Entity {
             backendTextures.maxTexturesByBatch(),
             backendShaders.maxIfStatementsByFragmentShader()
         ));
+        
+        while (usedTextureIndexes.length < maxUsableTexturesInBatch) {
+            usedTextureIndexes.push(0);
+        }
 
         #if ceramic_avoid_last_texture_slot
         if (maxUsableTexturesInBatch > 1) {
@@ -2436,10 +2444,10 @@ class Renderer extends Entity {
             }
             usedTextures = 1;
             var textureIndex = backendTextures.getTextureIndex(texture.backendItem);
-            usedTextureIndexes[0] = textureIndex;
+            usedTextureIndexes.unsafeSet(0, textureIndex);
             draw.setActiveTexture(0);
             activeTextureSlot = 0;
-            useTexture(draw, texture);
+            useTexture(draw, texture, false);
         /*}
         else {
             usedTextures = 0;
@@ -2450,7 +2458,7 @@ class Renderer extends Entity {
 
     }
 
-    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool = false):Void {
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useTexture(draw:backend.Draw, texture:ceramic.Texture, reusing:Bool):Void {
 
         if (texture != null) {
     #if (ceramic_debug_draw && ceramic_debug_multitexture)
@@ -2542,10 +2550,10 @@ class Renderer extends Entity {
 
             if (!alreadyUsed && usedTextures < maxUsableTexturesInBatch) {
                 var slot = usedTextures++;
-                usedTextureIndexes[slot] = textureIndex;
+                usedTextureIndexes.unsafeSet(slot, textureIndex);
                 draw.setActiveTexture(slot);
                 activeTextureSlot = slot;
-                useTexture(draw, texture);
+                useTexture(draw, texture, false);
             }
         }
 
@@ -2560,7 +2568,7 @@ class Renderer extends Entity {
         }
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
-        useTexture(draw, null);
+        useTexture(draw, null, false);
 
     }
     
