@@ -1334,8 +1334,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        ceramic.App.app.visuals.push(this);
-        ceramic.App.app.hierarchyDirty = true;
+        ceramic.App.app.addVisual(this);
 
 #if ceramic_luxe_legacy
         backendItem = ceramic.App.app.backend.draw.getItem(this);
@@ -1351,8 +1350,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
             ceramic.App.app.screen.focusedVisual = null;
         }
         
-        ceramic.App.app.visuals.remove(this);
-        ceramic.App.app.hierarchyDirty = true;
+        ceramic.App.app.removeVisual(this);
 
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;

@@ -114,7 +114,7 @@ class FontAsset extends Asset {
 
                                 // Font was reloaded. Update related visuals
                                 for (visual in [].concat(app.visuals)) {
-                                    if (Std.is(visual, Text)) {
+                                    if (!visual.destroyed && Std.is(visual, Text)) {
                                         var text:Text = cast visual;
                                         if (text.font == prevFont) {
                                             text.font = this.font;

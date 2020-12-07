@@ -89,39 +89,41 @@ class ImageAsset extends Asset {
 
                     // Texture was reloaded. Update related visuals
                     for (visual in [].concat(app.visuals)) {
-                        if (visual.asQuad != null) {
-                            var quad = visual.asQuad;
-                            if (quad.texture == prevTexture) {
-
-                                // Update texture but keep same frame
-                                //
-                                var frameX = quad.frameX;
-                                var frameY = quad.frameY;
-                                var frameWidth = quad.frameWidth;
-                                var frameHeight = quad.frameHeight;
-
-                                quad.texture = this.texture;
-
-                                // We keep the frame, unless image
-                                // is being hot-reloaded and its frame is all texture area
-                                if (reloadBecauseOfDensityChange
-                                    || frameX != 0 || frameY != 0
-                                    || frameWidth != prevTexture.width
-                                    || frameHeight != prevTexture.height
-                                ) {
-                                    // Frame was reset by texture assign.
-                                    // Put it back to what it was.
-                                    quad.frameX = frameX;
-                                    quad.frameY = frameY;
-                                    quad.frameWidth = frameWidth;
-                                    quad.frameHeight = frameHeight;
+                        if (!visual.destroyed) {
+                            if (visual.asQuad != null) {
+                                var quad = visual.asQuad;
+                                if (quad.texture == prevTexture) {
+    
+                                    // Update texture but keep same frame
+                                    //
+                                    var frameX = quad.frameX;
+                                    var frameY = quad.frameY;
+                                    var frameWidth = quad.frameWidth;
+                                    var frameHeight = quad.frameHeight;
+    
+                                    quad.texture = this.texture;
+    
+                                    // We keep the frame, unless image
+                                    // is being hot-reloaded and its frame is all texture area
+                                    if (reloadBecauseOfDensityChange
+                                        || frameX != 0 || frameY != 0
+                                        || frameWidth != prevTexture.width
+                                        || frameHeight != prevTexture.height
+                                    ) {
+                                        // Frame was reset by texture assign.
+                                        // Put it back to what it was.
+                                        quad.frameX = frameX;
+                                        quad.frameY = frameY;
+                                        quad.frameWidth = frameWidth;
+                                        quad.frameHeight = frameHeight;
+                                    }
                                 }
                             }
-                        }
-                        else if (visual.asMesh != null) {
-                            var mesh = visual.asMesh;
-                            if (mesh.texture == prevTexture) {
-                                mesh.texture = this.texture;
+                            else if (visual.asMesh != null) {
+                                var mesh = visual.asMesh;
+                                if (mesh.texture == prevTexture) {
+                                    mesh.texture = this.texture;
+                                }
                             }
                         }
                     }

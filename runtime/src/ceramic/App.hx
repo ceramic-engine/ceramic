@@ -292,8 +292,26 @@ class App extends Entity {
     /** Logger. Used by log.info() shortcut */
     public var logger(default,null):Logger = new Logger();
 
-    /** Visuals (ordered) */
+    /**
+     * Visuals (ordered)
+     * Active list of visuals being managed by ceramic.
+     * This list is ordered and updated at every frame.
+     * In between, it could contain destroyed visuals as they
+     * are removed only at the end of the frame for performance reasons.
+     */
     public var visuals(default,null):Array<Visual> = [];
+
+    /**
+     * Pending visuals: visuals that have been created this frame
+     * but were not added to the `visual` list yet
+     */
+    public var pendingVisuals(default,null):Array<Visual> = [];
+
+    /**
+     * Pending destroyed visuals: visuals that have been destroyed this frame
+     * but were not removed to the `visual` list yet
+     */
+    public var destroyedVisuals(default,null):Array<Visual> = [];
 
     /** Groups */
     public var groups(default,null):Array<Group<Entity>> = [];
@@ -797,6 +815,9 @@ class App extends Entity {
 #if ceramic_debug_cputime cpuTimePause(7); #end
 #if ceramic_debug_cputime cpuTimeRec(8); #end
 
+            // Sync pending and destroyed visuals
+            syncPendingVisuals();
+
             // Update visuals
             updateVisuals(visuals);
 
@@ -814,6 +835,9 @@ class App extends Entity {
 
 #if ceramic_debug_cputime cpuTimePause(10); #end
 #if ceramic_debug_cputime cpuTimeRec(11); #end
+
+            // Sync destroyed visuals again, if needed, before sorting
+            syncDestroyedVisuals();
 
             // Sort visuals depending on their settings
             sortVisuals(visuals);
@@ -848,6 +872,75 @@ class App extends Entity {
     }
 
     @:noCompletion
+    inline public function addVisual(visual:Visual):Void {
+
+        pendingVisuals.push(visual);
+
+    }
+
+    @:noCompletion
+    inline public function removeVisual(visual:Visual):Void {
+
+        destroyedVisuals.push(visual);
+
+    }
+
+    /*inline*/ function syncPendingVisuals():Void {
+
+        if (pendingVisuals.length > 0) {
+
+            // Add pending visuals
+            while (pendingVisuals.length > 0) {
+                visuals.push(pendingVisuals.pop());
+            }
+
+            hierarchyDirty = true;
+
+        }
+
+    }
+
+    /*inline*/ function syncDestroyedVisuals():Void {
+
+        if (destroyedVisuals.length > 0) {
+
+            while (destroyedVisuals.length > 0) {
+                visuals.remove(destroyedVisuals.pop());
+            }
+
+            /*
+            // Remove destroyed visuals
+            var i = 0;
+            var len = visuals.length;
+            var gap = 0;
+            while (i < len) {
+
+                // When hitting a destroyed visuals, move every next visual one index lower
+                var key = i + gap;
+                var visual = visuals.unsafeGet(key);
+                if (visual.destroyed) {
+                    gap++;
+                    len--;
+                }
+                if (gap > 0) {
+                    key = i + gap;
+                    visuals.unsafeSet(i, visuals.unsafeGet(key));
+                }
+                i++;
+            }
+
+            // Reduce array size
+            destroyedVisuals.setArrayLength(0);
+            visuals.setArrayLength(len);
+            */
+
+            hierarchyDirty = true;
+
+        }
+
+    }
+
+    @:noCompletion
     #if (!debug && !ceramic_debug_perf) inline #end public function updateVisuals(visuals:Array<Visual>) {
 
         var numIterations = 0;
@@ -862,33 +955,39 @@ class App extends Entity {
                 screen.matrix.emitChange();
             }
 
-            for (visual in visuals) {
+            for (i in 0...visuals.length) {
 
-                // Compute touchable state
-                if (visual.touchableDirty) {
-                    visual.computeTouchable();
+                var visual = visuals.unsafeGet(i);
+                if (!visual.destroyed) {
+
+                    // Compute touchable state
+                    if (visual.touchableDirty) {
+                        visual.computeTouchable();
+                    }
+    
+                    // Compute displayed content
+                    if (visual.contentDirty) {
+    
+                        // Compute content only if visual is currently visible
+                        //
+                        if (visual.visibilityDirty) {
+                            visual.computeVisibility();
+                        }
+    
+                        if (visual.computedVisible) {
+                            visual.computeContent();
+                        }
+                    }
                 }
 
-                // Compute displayed content
-                if (visual.contentDirty) {
-
-                    // Compute content only if visual is currently visible
-                    //
-                    if (visual.visibilityDirty) {
-                        visual.computeVisibility();
-                    }
-
-                    if (visual.computedVisible) {
-                        visual.computeContent();
-                    }
-                }
 
             }
 
             // Dispatch visual transforms changes
-            for (visual in visuals) {
+            for (i in 0...visuals.length) {
 
-                if (visual.transform != null) {
+                var visual = visuals.unsafeGet(i);
+                if (!visual.destroyed && visual.transform != null) {
                     visual.transform.computeChanged();
                     if (visual.transform.changed) {
                         visual.transform.emitChange();
@@ -905,8 +1004,9 @@ class App extends Entity {
                     throw 'Failed to update visuals because flushImmediate() is being called continuously.';
                 }
                 else {
-                    for (visual in visuals) {
-                        if (visual.contentDirty) {
+                    for (i in 0...visuals.length) {
+                        var visual = visuals.unsafeGet(i);
+                        if (!visual.destroyed && visual.contentDirty) {
                             throw 'Failed to update visuals because visuals content stays dirty. ($visual)';
                         }
                     }
@@ -924,35 +1024,39 @@ class App extends Entity {
         }
 
         // Update visuals render target, matrix and visibility
-        for (visual in visuals) {
+        for (i in 0...visuals.length) {
 
-            if (visual.renderTargetDirty) {
-                visual.computeRenderTarget();
-            }
+            var visual = visuals.unsafeGet(i);
+            if (!visual.destroyed) {
 
-            if (visual.matrixDirty) {
-                visual.computeMatrix();
-            }
-
-            if (visual.visibilityDirty) {
-                visual.computeVisibility();
-            }
-
-            if (visual.computedVisible) {
-                if (visual.clipDirty) {
-                    visual.computeClip();
+                if (visual.renderTargetDirty) {
+                    visual.computeRenderTarget();
                 }
-            }
 
-            if (visual.computedRenderTarget != null) {
-                if (visual.asQuad != null) {
-                    if (visual.asQuad.texture != null) {
-                        visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                if (visual.matrixDirty) {
+                    visual.computeMatrix();
+                }
+
+                if (visual.visibilityDirty) {
+                    visual.computeVisibility();
+                }
+
+                if (visual.computedVisible) {
+                    if (visual.clipDirty) {
+                        visual.computeClip();
                     }
                 }
-                else if (visual.asMesh != null) {
-                    if (visual.asMesh.texture != null) {
-                        visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+
+                if (visual.computedRenderTarget != null) {
+                    if (visual.asQuad != null) {
+                        if (visual.asQuad.texture != null) {
+                            visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                        }
+                    }
+                    else if (visual.asMesh != null) {
+                        if (visual.asMesh.texture != null) {
+                            visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                        }
                     }
                 }
             }
@@ -967,19 +1071,17 @@ class App extends Entity {
         if (hierarchyDirty) {
 
             // Compute visuals depth
-            for (visual in visuals) {
+            for (i in 0...visuals.length) {
 
-                #if ceramic_debug_num_visuals
-                if (visual.destroyed) {
-                    throw 'Visual is destroyed but in hierarchy: $visual';
-                }
-                #end
+                var visual = visuals.unsafeGet(i);
+                if (!visual.destroyed) {
 
-                if (visual.parent == null) {
-                    visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
+                    if (visual.parent == null) {
+                        visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
 
-                    if (visual.children != null) {
-                        visual.computeChildrenDepth();
+                        if (visual.children != null) {
+                            visual.computeChildrenDepth();
+                        }
                     }
                 }
             }
