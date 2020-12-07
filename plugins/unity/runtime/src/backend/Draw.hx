@@ -32,7 +32,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function getItem(visual:ceramic.Visual):VisualItem {
+    #if !ceramic_debug_draw_backend inline #end public function getItem(visual:ceramic.Visual):VisualItem {
 
         // The backend decides how each visual should be drawn.
         // Instead of checking instance type at each draw iteration,
@@ -66,8 +66,8 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
-    inline static var MAX_VERTS_SIZE:Int = 65536;
-    inline static var MAX_INDICES:Int = 16384;
+    #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
+    #if !ceramic_debug_draw_backend inline #end static var MAX_INDICES:Int = 16384;
 
     static var _stencilBufferDirty:Bool = false;
 
@@ -125,13 +125,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _floatAttributesIndex:Int = 0;
 
-    inline public function getNumPos():Int {
+    #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
         return _numPos;
 
     }
 
-    inline public function putPos(x:Float, y:Float, z:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float, y:Float, z:Float):Void {
 
         _meshVertices[_posIndex] = x;
         _meshVertices[_posIndex+1] = y;
@@ -141,7 +141,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
 
         _meshVertices[_posIndex] = x;
         _meshVertices[_posIndex+1] = y;
@@ -152,14 +152,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putIndice(i:Int):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putIndice(i:Int):Void {
 
         _meshIndices[_numIndices] = untyped __cs__('(ushort){0}', i);
         _numIndices++;
 
     }
 
-    inline public function putUVs(uvX:Float, uvY:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
         //_meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
         _meshVertices[_uvIndex] = uvX;
@@ -169,7 +169,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
         //_meshColors[_numColors] = new Color(r, g, b, a);
         _meshVertices[_colorIndex] = r;
@@ -181,25 +181,25 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function beginFloatAttributes():Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginFloatAttributes():Void {
 
         // Nothing to do here
 
     }
 
-    inline public function putFloatAttribute(index:Int, value:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putFloatAttribute(index:Int, value:Float):Void {
 
         _meshVertices[_floatAttributesIndex+index] = value;
 
     }
 
-    inline public function endFloatAttributes():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endFloatAttributes():Void {
 
         _floatAttributesIndex += _vertexSize;
 
     }
 
-    inline public function initBuffers():Void {
+    #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         if (_meshes == null) {
             _meshes = [];
@@ -249,7 +249,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function resetIndexes():Void {
+    #if !ceramic_debug_draw_backend inline #end function resetIndexes():Void {
 
         _numIndices = 0;
 
@@ -278,7 +278,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function beginRender():Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
         // Reset command buffer
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
@@ -301,7 +301,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function clearAndApplyBackground():Void {
+    #if !ceramic_debug_draw_backend inline #end public function clearAndApplyBackground():Void {
 
         var bg = ceramic.App.app.settings.background;
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
@@ -309,7 +309,7 @@ class Draw #if !completion implements spec.Draw #end {
         
     }
 
-    inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         if (_currentRenderTarget != renderTarget || force) {
             _currentRenderTarget = renderTarget;
@@ -404,7 +404,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function updateProjectionMatrix(width:Float, height:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end function updateProjectionMatrix(width:Float, height:Float):Void {
 
         // // Making orthographic projection
         // //
@@ -444,7 +444,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipX:Float = 1, flipY:Float = 1):Void {
+    #if !ceramic_debug_draw_backend inline #end function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipX:Float = 1, flipY:Float = 1):Void {
 
         if (transform != null) {
             _modelViewTransform.setToTransform(transform);
@@ -478,7 +478,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function updateCurrentMatrix():Void {
+    #if !ceramic_debug_draw_backend inline #end function updateCurrentMatrix():Void {
 
         untyped __cs__('UnityEngine.Matrix4x4 matrix = ((UnityEngine.Matrix4x4){0}) * ((UnityEngine.Matrix4x4){1})', _projectionMatrix, _modelViewMatrix);
         
@@ -486,7 +486,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline function transformToMatrix4x4(transform:Transform):Dynamic {
+    #if !ceramic_debug_draw_backend inline #end function transformToMatrix4x4(transform:Transform):Dynamic {
 
         untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
 
@@ -501,7 +501,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function useShader(shader:backend.ShaderImpl):Void {
+    #if !ceramic_debug_draw_backend inline #end public function useShader(shader:backend.ShaderImpl):Void {
 
         _materialCurrentShader = _materialStencilWrite != 0 ? _stencilShader : shader;
 
@@ -518,26 +518,26 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function clear():Void {
+    #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(1f, 1f, 1f, 0f), 1f)');
 
     }
 
-    inline public function enableBlending():Void {
+    #if !ceramic_debug_draw_backend inline #end public function enableBlending():Void {
 
         // Blending always enabled
 
     }
 
-    inline public function disableBlending():Void {
+    #if !ceramic_debug_draw_backend inline #end public function disableBlending():Void {
 
         // Blending always enabled
 
     }
 
-    inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         _materialSrcRgb = srcRgb;
         _materialDstRgb = dstRgb;
@@ -546,55 +546,55 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function getActiveTexture():Int {
+    #if !ceramic_debug_draw_backend inline #end public function getActiveTexture():Int {
 
         return _activeTextureSlot;
 
     }
 
-    inline public function setActiveTexture(slot:Int):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
 
     }
 
-    inline public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
+    #if !ceramic_debug_draw_backend inline #end public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem:TextureImpl).textureId == textureId;
 
     }
 
-    inline public function getTextureId(backendItem:backend.Texture):backend.TextureId {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem:TextureImpl).textureId;
 
     }
 
-    inline public function getTextureWidth(texture:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureWidth(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    inline public function getTextureHeight(texture:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureHeight(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    inline public function getTextureWidthActual(texture:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureWidthActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).width;
 
     }
 
-    inline public function getTextureHeightActual(texture:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureHeightActual(texture:backend.Texture):Int {
 
         return (texture:TextureImpl).height;
 
     }
 
-    inline public function bindTexture(backendItem:backend.Texture):Void {
+    #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
         // TODO
 
@@ -602,31 +602,31 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function bindNoTexture():Void {
+    #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
         
         _materialCurrentTextures[_activeTextureSlot] = null;
 
     }
 
-    inline public function setRenderWireframe(value:Bool):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setRenderWireframe(value:Bool):Void {
 
         // TODO
 
     }
 
-    inline public function beginDrawQuad(quad:ceramic.Quad):Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     }
 
-    inline public function endDrawQuad():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawQuad():Void {
 
     }
 
-    inline public function beginDrawMesh(mesh:ceramic.Mesh):Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
     }
 
-    inline public function endDrawMesh():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawMesh():Void {
 
     }
 
@@ -672,49 +672,49 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function endDrawingInStencilBuffer():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
         
         _materialStencilWrite = 0;
 
     }
 
-    inline public function drawWithStencilTest():Void {
+    #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
         _materialStencilTest = true;
 
     }
 
-    inline public function drawWithoutStencilTest():Void {
+    #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
         _materialStencilTest = false;
 
     }
 
-    inline public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
+    #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
         
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
-    inline public function remainingVertices():Int {
+    #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
         
         return _maxVerts - _numPos;
 
     }
 
-    inline public function remainingIndices():Int {
+    #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
         
         return MAX_INDICES - _numIndices;
 
     }
 
-    inline public function hasAnythingToFlush():Bool {
+    #if !ceramic_debug_draw_backend inline #end public function hasAnythingToFlush():Bool {
 
         return _numPos > 0;
 
     }
 
-    inline public function flush():Void {
+    #if !ceramic_debug_draw_backend inline #end public function flush():Void {
 
         var mesh = _currentMesh;
 
