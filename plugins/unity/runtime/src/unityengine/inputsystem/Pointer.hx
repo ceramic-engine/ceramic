@@ -7,4 +7,6 @@ extern class Pointer extends InputDevice {
 
     var position(default, null):Vector2Control;
 
+    var delta(default, null):Vector2Control;
+
 }
