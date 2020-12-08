@@ -900,39 +900,41 @@ class App extends Entity {
 
     }
 
-    /*inline*/ function syncDestroyedVisuals():Void {
+    inline function syncDestroyedVisuals():Void {
 
         if (destroyedVisuals.length > 0) {
 
-            while (destroyedVisuals.length > 0) {
-                visuals.remove(destroyedVisuals.pop());
-            }
-
-            /*
             // Remove destroyed visuals
             var i = 0;
-            var len = visuals.length;
             var gap = 0;
+            var len = visuals.length;
             while (i < len) {
 
-                // When hitting a destroyed visuals, move every next visual one index lower
-                var key = i + gap;
-                var visual = visuals.unsafeGet(key);
-                if (visual.destroyed) {
-                    gap++;
-                    len--;
+                do {
+
+                    var visual = visuals.unsafeGet(i);
+                    if (visual.destroyed) {
+                        i++;
+                        gap++;
+                    }
+                    else {
+                        break;
+                    }
+
                 }
-                if (gap > 0) {
-                    key = i + gap;
-                    visuals.unsafeSet(i, visuals.unsafeGet(key));
+                while (i < len);
+
+                if (gap != 0 && i < len) {
+                    var key = i - gap;
+                    visuals.unsafeSet(key, visuals.unsafeGet(i));
                 }
+                
                 i++;
             }
 
             // Reduce array size
             destroyedVisuals.setArrayLength(0);
-            visuals.setArrayLength(len);
-            */
+            visuals.setArrayLength(len - gap);
 
             hierarchyDirty = true;
 
