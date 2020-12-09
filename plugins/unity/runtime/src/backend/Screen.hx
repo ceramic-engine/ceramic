@@ -126,39 +126,39 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             if (mouse.leftButton.isPressed) {
                 if (!mouseLeftPressed) {
                     mouseLeftPressed = true;
-                    emitMouseDown(1, mouseX, mouseY);
+                    emitMouseDown(0, mouseX, mouseY);
                 }
             }
             else {
                 if (mouseLeftPressed) {
                     mouseLeftPressed = false;
-                    emitMouseUp(1, mouseX, mouseY);
+                    emitMouseUp(0, mouseX, mouseY);
                 }
             }
     
             if (mouse.middleButton.isPressed) {
                 if (!mouseMiddlePressed) {
                     mouseMiddlePressed = true;
-                    emitMouseDown(2, mouseX, mouseY);
+                    emitMouseDown(1, mouseX, mouseY);
                 }
             }
             else {
                 if (mouseMiddlePressed) {
                     mouseMiddlePressed = false;
-                    emitMouseUp(2, mouseX, mouseY);
+                    emitMouseUp(1, mouseX, mouseY);
                 }
             }
     
             if (mouse.rightButton.isPressed) {
                 if (!mouseRightPressed) {
                     mouseRightPressed = true;
-                    emitMouseDown(3, mouseX, mouseY);
+                    emitMouseDown(2, mouseX, mouseY);
                 }
             }
             else {
                 if (mouseRightPressed) {
                     mouseRightPressed = false;
-                    emitMouseUp(3, mouseX, mouseY);
+                    emitMouseUp(2, mouseX, mouseY);
                 }
             }
 
@@ -202,17 +202,17 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             if (touch.phase == TouchPhase.Began) {
                 var x = touch.screenPosition.x;
                 var y = height - touch.screenPosition.y;
-                emitTouchDown(index, x, y);
+                emitTouchDown(index - 1, x, y);
             }
             else if (touch.phase == TouchPhase.Moved) {
                 var x = touch.screenPosition.x;
                 var y = height - touch.screenPosition.y;
-                emitTouchMove(index, x, y);
+                emitTouchMove(index - 1, x, y);
             }
             else if (touch.phase == TouchPhase.Ended) {
                 var x = touch.screenPosition.x;
                 var y = height - touch.screenPosition.y;
-                emitTouchUp(index, x, y);
+                emitTouchUp(index - 1, x, y);
 
                 usedTouchIndexes.remove(index);
                 touchIdToIndex.remove(touchId);

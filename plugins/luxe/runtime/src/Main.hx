@@ -386,7 +386,7 @@ class Main extends luxe.Game {
 
         mouseDownButtons.set(event.button, true);
         ceramic.App.app.backend.screen.emitMouseDown(
-            event.button,
+            event.button - 1,
             event.x,
             event.y
         );
@@ -404,7 +404,7 @@ class Main extends luxe.Game {
 
         mouseDownButtons.remove(event.button);
         ceramic.App.app.backend.screen.emitMouseUp(
-            event.button,
+            event.button - 1,
             event.x,
             event.y
         );
@@ -528,6 +528,8 @@ class Main extends luxe.Game {
 
     override public function ongamepadaxis(event:GamepadEvent) {
 
+        #if !(ios || android)
+
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
@@ -537,9 +539,13 @@ class Main extends luxe.Game {
 
         @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, event.axis, event.value);
 
+        #end
+
     }
 
     override public function ongamepaddown(event:GamepadEvent) {
+
+        #if !(ios || android)
 
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
@@ -550,9 +556,13 @@ class Main extends luxe.Game {
 
         @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, event.button);
 
+        #end
+
     }
 
     override public function ongamepadup(event:GamepadEvent) {
+
+        #if !(ios || android)
 
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
@@ -563,9 +573,13 @@ class Main extends luxe.Game {
 
         @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, event.button);
 
+        #end
+
     }
 
     override public function ongamepaddevice(event:GamepadEvent) {
+
+        #if !(ios || android)
 
         var id = event.gamepad;
         if (event.type == GamepadEventType.device_removed) {
@@ -586,6 +600,8 @@ class Main extends luxe.Game {
                 @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
             }
         }
+
+        #end
 
     }
 
