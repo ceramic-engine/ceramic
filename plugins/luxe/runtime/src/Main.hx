@@ -1,5 +1,6 @@
 package;
 
+import ceramic.IntIntMap;
 #if web
 
 import js.Browser.navigator;
@@ -315,6 +316,8 @@ class Main extends luxe.Game {
         };
 #end
 
+        configureGamepadMapping();
+
         return config;
 
     }
@@ -526,6 +529,41 @@ class Main extends luxe.Game {
 
 #end
 
+    var gamepadAxisToButton:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    var gamepadButtonMapping:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    var gamepadPressed:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    function configureGamepadMapping() {
+
+        #if !ceramic_no_remap_gamepad
+
+        #if (cpp && linc_sdl)
+
+        // Tweak a few values to make these match what we got with HTML5 gamepad API
+        // This is expected to work on PS4 and Xbox controllers for now.
+        // (better support of more gamepad could be done later if needed though)
+
+        gamepadButtonMapping.set(9, 4);
+        gamepadButtonMapping.set(10, 5);
+        gamepadAxisToButton.set(4, 6);
+        gamepadAxisToButton.set(5, 7);
+        gamepadButtonMapping.set(4, 8);
+        gamepadButtonMapping.set(6, 9);
+        gamepadButtonMapping.set(7, 10);
+        gamepadButtonMapping.set(8, 11);
+        gamepadButtonMapping.set(11, 12);
+        gamepadButtonMapping.set(12, 13);
+        gamepadButtonMapping.set(13, 14);
+        gamepadButtonMapping.set(14, 15);
+
+        #end
+
+        #end
+
+    }
+
     override public function ongamepadaxis(event:GamepadEvent) {
 
         #if !(ios || android)
@@ -537,7 +575,27 @@ class Main extends luxe.Game {
             @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, event.axis, event.value);
+        var axisId = event.axis;
+
+        if (gamepadAxisToButton.exists(axisId)) {
+            var buttonId = gamepadAxisToButton.get(axisId);
+            var pressed = event.value >= 0.5;
+            if (pressed) {
+                if (gamepadPressed.get(id * 100 + buttonId) != 1) {
+                    gamepadPressed.set(id * 100 + buttonId, 1);
+                    @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, buttonId);
+                }
+            }
+            else {
+                if (gamepadPressed.get(id * 100 + buttonId) == 1) {
+                    gamepadPressed.set(id * 100 + buttonId, 0);
+                    @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, buttonId);
+                }
+            }
+        }
+        else {
+            @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, axisId, event.value);
+        }
 
         #end
 
@@ -550,11 +608,22 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
+            for (i in 0...100) {
+                gamepadPressed.set(id * 100 + i, 0);
+            }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
             @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, event.button);
+        var buttonId = event.button;
+        if (gamepadButtonMapping.exists(buttonId)) {
+            buttonId = gamepadButtonMapping.get(buttonId);
+        }
+
+        if (gamepadPressed.get(id * 100 + buttonId) != 1) {
+            gamepadPressed.set(id * 100 + buttonId, 1);
+            @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, buttonId);
+        }
 
         #end
 
@@ -567,11 +636,22 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
+            for (i in 0...100) {
+                gamepadPressed.set(id * 100 + i, 0);
+            }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
             @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
         }
 
-        @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, event.button);
+        var buttonId = event.button;
+        if (gamepadButtonMapping.exists(buttonId)) {
+            buttonId = gamepadButtonMapping.get(buttonId);
+        }
+
+        if (gamepadPressed.get(id * 100 + buttonId) == 1) {
+            gamepadPressed.set(id * 100 + buttonId, 0);
+            @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, buttonId);
+        }
 
         #end
 
@@ -584,6 +664,12 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (event.type == GamepadEventType.device_removed) {
             if (activeControllers.exists(id)) {
+                for (i in 0...100) {
+                    if (gamepadPressed.get(id * 100 + i) == 1) {
+                        @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, i);
+                        gamepadPressed.set(id * 100 + i, 0);
+                    }
+                }
                 @:privateAccess ceramic.App.app.backend.input.emitControllerDisable(id);
                 activeControllers.remove(id);
                 removedControllers.set(id, true);
@@ -595,6 +681,9 @@ class Main extends luxe.Game {
         else if (event.type == GamepadEventType.device_added) {
             if (!activeControllers.exists(id)) {
                 activeControllers.set(id, true);
+                for (i in 0...100) {
+                    gamepadPressed.set(id * 100 + i, 0);
+                }
                 removedControllers.remove(id);
                 var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
                 @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
