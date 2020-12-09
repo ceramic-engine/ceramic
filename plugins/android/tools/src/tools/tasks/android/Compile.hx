@@ -89,7 +89,9 @@ class Compile extends tools.Task {
 
             print('Compile C++ for arch $arch');
 
-            haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
+            if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {
+                fail('Failed to compile C++ for arch $arch');
+            }
         }
 
         // Create android project if needed

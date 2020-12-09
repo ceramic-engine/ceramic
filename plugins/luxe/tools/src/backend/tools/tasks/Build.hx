@@ -259,7 +259,9 @@ class Build extends tools.Task {
             }
             print('Compile C++');
 
-            haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) });
+            if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {
+                fail('Failed to compile C++');
+            }
         }
 
         // Compile c++ for Android on requested architectures
