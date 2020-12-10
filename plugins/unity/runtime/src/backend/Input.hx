@@ -1,10 +1,15 @@
 package backend;
 
+import ceramic.IntIntMap;
+import ceramic.IntMap;
 import ceramic.Key;
 import ceramic.KeyCode;
 import ceramic.ScanCode;
+import unityengine.inputsystem.Gamepad;
 import unityengine.inputsystem.Keyboard;
 import unityengine.inputsystem.controls.KeyControl;
+
+using ceramic.Extensions;
 
 class Input implements tracker.Events implements spec.Input {
 
@@ -27,6 +32,7 @@ class Input implements tracker.Events implements spec.Input {
     inline function update():Void {
 
         updateKeyboardInput();
+        updateGamepadInput();
 
     }
 
@@ -272,6 +278,128 @@ class Input implements tracker.Events implements spec.Input {
         else if (scanCode == ScanCode.RSHIFT) {
             // Right Shift
             ceramic.App.app.textInput.rshiftUp();
+        }
+
+    }
+
+/// Gamepad input
+
+    var gamepads:Array<Gamepad> = [];
+
+    var gamepadPressed:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    var gamepadAxis:IntMap<Single> = new IntMap(16, 0.5, false);
+
+    var unusedGamepads:Array<Gamepad> = [];
+
+    function updateGamepadInput() {
+
+        var numPads = Gamepad.all.Count;
+
+        for (i in 0...gamepads.length) {
+            unusedGamepads[i] = gamepads.unsafeGet(i);
+        }
+
+        for (i in 0...numPads) {
+
+            var gamepad:Gamepad = untyped __cs__('{0}[{1}]', Gamepad.all, i);
+            var index = gamepads.indexOf(gamepad);
+            if (index == -1) {
+                for (n in 0...gamepads.length) {
+                    if (gamepads.unsafeGet(n) == null) {
+                        index = n;
+                        gamepads.unsafeSet(index, gamepad);
+                        break;
+                    }
+                }
+                if (index == -1) {
+                    gamepads.push(gamepad);
+                    index = gamepads.length - 1;
+                }
+                emitControllerEnable(index, gamepad.displayName);
+                for (n in 0...20) {
+                    gamepadPressed.set(index * 20 + n, 0);
+                }
+            }
+
+            var unusedIndex = unusedGamepads.indexOf(gamepad);
+            if (unusedIndex != -1) {
+                unusedGamepads.unsafeSet(unusedIndex, null);
+            }
+
+            updateGamepadButton(index, 0, gamepad.buttonSouth.isPressed);
+            updateGamepadButton(index, 1, gamepad.buttonEast.isPressed);
+            updateGamepadButton(index, 2, gamepad.buttonWest.isPressed);
+            updateGamepadButton(index, 3, gamepad.buttonNorth.isPressed);
+
+            updateGamepadButton(index, 4, gamepad.leftShoulder.isPressed);
+            updateGamepadButton(index, 5, gamepad.rightShoulder.isPressed);
+            updateGamepadButton(index, 6, gamepad.leftTrigger.isPressed);
+            updateGamepadButton(index, 7, gamepad.rightTrigger.isPressed);
+
+            updateGamepadButton(index, 8, gamepad.selectButton.isPressed);
+            updateGamepadButton(index, 9, gamepad.startButton.isPressed);
+
+            updateGamepadButton(index, 10, gamepad.leftStickButton.isPressed);
+            updateGamepadButton(index, 11, gamepad.rightStickButton.isPressed);
+
+            updateGamepadButton(index, 12, gamepad.dpad.up.isPressed);
+            updateGamepadButton(index, 13, gamepad.dpad.down.isPressed);
+            updateGamepadButton(index, 14, gamepad.dpad.left.isPressed);
+            updateGamepadButton(index, 15, gamepad.dpad.right.isPressed);
+
+            updateGamepadAxis(index, 0, gamepad.leftStick.x.ReadValue());
+            updateGamepadAxis(index, 1, gamepad.leftStick.y.ReadValue() * -1);
+            updateGamepadAxis(index, 2, gamepad.rightStick.x.ReadValue());
+            updateGamepadAxis(index, 3, gamepad.rightStick.y.ReadValue() * -1);
+
+        }
+
+        for (i in 0...unusedGamepads.length) {
+            var gamepad:Gamepad = unusedGamepads.unsafeGet(i);
+            if (gamepad != null) {
+                var index = gamepads.indexOf(gamepad);
+                if (index != -1) {
+                    gamepads.unsafeSet(index, null);
+                    for (n in 0...20) {
+                        if (gamepadPressed.get(index * 20 + n) == 1) {
+                            gamepadPressed.set(index * 20 + n, 0);
+                            emitControllerUp(index, n);
+                        }
+                    }
+                    emitControllerDisable(index);
+                }
+                unusedGamepads.unsafeSet(i, null);
+            }
+        }
+        
+    }
+
+    function updateGamepadButton(index:Int, button:Int, pressed:Bool) {
+
+        var wasPressed = gamepadPressed.get(index * 20 + button) == 1;
+
+        if (pressed) {
+            if (!wasPressed) {
+                gamepadPressed.set(index * 20 + button, 1);
+                emitControllerDown(index, button);
+            }
+        }
+        else {
+            if (wasPressed) {
+                gamepadPressed.set(index * 20 + button, 0);
+                emitControllerUp(index, button);
+            }
+        }
+
+    }
+
+    function updateGamepadAxis(index:Int, axis:Int, value:Single) {
+
+        var prevValue = gamepadAxis.get(index * 5 + axis);
+        if (prevValue != value) {
+            gamepadAxis.set(index * 5 + axis, value);
+            emitControllerAxis(index, axis, value);
         }
 
     }
