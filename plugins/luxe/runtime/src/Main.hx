@@ -1,6 +1,8 @@
 package;
 
 import ceramic.IntIntMap;
+import ceramic.IntMap;
+
 #if web
 
 import js.Browser.navigator;
@@ -535,6 +537,10 @@ class Main extends luxe.Game {
 
     var gamepadPressed:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    #if !ceramic_no_axis_round
+    var gamepadAxis:IntMap<Float> = new IntMap(16, 0.5, false);
+    #end
+
     function configureGamepadMapping() {
 
         #if !ceramic_no_remap_gamepad
@@ -594,7 +600,16 @@ class Main extends luxe.Game {
             }
         }
         else {
+            #if !ceramic_no_axis_round
+            var prevValue = gamepadAxis.get(id * 100 + axisId);
+            var newValue = Math.round(event.value * 100) / 100.0;
+            if (Math.abs(prevValue - newValue) > 0.01) {
+                gamepadAxis.set(id * 100 + axisId, newValue);
+                @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, axisId, newValue);
+            }
+            #else
             @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, axisId, event.value);
+            #end
         }
 
         #end
