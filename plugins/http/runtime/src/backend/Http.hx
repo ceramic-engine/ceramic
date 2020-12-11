@@ -345,21 +345,39 @@ class Http implements spec.Http {
         var requestId = nextRequestId;
         nextRequestId = (nextRequestId + 1) % 999999999;
 
+        var content:String = null;
+        if (options.content != null)
+            content = options.content;
+
         var url = options.url;
+
+        // Unity web request API forces us to decode uri components and give them as a dictionary...
+        var formFields:Dynamic = null;
+        if (options.method == POST) {
+            if (content != null) {
+                var postUriParams = ceramic.Utils.decodeUriParams(content);
+                formFields = untyped __cs__('new System.Collections.Generic.Dictionary<string,string>()');
+                for (key => val in postUriParams) {
+                    untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0}).Add({1}, {2})', formFields, key, val);
+                }
+            }
+        }
 
         var webRequest:UnityWebRequest = null;
         try {
             webRequest = switch options.method {
                 case null: UnityWebRequest.Get(url);
                 case GET: UnityWebRequest.Get(url);
-                case POST: UnityWebRequest.Post(url, options.content);
-                case PUT: UnityWebRequest.Put(url, options.content);
+                case POST: UnityWebRequest.Post(url, untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0})', formFields));
+                case PUT: UnityWebRequest.Put(url, content);
                 case DELETE: UnityWebRequest.Delete(url);
             }
 
             if (options.headers != null) {
                 for (key in options.headers.keys()) {
-                    webRequest.SetRequestHeader(key, options.headers.get(key));
+                    if (key.toLowerCase() != 'content-length') {
+                        webRequest.SetRequestHeader(key, options.headers.get(key));
+                    }
                 }
             }
     
@@ -410,7 +428,13 @@ class Http implements spec.Http {
                 catch (e1:Dynamic) {}
             }
 
-            done(null);
+            done({
+                status: 404,
+                content: null,
+                binaryContent: null,
+                headers: new Map(),
+                error: 'Error: ' + e
+            });
         }
 
 #elseif akifox_asynchttp

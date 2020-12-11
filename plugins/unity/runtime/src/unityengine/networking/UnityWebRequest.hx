@@ -35,7 +35,7 @@ extern class UnityWebRequest {
 
     var responseCode(default, null):Any; // long
 
-    var method(default, null):String;
+    var method:String;
 
     var timeout:Int;
 

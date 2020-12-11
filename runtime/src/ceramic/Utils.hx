@@ -427,4 +427,23 @@ class Utils {
 
     }
 
+    public static function decodeUriParams(raw:String):Map<String,String> {
+
+        var result = new Map<String,String>();
+
+        var parts = raw.split('&');
+        for (part in parts) {
+            var equalIndex = part.indexOf('=');
+            if (equalIndex != -1) {
+                result.set(
+                    StringTools.urlDecode(part.substring(0, equalIndex)),
+                    StringTools.urlDecode(part.substring(equalIndex + 1))
+                );
+            }
+        }
+
+        return result;
+
+    }
+
 }
