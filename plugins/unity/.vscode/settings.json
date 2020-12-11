@@ -8,5 +8,6 @@
         "**/node_modules": true,
         "**/tmp": true,
         "**/out": true
-    }
+    },
+    "git.ignoreLimitWarning": true
 }
