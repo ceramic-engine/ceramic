@@ -192,6 +192,7 @@ class Renderer extends Entity {
                     if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
 
                         var clip:ceramic.Visual;
+                        #if !ceramic_no_clip
                         if (visual.computedClip) {
                             // Get new clip and compare with last
                             var clippingVisual = visual;
@@ -201,8 +202,11 @@ class Renderer extends Entity {
                             clip = clippingVisual != null ? clippingVisual.clip : null;
 
                         } else {
+                        #end
                             clip = null;
+                        #if !ceramic_no_clip
                         }
+                        #end
 
                         if (clip != lastClip) {
 
@@ -1277,6 +1281,7 @@ class Renderer extends Entity {
                     if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
 
                         var clip:ceramic.Visual;
+                        #if !ceramic_no_clip
                         if (visual.computedClip) {
                             // Get new clip and compare with last
                             var clippingVisual = visual;
@@ -1286,8 +1291,11 @@ class Renderer extends Entity {
                             clip = clippingVisual != null ? clippingVisual.clip : null;
 
                         } else {
+                        #end
                             clip = null;
+                        #if !ceramic_no_clip
                         }
+                        #end
 
                         if (clip != lastClip) {
 
