@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.IntMap;
 import ceramic.Runner;
 #if android
 import android.Http as AndroidHttp;
@@ -7,6 +8,9 @@ import android.Http as AndroidHttp;
 import ios.Http as IosHttp;
 #elseif js
 import js.html.XMLHttpRequest;
+#elseif (cs && unity)
+import unityengine.networking.UnityWebRequest;
+import unityengine.networking.DownloadHandler;
 #end
 
 import ceramic.Shortcuts.*;
@@ -19,7 +23,31 @@ import sys.io.File;
 
 using StringTools;
 
+#if (cs && unity)
+@:classCode('
+System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
+    yield return request.SendWebRequest();
+    unityHandleWebRequestResponse(id, request.downloadHandler);
+}
+')
+#end
 class Http implements spec.Http {
+
+    #if (cs && unity)
+    var nextRequestId:Int = 1;
+    var requestCallbacks:Map<Int, DownloadHandler->Void> = new Map();
+    
+    @:keep function unityHandleWebRequestResponse(requestId:Int, downloadHandler:DownloadHandler):Void {
+
+        var callback:DownloadHandler->Void = requestCallbacks.get(requestId);
+        if (callback != null) {
+            requestCallbacks.remove(requestId);
+            callback(downloadHandler);
+            callback = null;
+        }
+
+    }
+    #end
 
     public function new() {}
 
@@ -311,6 +339,79 @@ class Http implements spec.Http {
         };
 
         xhr.send(content);
+
+#elseif (cs && unity)
+
+        var requestId = nextRequestId;
+        nextRequestId = (nextRequestId + 1) % 999999999;
+
+        var url = options.url;
+
+        var webRequest:UnityWebRequest = null;
+        try {
+            webRequest = switch options.method {
+                case null: UnityWebRequest.Get(url);
+                case GET: UnityWebRequest.Get(url);
+                case POST: UnityWebRequest.Post(url, options.content);
+                case PUT: UnityWebRequest.Put(url, options.content);
+                case DELETE: UnityWebRequest.Delete(url);
+            }
+
+            if (options.headers != null) {
+                for (key in options.headers.keys()) {
+                    webRequest.SetRequestHeader(key, options.headers.get(key));
+                }
+            }
+    
+            requestCallbacks.set(requestId, function(downloadHandler) {
+
+                var resStatus = Std.int(webRequest.responseCode);
+                var resHeaders = new Map<String, String>();
+
+                var rawHeaders = webRequest.GetResponseHeaders();
+                untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
+                var headerName:String = untyped __cs__('rawHeaderEntry.Key');
+                var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
+                resHeaders.set(headerName, headerValue);
+                untyped __cs__('}');
+
+                if (webRequest.isNetworkError || webRequest.isHttpError) {
+                    done({
+                        status: resStatus,
+                        content: resStatus < 200 || resStatus >= 300 ? null : downloadHandler.text,
+                        binaryContent: null,
+                        headers: resHeaders,
+                        error: webRequest.error
+                    });
+                }
+                else {
+                    done({
+                        status: resStatus,
+                        content: resStatus < 200 || resStatus >= 300 ? null : downloadHandler.text,
+                        binaryContent: null, // TODO?
+                        headers: resHeaders,
+                        error: webRequest.error
+                    });
+                }
+
+                webRequest.Dispose();
+
+            });
+    
+            var monoBehaviour = Main.monoBehaviour;
+            untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+    
+        } catch (e:Dynamic) {
+            if (webRequest != null) {
+                try {
+                    webRequest.Dispose();
+                    webRequest = null;
+                }
+                catch (e1:Dynamic) {}
+            }
+
+            done(null);
+        }
 
 #elseif akifox_asynchttp
 
