@@ -2,17 +2,21 @@ package backend;
 
 class Info #if !completion implements spec.Info #end {
 
-    public function new() {}
+    var _storageDirectory:String = null;
+
+    public function new() {
+
+        #if (cs && unity)
+        _storageDirectory = untyped __cs__('UnityEngine.Application.persistentDataPath');
+        #end
+
+    }
 
 /// System
 
     public function storageDirectory():String {
 
-        #if (cs && unity)
-        return untyped __cs__('UnityEngine.Application.persistentDataPath');
-        #else
-        return null;
-        #end
+        return _storageDirectory;
 
     }
 
