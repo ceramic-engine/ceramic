@@ -526,8 +526,9 @@ class Assets extends Entity {
 
     public function ensureImage(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ImageAsset->Void):Void {
 
-        if (!name.startsWith('image:')) name = 'image:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'image:')) _name = 'image:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, ImageAsset) ? cast asset : null);
         });
 
@@ -535,8 +536,9 @@ class Assets extends Entity {
 
     public function ensureFont(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:FontAsset->Void):Void {
 
-        if (!name.startsWith('font:')) name = 'font:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'font:')) _name = 'font:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, FontAsset) ? cast asset : null);
         });
 
@@ -544,8 +546,9 @@ class Assets extends Entity {
 
     public function ensureText(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TextAsset->Void):Void {
 
-        if (!name.startsWith('text:')) name = 'text:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'text:')) _name = 'text:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, TextAsset) ? cast asset : null);
         });
 
@@ -553,8 +556,9 @@ class Assets extends Entity {
 
     public function ensureSound(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:SoundAsset->Void):Void {
 
-        if (!name.startsWith('sound:')) name = 'sound:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'sound:')) _name = 'sound:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, SoundAsset) ? cast asset : null);
         });
 
@@ -562,8 +566,9 @@ class Assets extends Entity {
 
     public function ensureDatabase(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:DatabaseAsset->Void):Void {
 
-        if (!name.startsWith('database:')) name = 'database:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'database:')) _name = 'database:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, DatabaseAsset) ? cast asset : null);
         });
 
@@ -571,8 +576,9 @@ class Assets extends Entity {
 
     public function ensureShader(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ShaderAsset->Void):Void {
 
-        if (!name.startsWith('shader:')) name = 'shader:' + name;
-        ensure(cast name, options, function(asset) {
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'shader:')) _name = 'shader:' + _name;
+        ensure(_name, options, function(asset) {
             done(Std.is(asset, ShaderAsset) ? cast asset : null);
         });
 

@@ -26,7 +26,7 @@ class Equal {
 
     }
 
-    public static function arrayEqual(a:Array<Dynamic>, b:Array<Dynamic>):Bool {
+    public static function arrayEqual(a:Array<Any>, b:Array<Any>):Bool {
 
         var lenA = a.length;
         var lenB = b.length;
