@@ -9,6 +9,8 @@ import unityengine.inputsystem.Gamepad;
 import unityengine.inputsystem.Keyboard;
 import unityengine.inputsystem.controls.KeyControl;
 
+import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 class Input implements tracker.Events implements spec.Input {
@@ -218,45 +220,50 @@ class Input implements tracker.Events implements spec.Input {
 
     function willEmitKeyDown(key:Key) {
 
+        #if ceramic_debug_text_input
+        trace('willEmitKeyDown($key)');
+        #end
+
         // Keyboard input could have been handled at ceramic cross-platform api level,
         // but it looks more like implementation details that could vary
         // depending on the backend so let's keep it in backend code
 
         var scanCode = key.scanCode;
 
-        if (scanCode == ScanCode.BACKSPACE) {
+        /*if (scanCode == ScanCode.BACKSPACE) {
             // Backspace
-            ceramic.App.app.textInput.backspace();
+            //ceramic.App.app.textInput.backspace();
         }
         else if (scanCode == ScanCode.SPACE) {
             // Space
-            ceramic.App.app.textInput.space();
+            //ceramic.App.app.textInput.space();
         }
         else if (scanCode == ScanCode.ENTER) {
             // Enter
-            ceramic.App.app.textInput.enter();
+            //ceramic.App.app.textInput.enter();
         }
         else if (scanCode == ScanCode.ESCAPE) {
             // Escape
-            ceramic.App.app.textInput.escape();
+            //ceramic.App.app.textInput.escape();
         }
         else if (scanCode == ScanCode.LEFT) {
             // Left
-            ceramic.App.app.textInput.moveLeft();
+            //ceramic.App.app.textInput.moveLeft();
         }
         else if (scanCode == ScanCode.RIGHT) {
             // Right
-            ceramic.App.app.textInput.moveRight();
+            //ceramic.App.app.textInput.moveRight();
         }
         else if (scanCode == ScanCode.UP) {
             // Up
-            ceramic.App.app.textInput.moveUp();
+            //ceramic.App.app.textInput.moveUp();
         }
         else if (scanCode == ScanCode.DOWN) {
             // Down
-            ceramic.App.app.textInput.moveDown();
+            //ceramic.App.app.textInput.moveDown();
         }
-        else if (scanCode == ScanCode.LSHIFT) {
+        else*/
+        if (scanCode == ScanCode.LSHIFT) {
             // Left Shift
             ceramic.App.app.textInput.lshiftDown();
         }

@@ -3,6 +3,8 @@ package backend;
 import cs.types.Char16;
 import unityengine.inputsystem.Keyboard;
 
+using StringTools;
+
 class TextInput implements spec.TextInput {
 
     public var textInputActive(default, null):Bool = false;
@@ -25,7 +27,46 @@ class TextInput implements spec.TextInput {
 
         if (textInputActive) {
             var char:String = Std.string(csChar);
+            var code:Int = char.charCodeAt(0);
 
+            #if ceramic_debug_text_input
+            ceramic.Shortcuts.log.success('APPEND ' + haxe.Json.stringify(char) + ' / ' + char.charCodeAt(0));
+            #end
+
+            // Only tested on macOS for now
+            // TODO: try on other platforms
+
+            switch (code) {
+                case 63234:
+                    ceramic.App.app.textInput.moveLeft();
+                case 63235:
+                    ceramic.App.app.textInput.moveRight();
+                case 63232:
+                    ceramic.App.app.textInput.moveUp();
+                case 63233:
+                    ceramic.App.app.textInput.moveDown();
+                case 32:
+                    ceramic.App.app.textInput.space();
+                case 127:
+                    ceramic.App.app.textInput.backspace();
+                case 27:
+                    ceramic.App.app.textInput.escape();
+                default:
+                    if (code >= 63236 && code <= 63254) {
+                        // Function keys, ignore
+                    }
+                    else if (char == '\n' || char == '\r' || char == '\r\n') {
+                        ceramic.App.app.textInput.enter();
+                    }
+                    else if (code < 32) {
+                        // Ignore, not printable
+                    }
+                    else {
+                        ceramic.App.app.textInput.appendText(char);
+                    }
+            }
+
+            /*
             var keyboard = Keyboard.current;
             if (keyboard.leftArrowKey.isPressed
                 || keyboard.rightArrowKey.isPressed
@@ -35,6 +76,9 @@ class TextInput implements spec.TextInput {
             }
             else if (keyboard.escapeKey.isPressed) {
                 // Ignore escape
+            }
+            else if (keyboard.backspaceKey.isPressed) {
+                // Ignore backspace
             }
             else if (keyboard.enterKey.isPressed) {
                 // Ignore enter
@@ -53,7 +97,7 @@ class TextInput implements spec.TextInput {
                 || keyboard.f12Key.isPressed) {
                 // Ignore function keys
             }
-            else if (char.length > 0) {
+            else if (char.trim().length > 0) {
                 if (char == '\r' || char == '\n' || char == ' ') {
                     // Ignore: line break, spaces
                 }
@@ -61,6 +105,7 @@ class TextInput implements spec.TextInput {
                     ceramic.App.app.textInput.appendText(char);
                 }
             }
+            */
         }
 
     }

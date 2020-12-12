@@ -32,7 +32,13 @@ extern class Keyboard extends InputDevice {
 
     var escapeKey(default, null):KeyControl;
 
+    var backspaceKey(default, null):KeyControl;
+
     var spaceKey(default, null):KeyControl;
+
+    var leftShiftKey(default, null):KeyControl;
+
+    var rightShiftKey(default, null):KeyControl;
 
     var f1Key(default, null):KeyControl;
 
