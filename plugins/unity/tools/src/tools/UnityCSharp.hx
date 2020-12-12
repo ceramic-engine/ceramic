@@ -29,7 +29,7 @@ class UnityCSharp {
         var srcList = Files.getFlatDirectory(srcCsPath);
         var srcNames = new Map<String,Bool>();
         for (name in srcList) {
-            srcNames.set(name, true);
+            srcNames.set(sanitizeName(name), true);
         }
 
         // List existing destination files
@@ -58,16 +58,19 @@ class UnityCSharp {
                 else if (normalizedPath == 'cs/internal/Runtime.cs') {
                     processedContent = patchRuntime(processedContent, dstResourcesPath);
                 }
-                var dstFilePath = Path.join([dstCsPath, name]);
+
+                var sanitizedName = sanitizeName(normalizedPath);
+
+                var dstFilePath = Path.join([dstCsPath, sanitizedName]);
                 var existingContent = null;
 
-                if (dstNames.exists(name)) {
+                if (dstNames.exists(sanitizedName)) {
                     existingContent = File.getContent(dstFilePath);
                 }
 
                 if (processedContent != existingContent) {
                     // Content is different
-                    if (!dstNames.exists(name)) {
+                    if (!dstNames.exists(sanitizedName)) {
                         // Check that intermediate directories are created
                         var directory = Path.directory(dstFilePath);
                         if (!FileSystem.exists(directory)) {
@@ -100,6 +103,19 @@ class UnityCSharp {
             }
 
         }
+
+    }
+
+    static function sanitizeName(name:String):String {
+
+        var sanitizedNameParts = Path.normalize(name).split('/');
+        for (i in 0...sanitizedNameParts.length) {
+            var part = sanitizedNameParts[i];
+            if (part == 'editor') {
+                sanitizedNameParts[i] = '_editor';
+            }
+        }
+        return sanitizedNameParts.join('/');
 
     }
 
