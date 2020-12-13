@@ -885,6 +885,7 @@ class Renderer extends Entity {
             // Check that our mesh is still not too large
             if (visualNumVertices > draw.remainingVertices() || visualNumVertices > draw.remainingIndices()) {
                 endVertices = Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
+                endVertices = Std.int(endVertices / 3) * 3;
             }
         }
 
@@ -1043,6 +1044,7 @@ class Renderer extends Entity {
 
                     startVertices = endVertices;
                     endVertices = startVertices + Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
+                    endVertices = Std.int(endVertices / 3) * 3;
                     if (endVertices > visualNumVertices) {
                         endVertices = visualNumVertices;
                     }
