@@ -380,7 +380,13 @@ class ProjectLoader {
             }
 
             if (app.icon == null) {
-                app.icon = 'resources/AppIcon.png';
+                if (context.defines.exists('android') || context.defines.exists('ios')) {
+                    // Looks nicer on mobile devices so far
+                    app.icon = 'resources/AppIcon-flat.png';
+                }
+                else {
+                    app.icon = 'resources/AppIcon.png';
+                }
             }
             if (app.screen == null) app.screen = {};
             if (app.screen.width == null) {
