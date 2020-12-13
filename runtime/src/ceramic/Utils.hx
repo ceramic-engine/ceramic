@@ -446,4 +446,30 @@ class Utils {
 
     }
 
+    /**
+     * Transforms a value between 0 and 1 to another value between 0 and 1 following a sinusoidal curve
+     * @param value a value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
+     * @return Float
+     */
+    public static function sinRatio(value:Float):Float {
+
+        if (value >= 1.0)
+            value = value % 1.0;
+        return (Math.sin(value * Math.PI * 2) + 1.0) * 0.5;
+
+    }
+
+    /**
+     * Transforms a value between 0 and 1 to another value between 0 and 1 following a cosinusoidal curve
+     * @param value a value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
+     * @return Float
+     */
+    public static function cosRatio(value:Float):Float {
+
+        if (value >= 1.0)
+            value = value % 1.0;
+        return (Math.cos(value * Math.PI * 2) + 1.0) * 0.5;
+
+    }
+
 }
