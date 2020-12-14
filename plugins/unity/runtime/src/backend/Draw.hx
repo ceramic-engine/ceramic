@@ -812,7 +812,9 @@ class Draw #if !completion implements spec.Draw #end {
 
 #if unity_urp
 
-    var renderPasses:Array<CeramicRenderPass> = [];
+    var mainCameraRenderPasses:Array<CeramicRenderPass> = [];
+
+    var customTargetRenderPasses:Array<CeramicRenderPass> = [];
 
     var pendingCommandBuffers:Array<CommandBuffer> = [];
 
@@ -839,15 +841,30 @@ class Draw #if !completion implements spec.Draw #end {
 
     function addRenderPasses(renderer:ScriptableRenderer, renderingData:RenderingData):Void {
 
+        var nMain = 0;
+        var nCustom = 0;
+
         for (i in 0...pendingCommandBuffers.length) {
             var cmd = pendingCommandBuffers.unsafeGet(i);
             var renderTarget = pendingRenderTargets.unsafeGet(i);
 
             // Get or create render pass
-            var renderPass = renderPasses[i];
-            if (renderPass == null) {
-                renderPass = new CeramicRenderPass();
-                renderPasses[i] = renderPass;
+            var renderPass:CeramicRenderPass = null;
+            if (renderTarget == null) {
+                renderPass = mainCameraRenderPasses[nMain];
+                if (renderPass == null) {
+                    renderPass = new CeramicRenderPass();
+                    mainCameraRenderPasses[nMain] = renderPass;
+                }
+                nMain++;
+            }
+            else {
+                renderPass = customTargetRenderPasses[nCustom];
+                if (renderPass == null) {
+                    renderPass = new CeramicRenderPass();
+                    customTargetRenderPasses[nCustom] = renderPass;
+                }
+                nCustom++;
             }
 
             // Update render pass command buffer
