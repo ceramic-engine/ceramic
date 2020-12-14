@@ -164,6 +164,7 @@ class Renderer extends Entity {
         lastShader = null;
         useShader(draw, null);
 
+
         // Default blending
         draw.setBlendFuncSeparate(
             backend.BlendMode.ONE,

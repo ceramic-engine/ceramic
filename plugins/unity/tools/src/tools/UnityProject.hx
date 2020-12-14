@@ -67,8 +67,12 @@ class UnityProject {
 
             // Copy from template project
             print('Copy from Unity project template');
+            var projectTemplateName = 'standard';
+            if (context.defines.exists('unity_urp')) {
+                projectTemplateName = 'urp';
+            }
             Files.copyDirectory(
-                Path.join([pluginPath, 'tpl/project/standard']),
+                Path.join([pluginPath, 'tpl/project/$projectTemplateName']),
                 unityProjectPath
             );
 

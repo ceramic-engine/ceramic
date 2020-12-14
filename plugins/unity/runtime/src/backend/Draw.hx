@@ -12,6 +12,13 @@ import unityengine.rendering.MeshUpdateFlags;
 import unityengine.rendering.VertexAttributeDescriptor;
 import unityengine.rendering.VertexAttribute;
 import unityengine.rendering.VertexAttributeFormat;
+import unityengine.rendering.CommandBuffer;
+import unityengine.rendering.CommandBufferPool;
+#if unity_urp
+import unityengine.rendering.universal.ScriptableRenderPass;
+import unityengine.rendering.universal.ScriptableRenderer;
+import unityengine.rendering.universal.RenderingData;
+#end
 import ceramic.Transform;
 import cs.StdTypes.Int16;
 import cs.NativeArray;
@@ -27,8 +34,12 @@ class Draw #if !completion implements spec.Draw #end {
 
         renderer = new ceramic.Renderer();
 
+        trace('NEW BACKEND DRAW');
+
+        #if !unity_urp
         commandBuffer = untyped __cs__('new UnityEngine.Rendering.CommandBuffer()');
         untyped __cs__('UnityEngine.Camera.main.AddCommandBuffer(UnityEngine.Rendering.CameraEvent.AfterEverything, (UnityEngine.Rendering.CommandBuffer){0})', commandBuffer);
+        #end
 
     }
 
@@ -53,6 +64,11 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
+
+        #if unity_urp
+        widthOnDraw = ceramic.App.app.backend.screen.getWidth();
+        heightOnDraw = ceramic.App.app.backend.screen.getHeight();
+        #end
 
         renderer.render(true, visuals);
 
@@ -280,9 +296,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
-        // Reset command buffer
+        // Reset command buffer(s)
+        #if unity_urp
+        clearPendingCommandBuffers();
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.Clear()');
+        #end
 
         //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
         //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
@@ -291,6 +311,9 @@ class Draw #if !completion implements spec.Draw #end {
 
 		untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
         untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
+
+        // trace('cameraWidth=' + Std.string(untyped __cs__('cameraWidth')));
+        // trace('cameraHeight=' + Std.string(untyped __cs__('cameraHeight')));
 
         if (_projectionMatrix == null) {
             _projectionMatrix = untyped __cs__('UnityEngine.Matrix4x4.identity');
@@ -306,7 +329,8 @@ class Draw #if !completion implements spec.Draw #end {
         var bg = ceramic.App.app.settings.background;
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color((float){0}, (float){1}, (float){2}, 1f), 1f)', bg.redFloat, bg.greenFloat, bg.blueFloat);
-        
+        //untyped __cs__('cmd.ClearRenderTarget(true, true, UnityEngine.Color.yellow)');
+
     }
 
     #if !ceramic_debug_draw_backend inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
@@ -321,8 +345,13 @@ class Draw #if !completion implements spec.Draw #end {
                 var backendItem:TextureImpl = renderTarget.backendItem;
                 var unityRenderTexture = backendItem.unityRenderTexture;
 
+                #if unity_urp
+                configureNextCommandBuffer(renderTarget);
+                untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
                 untyped __cs__('cmd.SetRenderTarget((UnityEngine.RenderTexture){0})', unityRenderTexture);
+                #end
 
                 untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
                 untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
@@ -377,9 +406,14 @@ class Draw #if !completion implements spec.Draw #end {
                 // TODO update unity render target
                 //luxeRenderer.target = null;
           
+                #if unity_urp
+                configureNextCommandBuffer(null);
+                untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
                 untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
-                
+                #end
+
                 updateProjectionMatrix(
                     ceramic.App.app.backend.screen.getWidth(),
                     ceramic.App.app.backend.screen.getHeight()
@@ -774,10 +808,85 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+/// Universal Render Pipeline
+
+#if unity_urp
+
+    var renderPasses:Array<CeramicRenderPass> = [];
+
+    var pendingCommandBuffers:Array<CommandBuffer> = [];
+
+    var pendingRenderTargets:Array<ceramic.RenderTexture> = [];
+
+    var widthOnDraw:Int = -1;
+
+    var heightOnDraw:Int = -1;
+
+    function clearPendingCommandBuffers():Void {
+
+        pendingCommandBuffers.setArrayLength(0);
+        pendingRenderTargets.setArrayLength(0);
+
+    }
+
+    function configureNextCommandBuffer(renderTarget:ceramic.RenderTexture):Void {
+
+        commandBuffer = CommandBufferPool.Get();
+        pendingCommandBuffers.push(commandBuffer);
+        pendingRenderTargets.push(renderTarget);
+
+    }
+
+    function addRenderPasses(renderer:ScriptableRenderer, renderingData:RenderingData):Void {
+
+        for (i in 0...pendingCommandBuffers.length) {
+            var cmd = pendingCommandBuffers.unsafeGet(i);
+            var renderTarget = pendingRenderTargets.unsafeGet(i);
+
+            // Get or create render pass
+            var renderPass = renderPasses[i];
+            if (renderPass == null) {
+                renderPass = new CeramicRenderPass();
+                renderPasses[i] = renderPass;
+            }
+
+            // Update render pass command buffer
+            var prevCmd = renderPass.GetCommandBuffer();
+            if (prevCmd != null) {
+                CommandBufferPool.Release(prevCmd);
+            }
+            renderPass.SetCommandBuffer(cmd);
+            if (renderTarget != null) {
+                untyped __cs__('{0}.SetRenderTarget((UnityEngine.RenderTexture){1})', renderPass, renderTarget.backendItem.unityRenderTexture);
+            }
+            else {
+                untyped __cs__('{0}.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)', renderPass);
+            }
+
+            // Add render pass
+            renderer.EnqueuePass(renderPass);
+        }
+
+        clearPendingCommandBuffers();
+
+    }
+    
+    @:keep
+    public static function unityUrpAddRenderPasses(renderer:ScriptableRenderer, renderingData:RenderingData):Void {
+
+        if (ceramic.App.app != null && ceramic.App.app.backend != null && ceramic.App.app.backend.draw != null) {
+
+            ceramic.App.app.backend.draw.addRenderPasses(renderer, renderingData);
+        }
+
+    }
+    
+#end
+
 /// Internal
 
     var renderer:ceramic.Renderer;
 
-    var commandBuffer:Dynamic;
+    var commandBuffer:CommandBuffer;
 
 }
