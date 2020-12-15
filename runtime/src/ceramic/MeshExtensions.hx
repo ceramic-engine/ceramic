@@ -150,5 +150,74 @@ class MeshExtensions {
 
     }
 
+    /**
+     * Generate vertices to draw arc, pie, ring or disc geometry
+     * @param mesh The mesh to work with
+     * @param radius Radius of the arc
+     * @param angle Angle (from 0 to 360). 360 will make it draw a full circle/ring
+     * @param thickness Thickness of the arc. If same value as radius and borderPosition is `INSIDE`, will draw a pie.
+     * @param sides Number of sides. Higher is smoother but needs more vertices
+     * @param borderPosition Position of the drawn border
+     */
+    public static function createArc(mesh:Mesh, radius:Float, angle:Float, thickness:Float, sides:Int, borderPosition:BorderPosition):Void {
+
+        var count:Int = Math.ceil(sides * angle / 360);
+        
+        var vertices = mesh.vertices;
+        var indices = mesh.indices;
+
+        vertices.setArrayLength(0);
+        indices.setArrayLength(0);
+
+        var _x:Float;
+        var _y:Float;
+
+        var angleOffset:Float = Math.PI * 1.5;
+        var sidesOverTwoPi:Float = Utils.degToRad(angle) / count;
+
+        var borderStart:Float = switch borderPosition {
+            case INSIDE: -thickness;
+            case OUTSIDE: 0;
+            case MIDDLE: -thickness * 0.5;
+        }
+        var borderEnd:Float = switch borderPosition {
+            case INSIDE: 0;
+            case OUTSIDE: thickness;
+            case MIDDLE: thickness * 0.5;
+        }
+
+        mesh.width = radius * 2;
+        mesh.height = radius * 2;
+
+        for (i in 0...count+1) {
+
+            var rawX = Math.cos(angleOffset + sidesOverTwoPi * i);
+            var rawY = Math.sin(angleOffset + sidesOverTwoPi * i);
+
+            _x = (radius + borderStart) * rawX;
+            _y = (radius + borderStart) * rawY;
+
+            vertices.push(radius + _x);
+            vertices.push(radius + _y);
+
+            _x = (radius + borderEnd) * rawX;
+            _y = (radius + borderEnd) * rawY;
+
+            vertices.push(radius + _x);
+            vertices.push(radius + _y);
+
+            if (i > 0) {
+                var n = (i - 1) * 2;
+                indices.push(n);
+                indices.push(n + 1);
+                indices.push(n + 2);
+                indices.push(n + 1);
+                indices.push(n + 2);
+                indices.push(n + 3);
+            }
+
+        }
+
+    }
 
 }
