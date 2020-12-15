@@ -240,7 +240,9 @@ class Mesh extends Visual {
 
     override function set_shader(shader:Shader):Shader {
         this.shader = shader;
-        this.customFloatAttributesSize = shader.customFloatAttributesSize;
+        if (shader != null) {
+            this.customFloatAttributesSize = shader.customFloatAttributesSize;
+        }
         return shader;
     }
 
