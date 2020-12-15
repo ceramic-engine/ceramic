@@ -1125,7 +1125,10 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
     /** Assign a shader to this visual. */
     @editable
-    public var shader:Shader = null;
+    public var shader(default, set):Shader = null;
+    function set_shader(shader:Shader):Shader {
+        return this.shader = shader;
+    }
 
 /// Flags
 
