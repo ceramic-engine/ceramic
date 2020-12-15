@@ -179,6 +179,7 @@ class Mesh extends Visual {
             // Convert x and y coordinate
             var testX = matrix.transformX(x, y);
             var testY = matrix.transformY(x, y);
+            var floatsPerVertex = 2 + customFloatAttributesSize;
 
             // Test every triangle to see if our point hits one of these
             var i = 0;
@@ -203,17 +204,17 @@ class Mesh extends Visual {
                 nc = indices.unsafeGet(j);
                 j++;
 
-                k = na * 2;
+                k = na * floatsPerVertex;
                 ax = vertices.unsafeGet(k);
                 k++;
                 ay = vertices.unsafeGet(k);
 
-                k = nb * 2;
+                k = nb * floatsPerVertex;
                 bx = vertices.unsafeGet(k);
                 k++;
                 by = vertices.unsafeGet(k);
 
-                k = nc * 2;
+                k = nc * floatsPerVertex;
                 cx = vertices.unsafeGet(k);
                 k++;
                 cy = vertices.unsafeGet(k);
