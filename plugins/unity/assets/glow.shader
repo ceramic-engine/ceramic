@@ -10,8 +10,8 @@ Shader "glow"
 		resolution ("resolution", Vector) = (0,0,0,0)
 		glowSize ("glowSize", Float) = 0.5
 		glowColor ("glowColor", Vector) = (0,0,0,0)
-		glowThreshold ("glowThreshold", Float) = 1.0
-		glowIntensity ("glowIntensity", Float) = 0.5
+		glowIntensity ("glowIntensity", Float) = 1.0
+		glowThreshold ("glowThreshold", Float) = 0.5
 	}
 
 	SubShader
@@ -79,7 +79,7 @@ Shader "glow"
 
 					float sum = 0.0;
 					for (int n = 0; n < 9; ++n) {
-						uvY = IN.texcoord.y + (glowSize * (float(n) - 4.5)) / resolution.y;
+						uvY = IN.texcoord.y + (glowSize * (float(n) - 4.0)) / resolution.y;
 						float hSum = 0.0;
 						hSum += tex2D(_MainTex, float2(uvX - (4.0 * glowSize) / resolution.x, uvY)).a;
 						hSum += tex2D(_MainTex, float2(uvX - (3.0 * glowSize) / resolution.x, uvY)).a;

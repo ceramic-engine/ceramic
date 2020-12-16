@@ -24,7 +24,7 @@ void main() {
 
     vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);
     for (int n = 0; n < 9; ++n) {
-        uvY = tcoord.y + (blurSize.y * (float(n) - 4.5)) / resolution.y;
+        uvY = tcoord.y + (blurSize.y * (float(n) - 4.0)) / resolution.y;
         vec4 hSum = vec4(0.0, 0.0, 0.0, 0.0);
         hSum += texture2D(tex0, vec2(uvX - (4.0 * blurSize.x) / resolution.x, uvY));
         hSum += texture2D(tex0, vec2(uvX - (3.0 * blurSize.x) / resolution.x, uvY));

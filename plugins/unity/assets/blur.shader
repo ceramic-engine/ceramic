@@ -72,7 +72,7 @@ Shader "blur"
 
 				fixed4 sum = fixed4(0.0, 0.0, 0.0, 0.0);
 				for (int n = 0; n < 9; ++n) {
-					uvY = IN.texcoord.y + (blurSize.y * (float(n) - 4.5)) / resolution.y;
+					uvY = IN.texcoord.y + (blurSize.y * (float(n) - 4.0)) / resolution.y;
 					fixed4 hSum = fixed4(0.0, 0.0, 0.0, 0.0);
 					hSum += tex2D(_MainTex, float2(uvX - (4.0 * blurSize.x) / resolution.x, uvY));
 					hSum += tex2D(_MainTex, float2(uvX - (3.0 * blurSize.x) / resolution.x, uvY));
