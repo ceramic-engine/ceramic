@@ -124,6 +124,10 @@ class Screen extends Entity implements Observable {
     var _numPointerDown:Int = 0;
     inline function get_isPointerDown():Bool { return _numPointerDown > 0; }
 
+    private var pressedMouseButtons:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    private var pressedTouches:IntIntMap = new IntIntMap(16, 0.5, false);
+
 /// Events
 
     /** Resize event occurs once at startup, then each time any

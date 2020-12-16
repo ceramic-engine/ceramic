@@ -2,7 +2,7 @@ package ceramic;
 
 @:structInit class Key {
 
-    public function new(keyCode:Int, scanCode:Int) {
+    public function new(keyCode:KeyCode, scanCode:ScanCode) {
 
         this.keyCode = keyCode;
         this.scanCode = scanCode;
@@ -10,7 +10,7 @@ package ceramic;
     }
 
     /** Key code (localized key) depends on keyboard mapping (QWERTY, AZERTY, ...) */
-    public var keyCode(default, null):Int;
+    public var keyCode(default, null):KeyCode;
 
     /** Name associated to the key code (localized key) */
     public var keyCodeName(get, null):String;
@@ -19,7 +19,7 @@ package ceramic;
     }
     
     /** Scan code (US international key) doesn't depend on keyboard mapping (QWERTY, AZERTY, ...) */
-    public var scanCode(default, null):Int;
+    public var scanCode(default, null):ScanCode;
 
     /** Name associated to the scan code (US international key) */
     public var scanCodeName(get, null):String;
@@ -29,7 +29,7 @@ package ceramic;
 
     function toString() {
 
-        return 'Key($keyCode $keyCodeName / $scanCode $scanCodeName)';
+        return 'Key(${(keyCode:Int)} $keyCodeName / ${(scanCode:Int)} $scanCodeName)';
 
     }
 

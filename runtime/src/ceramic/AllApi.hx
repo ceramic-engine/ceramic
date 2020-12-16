@@ -319,7 +319,7 @@ class AllApi {
         interp.variables.set('KeyAcceleratorItem', ceramic.KeyAcceleratorItem);
         interp.variables.set('KeyBinding', ceramic.KeyBinding);
         interp.variables.set('KeyBindings', ceramic.KeyBindings);
-        interp.variables.set('KeyCode', ceramic.KeyCode);
+        //interp.variables.set('KeyCode', ceramic.KeyCode);
         interp.variables.set('Layer', ceramic.Layer);
         interp.variables.set('Lazy', ceramic.Lazy);
         interp.variables.set('Line', ceramic.Line);
@@ -345,7 +345,7 @@ class AllApi {
         interp.variables.set('RotateFrame', ceramic.scriptable.ScriptableRotateFrame);
         interp.variables.set('Runner', ceramic.Runner);
         interp.variables.set('RuntimeAssets', ceramic.RuntimeAssets);
-        interp.variables.set('ScanCode', ceramic.ScanCode);
+        //interp.variables.set('ScanCode', ceramic.ScanCode);
         interp.variables.set('Screen', ceramic.Screen);
         interp.variables.set('ScreenScaling', ceramic.ScreenScaling);
         //interp.variables.set('Script', ceramic.Script);

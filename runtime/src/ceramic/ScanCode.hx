@@ -1,15 +1,13 @@
 package ceramic;
 
-/** The scanCode class. The values below come directly from SDL header include files,
-but they aren't specific to SDL so they are used generically */
-class ScanCode {
+enum abstract ScanCode(Int) from Int to Int {
 
     /** Convert a scanCode to a readable name */
-    public static function name( scanCode:Int ) : String {
+    public static function name(scanCode:ScanCode):String {
 
         var res = null;
 
-        if (scanCode >= 0 && scanCode < scanCodeNames.length) {
+        if ((scanCode:Int) >= 0 && (scanCode:Int) < scanCodeNames.length) {
             res = scanCodeNames[scanCode];
         }
 
@@ -17,62 +15,68 @@ class ScanCode {
 
     }
 
-    // special value remains caps
-    public static inline var MASK:Int                      = (1<<30);
+    function toString():String {
 
-    public static inline var UNKNOWN:Int                 = 0;
+        return 'ScanCode(' + this + ' ' + ScanCode.name(this) + ')';
+
+    }
+
+    // special value remains caps
+    public static var MASK:Int           = (1<<30);
+
+    var UNKNOWN:ScanCode                 = 0;
 
     // Usage page 0x07
     // These values are from usage page 0x07 (USB keyboard page).
 
-    public static inline var KEY_A:Int                   = 4;
-    public static inline var KEY_B:Int                   = 5;
-    public static inline var KEY_C:Int                   = 6;
-    public static inline var KEY_D:Int                   = 7;
-    public static inline var KEY_E:Int                   = 8;
-    public static inline var KEY_F:Int                   = 9;
-    public static inline var KEY_G:Int                   = 10;
-    public static inline var KEY_H:Int                   = 11;
-    public static inline var KEY_I:Int                   = 12;
-    public static inline var KEY_J:Int                   = 13;
-    public static inline var KEY_K:Int                   = 14;
-    public static inline var KEY_L:Int                   = 15;
-    public static inline var KEY_M:Int                   = 16;
-    public static inline var KEY_N:Int                   = 17;
-    public static inline var KEY_O:Int                   = 18;
-    public static inline var KEY_P:Int                   = 19;
-    public static inline var KEY_Q:Int                   = 20;
-    public static inline var KEY_R:Int                   = 21;
-    public static inline var KEY_S:Int                   = 22;
-    public static inline var KEY_T:Int                   = 23;
-    public static inline var KEY_U:Int                   = 24;
-    public static inline var KEY_V:Int                   = 25;
-    public static inline var KEY_W:Int                   = 26;
-    public static inline var KEY_X:Int                   = 27;
-    public static inline var KEY_Y:Int                   = 28;
-    public static inline var KEY_Z:Int                   = 29;
+    var KEY_A:ScanCode                   = 4;
+    var KEY_B:ScanCode                   = 5;
+    var KEY_C:ScanCode                   = 6;
+    var KEY_D:ScanCode                   = 7;
+    var KEY_E:ScanCode                   = 8;
+    var KEY_F:ScanCode                   = 9;
+    var KEY_G:ScanCode                   = 10;
+    var KEY_H:ScanCode                   = 11;
+    var KEY_I:ScanCode                   = 12;
+    var KEY_J:ScanCode                   = 13;
+    var KEY_K:ScanCode                   = 14;
+    var KEY_L:ScanCode                   = 15;
+    var KEY_M:ScanCode                   = 16;
+    var KEY_N:ScanCode                   = 17;
+    var KEY_O:ScanCode                   = 18;
+    var KEY_P:ScanCode                   = 19;
+    var KEY_Q:ScanCode                   = 20;
+    var KEY_R:ScanCode                   = 21;
+    var KEY_S:ScanCode                   = 22;
+    var KEY_T:ScanCode                   = 23;
+    var KEY_U:ScanCode                   = 24;
+    var KEY_V:ScanCode                   = 25;
+    var KEY_W:ScanCode                   = 26;
+    var KEY_X:ScanCode                   = 27;
+    var KEY_Y:ScanCode                   = 28;
+    var KEY_Z:ScanCode                   = 29;
 
-    public static inline var KEY_1:Int                   = 30;
-    public static inline var KEY_2:Int                   = 31;
-    public static inline var KEY_3:Int                   = 32;
-    public static inline var KEY_4:Int                   = 33;
-    public static inline var KEY_5:Int                   = 34;
-    public static inline var KEY_6:Int                   = 35;
-    public static inline var KEY_7:Int                   = 36;
-    public static inline var KEY_8:Int                   = 37;
-    public static inline var KEY_9:Int                   = 38;
-    public static inline var KEY_0:Int                   = 39;
+    var KEY_1:ScanCode                   = 30;
+    var KEY_2:ScanCode                   = 31;
+    var KEY_3:ScanCode                   = 32;
+    var KEY_4:ScanCode                   = 33;
+    var KEY_5:ScanCode                   = 34;
+    var KEY_6:ScanCode                   = 35;
+    var KEY_7:ScanCode                   = 36;
+    var KEY_8:ScanCode                   = 37;
+    var KEY_9:ScanCode                   = 38;
+    var KEY_0:ScanCode                   = 39;
 
-    public static inline var ENTER:Int                   = 40;
-    public static inline var ESCAPE:Int                  = 41;
-    public static inline var BACKSPACE:Int               = 42;
-    public static inline var TAB:Int                     = 43;
-    public static inline var SPACE:Int                   = 44;
+    var ENTER:ScanCode                   = 40;
+    var ESCAPE:ScanCode                  = 41;
+    var BACKSPACE:ScanCode               = 42;
+    var TAB:ScanCode                     = 43;
+    var SPACE:ScanCode                   = 44;
 
-    public static inline var MINUS:Int                   = 45;
-    public static inline var EQUALS:Int                  = 46;
-    public static inline var LEFTBRACKET:Int             = 47;
-    public static inline var RIGHTBRACKET:Int            = 48;
+    var MINUS:ScanCode                   = 45;
+    var EQUALS:ScanCode                  = 46;
+    var LEFTBRACKET:ScanCode             = 47;
+    var RIGHTBRACKET:ScanCode            = 48;
 
     // Located at the lower left of the return
     // key on ISO keyboards and at the right end
@@ -88,7 +92,7 @@ class ScanCode {
     // layout, and ASTERISK and MICRO SIGN in a
     // French Windows layout.
 
-    public static inline var BACKSLASH:Int               = 49;
+    var BACKSLASH:ScanCode               = 49;
 
     // ISO USB keyboards actually use this code
     // instead of 49 for the same key, but all
@@ -96,15 +100,15 @@ class ScanCode {
     // identically. So, as an implementor, unless
     // your keyboard generates both of those
     // codes and your OS treats them differently,
-    // you should generate public static inline var BACKSLASH
+    // you should generate var BACKSLASH
     // instead of this code. As a user, you
     // should not rely on this code because SDL
     // will never generate it with most (all?)
     // keyboards.
 
-    public static inline var NONUSHASH:Int          = 50;
-    public static inline var SEMICOLON:Int          = 51;
-    public static inline var APOSTROPHE:Int         = 52;
+    var NONUSHASH:ScanCode          = 50;
+    var SEMICOLON:ScanCode          = 51;
+    var APOSTROPHE:ScanCode         = 52;
 
     // Located in the top left corner (on both ANSI
     // and ISO keyboards). Produces GRAVE ACCENT and
@@ -123,60 +127,60 @@ class ScanCode {
     // SIGN in a Swiss German, German, or French Mac
     // layout on ANSI keyboards.
 
-    public static inline var GRAVE:Int              = 53;
-    public static inline var COMMA:Int              = 54;
-    public static inline var PERIOD:Int             = 55;
-    public static inline var SLASH:Int              = 56;
+    var GRAVE:ScanCode              = 53;
+    var COMMA:ScanCode              = 54;
+    var PERIOD:ScanCode             = 55;
+    var SLASH:ScanCode              = 56;
 
-    public static inline var CAPSLOCK:Int           = 57;
+    var CAPSLOCK:ScanCode           = 57;
 
-    public static inline var F1:Int                 = 58;
-    public static inline var F2:Int                 = 59;
-    public static inline var F3:Int                 = 60;
-    public static inline var F4:Int                 = 61;
-    public static inline var F5:Int                 = 62;
-    public static inline var F6:Int                 = 63;
-    public static inline var F7:Int                 = 64;
-    public static inline var F8:Int                 = 65;
-    public static inline var F9:Int                 = 66;
-    public static inline var F10:Int                = 67;
-    public static inline var F11:Int                = 68;
-    public static inline var F12:Int                = 69;
+    var F1:ScanCode                 = 58;
+    var F2:ScanCode                 = 59;
+    var F3:ScanCode                 = 60;
+    var F4:ScanCode                 = 61;
+    var F5:ScanCode                 = 62;
+    var F6:ScanCode                 = 63;
+    var F7:ScanCode                 = 64;
+    var F8:ScanCode                 = 65;
+    var F9:ScanCode                 = 66;
+    var F10:ScanCode                = 67;
+    var F11:ScanCode                = 68;
+    var F12:ScanCode                = 69;
 
-    public static inline var PRINTSCREEN:Int        = 70;
-    public static inline var SCROLLLOCK:Int         = 71;
-    public static inline var PAUSE:Int              = 72;
+    var PRINTSCREEN:ScanCode        = 70;
+    var SCROLLLOCK:ScanCode         = 71;
+    var PAUSE:ScanCode              = 72;
 
     // insert on PC, help on some Mac keyboards (but does send code 73, not 117)
-    public static inline var INSERT:Int             = 73;
-    public static inline var HOME:Int               = 74;
-    public static inline var PAGEUP:Int             = 75;
-    public static inline var DELETE:Int             = 76;
-    public static inline var END:Int                = 77;
-    public static inline var PAGEDOWN:Int           = 78;
-    public static inline var RIGHT:Int              = 79;
-    public static inline var LEFT:Int               = 80;
-    public static inline var DOWN:Int               = 81;
-    public static inline var UP:Int                 = 82;
+    var INSERT:ScanCode             = 73;
+    var HOME:ScanCode               = 74;
+    var PAGEUP:ScanCode             = 75;
+    var DELETE:ScanCode             = 76;
+    var END:ScanCode                = 77;
+    var PAGEDOWN:ScanCode           = 78;
+    var RIGHT:ScanCode              = 79;
+    var LEFT:ScanCode               = 80;
+    var DOWN:ScanCode               = 81;
+    var UP:ScanCode                 = 82;
 
     // num lock on PC, clear on Mac keyboards
-    public static inline var NUMLOCKCLEAR:Int       = 83;
-    public static inline var KP_DIVIDE:Int          = 84;
-    public static inline var KP_MULTIPLY:Int        = 85;
-    public static inline var KP_MINUS:Int           = 86;
-    public static inline var KP_PLUS:Int            = 87;
-    public static inline var KP_ENTER:Int           = 88;
-    public static inline var KP_1:Int               = 89;
-    public static inline var KP_2:Int               = 90;
-    public static inline var KP_3:Int               = 91;
-    public static inline var KP_4:Int               = 92;
-    public static inline var KP_5:Int               = 93;
-    public static inline var KP_6:Int               = 94;
-    public static inline var KP_7:Int               = 95;
-    public static inline var KP_8:Int               = 96;
-    public static inline var KP_9:Int               = 97;
-    public static inline var KP_0:Int               = 98;
-    public static inline var KP_PERIOD:Int          = 99;
+    var NUMLOCKCLEAR:ScanCode       = 83;
+    var KP_DIVIDE:ScanCode          = 84;
+    var KP_MULTIPLY:ScanCode        = 85;
+    var KP_MINUS:ScanCode           = 86;
+    var KP_PLUS:ScanCode            = 87;
+    var KP_ENTER:ScanCode           = 88;
+    var KP_1:ScanCode               = 89;
+    var KP_2:ScanCode               = 90;
+    var KP_3:ScanCode               = 91;
+    var KP_4:ScanCode               = 92;
+    var KP_5:ScanCode               = 93;
+    var KP_6:ScanCode               = 94;
+    var KP_7:ScanCode               = 95;
+    var KP_8:ScanCode               = 96;
+    var KP_9:ScanCode               = 97;
+    var KP_0:ScanCode               = 98;
+    var KP_PERIOD:ScanCode          = 99;
 
 
     // This is the additional key that ISO
@@ -189,201 +193,201 @@ class ScanCode {
     // LESS-THAN SIGN and GREATER-THAN SIGN
     // in a Swiss German, German, or French
     // layout.
-    public static inline var NONUSBACKSLASH:Int     = 100;
+    var NONUSBACKSLASH:ScanCode     = 100;
 
     // windows contextual menu, compose
-    public static inline var APPLICATION:Int        = 101;
+    var APPLICATION:ScanCode        = 101;
 
     // The USB document says this is a status flag,
     // not a physical key - but some Mac keyboards
     // do have a power key.
-    public static inline var POWER:Int              = 102;
-    public static inline var KP_EQUALS:Int          = 103;
-    public static inline var F13:Int                = 104;
-    public static inline var F14:Int                = 105;
-    public static inline var F15:Int                = 106;
-    public static inline var F16:Int                = 107;
-    public static inline var F17:Int                = 108;
-    public static inline var F18:Int                = 109;
-    public static inline var F19:Int                = 110;
-    public static inline var F20:Int                = 111;
-    public static inline var F21:Int                = 112;
-    public static inline var F22:Int                = 113;
-    public static inline var F23:Int                = 114;
-    public static inline var F24:Int                = 115;
-    public static inline var EXECUTE:Int            = 116;
-    public static inline var HELP:Int               = 117;
-    public static inline var MENU:Int               = 118;
-    public static inline var SELECT:Int             = 119;
-    public static inline var STOP:Int               = 120;
+    var POWER:ScanCode              = 102;
+    var KP_EQUALS:ScanCode          = 103;
+    var F13:ScanCode                = 104;
+    var F14:ScanCode                = 105;
+    var F15:ScanCode                = 106;
+    var F16:ScanCode                = 107;
+    var F17:ScanCode                = 108;
+    var F18:ScanCode                = 109;
+    var F19:ScanCode                = 110;
+    var F20:ScanCode                = 111;
+    var F21:ScanCode                = 112;
+    var F22:ScanCode                = 113;
+    var F23:ScanCode                = 114;
+    var F24:ScanCode                = 115;
+    var EXECUTE:ScanCode            = 116;
+    var HELP:ScanCode               = 117;
+    var MENU:ScanCode               = 118;
+    var SELECT:ScanCode             = 119;
+    var STOP:ScanCode               = 120;
 
     // redo
-    public static inline var AGAIN:Int              = 121;
-    public static inline var UNDO:Int               = 122;
-    public static inline var CUT:Int                = 123;
-    public static inline var COPY:Int               = 124;
-    public static inline var PASTE:Int              = 125;
-    public static inline var FIND:Int               = 126;
-    public static inline var MUTE:Int               = 127;
-    public static inline var VOLUMEUP:Int           = 128;
-    public static inline var VOLUMEDOWN:Int         = 129;
+    var AGAIN:ScanCode              = 121;
+    var UNDO:ScanCode               = 122;
+    var CUT:ScanCode                = 123;
+    var COPY:ScanCode               = 124;
+    var PASTE:ScanCode              = 125;
+    var FIND:ScanCode               = 126;
+    var MUTE:ScanCode               = 127;
+    var VOLUMEUP:ScanCode           = 128;
+    var VOLUMEDOWN:ScanCode         = 129;
 
     // not sure whether there's a reason to enable these
-    //  public static inline var lockingcapslock = 130,
-    //  public static inline var lockingnumlock = 131,
-    //  public static inline var lockingscrolllock = 132,
+    //  var lockingcapslock = 130,
+    //  var lockingnumlock = 131,
+    //  var lockingscrolllock = 132,
 
-    public static inline var KP_COMMA:Int           = 133;
-    public static inline var KP_EQUALSAS400:Int     = 134;
+    var KP_COMMA:ScanCode           = 133;
+    var KP_EQUALSAS400:ScanCode     = 134;
 
     // used on Asian keyboards; see footnotes in USB doc
-    public static inline var INTERNATIONAL1:Int     = 135;
-    public static inline var INTERNATIONAL2:Int     = 136;
+    var INTERNATIONAL1:ScanCode     = 135;
+    var INTERNATIONAL2:ScanCode     = 136;
 
     // Yen
-    public static inline var INTERNATIONAL3:Int     = 137;
-    public static inline var INTERNATIONAL4:Int     = 138;
-    public static inline var INTERNATIONAL5:Int     = 139;
-    public static inline var INTERNATIONAL6:Int     = 140;
-    public static inline var INTERNATIONAL7:Int     = 141;
-    public static inline var INTERNATIONAL8:Int     = 142;
-    public static inline var INTERNATIONAL9:Int     = 143;
+    var INTERNATIONAL3:ScanCode     = 137;
+    var INTERNATIONAL4:ScanCode     = 138;
+    var INTERNATIONAL5:ScanCode     = 139;
+    var INTERNATIONAL6:ScanCode     = 140;
+    var INTERNATIONAL7:ScanCode     = 141;
+    var INTERNATIONAL8:ScanCode     = 142;
+    var INTERNATIONAL9:ScanCode     = 143;
     // Hangul/English toggle
-    public static inline var LANG1:Int              = 144;
+    var LANG1:ScanCode              = 144;
     // Hanja conversion
-    public static inline var LANG2:Int              = 145;
+    var LANG2:ScanCode              = 145;
     // Katakana
-    public static inline var LANG3:Int              = 146;
+    var LANG3:ScanCode              = 146;
     // Hiragana
-    public static inline var LANG4:Int              = 147;
+    var LANG4:ScanCode              = 147;
     // Zenkaku/Hankaku
-    public static inline var LANG5:Int              = 148;
+    var LANG5:ScanCode              = 148;
     // reserved
-    public static inline var LANG6:Int              = 149;
+    var LANG6:ScanCode              = 149;
     // reserved
-    public static inline var LANG7:Int              = 150;
+    var LANG7:ScanCode              = 150;
     // reserved
-    public static inline var LANG8:Int              = 151;
+    var LANG8:ScanCode              = 151;
     // reserved
-    public static inline var LANG9:Int              = 152;
+    var LANG9:ScanCode              = 152;
     // Erase-Eaze
-    public static inline var ALTERASE:Int           = 153;
-    public static inline var SYSREQ:Int             = 154;
-    public static inline var CANCEL:Int             = 155;
-    public static inline var CLEAR:Int              = 156;
-    public static inline var PRIOR:Int              = 157;
-    public static inline var RETURN2:Int            = 158;
-    public static inline var SEPARATOR:Int          = 159;
-    public static inline var OUT:Int                = 160;
-    public static inline var OPER:Int               = 161;
-    public static inline var CLEARAGAIN:Int         = 162;
-    public static inline var CRSEL:Int              = 163;
-    public static inline var EXSEL:Int              = 164;
+    var ALTERASE:ScanCode           = 153;
+    var SYSREQ:ScanCode             = 154;
+    var CANCEL:ScanCode             = 155;
+    var CLEAR:ScanCode              = 156;
+    var PRIOR:ScanCode              = 157;
+    var RETURN2:ScanCode            = 158;
+    var SEPARATOR:ScanCode          = 159;
+    var OUT:ScanCode                = 160;
+    var OPER:ScanCode               = 161;
+    var CLEARAGAIN:ScanCode         = 162;
+    var CRSEL:ScanCode              = 163;
+    var EXSEL:ScanCode              = 164;
 
-    public static inline var KP_00:Int              = 176;
-    public static inline var KP_000:Int             = 177;
-    public static inline var THOUSANDSSEPARATOR:Int = 178;
-    public static inline var DECIMALSEPARATOR:Int   = 179;
-    public static inline var CURRENCYUNIT:Int       = 180;
-    public static inline var CURRENCYSUBUNIT:Int    = 181;
-    public static inline var KP_LEFTPAREN:Int       = 182;
-    public static inline var KP_RIGHTPAREN:Int      = 183;
-    public static inline var KP_LEFTBRACE:Int       = 184;
-    public static inline var KP_RIGHTBRACE:Int      = 185;
-    public static inline var KP_TAB:Int             = 186;
-    public static inline var KP_BACKSPACE:Int       = 187;
-    public static inline var KP_A:Int               = 188;
-    public static inline var KP_B:Int               = 189;
-    public static inline var KP_C:Int               = 190;
-    public static inline var KP_D:Int               = 191;
-    public static inline var KP_E:Int               = 192;
-    public static inline var KP_F:Int               = 193;
-    public static inline var KP_XOR:Int             = 194;
-    public static inline var KP_POWER:Int           = 195;
-    public static inline var KP_PERCENT:Int         = 196;
-    public static inline var KP_LESS:Int            = 197;
-    public static inline var KP_GREATER:Int         = 198;
-    public static inline var KP_AMPERSAND:Int       = 199;
-    public static inline var KP_DBLAMPERSAND:Int    = 200;
-    public static inline var KP_VERTICALBAR:Int     = 201;
-    public static inline var KP_DBLVERTICALBAR:Int  = 202;
-    public static inline var KP_COLON:Int           = 203;
-    public static inline var KP_HASH:Int            = 204;
-    public static inline var KP_SPACE:Int           = 205;
-    public static inline var KP_AT:Int              = 206;
-    public static inline var KP_EXCLAM:Int          = 207;
-    public static inline var KP_MEMSTORE:Int        = 208;
-    public static inline var KP_MEMRECALL:Int       = 209;
-    public static inline var KP_MEMCLEAR:Int        = 210;
-    public static inline var KP_MEMADD:Int          = 211;
-    public static inline var KP_MEMSUBTRACT:Int     = 212;
-    public static inline var KP_MEMMULTIPLY:Int     = 213;
-    public static inline var KP_MEMDIVIDE:Int       = 214;
-    public static inline var KP_PLUSMINUS:Int       = 215;
-    public static inline var KP_CLEAR:Int           = 216;
-    public static inline var KP_CLEARENTRY:Int      = 217;
-    public static inline var KP_BINARY:Int          = 218;
-    public static inline var KP_OCTAL:Int           = 219;
-    public static inline var KP_DECIMAL:Int         = 220;
-    public static inline var KP_HEXADECIMAL:Int     = 221;
+    var KP_00:ScanCode              = 176;
+    var KP_000:ScanCode             = 177;
+    var THOUSANDSSEPARATOR:ScanCode = 178;
+    var DECIMALSEPARATOR:ScanCode   = 179;
+    var CURRENCYUNIT:ScanCode       = 180;
+    var CURRENCYSUBUNIT:ScanCode    = 181;
+    var KP_LEFTPAREN:ScanCode       = 182;
+    var KP_RIGHTPAREN:ScanCode      = 183;
+    var KP_LEFTBRACE:ScanCode       = 184;
+    var KP_RIGHTBRACE:ScanCode      = 185;
+    var KP_TAB:ScanCode             = 186;
+    var KP_BACKSPACE:ScanCode       = 187;
+    var KP_A:ScanCode               = 188;
+    var KP_B:ScanCode               = 189;
+    var KP_C:ScanCode               = 190;
+    var KP_D:ScanCode               = 191;
+    var KP_E:ScanCode               = 192;
+    var KP_F:ScanCode               = 193;
+    var KP_XOR:ScanCode             = 194;
+    var KP_POWER:ScanCode           = 195;
+    var KP_PERCENT:ScanCode         = 196;
+    var KP_LESS:ScanCode            = 197;
+    var KP_GREATER:ScanCode         = 198;
+    var KP_AMPERSAND:ScanCode       = 199;
+    var KP_DBLAMPERSAND:ScanCode    = 200;
+    var KP_VERTICALBAR:ScanCode     = 201;
+    var KP_DBLVERTICALBAR:ScanCode  = 202;
+    var KP_COLON:ScanCode           = 203;
+    var KP_HASH:ScanCode            = 204;
+    var KP_SPACE:ScanCode           = 205;
+    var KP_AT:ScanCode              = 206;
+    var KP_EXCLAM:ScanCode          = 207;
+    var KP_MEMSTORE:ScanCode        = 208;
+    var KP_MEMRECALL:ScanCode       = 209;
+    var KP_MEMCLEAR:ScanCode        = 210;
+    var KP_MEMADD:ScanCode          = 211;
+    var KP_MEMSUBTRACT:ScanCode     = 212;
+    var KP_MEMMULTIPLY:ScanCode     = 213;
+    var KP_MEMDIVIDE:ScanCode       = 214;
+    var KP_PLUSMINUS:ScanCode       = 215;
+    var KP_CLEAR:ScanCode           = 216;
+    var KP_CLEARENTRY:ScanCode      = 217;
+    var KP_BINARY:ScanCode          = 218;
+    var KP_OCTAL:ScanCode           = 219;
+    var KP_DECIMAL:ScanCode         = 220;
+    var KP_HEXADECIMAL:ScanCode     = 221;
 
-    public static inline var LCTRL:Int              = 224;
-    public static inline var LSHIFT:Int             = 225;
+    var LCTRL:ScanCode              = 224;
+    var LSHIFT:ScanCode             = 225;
     // alt, option
-    public static inline var LALT:Int               = 226;
+    var LALT:ScanCode               = 226;
     // windows, command (apple), meta, super
-    public static inline var LMETA:Int              = 227;
-    public static inline var RCTRL:Int              = 228;
-    public static inline var RSHIFT:Int             = 229;
+    var LMETA:ScanCode              = 227;
+    var RCTRL:ScanCode              = 228;
+    var RSHIFT:ScanCode             = 229;
     // alt gr, option
-    public static inline var RALT:Int               = 230;
+    var RALT:ScanCode               = 230;
     // windows, command (apple), meta, super
-    public static inline var RMETA:Int              = 231;
+    var RMETA:ScanCode              = 231;
 
     // Not sure if this is really not covered
     // by any of the above, but since there's a
     // special KMOD_MODE for it I'm adding it here
-    public static inline var MODE:Int               = 257;
+    var MODE:ScanCode               = 257;
 
     //
     // Usage page 0x0C
     // These values are mapped from usage page 0x0C (USB consumer page).
 
-    public static inline var AUDIONEXT:Int          = 258;
-    public static inline var AUDIOPREV:Int          = 259;
-    public static inline var AUDIOSTOP:Int          = 260;
-    public static inline var AUDIOPLAY:Int          = 261;
-    public static inline var AUDIOMUTE:Int          = 262;
-    public static inline var MEDIASELECT:Int        = 263;
-    public static inline var WWW:Int                = 264;
-    public static inline var MAIL:Int               = 265;
-    public static inline var CALCULATOR:Int         = 266;
-    public static inline var COMPUTER:Int           = 267;
-    public static inline var AC_SEARCH:Int          = 268;
-    public static inline var AC_HOME:Int            = 269;
-    public static inline var AC_BACK:Int            = 270;
-    public static inline var AC_FORWARD:Int         = 271;
-    public static inline var AC_STOP:Int            = 272;
-    public static inline var AC_REFRESH:Int         = 273;
-    public static inline var AC_BOOKMARKS:Int       = 274;
+    var AUDIONEXT:ScanCode          = 258;
+    var AUDIOPREV:ScanCode          = 259;
+    var AUDIOSTOP:ScanCode          = 260;
+    var AUDIOPLAY:ScanCode          = 261;
+    var AUDIOMUTE:ScanCode          = 262;
+    var MEDIASELECT:ScanCode        = 263;
+    var WWW:ScanCode                = 264;
+    var MAIL:ScanCode               = 265;
+    var CALCULATOR:ScanCode         = 266;
+    var COMPUTER:ScanCode           = 267;
+    var AC_SEARCH:ScanCode          = 268;
+    var AC_HOME:ScanCode            = 269;
+    var AC_BACK:ScanCode            = 270;
+    var AC_FORWARD:ScanCode         = 271;
+    var AC_STOP:ScanCode            = 272;
+    var AC_REFRESH:ScanCode         = 273;
+    var AC_BOOKMARKS:ScanCode       = 274;
 
     // Walther keys
     // These are values that Christian Walther added (for mac keyboard?).
 
-    public static inline var BRIGHTNESSDOWN:Int     = 275;
-    public static inline var BRIGHTNESSUP:Int       = 276;
+    var BRIGHTNESSDOWN:ScanCode     = 275;
+    var BRIGHTNESSUP:ScanCode       = 276;
 
     // Display mirroring/dual display switch, video mode switch */
-    public static inline var DISPLAYSWITCH:Int      = 277;
+    var DISPLAYSWITCH:ScanCode      = 277;
 
-    public static inline var KBDILLUMTOGGLE:Int     = 278;
-    public static inline var KBDILLUMDOWN:Int       = 279;
-    public static inline var KBDILLUMUP:Int         = 280;
-    public static inline var EJECT:Int              = 281;
-    public static inline var SLEEP:Int              = 282;
+    var KBDILLUMTOGGLE:ScanCode     = 278;
+    var KBDILLUMDOWN:ScanCode       = 279;
+    var KBDILLUMUP:ScanCode         = 280;
+    var EJECT:ScanCode              = 281;
+    var SLEEP:ScanCode              = 282;
 
-    public static inline var APP1:Int               = 283;
-    public static inline var APP2:Int               = 284;
+    var APP1:ScanCode               = 283;
+    var APP2:ScanCode               = 284;
 
     static var scanCodeNames:Array<String> = [
         null, null, null, null,
@@ -615,6 +619,6 @@ class ScanCode {
         "KBDIllumUp",
         "Eject",
         "Sleep",
-    ]; //scanCode names
+    ];
 
 }

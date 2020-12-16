@@ -587,24 +587,24 @@ class Main extends luxe.Game {
             var buttonId = gamepadAxisToButton.get(axisId);
             var pressed = event.value >= 0.5;
             if (pressed) {
-                if (gamepadPressed.get(id * 100 + buttonId) != 1) {
-                    gamepadPressed.set(id * 100 + buttonId, 1);
+                if (gamepadPressed.get(id * 1024 + buttonId) != 1) {
+                    gamepadPressed.set(id * 1024 + buttonId, 1);
                     @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, buttonId);
                 }
             }
             else {
-                if (gamepadPressed.get(id * 100 + buttonId) == 1) {
-                    gamepadPressed.set(id * 100 + buttonId, 0);
+                if (gamepadPressed.get(id * 1024 + buttonId) == 1) {
+                    gamepadPressed.set(id * 1024 + buttonId, 0);
                     @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, buttonId);
                 }
             }
         }
         else {
             #if !ceramic_no_axis_round
-            var prevValue = gamepadAxis.get(id * 100 + axisId);
-            var newValue = Math.round(event.value * 100) / 100.0;
+            var prevValue = gamepadAxis.get(id * 1024 + axisId);
+            var newValue = Math.round(event.value * 1024) / 100.0;
             if (Math.abs(prevValue - newValue) > 0.01) {
-                gamepadAxis.set(id * 100 + axisId, newValue);
+                gamepadAxis.set(id * 1024 + axisId, newValue);
                 @:privateAccess ceramic.App.app.backend.input.emitControllerAxis(id, axisId, newValue);
             }
             #else
@@ -623,8 +623,8 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
-            for (i in 0...100) {
-                gamepadPressed.set(id * 100 + i, 0);
+            for (i in 0...1024) {
+                gamepadPressed.set(id * 1024 + i, 0);
             }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
             @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
@@ -635,8 +635,8 @@ class Main extends luxe.Game {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
 
-        if (gamepadPressed.get(id * 100 + buttonId) != 1) {
-            gamepadPressed.set(id * 100 + buttonId, 1);
+        if (gamepadPressed.get(id * 1024 + buttonId) != 1) {
+            gamepadPressed.set(id * 1024 + buttonId, 1);
             @:privateAccess ceramic.App.app.backend.input.emitControllerDown(id, buttonId);
         }
 
@@ -651,8 +651,8 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
             activeControllers.set(id, true);
-            for (i in 0...100) {
-                gamepadPressed.set(id * 100 + i, 0);
+            for (i in 0...1024) {
+                gamepadPressed.set(id * 1024 + i, 0);
             }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
             @:privateAccess ceramic.App.app.backend.input.emitControllerEnable(id, name);
@@ -663,8 +663,8 @@ class Main extends luxe.Game {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
 
-        if (gamepadPressed.get(id * 100 + buttonId) == 1) {
-            gamepadPressed.set(id * 100 + buttonId, 0);
+        if (gamepadPressed.get(id * 1024 + buttonId) == 1) {
+            gamepadPressed.set(id * 1024 + buttonId, 0);
             @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, buttonId);
         }
 
@@ -679,10 +679,10 @@ class Main extends luxe.Game {
         var id = event.gamepad;
         if (event.type == GamepadEventType.device_removed) {
             if (activeControllers.exists(id)) {
-                for (i in 0...100) {
-                    if (gamepadPressed.get(id * 100 + i) == 1) {
+                for (i in 0...1024) {
+                    if (gamepadPressed.get(id * 1024 + i) == 1) {
                         @:privateAccess ceramic.App.app.backend.input.emitControllerUp(id, i);
-                        gamepadPressed.set(id * 100 + i, 0);
+                        gamepadPressed.set(id * 1024 + i, 0);
                     }
                 }
                 @:privateAccess ceramic.App.app.backend.input.emitControllerDisable(id);
@@ -696,8 +696,8 @@ class Main extends luxe.Game {
         else if (event.type == GamepadEventType.device_added) {
             if (!activeControllers.exists(id)) {
                 activeControllers.set(id, true);
-                for (i in 0...100) {
-                    gamepadPressed.set(id * 100 + i, 0);
+                for (i in 0...1024) {
+                    gamepadPressed.set(id * 1024 + i, 0);
                 }
                 removedControllers.remove(id);
                 var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;

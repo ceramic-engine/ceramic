@@ -9,8 +9,8 @@ enum KeyAcceleratorItem {
 
     CMD_OR_CTRL;
 
-    SCAN(scanCode:Int);
+    SCAN(scanCode:ScanCode);
 
-    KEY(keyCode:Int);
+    KEY(keyCode:KeyCode);
 
 }

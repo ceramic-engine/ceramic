@@ -95,7 +95,7 @@ class KeyBinding extends Entity {
 
     }
 
-    function bindScanCode(scanCode:Int, itemIndex:Int):Void {
+    function bindScanCode(scanCode:ScanCode, itemIndex:Int):Void {
 
         input.onKeyDown(this, function(key:Key) {
 
@@ -109,7 +109,7 @@ class KeyBinding extends Entity {
             #end
 
             if (key.scanCode == scanCode) {
-                if (input.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.scanJustPressed(key.scanCode) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
@@ -169,18 +169,18 @@ class KeyBinding extends Entity {
 
     }
 
-    function bindKeyCode(keyCode:Int, itemIndex:Int):Void {
+    function bindKeyCode(keyCode:KeyCode, itemIndex:Int):Void {
 
         input.onKeyDown(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
-                if (input.keyJustPressed(key) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.scanJustPressed(key.scanCode) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
 
                     #if web
-                    if ((cmdPressed > 0 || ctrlPressed > 0) && keyCode != KeyCode.LMETA && keyCode != KeyCode.RMETA && keyCode != ScanCode.LCTRL && keyCode != ScanCode.RCTRL && keyCode != KeyCode.LSHIFT && keyCode != KeyCode.RSHIFT) {
+                    if ((cmdPressed > 0 || ctrlPressed > 0) && keyCode != KeyCode.LMETA && keyCode != KeyCode.RMETA && keyCode != KeyCode.LCTRL && keyCode != KeyCode.RCTRL && keyCode != KeyCode.LSHIFT && keyCode != KeyCode.RSHIFT) {
                         app.onceUpdate(this, _ -> {
                             if (pressedItems[itemIndex] > 0)
                                 pressedItems[itemIndex]--;

@@ -1,118 +1,265 @@
 package ceramic;
 
-// Substantial portion of the following code taken from snow/luxe (https://luxeengine.com)
+enum abstract KeyCode(Int) from Int to Int {
 
-/** The keyCode class, with conversion helpers for scanCodes. The values below come directly from SDL header include files,
-but they aren't specific to SDL so they are used generically */
-class KeyCode {
+    var UNKNOWN:KeyCode             = 0;
 
-    /** Convert a scanCode to a keyCode for comparison */
-    public static inline function fromScanCode( scanCode:Int ):Int {
+    var ENTER:KeyCode               = 13;
+    var ESCAPE:KeyCode              = 27;
+    var BACKSPACE:KeyCode           = 8;
+    var TAB:KeyCode                 = 9;
+    var SPACE:KeyCode               = 32;
+    var EXCLAIM:KeyCode             = 33;
+    var QUOTEDBL:KeyCode            = 34;
+    var HASH:KeyCode                = 35;
+    var PERCENT:KeyCode             = 37;
+    var DOLLAR:KeyCode              = 36;
+    var AMPERSAND:KeyCode           = 38;
+    var QUOTE:KeyCode               = 39;
+    var LEFTPAREN:KeyCode           = 40;
+    var RIGHTPAREN:KeyCode          = 41;
+    var ASTERISK:KeyCode            = 42;
+    var PLUS:KeyCode                = 43;
+    var COMMA:KeyCode               = 44;
+    var MINUS:KeyCode               = 45;
+    var PERIOD:KeyCode              = 46;
+    var SLASH:KeyCode               = 47;
+    var KEY_0:KeyCode               = 48;
+    var KEY_1:KeyCode               = 49;
+    var KEY_2:KeyCode               = 50;
+    var KEY_3:KeyCode               = 51;
+    var KEY_4:KeyCode               = 52;
+    var KEY_5:KeyCode               = 53;
+    var KEY_6:KeyCode               = 54;
+    var KEY_7:KeyCode               = 55;
+    var KEY_8:KeyCode               = 56;
+    var KEY_9:KeyCode               = 57;
+    var COLON:KeyCode               = 58;
+    var SEMICOLON:KeyCode           = 59;
+    var LESS:KeyCode                = 60;
+    var EQUALS:KeyCode              = 61;
+    var GREATER:KeyCode             = 62;
+    var QUESTION:KeyCode            = 63;
+    var AT:KeyCode                  = 64;
 
-        return (scanCode | ScanCode.MASK);
+    // Skip uppercase letters
 
-    }
+    var LEFTBRACKET:KeyCode         = 91;
+    var BACKSLASH:KeyCode           = 92;
+    var RIGHTBRACKET:KeyCode        = 93;
+    var CARET:KeyCode               = 94;
+    var UNDERSCORE:KeyCode          = 95;
+    var BACKQUOTE:KeyCode           = 96;
+    var KEY_A:KeyCode               = 97;
+    var KEY_B:KeyCode               = 98;
+    var KEY_C:KeyCode               = 99;
+    var KEY_D:KeyCode               = 100;
+    var KEY_E:KeyCode               = 101;
+    var KEY_F:KeyCode               = 102;
+    var KEY_G:KeyCode               = 103;
+    var KEY_H:KeyCode               = 104;
+    var KEY_I:KeyCode               = 105;
+    var KEY_J:KeyCode               = 106;
+    var KEY_K:KeyCode               = 107;
+    var KEY_L:KeyCode               = 108;
+    var KEY_M:KeyCode               = 109;
+    var KEY_N:KeyCode               = 110;
+    var KEY_O:KeyCode               = 111;
+    var KEY_P:KeyCode               = 112;
+    var KEY_Q:KeyCode               = 113;
+    var KEY_R:KeyCode               = 114;
+    var KEY_S:KeyCode               = 115;
+    var KEY_T:KeyCode               = 116;
+    var KEY_U:KeyCode               = 117;
+    var KEY_V:KeyCode               = 118;
+    var KEY_W:KeyCode               = 119;
+    var KEY_X:KeyCode               = 120;
+    var KEY_Y:KeyCode               = 121;
+    var KEY_Z:KeyCode               = 122;
 
-    /** Convert a keyCode to a scanCode if possible.
-        NOTE - this will only map a large % but not all keys,
-        there is a list of unmapped keys commented in the code. */
-    public static function toScanCode( keyCode:Int ):Int {
+    var CAPSLOCK:KeyCode            = 57 | (1<<30);
 
-        // Quite a lot map directly to a masked scanCode
-        // Ff that's the case, return it directly
-        if ((keyCode & ScanCode.MASK) != 0) {
-            return keyCode &~ ScanCode.MASK;
-        }
+    var F1:KeyCode                  = 58 | (1<<30);
+    var F2:KeyCode                  = 59 | (1<<30);
+    var F3:KeyCode                  = 60 | (1<<30);
+    var F4:KeyCode                  = 61 | (1<<30);
+    var F5:KeyCode                  = 62 | (1<<30);
+    var F6:KeyCode                  = 63 | (1<<30);
+    var F7:KeyCode                  = 64 | (1<<30);
+    var F8:KeyCode                  = 65 | (1<<30);
+    var F9:KeyCode                  = 66 | (1<<30);
+    var F10:KeyCode                 = 67 | (1<<30);
+    var F11:KeyCode                 = 68 | (1<<30);
+    var F12:KeyCode                 = 69 | (1<<30);
 
-        // Now we translate them to the scan where unmapped
+    var PRINTSCREEN:KeyCode         = 70 | (1<<30);
+    var SCROLLLOCK:KeyCode          = 71 | (1<<30);
+    var PAUSE:KeyCode               = 72 | (1<<30);
 
-        switch(keyCode) {
-            case 13  /*KeyCode.ENTER*/:         return ScanCode.ENTER;
-            case 27  /*KeyCode.ESCAPE*/:        return ScanCode.ESCAPE;
-            case 8   /*KeyCode.BACKSPACE*/:     return ScanCode.BACKSPACE;
-            case 9   /*KeyCode.TAB*/:           return ScanCode.TAB;
-            case 32  /*KeyCode.SPACE*/:         return ScanCode.SPACE;
-            case 47  /*KeyCode.SLASH*/:         return ScanCode.SLASH;
-            case 48  /*KeyCode.KEY_0*/:         return ScanCode.KEY_0;
-            case 49  /*KeyCode.KEY_1*/:         return ScanCode.KEY_1;
-            case 50  /*KeyCode.KEY_2*/:         return ScanCode.KEY_2;
-            case 51  /*KeyCode.KEY_3*/:         return ScanCode.KEY_3;
-            case 52  /*KeyCode.KEY_4*/:         return ScanCode.KEY_4;
-            case 53  /*KeyCode.KEY_5*/:         return ScanCode.KEY_5;
-            case 54  /*KeyCode.KEY_6*/:         return ScanCode.KEY_6;
-            case 55  /*KeyCode.KEY_7*/:         return ScanCode.KEY_7;
-            case 56  /*KeyCode.KEY_8*/:         return ScanCode.KEY_8;
-            case 57  /*KeyCode.KEY_9*/:         return ScanCode.KEY_9;
-            case 59  /*KeyCode.SEMICOLON*/:     return ScanCode.SEMICOLON;
-            case 61  /*KeyCode.EQUALS*/:        return ScanCode.EQUALS;
-            case 91  /*KeyCode.LEFTBRACKET*/:   return ScanCode.LEFTBRACKET;
-            case 92  /*KeyCode.BACKSLASH*/:     return ScanCode.BACKSLASH;
-            case 93  /*KeyCode.RIGHTBRACKET*/:  return ScanCode.RIGHTBRACKET;
-            case 96  /*KeyCode.BACKQUOTE*/:     return ScanCode.GRAVE;
-            case 97  /*KeyCode.KEY_A*/:         return ScanCode.KEY_A;
-            case 98  /*KeyCode.KEY_B*/:         return ScanCode.KEY_B;
-            case 99  /*KeyCode.KEY_C*/:         return ScanCode.KEY_C;
-            case 100 /*KeyCode.KEY_D*/:         return ScanCode.KEY_D;
-            case 101 /*KeyCode.KEY_E*/:         return ScanCode.KEY_E;
-            case 102 /*KeyCode.KEY_F*/:         return ScanCode.KEY_F;
-            case 103 /*KeyCode.KEY_G*/:         return ScanCode.KEY_G;
-            case 104 /*KeyCode.KEY_H*/:         return ScanCode.KEY_H;
-            case 105 /*KeyCode.KEY_I*/:         return ScanCode.KEY_I;
-            case 106 /*KeyCode.KEY_J*/:         return ScanCode.KEY_J;
-            case 107 /*KeyCode.KEY_K*/:         return ScanCode.KEY_K;
-            case 108 /*KeyCode.KEY_L*/:         return ScanCode.KEY_L;
-            case 109 /*KeyCode.KEY_M*/:         return ScanCode.KEY_M;
-            case 110 /*KeyCode.KEY_N*/:         return ScanCode.KEY_N;
-            case 111 /*KeyCode.KEY_O*/:         return ScanCode.KEY_O;
-            case 112 /*KeyCode.KEY_P*/:         return ScanCode.KEY_P;
-            case 113 /*KeyCode.KEY_Q*/:         return ScanCode.KEY_Q;
-            case 114 /*KeyCode.KEY_R*/:         return ScanCode.KEY_R;
-            case 115 /*KeyCode.KEY_S*/:         return ScanCode.KEY_S;
-            case 116 /*KeyCode.KEY_T*/:         return ScanCode.KEY_T;
-            case 117 /*KeyCode.KEY_U*/:         return ScanCode.KEY_U;
-            case 118 /*KeyCode.KEY_V*/:         return ScanCode.KEY_V;
-            case 119 /*KeyCode.KEY_W*/:         return ScanCode.KEY_W;
-            case 120 /*KeyCode.KEY_X*/:         return ScanCode.KEY_X;
-            case 121 /*KeyCode.KEY_Y*/:         return ScanCode.KEY_Y;
-            case 122 /*KeyCode.KEY_Z*/:         return ScanCode.KEY_Z;
+    var INSERT:KeyCode              = 73 | (1<<30);
+    var HOME:KeyCode                = 74 | (1<<30);
+    var PAGEUP:KeyCode              = 75 | (1<<30);
+    var DELETE:KeyCode              = 127;
+    var END:KeyCode                 = 77 | (1<<30);
+    var PAGEDOWN:KeyCode            = 78 | (1<<30);
+    var RIGHT:KeyCode               = 79 | (1<<30);
+    var LEFT:KeyCode                = 80 | (1<<30);
+    var DOWN:KeyCode                = 81 | (1<<30);
+    var UP:KeyCode                  = 82 | (1<<30);
 
+    var NUMLOCKCLEAR:KeyCode        = 83 | (1<<30);
+    var KP_DIVIDE:KeyCode           = 84 | (1<<30);
+    var KP_MULTIPLY:KeyCode         = 85 | (1<<30);
+    var KP_MINUS:KeyCode            = 86 | (1<<30);
+    var KP_PLUS:KeyCode             = 87 | (1<<30);
+    var KP_ENTER:KeyCode            = 88 | (1<<30);
+    var KP_1:KeyCode                = 89 | (1<<30);
+    var KP_2:KeyCode                = 90 | (1<<30);
+    var KP_3:KeyCode                = 91 | (1<<30);
+    var KP_4:KeyCode                = 92 | (1<<30);
+    var KP_5:KeyCode                = 93 | (1<<30);
+    var KP_6:KeyCode                = 94 | (1<<30);
+    var KP_7:KeyCode                = 95 | (1<<30);
+    var KP_8:KeyCode                = 96 | (1<<30);
+    var KP_9:KeyCode                = 97 | (1<<30);
+    var KP_0:KeyCode                = 98 | (1<<30);
+    var KP_PERIOD:KeyCode           = 99 | (1<<30);
 
-            // These are unmappable because they are not keys
-            // but values on the key (like a shift key combo)
-            // and to hardcode them to the key you think it is,
-            // would be to map it to a fixed locale probably.
-            // They don't have scanCodes, so we don't return one
+    var APPLICATION:KeyCode         = 101 | (1<<30);
 
-            // case exclaim:      ;
-            // case quotedbl:     ;
-            // case hash:         ;
-            // case percent:      ;
-            // case dollar:       ;
-            // case ampersand:    ;
-            // case quote:        ;
-            // case leftparen:    ;
-            // case rightparen:   ;
-            // case asterisk:     ;
-            // case plus:         ;
-            // case comma:        ;
-            // case minus:        ;
-            // case period:       ;
-            // case less:         ;
-            // case colon:        ;
-            // case greater:      ;
-            // case question:     ;
-            // case at:           ;
-            // case caret:        ;
-            // case underscore:   ;
+    var POWER:KeyCode               = 102 | (1<<30);
+    var KP_EQUALS:KeyCode           = 103 | (1<<30);
+    var F13:KeyCode                 = 104 | (1<<30);
+    var F14:KeyCode                 = 105 | (1<<30);
+    var F15:KeyCode                 = 106 | (1<<30);
+    var F16:KeyCode                 = 107 | (1<<30);
+    var F17:KeyCode                 = 108 | (1<<30);
+    var F18:KeyCode                 = 109 | (1<<30);
+    var F19:KeyCode                 = 110 | (1<<30);
+    var F20:KeyCode                 = 111 | (1<<30);
+    var F21:KeyCode                 = 112 | (1<<30);
+    var F22:KeyCode                 = 113 | (1<<30);
+    var F23:KeyCode                 = 114 | (1<<30);
+    var F24:KeyCode                 = 115 | (1<<30);
+    var EXECUTE:KeyCode             = 116 | (1<<30);
+    var HELP:KeyCode                = 117 | (1<<30);
+    var MENU:KeyCode                = 118 | (1<<30);
+    var SELECT:KeyCode              = 119 | (1<<30);
+    var STOP:KeyCode                = 120 | (1<<30);
 
-        } //switch(keyCode)
+    var AGAIN:KeyCode               = 121 | (1<<30);
+    var UNDO:KeyCode                = 122 | (1<<30);
+    var CUT:KeyCode                 = 123 | (1<<30);
+    var COPY:KeyCode                = 124 | (1<<30);
+    var PASTE:KeyCode               = 125 | (1<<30);
+    var FIND:KeyCode                = 126 | (1<<30);
+    var MUTE:KeyCode                = 127 | (1<<30);
+    var VOLUMEUP:KeyCode            = 128 | (1<<30);
+    var VOLUMEDOWN:KeyCode          = 129 | (1<<30);
 
-        return ScanCode.UNKNOWN;
+    var KP_COMMA:KeyCode            = 133 | (1<<30);
+    var KP_EQUALSAS400:KeyCode      = 134 | (1<<30);
 
-    }
+    var ALTERASE:KeyCode            = 153 | (1<<30);
+    var SYSREQ:KeyCode              = 154 | (1<<30);
+    var CANCEL:KeyCode              = 155 | (1<<30);
+    var CLEAR:KeyCode               = 156 | (1<<30);
+    var PRIOR:KeyCode               = 157 | (1<<30);
+    var RETURN2:KeyCode             = 158 | (1<<30);
+    var SEPARATOR:KeyCode           = 159 | (1<<30);
+    var OUT:KeyCode                 = 160 | (1<<30);
+    var OPER:KeyCode                = 161 | (1<<30);
+    var CLEARAGAIN:KeyCode          = 162 | (1<<30);
+    var CRSEL:KeyCode               = 163 | (1<<30);
+    var EXSEL:KeyCode               = 164 | (1<<30);
+
+    var KP_00:KeyCode               = 176 | (1<<30);
+    var KP_000:KeyCode              = 177 | (1<<30);
+    var THOUSANDSSEPARATOR:Int      = 178 | (1<<30);
+    var DECIMALSEPARATOR:Int        = 179 | (1<<30);
+    var CURRENCYUNIT:KeyCode        = 180 | (1<<30);
+    var CURRENCYSUBUNIT:KeyCode     = 181 | (1<<30);
+    var KP_LEFTPAREN:KeyCode        = 182 | (1<<30);
+    var KP_RIGHTPAREN:KeyCode       = 183 | (1<<30);
+    var KP_LEFTBRACE:KeyCode        = 184 | (1<<30);
+    var KP_RIGHTBRACE:KeyCode       = 185 | (1<<30);
+    var KP_TAB:KeyCode              = 186 | (1<<30);
+    var KP_BACKSPACE:KeyCode        = 187 | (1<<30);
+    var KP_A:KeyCode                = 188 | (1<<30);
+    var KP_B:KeyCode                = 189 | (1<<30);
+    var KP_C:KeyCode                = 190 | (1<<30);
+    var KP_D:KeyCode                = 191 | (1<<30);
+    var KP_E:KeyCode                = 192 | (1<<30);
+    var KP_F:KeyCode                = 193 | (1<<30);
+    var KP_XOR:KeyCode              = 194 | (1<<30);
+    var KP_POWER:KeyCode            = 195 | (1<<30);
+    var KP_PERCENT:KeyCode          = 196 | (1<<30);
+    var KP_LESS:KeyCode             = 197 | (1<<30);
+    var KP_GREATER:KeyCode          = 198 | (1<<30);
+    var KP_AMPERSAND:KeyCode        = 199 | (1<<30);
+    var KP_DBLAMPERSAND:KeyCode     = 200 | (1<<30);
+    var KP_VERTICALBAR:KeyCode      = 201 | (1<<30);
+    var KP_DBLVERTICALBAR:Int       = 202 | (1<<30);
+    var KP_COLON:KeyCode            = 203 | (1<<30);
+    var KP_HASH:KeyCode             = 204 | (1<<30);
+    var KP_SPACE:KeyCode            = 205 | (1<<30);
+    var KP_AT:KeyCode               = 206 | (1<<30);
+    var KP_EXCLAM:KeyCode           = 207 | (1<<30);
+    var KP_MEMSTORE:KeyCode         = 208 | (1<<30);
+    var KP_MEMRECALL:KeyCode        = 209 | (1<<30);
+    var KP_MEMCLEAR:KeyCode         = 210 | (1<<30);
+    var KP_MEMADD:KeyCode           = 211 | (1<<30);
+    var KP_MEMSUBTRACT:KeyCode      = 212 | (1<<30);
+    var KP_MEMMULTIPLY:KeyCode      = 213 | (1<<30);
+    var KP_MEMDIVIDE:KeyCode        = 214 | (1<<30);
+    var KP_PLUSMINUS:KeyCode        = 215 | (1<<30);
+    var KP_CLEAR:KeyCode            = 216 | (1<<30);
+    var KP_CLEARENTRY:KeyCode       = 217 | (1<<30);
+    var KP_BINARY:KeyCode           = 218 | (1<<30);
+    var KP_OCTAL:KeyCode            = 219 | (1<<30);
+    var KP_DECIMAL:KeyCode          = 220 | (1<<30);
+    var KP_HEXADECIMAL:KeyCode      = 221 | (1<<30);
+
+    var LCTRL:KeyCode               = 224 | (1<<30);
+    var LSHIFT:KeyCode              = 225 | (1<<30);
+    var LALT:KeyCode                = 226 | (1<<30);
+    var LMETA:KeyCode               = 227 | (1<<30);
+    var RCTRL:KeyCode               = 228 | (1<<30);
+    var RSHIFT:KeyCode              = 229 | (1<<30);
+    var RALT:KeyCode                = 230 | (1<<30);
+    var RMETA:KeyCode               = 231 | (1<<30);
+
+    var MODE:KeyCode                = 257 | (1<<30);
+
+    var AUDIONEXT:KeyCode           = 258 | (1<<30);
+    var AUDIOPREV:KeyCode           = 259 | (1<<30);
+    var AUDIOSTOP:KeyCode           = 260 | (1<<30);
+    var AUDIOPLAY:KeyCode           = 261 | (1<<30);
+    var AUDIOMUTE:KeyCode           = 262 | (1<<30);
+    var MEDIASELECT:KeyCode         = 263 | (1<<30);
+    var WWW:KeyCode                 = 264 | (1<<30);
+    var MAIL:KeyCode                = 265 | (1<<30);
+    var CALCULATOR:KeyCode          = 266 | (1<<30);
+    var COMPUTER:KeyCode            = 267 | (1<<30);
+    var AC_SEARCH:KeyCode           = 268 | (1<<30);
+    var AC_HOME:KeyCode             = 269 | (1<<30);
+    var AC_BACK:KeyCode             = 270 | (1<<30);
+    var AC_FORWARD:KeyCode          = 271 | (1<<30);
+    var AC_STOP:KeyCode             = 272 | (1<<30);
+    var AC_REFRESH:KeyCode          = 273 | (1<<30);
+    var AC_BOOKMARKS:KeyCode        = 274 | (1<<30);
+
+    var BRIGHTNESSDOWN:KeyCode      = 275 | (1<<30);
+    var BRIGHTNESSUP:KeyCode        = 276 | (1<<30);
+    var DISPLAYSWITCH:KeyCode       = 277 | (1<<30);
+    var KBDILLUMTOGGLE:KeyCode      = 278 | (1<<30);
+    var KBDILLUMDOWN:KeyCode        = 279 | (1<<30);
+    var KBDILLUMUP:KeyCode          = 280 | (1<<30);
+    var EJECT:KeyCode               = 281 | (1<<30);
+    var SLEEP:KeyCode               = 282 | (1<<30);
 
     /** Convert a keyCode to string */
-    public static function name( keyCode:Int ) : String {
+    public static function name(keyCode:KeyCode):String {
 
         //we don't use toScanCode because it would consume
         //the typeable characters and we want those as unicode etc.
@@ -121,7 +268,7 @@ class KeyCode {
             return ScanCode.name(keyCode &~ ScanCode.MASK);
         }
 
-        switch(keyCode) {
+        switch (keyCode) {
 
             case 13  /*KeyCode.ENTER*/:     return ScanCode.name(ScanCode.ENTER);
             case 27  /*KeyCode.ESCAPE*/:    return ScanCode.name(ScanCode.ESCAPE);
@@ -163,260 +310,14 @@ class KeyCode {
 
             }
 
-        } //switch(keyCode)
+        }
 
     }
 
-    public static #if (!no_inline && !haxe_server) inline #end var UNKNOWN:Int              = 0;
+    function toString():String {
 
-    public static #if (!no_inline && !haxe_server) inline #end var ENTER:Int                = 13;
-    public static #if (!no_inline && !haxe_server) inline #end var ESCAPE:Int               = 27;
-    public static #if (!no_inline && !haxe_server) inline #end var BACKSPACE:Int            = 8;
-    public static #if (!no_inline && !haxe_server) inline #end var TAB:Int                  = 9;
-    public static #if (!no_inline && !haxe_server) inline #end var SPACE:Int                = 32;
-    public static #if (!no_inline && !haxe_server) inline #end var EXCLAIM:Int              = 33;
-    public static #if (!no_inline && !haxe_server) inline #end var QUOTEDBL:Int             = 34;
-    public static #if (!no_inline && !haxe_server) inline #end var HASH:Int                 = 35;
-    public static #if (!no_inline && !haxe_server) inline #end var PERCENT:Int              = 37;
-    public static #if (!no_inline && !haxe_server) inline #end var DOLLAR:Int               = 36;
-    public static #if (!no_inline && !haxe_server) inline #end var AMPERSAND:Int            = 38;
-    public static #if (!no_inline && !haxe_server) inline #end var QUOTE:Int                = 39;
-    public static #if (!no_inline && !haxe_server) inline #end var LEFTPAREN:Int            = 40;
-    public static #if (!no_inline && !haxe_server) inline #end var RIGHTPAREN:Int           = 41;
-    public static #if (!no_inline && !haxe_server) inline #end var ASTERISK:Int             = 42;
-    public static #if (!no_inline && !haxe_server) inline #end var PLUS:Int                 = 43;
-    public static #if (!no_inline && !haxe_server) inline #end var COMMA:Int                = 44;
-    public static #if (!no_inline && !haxe_server) inline #end var MINUS:Int                = 45;
-    public static #if (!no_inline && !haxe_server) inline #end var PERIOD:Int               = 46;
-    public static #if (!no_inline && !haxe_server) inline #end var SLASH:Int                = 47;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_0:Int                = 48;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_1:Int                = 49;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_2:Int                = 50;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_3:Int                = 51;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_4:Int                = 52;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_5:Int                = 53;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_6:Int                = 54;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_7:Int                = 55;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_8:Int                = 56;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_9:Int                = 57;
-    public static #if (!no_inline && !haxe_server) inline #end var COLON:Int                = 58;
-    public static #if (!no_inline && !haxe_server) inline #end var SEMICOLON:Int            = 59;
-    public static #if (!no_inline && !haxe_server) inline #end var LESS:Int                 = 60;
-    public static #if (!no_inline && !haxe_server) inline #end var EQUALS:Int               = 61;
-    public static #if (!no_inline && !haxe_server) inline #end var GREATER:Int              = 62;
-    public static #if (!no_inline && !haxe_server) inline #end var QUESTION:Int             = 63;
-    public static #if (!no_inline && !haxe_server) inline #end var AT:Int                   = 64;
+        return 'KeyCode(' + this + ' ' + KeyCode.name(this) + ')';
 
-       // Skip uppercase letters
-
-    public static #if (!no_inline && !haxe_server) inline #end var LEFTBRACKET:Int          = 91;
-    public static #if (!no_inline && !haxe_server) inline #end var BACKSLASH:Int            = 92;
-    public static #if (!no_inline && !haxe_server) inline #end var RIGHTBRACKET:Int         = 93;
-    public static #if (!no_inline && !haxe_server) inline #end var CARET:Int                = 94;
-    public static #if (!no_inline && !haxe_server) inline #end var UNDERSCORE:Int           = 95;
-    public static #if (!no_inline && !haxe_server) inline #end var BACKQUOTE:Int            = 96;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_A:Int                = 97;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_B:Int                = 98;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_C:Int                = 99;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_D:Int                = 100;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_E:Int                = 101;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_F:Int                = 102;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_G:Int                = 103;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_H:Int                = 104;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_I:Int                = 105;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_J:Int                = 106;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_K:Int                = 107;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_L:Int                = 108;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_M:Int                = 109;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_N:Int                = 110;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_O:Int                = 111;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_P:Int                = 112;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_Q:Int                = 113;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_R:Int                = 114;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_S:Int                = 115;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_T:Int                = 116;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_U:Int                = 117;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_V:Int                = 118;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_W:Int                = 119;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_X:Int                = 120;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_Y:Int                = 121;
-    public static #if (!no_inline && !haxe_server) inline #end var KEY_Z:Int                = 122;
-
-    public static #if (!no_inline && !haxe_server) inline #end var CAPSLOCK:Int             = fromScanCode(ScanCode.CAPSLOCK);
-
-    public static #if (!no_inline && !haxe_server) inline #end var F1:Int                   = fromScanCode(ScanCode.F1);
-    public static #if (!no_inline && !haxe_server) inline #end var F2:Int                   = fromScanCode(ScanCode.F2);
-    public static #if (!no_inline && !haxe_server) inline #end var F3:Int                   = fromScanCode(ScanCode.F3);
-    public static #if (!no_inline && !haxe_server) inline #end var F4:Int                   = fromScanCode(ScanCode.F4);
-    public static #if (!no_inline && !haxe_server) inline #end var F5:Int                   = fromScanCode(ScanCode.F5);
-    public static #if (!no_inline && !haxe_server) inline #end var F6:Int                   = fromScanCode(ScanCode.F6);
-    public static #if (!no_inline && !haxe_server) inline #end var F7:Int                   = fromScanCode(ScanCode.F7);
-    public static #if (!no_inline && !haxe_server) inline #end var F8:Int                   = fromScanCode(ScanCode.F8);
-    public static #if (!no_inline && !haxe_server) inline #end var F9:Int                   = fromScanCode(ScanCode.F9);
-    public static #if (!no_inline && !haxe_server) inline #end var F10:Int                  = fromScanCode(ScanCode.F10);
-    public static #if (!no_inline && !haxe_server) inline #end var F11:Int                  = fromScanCode(ScanCode.F11);
-    public static #if (!no_inline && !haxe_server) inline #end var F12:Int                  = fromScanCode(ScanCode.F12);
-
-    public static #if (!no_inline && !haxe_server) inline #end var PRINTSCREEN:Int          = fromScanCode(ScanCode.PRINTSCREEN);
-    public static #if (!no_inline && !haxe_server) inline #end var SCROLLLOCK:Int           = fromScanCode(ScanCode.SCROLLLOCK);
-    public static #if (!no_inline && !haxe_server) inline #end var PAUSE:Int                = fromScanCode(ScanCode.PAUSE);
-    public static #if (!no_inline && !haxe_server) inline #end var INSERT:Int               = fromScanCode(ScanCode.INSERT);
-    public static #if (!no_inline && !haxe_server) inline #end var HOME:Int                 = fromScanCode(ScanCode.HOME);
-    public static #if (!no_inline && !haxe_server) inline #end var PAGEUP:Int               = fromScanCode(ScanCode.PAGEUP);
-    public static #if (!no_inline && !haxe_server) inline #end var DELETE:Int               = 127;
-    public static #if (!no_inline && !haxe_server) inline #end var END:Int                  = fromScanCode(ScanCode.END);
-    public static #if (!no_inline && !haxe_server) inline #end var PAGEDOWN:Int             = fromScanCode(ScanCode.PAGEDOWN);
-    public static #if (!no_inline && !haxe_server) inline #end var RIGHT:Int                = fromScanCode(ScanCode.RIGHT);
-    public static #if (!no_inline && !haxe_server) inline #end var LEFT:Int                 = fromScanCode(ScanCode.LEFT);
-    public static #if (!no_inline && !haxe_server) inline #end var DOWN:Int                 = fromScanCode(ScanCode.DOWN);
-    public static #if (!no_inline && !haxe_server) inline #end var UP:Int                   = fromScanCode(ScanCode.UP);
-
-    public static #if (!no_inline && !haxe_server) inline #end var NUMLOCKCLEAR:Int         = fromScanCode(ScanCode.NUMLOCKCLEAR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_DIVIDE:Int            = fromScanCode(ScanCode.KP_DIVIDE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MULTIPLY:Int          = fromScanCode(ScanCode.KP_MULTIPLY);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MINUS:Int             = fromScanCode(ScanCode.KP_MINUS);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_PLUS:Int              = fromScanCode(ScanCode.KP_PLUS);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_ENTER:Int             = fromScanCode(ScanCode.KP_ENTER);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_1:Int                 = fromScanCode(ScanCode.KP_1);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_2:Int                 = fromScanCode(ScanCode.KP_2);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_3:Int                 = fromScanCode(ScanCode.KP_3);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_4:Int                 = fromScanCode(ScanCode.KP_4);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_5:Int                 = fromScanCode(ScanCode.KP_5);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_6:Int                 = fromScanCode(ScanCode.KP_6);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_7:Int                 = fromScanCode(ScanCode.KP_7);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_8:Int                 = fromScanCode(ScanCode.KP_8);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_9:Int                 = fromScanCode(ScanCode.KP_9);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_0:Int                 = fromScanCode(ScanCode.KP_0);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_PERIOD:Int            = fromScanCode(ScanCode.KP_PERIOD);
-
-    public static #if (!no_inline && !haxe_server) inline #end var APPLICATION:Int          = fromScanCode(ScanCode.APPLICATION);
-    public static #if (!no_inline && !haxe_server) inline #end var POWER:Int                = fromScanCode(ScanCode.POWER);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_EQUALS:Int            = fromScanCode(ScanCode.KP_EQUALS);
-    public static #if (!no_inline && !haxe_server) inline #end var F13:Int                  = fromScanCode(ScanCode.F13);
-    public static #if (!no_inline && !haxe_server) inline #end var F14:Int                  = fromScanCode(ScanCode.F14);
-    public static #if (!no_inline && !haxe_server) inline #end var F15:Int                  = fromScanCode(ScanCode.F15);
-    public static #if (!no_inline && !haxe_server) inline #end var F16:Int                  = fromScanCode(ScanCode.F16);
-    public static #if (!no_inline && !haxe_server) inline #end var F17:Int                  = fromScanCode(ScanCode.F17);
-    public static #if (!no_inline && !haxe_server) inline #end var F18:Int                  = fromScanCode(ScanCode.F18);
-    public static #if (!no_inline && !haxe_server) inline #end var F19:Int                  = fromScanCode(ScanCode.F19);
-    public static #if (!no_inline && !haxe_server) inline #end var F20:Int                  = fromScanCode(ScanCode.F20);
-    public static #if (!no_inline && !haxe_server) inline #end var F21:Int                  = fromScanCode(ScanCode.F21);
-    public static #if (!no_inline && !haxe_server) inline #end var F22:Int                  = fromScanCode(ScanCode.F22);
-    public static #if (!no_inline && !haxe_server) inline #end var F23:Int                  = fromScanCode(ScanCode.F23);
-    public static #if (!no_inline && !haxe_server) inline #end var F24:Int                  = fromScanCode(ScanCode.F24);
-    public static #if (!no_inline && !haxe_server) inline #end var EXECUTE:Int              = fromScanCode(ScanCode.EXECUTE);
-    public static #if (!no_inline && !haxe_server) inline #end var HELP:Int                 = fromScanCode(ScanCode.HELP);
-    public static #if (!no_inline && !haxe_server) inline #end var MENU:Int                 = fromScanCode(ScanCode.MENU);
-    public static #if (!no_inline && !haxe_server) inline #end var SELECT:Int               = fromScanCode(ScanCode.SELECT);
-    public static #if (!no_inline && !haxe_server) inline #end var STOP:Int                 = fromScanCode(ScanCode.STOP);
-    public static #if (!no_inline && !haxe_server) inline #end var AGAIN:Int                = fromScanCode(ScanCode.AGAIN);
-    public static #if (!no_inline && !haxe_server) inline #end var UNDO:Int                 = fromScanCode(ScanCode.UNDO);
-    public static #if (!no_inline && !haxe_server) inline #end var CUT:Int                  = fromScanCode(ScanCode.CUT);
-    public static #if (!no_inline && !haxe_server) inline #end var COPY:Int                 = fromScanCode(ScanCode.COPY);
-    public static #if (!no_inline && !haxe_server) inline #end var PASTE:Int                = fromScanCode(ScanCode.PASTE);
-    public static #if (!no_inline && !haxe_server) inline #end var FIND:Int                 = fromScanCode(ScanCode.FIND);
-    public static #if (!no_inline && !haxe_server) inline #end var MUTE:Int                 = fromScanCode(ScanCode.MUTE);
-    public static #if (!no_inline && !haxe_server) inline #end var VOLUMEUP:Int             = fromScanCode(ScanCode.VOLUMEUP);
-    public static #if (!no_inline && !haxe_server) inline #end var VOLUMEDOWN:Int           = fromScanCode(ScanCode.VOLUMEDOWN);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_COMMA:Int             = fromScanCode(ScanCode.KP_COMMA);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_EQUALSAS400:Int       = fromScanCode(ScanCode.KP_EQUALSAS400);
-
-    public static #if (!no_inline && !haxe_server) inline #end var ALTERASE:Int             = fromScanCode(ScanCode.ALTERASE);
-    public static #if (!no_inline && !haxe_server) inline #end var SYSREQ:Int               = fromScanCode(ScanCode.SYSREQ);
-    public static #if (!no_inline && !haxe_server) inline #end var CANCEL:Int               = fromScanCode(ScanCode.CANCEL);
-    public static #if (!no_inline && !haxe_server) inline #end var CLEAR:Int                = fromScanCode(ScanCode.CLEAR);
-    public static #if (!no_inline && !haxe_server) inline #end var PRIOR:Int                = fromScanCode(ScanCode.PRIOR);
-    public static #if (!no_inline && !haxe_server) inline #end var RETURN2:Int              = fromScanCode(ScanCode.RETURN2);
-    public static #if (!no_inline && !haxe_server) inline #end var SEPARATOR:Int            = fromScanCode(ScanCode.SEPARATOR);
-    public static #if (!no_inline && !haxe_server) inline #end var OUT:Int                  = fromScanCode(ScanCode.OUT);
-    public static #if (!no_inline && !haxe_server) inline #end var OPER:Int                 = fromScanCode(ScanCode.OPER);
-    public static #if (!no_inline && !haxe_server) inline #end var CLEARAGAIN:Int           = fromScanCode(ScanCode.CLEARAGAIN);
-    public static #if (!no_inline && !haxe_server) inline #end var CRSEL:Int                = fromScanCode(ScanCode.CRSEL);
-    public static #if (!no_inline && !haxe_server) inline #end var EXSEL:Int                = fromScanCode(ScanCode.EXSEL);
-
-    public static #if (!no_inline && !haxe_server) inline #end var KP_00:Int                = fromScanCode(ScanCode.KP_00);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_000:Int               = fromScanCode(ScanCode.KP_000);
-    public static #if (!no_inline && !haxe_server) inline #end var THOUSANDSSEPARATOR:Int   = fromScanCode(ScanCode.THOUSANDSSEPARATOR);
-    public static #if (!no_inline && !haxe_server) inline #end var DECIMALSEPARATOR:Int     = fromScanCode(ScanCode.DECIMALSEPARATOR);
-    public static #if (!no_inline && !haxe_server) inline #end var CURRENCYUNIT:Int         = fromScanCode(ScanCode.CURRENCYUNIT);
-    public static #if (!no_inline && !haxe_server) inline #end var CURRENCYSUBUNIT:Int      = fromScanCode(ScanCode.CURRENCYSUBUNIT);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_LEFTPAREN:Int         = fromScanCode(ScanCode.KP_LEFTPAREN);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_RIGHTPAREN:Int        = fromScanCode(ScanCode.KP_RIGHTPAREN);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_LEFTBRACE:Int         = fromScanCode(ScanCode.KP_LEFTBRACE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_RIGHTBRACE:Int        = fromScanCode(ScanCode.KP_RIGHTBRACE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_TAB:Int               = fromScanCode(ScanCode.KP_TAB);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_BACKSPACE:Int         = fromScanCode(ScanCode.KP_BACKSPACE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_A:Int                 = fromScanCode(ScanCode.KP_A);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_B:Int                 = fromScanCode(ScanCode.KP_B);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_C:Int                 = fromScanCode(ScanCode.KP_C);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_D:Int                 = fromScanCode(ScanCode.KP_D);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_E:Int                 = fromScanCode(ScanCode.KP_E);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_F:Int                 = fromScanCode(ScanCode.KP_F);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_XOR:Int               = fromScanCode(ScanCode.KP_XOR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_POWER:Int             = fromScanCode(ScanCode.KP_POWER);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_PERCENT:Int           = fromScanCode(ScanCode.KP_PERCENT);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_LESS:Int              = fromScanCode(ScanCode.KP_LESS);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_GREATER:Int           = fromScanCode(ScanCode.KP_GREATER);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_AMPERSAND:Int         = fromScanCode(ScanCode.KP_AMPERSAND);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_DBLAMPERSAND:Int      = fromScanCode(ScanCode.KP_DBLAMPERSAND);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_VERTICALBAR:Int       = fromScanCode(ScanCode.KP_VERTICALBAR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_DBLVERTICALBAR:Int    = fromScanCode(ScanCode.KP_DBLVERTICALBAR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_COLON:Int             = fromScanCode(ScanCode.KP_COLON);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_HASH:Int              = fromScanCode(ScanCode.KP_HASH);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_SPACE:Int             = fromScanCode(ScanCode.KP_SPACE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_AT:Int                = fromScanCode(ScanCode.KP_AT);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_EXCLAM:Int            = fromScanCode(ScanCode.KP_EXCLAM);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMSTORE:Int          = fromScanCode(ScanCode.KP_MEMSTORE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMRECALL:Int         = fromScanCode(ScanCode.KP_MEMRECALL);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMCLEAR:Int          = fromScanCode(ScanCode.KP_MEMCLEAR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMADD:Int            = fromScanCode(ScanCode.KP_MEMADD);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMSUBTRACT:Int       = fromScanCode(ScanCode.KP_MEMSUBTRACT);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMMULTIPLY:Int       = fromScanCode(ScanCode.KP_MEMMULTIPLY);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_MEMDIVIDE:Int         = fromScanCode(ScanCode.KP_MEMDIVIDE);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_PLUSMINUS:Int         = fromScanCode(ScanCode.KP_PLUSMINUS);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_CLEAR:Int             = fromScanCode(ScanCode.KP_CLEAR);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_CLEARENTRY:Int        = fromScanCode(ScanCode.KP_CLEARENTRY);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_BINARY:Int            = fromScanCode(ScanCode.KP_BINARY);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_OCTAL:Int             = fromScanCode(ScanCode.KP_OCTAL);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_DECIMAL:Int           = fromScanCode(ScanCode.KP_DECIMAL);
-    public static #if (!no_inline && !haxe_server) inline #end var KP_HEXADECIMAL:Int       = fromScanCode(ScanCode.KP_HEXADECIMAL);
-
-    public static #if (!no_inline && !haxe_server) inline #end var LCTRL:Int                = fromScanCode(ScanCode.LCTRL);
-    public static #if (!no_inline && !haxe_server) inline #end var LSHIFT:Int               = fromScanCode(ScanCode.LSHIFT);
-    public static #if (!no_inline && !haxe_server) inline #end var LALT:Int                 = fromScanCode(ScanCode.LALT);
-    public static #if (!no_inline && !haxe_server) inline #end var LMETA:Int                = fromScanCode(ScanCode.LMETA);
-    public static #if (!no_inline && !haxe_server) inline #end var RCTRL:Int                = fromScanCode(ScanCode.RCTRL);
-    public static #if (!no_inline && !haxe_server) inline #end var RSHIFT:Int               = fromScanCode(ScanCode.RSHIFT);
-    public static #if (!no_inline && !haxe_server) inline #end var RALT:Int                 = fromScanCode(ScanCode.RALT);
-    public static #if (!no_inline && !haxe_server) inline #end var RMETA:Int                = fromScanCode(ScanCode.RMETA);
-
-    public static #if (!no_inline && !haxe_server) inline #end var MODE:Int                 = fromScanCode(ScanCode.MODE);
-
-    public static #if (!no_inline && !haxe_server) inline #end var AUDIONEXT:Int            = fromScanCode(ScanCode.AUDIONEXT);
-    public static #if (!no_inline && !haxe_server) inline #end var AUDIOPREV:Int            = fromScanCode(ScanCode.AUDIOPREV);
-    public static #if (!no_inline && !haxe_server) inline #end var AUDIOSTOP:Int            = fromScanCode(ScanCode.AUDIOSTOP);
-    public static #if (!no_inline && !haxe_server) inline #end var AUDIOPLAY:Int            = fromScanCode(ScanCode.AUDIOPLAY);
-    public static #if (!no_inline && !haxe_server) inline #end var AUDIOMUTE:Int            = fromScanCode(ScanCode.AUDIOMUTE);
-    public static #if (!no_inline && !haxe_server) inline #end var MEDIASELECT:Int          = fromScanCode(ScanCode.MEDIASELECT);
-    public static #if (!no_inline && !haxe_server) inline #end var WWW:Int                  = fromScanCode(ScanCode.WWW);
-    public static #if (!no_inline && !haxe_server) inline #end var MAIL:Int                 = fromScanCode(ScanCode.MAIL);
-    public static #if (!no_inline && !haxe_server) inline #end var CALCULATOR:Int           = fromScanCode(ScanCode.CALCULATOR);
-    public static #if (!no_inline && !haxe_server) inline #end var COMPUTER:Int             = fromScanCode(ScanCode.COMPUTER);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_SEARCH:Int            = fromScanCode(ScanCode.AC_SEARCH);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_HOME:Int              = fromScanCode(ScanCode.AC_HOME);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_BACK:Int              = fromScanCode(ScanCode.AC_BACK);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_FORWARD:Int           = fromScanCode(ScanCode.AC_FORWARD);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_STOP:Int              = fromScanCode(ScanCode.AC_STOP);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_REFRESH:Int           = fromScanCode(ScanCode.AC_REFRESH);
-    public static #if (!no_inline && !haxe_server) inline #end var AC_BOOKMARKS:Int         = fromScanCode(ScanCode.AC_BOOKMARKS);
-
-    public static #if (!no_inline && !haxe_server) inline #end var BRIGHTNESSDOWN:Int       = fromScanCode(ScanCode.BRIGHTNESSDOWN);
-    public static #if (!no_inline && !haxe_server) inline #end var BRIGHTNESSUP:Int         = fromScanCode(ScanCode.BRIGHTNESSUP);
-    public static #if (!no_inline && !haxe_server) inline #end var DISPLAYSWITCH:Int        = fromScanCode(ScanCode.DISPLAYSWITCH);
-    public static #if (!no_inline && !haxe_server) inline #end var KBDILLUMTOGGLE:Int       = fromScanCode(ScanCode.KBDILLUMTOGGLE);
-    public static #if (!no_inline && !haxe_server) inline #end var KBDILLUMDOWN:Int         = fromScanCode(ScanCode.KBDILLUMDOWN);
-    public static #if (!no_inline && !haxe_server) inline #end var KBDILLUMUP:Int           = fromScanCode(ScanCode.KBDILLUMUP);
-    public static #if (!no_inline && !haxe_server) inline #end var EJECT:Int                = fromScanCode(ScanCode.EJECT);
-    public static #if (!no_inline && !haxe_server) inline #end var SLEEP:Int                = fromScanCode(ScanCode.SLEEP);
+    }
 
 }

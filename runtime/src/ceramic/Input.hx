@@ -26,6 +26,8 @@ class Input extends Entity {
 
     var pressedKeyCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    var pressedControllerButtons:IntIntMap = new IntIntMap(16, 0.5, false);
+
     public function new() {
 
         super();
@@ -38,6 +40,11 @@ class Input extends Entity {
 
         var prevScan = pressedScanCodes.get(key.scanCode);
         var prevKey = pressedKeyCodes.get(key.keyCode);
+
+        if (prevScan == -1) {
+            prevScan = 0;
+            prevKey = 0;
+        }
 
         pressedScanCodes.set(key.scanCode, prevScan + 1);
         pressedKeyCodes.set(key.keyCode, prevKey + 1);
@@ -58,44 +65,111 @@ class Input extends Entity {
 
     function willEmitKeyUp(key:Key):Void {
 
-        pressedScanCodes.set(key.scanCode, 0);
-        pressedKeyCodes.set(key.keyCode, 0);
+        pressedScanCodes.set(key.scanCode, -1);
+        pressedKeyCodes.set(key.keyCode, -1);
+        // Used to differenciate "released" and "just released" states
+        ceramic.App.app.beginUpdateCallbacks.push(function() {
+            if (pressedScanCodes.get(key.scanCode) == -1) {
+                pressedScanCodes.set(key.scanCode, 0);
+            }
+            if (pressedKeyCodes.get(key.keyCode) == -1) {
+                pressedKeyCodes.set(key.keyCode, 0);
+            }
+        });
 
     }
 
-    public function keyCodePressed(keyCode:Int):Bool {
+    public function keyPressed(keyCode:KeyCode):Bool {
 
         return pressedKeyCodes.get(keyCode) > 0;
 
     }
 
-    public function keyCodeJustPressed(keyCode:Int):Bool {
+    public function keyJustPressed(keyCode:KeyCode):Bool {
 
         return pressedKeyCodes.get(keyCode) == 1;
 
     }
 
-    public function scanCodePressed(scanCode:Int):Bool {
+    public function keyJustReleased(keyCode:KeyCode):Bool {
+
+        return pressedKeyCodes.get(keyCode) == -1;
+
+    }
+
+    public function scanPressed(scanCode:ScanCode):Bool {
 
         return pressedScanCodes.get(scanCode) > 0;
 
     }
 
-    public function scanCodeJustPressed(scanCode:Int):Bool {
+    public function scanJustPressed(scanCode:ScanCode):Bool {
 
         return pressedScanCodes.get(scanCode) == 1;
 
     }
 
-    public function keyPressed(key:Key):Bool {
+    public function scanJustReleased(scanCode:ScanCode):Bool {
 
-        return pressedScanCodes.get(key.scanCode) > 0;
+        return pressedScanCodes.get(scanCode) == -1;
 
     }
 
-    public function keyJustPressed(key:Key):Bool {
+/// Controller
 
-        return pressedScanCodes.get(key.scanCode) == 1;
+    function willEmitControllerDown(controllerId:Int, buttonId:Int):Void {
+
+        var key = controllerId * 1024 + buttonId;
+        var prevValue = pressedControllerButtons.get(key);
+
+        if (prevValue == -1) {
+            prevValue = 0;
+        }
+
+        pressedControllerButtons.set(key, prevValue + 1);
+
+        if (prevValue == 0) {
+            // Used to differenciate "pressed" and "just pressed" states
+            ceramic.App.app.beginUpdateCallbacks.push(function() {
+                if (pressedControllerButtons.get(key) == 1) {
+                    pressedControllerButtons.set(key, 2);
+                }
+            });
+        }
+
+    }
+
+    function willEmitControllerUp(controllerId:Int, buttonId:Int):Void {
+
+        var key = controllerId * 1024 + buttonId;
+        pressedControllerButtons.set(key, -1);
+        // Used to differenciate "released" and "just released" states
+        ceramic.App.app.beginUpdateCallbacks.push(function() {
+            if (pressedControllerButtons.get(key) == -1) {
+                pressedControllerButtons.set(key, 0);
+            }
+        });
+
+    }
+
+    public function controllerPressed(controllerId:Int, buttonId:Int):Bool {
+
+        var key = controllerId * 1024 + buttonId;
+        return pressedControllerButtons.get(key) > 0;
+
+    }
+
+    public function controllerJustPressed(controllerId:Int, buttonId:Int):Bool {
+
+        var key = controllerId * 1024 + buttonId;
+        return pressedControllerButtons.get(key) == 1;
+
+    }
+
+    public function controllerJustReleased(controllerId:Int, buttonId:Int):Bool {
+
+        var key = controllerId * 1024 + buttonId;
+        return pressedControllerButtons.get(key) == -1;
 
     }
 
