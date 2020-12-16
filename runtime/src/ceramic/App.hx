@@ -729,18 +729,6 @@ class App extends Entity {
         screen.updatePointerOverState(delta);
 
 #if ceramic_debug_cputime cpuTimePause(2); #end
-#if ceramic_debug_cputime cpuTimeRec(3); #end
-
-        // Run 'begin update' callbacks, like touch/mouse/key events etc...
-        if (beginUpdateCallbacks.length > 0) {
-            var callbacks = beginUpdateCallbacks;
-            beginUpdateCallbacks = [];
-            for (callback in callbacks) {
-                callback();
-            }
-        }
-
-#if ceramic_debug_cputime cpuTimePause(3); #end
 
         inUpdate = true;
         shouldUpdateAndDrawAgain = true;
@@ -752,6 +740,19 @@ class App extends Entity {
             shouldUpdateAndDrawAgain = false;
             var _delta:Float = isFirstUpdateInFrame ? delta : 0;
 
+#if ceramic_debug_cputime cpuTimeRec(3); #end
+            
+            
+            // Run 'begin update' callbacks, like touch/mouse/key events etc...
+            if (beginUpdateCallbacks.length > 0) {
+                var callbacks = beginUpdateCallbacks;
+                beginUpdateCallbacks = [];
+                for (callback in callbacks) {
+                    callback();
+                }
+            }
+            
+#if ceramic_debug_cputime cpuTimePause(3); #end
 #if ceramic_debug_cputime cpuTimeRec(4); #end
 
             // Trigger pre-update event
