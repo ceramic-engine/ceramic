@@ -742,6 +742,8 @@ class App extends Entity {
 
 #if ceramic_debug_cputime cpuTimeRec(3); #end
             
+            // Reset screen deltas
+            screen.resetDeltas();
             
             // Run 'begin update' callbacks, like touch/mouse/key events etc...
             if (beginUpdateCallbacks.length > 0) {

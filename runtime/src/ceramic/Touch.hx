@@ -10,6 +10,10 @@ class Touch {
 
     public var y(default,null):Float;
 
+    public var deltaX(default,null):Float;
+
+    public var deltaY(default,null):Float;
+
 /// Print
 
     function toString():String {
@@ -17,7 +21,9 @@ class Touch {
         return '' + {
             index: index,
             x: x,
-            y: y
+            y: y,
+            deltaX: deltaX,
+            deltaY: deltaY
         };
 
     }

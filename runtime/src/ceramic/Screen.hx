@@ -72,11 +72,27 @@ class Screen extends Entity implements Observable {
         convenience when you don't want to deal with multiple positions. */
     public var pointerY(default,null):Float = 0;
 
+    /** Pointer x delta since last frame */
+    public var pointerDeltaX(default,null):Float = 0;
+
+    /** Pointer y delta since last frame */
+    public var pointerDeltaY(default,null):Float = 0;
+
     /** Mouse x coordinate, computed from mouse events. */
     public var mouseX(default,null):Float = 0;
 
     /** Mouse y coordinate, computed from mouse events. */
     public var mouseY(default,null):Float = 0;
+
+    /**
+     * Mouse x delta since last frame
+     */
+    public var mouseDeltaX(default, null):Float = 0;
+
+    /**
+     * Mouse y delta since last frame
+     */
+    public var mouseDeltaY(default, null):Float = 0;
 
     /** Touches x and y coordinates by touch index. */
     public var touches(default,null):Touches = new Touches(8, 0.5, false);
@@ -127,6 +143,14 @@ class Screen extends Entity implements Observable {
     private var pressedMouseButtons:IntIntMap = new IntIntMap(16, 0.5, false);
 
     private var pressedTouches:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    private var prevTouchPositions:IntFloatMap = new IntFloatMap(16, 0.5, false);
+
+    private var prevMouseX:Float = 0;
+    
+    private var prevMouseY:Float = 0;
+
+    private var maxTouchIndex:Int = -1;
 
 /// Events
 
@@ -739,7 +763,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { index: info.touchIndex, x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y, deltaX: 0, deltaY: 0 };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -763,7 +787,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { index: info.touchIndex, x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y, deltaX: 0, deltaY: 0 };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -792,7 +816,7 @@ class Screen extends Entity implements Observable {
             // Touch
             var pointer = touches.get(info.touchIndex);
             if (pointer == null) {
-                pointer = { index: info.touchIndex, x: info.x, y: info.y };
+                pointer = { index: info.touchIndex, x: info.x, y: info.y, deltaX: 0, deltaY: 0 };
                 touches.set(info.touchIndex, pointer);
             } else {
                 pointer.x = info.x;
@@ -805,6 +829,10 @@ class Screen extends Entity implements Observable {
     }
 
     inline function updatePointer():Void {
+
+        // Keep value for delta
+        var prevPointerX = pointerX;
+        var prevPointerY = pointerY;
 
         // Touches?
         //
@@ -828,6 +856,10 @@ class Screen extends Entity implements Observable {
             pointerX = mouseX;
             pointerY = mouseY;
         }
+
+        // Update delta
+        pointerDeltaX += (pointerX - prevPointerX);
+        pointerDeltaY += (pointerY - prevPointerY);
 
     }
 
@@ -1033,6 +1065,182 @@ class Screen extends Entity implements Observable {
     public function isHitVisual(visual:Visual):Bool {
 
         return visual.internalFlag(3);
+
+    }
+
+/// Screen deltas
+
+    function resetDeltas():Void {
+
+        pointerDeltaX = 0;
+        pointerDeltaY = 0;
+
+        mouseDeltaX = 0;
+        mouseDeltaY = 0;
+
+        var i = 0;
+        while (i <= maxTouchIndex) {
+            var touch:Touch = touches.get(i);
+            if (touch != null) {
+                touch.deltaX = 0;
+                touch.deltaY = 0;
+            }
+            i++;
+        }
+
+    }
+
+/// Mouse states
+
+    function willEmitMouseMove(x:Float, y:Float):Void {
+
+        mouseDeltaX += (x - prevMouseX);
+        mouseDeltaY += (y - prevMouseY);
+        prevMouseX = x;
+        prevMouseY = y;
+
+    }
+
+    function willEmitMouseDown(buttonId:Int, x:Float, y:Float) {
+
+        prevMouseX = x;
+        prevMouseY = y;
+
+        var prevValue = pressedMouseButtons.get(buttonId);
+
+        if (prevValue == -1) {
+            prevValue = 0;
+        }
+
+        pressedMouseButtons.set(buttonId, prevValue + 1);
+
+        if (prevValue == 0) {
+            // Used to differenciate "pressed" and "just pressed" states
+            ceramic.App.app.beginUpdateCallbacks.push(function() {
+                if (pressedMouseButtons.get(buttonId) == 1) {
+                    pressedMouseButtons.set(buttonId, 2);
+                }
+            });
+        }
+
+    }
+
+    function willEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
+
+        pressedMouseButtons.set(buttonId, -1);
+        // Used to differenciate "released" and "just released" states
+        ceramic.App.app.beginUpdateCallbacks.push(function() {
+            if (pressedMouseButtons.get(buttonId) == -1) {
+                pressedMouseButtons.set(buttonId, 0);
+            }
+        });
+
+    }
+
+    public function mousePressed(buttonId:Int):Bool {
+
+        return pressedMouseButtons.get(buttonId) > 0;
+
+    }
+
+    public function mouseJustPressed(buttonId:Int):Bool {
+
+        return pressedMouseButtons.get(buttonId) == 1;
+
+    }
+
+    public function mouseJustReleased(buttonId:Int):Bool {
+
+        return pressedMouseButtons.get(buttonId) == -1;
+
+    }
+
+/// Touch states
+
+    function willEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+
+        if (touchIndex > maxTouchIndex) {
+            maxTouchIndex = touchIndex;
+        }
+        var keyX = touchIndex * 2;
+        var keyY = keyX + 1;
+        var prevX = prevTouchPositions.get(keyX);
+        var prevY = prevTouchPositions.get(keyY);
+        var touch:Touch = touches.get(touchIndex);
+        if (touch != null) {
+            touch.deltaX += (x - prevX);
+            touch.deltaY += (y - prevY);
+        }
+
+    }
+
+    function willEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+
+        var keyX = touchIndex * 2;
+        var keyY = keyX + 1;
+        prevTouchPositions.set(keyX, x);
+        prevTouchPositions.set(keyY, y);
+
+        var prevValue = pressedTouches.get(touchIndex);
+
+        if (prevValue == -1) {
+            prevValue = 0;
+        }
+
+        pressedTouches.set(touchIndex, prevValue + 1);
+
+        if (prevValue == 0) {
+            // Used to differenciate "pressed" and "just pressed" states
+            ceramic.App.app.beginUpdateCallbacks.push(function() {
+                if (pressedTouches.get(touchIndex) == 1) {
+                    pressedTouches.set(touchIndex, 2);
+                }
+            });
+        }
+
+    }
+
+    function willEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+
+        pressedTouches.set(touchIndex, -1);
+        // Used to differenciate "released" and "just released" states
+        ceramic.App.app.beginUpdateCallbacks.push(function() {
+            if (pressedTouches.get(touchIndex) == -1) {
+                pressedTouches.set(touchIndex, 0);
+            }
+        });
+
+    }
+
+    public function touchPressed(touchIndex:Int):Bool {
+
+        return pressedTouches.get(touchIndex) > 0;
+
+    }
+
+    public function touchJustPressed(touchIndex:Int):Bool {
+
+        return pressedTouches.get(touchIndex) == 1;
+
+    }
+
+    public function touchJustReleased(touchIndex:Int):Bool {
+
+        return pressedTouches.get(touchIndex) == -1;
+
+    }
+
+    public function touchDeltaX(touchIndex:Int):Float {
+
+        var touch:Touch = touches.get(touchIndex);
+        return touch != null ? touch.deltaX : 0.0;
+
+    }
+
+    public function touchDeltaY(touchIndex:Int):Float {
+
+        var touch:Touch = touches.get(touchIndex);
+        return touch != null ? touch.deltaY : 0.0;
 
     }
 
