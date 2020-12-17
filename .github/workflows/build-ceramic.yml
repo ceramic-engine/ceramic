@@ -1,0 +1,127 @@
+name: build-ceramic
+on:
+  push:
+    tags:
+      - v**
+jobs:
+
+  build-ceramic-windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.16.3'
+      - name: Setup Haxe
+        working-directory: .
+        run: |
+          $NEKOPATH = $(Convert-Path .)+'/git/haxe-binary/windows/neko'
+          $HAXEPATH = $(Convert-Path .)+'/git/haxe-binary/windows/haxe'
+          echo $NEKOPATH >> $GITHUB_PATH
+          echo $HAXEPATH >> $GITHUB_PATH
+          echo $NEKOPATH
+          echo $HAXEPATH
+      - name: Build Ceramic
+        working-directory: ./tools
+        run: |
+          npm install
+          ./npm install
+          ./npm audit fix
+      - name: Run Ceramic
+        working-directory: ./tools
+        run: |
+          ./ceramic
+
+  build-ceramic-mac:
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.16.3'
+      - name: Setup Haxe
+        working-directory: .
+        run: |
+          set -ex
+          export NEKOPATH=$PWD'/git/haxe-binary/mac/neko'
+          export HAXEPATH=$PWD'/git/haxe-binary/mac/haxe'
+          echo 'neko path: '$NEKOPATH
+          echo 'haxe path: '$HAXEPATH
+          sudo mkdir -p /usr/local/bin
+          sudo mkdir -p /usr/local/lib
+          sudo mkdir -p /usr/local/share/haxe
+          sudo ln -s $HAXEPATH/haxe                 /usr/local/bin/haxe
+          sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
+          sudo ln -s $HAXEPATH/std                  /usr/local/share/haxe/std
+          sudo ln -s $NEKOPATH/neko                 /usr/local/bin/neko
+          sudo ln -s $NEKOPATH/nekoc                /usr/local/bin/nekoc
+          sudo ln -s $NEKOPATH/nekoml               /usr/local/bin/nekoml
+          sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
+          sudo ln -s $NEKOPATH                      /usr/local/lib/neko
+          sudo ln -s $NEKOPATH/libneko.dylib        /usr/local/lib/libneko.dylib
+          sudo ln -s $NEKOPATH/libneko.2.1.0.dylib  /usr/local/lib/libneko.2.1.0.dylib
+          sudo ln -s $NEKOPATH/libneko.2.dylib      /usr/local/lib/libneko.2.dylib
+          set +x
+          echo 'neko: '$(neko -version)
+          echo 'haxe: '$(haxe --version)
+          echo 'haxelib: '$(haxelib version)
+      - name: Build Ceramic
+        working-directory: ./tools
+        run: |
+          npm install
+          ./npm install
+          ./npm audit fix
+      - name: Build Ceramic
+        working-directory: ./tools
+        run: |
+          ./ceramic
+
+  build-ceramic-linux:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.16.3'
+      - name: Setup Haxe
+        working-directory: .
+        run: |
+          export NEKOPATH=$PWD'/git/haxe-binary/linux/neko'
+          export HAXEPATH=$PWD'/git/haxe-binary/linux/haxe'
+          echo 'neko path: '$NEKOPATH
+          echo 'haxe path: '$HAXEPATH
+          sudo mkdir -p /usr/local/bin
+          sudo mkdir -p /usr/local/lib
+          sudo mkdir -p /usr/local/share/haxe
+          sudo ln -s $HAXEPATH/haxe                 /usr/local/bin/haxe
+          sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
+          sudo ln -s $HAXEPATH/std                  /usr/local/share/haxe/std
+          sudo ln -s $NEKOPATH/neko                 /usr/local/bin/neko
+          sudo ln -s $NEKOPATH/nekoc                /usr/local/bin/nekoc
+          sudo ln -s $NEKOPATH/nekoml               /usr/local/bin/nekoml
+          sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
+          sudo ln -s $NEKOPATH                      /usr/local/lib/neko
+          sudo ln -s $NEKOPATH/libneko.so           /usr/local/lib/libneko.so
+          sudo ln -s $NEKOPATH/libneko.so.2.2.0     /usr/local/lib/libneko.so.2.2.0
+          sudo ln -s $NEKOPATH/libneko.so.2         /usr/local/lib/libneko.so.2
+          sudo ldconfig
+          sudo ldconfig /usr/local/lib
+          echo 'neko: '$(neko -version)
+          echo 'haxe: '$(haxe --version)
+          echo 'haxelib: '$(haxelib version)
+      - name: Build Ceramic
+        working-directory: ./tools
+        run: |
+          npm install
+          ./npm install
+          ./npm audit fix
+      - name: Run Ceramic
+        working-directory: ./tools
+        run: |
+          ./ceramic
