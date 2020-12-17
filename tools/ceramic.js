@@ -3,6 +3,62 @@
 var fs = require('fs');
 var path = require('path');
 
+// Look for .ceramic file in cwd or a parent dir
+var resolvedCwd = process.cwd();
+for (var i = 0; i < process.argv.length - 1; i++) {
+    var arg = process.argv[i];
+    if (arg == '--cwd') {
+        resolvedCwd = process.argv[i + 1];
+        break;
+    }
+}
+
+var pathParts = path.normalize(resolvedCwd).split(path.sep);
+while (pathParts.length > 0) {
+    var ceramicRefFile = path.join(pathParts.join(path.sep), '.ceramic-tools');
+    if (fs.existsSync(ceramicRefFile)) {
+        var ceramicPath = fs.readFileSync(ceramicRefFile, 'utf8');
+        if (!path.isAbsolute(ceramicPath)) {
+            ceramicPath = path.join(pathParts.join(path.sep), ceramicPath);
+        }
+        ceramicPath = path.normalize(ceramicPath);
+
+        if (!fs.existsSync(path.join(ceramicPath, 'ceramic'))) {
+            console.error('Invalid ceramic path: ' + ceramicPath);
+            process.exit(1);
+        }
+
+        if (ceramicPath != __dirname) {
+            var args = [];
+            if (process.platform != 'win32') {
+                args.push(path.join(ceramicPath, 'ceramic'));
+            }
+            for (var i = 2; i < process.argv.length; i++) {
+                var arg = process.argv[i];
+                args.push(arg);
+            }
+    
+            var cmd = path.join(ceramicPath, 'node_modules/.bin/node');
+            if (process.platform == 'win32') {
+                cmd = path.join(ceramicPath, 'ceramic.cmd');
+            }
+            require('child_process').spawn(
+                cmd,
+                args,
+                {
+                    stdio: 'inherit',
+                    cwd: process.cwd()
+                }
+            );
+            return;
+        }
+        else {
+            break;
+        }
+    }
+    pathParts.pop();
+}
+
 // Give access to haxe, haxelib, neko commands from ceramic
 // Example: on Mac & Linux, you type `$(ceramic haxe) -version` to run haxe command and get haxe version
 if (process.argv.length == 3) {
