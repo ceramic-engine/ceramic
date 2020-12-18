@@ -43,7 +43,7 @@ jobs:
       - name: Check ceramic version
         working-directory: ./tools
         run: |
-          ./ceramic version --check-tag $('v'+$GIT_TAG)
+          ./ceramic version --check-tag $($env:GIT_TAG)
 
   build-ceramic-mac:
     runs-on: macos-10.15
