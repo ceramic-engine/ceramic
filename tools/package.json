@@ -42,7 +42,7 @@
     "npm": "^6.14.6",
     "plist": "^3.0.1",
     "rimraf": "^3.0.0",
-    "sharp": "^0.26.3",
+    "sharp": "^0.23.0",
     "shell-quote": "^1.7.2",
     "source-map-support": "^0.5.13",
     "stream-splitter": "^0.3.2",
