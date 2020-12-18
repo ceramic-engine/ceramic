@@ -16,11 +16,11 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Extract git tag
-        working-directory: .
-        run: |
-          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
-          echo 'GIT_TAG='+$GIT_TAG >> $GITHUB_ENV
+      # - name: Extract git tag
+      #   working-directory: .
+      #   run: |
+      #     $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+      #     echo 'GIT_TAG='+$GIT_TAG >> $GITHUB_ENV
       - name: Setup haxe
         working-directory: .
         run: |
@@ -43,7 +43,8 @@ jobs:
       - name: Check ceramic version
         working-directory: ./tools
         run: |
-          ./ceramic version --check-tag $($env:GIT_TAG)
+          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+          ./ceramic version --check-tag $GIT_TAG
 
   build-ceramic-mac:
     runs-on: macos-10.15
