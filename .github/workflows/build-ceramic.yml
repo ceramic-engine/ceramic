@@ -39,12 +39,10 @@ jobs:
   build-ceramic-mac:
     runs-on: macos-10.15
     steps:
-      - uses: olegtarasov/get-tag@v2
-        id: tagName
       - name: Print tag name
         working-directory: .
         run: |
-          echo 'tag: '$GIT_TAG_NAME
+          echo 'tag: '${GITHUB_REF##*/}
   #     - uses: actions/checkout@v2
   #       with:
   #         submodules: true
