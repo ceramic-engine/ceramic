@@ -3,7 +3,7 @@ on:
   push:
     tags:
       - v**
-  branches:
+    branches:
       - test-actions2
 jobs:
 
