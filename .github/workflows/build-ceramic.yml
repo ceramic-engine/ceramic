@@ -38,7 +38,7 @@ jobs:
       - name: Extract git tag
         working-directory: .
         run: |
-          echo 'GIT_TAG='+$($($env:GITHUB_REF).replace("refs/tags/", "")) >> $GITHUB_ENV
+          echo 'GIT_TAG='+$($($env:GITHUB_REF).replace("refs/tags/", ""))) >> $GITHUB_ENV
       - name: Check ceramic version
         working-directory: ./tools
         run: |
