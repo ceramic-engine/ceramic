@@ -7,9 +7,12 @@ on:
       - test-actions2
 jobs:
 
-  # build-ceramic-windows:
-  #   runs-on: windows-2019
-  #   steps:
+  build-ceramic-windows:
+    runs-on: windows-2019
+    steps:
+        working-directory: .
+        run: |
+          echo 'tag: '+$GITHUB_REF.replace("refs/tags/", "")
   #     - uses: actions/checkout@v2
   #       with:
   #         submodules: true
@@ -42,7 +45,7 @@ jobs:
       - name: Print tag name
         working-directory: .
         run: |
-          echo 'tag: '${GITHUB_REF##*/}
+          echo 'tag: '${GITHUB_REF/refs\/tags\//}
   #     - uses: actions/checkout@v2
   #       with:
   #         submodules: true
