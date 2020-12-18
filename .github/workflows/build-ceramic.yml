@@ -14,7 +14,7 @@ jobs:
       - name: Print tag name
         working-directory: .
         run: |
-          $GIT_TAG = 'tag: '+$($GITHUB_REF.replace("refs/tags/", ""))
+          $GIT_TAG = 'tag: '+$($(env:GITHUB_REF).replace("refs/tags/", ""))
           echo $GIT_TAG
   #     - uses: actions/checkout@v2
   #       with:
