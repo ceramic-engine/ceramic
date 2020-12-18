@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - v**
-    branches:
-      - test-actions2
 jobs:
 
   build-ceramic-windows:
