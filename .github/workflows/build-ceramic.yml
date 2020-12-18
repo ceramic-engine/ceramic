@@ -16,11 +16,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      # - name: Extract git tag
-      #   working-directory: .
-      #   run: |
-      #     $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
-      #     echo 'GIT_TAG='+$GIT_TAG >> $GITHUB_ENV
       - name: Setup haxe
         working-directory: .
         run: |
@@ -45,14 +40,25 @@ jobs:
         run: |
           $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
           ./ceramic version --check-tag $GIT_TAG
-
-  build-ceramic-mac:
-    runs-on: macos-10.15
-    steps:
-      - name: Print tag name
+      - name: Create archive for release
         working-directory: .
         run: |
-          echo 'tag: '${GITHUB_REF/refs\/tags\//}
+          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+          $ZIP_COMPRESS = '.'
+          $ZIP_EXCLUDE = @(".git", ".github")
+          $ZIP_TARGET = 'ceramic-'+$GIT_TAG+'.zip'
+          Get-ChildItem $ZIP_COMPRESS -Directory  | 
+            where { $_.Name -notin $ZIP_EXCLUDE} | 
+              Compress-Archive -DestinationPath $ZIP_TARGET -Update
+
+
+  # build-ceramic-mac:
+  #   runs-on: macos-10.15
+  #   steps:
+  #     - name: Print tag name
+  #       working-directory: .
+  #       run: |
+  #         echo 'tag: '${GITHUB_REF/refs\/tags\//}
   #     - uses: actions/checkout@v2
   #       with:
   #         submodules: true
