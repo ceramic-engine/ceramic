@@ -1,11 +1,26 @@
-name: build-ceramic
+name: Build ceramic
 on:
   push:
     tags:
       - v**
 jobs:
 
+  setup-release:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
   build-ceramic-windows:
+    needs: setup-release
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
@@ -14,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup Haxe
+      - name: Setup haxe
         working-directory: .
         run: |
           $NEKOPATH = $(Convert-Path .)+'/git/haxe-binary/windows/neko'
@@ -23,18 +38,43 @@ jobs:
           echo $HAXEPATH >> $GITHUB_PATH
           echo $NEKOPATH
           echo $HAXEPATH
-      - name: Build Ceramic
+      - name: Build ceramic
         working-directory: ./tools
         run: |
           npm install
           ./npm install
           ./npm audit fix
-      - name: Run Ceramic
+      - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+      - name: Check ceramic version
+        working-directory: ./tools
+        run: |
+          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+          ./ceramic version --check-tag $GIT_TAG
+      - name: Create archive for release
+        working-directory: .
+        run: |
+          $ZIP_COMPRESS = $(Convert-Path .)
+          $ZIP_EXCLUDE = @(".git", ".github", "ceramic-windows.zip")
+          $ZIP_DESTINATION = 'ceramic-windows.zip'
+          $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
+          Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ceramic-windows.zip
+          asset_name: ceramic-windows.zip
+          asset_content_type: application/zip
+
 
   build-ceramic-mac:
+    needs: setup-release
     runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +83,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup Haxe
+      - name: Setup haxe
         working-directory: .
         run: |
           set -ex
@@ -69,18 +109,36 @@ jobs:
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
           echo 'haxelib: '$(haxelib version)
-      - name: Build Ceramic
+      - name: Build ceramic
         working-directory: ./tools
         run: |
           npm install
           ./npm install
           ./npm audit fix
-      - name: Run Ceramic
+      - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+      - name: Check ceramic version
+        working-directory: ./tools
+        run: |
+          GIT_TAG=${GITHUB_REF/refs\/tags\//}
+          ./ceramic version --check-tag $GIT_TAG
+      - name: Create zip archive
+        run: zip -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ceramic-mac.zip
+          asset_name: ceramic-mac.zip
+          asset_content_type: application/zip
 
   build-ceramic-linux:
+    needs: setup-release
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -89,7 +147,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup Haxe
+      - name: Setup haxe
         working-directory: .
         run: |
           export NEKOPATH=$PWD'/git/haxe-binary/linux/neko'
@@ -115,13 +173,30 @@ jobs:
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
           echo 'haxelib: '$(haxelib version)
-      - name: Build Ceramic
+      - name: Build ceramic
         working-directory: ./tools
         run: |
           npm install
           ./npm install
           ./npm audit fix
-      - name: Run Ceramic
+      - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+      - name: Check ceramic version
+        working-directory: ./tools
+        run: |
+          GIT_TAG=${GITHUB_REF/refs\/tags\//}
+          ./ceramic version --check-tag $GIT_TAG
+      - name: Create zip archive
+        run: zip -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ceramic-linux.zip
+          asset_name: ceramic-linux.zip
+          asset_content_type: application/zip
