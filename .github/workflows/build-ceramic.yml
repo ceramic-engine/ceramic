@@ -5,7 +5,22 @@ on:
       - v**
 jobs:
 
+  setup-release:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
   build-ceramic-windows:
+    needs: setup-release
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
@@ -46,16 +61,6 @@ jobs:
           $ZIP_DESTINATION = 'ceramic-windows.zip'
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -69,6 +74,7 @@ jobs:
 
 
   build-ceramic-mac:
+    needs: setup-release
     runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v2
@@ -120,16 +126,6 @@ jobs:
           ./ceramic version --check-tag $GIT_TAG
       - name: Create zip archive
         run: zip -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -142,6 +138,7 @@ jobs:
           asset_content_type: application/zip
 
   build-ceramic-linux:
+    needs: setup-release
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -193,16 +190,6 @@ jobs:
           ./ceramic version --check-tag $GIT_TAG
       - name: Create zip archive
         run: zip -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
