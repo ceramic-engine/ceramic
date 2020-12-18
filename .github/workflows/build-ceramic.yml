@@ -75,7 +75,7 @@ jobs:
           npm install
           ./npm install
           ./npm audit fix
-      - name: Build Ceramic
+      - name: Run Ceramic
         working-directory: ./tools
         run: |
           ./ceramic
