@@ -13,7 +13,8 @@ jobs:
       - name: Print tag name
         working-directory: .
         run: |
-          echo 'tag: '+$GITHUB_REF.replace("refs/tags/", "")
+          $GIT_TAG = 'tag: '+$GITHUB_REF.replace("refs/tags/", "")
+          echo $GIT_TAG
   #     - uses: actions/checkout@v2
   #       with:
   #         submodules: true
