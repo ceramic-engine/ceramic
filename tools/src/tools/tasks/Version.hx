@@ -17,6 +17,30 @@ class Version extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        if (extractArgFlag(args, 'base')) {
+            var baseVersion = context.ceramicVersion.split('-')[0];
+            print('' + baseVersion);
+            return;
+        }
+
+        if (extractArgFlag(args, 'short')) {
+            print('' + context.ceramicVersion);
+            return;
+        }
+
+        var checkTag = extractArgValue(args, 'check-tag');
+        if (checkTag != null) {
+            var expectedTag = 'v' + context.ceramicVersion.split('-')[0];
+            var sanitizedTag = checkTag;
+            sanitizedTag = ~/[a-zA-Z_-]+$/.replace(sanitizedTag, '');
+            if (sanitizedTag != expectedTag) {
+                fail('Tag $checkTag doesn\'t match current version: ' + context.ceramicVersion);
+            }
+            else {
+                success('Tag $checkTag is matching current version');
+            }
+        }
+
         var toolsPath = context.ceramicToolsPath;
         var homedir:String = untyped Os.homedir();
 

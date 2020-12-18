@@ -10,36 +10,39 @@ jobs:
   build-ceramic-windows:
     runs-on: windows-2019
     steps:
-      - name: Print tag name
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.16.3'
+      - name: Setup haxe
         working-directory: .
         run: |
-          $GIT_TAG = 'tag: '+$($($env:GITHUB_REF).replace("refs/tags/", ""))
-          echo $GIT_TAG
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         submodules: true
-  #     - uses: actions/setup-node@v1
-  #       with:
-  #         node-version: '10.16.3'
-  #     - name: Setup Haxe
-  #       working-directory: .
-  #       run: |
-  #         $NEKOPATH = $(Convert-Path .)+'/git/haxe-binary/windows/neko'
-  #         $HAXEPATH = $(Convert-Path .)+'/git/haxe-binary/windows/haxe'
-  #         echo $NEKOPATH >> $GITHUB_PATH
-  #         echo $HAXEPATH >> $GITHUB_PATH
-  #         echo $NEKOPATH
-  #         echo $HAXEPATH
-  #     - name: Build Ceramic
-  #       working-directory: ./tools
-  #       run: |
-  #         npm install
-  #         ./npm install
-  #         ./npm audit fix
-  #     - name: Run Ceramic
-  #       working-directory: ./tools
-  #       run: |
-  #         ./ceramic
+          $NEKOPATH = $(Convert-Path .)+'/git/haxe-binary/windows/neko'
+          $HAXEPATH = $(Convert-Path .)+'/git/haxe-binary/windows/haxe'
+          echo $NEKOPATH >> $GITHUB_PATH
+          echo $HAXEPATH >> $GITHUB_PATH
+          echo $NEKOPATH
+          echo $HAXEPATH
+      - name: Build ceramic
+        working-directory: ./tools
+        run: |
+          npm install
+          ./npm install
+          ./npm audit fix
+      - name: Run ceramic
+        working-directory: ./tools
+        run: |
+          ./ceramic
+      - name: Extract git tag
+        working-directory: .
+        run: |
+          echo 'GIT_TAG='+$($($env:GITHUB_REF).replace("refs/tags/", "")) >> $GITHUB_ENV
+      - name: Check ceramic version
+        working-directory: ./tools
+        run: |
+          ./ceramic version --check-tag $('v'+$GIT_TAG)
 
   build-ceramic-mac:
     runs-on: macos-10.15
