@@ -19,7 +19,7 @@ jobs:
       - name: Extract git tag
         working-directory: .
         run: |
-          $GIT_TAG = $GITHUB_REF.replace("refs/tags/", "")
+          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
           echo 'GIT_TAG='+$GIT_TAG >> $GITHUB_ENV
       - name: Setup haxe
         working-directory: .
