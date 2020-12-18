@@ -79,7 +79,8 @@ jobs:
         working-directory: .
         id: release_url
         run: |
-          echo '::set-output name=UPLOAD_URL::'+$(cat upload_url.txt)
+          $UPLOAD_URL = $(cat upload_url.txt)
+          echo "::set-output name=UPLOAD_URL::$UPLOAD_URL"
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
