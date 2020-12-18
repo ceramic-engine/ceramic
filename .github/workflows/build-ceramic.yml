@@ -10,6 +10,7 @@ jobs:
   build-ceramic-windows:
     runs-on: windows-2019
     steps:
+      - name: Print tag name
         working-directory: .
         run: |
           echo 'tag: '+$GITHUB_REF.replace("refs/tags/", "")
