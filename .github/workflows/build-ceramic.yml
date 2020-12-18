@@ -39,7 +39,7 @@ jobs:
   build-ceramic-mac:
     runs-on: macos-10.15
     steps:
-      - uses: ceramic-engine/get-tag@v2
+      - uses: olegtarasov/get-tag@v2
         id: tagName
       - name: Print tag name
         working-directory: .
