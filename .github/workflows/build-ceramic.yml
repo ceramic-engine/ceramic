@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - v**
+  branches:
+      - master
 jobs:
 
   build-ceramic-windows:
@@ -37,6 +39,12 @@ jobs:
   build-ceramic-mac:
     runs-on: macos-10.15
     steps:
+      - uses: ceramic-engine/get-tag@v2
+        id: tagName
+      - name: Print tag name
+        working-directory: .
+        run: |
+          echo $GIT_TAG_NAME
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -79,6 +87,8 @@ jobs:
         working-directory: ./tools
         run: |
           ./ceramic
+      - name: Create zip archive
+        run: zip -r 'ceramic-'$GIT_TAG_NAME'.zip' . -x ".git/*" ".github/*"
 
   build-ceramic-linux:
     runs-on: ubuntu-18.04
