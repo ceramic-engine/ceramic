@@ -63,7 +63,7 @@ jobs:
         run: |
           $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
           ./ceramic version --check-tag $GIT_TAG
-      - name: Create archive for release
+      - name: Create zip archive
         working-directory: .
         run: |
           $ZIP_COMPRESS = $(Convert-Path .)
