@@ -57,6 +57,14 @@ jobs:
           cd ../runner
           ../tools/npm install
           cd ..
+      - name: Cleanup
+        working-directory: .
+        run: |
+          Remove-Item 'git/haxe-binary/linux' -Recurse
+          Remove-Item 'git/haxe-binary/mac' -Recurse
+          cd tools
+          npm uninstall npm
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
@@ -141,6 +149,14 @@ jobs:
           cd ../runner
           ../tools/npm install
           cd ..
+      - name: Cleanup
+        working-directory: .
+        run: |
+          rm -rf git/haxe-binary/linux
+          rm -rf git/haxe-binary/windows
+          cd tools
+          npm uninstall npm
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
@@ -216,6 +232,14 @@ jobs:
           ./npm audit fix
           cd ../runner
           ../tools/npm install
+          cd ..
+      - name: Cleanup
+        working-directory: .
+        run: |
+          rm -rf git/haxe-binary/mac
+          rm -rf git/haxe-binary/windows
+          cd tools
+          npm uninstall npm
           cd ..
       - name: Run ceramic
         working-directory: ./tools
