@@ -114,7 +114,6 @@ class Tools {
 
         context.tasks.set('init', new tools.tasks.Init());
         context.tasks.set('vscode', new tools.tasks.Vscode());
-        context.tasks.set('setup', new tools.tasks.Setup());
         context.tasks.set('link', new tools.tasks.Link());
         context.tasks.set('unlink', new tools.tasks.Unlink());
         context.tasks.set('path', new tools.tasks.Path());
