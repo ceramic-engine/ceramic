@@ -54,6 +54,9 @@ jobs:
           npm install
           ./npm install
           ./npm audit fix
+          cd ../runner
+          ../tools/npm install
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
@@ -135,6 +138,9 @@ jobs:
           npm install
           ./npm install
           ./npm audit fix
+          cd ../runner
+          ../tools/npm install
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
@@ -208,6 +214,9 @@ jobs:
           npm install
           ./npm install
           ./npm audit fix
+          cd ../runner
+          ../tools/npm install
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
