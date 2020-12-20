@@ -10,7 +10,6 @@
 -D luxe_web
 -D snow_web
 -D luxe
--D unifill
 -D snow
 -D linc_openal
 -D linc_timestamp
@@ -25,7 +24,6 @@
 -cp /Users/jeremyfa/Developer/ceramic/runtime/src
 -cp /Users/jeremyfa/Developer/ceramic/plugins/luxe/runtime/src
 -cp /Users/jeremyfa/Developer/ceramic/plugins/spine/sample/src
--lib unifill
 -lib linc_opengl
 -lib linc_sdl
 -lib linc_ogg

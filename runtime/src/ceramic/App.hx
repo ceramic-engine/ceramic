@@ -373,10 +373,6 @@ class App extends Entity {
 
     var disposedEntities:Array<Entity> = [];
 
-#if (web && hotml && ceramic_hotreload)
-    var hotReloadClient:hotml.client.Client;
-#end
-
 #if (cppia || ceramic_cppia_host)
     @:noCompletion public var initSettings:InitSettings;
 #end
@@ -448,12 +444,6 @@ class App extends Entity {
 
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
-#end
-
-#if (web && hotml && ceramic_hotreload)
-        log.debug('Initialize hot reload client');
-        var port:Null<Int> = ceramic.macros.DefinesMacro.getDefine('ceramic_hotreload_port');
-        hotReloadClient = new hotml.client.Client(port);
 #end
 
         // Init persistent data (that relies on backend)

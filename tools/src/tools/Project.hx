@@ -39,12 +39,10 @@ class Project {
 
     /** A list of haxe libraryes required to make ceramic runtime work */
     public static var runtimeLibraries:Array<Dynamic> = [
-        { 'unifill': '0.4.1' },
         { 'format': '3.4.2' },
         { 'hscript': '2.4.0' },
         { 'polyline': 'git:https://github.com/jeremyfa/polyline.git' },
         { 'tracker': 'git:https://github.com/jeremyfa/tracker.git' },
-        { 'hotml': 'git:https://github.com/jeremyfa/hotml.git' },
         { 'bind': 'git:https://github.com/jeremyfa/polyline.git' },
         { 'earcut': 'git:https://github.com/ceramic-engine/earcut.git' },
         { 'poly2tri': 'git:https://github.com/ceramic-engine/poly2tri.git' },

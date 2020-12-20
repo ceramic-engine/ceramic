@@ -21,7 +21,6 @@ function postInstall() {
         fs.mkdirSync(haxelibRepoPath);
     }
     spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'hotml', '../git/hotml'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'hxcpp', '4.1.15', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 

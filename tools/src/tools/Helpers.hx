@@ -382,9 +382,6 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'unifill', '0,4,1'])))
-            haxelib(['install', 'unifill', '0.4.1', '--always'], {cwd: cwd});
-
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '10,0,0'])))
             haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
 
@@ -393,9 +390,6 @@ class Helpers {
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'tracker'])))
             haxelib(['dev', 'tracker', Path.join([context.ceramicGitDepsPath, 'tracker']), '--always'], {cwd: cwd});
-
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hotml'])))
-            haxelib(['dev', 'hotml', Path.join([context.ceramicGitDepsPath, 'hotml']), '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'arcade'])))
             haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});

@@ -77,10 +77,6 @@
 	path = git/tracker
 	url = https://github.com/jeremyfa/tracker.git
 	branch = master
-[submodule "git/hotml"]
-	path = git/hotml
-	url = https://github.com/jeremyfa/hotml.git
-	branch = master
 [submodule "git/linc_dialogs"]
 	path = git/linc_dialogs
 	url = https://github.com/ceramic-engine/linc_dialogs.git

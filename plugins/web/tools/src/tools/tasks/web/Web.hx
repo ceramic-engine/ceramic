@@ -16,8 +16,6 @@ import npm.StreamSplitter;
 import npm.Fiber;
 import npm.Chokidar;
 
-import hotml.server.Main as HotReloadServer;
-
 using StringTools;
 
 class Web extends tools.Task {
@@ -141,78 +139,78 @@ class Web extends tools.Task {
                 warning(''+err);
             });
 
-            if (doHotReload) {
-                // JS hot reload server
+            // if (doHotReload) {
+            //     // JS hot reload server
     
-                var argPort = extractArgValue(args, 'hot-reload-port');
-                var port = argPort != null ? Std.parseInt(argPort) : 3220;
-                if (port < 1024) {
-                    fail('Invalid port $argPort');
-                }
+            //     var argPort = extractArgValue(args, 'hot-reload-port');
+            //     var port = argPort != null ? Std.parseInt(argPort) : 3220;
+            //     if (port < 1024) {
+            //         fail('Invalid port $argPort');
+            //     }
     
-                var server = new HotReloadServer(
-                    webProjectPath,
-                    project.app.name + '.js',
-                    port
-                );
+            //     var server = new HotReloadServer(
+            //         webProjectPath,
+            //         project.app.name + '.js',
+            //         port
+            //     );
     
-                var watcher = Chokidar.watch([
-                    Path.join([cwd, 'src/**/*.hx']),
-                    Path.join([webProjectPath, project.app.name + '.js'])
-                ], {
-                    ignoreInitial: true,
-                    cwd: cwd
-                });
+            //     var watcher = Chokidar.watch([
+            //         Path.join([cwd, 'src/**/*.hx']),
+            //         Path.join([webProjectPath, project.app.name + '.js'])
+            //     ], {
+            //         ignoreInitial: true,
+            //         cwd: cwd
+            //     });
     
-                var scheduledDelay:Dynamic = null;
-                var building = false;
+            //     var scheduledDelay:Dynamic = null;
+            //     var building = false;
     
-                function doBuild() {
+            //     function doBuild() {
 
-                    if (building) {
-                        js.Node.setTimeout(doBuild, 500);
-                        return;
-                    }
+            //         if (building) {
+            //             js.Node.setTimeout(doBuild, 500);
+            //             return;
+            //         }
     
-                    scheduledDelay = null;
+            //         scheduledDelay = null;
     
-                    var buildArgs = ['build', 'web', '--variant', context.variant];
-                    if (context.debug)
-                        buildArgs.push('--debug');
-                    Fiber.fiber(function() {
-                        building = true;
-                        runTask('luxe build', buildArgs);
-                        building = false;
-                    }).run();
+            //         var buildArgs = ['build', 'web', '--variant', context.variant];
+            //         if (context.debug)
+            //             buildArgs.push('--debug');
+            //         Fiber.fiber(function() {
+            //             building = true;
+            //             runTask('luxe build', buildArgs);
+            //             building = false;
+            //         }).run();
     
-                }
+            //     }
     
-                function scheduleBuild() {
+            //     function scheduleBuild() {
     
-                    if (scheduledDelay != null)
-                        js.Node.clearTimeout(scheduledDelay);
+            //         if (scheduledDelay != null)
+            //             js.Node.clearTimeout(scheduledDelay);
                     
-                    scheduledDelay = js.Node.setTimeout(doBuild, 500);
+            //         scheduledDelay = js.Node.setTimeout(doBuild, 500);
     
-                }
+            //     }
     
-                watcher.on('add', (path, stats) -> {
-                    print('Added: $path');
-                    if (path.endsWith('.hx')) {
-                        scheduleBuild();
-                    }
-                });
-                watcher.on('change', (path, stats) -> {
-                    print('Changed: $path');
-                    if (path.endsWith('.hx')) {
-                        scheduleBuild();
-                    }
-                    else if (path.endsWith('.js')) {
-                        print('reload server');
-                        server.reload();
-                    }
-                });
-            }
+            //     watcher.on('add', (path, stats) -> {
+            //         print('Added: $path');
+            //         if (path.endsWith('.hx')) {
+            //             scheduleBuild();
+            //         }
+            //     });
+            //     watcher.on('change', (path, stats) -> {
+            //         print('Changed: $path');
+            //         if (path.endsWith('.hx')) {
+            //             scheduleBuild();
+            //         }
+            //         else if (path.endsWith('.js')) {
+            //             print('reload server');
+            //             server.reload();
+            //         }
+            //     });
+            // }
 
         });
 
