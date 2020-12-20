@@ -38,15 +38,15 @@ class BackendTools implements tools.spec.BackendTools {
             ]
         });
         
-        targets.push({
-            name: 'lua',
-            displayName: 'Lua',
-            configs: [
-                Run('Run Lua'),
-                Build('Build Lua'),
-                Clean('Clean Lua')
-            ]
-        });
+        // targets.push({
+        //     name: 'lua',
+        //     displayName: 'Lua',
+        //     configs: [
+        //         Run('Run Lua'),
+        //         Build('Build Lua'),
+        //         Clean('Clean Lua')
+        //     ]
+        // });
 
         var os = Sys.systemName();
 
