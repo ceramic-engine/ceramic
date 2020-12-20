@@ -160,24 +160,24 @@ jobs:
           cd ../runner
           ../tools/npm install
           cd ..
-      # - name: Cleanup
-      #   working-directory: .
-      #   run: |
-      #     rm -rf git/haxe-binary/linux
-      #     rm -rf git/haxe-binary/windows
-      #     cd tools
-      #     rm -f ./npm.cmd
-      #     rm -f ./npm
-      #     rm -f ./npx.cmd
-      #     rm -f ./npx
-      #     rm -f ./node.cmd
-      #     rm -f ./haxe.cmd
-      #     rm -f ./neko.cmd
-      #     rm -f ./ceramic.cmd
-      #     rm -f ./ceramic-electron
-      #     rm -f ./ceramic-electron.bat
-      #     npm uninstall npm
-      #     cd ..
+      - name: Cleanup
+        working-directory: .
+        run: |
+          rm -rf git/haxe-binary/linux
+          rm -rf git/haxe-binary/windows
+          cd tools
+          rm -f ./npm.cmd
+          rm -f ./npm
+          rm -f ./npx.cmd
+          rm -f ./npx
+          rm -f ./node.cmd
+          rm -f ./haxe.cmd
+          rm -f ./neko.cmd
+          rm -f ./ceramic.cmd
+          rm -f ./ceramic-electron
+          rm -f ./ceramic-electron.bat
+          npm uninstall npm
+          cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
@@ -188,7 +188,7 @@ jobs:
           GIT_TAG=${GITHUB_REF/refs\/tags\//}
           ./ceramic version --check-tag $GIT_TAG
       - name: Create zip archive
-        run: zip -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
       - name: Retrieve upload URL
         uses: actions/download-artifact@v2
         with:
@@ -282,7 +282,7 @@ jobs:
           GIT_TAG=${GITHUB_REF/refs\/tags\//}
           ./ceramic version --check-tag $GIT_TAG
       - name: Create zip archive
-        run: zip -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
       - name: Retrieve upload URL
         uses: actions/download-artifact@v2
         with:
