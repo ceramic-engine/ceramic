@@ -48,41 +48,41 @@ class BackendTools implements tools.spec.BackendTools {
         //     ]
         // });
 
-        var os = Sys.systemName();
+        // var os = Sys.systemName();
 
-        if (os == 'Mac') {
-            targets.push({
-                name: 'mac',
-                displayName: 'Mac',
-                configs: [
-                    Run('Run Mac'),
-                    Build('Build Mac'),
-                    Clean('Clean Mac')
-                ]
-            });
-        }
-        else if (os == 'Windows') {
-            targets.push({
-                name: 'windows',
-                displayName: 'Windows',
-                configs: [
-                    Run('Run Windows'),
-                    Build('Build Windows'),
-                    Clean('Clean Windows')
-                ]
-            });
-        }
-        else if (os == 'Linux') {
-            targets.push({
-                name: 'linux',
-                displayName: 'Linux',
-                configs: [
-                    Run('Run Linux'),
-                    Build('Build Linux'),
-                    Clean('Clean Linux')
-                ]
-            });
-        }
+        // if (os == 'Mac') {
+        //     targets.push({
+        //         name: 'mac',
+        //         displayName: 'Mac',
+        //         configs: [
+        //             Run('Run Mac'),
+        //             Build('Build Mac'),
+        //             Clean('Clean Mac')
+        //         ]
+        //     });
+        // }
+        // else if (os == 'Windows') {
+        //     targets.push({
+        //         name: 'windows',
+        //         displayName: 'Windows',
+        //         configs: [
+        //             Run('Run Windows'),
+        //             Build('Build Windows'),
+        //             Clean('Clean Windows')
+        //         ]
+        //     });
+        // }
+        // else if (os == 'Linux') {
+        //     targets.push({
+        //         name: 'linux',
+        //         displayName: 'Linux',
+        //         configs: [
+        //             Run('Run Linux'),
+        //             Build('Build Linux'),
+        //             Clean('Clean Linux')
+        //         ]
+        //     });
+        // }
 
         return targets;
 

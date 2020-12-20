@@ -80,58 +80,8 @@ class Build extends tools.Task {
         //cmdArgs.push('--connect');
         //cmdArgs.push('4061');
 
-        var status = 0;
-        var hasErrorLog = false;
+        var status = haxeWithChecksAndLogs(cmdArgs, { cwd: hxmlProjectPath });
 
-        Sync.run(function(done) {
-
-            var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
-            var proc = ChildProcess.spawn(
-                Path.join([context.ceramicToolsPath, haxe]),
-                cmdArgs,
-                { cwd: hxmlProjectPath }
-            );
-            proc.on('close', function(code:Int) {
-                status = code;
-            });
-
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.pipe(untyped out);
-            out.encoding = 'utf8';
-            out.on('token', function(token) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(hxmlProjectPath, token);
-                stdoutWrite(token + "\n");
-            });
-            out.on('done', function() {
-                done();
-            });
-            out.on('error', function(err) {
-                warning(''+err);
-            });
-
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.pipe(untyped err);
-            err.encoding = 'utf8';
-            err.on('token', function(token) {
-                if (isErrorOutput(token)) {
-                    hasErrorLog = true;
-                }
-                token = formatLineOutput(hxmlProjectPath, token);
-                stderrWrite(token + "\n");
-            });
-            err.on('error', function(err) {
-                warning(''+err);
-            });
-
-        });
-
-        if (status == 0 && hasErrorLog) {
-            status = 1;
-        }
-        
         if (status != 0) {
             fail('Error when running headless $action.');
         }
@@ -157,60 +107,10 @@ class Build extends tools.Task {
                 cmdArgs.push(task);
             }
 
-            var status = 0;
-            var hasErrorLog = false;
-
-            Sync.run(function(done) {
-
-                var proc = ChildProcess.spawn(
-                    'node',
-                    cmdArgs,
-                    { cwd: hxmlProjectPath }
-                );
-
-                var out = StreamSplitter.splitter("\n");
-                proc.stdout.pipe(untyped out);
-                proc.on('close', function(code:Int) {
-                    status = code;
-                });
-                out.encoding = 'utf8';
-                out.on('token', function(token:String) {
-                    if (isErrorOutput(token)) {
-                        hasErrorLog = true;
-                    }
-                    token = formatLineOutput(hxmlProjectPath, token);
-                    stdoutWrite(token + "\n");
-                });
-                out.on('done', function() {
-                    done();
-                });
-                out.on('error', function(err) {
-                    warning(''+err);
-                });
-
-                var err = StreamSplitter.splitter("\n");
-                proc.stderr.pipe(untyped err);
-                err.encoding = 'utf8';
-                err.on('token', function(token:String) {
-                    if (isErrorOutput(token)) {
-                        hasErrorLog = true;
-                    }
-                    token = formatLineOutput(hxmlProjectPath, token);
-                    stderrWrite(token + "\n");
-                });
-                err.on('error', function(err) {
-                    warning(''+err);
-                });
-
-            });
-
-            if (status == 0 && hasErrorLog) {
-                status = 1;
-            }
+            var status = commandWithChecksAndLogs('node', cmdArgs, { cwd: hxmlProjectPath });
             
             if (status != 0) {
-                if (!hasErrorLog) fail('Error when running node $action.');
-                else js.Node.process.exit(status);
+                fail('Error when running node $action.');
             }
             else {
                 if (action == 'run') {
