@@ -160,24 +160,24 @@ jobs:
           cd ../runner
           ../tools/npm install
           cd ..
-      - name: Cleanup
-        working-directory: .
-        run: |
-          rm -rf git/haxe-binary/linux
-          rm -rf git/haxe-binary/windows
-          cd tools
-          rm -f ./npm.cmd
-          rm -f ./npm
-          rm -f ./npx.cmd
-          rm -f ./npx
-          rm -f ./node.cmd
-          rm -f ./haxe.cmd
-          rm -f ./neko.cmd
-          rm -f ./ceramic.cmd
-          rm -f ./ceramic-electron
-          rm -f ./ceramic-electron.bat
-          npm uninstall npm
-          cd ..
+      # - name: Cleanup
+      #   working-directory: .
+      #   run: |
+      #     rm -rf git/haxe-binary/linux
+      #     rm -rf git/haxe-binary/windows
+      #     cd tools
+      #     rm -f ./npm.cmd
+      #     rm -f ./npm
+      #     rm -f ./npx.cmd
+      #     rm -f ./npx
+      #     rm -f ./node.cmd
+      #     rm -f ./haxe.cmd
+      #     rm -f ./neko.cmd
+      #     rm -f ./ceramic.cmd
+      #     rm -f ./ceramic-electron
+      #     rm -f ./ceramic-electron.bat
+      #     npm uninstall npm
+      #     cd ..
       - name: Run ceramic
         working-directory: ./tools
         run: |
