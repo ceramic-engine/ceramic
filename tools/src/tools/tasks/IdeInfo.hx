@@ -17,7 +17,7 @@ class IdeInfo extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var ide = loadIdeInfo(cwd, args);
+        var ide:Dynamic = loadIdeInfo(cwd, args);
 
         var targets:Array<IdeInfoTargetItem> = [];
         var variants:Array<IdeInfoVariantItem> = [];
@@ -53,14 +53,6 @@ class IdeInfo extends tools.Task {
                 }
             });
             */
-    
-            // Build params
-            //
-            variants.push({
-                name: 'No skip',
-                args: ['--no-skip'],
-                group: 'build'
-            });
         }
 
         // Let plugins extend the list
