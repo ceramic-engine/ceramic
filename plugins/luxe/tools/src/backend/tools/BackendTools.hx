@@ -74,15 +74,15 @@ class BackendTools implements tools.spec.BackendTools {
             });
         }
 
-        targets.push({
-            name: 'cppia',
-            displayName: 'CPPIA',
-            configs: [
-                Run('Run CPPIA'),
-                Build('Build CPPIA'),
-                Clean('Clean CPPIA')
-            ]
-        });
+        // targets.push({
+        //     name: 'cppia',
+        //     displayName: 'CPPIA',
+        //     configs: [
+        //         Run('Run CPPIA'),
+        //         Build('Build CPPIA'),
+        //         Clean('Clean CPPIA')
+        //     ]
+        // });
 
         targets.push({
             name: 'ios',
