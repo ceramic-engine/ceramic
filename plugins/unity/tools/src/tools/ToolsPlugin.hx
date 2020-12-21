@@ -3,6 +3,7 @@ package tools;
 import tools.Context;
 import tools.Helpers;
 import tools.Vscode;
+import tools.Ide;
 import tools.Helpers.*;
 import backend.tools.BackendTools;
 
@@ -50,6 +51,47 @@ class ToolsPlugin {
 
         // Restore default backend
         context.backend = prevBackend;
+
+    }
+
+    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>) {
+
+        var backendName = 'unity';
+
+        if (context.project != null && context.project.app != null) {
+            for (buildTargets in backend.getBuildTargets()) {
+
+                for (config in buildTargets.configs) {
+
+                    var name:String = null;
+                    var kind:String = null;
+
+                    switch (config) {
+                        case Build(name_):
+                            name = name_;
+                            kind = 'build';
+                        case Run(name_):
+                            name = name_;
+                            kind = 'run';
+                        case Clean(name_):
+                    }
+
+                    if (kind == null) continue;
+
+                    targets.push({
+                        name: '$backendName / $name',
+                        groups: ['build', backendName],
+                        command: 'ceramic',
+                        args: [backendName, kind, buildTargets.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
+                        select: {
+                            command: 'ceramic',
+                            args: [backendName, "hxml", buildTargets.name, "--setup", "--output", "completion.hxml"]
+                        }
+                    });
+
+                }
+            }
+        }
 
     }
 
