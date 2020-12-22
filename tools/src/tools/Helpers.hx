@@ -1086,4 +1086,34 @@ class Helpers {
         return 0;
 
     }
+
+    public static function getWindowsDrives():Array<String> {
+
+        var result = [];
+        var hasC = false;
+
+        if (Sys.systemName() == 'Windows') {
+
+            var out = command('wmic', ['logicaldisk', 'get', 'name']).stdout;
+            for (line in ~/[\r\n]+/.split(out)) {
+                line = line.trim();
+                if (line.length >= 2 && line.charAt(1) == ':') {
+                    var letter = line.charAt(0).toUpperCase();
+                    if (letter == 'C') {
+                        hasC = true;
+                    }
+                    else {
+                        result.push(letter);
+                    }
+                }
+            }
+        }
+
+        if (hasC) {
+            result.unshift('C');
+        }
+
+        return result;
+
+    }
 }
