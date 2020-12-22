@@ -88,7 +88,7 @@ class UnityEditor {
                 return Path.join([unityEditorsPath, unityVersion, 'Unity.app']);
             }
             else if (isWindows) {
-                return Path.join([unityEditorsPath, file, 'Editor']);
+                return Path.join([unityEditorsPath, unityVersion, 'Editor']);
             }
         }
         else {
