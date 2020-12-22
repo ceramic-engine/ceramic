@@ -76,11 +76,24 @@ class Project extends tools.Task {
                         });
                     });
                 }
+                else if (os == 'Windows') {
+
+                    // Just trying windows, not sure it works
+
+                    print('Open project with Unity Editor...');
+        
+                    var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
+        
+                    var cmd = Path.join([unityEditorPath, 'Unity.exe']);
+                    var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+        
+                    command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+
+                }
 
             }
             else {
 
-                // TODO windows
                 if (os == 'Mac') {
 
                     print('Open project with Unity Editor...');
@@ -91,6 +104,20 @@ class Project extends tools.Task {
                     var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
         
                     command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+                }
+                else if (os == 'Windows') {
+
+                    // Just trying windows, not sure it works
+
+                    print('Open project with Unity Editor...');
+        
+                    var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
+        
+                    var cmd = Path.join([unityEditorPath, 'Unity.exe']);
+                    var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
+        
+                    command(cmd, ['-openfile', ceramicScenePath], { detached: true });
+
                 }
             }
 

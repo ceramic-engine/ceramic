@@ -28,24 +28,39 @@ class UnityEditor {
             return editorPath;
         }
 
-        if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Windows') {
+        var isMac = (Sys.systemName() == 'Mac');
+        var isWindows = (Sys.systemName() == 'Windows');
+
+        if (isMac || isWindows) {
             var unityEditorsPath:String = null;
 
-            if (Sys.systemName() == 'Mac') {
+            if (isMac) {
                 unityEditorPath = '/Applications/Unity/Hub/Editor/';
             }
-            else if (Sys.systemName() == 'Windows') {
-                unityEditorPath = 'C:/Program Files/Unity/Hub/Editor/';
+            else if (isWindows) {
+                for (drive in getWindowsDrives()) {
+                    var tryPath = '$drive:/Program Files/Unity/Hub/Editor/';
+                    if (FileSystem.exists(tryPath)) {
+                        unityEditorsPath = tryPath;
+                        break;
+                    }
+                }
             }
 
-            if (!FileSystem.exists(unityEditorsPath) || !FileSystem.isDirectory(unityEditorsPath)) {
+            if (unityEditorsPath == null || !FileSystem.exists(unityEditorsPath) || !FileSystem.isDirectory(unityEditorsPath)) {
                 fail('Cannot unity editor path: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
             }
 
             var availableVersions = [];
             for (file in FileSystem.readDirectory(unityEditorsPath)) {
                 if (file.startsWith('20')) {
-                    var fullPath = Path.join([unityEditorsPath, file, 'Unity.app']);
+                    var fullPath:String = null;
+                    if (isMac) {
+                        fullPath = Path.join([unityEditorsPath, file, 'Unity.app']);
+                    }
+                    else if (isWindows) {
+                        fullPath = Path.join([unityEditorsPath, file, 'Editor', 'Unity.exe']);
+                    }
                     if (FileSystem.exists(fullPath)) {
                         availableVersions.push(file);
                     }
@@ -69,7 +84,12 @@ class UnityEditor {
 
             unityVersion = availableVersions[availableVersions.length-1];
 
-            return Path.join([unityEditorsPath, unityVersion, 'Unity.app']);
+            if (isMac) {
+                return Path.join([unityEditorsPath, unityVersion, 'Unity.app']);
+            }
+            else if (isWindows) {
+                return Path.join([unityEditorsPath, file, 'Editor']);
+            }
         }
         else {
             fail('Cannot resolve unity editor path: not supported on platform ' + Sys.systemName() + ' yet.');

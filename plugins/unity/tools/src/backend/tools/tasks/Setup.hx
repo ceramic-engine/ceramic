@@ -186,6 +186,10 @@ class Setup extends tools.Task {
                 //finalHxml.push('-net-lib=$unityEditorPath/Contents/Managed/UnityEngine.dll');
                 //finalHxml.push('-net-lib=/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.dll'); // Not needed for compilation
             }
+            else if (Sys.systemName() == 'Windows') {
+                var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project, true);
+                finalHxml.push('-D net-std=$unityEditorPath/Data/MonoBleedingEdge/lib/mono/unity');
+            }
             else {
                 fail('Building for Unity is not yet supported on system: ' + Sys.systemName());
             }
