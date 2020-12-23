@@ -11,7 +11,6 @@ class UnityEditor {
     public static function resolveUnityEditorPath(cwd:String, project:Project, printVersions:Bool = false):String {
 
         var unityVersion:String = null;
-        var unityEditorPath:String = null;
         if (project.app.unity != null &&
             project.app.unity.version != null) {
             unityVersion = '' + project.app.unity.version;
@@ -35,7 +34,7 @@ class UnityEditor {
             var unityEditorsPath:String = null;
 
             if (isMac) {
-                unityEditorPath = '/Applications/Unity/Hub/Editor/';
+                unityEditorsPath = '/Applications/Unity/Hub/Editor/';
             }
             else if (isWindows) {
                 for (drive in getWindowsDrives()) {
@@ -48,7 +47,7 @@ class UnityEditor {
             }
 
             if (unityEditorsPath == null || !FileSystem.exists(unityEditorsPath) || !FileSystem.isDirectory(unityEditorsPath)) {
-                fail('Cannot unity editor path: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
+                fail('Cannot find unity editor path: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
             }
 
             var availableVersions = [];
