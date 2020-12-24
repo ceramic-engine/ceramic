@@ -119,6 +119,7 @@ class Tools {
         context.tasks.set('path', new tools.tasks.Path());
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
+        context.tasks.set('hxml', new tools.tasks.Hxml());
         context.tasks.set('module', new tools.tasks.Module());
 
         context.tasks.set('font', new tools.tasks.Font());

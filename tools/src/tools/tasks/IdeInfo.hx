@@ -77,10 +77,14 @@ class IdeInfo extends tools.Task {
                             fail('Invalid target name in ceramic.yml: ${item.name}');
                         }
                         var itemName = ('' + item.name).trim();
-                        if (item.command == null || !Std.is(item.name, String) || ('' + item.name).trim() == '') {
+                        if (item.command == null || !Std.is(item.command, String) || ('' + item.command).trim() == '') {
                             fail('Invalid target command in ceramic.yml: ${item.command}');
                         }
                         var itemCommand = ('' + item.command).trim();
+                        if (item.cwd != null && (!Std.is(item.cwd, String) || ('' + item.cwd).trim() == '')) {
+                            fail('Invalid target cwd in ceramic.yml: ${item.cwd}');
+                        }
+                        var itemCwd = ('' + item.cwd).trim();
                         if (item.args != null && !Std.is(item.args, Array)) {
                             fail('Invalid target args in ceramic.yml: ${item.args}');
                         }
@@ -145,6 +149,7 @@ class IdeInfo extends tools.Task {
                             name: itemName,
                             command: itemCommand,
                             args: itemArgs,
+                            cwd: itemCwd,
                             groups: itemGroups,
                             select: itemSelect
                         });

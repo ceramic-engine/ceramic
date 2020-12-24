@@ -1,0 +1,8 @@
+ide:
+    targets:
+        - name: NPM Install
+          command: ./npm
+          args: [install]
+        - name: Build All
+          command: ./node
+          args: [post-install.js]

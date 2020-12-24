@@ -13,6 +13,8 @@ typedef IdeInfoTargetItem = {
 
     @:optional var select:IdeInfoTargetSelectItem;
 
+    @:optional var cwd:String;
+
 }
 
 typedef IdeInfoTargetSelectItem = {

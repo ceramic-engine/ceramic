@@ -12,84 +12,107 @@ class Hxml extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Print hxml data using " + context.backend.name + " backend and the given target.";
+        if (context.backend != null) {
+            return "Print hxml data (uses --from-hxml param).";
+        }
+        else {
+            return "Print hxml data using " + context.backend.name + " backend and the given target.";
+        }
 
     }
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        ensureCeramicProject(cwd, args, App);
+        var rawHxml:String;
+        var hxmlOriginalCwd:String;
+        var fromHxml = extractArgValue(args, 'from-hxml');
 
-        var availableTargets = context.backend.getBuildTargets();
-        var targetName = getTargetName(args, availableTargets);
-
-        if (targetName == null) {
-            fail('You must specify a target to get hxml from.');
-        }
-
-        // Find target from name
-        //
-        var target = null;
-        for (aTarget in availableTargets) {
-
-            if (aTarget.name == targetName) {
-                target = aTarget;
-                break;
+        if (fromHxml != null) {
+            // Got a source hxml to use.
+            // Simply compare cwd with this source's directory
+            // and convert relative paths as needed
+            if (!Path.isAbsolute(fromHxml)) {
+                fromHxml = Path.join([cwd, fromHxml]);
             }
-
+            rawHxml = File.getContent(fromHxml);
+            hxmlOriginalCwd = Path.directory(fromHxml);
         }
+        else {
 
-        if (target == null) {
-            fail('Unknown target: $targetName');
-        }
-
-        // Add target define
-        if (!context.defines.exists(target.name)) {
-            context.defines.set(target.name, '');
-        }
-
-        // Update setup, if needed
-        if (extractArgFlag(args, 'setup', true)) {
-            context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
-        }
-
-        // Get and run backend's setup task
-        var rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
-        var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
-
-        // Check hxml validity
-        if (rawHxml == null) {
-            fail('Failed to get hxml for ${target.name}. Did you run setup on this target?');
-        }
-
-        // Add completion flags
-        rawHxml += "\n" + '-D completion -D display -D no_inline';
-
-        // Add some completion cache optims
-        //
-        var pathFilters = [];
-        var ceramicSrcContentPath = Path.join([context.ceramicRuntimePath, 'src/ceramic']);
-        for (name in FileSystem.readDirectory(ceramicSrcContentPath)) {
-            if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
-                if (name.endsWith('.hx')) {
-                    var className = name.substr(0, name.length - 3);
-                    if (className != 'Assets') {
-                        pathFilters.push('ceramic.' + className);
+            // Get HXML from ceramic project
+            ensureCeramicProject(cwd, args, App);
+    
+            var availableTargets = context.backend.getBuildTargets();
+            var targetName = getTargetName(args, availableTargets);
+    
+            if (targetName == null) {
+                fail('You must specify a target to get hxml from.');
+            }
+    
+            // Find target from name
+            //
+            var target = null;
+            for (aTarget in availableTargets) {
+    
+                if (aTarget.name == targetName) {
+                    target = aTarget;
+                    break;
+                }
+    
+            }
+    
+            if (target == null) {
+                fail('Unknown target: $targetName');
+            }
+    
+            // Add target define
+            if (!context.defines.exists(target.name)) {
+                context.defines.set(target.name, '');
+            }
+    
+            // Update setup, if needed
+            if (extractArgFlag(args, 'setup', true)) {
+                context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
+            }
+    
+            // Get and run backend's setup task
+            rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
+            hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
+    
+            // Check hxml validity
+            if (rawHxml == null) {
+                fail('Failed to get hxml for ${target.name}. Did you run setup on this target?');
+            }
+    
+            // Add completion flags
+            rawHxml += "\n" + '-D completion -D display -D no_inline';
+    
+            // Add some completion cache optims
+            //
+            var pathFilters = [];
+            var ceramicSrcContentPath = Path.join([context.ceramicRuntimePath, 'src/ceramic']);
+            for (name in FileSystem.readDirectory(ceramicSrcContentPath)) {
+                if (!FileSystem.isDirectory(Path.join([ceramicSrcContentPath, name]))) {
+                    if (name.endsWith('.hx')) {
+                        var className = name.substr(0, name.length - 3);
+                        if (className != 'Assets') {
+                            pathFilters.push('ceramic.' + className);
+                        }
                     }
                 }
             }
-        }
-
-        // Let plugins extend completion HXML
-        for (plugin in context.plugins) {
-            if (plugin.extendCompletionHxml != null) {
-
-                var prevBackend = context.backend;
-                context.backend = plugin.backend;
-
-                plugin.extendCompletionHxml(rawHxml);
-
-                context.backend = prevBackend;
+    
+            // Let plugins extend completion HXML
+            for (plugin in context.plugins) {
+                if (plugin.extendCompletionHxml != null) {
+    
+                    var prevBackend = context.backend;
+                    context.backend = plugin.backend;
+    
+                    plugin.extendCompletionHxml(rawHxml);
+    
+                    context.backend = prevBackend;
+                }
             }
         }
         
