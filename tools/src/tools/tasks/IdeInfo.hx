@@ -27,6 +27,12 @@ class IdeInfo extends tools.Task {
             // Build config
             //
             variants.push({
+                name: 'Release',
+                args: [],
+                group: 'build',
+                role: 'build-preset'
+            });
+            variants.push({
                 name: 'Debug',
                 args: ['--debug'],
                 group: 'build',
@@ -34,12 +40,6 @@ class IdeInfo extends tools.Task {
                 select: {
                     args: ['--debug']
                 }
-            });
-            variants.push({
-                name: 'Release',
-                args: [],
-                group: 'build',
-                role: 'build-preset'
             });
     
             /*
