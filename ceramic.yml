@@ -1,17 +1,17 @@
 ide:
     targets:
         # Tools
-        - name: NPM Install
-          command: ./npm
-          args: [install]
+        - name: Tools
+          command: ./node
+          args: [post-install.js]
           cwd: tools
           select:
               command: ./ceramic
               args: [hxml, --from-hxml, build.hxml, --output, ../completion.hxml]
 
-        - name: Tools
-          command: ./node
-          args: [post-install.js]
+        - name: NPM Install
+          command: ./npm
+          args: [install]
           cwd: tools
           select:
               command: ./ceramic

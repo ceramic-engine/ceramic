@@ -53,13 +53,26 @@ class IdeInfo extends tools.Task {
                 }
             });
             */
-        }
 
-        // Let plugins extend the list
-        for (plugin in context.plugins) {
-            if (plugin.extendIdeInfo != null) {
-                plugin.extendIdeInfo(targets, variants);
+            // Let plugins extend the list
+            for (plugin in context.plugins) {
+                if (plugin.extendIdeInfo != null) {
+                    plugin.extendIdeInfo(targets, variants);
+                }
             }
+        }
+        else if (context.project != null && context.project.plugin != null) {
+
+            targets.push({
+                name: 'Tools Plugin',
+                command: 'ceramic',
+                args: ['plugin', 'build', '--tools'],
+                select: {
+                    command: 'ceramic',
+                    args: ["plugin", "hxml", "--tools", "--debug", "--completion", "--output", "completion.hxml"]
+                }
+            });
+
         }
 
         // Let project extend the list

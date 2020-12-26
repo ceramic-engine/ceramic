@@ -12,7 +12,7 @@ class Hxml extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        if (context.backend != null) {
+        if (context.backend == null) {
             return "Print hxml data (uses --from-hxml param).";
         }
         else {

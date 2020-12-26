@@ -44,3 +44,4 @@ plugin-build.hxml
 /tools-editor
 /plugins/android/support/.idea/caches
 /.haxelib
+completion.hxml

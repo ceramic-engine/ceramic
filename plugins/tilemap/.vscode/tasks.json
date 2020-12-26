@@ -1,31 +1,20 @@
 {
-    "displayName": "▷ Tools plugin",
-    "description": "ceramic plugin build --tools",
-    "tasks": [
-        {
-            "type": "shell",
-            "taskName": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "command": "ceramic",
-            "args": [
-                "plugin",
-                "build",
-                "--debug",
-                "--tools",
-                "--vscode-editor"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": "$haxe"
-        }
-    ],
-    "version": "2.0.0",
-    "chooserIndex": 0
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "ceramic",
+			"args": "active configuration",
+			"problemMatcher": [
+				"$haxe-absolute",
+				"$haxe",
+				"$haxe-error",
+				"$haxe-trace"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "ceramic: active configuration"
+		}
+	]
 }
