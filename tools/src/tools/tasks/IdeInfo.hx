@@ -55,9 +55,20 @@ class IdeInfo extends tools.Task {
             */
 
             // Let plugins extend the list
+            // but give priority to default backend so that it will be selected by default
+            var defaultBackendName = 'luxe';
             for (plugin in context.plugins) {
-                if (plugin.extendIdeInfo != null) {
-                    plugin.extendIdeInfo(targets, variants);
+                if (plugin.name != null && plugin.name.toLowerCase() == defaultBackendName.toLowerCase()) {
+                    if (plugin.extendIdeInfo != null) {
+                        plugin.extendIdeInfo(targets, variants);
+                    }
+                }
+            }
+            for (plugin in context.plugins) {
+                if (plugin.name == null || plugin.name.toLowerCase() != defaultBackendName.toLowerCase()) {
+                    if (plugin.extendIdeInfo != null) {
+                        plugin.extendIdeInfo(targets, variants);
+                    }
                 }
             }
         }
