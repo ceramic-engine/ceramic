@@ -91,6 +91,11 @@ app:
             backends.push(aBackend);
         }
 
+        if (backends.length == 0) {
+            // Add default backend
+            backends.push('luxe');
+        }
+
         // Check generated files
         var generatedTplPath = Path.join([context.ceramicToolsPath, 'tpl', 'generated']);
         var generatedFiles = Files.getFlatDirectory(generatedTplPath);
@@ -110,8 +115,13 @@ app:
             runCeramic(projectPath, [backendName, 'setup', 'default'].concat(force ? ['--force'] : []));
         }
 
+        var ide = extractArgValue(args, 'ide');
+        if (ide == null) {
+            ide = 'vscode';
+        }
+
         // Generate vscode files?
-        if (extractArgFlag(args, 'vscode')) {
+        if (ide == 'vscode') {
 
             var task = new Vscode();
 

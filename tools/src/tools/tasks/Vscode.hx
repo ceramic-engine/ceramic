@@ -38,89 +38,40 @@ class Vscode extends tools.Task {
 
         if (!force && !settingsOnly && !updateTasks) {
             if (FileSystem.exists(Path.join([vscodeDir, 'tasks.json']))
-                || FileSystem.exists(Path.join([vscodeDir, 'tasks-chooser.json']))
                 || FileSystem.exists(Path.join([vscodeDir, 'settings.json']))) {
 
                 fail('Some Visual Studio Code project files already exist.\nUse --force to generate them again.');
             }
         }
 
+        // Ensure vscode directory exists
+        if (!FileSystem.exists(vscodeDir)) {
+            FileSystem.createDirectory(vscodeDir);
+        }
+
         if (!settingsOnly) {
 
-            var chooser = {
-                selectDescription: "Select build config",
-                items: [],
-                baseItem: {
-                    version: "2.0.0"
-                }
-            };
-
-            // Let plugins extend the list
-            for (plugin in context.plugins) {
-                if (plugin.extendVscodeTasksChooser != null) {
-
-                    if (plugin.backend == null || backends.indexOf(plugin.backend.name) != -1) {
-
-                        // Extend tasks chooser if its an enabled backend
-                        // of if its not a backend plugin
-
-                        var prevBackend = context.backend;
-                        context.backend = plugin.backend;
-
-                        plugin.extendVscodeTasksChooser(chooser.items);
-
-                        context.backend = prevBackend;
-
-                    }
-                }
-            }
-
-            var tasksChooserPath = Path.join([vscodeDir, 'tasks-chooser.json']);
-            if (updateTasks && FileSystem.exists(tasksChooserPath)) {
-                // Update existing tasks-chooser.json
-                // (add new entries only)
-                var existing = Json.parse(File.getContent(tasksChooserPath));
-                var items:Array<Dynamic> = existing.items;
-                var newItems:Array<Dynamic> = chooser.items;
-
-                // Record all used names
-                var usedNames:Map<String,Bool> = new Map();
-                for (item in items) {
-                    usedNames.set(item.displayName, true);
-                }
-
-                // Then add new items with new names
-                for (newItem in newItems) {
-                    if (!usedNames.exists(newItem.displayName)) {
-                        usedNames.set(newItem.displayName, true);
-                        items.push(newItem);
-                    }
-                }
-
-                // Save result
-                File.saveContent(tasksChooserPath, Json.stringify(existing, null, '    '));
-            }
-            else {
-                // Save tasks-chooser.json
-                //
-                if (!FileSystem.exists(vscodeDir)) {
-                    FileSystem.createDirectory(vscodeDir);
-                }
-                File.saveContent(tasksChooserPath, Json.stringify(chooser, null, '    '));
-            }
-
             // Save tasks.json
-            //
-            var vscodeTasks:Dynamic = {};
-            for (key in Reflect.fields(chooser.baseItem)) {
-                if (key == 'onSelect') continue;
-                Reflect.setField(vscodeTasks, key, Reflect.field(chooser.baseItem, key));
-            }
-            for (key in Reflect.fields(chooser.items[0])) {
-                if (key == 'onSelect') continue;
-                Reflect.setField(vscodeTasks, key, Reflect.field(chooser.items[0], key));
-            }
-            vscodeTasks.chooserIndex = 0;
+            var vscodeTasks = {
+                "version": "2.0.0",
+                "tasks": [
+                    {
+                        "type": "ceramic",
+                        "args": "active configuration",
+                        "problemMatcher": [
+                            "$haxe-absolute",
+                            "$haxe",
+                            "$haxe-error",
+                            "$haxe-trace"
+                        ],
+                        "group": {
+                            "kind": "build",
+                            "isDefault": true
+                        },
+                        "label": "ceramic: active configuration"
+                    }
+                ]
+            };
             File.saveContent(Path.join([vscodeDir, 'tasks.json']), Json.stringify(vscodeTasks, null, '    '));
 
         }
