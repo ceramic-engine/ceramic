@@ -24,6 +24,17 @@ function postInstall() {
     spawnSync(haxelib, ['install', 'hxcpp', '4.1.15', '--always'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
 
+    // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
+    var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
+    var androidClangToolchainPath = path.join(hxcppPath, 'toolchain/android-toolchain-clang.xml');
+    var androidClangToolchain = '' + fs.readFileSync(androidClangToolchainPath);
+    var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+    if (indexOfOptimFlag == -1) {
+        console.log("Patch hxcpp android-clang toolchain");
+        androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+    }
+    fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
+
     // Patch hxcpp toolchain on iOS
     // See: https://github.com/HaxeFoundation/hxcpp/issues/764
     /*var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
@@ -36,11 +47,11 @@ function postInstall() {
     /*var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');
     var overrideHaxeStdDir = path.join(__dirname, '../haxe/std');
     fs.copySync(overrideHaxeStdDir, haxeStdDir);*/
+
+    console.log("Build tools");
     
     // Build tools
     spawnSync(haxe, ['build.hxml'], { stdio: "inherit", cwd: __dirname });
-
-    console.log("post install");
         
     // Build tools plugins
     var ceramic = process.platform == 'win32' ? 'ceramic.cmd' : './ceramic';

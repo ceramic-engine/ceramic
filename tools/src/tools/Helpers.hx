@@ -364,8 +364,19 @@ class Helpers {
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
         
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp', '4,1,15'])))
+        var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,1,15']);
+        if (!FileSystem.exists(hxcppPath)) {
             haxelib(['install', 'hxcpp', '4.1.15', '--always'], {cwd: cwd});
+        }
+        // Patch hxcpp if needed
+        var androidClangToolchainPath = Path.join([hxcppPath, 'toolchain/android-toolchain-clang.xml']);
+        var androidClangToolchain = File.getContent(androidClangToolchainPath);
+        var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+        if (indexOfOptimFlag == -1) {
+            print("Patch hxcpp android-clang toolchain");
+            androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+        }
+        File.saveContent(androidClangToolchainPath, androidClangToolchain);
         
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
             haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
