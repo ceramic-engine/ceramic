@@ -34,7 +34,7 @@ task haxeBuildRelease(type: Exec) {
     workingDir '..'
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        // TODO
+        commandLine './build-haxe.cmd', '--archs', 'armv7,arm64'
     }
     else {
         commandLine './build-haxe.sh', '--archs', 'armv7,arm64'
@@ -45,7 +45,7 @@ task haxeBuildDebug(type: Exec) {
     workingDir '..'
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        // TODO
+        commandLine './build-haxe.cmd', '--debug', '--archs', 'armv7,arm64'
     }
     else {
         commandLine './build-haxe.sh', '--debug', '--archs', 'armv7,arm64'

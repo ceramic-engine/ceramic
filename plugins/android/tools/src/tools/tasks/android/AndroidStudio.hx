@@ -85,6 +85,30 @@ class AndroidStudio extends tools.Task {
             });
 
         }
+        else if (os == 'Windows' && FileSystem.exists(androidProjectFile)) {
+
+            // Open project
+
+            var homedir:String = untyped Os.homedir();
+            var androidStudioExePath:String = null;
+
+            for (drive in getWindowsDrives()) {
+                var tryPath = '$drive:/Program Files/Android/Android Studio/bin/studio64.exe';
+                if (FileSystem.exists(tryPath)) {
+                    androidStudioExePath = tryPath;
+                    break;
+                }
+            }
+
+            if (androidStudioExePath == null) {
+                fail('Android Studio does\'t seem to be installed.\nInstall it from: https://developer.android.com/studio');
+            }
+
+            success('Project is ready at path: ' + androidProjectPath);
+            print('Open it from Android Studio to run/build it.');
+            command(androidStudioExePath, [], { detached: true });
+
+        }
 
     }
 

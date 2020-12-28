@@ -46,28 +46,28 @@ class Compile extends tools.Task {
             var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
             switch (arch) {
                 case 'armv7':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_ARMV7'],
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
                         Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
                     );
                 case 'arm64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_ARM64'],
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
                         Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
                     );
                 case 'x86' | 'i386':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_X86'],
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
                         Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
                     );
                 case 'x86_64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_X86_64'],
                         {cwd: openALAndroidPath});
                     // TODO copy
                 default:
