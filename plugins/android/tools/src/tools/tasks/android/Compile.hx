@@ -33,7 +33,7 @@ class Compile extends tools.Task {
         var archList = archs.split(',');
         for (arch in archList) {
             arch = arch.trim();
-            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid'];
+            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG'];
             if (debug) {
                 hxcppArgs.push('-Ddebug');
             }
