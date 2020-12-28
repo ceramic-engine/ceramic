@@ -198,7 +198,8 @@ class Project {
         // app.hxml += '\n' + '--macro tracker.macros.TrackerMacro.setReusableArray("ceramic.ReusableArray")';
 
         if (context.defines.exists('android')) {
-            app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=26 -D PLATFORM=android-26";
+            // Will set Android APP_PLATFORM, which should match minSdkVersion
+            app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=21 -D PLATFORM=android-21";
             app.hxml += "\n" + "-D NO_PRECOMPILED_HEADERS";
         }
 
