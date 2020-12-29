@@ -372,9 +372,13 @@ class Helpers {
         var androidClangToolchainPath = Path.join([hxcppPath, 'toolchain/android-toolchain-clang.xml']);
         var androidClangToolchain = File.getContent(androidClangToolchainPath);
         var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
-        if (indexOfOptimFlag == -1) {
+        var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
+        if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1) {
             print("Patch hxcpp android-clang toolchain");
-            androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+            if (indexOfOptimFlag == -1)
+                androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+            if (indexOfStaticLibcpp != -1)
+                androidClangToolchain = androidClangToolchain.replace('="-static-libstdc++" />', '="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
         }
         File.saveContent(androidClangToolchainPath, androidClangToolchain);
         

@@ -29,9 +29,13 @@ function postInstall() {
     var androidClangToolchainPath = path.join(hxcppPath, 'toolchain/android-toolchain-clang.xml');
     var androidClangToolchain = '' + fs.readFileSync(androidClangToolchainPath);
     var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
-    if (indexOfOptimFlag == -1) {
+    var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
+    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1) {
         console.log("Patch hxcpp android-clang toolchain");
-        androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+        if (indexOfOptimFlag == -1)
+            androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+        if (indexOfStaticLibcpp != -1)
+            androidClangToolchain = androidClangToolchain.split('="-static-libstdc++" />').join('="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
     }
     fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
 

@@ -31,9 +31,11 @@ class Compile extends tools.Task {
         var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'android', cwd, debug, variant);
 
         var archList = archs.split(',');
+        var archs = [];
         for (arch in archList) {
             arch = arch.trim();
-            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG'];
+            archs.push(arch);
+            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid', '-DHXCPP_CLANG'];
             if (debug) {
                 hxcppArgs.push('-Ddebug');
             }
@@ -42,34 +44,41 @@ class Compile extends tools.Task {
             }
 
 			// Android OpenAL built separately (because of LGPL license, we want to build
-			// it separately and link it dynamically at runtime)
+            // it separately and link it dynamically at runtime)
             var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
+            var buildOpenALArgs = [];
+            if (!context.colors) {
+                buildOpenALArgs.push('-DHXCPP_NO_COLOR');
+            }
             switch (arch) {
                 case 'armv7':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_ARMV7'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
                         Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
                     );
                 case 'arm64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_ARM64'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
                         Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
                     );
                 case 'x86' | 'i386':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_X86'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_X86'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
                         Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
                     );
                 case 'x86_64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CPP11', '-DHXCPP_CLANG', '-DHXCPP_X86_64'],
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
-                    // TODO copy
+                    Files.copyIfNeeded(
+                        Path.join([openALAndroidPath, 'lib/Android/libopenal-x86_64.so']),
+                        Path.join([openALAndroidPath, 'lib/Android/x86_64/libopenal.so'])
+                    );
                 default:
             }
 
@@ -97,11 +106,14 @@ class Compile extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
+        // Copy Shared libc++ binaries if needed
+        AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
+
         // Copy OpenAL binaries if needed
-        AndroidProject.copyOpenALBinariesIfNeeded(cwd, project);
+        AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
 
         // Copy main binaries if needed
-        AndroidProject.copyMainBinariesIfNeeded(cwd, project);
+        AndroidProject.copyMainBinariesIfNeeded(cwd, project, archs);
 
     }
 

@@ -114,7 +114,7 @@ class AndroidProject {
 
     }
 
-    public static function copyMainBinariesIfNeeded(cwd:String, project:Project) {
+    public static function copyMainBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
 
         var debug = context.debug;
         var variant = context.variant;
@@ -126,46 +126,105 @@ class AndroidProject {
         var builtFile:String;
         var targetFile:String;
 
-        builtFile = Path.join([srcJni, '$libPrefix-v7.so']);
-        targetFile = Path.join([dstJni, 'armeabi-v7a/$jniLibName']);
-        Files.copyIfNeeded(builtFile, targetFile);
+        if (archs.contains('armv7')) {
+            builtFile = Path.join([srcJni, '$libPrefix-v7.so']);
+            targetFile = Path.join([dstJni, 'armeabi-v7a/$jniLibName']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
 
-        builtFile = Path.join([srcJni, '$libPrefix-64.so']);
-        targetFile = Path.join([dstJni, 'arm64-v8a/$jniLibName']);
-        Files.copyIfNeeded(builtFile, targetFile);
+        if (archs.contains('arm64')) {
+            builtFile = Path.join([srcJni, '$libPrefix-64.so']);
+            targetFile = Path.join([dstJni, 'arm64-v8a/$jniLibName']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
 
-        builtFile = Path.join([srcJni, '$libPrefix-x86.so']);
-        if (FileSystem.exists(builtFile)) {
+        if (archs.contains('x86')) {
+            builtFile = Path.join([srcJni, '$libPrefix-x86.so']);
             targetFile = Path.join([dstJni, 'x86/$jniLibName']);
             Files.copyIfNeeded(builtFile, targetFile);
         }
 
-        // TODO x86_64
+        if (archs.contains('x86_64')) {
+            builtFile = Path.join([srcJni, '$libPrefix-x86_64.so']);
+            targetFile = Path.join([dstJni, 'x86_64/$jniLibName']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
 
     }
 
-    public static function copyOpenALBinariesIfNeeded(cwd:String, project:Project) {
+    public static function copyOpenALBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
 
         // Copy OpenAL binaries if they have changed or weren't copied before
 
         var builtFile:String;
         var targetFile:String;
 
-        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']);
-        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so']);
-        Files.copyIfNeeded(builtFile, targetFile);
-
-        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']);
-        targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so']);
-        Files.copyIfNeeded(builtFile, targetFile);
-
-        builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']);
-        if (FileSystem.exists(builtFile)) {
-            targetFile = Path.join([context.cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
+        if (archs.contains('armv7')) {
+            builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-v7.so']);
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so']);
             Files.copyIfNeeded(builtFile, targetFile);
         }
 
-        // TODO x86_64
+        if (archs.contains('arm64')) {
+            builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-64.so']);
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
+
+        if (archs.contains('x86')) {
+            builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86.so']);
+            if (FileSystem.exists(builtFile)) {
+                targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
+                Files.copyIfNeeded(builtFile, targetFile);
+            }
+        }
+
+        if (archs.contains('x86_64')) {
+            builtFile = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android/lib/Android/libopenal-x86_64.so']);
+            if (FileSystem.exists(builtFile)) {
+                targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86_64/libopenal.so']);
+                Files.copyIfNeeded(builtFile, targetFile);
+            }
+        }
+
+    }
+
+    public static function copySharedLibCppBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
+
+        // Copy shared lib c++ binaries if they have changed or weren't copied before
+
+        var builtFile:String;
+        var targetFile:String;
+
+        var androidLibsPath = Path.join([context.plugins.get('Android').path, 'resources', 'libs']);
+
+        if (archs.contains('armv7')) {
+            builtFile = Path.join([androidLibsPath, 'armeabi-v7a/libc++_shared.so']);
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libc++_shared.so']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
+
+        if (archs.contains('arm64')) {
+            builtFile = Path.join([androidLibsPath, 'arm64-v8a/libc++_shared.so']);
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libc++_shared.so']);
+            Files.copyIfNeeded(builtFile, targetFile);
+        }
+
+        if (archs.contains('x86')) {
+            builtFile = Path.join([androidLibsPath, 'x86/libc++_shared.so']);
+            if (FileSystem.exists(builtFile)) {
+                targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86/libc++_shared.so']);
+                Files.copyIfNeeded(builtFile, targetFile);
+            }
+        }
+
+        if (archs.contains('x86_64')) {
+            builtFile = Path.join([androidLibsPath, 'x86_64/libc++_shared.so']);
+            if (FileSystem.exists(builtFile)) {
+                targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86_64/libc++_shared.so']);
+                Files.copyIfNeeded(builtFile, targetFile);
+            }
+        }
 
     }
 
