@@ -251,6 +251,12 @@ class Build extends tools.Task {
 				hxcppArgs.push('-DHXCPP_CPP11');
 				hxcppArgs.push('-DHXCPP_CLANG');
 			}
+			if (context.defines.exists('HXCPP_M32')) {
+				hxcppArgs.push('-DHXCPP_M32');
+			}
+			else {
+				hxcppArgs.push('-DHXCPP_M64');
+			}
             if (debug) {
                 hxcppArgs.push('-Ddebug');
             }
