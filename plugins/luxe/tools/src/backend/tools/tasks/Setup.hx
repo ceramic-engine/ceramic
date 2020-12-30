@@ -219,6 +219,13 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '--macro snow.Set.runtime("snow.modules.sdl.Runtime")';
             targetFlags += '\n' + '--macro snow.Set.audio("snow.modules.openal.Audio")';
             targetFlags += '\n' + '--macro snow.Set.io("snow.modules.sdl.IO")';
+            if (target.name == 'windows') {
+                // On windows, use mojoal implementation for OpenAL.
+                // This ensure we don't need any global shared OpenAL32.dll to be installed on target system
+                if (!context.defines.exists('mojoal') && !context.defines.exists('no_mojoal')) {
+                    targetFlags += '\n' + '-D mojoal';
+                }
+            }
             if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
                 targetFlags += '\n' + '-D arch-64';
 
