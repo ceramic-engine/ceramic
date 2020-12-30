@@ -41,6 +41,8 @@ class Windows extends tools.Task {
         // Copy binary file
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
 
+        // TODO copy openal32.dll for correct architecture
+
         // Stop if not running
         if (!doRun) return;
 
