@@ -161,6 +161,14 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set('target', target.name);
         defines.set(target.name, '');
 
+        switch target.name {
+            case 'android' | 'ios':
+                defines.set('mobile', '');
+            case 'mac' | 'windows' | 'linux':
+                defines.set('desktop', '');
+            default:
+        }
+
         var outTargetPath = target.outPath('luxe', cwd, context.debug, variant);
         defines.set('target_path', outTargetPath);
         defines.set('target_assets_path', Path.join([outTargetPath, 'assets']));

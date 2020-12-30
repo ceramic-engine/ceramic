@@ -208,7 +208,9 @@ class Setup extends tools.Task {
             }
             if (target.name == 'ios' || target.name == 'android') {
                 targetFlags += '\n' + '-D linc_opengl_GLES';
-                targetFlags += '\n' + '-D mobile';
+
+                // Already added from defines
+                //targetFlags += '\n' + '-D mobile';
             }
             if (target.name == 'android') {
                 targetFlags += '\n' + '-D ceramic_avoid_last_texture_slot';
@@ -219,7 +221,10 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '--macro snow.Set.io("snow.modules.sdl.IO")';
             if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
                 targetFlags += '\n' + '-D arch-64';
-                targetFlags += '\n' + '-D desktop';
+
+                // Already added from defines
+                //targetFlags += '\n' + '-D desktop';
+
                 targetFlags += '\n' + '-D snow_use_glew';
             }
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
