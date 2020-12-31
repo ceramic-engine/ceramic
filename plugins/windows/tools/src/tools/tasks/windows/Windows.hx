@@ -41,7 +41,20 @@ class Windows extends tools.Task {
         // Copy binary file
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
 
-        // TODO copy openal32.dll for correct architecture
+        // Copy openal32.dll for correct architecture
+        var pluginPath = context.plugins.get('Windows').path;
+        if (context.defines.exists('HXCPP_M32')) {
+            Files.copyIfNeeded(
+                Path.join([pluginPath, 'resources', 'libs', 'x86', 'openal32.dll']),
+                Path.join([windowsProjectPath, 'openal32.dll'])
+            );
+        }
+        else {
+            Files.copyIfNeeded(
+                Path.join([pluginPath, 'resources', 'libs', 'x86_64', 'openal32.dll']),
+                Path.join([windowsProjectPath, 'openal32.dll'])
+            );
+        }
 
         // Stop if not running
         if (!doRun) return;
