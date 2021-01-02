@@ -59,7 +59,7 @@ class Windows extends tools.Task {
         // Stop if not running
         if (!doRun) return;
 
-        // Run project through electron/ceramic-runner
+        // Run project
         print('Start app');
 
         var status = commandWithChecksAndLogs(

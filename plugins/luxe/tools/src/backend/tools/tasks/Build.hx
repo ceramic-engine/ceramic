@@ -291,8 +291,15 @@ class Build extends tools.Task {
 				runHooks(cwd, args, project.app.hooks, 'end run');
 			}
 		}
+		// Linux
+		else if ((action == 'run' || action == 'build') && target.name == 'linux') {
+			runTask('linux app', action == 'run' ? ['--run'] : []);
+			if (action == 'run') {
+				runHooks(cwd, args, project.app.hooks, 'end run');
+			}
+		}
 		// Windows
-		if ((action == 'run' || action == 'build') && target.name == 'windows') {
+		else if ((action == 'run' || action == 'build') && target.name == 'windows') {
 			runTask('windows app', action == 'run' ? ['--run'] : []);
 			if (action == 'run') {
 				runHooks(cwd, args, project.app.hooks, 'end run');
