@@ -49,7 +49,7 @@ class PlatformSpecific {
         }
 
         var filePath = ceramic.Path.join([root, assetPath]);
-        var handle = @:privateAccess Luxe.snow.io.module._data_load(filePath);
+        var handle = @:privateAccess snow.Snow.app.io.module._data_load(filePath);
         if (handle != null)
             return handle.toBytes().toString();
         else
@@ -81,7 +81,7 @@ class PlatformSpecific {
         }
         
         var filePath = ceramic.Path.join([root, assetPath]);
-        var handle = @:privateAccess Luxe.snow.io.module._data_load(filePath);
+        var handle = @:privateAccess snow.Snow.app.io.module._data_load(filePath);
         if (handle != null)
             return handle.toBytes();
         else
