@@ -1,8 +1,0 @@
-app:
-    package: mycompany.sample
-    name: superSample
-    displayName: sample
-    author: My Company
-    version: '1.0'
-
-    libs: []
