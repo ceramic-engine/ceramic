@@ -36,7 +36,7 @@ class Linux extends tools.Task {
         LinuxApp.createLinuxAppIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'linux', cwd, context.debug, context.variant);
+        var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'linux', cwd, context.debug, context.variant);
 
         // Copy binary file
         if (!FileSystem.exists(Path.directory(linuxAppBinaryFile))) {

@@ -37,7 +37,7 @@ class Mac extends tools.Task {
         MacApp.createMacAppIfNeeded(cwd, project);
 
         // Copy built files and assets
-        var outTargetPath = BuildTargetExtensions.outPathWithName('luxe', 'mac', cwd, context.debug, context.variant);
+        var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'mac', cwd, context.debug, context.variant);
 
         // Copy binary file
         if (!FileSystem.exists(Path.directory(macAppBinaryFile))) {

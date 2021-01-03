@@ -119,7 +119,7 @@ class AndroidProject {
         var debug = context.debug;
         var variant = context.variant;
         var libPrefix = context.debug ? 'libMain-debug' : 'libMain';
-        var builtOutPath = BuildTargetExtensions.outPathWithName('luxe', 'android', cwd, debug, variant);
+        var builtOutPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'android', cwd, debug, variant);
         var srcJni = Path.join([builtOutPath, 'cpp']);
         var dstJni = Path.join([context.cwd, 'project/android/app/src/main/jniLibs']);
         var jniLibName = 'lib' + project.app.name + '.so';
