@@ -138,7 +138,10 @@ class Hxml extends tools.Task {
             }
         }
 
-        var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
+        //var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlTargetCwd).join(" ").replace(" \n ", "\n").trim();
+        
+        var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, hxmlOriginalCwd).join(" ").replace(" \n ", "\n").trim();
+        finalHxml = '--cwd ' + hxmlOriginalCwd + '\n' + finalHxml;
 
         if (output != null) {
 
