@@ -9,6 +9,9 @@ for (var i = 0; i < process.argv.length - 1; i++) {
     var arg = process.argv[i];
     if (arg == '--cwd') {
         resolvedCwd = process.argv[i + 1];
+        if (!path.isAbsolute(resolvedCwd)) {
+            resolvedCwd = path.normalize(path.join(process.cwd(), resolvedCwd));
+        }
         break;
     }
 }
