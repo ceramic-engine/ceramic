@@ -1,5 +1,6 @@
 package;
 
+import backend.ClayEvents;
 import clay.Clay;
 import ceramic.Path;
 
@@ -7,9 +8,15 @@ class Main {
 
     public static var project:Project = null;
 
+    public static var events:ClayEvents = null;
+
     public static function main() {
         
-        @:privateAccess new Clay();
+        events = @:privateAccess new ClayEvents();
+
+        var config:Dynamic = {};
+
+        @:privateAccess new Clay(config, events);
 
     }
 

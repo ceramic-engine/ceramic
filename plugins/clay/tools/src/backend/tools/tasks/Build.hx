@@ -197,10 +197,12 @@ class Build extends tools.Task {
 			if (!debug && !context.defines.exists('ceramic_debug_draw') && !context.defines.exists('ceramic_no_strip_markers')) {
 				if (target.name == 'ios' || target.name == 'android' || target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
 					var criticalFilePath = Path.join([outTargetPath, 'cpp', 'src', 'ceramic', 'Renderer.cpp']);
-					var cppContent = File.getContent(criticalFilePath);
-					var newCppContent = stripHxcppLineMarkers(cppContent);
-					if (cppContent != newCppContent) {
-						File.saveContent(criticalFilePath, newCppContent);
+					if (FileSystem.exists(criticalFilePath)) {
+						var cppContent = File.getContent(criticalFilePath);
+						var newCppContent = stripHxcppLineMarkers(cppContent);
+						if (cppContent != newCppContent) {
+							File.saveContent(criticalFilePath, newCppContent);
+						}
 					}
 				}
 			}

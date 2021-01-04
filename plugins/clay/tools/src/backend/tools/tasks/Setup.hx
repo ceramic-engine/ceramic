@@ -174,7 +174,7 @@ class Setup extends tools.Task {
             }
             targetFlags += '\n' + '-lib hxcpp';
             targetFlags += '\n' + '-D hxcpp_static_std';
-            targetFlags += '\n' + '-D clay_native';
+            targetFlags += '\n' + '-D clay_sdl';
             if (target.name == 'ios') {
                 // openal manual init
             }
@@ -261,6 +261,7 @@ ${haxeflagsHxml.join('\n')}
         
         for (lib in requiredLibs) {
             haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+            libs.set(lib, true);
         }
 
         // Check that libs are available

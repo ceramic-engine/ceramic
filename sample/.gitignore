@@ -1,3 +1,8 @@
 /out
 /.haxelib
 /project/web
+/project/mac
+/project/windows
+/project/android
+/project/ios
+/project/unity

@@ -4,3 +4,10 @@ app:
     displayName: Sample
     author: My Company
     version: '1.0'
+
+    defines:
+        - ceramic_no_skip
+        - clay_debug
+
+    plugins:
+        - clay
