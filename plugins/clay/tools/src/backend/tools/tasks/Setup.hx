@@ -174,6 +174,7 @@ class Setup extends tools.Task {
             }
             targetFlags += '\n' + '-lib hxcpp';
             targetFlags += '\n' + '-D hxcpp_static_std';
+            targetFlags += '\n' + '-D clay_native';
             targetFlags += '\n' + '-D clay_sdl';
             if (target.name == 'ios') {
                 // openal manual init
@@ -186,7 +187,7 @@ class Setup extends tools.Task {
                 targetFlags += '\n' + '-D ceramic_avoid_last_texture_slot';
             }
             if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
-                // use glew
+                targetFlags += '\n' + '-D clay_use_glew';
             }
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
         }

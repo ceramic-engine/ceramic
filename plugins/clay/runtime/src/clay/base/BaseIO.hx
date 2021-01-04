@@ -1,4 +1,4 @@
-package clay.io;
+package clay.base;
 
 import clay.buffers.Uint8Array;
 

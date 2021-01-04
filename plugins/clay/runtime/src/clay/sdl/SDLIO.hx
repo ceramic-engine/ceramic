@@ -1,10 +1,10 @@
-package clay.io;
+package clay.sdl;
 
 import sdl.SDL;
 
 import clay.buffers.Uint8Array;
 
-class SdlIO extends BaseIO {
+class SDLIO extends clay.base.BaseIO {
 
     function new() {}
     

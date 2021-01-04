@@ -1,7 +1,7 @@
 package clay;
 
 #if clay_web
-typedef IO = clay.io.WebIO;
+typedef IO = clay.web.WebIO;
 #elseif clay_sdl
-typedef IO = clay.io.SdlIO;
+typedef IO = clay.sdl.SDLIO;
 #end

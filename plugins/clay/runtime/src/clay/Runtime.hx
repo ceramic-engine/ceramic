@@ -1,7 +1,7 @@
 package clay;
 
 #if clay_web
-typedef Runtime = clay.runtime.WebRuntime;
+typedef Runtime = clay.web.WebRuntime;
 #elseif clay_sdl
-typedef Runtime = clay.runtime.SdlRuntime;
+typedef Runtime = clay.sdl.SDLRuntime;
 #end

@@ -16,7 +16,11 @@ class Main {
 
         var config:Dynamic = {};
 
-        @:privateAccess new Clay(config, events);
+        @:privateAccess new Clay(config -> {
+
+            //
+
+        }, events);
 
     }
 

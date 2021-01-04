@@ -1,4 +1,4 @@
-package clay.runtime;
+package clay.web;
 
 class WebRuntime extends BaseRuntime {
 
