@@ -45,7 +45,7 @@ while (pathParts.length > 0) {
             if (process.platform == 'win32') {
                 cmd = path.join(ceramicPath, 'ceramic.cmd');
             }
-            require('child_process').spawn(
+            proc = require('child_process').spawn(
                 cmd,
                 args,
                 {
@@ -53,6 +53,9 @@ while (pathParts.length > 0) {
                     cwd: process.cwd()
                 }
             );
+            proc.on('close', (code) => {
+                process.exit(code);
+            });
             return;
         }
         else {
