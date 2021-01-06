@@ -85,3 +85,7 @@
 	path = git/poly2tri
 	url = https://github.com/ceramic-engine/poly2tri.git
 	branch = master
+[submodule "git/clay"]
+	path = git/clay
+	url = https://github.com/ceramic-engine/clay.git
+	branch = master

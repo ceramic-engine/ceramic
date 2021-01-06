@@ -12,7 +12,7 @@ using StringTools;
 
 class Setup extends tools.Task {
 
-    public static final requiredLibs:ReadOnlyArray<String> = ['linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp'];
+    public static final requiredLibs:ReadOnlyArray<String> = ['clay', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp'];
 
 /// Properties
 
@@ -201,6 +201,7 @@ $targetFlags
 -cp ' + Path.join([backendRuntimePathRelative, 'src']) + '
 -cp ' + '../../../src' + '
 ${libsHxml.join('\n')}
+-lib clay
 -lib linc_opengl
 -lib linc_sdl
 -lib linc_ogg
