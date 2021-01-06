@@ -53,7 +53,7 @@ while (pathParts.length > 0) {
                     cwd: process.cwd()
                 }
             );
-            proc.on('close', (code) => {
+            proc.on('close', function(code) {
                 process.exit(code);
             });
             return;
