@@ -219,9 +219,9 @@ class Csv {
 
     }
 
-#if (!ceramic || macro)
-
     static function warning(str:String):Void {
+
+#if (!ceramic || macro)
 
 #if sys
         Sys.println(str);
@@ -231,8 +231,12 @@ class Csv {
         trace(str);
 #end
 
-    }
+#else
+
+        log.warning(str);
 
 #end
+
+    }
 
 }

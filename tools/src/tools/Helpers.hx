@@ -45,6 +45,7 @@ class Helpers {
         }
 
         // Add generic defines
+        context.defines.set('ceramic', context.ceramicVersion);
         context.defines.set('assets_path', Path.join([cwd, 'assets']));
         context.defines.set('ceramic_assets_path', Path.join([context.ceramicToolsPath, 'assets']));
         context.defines.set('ceramic_root_path', context.ceramicRootPath);
