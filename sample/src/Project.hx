@@ -16,7 +16,8 @@ class Project extends Entity {
         settings.background = Color.GRAY;
         settings.targetWidth = 640;
         settings.targetHeight = 480;
-        settings.scaling = FILL;
+        settings.scaling = FIT;
+        settings.resizable = true;
 
         app.onceReady(this, ready);
 
