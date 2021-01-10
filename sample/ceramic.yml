@@ -8,6 +8,7 @@ app:
     defines:
         - ceramic_no_skip
         - clay_debug
+        - clay_debug_unsafe
 
     plugins:
         - clay
