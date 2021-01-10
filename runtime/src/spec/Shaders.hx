@@ -32,7 +32,7 @@ interface Shaders {
 
     function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void;
 
-    function setTexture(shader:Shader, name:String, texture:Texture):Void;
+    function setTexture(shader:Shader, name:String, slot:Int, texture:Texture):Void;
 
     function customFloatAttributesSize(shader:Shader):Int;
     

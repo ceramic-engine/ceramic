@@ -1,7 +1,9 @@
 package backend;
 
-abstract TextureId(Int) from Int to Int {
+import clay.graphics.Graphics;
 
-    #if !debug inline #end public static var DEFAULT:TextureId = 0;
+abstract TextureId(clay.Types.TextureId) from clay.Types.TextureId to clay.Types.TextureId {
+
+    #if !debug inline #end public static var DEFAULT:TextureId = Graphics.NO_TEXTURE;
 
 }

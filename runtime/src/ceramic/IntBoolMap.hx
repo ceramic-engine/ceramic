@@ -39,6 +39,10 @@ abstract IntBoolMap(IntIntMap) {
         return this.remove(key) != 0;
     }
 
+    public function copy():IntBoolMap {
+        return cast this.copy();
+    }
+
 }
 
 #else
@@ -86,6 +90,10 @@ abstract IntBoolMap(Map<Int,Bool>) {
 
     inline public function existsInline(key:Int):Bool {
         return this.exists(key);
+    }
+
+    inline public function copy():IntBoolMap {
+        return cast this.copy();
     }
 
 }

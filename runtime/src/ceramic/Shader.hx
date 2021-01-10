@@ -47,8 +47,8 @@ class Shader extends Entity {
         this.backendItem = backendItem;
 
         var attributes:Array<ShaderAttribute> = [
-            { size: 4, name: 'vertexPosition' },
-            { size: 4, name: 'vertexTCoord' },
+            { size: 3, name: 'vertexPosition' },
+            { size: 2, name: 'vertexTCoord' },
             { size: 4, name: 'vertexColor' }
         ];
 
@@ -137,9 +137,9 @@ class Shader extends Entity {
 
     }
 
-    inline public function setTexture(name:String, texture:Texture):Void {
+    inline public function setTexture(name:String, slot:Int, texture:Texture):Void {
 
-        app.backend.shaders.setTexture(backendItem, name, texture.backendItem);
+        app.backend.shaders.setTexture(backendItem, name, slot, texture.backendItem);
 
     }
 

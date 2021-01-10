@@ -2,6 +2,7 @@ package backend;
 
 @:allow(Main)
 @:allow(backend.Textures)
+@:allow(backend.ClayEvents)
 class Backend implements tracker.Events implements spec.Backend {
 
 /// Public API
@@ -46,13 +47,13 @@ class Backend implements tracker.Events implements spec.Backend {
 
     inline function willEmitUpdate(delta:Float) {
 
-        //
+        draw.begin();
 
     }
 
     inline function didEmitUpdate(delta:Float) {
 
-        //
+        draw.end();
 
     }
 

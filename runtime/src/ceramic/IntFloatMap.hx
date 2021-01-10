@@ -110,6 +110,19 @@ class IntFloatMap {
 
     }
 
+    public function copy():IntFloatMap {
+        
+        var map = new IntFloatMap();
+
+        map.keys = keys.copy();
+        map.nextFreeIndex = nextFreeIndex;
+        map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
+        map.values = values.copy();
+        
+        return map;
+
+    }
+
 /// Internal
 
     function resizeValues(targetSize:Int) {
@@ -169,6 +182,10 @@ abstract IntFloatMap(Map<Int,Float>) {
 
     inline public function existsInline(key:Int):Bool {
         return this.exists(key);
+    }
+
+    inline public function copy():IntFloatMap {
+        return cast this.copy();
     }
 
 }

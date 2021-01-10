@@ -244,7 +244,7 @@ class Shaders implements spec.Shaders {
 
     }
 
-    inline public function setTexture(shader:Shader, name:String, texture:Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, slot:Int, texture:Texture):Void {
         
         (shader:phoenix.Shader).set_texture(name, texture);
 

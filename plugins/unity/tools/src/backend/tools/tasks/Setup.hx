@@ -163,7 +163,6 @@ class Setup extends tools.Task {
             finalHxml.push('-cs bin');
             finalHxml.push('-D dll');
             finalHxml.push('-D no-root');
-            finalHxml.push('-D ceramic_render_pos_indice');
             finalHxml.push('-D ceramic_texture_stamp_delayed');
             
             var unityVersion:String = null;

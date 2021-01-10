@@ -8,9 +8,7 @@ interface Draw {
 
     function swap():Void;
 
-    function getItem(visual:ceramic.Visual):VisualItem;
-
-    function initBuffers(#if !ceramic_render_pos_indice maxVerts:Int #end):Void;
+    function initBuffers(#if ceramic_render_no_indice maxVerts:Int #end):Void;
 
     function beginRender():Void;
 
@@ -56,7 +54,7 @@ interface Draw {
 
     function drawWithoutStencilTest():Void;
 
-#if ceramic_render_pos_indice
+#if !ceramic_render_no_indice
 
     // TODO?
 

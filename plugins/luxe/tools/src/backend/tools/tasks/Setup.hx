@@ -239,6 +239,7 @@ $targetFlags
 -D no_default_font
 -D luxe_no_default_shaders
 -D no-console
+-D ceramic_render_no_indice
 --macro snow.Set.main("luxe.Engine")
 --macro snow.Set.ident(' + Json.stringify(project.app.name) + ')
 --macro snow.Set.config("config.json")

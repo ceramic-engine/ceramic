@@ -1,5 +1,7 @@
 package backend;
 
+import clay.Clay;
+
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     public function new() {}
@@ -21,19 +23,19 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     inline public function getWidth():Int {
 
-        return ceramic.App.app.settings.targetWidth;
+        return Clay.app.screenWidth;
 
     }
 
     inline public function getHeight():Int {
 
-        return ceramic.App.app.settings.targetHeight;
+        return Clay.app.screenHeight;
 
     }
 
     inline public function getDensity():Float {
 
-        return 1.0;
+        return Clay.app.screenDensity;
 
     }
 

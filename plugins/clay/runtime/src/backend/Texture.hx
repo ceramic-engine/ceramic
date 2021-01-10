@@ -1,3 +1,3 @@
 package backend;
 
-abstract Texture(TextureImpl) from TextureImpl to TextureImpl {}
+abstract Texture(clay.graphics.Texture) from clay.graphics.Texture to clay.graphics.Texture {}

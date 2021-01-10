@@ -360,6 +360,25 @@ class IntIntMap {
 
     }
 
+    public function copy():IntIntMap {
+        
+        var map = new IntIntMap();
+
+        map.data = data.copy();
+        map.hasFreeKey = hasFreeKey;
+        map.freeValue = freeValue;
+        map.fillFactor = fillFactor;
+        map.threshold = threshold;
+        map.size = size;
+        map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
+        map.iterableKeysUsed = iterableKeysUsed != null ? iterableKeysUsed.copy() : null;
+        map.mask = mask;
+        map.mask2 = mask2;
+
+        return map;
+
+    }
+
 /// Tools
 
     /** Return the least power of two greater than or equal to the specified value. */
@@ -447,6 +466,10 @@ abstract IntIntMap(Map<Int,Int>) {
 
     inline public function existsInline(key:Int):Bool {
         return this.exists(Std.int(key));
+    }
+
+    inline public function copy():IntIntMap {
+        return cast this.copy();
     }
 
 }

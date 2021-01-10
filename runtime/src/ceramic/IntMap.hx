@@ -136,6 +136,19 @@ class IntMap<V> {
 
     }
 
+    public function copy():IntMap<V> {
+        
+        var map = new IntMap<V>();
+
+        map.keys = keys.copy();
+        map.nextFreeIndex = nextFreeIndex;
+        map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
+        map.values = values.copy();
+        
+        return map;
+
+    }
+
 /// Internal
 
     function resizeValues(targetSize:Int) {

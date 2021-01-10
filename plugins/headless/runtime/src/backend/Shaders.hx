@@ -70,7 +70,7 @@ class Shaders implements spec.Shaders {
 
     }
 
-    inline public function setTexture(shader:Shader, name:String, texture:backend.Texture):Void {
+    inline public function setTexture(shader:Shader, name:String, slot:Int, texture:backend.Texture):Void {
         
         //
 

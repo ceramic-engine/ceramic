@@ -1,5 +1,8 @@
 package backend;
 
+import clay.Immediate;
+import clay.buffers.Uint8Array;
+import clay.Clay;
 import ceramic.Path;
 
 #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
@@ -13,47 +16,93 @@ class Texts implements spec.Texts {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextOptions, done:String->Void):Void {
+    public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
-        #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
+        var done = function(text:String) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(text);
+                _done = null;
+            });
+        };
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
-        if (path.startsWith('http://') || path.startsWith('https://')) {
-            // Not implemented (yet?)
-            done(null);
+        // Is text currently loading?
+        if (loadingTextCallbacks.exists(path)) {
+            // Yes, just bind it
+            loadingTextCallbacks.get(path).push(function(text:String) {
+                done(text);
+            });
             return;
         }
-
-        if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
-            try {
-                done(File.getContent(path));
-            } catch (e:Dynamic) {
-                ceramic.App.app.logger.error('Failed to load file at path: $path, $e');
-                done(null);
-            }
-        }
         else {
-            ceramic.App.app.logger.error('File doesn\'t exist at path: $path');
-            done(null);
+            // Add loading callbacks array
+            loadingTextCallbacks.set(path, []);
         }
 
-        #else
+        // Remove ?something in path
+        var cleanedPath = path;
+        var questionMarkIndex = cleanedPath.indexOf('?');
+        if (questionMarkIndex != -1) {
+            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        }
 
-        ceramic.App.app.logger.warning('Backend cannot read file at path: $path ; returning empty string');
-        done('');
+        var fullPath = cleanedPath;
+        if (!Path.isAbsolute(fullPath)) {
+            fullPath = Path.join([Clay.app.io.appPath(), fullPath]);
+        }
+        Clay.app.io.loadData(fullPath, null, function(res:Uint8Array) {
+            
+            if (res == null) {
 
-        #end
+                var callbacks = loadingTextCallbacks.get(path);
+                if (callbacks != null) {
+                    loadingTextCallbacks.remove(path);
+                    done(null);
+                    for (callback in callbacks) {
+                        callback(null);
+                    }
+                }
+                else {
+                    done(null);
+                }
+
+                return;
+            }
+
+            var text = res.toBytes().toString();
+
+            var callbacks = loadingTextCallbacks.get(path);
+            if (callbacks != null) {
+                loadingTextCallbacks.remove(path);
+                done(text);
+                for (callback in callbacks) {
+                    callback(text);
+                }
+            }
+            else {
+                done(text);
+            }
+        });
+
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        ceramic.App.app.onceImmediate(function() {
+            Immediate.flush();
+        });
 
     }
 
     inline public function supportsHotReloadPath():Bool {
         
-        return false;
+        return true;
 
     }
+
+/// Internal
+
+    var loadingTextCallbacks:Map<String,Array<String->Void>> = new Map();
 
 } //Textures
