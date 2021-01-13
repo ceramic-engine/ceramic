@@ -152,10 +152,13 @@ class Draw #if !completion implements spec.Draw #end {
             _buffersIndex = 0;
         }
         if (_posListArray.length <= _buffersIndex) {
+
             _posListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
-            _uvListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
+             // For uvs, we'll never need more than two thirds of vertex buffer size
+            _uvListArray[_buffersIndex] = new Float32Array(Std.int(Math.ceil(MAX_VERTS_SIZE * 2.0 / 3.0)));
             _colorListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
             _indiceListArray[_buffersIndex] = new Uint8Array(MAX_INDICES);
+
             #if cpp
             _viewPosBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
             _viewUvsBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
