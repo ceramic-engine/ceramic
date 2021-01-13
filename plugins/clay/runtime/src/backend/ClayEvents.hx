@@ -2,6 +2,7 @@ package backend;
 
 import clay.Clay;
 
+@:access(backend.Screen)
 class ClayEvents extends clay.Events {
 
     var backend:backend.Backend;
@@ -35,7 +36,28 @@ class ClayEvents extends clay.Events {
 
     override function tick(delta:Float) {
 
+        triggerResizeIfNeeded();
+
         backend.emitUpdate(delta);
+
+    }
+
+/// Internal
+
+    function triggerResizeIfNeeded():Void {
+
+        var density = Clay.app.screenDensity;
+        var width = Clay.app.screenWidth;
+        var height = Clay.app.screenHeight;
+
+        if (lastDensity != density || lastWidth != width || lastHeight != height) {
+
+            lastDensity = density;
+            lastWidth = width;
+            lastHeight = height;
+
+            backend.screen.emitResize();
+        }
 
     }
 
