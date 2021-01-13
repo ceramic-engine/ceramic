@@ -18,16 +18,19 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function new() {
 
-        trace('- create renderer');
         renderer = new ceramic.Renderer();
 
     }
 
-    #if !debug /*inline*/ #end function begin():Void {
+    #if !ceramic_debug_draw_backend inline #end function begin():Void {
+
+        //
 
     }
 
-    #if !debug /*inline*/ #end function end():Void {
+    #if !ceramic_debug_draw_backend inline #end function end():Void {
+
+        //
 
     }
 
@@ -37,7 +40,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    public function swap():Void {
+    inline public function swap():Void {
 
         // Unused
 
@@ -45,18 +48,24 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
-    #if !ceramic_debug_draw_backend /*inline*/ #end static var MAX_VERTS_SIZE:Int = 65536;
-    #if !ceramic_debug_draw_backend /*inline*/ #end static var MAX_INDICES:Int = 16384;
-    #if !ceramic_debug_draw_backend /*inline*/ #end static var MAX_BUFFERS:Int = 64;
+    #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
+    #if !ceramic_debug_draw_backend inline #end static var MAX_INDICES:Int = 16384;
+    #if !ceramic_debug_draw_backend inline #end static var MAX_BUFFERS:Int = 64;
+
+    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_POS:Int = 0;
+    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_UV:Int = 1;
+    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_COLOR:Int = 2;
 
     #if cpp
-    static var _viewPosBufferViewArray:Array<ArrayBufferView> = [];// = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
-    static var _viewUvsBufferViewArray:Array<ArrayBufferView> = [];// = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
-    static var _viewColorsBufferViewArray:Array<ArrayBufferView> = [];// = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
+    static var _viewPosBufferViewArray:Array<ArrayBufferView> = [];
+    static var _viewUvsBufferViewArray:Array<ArrayBufferView> = [];
+    static var _viewColorsBufferViewArray:Array<ArrayBufferView> = [];
+    static var _viewIndicesBufferViewArray:Array<ArrayBufferView> = [];
     
     static var _viewPosBufferView:ArrayBufferView;
     static var _viewUvsBufferView:ArrayBufferView;
     static var _viewColorsBufferView:ArrayBufferView;
+    static var _viewIndicesBufferView:ArrayBufferView;
     #end
 
     static var _buffersIndex:Int;
@@ -79,6 +88,10 @@ class Draw #if !completion implements spec.Draw #end {
     #end
 
     static var _activeTextureSlot:Int = 0;
+
+    static var _batchMultiTexture:Bool = false;
+    static var _posSize:Int = 0;
+    static var _customGLBuffers:Array<GLBuffer> = [];
 
     static var _activeShader:ShaderImpl;
 
@@ -123,7 +136,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _drawingInStencilBuffer:Bool = false;
 
-    /*inline*/ public function initBuffers():Void {
+    #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         _activeTextureSlot = 0;
         _buffersIndex = -1;
@@ -147,6 +160,7 @@ class Draw #if !completion implements spec.Draw #end {
             _viewPosBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
             _viewUvsBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
             _viewColorsBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
+            _viewIndicesBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Uint8);
             #end
         }
 
@@ -157,6 +171,7 @@ class Draw #if !completion implements spec.Draw #end {
         _viewPosBufferView = _viewPosBufferViewArray.unsafeGet(_buffersIndex);
         _viewUvsBufferView = _viewUvsBufferViewArray.unsafeGet(_buffersIndex);
         _viewColorsBufferView = _viewColorsBufferViewArray.unsafeGet(_buffersIndex);
+        _viewIndicesBufferView = _viewIndicesBufferViewArray.unsafeGet(_buffersIndex);
 
         _posBuffer = (_posList:clay.buffers.ArrayBufferView).buffer;
         _uvBuffer = (_uvList:clay.buffers.ArrayBufferView).buffer;
@@ -165,15 +180,17 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function beginRender():Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
-        //
+        GL.enableVertexAttribArray(ATTRIBUTE_POS);
+        GL.enableVertexAttribArray(ATTRIBUTE_UV);
+        GL.enableVertexAttribArray(ATTRIBUTE_COLOR);
 
     }
 
-    /*inline*/ public function clear():Void {
+    #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
-        /*inline*/ Graphics.clear(
+        #if !ceramic_debug_draw_backend inline #end Graphics.clear(
             _whiteTransparentColor.redFloat,
             _whiteTransparentColor.greenFloat,
             _whiteTransparentColor.blueFloat,
@@ -182,11 +199,11 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function clearAndApplyBackground():Void {
+    #if !ceramic_debug_draw_backend inline #end public function clearAndApplyBackground():Void {
 
         var background = ceramic.App.app.settings.background;
 
-        /*inline*/ Graphics.clear(
+        #if !ceramic_debug_draw_backend inline #end Graphics.clear(
             background.redFloat,
             background.greenFloat,
             background.blueFloat,
@@ -195,38 +212,38 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function enableBlending():Void {
+    #if !ceramic_debug_draw_backend inline #end public function enableBlending():Void {
 
         Graphics.enableBlending();
 
     }
 
-    /*inline*/ public function disableBlending():Void {
+    #if !ceramic_debug_draw_backend inline #end public function disableBlending():Void {
 
         Graphics.disableBlending();
 
     }
 
-    /*inline*/ public function setActiveTexture(slot:Int):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
         Graphics.setActiveTexture(slot);
 
     }
 
-    /*inline*/ public function setRenderWireframe(value:Bool):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setRenderWireframe(value:Bool):Void {
 
         // TODO?
 
     }
 
-    /*inline*/ public function getActiveTexture():Int {
+    #if !ceramic_debug_draw_backend inline #end public function getActiveTexture():Int {
 
         return _activeTextureSlot;
 
     }
 
-    /*inline*/ public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         if (_currentRenderTarget != renderTarget || force) {
             _currentRenderTarget = renderTarget;
@@ -290,7 +307,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function useShader(shader:backend.Shader):Void {
+    #if !ceramic_debug_draw_backend inline #end public function useShader(shader:backend.Shader):Void {
         
         _activeShader = shader;
 
@@ -301,7 +318,9 @@ class Draw #if !completion implements spec.Draw #end {
 
         _floatAttributesSize = shadersBackend.customFloatAttributesSize(_activeShader);
 
-        _vertexSize = 3 + _floatAttributesSize + (shadersBackend.canBatchWithMultipleTextures(_activeShader) ? 1 : 0);
+        _batchMultiTexture = shadersBackend.canBatchWithMultipleTextures(_activeShader);
+        _vertexSize = 3 + _floatAttributesSize + (_batchMultiTexture ? 1 : 0);
+        _posSize = _vertexSize;
         if (_vertexSize < 4)
             _vertexSize = 4;
 
@@ -315,18 +334,20 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ function resetIndexes():Void {
+    #if !ceramic_debug_draw_backend inline #end function resetIndexes():Void {
 
         _numIndices = 0;
-
         _numPos = 0;
+        _numUVs = 0;
+        _numColors = 0;
+
         _posIndex = 0;
         _uvIndex = 0;
         _colorIndex = 0;
 
     }
 
-    /*inline*/ public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         Graphics.setBlendFuncSeparate(
             srcRgb,
@@ -337,23 +358,23 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function beginDrawQuad(quad:ceramic.Quad):Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     }
 
-    /*inline*/ public function endDrawQuad():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawQuad():Void {
 
     }
 
-    /*inline*/ public function beginDrawMesh(mesh:ceramic.Mesh):Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginDrawMesh(mesh:ceramic.Mesh):Void {
 
     }
 
-    /*inline*/ public function endDrawMesh():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawMesh():Void {
 
     }
 
-    /*inline*/ public function drawWithStencilTest():Void {
+    #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
         // This part is not provided by clay because too specific for now
         // Might change later if clay handles it
@@ -366,7 +387,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function drawWithoutStencilTest():Void {
+    #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
         // This part is not provided by clay because too specific for now
         // Might change later if clay handles it
@@ -379,7 +400,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function beginDrawingInStencilBuffer():Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginDrawingInStencilBuffer():Void {
         
         _drawingInStencilBuffer = true;
 
@@ -399,62 +420,62 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function endDrawingInStencilBuffer():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
         
         _drawingInStencilBuffer = false;
 
     }
 
-    /*inline*/ public function bindTexture(backendItem:backend.Texture):Void {
+    #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
         Graphics.setActiveTexture(_activeTextureSlot);
         Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
 
     }
 
-    /*inline*/ public function bindNoTexture():Void {
+    #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
 
         Graphics.bindTexture2d(Graphics.NO_TEXTURE);
 
     }
 
-    /*inline*/ public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
+    #if !ceramic_debug_draw_backend inline #end public function textureBackendItemMatchesId(backendItem:backend.Texture, textureId:backend.TextureId):Bool {
 
         return (backendItem:clay.graphics.Texture).textureId == textureId;
 
     }
 
-    /*inline*/ public function getTextureId(backendItem:backend.Texture):backend.TextureId {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureId(backendItem:backend.Texture):backend.TextureId {
 
         return (backendItem:clay.graphics.Texture).textureId;
 
     }
 
-    /*inline*/ public function getTextureWidth(backendItem:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureWidth(backendItem:backend.Texture):Int {
 
         return (backendItem:clay.graphics.Texture).width;
 
     }
 
-    /*inline*/ public function getTextureHeight(backendItem:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureHeight(backendItem:backend.Texture):Int {
 
         return (backendItem:clay.graphics.Texture).height;
 
     }
 
-    /*inline*/ public function getTextureWidthActual(backendItem:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureWidthActual(backendItem:backend.Texture):Int {
 
         return (backendItem:clay.graphics.Texture).widthActual;
 
     }
 
-    /*inline*/ public function getTextureHeightActual(backendItem:backend.Texture):Int {
+    #if !ceramic_debug_draw_backend inline #end public function getTextureHeightActual(backendItem:backend.Texture):Int {
 
         return (backendItem:clay.graphics.Texture).heightActual;
 
     }
 
-    /*inline*/ function updateProjectionMatrix(width:Float, height:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end function updateProjectionMatrix(width:Float, height:Float):Void {
 
         // Making orthographic projection
         //
@@ -483,7 +504,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
+    #if !ceramic_debug_draw_backend inline #end function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
 
         if (transform != null) {
             _modelViewTransform.setToTransform(transform);
@@ -517,7 +538,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ function matrixIdentity(m:ceramic.Float32Array):Void {
+    #if !ceramic_debug_draw_backend inline #end function matrixIdentity(m:ceramic.Float32Array):Void {
 
         m[0] = 1;        m[4] = 0;        m[8] = 0;       m[12] = 0;
         m[1] = 0;        m[5] = 1;        m[9] = 0;       m[13] = 0;
@@ -526,7 +547,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ function setMatrixToTransform(m:ceramic.Float32Array, transform:ceramic.Transform):Void {
+    #if !ceramic_debug_draw_backend inline #end function setMatrixToTransform(m:ceramic.Float32Array, transform:ceramic.Transform):Void {
 
         m[0] = transform.a; m[4] = transform.c; m[8] = 0;   m[12] = transform.tx;
         m[1] = transform.b; m[5] = transform.d; m[9] = 0;   m[13] = transform.ty;
@@ -535,13 +556,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function getNumPos():Int {
+    #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
         return _numPos;
 
     }
 
-    /*inline*/ public function putPos(x:Float, y:Float, z:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float, y:Float, z:Float):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, _posIndex * Float32Array.BYTES_PER_ELEMENT, x);
@@ -557,7 +578,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, _posIndex * Float32Array.BYTES_PER_ELEMENT, x);
@@ -575,13 +596,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function beginFloatAttributes():Void {
+    #if !ceramic_debug_draw_backend inline #end public function beginFloatAttributes():Void {
 
         // Nothing to do here
 
     }
 
-    /*inline*/ public function putFloatAttribute(index:Int, value:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putFloatAttribute(index:Int, value:Float):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + index) * Float32Array.BYTES_PER_ELEMENT, value);
@@ -591,13 +612,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function endFloatAttributes():Void {
+    #if !ceramic_debug_draw_backend inline #end public function endFloatAttributes():Void {
 
         _posIndex += _floatAttributesSize;
 
     }
 
-    /*inline*/ public function putIndice(i:Int):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putIndice(i:Int):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setUint8(_indiceBuffer, _numIndices, i);
@@ -608,7 +629,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function putUVs(uvX:Float, uvY:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setFloat32(_uvBuffer, _uvIndex * Float32Array.BYTES_PER_ELEMENT, uvX);
@@ -618,10 +639,11 @@ class Draw #if !completion implements spec.Draw #end {
         _uvList[_uvIndex + 1] = uvY;
         #end
         _uvIndex += 2;
+        _numUVs++;
 
     }
 
-    /*inline*/ public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
         #if cpp
         clay.buffers.ArrayBufferIO.setFloat32(_colorBuffer, _colorIndex * Float32Array.BYTES_PER_ELEMENT, r);
@@ -639,33 +661,149 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    /*inline*/ public function hasAnythingToFlush():Bool {
+    #if !ceramic_debug_draw_backend inline #end public function hasAnythingToFlush():Bool {
 
         return _numPos > 0;
 
     }
 
-    /*inline*/ public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
+    #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
         
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
-    /*inline*/ public function remainingVertices():Int {
+    #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
         
         return _maxVerts - _numPos;
 
     }
 
-    /*inline*/ public function remainingIndices():Int {
+    #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
         
         return MAX_INDICES - _numIndices;
 
     }
 
-    /*inline*/ public function flush():Void {
+    static var debugShader:clay.graphics.Shader = null;
 
-        throw 'TODO';
+    #if !ceramic_debug_draw_backend inline #end public function flush():Void {
+
+        var batchMultiTexture = _batchMultiTexture;
+
+        // fromBuffer takes byte length, so floats * 4
+        #if cpp
+        var pos = Float32Array.fromBuffer(_posBuffer, 0, _posIndex * 4, _viewPosBufferView);
+        var uvs = Float32Array.fromBuffer(_uvBuffer, 0, _uvIndex * 4, _viewUvsBufferView);
+        var colors = Float32Array.fromBuffer(_colorBuffer, 0, _colorIndex * 4, _viewColorsBufferView);
+        var indices = Uint8Array.fromBuffer(_indiceBuffer, 0, _numIndices, _viewIndicesBufferView);
+        #else
+        var pos = Float32Array.fromBuffer(_posList.buffer, 0, _posIndex * 4);
+        var uvs = Float32Array.fromBuffer(_uvList.buffer, 0, _uvIndex * 4);
+        var colors = Float32Array.fromBuffer(_colorList.buffer, 0, _colorIndex * 4);
+        var indices = Uint8Array.fromBuffer(_indiceList.buffer, 0, _numIndices);
+        #end
+
+        // Begin submit
+
+        var pb = GL.createBuffer();
+        var cb = GL.createBuffer();
+        var tb = GL.createBuffer();
+        var ib = GL.createBuffer();
+
+        GL.enableVertexAttribArray(0);
+        GL.enableVertexAttribArray(1);
+        GL.enableVertexAttribArray(2);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, pb);
+        GL.vertexAttribPointer(ATTRIBUTE_POS, 3, GL.FLOAT, false, _posSize * 4, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, tb);
+        GL.vertexAttribPointer(ATTRIBUTE_UV, 2, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, uvs, GL.STREAM_DRAW);
+
+        GL.bindBuffer(GL.ARRAY_BUFFER, cb);
+        GL.vertexAttribPointer(ATTRIBUTE_COLOR, 4, GL.FLOAT, false, 0, 0);
+        GL.bufferData(GL.ARRAY_BUFFER, colors, GL.STREAM_DRAW);
+
+        var offset = 3;
+        var n = ATTRIBUTE_COLOR + 1;
+        var customGLBuffersLen:Int = 0;
+
+        if (batchMultiTexture) {
+
+            var b = GL.createBuffer();
+            _customGLBuffers[customGLBuffersLen++] = b;
+
+            GL.enableVertexAttribArray(n);
+            GL.bindBuffer(GL.ARRAY_BUFFER, b);
+            GL.vertexAttribPointer(n, 1, GL.FLOAT, false, _posSize * 4, offset * 4);
+            GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
+
+            n++;
+            offset++;
+
+        }
+
+        if (_activeShader != null && _activeShader.customAttributes != null) {
+
+            var allAttrs = _activeShader.customAttributes;
+            var start = customGLBuffersLen;
+            var end = start + allAttrs.length;
+            customGLBuffersLen += allAttrs.length;
+            for (ii in start...end) {
+
+                var attrIndex = ii - start;
+                var attr = allAttrs.unsafeGet(attrIndex);
+
+                var b = GL.createBuffer();
+                _customGLBuffers[ii] = b;
+
+                GL.enableVertexAttribArray(n);
+                GL.bindBuffer(GL.ARRAY_BUFFER, b);
+                GL.vertexAttribPointer(n, attr.size, GL.FLOAT, false, _posSize * 4, offset * 4);
+                GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
+
+                n++;
+                offset += attr.size;
+
+            }
+        }
+
+        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, ib);
+        GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STREAM_DRAW);
+
+        // Draw
+        GL.drawElements(GL.TRIANGLES, _numIndices, GL.UNSIGNED_BYTE, 0);
+
+        GL.deleteBuffer(pb);
+        GL.deleteBuffer(cb);
+        GL.deleteBuffer(tb);
+
+        if (customGLBuffersLen > 0) {
+            var n = ATTRIBUTE_COLOR + 1;
+            for (ii in 0...customGLBuffersLen) {
+                var b = _customGLBuffers.unsafeGet(ii);
+                GL.deleteBuffer(b);
+                GL.disableVertexAttribArray(n);
+                n++;
+            }
+        }
+
+        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, Graphics.NO_BUFFER);
+        GL.deleteBuffer(ib);
+
+        // End submit
+
+        pos = null;
+        uvs = null;
+        colors = null;
+        indices = null;
+
+        resetIndexes();
+
+        prepareNextBuffers();
 
     }
 

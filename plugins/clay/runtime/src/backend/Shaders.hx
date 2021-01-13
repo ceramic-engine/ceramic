@@ -1,10 +1,15 @@
 package backend;
 
+import ceramic.ReadOnlyArray;
+import clay.opengl.GL;
 import ceramic.Path;
 
 using StringTools;
 
 class Shaders implements spec.Shaders {
+
+    static final SHADER_ATTRIBUTES:ReadOnlyArray<String> = ['vertexPosition', 'vertexTCoord', 'vertexColor'];
+    static final SHADER_ATTRIBUTES_MULTITEXTURE:ReadOnlyArray<String> = ['vertexPosition', 'vertexTCoord', 'vertexColor', 'vertexTextureId'];
 
     public function new() {}
 
@@ -33,9 +38,20 @@ class Shaders implements spec.Shaders {
         fragSource = fragLines.join('\n');
         #end
 
+        var textures = ['tex0'];
+
         if (isMultiTextureTemplate) {
             var maxTextures = ceramic.App.app.backend.textures.maxTexturesByBatch();
             var maxIfs = maxIfStatementsByFragmentShader();
+
+            var maxTexturesAndIfs = Std.int(Math.min(maxTextures, maxIfs));
+            if (maxTexturesAndIfs > 1) {
+                var i = 1;
+                while (i <= maxTexturesAndIfs) {
+                    textures.push('tex' + i);
+                    i++;
+                }
+            }
 
             fragSource = processMultiTextureFragTemplate(fragSource, maxTextures, maxIfs);
             vertSource = processMultiTextureVertTemplate(vertSource, maxTextures, maxIfs);
@@ -43,12 +59,15 @@ class Shaders implements spec.Shaders {
 
         var shader = new ShaderImpl();
 
+        shader.attributes = isMultiTextureTemplate ? SHADER_ATTRIBUTES_MULTITEXTURE.original : SHADER_ATTRIBUTES.original;
+        shader.textures = textures;
         shader.vertSource = vertSource;
         shader.fragSource = fragSource;
         shader.isBatchingMultiTexture = isMultiTextureTemplate;
         shader.customAttributes = customAttributes;
 
         shader.init();
+
         return shader;
 
     }
@@ -251,16 +270,87 @@ class Shaders implements spec.Shaders {
         return customFloatAttributesSize;
 
     }
-    
+
+    static var _maxIfStatementsByFragmentShader:Int = -1;
+
+    inline static function computeMaxIfStatementsByFragmentShaderIfNeeded(maxIfs:Int = 32):Void {
+
+        if (_maxIfStatementsByFragmentShader == -1) {
+            var fragTpl = "
+#ifdef GL_ES
+precision mediump float;
+#else
+#define mediump
+#endif
+varying float test;
+void main() {
+    {{CONDITIONS}}
+    gl_FragColor = vec4(0.0);
+}
+".trim();
+            var shader = GL.createShader(GL.FRAGMENT_SHADER);
+
+            while (maxIfs > 0) {
+                var frag = fragTpl.replace('{{CONDITIONS}}', generateIfStatements(maxIfs));
+
+                #if ceramic_debug_shader_if_statements
+                trace('COMPILE:');
+                trace(frag);
+                #end
+
+                GL.shaderSource(shader, frag);
+                GL.compileShader(shader);
+                
+                #if ceramic_debug_shader_if_statements
+                trace('LOGS:');
+                var logs = GL.getShaderInfoLog(shader);
+                trace(logs);
+                #end
+
+                if (GL.getShaderParameter(shader, GL.COMPILE_STATUS) == 0) {
+                    // That's too many ifs apparently
+                    maxIfs = Std.int(maxIfs / 2);
+                }
+                else {
+                    // It works!
+                    _maxIfStatementsByFragmentShader = maxIfs;
+                    break;
+                }
+            }
+
+            GL.deleteShader(shader);
+        }
+
+    }
+
+    static function generateIfStatements(maxIfs:Int):String {
+
+        var result = new StringBuf();
+
+        for (i in 0...maxIfs) {
+            if (i > 0) {
+                result.add('\nelse ');
+            }
+
+            if (i < maxIfs - 1) {
+                result.add('if (test == ${i}.0) {}');
+            }
+        }
+
+        return result.toString();
+
+    }
+
     public function maxIfStatementsByFragmentShader():Int {
 
-        return 0;
+        computeMaxIfStatementsByFragmentShaderIfNeeded();
+        return _maxIfStatementsByFragmentShader;
 
     }
 
     public function canBatchWithMultipleTextures(shader:Shader):Bool {
 
-        return false;
+        return (shader:ShaderImpl).isBatchingMultiTexture;
         
     }
 

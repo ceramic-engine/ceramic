@@ -7,8 +7,12 @@ app:
 
     defines:
         - ceramic_no_skip
-        - clay_debug
-        - clay_debug_unsafe
+        # - ceramic_debug_draw
+        # - ceramic_debug_draw_backend
+        # - ceramic_debug_unsafe
+        # - ceramic_no_multitexture
+        # - clay_debug
+        # - clay_debug_unsafe
 
     plugins:
         - clay
