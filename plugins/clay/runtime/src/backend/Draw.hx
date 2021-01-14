@@ -171,6 +171,8 @@ class Draw #if !completion implements spec.Draw #end {
         _uvList = _uvListArray.unsafeGet(_buffersIndex);
         _colorList = _colorListArray.unsafeGet(_buffersIndex);
         _indiceList = _indiceListArray.unsafeGet(_buffersIndex);
+
+        #if cpp
         _viewPosBufferView = _viewPosBufferViewArray.unsafeGet(_buffersIndex);
         _viewUvsBufferView = _viewUvsBufferViewArray.unsafeGet(_buffersIndex);
         _viewColorsBufferView = _viewColorsBufferViewArray.unsafeGet(_buffersIndex);
@@ -180,6 +182,7 @@ class Draw #if !completion implements spec.Draw #end {
         _uvBuffer = (_uvList:clay.buffers.ArrayBufferView).buffer;
         _colorBuffer = (_colorList:clay.buffers.ArrayBufferView).buffer;
         _indiceBuffer = (_indiceList:clay.buffers.ArrayBufferView).buffer;
+        #end
 
     }
 
