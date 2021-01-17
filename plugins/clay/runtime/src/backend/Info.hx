@@ -7,7 +7,11 @@ class Info #if !completion implements spec.Info #end {
 /// System
 
     inline public function storageDirectory():String {
+        #if (cpp && linc_sdl && !macro)
+        return clay.Clay.app.io.appPathPrefs();
+        #else
         return null;
+        #end
     }
 
 /// Assets
@@ -25,7 +29,7 @@ class Info #if !completion implements spec.Info #end {
     }
 
     inline public function shaderExtensions():Array<String> {
-        return ['glsl', 'frag', 'vert'];
+        return ['frag', 'vert'];
     }
 
 }

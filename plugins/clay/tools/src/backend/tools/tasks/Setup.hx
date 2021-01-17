@@ -208,6 +208,7 @@ ${libsHxml.join('\n')}
 -lib linc_stb
 -lib linc_timestamp
 -lib linc_openal
+-D clay_app_id=' + Json.stringify(project.app.name) + '
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
 
