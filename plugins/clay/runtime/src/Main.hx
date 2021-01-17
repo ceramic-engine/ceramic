@@ -1,14 +1,19 @@
 package;
 
+import haxe.ValueException;
 import backend.ClayEvents;
 import clay.Clay;
 import ceramic.Path;
+
+using StringTools;
 
 class Main {
 
     public static var project:Project = null;
 
     public static var events:ClayEvents = null;
+
+    static var muteResizeEvent:Bool = false;
 
     #if web
     
@@ -47,7 +52,7 @@ class Main {
         #end
 
         #if web
-        var userAgent = navigator.userAgent.toLowerCase();
+        var userAgent = js.Browser.navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             try {
                 var electronApp:Dynamic = untyped js.Syntax.code("require('electron').remote.require('./app.js');");
@@ -74,8 +79,15 @@ class Main {
             };
 
             // Catch errors
-            window.addEventListener('error', function(event:js.html.ErrorEvent) {
+            js.Browser.window.addEventListener('error', function(event:js.html.ErrorEvent) {
                 var error = event.error;
+
+                // This seems needed to make exception dumping work as expected in some cases
+                if (Std.is(error, ValueException)) {
+                    var valueException:ValueException = cast error;
+                    var _stack = valueException.stack;
+                }
+
                 var stack = (''+error.stack).split("\n");
                 var len = stack.length;
                 var i = len - 1;
@@ -127,10 +139,9 @@ class Main {
         if (app.settings.backend.webParent != null) {
             config.runtime.windowParent = app.settings.backend.webParent;
         } else {
-            config.runtime.windowParent = document.getElementById('ceramic-app');
+            config.runtime.windowParent = js.Browser.document.getElementById('ceramic-app');
         }
-        config.runtime.browserWindowMousemove = true;
-        config.runtime.browserWindowMouseup = true;
+        config.runtime.mouseUseBrowserWindowEvents = true;
         if (app.settings.backend.allowDefaultKeys) {
             config.runtime.preventDefaultKeys = [];
         }
@@ -144,9 +155,9 @@ class Main {
             var resizing = 0;
             var shouldFixSize = false;
 
-            var appEl:js.html.CanvasElement = cast document.getElementById('app');
+            var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
             if (appEl != null) {
-                document.body.classList.add('ceramic-invisible');
+                js.Browser.document.body.classList.add('ceramic-invisible');
                 appEl.style.visibility = 'hidden';
             }
 
@@ -163,11 +174,11 @@ class Main {
             */
             
             app.onUpdate(null, function(delta) {
-                var containerEl = document.getElementById(containerElId);
+                var containerEl = js.Browser.document.getElementById(containerElId);
                 if (containerEl != null) {
                     var width:Int = containerEl.offsetWidth;
                     var height:Int = containerEl.offsetHeight;
-                    var appEl:js.html.CanvasElement = cast document.getElementById('app');
+                    var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
 
                     /*
                     if (!didForceResizeOnce && !forceResize) {
@@ -178,7 +189,7 @@ class Main {
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
                             if (lastNewWidth != -1 || lastNewHeight != -1) {
-                                document.body.classList.add('ceramic-invisible');
+                                js.Browser.document.body.classList.add('ceramic-invisible');
                                 appEl.style.visibility = 'hidden';
                             }
                             lastResizeTime = ceramic.Timer.now;
@@ -190,30 +201,30 @@ class Main {
 
                     if (lastResizeTime != -1 && ceramic.Timer.now - lastResizeTime < 0.1) return;
 
-                    if (width != containerWidth || height != containerHeight || window.devicePixelRatio != containerPixelRatio) {
+                    if (width != containerWidth || height != containerHeight || js.Browser.window.devicePixelRatio != containerPixelRatio) {
                         var onlyDensityChanged = (width == containerWidth && height == containerHeight);
                         var pixelRatioUndefined = containerPixelRatio == 0;
                         shouldFixSize = (onlyDensityChanged || pixelRatioUndefined);
                         containerWidth = width;
                         containerHeight = height;
-                        containerPixelRatio = window.devicePixelRatio;
+                        containerPixelRatio = js.Browser.window.devicePixelRatio;
 
                         // Super hacky stuff part I: we subtract one pixel in width if only density changed
                         // This ensure proper resize events are fired and make things work. Yup.
                         // Real size is provided at next frame
-                        var appEl:js.html.CanvasElement = cast document.getElementById('app');
+                        var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
                         appEl.style.margin = '0 0 0 0';
                         appEl.style.width = (containerWidth - (shouldFixSize ? 1 : 0)) + 'px';
                         appEl.style.height = containerHeight + 'px';
-                        appEl.width = Math.round((containerWidth - (shouldFixSize ? 1 : 0)) * window.devicePixelRatio);
-                        appEl.height = Math.round(containerHeight * window.devicePixelRatio);
+                        appEl.width = Math.round((containerWidth - (shouldFixSize ? 1 : 0)) * js.Browser.window.devicePixelRatio);
+                        appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
                         muteResizeEvent = shouldFixSize;
 
                         // Hide weird intermediate state behind a black overlay.
                         // That's not the best option but let's get away with this for now.
                         resizing++;
                         if (lastResizeTime != -1) {
-                            document.body.classList.add('ceramic-invisible');
+                            js.Browser.document.body.classList.add('ceramic-invisible');
                             appEl.style.visibility = 'hidden';
                         }
                         var fn = null;
@@ -223,7 +234,7 @@ class Main {
                                 return;
                             }*/
                             if (resizing == 0) {
-                                document.body.classList.remove('ceramic-invisible');
+                                js.Browser.document.body.classList.remove('ceramic-invisible');
                                 appEl.style.visibility = 'visible';
                             }
                         };
@@ -239,7 +250,7 @@ class Main {
                         shouldFixSize = false;
                         muteResizeEvent = false;
                         appEl.style.width = containerWidth + 'px';
-                        appEl.width = Math.round(containerWidth * window.devicePixelRatio);
+                        appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
                     }
                 }
             });
@@ -261,6 +272,19 @@ class Main {
                 targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
                 targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
             });
+        }
+        #end
+
+    }
+
+    @:allow(backend.ClayEvents)
+    static function ready():Void {
+
+        #if web
+        var ext;
+        ext = clay.opengl.GL.gl.getExtension('OES_standard_derivatives');
+        if (electronRunner != null) {
+            electronRunner.ceramicReady();
         }
         #end
 

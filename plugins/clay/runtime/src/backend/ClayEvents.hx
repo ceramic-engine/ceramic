@@ -30,6 +30,8 @@ class ClayEvents extends clay.Events {
         // Camera size
         //Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
 
+        Main.ready();
+
         backend.emitReady();
 
     }
@@ -45,6 +47,9 @@ class ClayEvents extends clay.Events {
 /// Internal
 
     function triggerResizeIfNeeded():Void {
+
+        if (@:privateAccess Main.muteResizeEvent)
+            return;
 
         var density = Clay.app.screenDensity;
         var width = Clay.app.screenWidth;

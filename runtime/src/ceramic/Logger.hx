@@ -17,7 +17,7 @@ class Logger extends Entity {
 
 /// Internal
 
-#if (web && luxe)
+#if web
     private static var _hasElectronRunner:Bool = false;
 #end
 
@@ -119,14 +119,12 @@ class Logger extends Entity {
 
 #if unity
         untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
-#elseif (web && luxe)
+#elseif web
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[warning] ', value), pos);
         } else {
             untyped console.warn(value);
         }
-#elseif web
-        untyped console.warn(value);
 #else
         haxe.Log.trace(prefixLines('[warning] ', value), pos);
 #end
@@ -148,14 +146,12 @@ class Logger extends Entity {
 
 #if unity
         untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
-#elseif (web && luxe)
+#elseif web
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[error] ', value), pos);
         } else {
             untyped console.error(value);
         }
-#elseif web
-        untyped console.error(value);
 #else
         haxe.Log.trace(prefixLines('[error] ', value), pos);
 #end

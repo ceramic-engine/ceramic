@@ -442,6 +442,8 @@ class App extends Entity {
 
     function backendReady():Void {
 
+        backend.onUpdate(this, updatePreReady);
+
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
 #end
@@ -651,6 +653,7 @@ class App extends Entity {
 
         screen.resize();
 
+        backend.offUpdate(updatePreReady);
         backend.onUpdate(this, update);
 
         // Forward key events
@@ -680,6 +683,12 @@ class App extends Entity {
         backend.input.onControllerAxis(this, function(controllerId, axisId, value) {
             beginUpdateCallbacks.push(function() input.emitControllerAxis(controllerId, axisId, value));
         });
+
+    }
+
+    function updatePreReady(delta:Float):Void {
+
+        flushImmediate();
 
     }
 

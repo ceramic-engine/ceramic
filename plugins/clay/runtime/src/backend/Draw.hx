@@ -1,6 +1,6 @@
 package backend;
 
-import clay.buffers.Uint8Array;
+import clay.buffers.Uint16Array;
 import clay.Clay;
 import clay.opengl.GL;
 import clay.graphics.Graphics;
@@ -71,12 +71,12 @@ class Draw #if !completion implements spec.Draw #end {
     static var _buffersIndex:Int;
 
     static var _posListArray:Array<Float32Array> = [];
-    static var _indiceListArray:Array<Uint8Array> = [];
+    static var _indiceListArray:Array<Uint16Array> = [];
     static var _uvListArray:Array<Float32Array> = [];
     static var _colorListArray:Array<Float32Array> = [];
 
     static var _posList:Float32Array;
-    static var _indiceList:UInt8Array;
+    static var _indiceList:Uint16Array;
     static var _uvList:Float32Array;
     static var _colorList:Float32Array;
 
@@ -157,7 +157,7 @@ class Draw #if !completion implements spec.Draw #end {
              // For uvs, we'll never need more than two thirds of vertex buffer size
             _uvListArray[_buffersIndex] = new Float32Array(Std.int(Math.ceil(MAX_VERTS_SIZE * 2.0 / 3.0)));
             _colorListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
-            _indiceListArray[_buffersIndex] = new Uint8Array(MAX_INDICES);
+            _indiceListArray[_buffersIndex] = new Uint16Array(MAX_INDICES * 2);
 
             #if cpp
             _viewPosBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
@@ -627,7 +627,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function putIndice(i:Int):Void {
 
         #if cpp
-        clay.buffers.ArrayBufferIO.setUint8(_indiceBuffer, _numIndices, i);
+        clay.buffers.ArrayBufferIO.setUint16(_indiceBuffer, _numIndices * Uint16Array.BYTES_PER_ELEMENT, i);
         #else
         _indiceList[_numIndices] = i;
         #end
@@ -702,13 +702,34 @@ class Draw #if !completion implements spec.Draw #end {
         var pos = Float32Array.fromBuffer(_posBuffer, 0, _posIndex * 4, _viewPosBufferView);
         var uvs = Float32Array.fromBuffer(_uvBuffer, 0, _uvIndex * 4, _viewUvsBufferView);
         var colors = Float32Array.fromBuffer(_colorBuffer, 0, _colorIndex * 4, _viewColorsBufferView);
-        var indices = Uint8Array.fromBuffer(_indiceBuffer, 0, _numIndices, _viewIndicesBufferView);
+        var indices = Uint16Array.fromBuffer(_indiceBuffer, 0, _numIndices * 2, _viewIndicesBufferView);
         #else
         var pos = Float32Array.fromBuffer(_posList.buffer, 0, _posIndex * 4);
         var uvs = Float32Array.fromBuffer(_uvList.buffer, 0, _uvIndex * 4);
         var colors = Float32Array.fromBuffer(_colorList.buffer, 0, _colorIndex * 4);
-        var indices = Uint8Array.fromBuffer(_indiceList.buffer, 0, _numIndices);
+        var indices = Uint16Array.fromBuffer(_indiceList.buffer, 0, _numIndices * 2);
         #end
+
+        // var posArray = [];
+        // for (i in 0..._posIndex) {
+        //     posArray.push(pos[i]);
+        // }
+        // trace('pos: $posArray');
+        // var uvArray = [];
+        // for (i in 0..._uvIndex) {
+        //     uvArray.push(uvs[i]);
+        // }
+        // trace('uv: $uvArray');
+        // var colorArray = [];
+        // for (i in 0..._colorIndex) {
+        //     colorArray.push(colors[i]);
+        // }
+        // trace('color: $colorArray');
+        // var indiceArray = [];
+        // for (i in 0..._numIndices) {
+        //     indiceArray.push(indices[i]);
+        // }
+        // trace('indice: $indiceArray');
 
         // Begin submit
 
@@ -781,7 +802,7 @@ class Draw #if !completion implements spec.Draw #end {
         GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STREAM_DRAW);
 
         // Draw
-        GL.drawElements(GL.TRIANGLES, _numIndices, GL.UNSIGNED_BYTE, 0);
+        GL.drawElements(GL.TRIANGLES, _numIndices, GL.UNSIGNED_SHORT, 0);
 
         GL.deleteBuffer(pb);
         GL.deleteBuffer(cb);
