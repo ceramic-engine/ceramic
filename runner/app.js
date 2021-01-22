@@ -54,6 +54,9 @@ if (process.platform == 'darwin') {
     app.dock.setIcon(path.join(__dirname, 'resources/AppIcon.png'));
 }
 
+// App flags
+app.commandLine.appendSwitch('force_high_performance_gpu');
+
 // App name
 app.setName(appName);
 exports.app = app;
