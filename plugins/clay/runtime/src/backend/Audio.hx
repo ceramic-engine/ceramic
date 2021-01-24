@@ -132,10 +132,10 @@ class Audio implements spec.Audio {
     #if web
     public function resumeAudioContext(done:Bool->Void):Void {
 
-        var webAudio:snow.modules.webaudio.Audio = cast Luxe.snow.audio.module;
+        var webAudio:clay.web.WebAudio = cast Clay.app.audio;
         if (webAudio != null) {
             try {
-                var context:Dynamic = @:privateAccess webAudio.context;
+                var context:Dynamic = webAudio.context;
                 context.resume().then(() -> {
                     done(true);
                 }, () -> {
