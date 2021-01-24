@@ -30,12 +30,15 @@ function postInstall() {
     var androidClangToolchain = '' + fs.readFileSync(androidClangToolchainPath);
     var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
     var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
-    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1) {
+    var indexOfLibAtomic = androidClangToolchain.indexOf('name="-latomic"');
+    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfLibAtomic == -1) {
         console.log("Patch hxcpp android-clang toolchain");
         if (indexOfOptimFlag == -1)
-            androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+            androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
         if (indexOfStaticLibcpp != -1)
             androidClangToolchain = androidClangToolchain.split('="-static-libstdc++" />').join('="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
+        if (indexOfLibAtomic == -1)
+            androidClangToolchain = androidClangToolchain.split('</linker>').join('  <lib name="-latomic" if="HXCPP_LIB_ATOMIC" />\n</linker>');
     }
     fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
 

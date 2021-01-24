@@ -374,12 +374,15 @@ class Helpers {
         var androidClangToolchain = File.getContent(androidClangToolchainPath);
         var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
         var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
-        if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1) {
+        var indexOfLibAtomic = androidClangToolchain.indexOf('name="-latomic"');
+        if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfLibAtomic == -1) {
             print("Patch hxcpp android-clang toolchain");
             if (indexOfOptimFlag == -1)
-                androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/> <flag value="-O2" unless="debug"/>');
+                androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
             if (indexOfStaticLibcpp != -1)
                 androidClangToolchain = androidClangToolchain.replace('="-static-libstdc++" />', '="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
+            if (indexOfLibAtomic == -1)
+                androidClangToolchain = androidClangToolchain.replace('</linker>', '  <lib name="-latomic" if="HXCPP_LIB_ATOMIC" />\n</linker>');
         }
         File.saveContent(androidClangToolchainPath, androidClangToolchain);
         

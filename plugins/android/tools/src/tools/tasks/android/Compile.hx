@@ -35,7 +35,7 @@ class Compile extends tools.Task {
         for (arch in archList) {
             arch = arch.trim();
             archs.push(arch);
-            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid', '-DHXCPP_CLANG'];
+            var hxcppArgs = ['run', 'hxcpp', 'Build.xml', '-Dandroid'];
             if (debug) {
                 hxcppArgs.push('-Ddebug');
             }
@@ -52,28 +52,28 @@ class Compile extends tools.Task {
             }
             switch (arch) {
                 case 'armv7':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
                         Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
                     );
                 case 'arm64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
                         Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
                     );
                 case 'x86' | 'i386':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_X86'].concat(buildOpenALArgs),
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
                         Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
                     );
                 case 'x86_64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_CLANG', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
+                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
                         {cwd: openALAndroidPath});
                     Files.copyIfNeeded(
                         Path.join([openALAndroidPath, 'lib/Android/libopenal-x86_64.so']),
@@ -96,6 +96,10 @@ class Compile extends tools.Task {
                     continue;
             }
 
+            // Needed to prevent 'cannot locate symbol __atomic_store_1' unsatisfiedlinkerror
+            // (hxcpp clang toolchain has been patched by ceramic to handle this define)
+            hxcppArgs.push('-DHXCPP_LIB_ATOMIC');
+
             print('Compile C++ for arch $arch');
 
             if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {
@@ -106,8 +110,11 @@ class Compile extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
-        // Copy Shared libc++ binaries if needed
-        AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
+        // If not using GCC, we copy libc++_shared.so, which is recommended practice
+        if (!context.defines.exists('ceramic_android_use_gcc')) {
+            // Copy Shared libc++ binaries if needed
+            AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
+        }
 
         // Copy OpenAL binaries if needed
         AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
