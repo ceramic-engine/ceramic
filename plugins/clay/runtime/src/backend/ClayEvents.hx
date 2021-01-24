@@ -166,11 +166,11 @@ class ClayEvents extends clay.Events {
             mouseUp(x, y, button, timestamp, windowId);
         }
 
-        mouseX = x;
-        mouseY = y;
+        mouseX = x / Clay.app.screenDensity;
+        mouseY = y / Clay.app.screenDensity;
         
         mouseDownButtons.set(button, true);
-        backend.screen.emitMouseDown(button, x, y);
+        backend.screen.emitMouseDown(button, mouseX, mouseY);
 
     }
 
@@ -180,18 +180,18 @@ class ClayEvents extends clay.Events {
             return;
         }
 
-        mouseX = x;
-        mouseY = y;
+        mouseX = x / Clay.app.screenDensity;
+        mouseY = y / Clay.app.screenDensity;
 
         mouseDownButtons.remove(button);
-        backend.screen.emitMouseUp(button, x, y);
+        backend.screen.emitMouseUp(button, mouseX, mouseY);
 
     }
 
     override function mouseMove(x:Int, y:Int, xrel:Int, yrel:Int, timestamp:Float, windowId:Int) {
 
-        mouseX = x;
-        mouseY = y;
+        mouseX = x / Clay.app.screenDensity;
+        mouseY = y / Clay.app.screenDensity;
 
         backend.screen.emitMouseMove(x, y);
 

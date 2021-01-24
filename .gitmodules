@@ -88,4 +88,4 @@
 [submodule "git/clay"]
 	path = git/clay
 	url = https://github.com/ceramic-engine/clay.git
-	branch = master
+	branch = main

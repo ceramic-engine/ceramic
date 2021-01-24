@@ -1,3 +1,3 @@
 package backend;
 
-abstract AudioResource(AudioResourceImpl) from AudioResourceImpl to AudioResourceImpl {}
+abstract AudioResource(clay.audio.AudioSource) from clay.audio.AudioSource to clay.audio.AudioSource {}

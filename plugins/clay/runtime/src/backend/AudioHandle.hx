@@ -1,3 +1,3 @@
 package backend;
 
-abstract AudioHandle(AudioHandleImpl) from AudioHandleImpl to AudioHandleImpl {}
+abstract AudioHandle(clay.audio.AudioHandle) from clay.audio.AudioHandle to clay.audio.AudioHandle {}

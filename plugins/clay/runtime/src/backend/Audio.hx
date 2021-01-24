@@ -1,10 +1,19 @@
 package backend;
 
 import ceramic.Path;
+import ceramic.Shortcuts.*;
+
+import clay.Immediate;
+import clay.Clay;
 
 using StringTools;
 
 class Audio implements spec.Audio {
+
+/// Internal
+
+    var loopingStreams:Map<AudioHandle,Bool> = new Map();
+    var loopHandles:Map<AudioHandle,AudioHandle> = new Map();
 
 /// Lifecycle
 
@@ -12,49 +21,265 @@ class Audio implements spec.Audio {
 
 /// Public API
 
-    public function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void {
+    public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
 
-        done(new AudioResourceImpl());
+        var done = function(resource:AudioResource) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(resource);
+                _done = null;
+            });
+        };
+
+        var isStream:Bool = (options != null && options.stream == true);
+
+        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+            path
+        :
+            Path.join([ceramic.App.app.settings.assetsPath, path]);
+        
+        // Is resource already loaded?
+        if (loadedAudioResources.exists(path)) {
+            loadedAudioRetainCount.set(path, loadedAudioRetainCount.get(path) + 1);
+            var existing = loadedAudioResources.get(path);
+            done(existing);
+            return;
+        }
+
+        // Is resource currently loading?
+        if (loadingAudioCallbacks.exists(path)) {
+            // Yes, just bind it
+            loadingAudioCallbacks.get(path).push(function(resource:AudioResource) {
+                if (resource != null) {
+                    var retain = loadedAudioRetainCount.exists(path) ? loadedAudioRetainCount.get(path) : 0;
+                    loadedAudioRetainCount.set(path, retain + 1);
+                }
+                done(resource);
+            });
+            return;
+        }
+
+        // Remove ?something in path
+        var cleanedPath = path;
+        var questionMarkIndex = cleanedPath.indexOf('?');
+        if (questionMarkIndex != -1) {
+            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        }
+
+        // Create callbacks list with first entry
+        loadingAudioCallbacks.set(path, [function(resource:AudioResource) {
+            if (resource != null) {
+                var retain = loadedAudioRetainCount.exists(path) ? loadedAudioRetainCount.get(path) : 0;
+                loadedAudioRetainCount.set(path, retain + 1);
+            }
+            done(resource);
+        }]);
+
+        var fullPath = cleanedPath;
+        if (!Path.isAbsolute(fullPath)) {
+            fullPath = Path.join([Clay.app.io.appPath(), fullPath]);
+        }
+
+        function doFail() {
+            
+            var callbacks = loadingAudioCallbacks.get(path);
+            loadingAudioCallbacks.remove(path);
+            for (callback in callbacks) {
+                try {
+                    callback(null);
+                }
+                catch (e:Dynamic) {
+                    ceramic.App.app.onceImmediate(() -> {
+                        throw e;
+                    });
+                }
+            }
+
+        }
+
+        // Load audio
+        Clay.app.audio.loadData(fullPath, isStream, null, function(audioData) {
+
+            if (audioData == null) {
+                doFail();
+                return;
+            }
+
+            // Create audio source
+            var resource = new clay.audio.AudioSource(Clay.app, audioData);
+
+            // Success
+            loadedAudioResources.set(path, resource);
+            var callbacks = loadingAudioCallbacks.get(path);
+            loadingAudioCallbacks.remove(path);
+            for (callback in callbacks) {
+                callback(resource);
+            }
+        });
+
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        ceramic.App.app.onceImmediate(function() {
+            Immediate.flush();
+        });
 
     }
+
+    inline public function getDuration(resource:AudioResource):Float {
+
+        return (resource:clay.audio.AudioSource).getDuration();
+        
+    }
+
+    #if web
+    public function resumeAudioContext(done:Bool->Void):Void {
+
+        var webAudio:snow.modules.webaudio.Audio = cast Luxe.snow.audio.module;
+        if (webAudio != null) {
+            try {
+                var context:Dynamic = @:privateAccess webAudio.context;
+                context.resume().then(() -> {
+                    done(true);
+                }, () -> {
+                    done(false);
+                });
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to resume audio context: $e');
+            }
+        }
+
+    }
+    #else
+    public function resumeAudioContext(done:Bool->Void):Void {
+        done(true);
+    }
+    #end
 
     inline public function supportsHotReloadPath():Bool {
         
-        return false;
+        return true;
 
-    }
-
-    inline public function getDuration(audio:AudioResource):Float {
-
-        return 0;
-        
-    }
-
-    inline public function resumeAudioContext(done:Bool->Void):Void {
-
-        done(true);
-        
     }
 
     inline public function destroy(audio:AudioResource):Void {
 
-        //
+        var id:String = null;
+        for (key => val in loadedAudioResources) {
+            if (val == audio) {
+                id = key;
+            }
+        }
+        if (id == null) {
+            log.error('Failed to destroy audio resource: $audio because id could not be resolved');
+        }
+        else {
+            if (loadedAudioRetainCount.get(id) > 1) {
+                loadedAudioRetainCount.set(id, loadedAudioRetainCount.get(id) - 1);
+            }
+            else {
+                loadedAudioResources.remove(id);
+                loadedAudioRetainCount.remove(id);
+                (audio:clay.audio.AudioSource).destroy();
+            }
+        }
 
     }
 
     inline public function mute(audio:AudioResource):AudioHandle {
 
-        return null;
+        return -1;
 
     }
 
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
 
-        var handle = new AudioHandleImpl();
-        handle.volume = volume;
-        handle.pan = pan;
-        handle.pitch = pitch;
-        handle.position = position;
+        if (!Clay.app.audio.active) return -1;
+
+        var audioResource:clay.audio.AudioSource = audio;
+        var isStream = audioResource.data.isStream;
+
+        // These options are ignored on streamed sounds
+        // at the moment
+        if (isStream) {
+            position = 0;
+            pitch = 1;
+            pan = 0;
+        }
+
+        var handle:AudioHandle = null;
+        if (loop) {
+
+            #if cpp
+            if (isStream) {
+
+                // At the moment, looping a stream doesn't seem reliable in luxe/snow/openal.
+                // When looping a stream, let's manage ourselve the loop by
+                // checking the position and playing again from start.
+
+                var duration = audioResource.getDuration();
+                handle = Clay.app.audio.play(audioResource, volume, false);
+                var firstHandle = handle;
+                loopingStreams.set(handle, true);
+                var pos:Float = 0;
+
+                var onUpdate = null;
+                onUpdate = function(delta) {
+
+                    if (!Clay.app.audio.active) return;
+
+                    if (loopingStreams.exists(handle)) {
+
+                        var playing = loopingStreams.get(handle);
+                        if (playing) {
+
+                            var instance = Clay.app.audio.instanceOf(handle);
+                            if (instance != null) {
+                                pos = Clay.app.audio.positionOf(handle);
+                                if (pos < duration) volume = Clay.app.audio.volumeOf(handle);
+
+                                if (pos >= duration - 1.0/60) {
+                                    // End of loop, start from 0 again
+                                    loopingStreams.remove(handle);
+                                    Clay.app.audio.stop(handle);
+                                    handle = Clay.app.audio.play(audioResource, volume, false);
+                                    loopingStreams.set(handle, true);
+                                    loopHandles.set(firstHandle, handle);
+                                }
+                            }
+                            else {
+                                // Sound instance was destroyed when looping (it can happen), restore it
+                                // Not perfect: the stream is resumed from the beginning regardless
+                                // of where it was stopped.
+                                loopingStreams.remove(handle);
+                                handle = Clay.app.audio.play(audioResource, volume, false);
+                                loopingStreams.set(handle, true);
+                                loopHandles.set(firstHandle, handle);
+                            }
+                        }
+
+                    } else {
+                        ceramic.App.app.offUpdate(onUpdate);
+                    }
+
+                };
+                ceramic.App.app.onUpdate(null, onUpdate);
+
+            } else {
+            #end
+                handle = Clay.app.audio.loop(audioResource, volume, false);
+            #if cpp
+            }
+            #end
+
+        } else {
+            handle = Clay.app.audio.play(audioResource, volume, false);
+        }
+
+        if (pan != 0) {
+            trace('SET PAN $handle -> $pan');
+            Clay.app.audio.pan(handle, pan);
+        }
+        if (pitch != 1) Clay.app.audio.pitch(handle, pitch);
+        if (position != 0) Clay.app.audio.position(handle, position);
 
         return handle;
 
@@ -62,68 +287,164 @@ class Audio implements spec.Audio {
 
     public function pause(handle:AudioHandle):Void {
                     
-        //
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        if (loopingStreams.exists(handle)) {
+            loopingStreams.set(handle, false);
+        }
+
+        Clay.app.audio.pause(handle);
 
     }
 
     public function resume(handle:AudioHandle):Void {
                     
-        //
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        if (loopingStreams.exists(handle)) {
+            loopingStreams.set(handle, true);
+        }
+
+        Clay.app.audio.unPause(handle);
 
     }
 
     public function stop(handle:AudioHandle):Void {
                     
-        //
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            var prevHandle = handle;
+            handle = loopHandles.get(handle);
+            loopHandles.remove(prevHandle);
+        }
+
+        loopingStreams.remove(handle);
+
+        Clay.app.audio.stop(handle);
 
     }
 
     public function getVolume(handle:AudioHandle):Float {
+                    
+        if (!Clay.app.audio.active) return 0;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
 
-        return (handle:AudioHandleImpl).volume;
+        return Clay.app.audio.volumeOf(handle);
 
     }
 
     public function setVolume(handle:AudioHandle, volume:Float):Void {
                     
-        (handle:AudioHandleImpl).volume = volume;
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        Clay.app.audio.volume(handle, volume);
 
     }
 
     public function getPan(handle:AudioHandle):Float {
                     
-        return (handle:AudioHandleImpl).pan;
+        if (!Clay.app.audio.active) return 0;
+        if ((handle:Int) == -1) return 0;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Clay.app.audio.panOf(handle);
 
     }
 
     public function setPan(handle:AudioHandle, pan:Float):Void {
-                    
-        (handle:AudioHandleImpl).pan = pan;
+
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        Clay.app.audio.pan(handle, pan);
 
     }
 
     public function getPitch(handle:AudioHandle):Float {
                     
-        return (handle:AudioHandleImpl).pitch;
+        if (!Clay.app.audio.active) return 1;
+        if ((handle:Int) == -1) return 1;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Clay.app.audio.pitchOf(handle);
 
     }
 
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
                     
-        (handle:AudioHandleImpl).pitch = pitch;
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        Clay.app.audio.pitch(handle, pitch);
 
     }
 
     public function getPosition(handle:AudioHandle):Float {
                     
-        return (handle:AudioHandleImpl).position;
+        if (!Clay.app.audio.active) return 0;
+        if ((handle:Int) == -1) return 0;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        return Clay.app.audio.positionOf(handle);
 
     }
 
     public function setPosition(handle:AudioHandle, position:Float):Void {
                     
-        (handle:AudioHandleImpl).position = position;
+        if (!Clay.app.audio.active) return;
+        if ((handle:Int) == -1) return;
+        
+        if (loopHandles.exists(handle)) {
+            handle = loopHandles.get(handle);
+        }
+
+        Clay.app.audio.position(handle, position);
 
     }
+
+/// Internal
+
+    var loadingAudioCallbacks:Map<String,Array<AudioResource->Void>> = new Map();
+
+    var loadedAudioResources:Map<String,AudioResource> = new Map();
+
+    var loadedAudioRetainCount:Map<String,Int> = new Map();
 
 } //Audio

@@ -54,7 +54,7 @@ class Texts implements spec.Texts {
         if (!Path.isAbsolute(fullPath)) {
             fullPath = Path.join([Clay.app.io.appPath(), fullPath]);
         }
-        Clay.app.io.loadData(fullPath, null, function(res:Uint8Array) {
+        Clay.app.io.loadData(fullPath, true, function(res:Uint8Array) {
             
             if (res == null) {
 

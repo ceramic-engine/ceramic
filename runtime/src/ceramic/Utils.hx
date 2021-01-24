@@ -36,9 +36,17 @@ class Utils {
     static var _nextUniqueInt2:Int = Std.int(Math.random() * 0x7ffffffe);
     static var _nextUniqueInt3:Int = Std.int(Math.random() * 0x7ffffffe);
 
+    #if (cpp || cs || sys)
+    static var _uniqueIdMutex:sys.thread.Mutex = new sys.thread.Mutex();
+    #end
+
     /** Provides an identifier which is garanteed to be unique on this local device.
         It however doesn't garantee that this identifier is not predictable. */
     public static function uniqueId():String {
+
+        #if (cpp || cs || sys)
+        _uniqueIdMutex.acquire();
+        #end
 
         switch (_nextUniqueIntCursor) {
             case 0:
@@ -52,7 +60,13 @@ class Utils {
         }
         _nextUniqueIntCursor = (_nextUniqueIntCursor + 1) % 4;
 
-        return base62Id(_nextUniqueInt0) + base62Id() + base62Id(_nextUniqueInt1) + base62Id() + base62Id(_nextUniqueInt2) + base62Id() + base62Id(_nextUniqueInt3);
+        var result = base62Id(_nextUniqueInt0) + '-' + base62Id() + '-' + base62Id(_nextUniqueInt1) + '-' + base62Id() + '-' + base62Id(_nextUniqueInt2) + '-' + base62Id() + '-' + base62Id(_nextUniqueInt3);
+
+        #if (cpp || cs || sys)
+        _uniqueIdMutex.release();
+        #end
+
+        return result;
 
     }
 
