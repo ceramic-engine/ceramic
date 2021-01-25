@@ -93,7 +93,28 @@ class InitSettings {
         return settings.title;
     }
     inline function set_title(title:String):String {
-        return @:privateAccess settings.title = title;
+        return settings.title = title;
+    }
+
+    /** Fullscreen enabled or not. */
+    public var fullscreen(get,set):Bool;
+    inline function get_fullscreen():Bool {
+        return settings.fullscreen;
+    }
+    inline function set_fullscreen(fullscreen:Bool):Bool {
+        return settings.fullscreen = fullscreen;
+    }
+
+    /**
+     * Setup screen orientation. Default is `NONE`,
+     * meaning nothing is enforced and project defaults will be used.
+     */
+    public var orientation(get,set):ScreenOrientation;
+    inline function get_orientation():ScreenOrientation {
+        return settings.orientation;
+    }
+    inline function set_orientation(orientation:ScreenOrientation):ScreenOrientation {
+        return @:privateAccess settings.orientation = orientation;
     }
 
     /** Antialiasing value (0 means disabled). */

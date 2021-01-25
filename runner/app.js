@@ -88,7 +88,8 @@ function createWindow() {
         show: false,
         minWidth: 64,
         minHeight: 64,
-        resizable: false,
+        resizable: true,
+        fullscreenable: true,
         movable: true,
         nodeIntegration: true,
         title: appName,
@@ -149,9 +150,19 @@ exports.ceramicSettings = function(settings) {
     settings.trace('settings.targetHeight=' + settings.targetHeight);
     settings.trace('settings.title=' + settings.title);
     settings.trace('settings.resizable=' + settings.resizable);
+    settings.trace('settings.fullscreen=' + settings.fullscreen);
 
     mainWindow.setTitle(settings.title);
     mainWindow.setResizable(settings.resizable);
+    mainWindow.setFullScreenable(settings.resizable);
+
+    if (settings.fullscreen) {
+        // We delay this call so that before setting window fullscreen,
+        // Windowed version is set to target width & height
+        setTimeout(function() {
+            mainWindow.setFullScreen(true);
+        }, 100);
+    }
 
     var targetWidth = settings.targetWidth;
     var targetHeight = settings.targetHeight;

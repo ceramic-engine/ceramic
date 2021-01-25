@@ -50,10 +50,8 @@ class Texts implements spec.Texts {
             cleanedPath = cleanedPath.substr(0, questionMarkIndex);
         }
 
-        var fullPath = cleanedPath;
-        if (!Path.isAbsolute(fullPath)) {
-            fullPath = Path.join([Clay.app.io.appPath(), fullPath]);
-        }
+        var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        
         Clay.app.io.loadData(fullPath, true, function(res:Uint8Array) {
             
             if (res == null) {

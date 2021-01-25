@@ -1,5 +1,6 @@
 package backend;
 
+import clay.Types.WindowEventType;
 import clay.ScanCode;
 import clay.KeyCode;
 import clay.Types.TextEventType;
@@ -421,6 +422,34 @@ class ClayEvents extends clay.Events {
         
         if (backend.textInput.inputActive) {
             backend.textInput.handleTextInput(text);
+        }
+
+    }
+
+    override function windowEvent(type:WindowEventType, timestamp:Float, windowId:Int, x:Int, y:Int) {
+        
+        trace('EVENT WINDOW ' + type);
+        
+        switch type {
+            case UNKNOWN:
+            case SHOWN:
+            case HIDDEN:
+            case EXPOSED:
+            case MOVED:
+            case RESIZED:
+            case SIZE_CHANGED:
+            case MINIMIZED:
+            case MAXIMIZED:
+            case RESTORED:
+            case ENTER:
+            case LEAVE:
+            case FOCUS_GAINED:
+            case FOCUS_LOST:
+            case CLOSE:
+            case ENTER_FULLSCREEN:
+                ceramic.App.app.settings.fullscreen = true;
+            case EXIT_FULLSCREEN:
+                ceramic.App.app.settings.fullscreen = false;
         }
 
     }

@@ -214,6 +214,10 @@ class Screen extends Entity implements Observable {
             #if debug log.info('Setting title=$title'); #end
             app.backend.screen.setWindowTitle(title);
         });
+        settings.onFullscreenChange(this, function(fullscreen, prevFullscreen) {
+            #if debug log.info('Setting fullscreen=$fullscreen'); #end
+            app.backend.screen.setWindowFullscreen(fullscreen);
+        });
         settings.onScalingChange(this, function(scaling, prevScaling) {
             #if debug log.info('Setting scaling=$scaling'); #end
             resize();

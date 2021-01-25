@@ -74,10 +74,7 @@ class Audio implements spec.Audio {
             done(resource);
         }]);
 
-        var fullPath = cleanedPath;
-        if (!Path.isAbsolute(fullPath)) {
-            fullPath = Path.join([Clay.app.io.appPath(), fullPath]);
-        }
+        var fullPath = Clay.app.assets.fullPath(cleanedPath);
 
         function doFail() {
             

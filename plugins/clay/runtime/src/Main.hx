@@ -1,5 +1,6 @@
 package;
 
+import ceramic.ScreenOrientation;
 import haxe.ValueException;
 import backend.ClayEvents;
 import clay.Clay;
@@ -116,7 +117,18 @@ class Main {
         project = @:privateAccess new Project(ceramic.App.init());
         var app = @:privateAccess ceramic.App.app;
 
+        #if web
+        if (electronRunner == null) {
+            // If running on web without electron, disable fullscreen.
+            // It needs to be explicitly requested by the user.
+            if (app.settings.fullscreen) {
+                app.settings.fullscreen = false;
+            }
+        }
+        #end
+
         config.render.antialiasing = app.settings.antialiasing;
+
         if (app.settings.windowWidth > 0)
             config.window.width = app.settings.windowWidth;
         else if (app.settings.targetWidth > 0)
@@ -125,10 +137,14 @@ class Main {
             config.window.height = app.settings.windowHeight;
         else if (app.settings.targetHeight > 0)
             config.window.height = app.settings.targetHeight;
+
+        config.window.fullscreen = app.settings.fullscreen;
         config.window.resizable = app.settings.resizable;
         config.window.title = app.settings.title;
         config.render.stencil = 2;
         config.render.depth = 16;
+
+        configureOrientation();
 
         #if cpp
         // Uncaught error handler in native
@@ -258,7 +274,7 @@ class Main {
         //}
 
         // Are we running from ceramic/electron runner
-        if (electronRunner != null) {
+        if (electronRunner != null && electronRunner.ceramicSettings != null) {
 
             // Configure electron window
             electronRunner.ceramicSettings({
@@ -268,6 +284,7 @@ class Main {
                     #end
                 },
                 title: app.settings.title,
+                fullscreen: app.settings.fullscreen,
                 resizable: app.settings.resizable,
                 targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
                 targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
@@ -290,37 +307,37 @@ class Main {
 
     }
 
-    // static var _lastUpdateTime:Float = -1;
+/// Internal
 
-    // public static function main():Void {
+    static function configureOrientation() {
 
-    //     project = @:privateAccess new Project(ceramic.App.init());
+        #if (linc_sdl && cpp)
+        var app = ceramic.App.app;
         
-    //     #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
-    //     ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..']));
-    //     #end
+        if (app.settings.orientation != NONE) {
 
-    //     #if js
-    //     _lastUpdateTime = untyped __js__('new Date().getTime()');
-    //     untyped __js__('setInterval({0}, 100)', update);
-    //     #end
+            // Tell SDL which orientation(s) to use, if any is provided
 
-    //     // Emit ready event
-    //     ceramic.App.app.backend.emitReady();
+            var hint = [];
+            if ((app.settings.orientation & ScreenOrientation.PORTRAIT_UPRIGHT) != 0) {
+                hint.push('Portrait');
+            }
+            if ((app.settings.orientation & ScreenOrientation.PORTRAIT_UPSIDE_DOWN) != 0) {
+                hint.push('PortraitUpsideDown');
+            }
+            if ((app.settings.orientation & ScreenOrientation.LANDSCAPE_LEFT) != 0) {
+                hint.push('LandscapeLeft');
+            }
+            if ((app.settings.orientation & ScreenOrientation.LANDSCAPE_RIGHT) != 0) {
+                hint.push('LandscapeRight');
+            }
 
-    // }
 
-    // static function update() {
+            sdl.SDL.setHint(SDL_HINT_ORIENTATIONS, hint.join(' '));
 
-    //     #if js
-    //     var time:Float = untyped __js__('new Date().getTime()');
-    //     var delta = (time - _lastUpdateTime) * 0.001;
-    //     _lastUpdateTime = time;
+        }
+        #end
 
-    //     // Update
-    //     ceramic.App.app.backend.emitUpdate(delta);
-    //     #end
-
-    // }
+    }
 
 }

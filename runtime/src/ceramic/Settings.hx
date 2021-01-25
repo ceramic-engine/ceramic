@@ -40,6 +40,15 @@ class Settings implements Observable {
     /** App window title. */
     @observe public var title:String = 'App';
 
+    /** Fullscreen enabled or not. */
+    @observe public var fullscreen:Bool = false;
+
+    /**
+     * Setup screen orientation. Default is `NONE`,
+     * meaning nothing is enforced and project defaults will be used.
+     */
+    public var orientation(default,null):ScreenOrientation = NONE;
+
     /** App collections. */
     public var collections(default,null):Void->AutoCollections = null;
 

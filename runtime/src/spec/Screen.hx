@@ -12,4 +12,6 @@ interface Screen {
 
     function setWindowTitle(title:String):Void;
 
+    function setWindowFullscreen(fullscreen:Bool):Void;
+
 }

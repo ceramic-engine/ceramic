@@ -41,13 +41,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function setBackground(background:Int):Void {
 
-        //
+        // Already handled in draw loop, no need to do anything here.
 
     }
 
     public function setWindowTitle(title:String):Void {
 
-        //
+        Clay.app.runtime.setWindowTitle(title);
+
+    }
+
+    public function setWindowFullscreen(fullscreen:Bool):Void {
+
+        if (!Clay.app.runtime.setWindowFullscreen(fullscreen)) {
+            // Failed to change fullscreen setting, restore previous setting
+            ceramic.App.app.settings.fullscreen = !fullscreen;
+        }
 
     }
 
