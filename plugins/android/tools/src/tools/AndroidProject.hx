@@ -42,9 +42,27 @@ class AndroidProject {
             }
 
             // Copy from template project
+            var backendName:String = 'clay'; // Default to clay
+            if (context.backend != null) {
+                // In some cases (when called from bind hook),
+                // backend info is not provided, but when it is, use that.
+                // TODO: pass-on backend info for every case?
+                backendName = context.backend.name;
+            }
+            else {
+                // A bit hacky, but didn't have a better idea for now
+                if (FileSystem.exists(Path.join([cwd, 'out/clay']))) {
+                    backendName = 'clay';
+                }
+                else if (FileSystem.exists(Path.join([cwd, 'out/luxe']))) {
+                    // Just to keep compatibility with legacy projects
+                    backendName = 'luxe';
+                }
+            }
+            var templateName = 'android-' + backendName;
             print('Copy from Android project template');
             Files.copyDirectory(
-                Path.join([pluginPath, 'tpl/project/android']),
+                Path.join([pluginPath, 'tpl/project', templateName]),
                 androidProjectPath
             );
 
