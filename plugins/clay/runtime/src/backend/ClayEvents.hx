@@ -48,7 +48,13 @@ class ClayEvents extends clay.Events {
     var gamepadAxisValues:IntMap<Float> = new IntMap();
     #end
 
-    function new() {
+    var handleReady:()->Void;
+
+    public var muteResizeEvent:Bool = false;
+
+    function new(handleReady:()->Void) {
+
+        this.handleReady = handleReady;
 
         configureGamepadMapping();
 
@@ -100,7 +106,7 @@ class ClayEvents extends clay.Events {
         // Camera size
         //Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
 
-        Main.ready();
+        handleReady();
 
         backend.emitReady();
 
@@ -118,7 +124,7 @@ class ClayEvents extends clay.Events {
 
     function triggerResizeIfNeeded():Void {
 
-        if (@:privateAccess Main.muteResizeEvent)
+        if (muteResizeEvent)
             return;
 
         var density = Clay.app.screenDensity;
@@ -429,7 +435,7 @@ class ClayEvents extends clay.Events {
     override function windowEvent(type:WindowEventType, timestamp:Float, windowId:Int, x:Int, y:Int) {
         
         trace('EVENT WINDOW ' + type);
-        
+
         switch type {
             case UNKNOWN:
             case SHOWN:

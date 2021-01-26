@@ -3,6 +3,7 @@ package;
 import ceramic.ScreenOrientation;
 import haxe.ValueException;
 import backend.ClayEvents;
+import backend.ElectronRunner;
 import clay.Clay;
 import ceramic.Path;
 
@@ -10,15 +11,11 @@ using StringTools;
 
 class Main {
 
-    public static var project:Project = null;
+    static var project:Project = null;
 
-    public static var events:ClayEvents = null;
-
-    static var muteResizeEvent:Bool = false;
+    static var events:ClayEvents = null;
 
     #if web
-    
-    static var electronRunner:Dynamic = null;
 
     static var lastResizeTime:Float = -1;
 
@@ -30,13 +27,15 @@ class Main {
 
     public static function main() {
         
-        events = @:privateAccess new ClayEvents();
+        events = @:privateAccess new ClayEvents(ready);
 
         @:privateAccess new Clay(configure, events);
 
     }
 
     static function configure(config:clay.Config) {
+
+        // TODO we could probably tidy this file at some point :D
 
         #if clay_sdl
         config.runtime.autoSwap = true;
@@ -58,13 +57,13 @@ class Main {
             try {
                 var electronApp:Dynamic = untyped js.Syntax.code("require('electron').remote.require('./app.js');");
                 if (electronApp.isCeramicRunner) {
-                    electronRunner = electronApp;
+                    ElectronRunner.electronRunner = electronApp;
                 }
             } catch (e:Dynamic) {}
         }
 
         // Are we running from ceramic/electron runner
-        if (electronRunner != null) {
+        if (ElectronRunner.electronRunner != null) {
 
             // Add css class in html tag to let page change its style as needed
             untyped js.Syntax.code("document.getElementsByTagName('html')[0].className += ' in-electron-runner';");
@@ -75,7 +74,7 @@ class Main {
             // Override console.log
             var origConsoleLog:Dynamic = untyped console.log;
             untyped console.log = function(str) {
-                electronRunner.consoleLog(str);
+                ElectronRunner.electronRunner.consoleLog(str);
                 origConsoleLog(str);
             };
 
@@ -101,12 +100,12 @@ class Main {
                     str = str.ltrim();
 
                     // File in haxe project
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/file:' + (isWin ? '/' : ''), '');
+                    str = str.replace('http://localhost:' + ElectronRunner.electronRunner.serverPort + '/file:' + (isWin ? '/' : ''), '');
 
                     // File in compiled project
-                    str = str.replace('http://localhost:' + electronRunner.serverPort + '/', electronRunner.appFiles + '/');
+                    str = str.replace('http://localhost:' + ElectronRunner.electronRunner.serverPort + '/', ElectronRunner.electronRunner.appFiles + '/');
 
-                    electronRunner.consoleLog('[error] ' + str);
+                    ElectronRunner.electronRunner.consoleLog('[error] ' + str);
 
                     i--;
                 }
@@ -118,7 +117,7 @@ class Main {
         var app = @:privateAccess ceramic.App.app;
 
         #if web
-        if (electronRunner == null) {
+        if (ElectronRunner.electronRunner == null) {
             // If running on web without electron, disable fullscreen.
             // It needs to be explicitly requested by the user.
             if (app.settings.fullscreen) {
@@ -234,7 +233,7 @@ class Main {
                         appEl.style.height = containerHeight + 'px';
                         appEl.width = Math.round((containerWidth - (shouldFixSize ? 1 : 0)) * js.Browser.window.devicePixelRatio);
                         appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
-                        muteResizeEvent = shouldFixSize;
+                        events.muteResizeEvent = shouldFixSize;
 
                         // Hide weird intermediate state behind a black overlay.
                         // That's not the best option but let's get away with this for now.
@@ -264,7 +263,7 @@ class Main {
                     else if (shouldFixSize) {
                         // Hacky resize stuff part II
                         shouldFixSize = false;
-                        muteResizeEvent = false;
+                        events.muteResizeEvent = false;
                         appEl.style.width = containerWidth + 'px';
                         appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
                     }
@@ -274,21 +273,38 @@ class Main {
         //}
 
         // Are we running from ceramic/electron runner
-        if (electronRunner != null && electronRunner.ceramicSettings != null) {
+        if (ElectronRunner.electronRunner != null) {
 
-            // Configure electron window
-            electronRunner.ceramicSettings({
-                'trace': function(str:String) {
-                    #if debug
-                    trace('app.js: ' + str);
-                    #end
-                },
-                title: app.settings.title,
-                fullscreen: app.settings.fullscreen,
-                resizable: app.settings.resizable,
-                targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
-                targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
-            });
+            if (ElectronRunner.electronRunner.ceramicSettings != null) {
+                // Configure electron window
+                ElectronRunner.electronRunner.ceramicSettings({
+                    'trace': function(str:String) {
+                        #if debug
+                        trace('app.js: ' + str);
+                        #end
+                    },
+                    title: app.settings.title,
+                    fullscreen: app.settings.fullscreen,
+                    resizable: app.settings.resizable,
+                    targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
+                    targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
+                });
+            }
+
+            // Bind some events
+            if (ElectronRunner.electronRunner.listenFullscreen != null) {
+                // Fullscreen events
+                ElectronRunner.electronRunner.listenFullscreen(
+                    function(e) {
+                        trace('ELECTRON ENTER FULLSCREEN');
+                        ceramic.App.app.settings.fullscreen = true;
+                    },
+                    function(e) {
+                        trace('ELECTRON EXIT FULLSCREEN');
+                        ceramic.App.app.settings.fullscreen = false;
+                    }
+                );
+            }
         }
         #end
 
@@ -300,8 +316,8 @@ class Main {
         #if web
         var ext;
         ext = clay.opengl.GL.gl.getExtension('OES_standard_derivatives');
-        if (electronRunner != null) {
-            electronRunner.ceramicReady();
+        if (ElectronRunner.electronRunner != null) {
+            ElectronRunner.electronRunner.ceramicReady();
         }
         #end
 

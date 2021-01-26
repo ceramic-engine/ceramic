@@ -53,6 +53,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function setWindowFullscreen(fullscreen:Bool):Void {
 
+        #if web
+        // If using electron runner, use that to handle fullscreen instead of html fullscreen
+        if (ElectronRunner.electronRunner != null && ElectronRunner.electronRunner.setFullscreen != null) {
+            ElectronRunner.electronRunner.setFullscreen(fullscreen);
+            return;
+        }
+        #end
+
         if (!Clay.app.runtime.setWindowFullscreen(fullscreen)) {
             // Failed to change fullscreen setting, restore previous setting
             ceramic.App.app.settings.fullscreen = !fullscreen;

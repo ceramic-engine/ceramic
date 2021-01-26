@@ -60,4 +60,10 @@ class Screen implements tracker.Events implements spec.Screen {
 
     }
 
+    public function setWindowFullscreen(fullscreen:Bool):Void {
+
+        // Not implemented
+
+    }
+
 }

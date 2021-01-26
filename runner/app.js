@@ -190,6 +190,15 @@ exports.consoleLog = function(str) {
     console.log(str);
 };
 
+exports.setFullscreen = function(fullscreen) {
+    mainWindow.setFullScreen(fullscreen);
+};
+
+exports.listenFullscreen = function(enterFullscreen, leaveFullscreen) {
+    mainWindow.on('enter-full-screen', enterFullscreen);
+    mainWindow.on('leave-full-screen', leaveFullscreen);
+};
+
 // Create http server
 //
 let port = 49103
