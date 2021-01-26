@@ -433,8 +433,6 @@ class ClayEvents extends clay.Events {
     }
 
     override function windowEvent(type:WindowEventType, timestamp:Float, windowId:Int, x:Int, y:Int) {
-        
-        trace('EVENT WINDOW ' + type);
 
         switch type {
             case UNKNOWN:

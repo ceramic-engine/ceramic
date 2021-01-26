@@ -296,11 +296,9 @@ class Main {
                 // Fullscreen events
                 ElectronRunner.electronRunner.listenFullscreen(
                     function(e) {
-                        trace('ELECTRON ENTER FULLSCREEN');
                         ceramic.App.app.settings.fullscreen = true;
                     },
                     function(e) {
-                        trace('ELECTRON EXIT FULLSCREEN');
                         ceramic.App.app.settings.fullscreen = false;
                     }
                 );
