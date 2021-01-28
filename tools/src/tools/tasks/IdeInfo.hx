@@ -56,7 +56,7 @@ class IdeInfo extends tools.Task {
 
             // Let plugins extend the list
             // but give priority to default backend so that it will be selected by default
-            var defaultBackendName = 'luxe';
+            var defaultBackendName = 'clay';
             for (plugin in context.plugins) {
                 if (plugin.name != null && plugin.name.toLowerCase() == defaultBackendName.toLowerCase()) {
                     if (plugin.extendIdeInfo != null) {

@@ -58,18 +58,6 @@ class ToolsPlugin {
 
         if (context.project != null && context.project.app != null) {
 
-            var app = context.project.app;
-            var hasClayPlugin = false;
-            if (app.plugins != null && Std.is(app.plugins, Array)) {
-                var plugins:Array<String> = app.plugins;
-                if (plugins.indexOf('clay') != -1) {
-                    hasClayPlugin = true;
-                }
-            }
-            if (!hasClayPlugin) {
-                return;
-            }
-
             for (buildTargets in backend.getBuildTargets()) {
 
                 for (config in buildTargets.configs) {

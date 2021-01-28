@@ -57,6 +57,19 @@ class ToolsPlugin {
         var backendName = 'luxe';
 
         if (context.project != null && context.project.app != null) {
+
+            var app = context.project.app;
+            var hasLuxePlugin = false;
+            if (app.plugins != null && Std.is(app.plugins, Array)) {
+                var plugins:Array<String> = app.plugins;
+                if (plugins.indexOf('luxe') != -1) {
+                    hasLuxePlugin = true;
+                }
+            }
+            if (!hasLuxePlugin) {
+                return;
+            }
+
             for (buildTargets in backend.getBuildTargets()) {
 
                 for (config in buildTargets.configs) {

@@ -93,7 +93,7 @@ app:
 
         if (backends.length == 0) {
             // Add default backend
-            backends.push('luxe');
+            backends.push('clay');
         }
 
         // Check generated files
