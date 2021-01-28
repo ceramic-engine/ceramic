@@ -39,6 +39,8 @@ extern class Sharp {
 
     function resize(width:Float, ?height:Float, ?options:Dynamic):Sharp;
 
+    function extend(options:Dynamic):Sharp;
+
     function extract(options:Dynamic):Sharp;
 
     function toFile(output:String, callback:Dynamic->Dynamic->Void):Sharp;

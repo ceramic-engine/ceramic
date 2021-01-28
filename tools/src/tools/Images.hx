@@ -39,6 +39,14 @@ typedef TargetImage = {
 
     var height:Int;
 
+    @:optional var padLeft:Int;
+
+    @:optional var padRight:Int;
+
+    @:optional var padTop:Int;
+
+    @:optional var padBottom:Int;
+
 }
 
 class Images {
@@ -124,7 +132,7 @@ class Images {
 
     }
 
-    public static function resize(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float):Void {
+    public static function resize(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float, padTop:Float = 0, padRight:Float = 0, padBottom:Float = 0, padLeft:Float = 0):Void {
 
         Sync.run(function(done) {
 
@@ -134,18 +142,45 @@ class Images {
                 FileSystem.createDirectory(dirname);
             }
 
-            sharp(
-                srcPath
-            ).resize(
-                Math.round(targetWidth), Math.round(targetHeight)
-            ).toFile(
-                dstPath,
-                function(err, info) {
-                    if (err != null) throw err;
-
-                    done();
-                }
-            );
+            if (padTop == 0 && padRight == 0 && padBottom == 0 && padLeft == 0) {
+                sharp(
+                    srcPath
+                ).resize(
+                    Math.round(targetWidth), Math.round(targetHeight)
+                ).toFile(
+                    dstPath,
+                    function(err, info) {
+                        if (err != null) throw err;
+    
+                        done();
+                    }
+                );
+            }
+            else {
+                sharp(
+                    srcPath
+                ).resize(
+                    Math.round(targetWidth), Math.round(targetHeight)
+                ).extend({
+                    top: Math.round(padTop),
+                    right: Math.round(padTop),
+                    bottom: Math.round(padBottom),
+                    left: Math.round(padLeft),
+                    background: {
+                        r: 0,
+                        g: 0,
+                        b: 0,
+                        alpha: 0
+                    }
+                }).toFile(
+                    dstPath,
+                    function(err, info) {
+                        if (err != null) throw err;
+    
+                        done();
+                    }
+                );
+            }
 
         });
 

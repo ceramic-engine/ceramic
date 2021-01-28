@@ -312,58 +312,10 @@ class BackendTools implements tools.spec.BackendTools {
 
         switch (target.name) {
             case 'mac':
-                /*
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_16x16.png',
-                    width: 16,
-                    height: 16
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_16x16@2x.png',
-                    width: 32,
-                    height: 32
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_32x32.png',
-                    width: 32,
-                    height: 32
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_32x32@2x.png',
-                    width: 64,
-                    height: 64
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_128x128.png',
-                    width: 128,
-                    height: 128
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_128x128@2x.png',
-                    width: 256,
-                    height: 256
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_256x256.png',
-                    width: 256,
-                    height: 256
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_256x256@2x.png',
-                    width: 512,
-                    height: 512
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_512x512.png',
-                    width: 512,
-                    height: 512
-                });
-                toTransform.push({
-                    path: 'mac/app.iconset/icon_512x512@2x.png',
-                    width: 1024,
-                    height: 1024
-                });
-                */
+                // Icon needs to be generated manually for now
+
+            case 'linux':
+                // Icon needs to be generated manually for now
             
             case 'windows':
                 toTransform.push({
@@ -502,9 +454,27 @@ class BackendTools implements tools.spec.BackendTools {
                     height: 48
                 });
                 toTransform.push({
+                    path: 'mipmap-mdpi/ic_launcher_foreground.png',
+                    width: 72,
+                    height: 72,
+                    padLeft: 18,
+                    padRight: 18,
+                    padTop: 18,
+                    padBottom: 18
+                });
+                toTransform.push({
                     path: 'mipmap-hdpi/ic_launcher.png',
                     width: 72,
                     height: 72
+                });
+                toTransform.push({
+                    path: 'mipmap-hdpi/ic_launcher_foreground.png',
+                    width: 110,
+                    height: 110,
+                    padLeft: 26,
+                    padRight: 26,
+                    padTop: 26,
+                    padBottom: 26
                 });
                 toTransform.push({
                     path: 'mipmap-xhdpi/ic_launcher.png',
@@ -512,14 +482,41 @@ class BackendTools implements tools.spec.BackendTools {
                     height: 96
                 });
                 toTransform.push({
+                    path: 'mipmap-xhdpi/ic_launcher_foreground.png',
+                    width: 146,
+                    height: 146,
+                    padLeft: 35,
+                    padRight: 35,
+                    padTop: 35,
+                    padBottom: 35
+                });
+                toTransform.push({
                     path: 'mipmap-xxhdpi/ic_launcher.png',
                     width: 144,
                     height: 144
                 });
                 toTransform.push({
+                    path: 'mipmap-xxhdpi/ic_launcher_foreground.png',
+                    width: 220,
+                    height: 220,
+                    padLeft: 52,
+                    padRight: 52,
+                    padTop: 52,
+                    padBottom: 52
+                });
+                toTransform.push({
                     path: 'mipmap-xxxhdpi/ic_launcher.png',
                     width: 192,
                     height: 192
+                });
+                toTransform.push({
+                    path: 'mipmap-xxxhdpi/ic_launcher_foreground.png',
+                    width: 294,
+                    height: 294,
+                    padLeft: 69,
+                    padRight: 69,
+                    padTop: 69,
+                    padBottom: 69
                 });
 
             default:
@@ -539,7 +536,12 @@ class BackendTools implements tools.spec.BackendTools {
                 if (entry.path.endsWith('.png')) {
 
                     // Resize
-                    Images.resize(appIcon, entry.path, entry.width, entry.height);
+                    if (entry.padTop != null) {
+                        Images.resize(appIcon, entry.path, entry.width, entry.height, entry.padTop, entry.padRight, entry.padBottom, entry.padLeft);
+                    }
+                    else {
+                        Images.resize(appIcon, entry.path, entry.width, entry.height);
+                    }
 
                 } else if (entry.path.endsWith('.ico')) {
 
