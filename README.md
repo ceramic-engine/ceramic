@@ -33,17 +33,17 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 ## Available backends
 
-- Current default backend is `luxe` (using OpenGL/WebGL some parts of [luxe engine alpha](https://luxeengine.com/alpha/) written in `Haxe`, specifically edited and maintained for ceramic). It allows to target Mac, Windows, Linux, iOS, Android, HTML5 (WebGL). Internal parts depending on _luxe alpha_ may eventually be replaced by more tailored code in the future, and platform support improved either by using [ANGLE](https://github.com/google/angle) or an API like [sokol](https://github.com/floooh/sokol).
+- Current default backend is `clay`. It allows to natively target Mac, Windows, Linux, iOS, Android and HTML5 (WebGL).
 
 - A `headless` backend allows to run ceramic as a server/cli app (via C++ or Node.js).
 
-- A `unity` backend is currently under development, which allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
+- A `unity` backend is allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
 
 ## Credits
 
 Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)** but is also possible thanks to the following works:
 
-* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by Sven Bergström** which is the low-level-ish tech used by ceramic's default backend to display graphics, play sounds, manage input through [OpenGL](https://www.opengl.org/), [OpenAL](https://www.openal.org/) and [SDL](https://www.libsdl.org/). `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects. Some snippets of `ceramic` directly come from `luxe`.
+* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by Sven Bergström** which was used as a transitional backend before `clay` backend was ready. `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects. Some snippets of `ceramic` directly come from `luxe`.
 
 * **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was ported into `ceramic.Color` class.
 
