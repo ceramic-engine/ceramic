@@ -10,6 +10,7 @@ import clay.buffers.ArrayBufferView;
 using ceramic.Extensions;
 
 @:allow(backend.Backend)
+@:access(backend.Backend)
 class Draw #if !completion implements spec.Draw #end {
 
     var renderer:ceramic.Renderer = new ceramic.Renderer();
@@ -36,7 +37,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
-        renderer.render(true, visuals);
+        #if ios
+        // iOS doesn't like it when we send GPU commands when app is in background
+        if (!ceramic.App.app.backend.mobileInBackground) {
+        #end
+            renderer.render(true, visuals);
+        #if ios
+        }
+        #end
 
     }
 

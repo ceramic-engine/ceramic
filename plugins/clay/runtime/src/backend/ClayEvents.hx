@@ -12,6 +12,7 @@ import ceramic.IntBoolMap;
 import ceramic.IntIntMap;
 import clay.Clay;
 
+@:access(backend.Backend)
 @:access(backend.Screen)
 @:access(backend.Input)
 @:access(backend.TextInput)
@@ -155,9 +156,15 @@ class ClayEvents extends clay.Events {
             case WILL_ENTER_BACKGROUND:
                 ceramic.App.app.emitBeginEnterBackground();
             case DID_ENTER_BACKGROUND:
+                #if (ios || android)
+                backend.mobileInBackground = true;
+                #end
                 ceramic.App.app.emitFinishEnterBackground();
             case WILL_ENTER_FOREGROUND:
                 ceramic.App.app.emitBeginEnterForeground();
+                #if (ios || android)
+                backend.mobileInBackground = false;
+                #end
             case DID_ENTER_FOREGROUND:
                 ceramic.App.app.emitFinishEnterForeground();
         }

@@ -57,4 +57,8 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+/// Internal flags
+
+    var mobileInBackground:Bool = false;
+
 }
