@@ -200,7 +200,7 @@ class ClayEvents extends clay.Events {
         mouseX = x / Clay.app.screenDensity;
         mouseY = y / Clay.app.screenDensity;
 
-        backend.screen.emitMouseMove(x, y);
+        backend.screen.emitMouseMove(mouseX, mouseY);
 
     }
 
