@@ -204,6 +204,7 @@ class Textures implements spec.Textures {
     public function destroyTexture(texture:Texture):Void {
 
         var id = (texture:clay.graphics.Texture).id;
+
         if (loadedTexturesRetainCount.get(id) > 1) {
             loadedTexturesRetainCount.set(id, loadedTexturesRetainCount.get(id) - 1);
         }
