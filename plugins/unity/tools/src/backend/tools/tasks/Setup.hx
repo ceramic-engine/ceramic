@@ -129,12 +129,20 @@ class Setup extends tools.Task {
         }
 
         for (key in Reflect.fields(project.app.defines)) {
+
             var val = Reflect.field(project.app.defines, key);
             if (val == true) {
                 haxeflags.push('-D $key');
             } else {
                 haxeflags.push('-D $key=$val');
             }
+        }
+
+        // Use universal render pipeline unless unity_birp (built-in render pileline) is defined
+        var hasUnityBirp = (project.app.defines.unity_birp != null);
+        var hasUnityUrp = (project.app.defines.unity_urp != null);
+        if (!hasUnityBirp && !hasUnityUrp) {
+            haxeflags.push('-D unity_urp');
         }
 
         var classPaths = [];
