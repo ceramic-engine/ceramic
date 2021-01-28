@@ -3,7 +3,7 @@ package ceramic;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
 import haxe.io.Bytes;
-#if (bind && android && snow)
+#if (bind && android && (snow || clay))
 import bind.java.Support;
 #end
 #if cpp
@@ -20,7 +20,7 @@ class PlatformSpecific {
 
     public static function postAppInit():Void {
 
-        #if (bind && android && snow)
+        #if (bind && android && (snow || clay))
         // A hook to flush java runnables that need to be run from Haxe thread
         ceramic.App.app.onUpdate(null, function(_) {
             bind.java.Support.flushRunnables();
@@ -36,7 +36,24 @@ class PlatformSpecific {
      */
     public static function readStringFromAsset(assetPath:String):String {
 
-        #if (cpp && snow)
+        #if (cpp && clay)
+
+        var root = 'assets';
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+
+        var filePath = ceramic.Path.join([root, assetPath]);
+        var fullPath = clay.Clay.app.assets.fullPath(filePath);
+        var data = clay.Clay.app.io.loadData(fullPath, false);
+        if (data != null)
+            return data.toBytes().toString();
+        else
+            return null;
+
+        #elseif (cpp && snow)
 
         var root = 'assets';
         #if (ios || tvos)
@@ -68,7 +85,24 @@ class PlatformSpecific {
      */
     public static function readBytesFromAsset(assetPath:String):Bytes {
 
-        #if (cpp && snow)
+        #if (cpp && clay)
+
+        var root = 'assets';
+
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+
+        var filePath = ceramic.Path.join([root, assetPath]);
+        var fullPath = clay.Clay.app.assets.fullPath(filePath);
+        var data = clay.Clay.app.io.loadData(fullPath, false);
+        if (data != null)
+            return data.toBytes();
+        else
+            return null;
+
+        #elseif (cpp && snow)
 
         var root = 'assets';
         #if (ios || tvos)
@@ -103,6 +137,16 @@ class PlatformSpecific {
         #if android
 
         return null;
+
+        #elseif (cpp && clay)
+
+        var root = 'assets';
+        var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
+        if (assetsPrefix != null) {
+            root += assetsPrefix;
+        }
+
+        return clay.Clay.app.assets.fullPath(root);
 
         #elseif (cpp && snow)
 
