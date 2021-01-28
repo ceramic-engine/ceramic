@@ -119,15 +119,22 @@ class IntMap<V> {
     public function remove(key:Int) {
 
         var index = keys.get(key);
-        if (index != 0) {
-            // Key exists, set value to null
-            values.set(index - RESERVED_GAP, null);
-            // Update next free index if needed
-            if (nextFreeIndex >= index) {
-                nextFreeIndex = index - 1;
+        if (index != NO_VALUE) {
+            if (index != NULL_VALUE) {
+                index -= RESERVED_GAP;
+
+                // Key is mapping to a non null value, set value to null
+                values.set(index, null);
+
+                // Update next free index if needed
+                if (nextFreeIndex > index) {
+                    nextFreeIndex = index;
+                }
             }
+
             // Remove key
             keys.remove(key);
+            
             // Update iterable keys
             if (iterableKeys != null) {
                 iterableKeys.splice(iterableKeys.indexOf(key), 1);

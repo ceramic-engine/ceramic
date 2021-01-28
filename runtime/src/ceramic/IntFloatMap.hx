@@ -93,15 +93,20 @@ class IntFloatMap {
     public function remove(key:Int) {
 
         var index = keys.get(key);
-        if (index != 0) {
+        if (index != NO_VALUE) {
+            index -= RESERVED_GAP;
+
             // Key exists, set value to FREE (make slot available)
-            values.set(index - RESERVED_GAP, FREE_VALUE);
+            values.set(index, FREE_VALUE);
+
             // Update next free index if needed
-            if (nextFreeIndex >= index) {
-                nextFreeIndex = index - 1;
+            if (nextFreeIndex > index) {
+                nextFreeIndex = index;
             }
+
             // Remove key
             keys.remove(key);
+            
             // Update iterable keys
             if (iterableKeys != null) {
                 iterableKeys.splice(iterableKeys.indexOf(key), 1);
