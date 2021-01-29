@@ -35,6 +35,5 @@ yarn-error.log*
 
 plugin-build.hxml
 /runner/node_modules
-/plugins/android/
 /.haxelib
 completion.hxml
