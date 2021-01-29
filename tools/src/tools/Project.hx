@@ -199,7 +199,9 @@ class Project {
 
         if (context.defines.exists('android')) {
             // Will set Android APP_PLATFORM, which should match minSdkVersion
-            app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=21 -D PLATFORM=android-21";
+            if (context.defines.exists('ceramic_android_use_gcc')) {
+                app.hxml += "\n" + "-D HXCPP_ANDROID_PLATFORM=21 -D PLATFORM=android-21";
+            }
             app.hxml += "\n" + "-D NO_PRECOMPILED_HEADERS";
         }
 
