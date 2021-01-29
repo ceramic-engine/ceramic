@@ -1,0 +1,16 @@
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/app/build
+/app/src/main/assets/assets
+/captures
+.externalNativeBuild
+/app/src/main/jniLibs/armeabi
+/app/src/main/jniLibs/armeabi-v7a
+/app/src/main/jniLibs/x86
+/app/src/main/jniLibs/x86_64
+/app/src/main/jniLibs/arm64-v8a
