@@ -20,7 +20,11 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
 
     override function getCollidableType(element:Collidable):Class<Dynamic> {
 
+        #if js
+        var clazz:Class<Collidable> = untyped element.__class__;
+        #else
         var clazz = Type.getClass(element);
+        #end
         switch clazz {
             case Visual | Quad | Mesh: return Visual;
             case Group: return Group;
