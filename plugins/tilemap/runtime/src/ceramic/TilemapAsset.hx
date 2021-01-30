@@ -28,6 +28,8 @@ class TilemapAsset extends Asset {
 
     var tsxRawData:Map<String,String> = null;
 
+    // TODO cache external tileset so that we don't need to reload that for every tilemap
+
 /// Lifecycle
 
     override public function new(name:String, ?options:AssetOptions) {
