@@ -22,7 +22,7 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
 
         var clazz = Type.getClass(element);
         switch clazz {
-            case Visual: return Visual;
+            case Visual | Quad | Mesh: return Visual;
             case Group: return Group;
             case Body: return Body;
             case arcade.Group: return arcade.Group;
@@ -31,7 +31,7 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
                     return Visual;
                 if (Std.is(element, Group))
                     return Group;
-                if (Std.is(element, Body))
+                if (Std.is(element, Body)) 
                     return Body;
                 if (Std.is(element, arcade.Group))
                     return arcade.Group;
@@ -49,34 +49,46 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
             }
         }
         else {
-            switch [getCollidableType(element1), getCollidableType(element2)] {
-                case [Visual, Visual]:
-                    var visual1:Visual = cast element1;
-                    var visual2:Visual = cast element2;
-                    return overlapBodyVsBody(visual1.body, visual2.body, overlapCallback, processCallback);
-                case [Visual, Body]:
-                    var visual1:Visual = cast element1;
-                    return overlapBodyVsBody(visual1.body, cast element2, overlapCallback, processCallback);
-                case [Body, Visual]:
-                    var visual2:Visual = cast element2;
-                    return overlapBodyVsBody(cast element1, visual2.body, overlapCallback, processCallback);
-                case [Body, Body]:
-                    return overlapBodyVsBody(cast element1, cast element2, overlapCallback, processCallback);
-                case [Visual, Group]:
-                    var visual1:Visual = cast element1;
-                    return overlapBodyVsCeramicGroup(visual1.body, cast element2, overlapCallback, processCallback);
-                case [Group, Visual]:
-                    var visual2:Visual = cast element2;
-                    return overlapBodyVsCeramicGroup(visual2.body, cast element1, overlapCallback, processCallback);
-                case [Body, Group]:
-                    return overlapBodyVsCeramicGroup(cast element1, cast element2, overlapCallback, processCallback);
-                case [Group, Body]:
-                    return overlapBodyVsCeramicGroup(cast element2, cast element1, overlapCallback, processCallback);
-                case [Group, Group]:
-                    return overlapCeramicGroupVsCeramicGroup(cast element1, cast element2, overlapCallback, processCallback);
+            switch getCollidableType(element1) {
                 default:
-                    return super.overlap(element1, element2, overlapCallback, processCallback);
+                case Visual:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual1:Visual = cast element1;
+                            var visual2:Visual = cast element2;
+                            return overlapBodyVsBody(visual1.body, visual2.body, overlapCallback, processCallback);
+                        case Group:
+                            var visual1:Visual = cast element1;
+                            return overlapBodyVsCeramicGroup(visual1.body, cast element2, overlapCallback, processCallback);
+                        case Body:
+                            var visual1:Visual = cast element1;
+                            return overlapBodyVsBody(visual1.body, cast element2, overlapCallback, processCallback);
+                    }
+                case Group:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return overlapBodyVsCeramicGroup(visual2.body, cast element1, overlapCallback, processCallback);
+                        case Group:
+                            return overlapCeramicGroupVsCeramicGroup(cast element1, cast element2, overlapCallback, processCallback);
+                        case Body:
+                            return overlapBodyVsCeramicGroup(cast element2, cast element1, overlapCallback, processCallback);
+                    }
+                case Body:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return overlapBodyVsBody(cast element1, visual2.body, overlapCallback, processCallback);
+                        case Group:
+                            return overlapBodyVsCeramicGroup(cast element1, cast element2, overlapCallback, processCallback);
+                        case Body:
+                            return overlapBodyVsBody(cast element1, cast element2, overlapCallback, processCallback);
+                    }
             }
+            return super.overlap(element1, element2, overlapCallback, processCallback);
         }
 
     }
@@ -177,40 +189,52 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
     override function collide(element1:Collidable, ?element2:Collidable, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (element2 == null) {
-            return switch Type.getClass(element1) {
+            return switch getCollidableType(element1) {
                 case Group: collideCeramicGroupVsItself(cast element1, collideCallback, processCallback);
                 default: false;
             }
         }
         else {
-            switch [Type.getClass(element1), Type.getClass(element2)] {
-                case [Visual, Visual]:
-                    var visual1:Visual = cast element1;
-                    var visual2:Visual = cast element2;
-                    return collideBodyVsBody(visual1.body, visual2.body, collideCallback, processCallback);
-                case [Visual, Body]:
-                    var visual1:Visual = cast element1;
-                    return collideBodyVsBody(visual1.body, cast element2, collideCallback, processCallback);
-                case [Body, Visual]:
-                    var visual2:Visual = cast element2;
-                    return collideBodyVsBody(cast element1, visual2.body, collideCallback, processCallback);
-                case [Body, Body]:
-                    return collideBodyVsBody(cast element1, cast element2, collideCallback, processCallback);
-                case [Visual, Group]:
-                    var visual1:Visual = cast element1;
-                    return collideBodyVsCeramicGroup(visual1.body, cast element2, collideCallback, processCallback);
-                case [Group, Visual]:
-                    var visual2:Visual = cast element2;
-                    return collideBodyVsCeramicGroup(visual2.body, cast element1, collideCallback, processCallback);
-                case [Body, Group]:
-                    return collideBodyVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
-                case [Group, Body]:
-                    return collideBodyVsCeramicGroup(cast element2, cast element1, collideCallback, processCallback);
-                case [Group, Group]:
-                    return collideCeramicGroupVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
+            switch getCollidableType(element1) {
                 default:
-                    return super.collide(element1, element2, collideCallback, processCallback);
+                case Visual:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual1:Visual = cast element1;
+                            var visual2:Visual = cast element2;
+                            return collideBodyVsBody(visual1.body, visual2.body, collideCallback, processCallback);
+                        case Group:
+                            var visual1:Visual = cast element1;
+                            return collideBodyVsCeramicGroup(visual1.body, cast element2, collideCallback, processCallback);
+                        case Body:
+                            var visual1:Visual = cast element1;
+                            return collideBodyVsBody(visual1.body, cast element2, collideCallback, processCallback);
+                    }
+                case Group:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return collideBodyVsCeramicGroup(visual2.body, cast element1, collideCallback, processCallback);
+                        case Group:
+                            return collideCeramicGroupVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
+                        case Body:
+                            return collideBodyVsCeramicGroup(cast element2, cast element1, collideCallback, processCallback);
+                    }
+                case Body:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return collideBodyVsBody(cast element1, visual2.body, collideCallback, processCallback);
+                        case Group:
+                            return collideBodyVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
+                        case Body:
+                            return collideBodyVsBody(cast element1, cast element2, collideCallback, processCallback);
+                    }
             }
+            return super.collide(element1, element2, collideCallback, processCallback);
         }
 
     }
