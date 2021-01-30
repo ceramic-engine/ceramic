@@ -6,7 +6,10 @@ using ceramic.Extensions;
 
 /** Tilemap data.
     Strongly inspired from Tiled TMX format.
-    (https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) */
+    (https://doc.mapeditor.org/en/stable/reference/tmx-map-format/).
+    
+    This is a `Model` class, which make it suitable for (optional) serialization
+    and observable data. */
 class TilemapData extends Model {
 
 /// Main properties

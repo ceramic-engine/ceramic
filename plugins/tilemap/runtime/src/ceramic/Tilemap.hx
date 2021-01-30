@@ -2,6 +2,10 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * Renders tilemap data.
+ * Note: only ORTHOGONAL is supported
+ */
 class Tilemap extends Quad {
 
 /// Properties
