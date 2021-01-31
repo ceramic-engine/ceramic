@@ -84,14 +84,22 @@ class SpinePlugin {
     @:access(ceramic.Assets)
     public static function spine(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineData {
 
+        var asset = spineAsset(assets, name);
+        if (asset == null) return null;
+
+        return asset.spineData;
+
+    }
+
+    @:access(ceramic.Assets)
+    public static function spineAsset(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineAsset {
+
         var realName:String = Std.is(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
         
         if (!assets.assetsByKindAndName.exists('spine')) return null;
         var asset:SpineAsset = cast assets.assetsByKindAndName.get('spine').get(realName);
-        if (asset == null) return null;
-
-        return asset.spineData;
+        return asset;
 
     }
 
