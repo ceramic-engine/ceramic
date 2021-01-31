@@ -420,7 +420,7 @@ class Assets extends Entity {
 
 /// Load
 
-    public function load():Void {
+    public function load(warnIfNothingToLoad:Bool = true, ?pos:haxe.PosInfos):Void {
 
         var total = 0;
         var pending = 0;
@@ -435,7 +435,7 @@ class Assets extends Entity {
 
                     if (!success) {
                         allSuccess = false;
-                        App.app.logger.error('Failed to load asset ${asset.name} ($asset)');
+                        App.app.logger.error('Failed to load asset ${asset.name} ($asset)', pos);
                     }
 
                     pending--;
@@ -494,7 +494,9 @@ class Assets extends Entity {
 
         } else {
 
-            App.app.logger.warning('There was no asset to load.');
+            if (warnIfNothingToLoad) {
+                App.app.logger.warning('There was no asset to load.', pos);
+            }
             emitComplete(true);
 
         }
