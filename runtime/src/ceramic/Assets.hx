@@ -1,11 +1,11 @@
 package ceramic;
 
-import haxe.DynamicAccess;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
+import haxe.DynamicAccess;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 @:allow(ceramic.Asset)
 class Assets extends Entity {
@@ -321,9 +321,13 @@ class Assets extends Entity {
         asset.onDestroy(this, assetDestroyed);
 
         byName.set(asset.name, asset);
+
+        // Asset was associated with another `Assets` owner.
+        // Remove ownership so that we can safely associate it to new instance
         if (asset.owner != null && asset.owner != this) {
             asset.owner.removeAsset(asset);
         }
+
         addedAssets.push(asset);
         asset.owner = this;
         asset.runtimeAssets = this.runtimeAssets;
@@ -348,6 +352,34 @@ class Assets extends Entity {
             }
         }
 
+    }
+
+    public function imageAsset(name:Either<String,AssetId<String>>):ImageAsset {
+        return cast asset(name, 'image');
+    }
+
+    public function fontAsset(name:Either<String,AssetId<String>>):FontAsset {
+        return cast asset(name, 'font');
+    }
+
+    public function textAsset(name:Either<String,AssetId<String>>):TextAsset {
+        return cast asset(name, 'text');
+    }
+
+    public function soundAsset(name:Either<String,AssetId<String>>):SoundAsset {
+        return cast asset(name, 'sound');
+    }
+
+    public function databaseAsset(name:Either<String,AssetId<String>>):DatabaseAsset {
+        return cast asset(name, 'database');
+    }
+
+    public function fragmentsAsset(name:Either<String,AssetId<String>>):FragmentsAsset {
+        return cast asset(name, 'fragments');
+    }
+
+    public function shaderAsset(name:Either<String,AssetId<String>>):ShaderAsset {
+        return cast asset(name, 'shader');
     }
     
     public function asset(idOrName:Dynamic, ?kind:String):Asset {
