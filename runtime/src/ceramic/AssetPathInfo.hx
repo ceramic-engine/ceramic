@@ -2,18 +2,40 @@ package ceramic;
 
 using StringTools;
 
+/**
+ * Information extracted from a raw asset path
+ */
 class AssetPathInfo {
 
 /// Properties
 
+    /**
+     * Density value resolved from file name.
+     * Example: If file is named `someImage@2x.png`, density will be `2`.
+     * Default density is `1`
+     */
     public var density:Float;
 
+    /**
+     * File extension (always converted to lowercase for convenience)
+     */
     public var extension:String;
 
+    /**
+     * Normalized asset name (includes subdirectories relative to asset root).
+     * Example: both `someImage.png` and `someImage@2x.png` will resolve to a same asset name `someImage`
+     */
     public var name:String;
 
+    /**
+     * Original path used to generated path info
+     */
     public var path:String;
 
+    /**
+     * Flags are extracted from file path.
+     * Example: file `someFile+myTag.txt` will generate `myTag` flag.
+     */
     public var flags:Map<String,Dynamic>;
 
 /// Constructor
