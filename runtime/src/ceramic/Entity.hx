@@ -37,10 +37,20 @@ class Entity implements Events implements Lazy {
 
 /// Properties
 
-    public var data(get,null):Dynamic = null;
+    var _data:Dynamic = null;
+
+    public var hasData(get,never):Bool;
+    inline function get_hasData():Bool {
+        return _data != null;
+    }
+
+    public var data(get,set):Dynamic;
     function get_data():Dynamic {
-        if (data == null) data = {};
-        return data;
+        if (_data == null) _data = {};
+        return _data;
+    }
+    function set_data(data:Dynamic):Dynamic {
+        return _data = data;
     }
 
     public var id:String = null;
