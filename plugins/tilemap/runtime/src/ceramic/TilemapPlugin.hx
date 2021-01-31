@@ -54,17 +54,57 @@ class TilemapPlugin {
 
     }
 
-    @:access(ceramic.Assets)
     public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>):TilemapData {
+
+        var asset = tilemapAsset(assets, name);
+        if (asset == null) return null;
+
+        return asset.tilemapData;
+
+    }
+
+    @:access(ceramic.Assets)
+    public static function tilemapAsset(assets:Assets, name:Either<String,AssetId<String>>):TilemapAsset {
 
         var nameStr:String = cast name;
         if (nameStr.startsWith('tilemap:')) nameStr = nameStr.substr(8);
         
         if (!assets.assetsByKindAndName.exists('tilemap')) return null;
         var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(nameStr);
-        if (asset == null) return null;
+        return asset;
 
-        return asset.tilemapData;
+    }
+
+    /**
+     * Return the tilemap parser instance associated with this `Assets` object.
+     * The first time, creates an instance, then reuses it.
+     * @param assets 
+     * @return TilemapParser
+     */
+    public static function getTilemapParser(assets:Assets):TilemapParser {
+
+        var tilemapParser:TilemapParser = assets.data.tilemapParser;
+        if (tilemapParser == null) {
+            tilemapParser = new TilemapParser();
+            assets.data.tilemapParser = tilemapParser;
+        }
+        return tilemapParser;
+
+    }
+
+    /**
+     * Return a string map to read and store raw TSX cached data
+     * @param assets 
+     * @return Map<String,String>
+     */
+    public static function getRawTsxCache(assets:Assets):Map<String,String> {
+
+        var rawTsxCache:Map<String,String> = assets.data.rawTsxCache;
+        if (rawTsxCache == null) {
+            rawTsxCache = new Map<String,String>();
+            assets.data.rawTsxCache = rawTsxCache;
+        }
+        return rawTsxCache;
 
     }
 

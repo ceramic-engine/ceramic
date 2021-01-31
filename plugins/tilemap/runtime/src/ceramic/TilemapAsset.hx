@@ -1,18 +1,19 @@
 package ceramic;
 
+import ceramic.Asset;
+import ceramic.AssetOptions;
+import ceramic.Assets;
+import ceramic.ImageAsset;
+import ceramic.Mesh;
+import ceramic.Path;
+import ceramic.Quad;
+import ceramic.Shortcuts.*;
+import ceramic.TextAsset;
 import format.tmx.Data.TmxImage;
 import format.tmx.Data.TmxMap;
-import ceramic.Path;
-import ceramic.Asset;
-import ceramic.ImageAsset;
-import ceramic.TextAsset;
-import ceramic.Assets;
-import ceramic.AssetOptions;
-import ceramic.Quad;
-import ceramic.Mesh;
-import ceramic.Shortcuts.*;
 
 using StringTools;
+using ceramic.TilemapPlugin;
 
 class TilemapAsset extends Asset {
 
@@ -50,6 +51,23 @@ class TilemapAsset extends Asset {
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
+        var isTiledMap = path.toLowerCase().endsWith('.tmx');
+
+        if (isTiledMap) {
+            loadTmxTiledMap();
+        }
+        else {
+            status = BROKEN;
+            ceramic.App.app.logger.error('Unknown format for tilemap data at path: $path');
+            emitComplete(false);
+        }
+
+    }
+
+/// Tiled Map Editor format (TMX & TSX)
+
+    function loadTmxTiledMap() {
+
         // Load tmx asset
         //
         tmxAsset = new TextAsset(path);
@@ -66,12 +84,13 @@ class TilemapAsset extends Asset {
             if (rawTmxData != null && rawTmxData.length > 0) {
 
                 // Load external tileset raw data (if any)
-                loadExternalTilesetData(rawTmxData, function(isSuccess) {
+                loadExternalTsxTilesetData(rawTmxData, function(isSuccess) {
                         
                     if (isSuccess) {
 
-                        tmxMap = TilemapParser.parseTmx(rawTmxData, resolveTsxRawData);
-                        tilemapData = TilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromTmxImage);
+                        var tilemapParser = owner.getTilemapParser();
+                        tmxMap = tilemapParser.parseTmx(rawTmxData, Path.directory(path), resolveTsxRawData);
+                        tilemapData = tilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromTmxImage);
 
                         if (tilemapData != null) {
 
@@ -99,7 +118,7 @@ class TilemapAsset extends Asset {
 
                             });
 
-                            assets.load();
+                            assets.load(false);
 
                         }
                         else {
@@ -130,49 +149,74 @@ class TilemapAsset extends Asset {
 
     }
 
-    function loadExternalTilesetData(rawTmxData:String, done:Bool->Void) {
+    function loadExternalTsxTilesetData(rawTmxData:String, done:Bool->Void) {
 
-        var sources = TilemapParser.parseExternalTilesetNames(rawTmxData);
+        var tilemapParser = owner.getTilemapParser();
+        var rawTsxCache = owner.getRawTsxCache();
+        var sources = tilemapParser.parseExternalTilesetNames(rawTmxData);
 
         if (sources == null || sources.length == 0) {
             done(true);
             return;
         }
 
-        var textAssets = new Assets();
-
-        for (source in sources) {
-            addTilesetTextAsset(textAssets, source);
+        inline function sourceToCacheKey(source:String):String {
+            return Path.join([Path.directory(this.path), source]);
         }
 
-        textAssets.onceComplete(this, function(isSuccess) {
+        var textAssets:Assets = null;
 
-            if (!isSuccess) {
+        if (tsxRawData == null)
+            tsxRawData = new Map<String,String>();
+
+        for (source in sources) {
+            var existingData = null;
+            var key = sourceToCacheKey(source);
+            existingData = rawTsxCache.get(key);
+            if (existingData != null) {
+                tsxRawData.set(source, existingData);
+            }
+            else {
+                if (textAssets == null)
+                    textAssets = new Assets();
+                addTilesetTextAsset(textAssets, source);
+            }
+        }
+
+        if (textAssets != null) {
+            // Need to load new data
+            textAssets.onceComplete(this, function(isSuccess) {
+
+                if (!isSuccess) {
+                    textAssets.destroy();
+                    done(false);
+                    return;
+                }
+
+                for (source in sources) {
+                    var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), source]));
+                    var data = textAssets.text(pathInfo.name);
+                    var key = sourceToCacheKey(source);
+                    tsxRawData.set(source, data);
+                    rawTsxCache.set(key, data);
+                }
+
                 textAssets.destroy();
-                done(false);
-                return;
-            }
+                done(true);
+            });
 
-            if (tsxRawData == null) tsxRawData = new Map<String,String>();
-
-            for (source in sources) {
-                
-                var pathInfo = Assets.decodePath(source);
-                tsxRawData.set(source, textAssets.text(pathInfo.name));
-            }
-
-            textAssets.destroy();
+            textAssets.load();
+        }
+        else {
+            // Everything already cached
             done(true);
-        });
-
-        textAssets.load();
+        }
 
     }
 
     function addTilesetTextAsset(textAssets:Assets, source:String):Void {
 
         var path = Path.join([Path.directory(this.path), source]);
-
         var pathInfo = Assets.decodePath(path);
         var asset = new TextAsset(pathInfo.name);
         asset.path = pathInfo.path;
@@ -181,7 +225,7 @@ class TilemapAsset extends Asset {
 
     }
 
-    function resolveTsxRawData(name:String):String {
+    function resolveTsxRawData(name:String, cwd:String):String {
 
         if (tsxRawData != null) {
             return tsxRawData.get(name);
@@ -194,25 +238,44 @@ class TilemapAsset extends Asset {
     function loadTextureFromTmxImage(tmxImage:TmxImage, done:Texture->Void):Void {
 
         if (tmxImage.source != null) {
-            var path = tmxImage.source;
-            var pathInfo = Assets.decodePath(path);
-            var asset = new ImageAsset(pathInfo.name);
-            asset.handleTexturesDensityChange = true;
-            asset.onDestroy(this, function(_) {
-                // Should we do some cleanup here?
-            });
-            assets.addAsset(asset);
-            assets.onceComplete(this, function(isSuccess) {
-                if (isSuccess) {
-                    var texture = assets.texture(asset.name);
+            var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), tmxImage.source]));
+            
+            // Check if asset is already available
+            var texture = owner.texture(pathInfo.name);
+            
+            if (texture == null) {
 
-                    // NEAREST is usually preferred for tilemaps so use that by default,
-                    // although it is still possible to set it to LINEAR manually after
-                    texture.filter = NEAREST;
+                // Texture not already loaded, load it!
 
-                    done(texture);
-                }
-            });
+                var asset = new ImageAsset(pathInfo.name);
+                asset.handleTexturesDensityChange = true;
+                asset.onDestroy(this, function(_) {
+                    // Should we do some cleanup here?
+                });
+                assets.addAsset(asset);
+                assets.onceComplete(this, function(isSuccess) {
+                    if (isSuccess) {
+                        var texture = assets.texture(asset.name);
+    
+                        // NEAREST is usually preferred for tilemaps so use that by default,
+                        // although it is still possible to set it to LINEAR manually after
+                        texture.filter = NEAREST;
+
+                        // Share this texture with owner `Assets` instance
+                        // so that it can be reused later
+                        owner.addAsset(asset);
+    
+                        done(texture);
+                    }
+                });
+            }
+            else {
+
+                log.debug('REUSE texture $texture');
+
+                // Texture already loaded, use it :)
+                done(texture);
+            }
         }
         else if (tmxImage.data != null) {
             log.warning('Loading TMX embedded images is not supported.');
@@ -236,8 +299,8 @@ class TilemapAsset extends Asset {
 
     function checkTexturesDensity():Void {
 
-        // TODO, for now it keeps the same texture always
-        // but we should be able to improve this to resolved higher density of images
+        // This is called, but we don't need to do anything so far,
+        // as tileset textures are already updating themselfes as needed
 
     }
 

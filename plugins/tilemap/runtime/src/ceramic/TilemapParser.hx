@@ -17,11 +17,41 @@ import ceramic.Shortcuts.*;
 
 class TilemapParser {
 
-    public static function parseTmx(rawTmxData:String, ?resolveTsxRawData:String->String):TmxMap {
+    @:allow(ceramic.TilemapAsset)
+    var tmxParser:TilemapTmxParser = null;
+
+    public function new() {}
+
+    /**
+     * Clear cached data (if any).
+     * Only tileset data is cached because it can be shared between maps.
+     * Normally not needed to clear manually unless working with a lot of different tilesets.
+     */
+    public function clearCache():Void {
+
+        if (tmxParser != null) {
+            tmxParser.clearCache();
+        }
+
+    }
+
+    /**
+     * Parse TMX Tilemap (Tiled Map Editor format)
+     * @param rawTmxData Raw TMX data as string
+     * @param cwd Current working directory. Needed to identify cached tileset relative to their tilemap
+     * @param resolveTsxRawData A method to resolve TSX Tileset data that are not embedded in TMX data (optional)
+     * @return The TMX map data
+     */
+    public function parseTmx(rawTmxData:String, ?cwd:String, ?resolveTsxRawData:(name:String,cwd:String)->String):TmxMap {
 
         // First, parse TMX tilemap data
-        var tmxParser = new TilemapTmxParser();
-        var tmxMap = tmxParser.parseTmx(rawTmxData, resolveTsxRawData);
+        if (tmxParser == null) {
+            tmxParser = new TilemapTmxParser();
+        }
+        if (cwd == null) {
+            cwd = '.';
+        }
+        var tmxMap = tmxParser.parseTmx(rawTmxData, cwd, resolveTsxRawData);
 
         if (tmxMap == null) {
             log.warning('Failed to parse TMX data: result is null!');
@@ -32,7 +62,7 @@ class TilemapParser {
 
     }
 
-    public static function parseExternalTilesetNames(rawTmxData:String):Array<String> {
+    public function parseExternalTilesetNames(rawTmxData:String):Array<String> {
 
         var xml = Xml.parse(rawTmxData);
         
@@ -59,7 +89,7 @@ class TilemapParser {
 
     }
 
-    public static function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
+    public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
 
         var tilemapData = new TilemapData();
 
@@ -258,30 +288,38 @@ class TilemapParser {
 @:allow(ceramic.TilemapParser)
 private class TilemapTmxParser {
 
-    private var tsx:Map<String, TmxTileset> = null;
+    private var tsxCache:Map<String, TmxTileset> = null;
 
     private var r:TmxReader = null;
 
-    private var resolveTsxRawData:String->String = null;
+    private var resolveTsxRawData:(name:String,cwd:String)->String = null;
+
+    private var cwd:String;
 
     public function new() {
 
     }
 
-    public function parseTmx(rawTmxData:String, ?resolveTsxRawData:String->String):TmxMap {
+    public function parseTmx(rawTmxData:String, cwd:String, ?resolveTsxRawData:(name:String,cwd:String)->String):TmxMap {
 
         if (rawTmxData.length == 0) {
             throw "Tilemap: rawTmxData is 0 length";
         }
 
-        this.resolveTsxRawData = resolveTsxRawData != null ? resolveTsxRawData : (function(_) { return null; });
+        this.resolveTsxRawData = resolveTsxRawData != null ? resolveTsxRawData : (function(_,_) { return null; });
+
+        if (tsxCache == null) {
+            tsxCache = new Map();
+        }
 
         try
         {
             r = new TmxReader();
             r.resolveTSX = getTsx;
-            tsx = new Map();
-            return r.read(Xml.parse(rawTmxData));
+            this.cwd = cwd;
+            var result = r.read(Xml.parse(rawTmxData));
+            this.cwd = null;
+            return result;
         }
         catch (e:Dynamic)
         {
@@ -292,13 +330,20 @@ private class TilemapTmxParser {
 
     }
 
+    function clearCache():Void {
+
+        tsxCache = null;
+
+    }
+
     function getTsx(name:String):TmxTileset {
 
-        var cached:TmxTileset = tsx.get(name);
+        var cacheKey = cwd + ':' + name;
+        var cached:TmxTileset = tsxCache.get(cacheKey);
         if (cached != null) return cached;
 
-        cached = r.readTSX(Xml.parse(resolveTsxRawData(name)));
-        tsx.set(name, cached);
+        cached = r.readTSX(Xml.parse(resolveTsxRawData(name, cwd)));
+        tsxCache.set(cacheKey, cached);
 
         return cached;
 
