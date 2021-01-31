@@ -271,8 +271,6 @@ class TilemapAsset extends Asset {
             }
             else {
 
-                log.debug('REUSE texture $texture');
-
                 // Texture already loaded, use it :)
                 done(texture);
             }
