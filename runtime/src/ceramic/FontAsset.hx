@@ -29,6 +29,8 @@ class FontAsset extends Asset {
 
     override public function load() {
 
+        assets.inheritRuntimeAssetsFromAssets(owner);
+
         // Create array of assets to destroy after load
         var toDestroy:Array<Asset> = [];
         for (asset in assets) {

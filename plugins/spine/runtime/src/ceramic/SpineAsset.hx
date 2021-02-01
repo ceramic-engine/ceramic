@@ -56,6 +56,8 @@ class SpineAsset extends Asset {
 
     override public function load() {
 
+        assets.inheritRuntimeAssetsFromAssets(owner);
+
         // Load spine data
         status = LOADING;
         ceramic.App.app.logger.info('Load spine $path');
