@@ -126,6 +126,11 @@ class Main {
         }
         #end
 
+        #if (ios || tvos || android)
+        // Force fullscreen on mobile
+        app.settings.fullscreen = true;
+        #end
+
         config.render.antialiasing = app.settings.antialiasing;
 
         if (app.settings.windowWidth > 0)
