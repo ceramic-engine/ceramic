@@ -134,6 +134,11 @@ class Setup extends tools.Task {
             }
         }
 
+        if (project.app.defines.ceramic_use_electron) {
+            haxeflagsHxml.push('-D clay_web_use_electron_fs');
+            haxeflagsHxml.push('-D clay_web_use_electron_pngjs');
+        }
+
         for (key in Reflect.fields(project.app.defines)) {
             var val = Reflect.field(project.app.defines, key);
             if (val == true) {
@@ -142,9 +147,6 @@ class Setup extends tools.Task {
                 haxeflagsHxml.push('-D $key=$val');
             }
         }
-
-        // Disable debug console
-        haxeflagsHxml.push('-D no_debug_console');
 
         var classPathsHxml = '';
         for (entry in (project.app.paths:Array<String>)) {
