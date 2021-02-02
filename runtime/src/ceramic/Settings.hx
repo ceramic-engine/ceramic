@@ -44,6 +44,14 @@ class Settings implements Observable {
     @observe public var fullscreen:Bool = false;
 
     /**
+     * Maximum app update delta time.
+     * During app update (at each frame), `app.delta` will be capped to `maxDelta`
+     * if its value is above `maxDelta`.
+     * If needed, use `app.realDelta` to get real elapsed time since last frame.
+     */
+    @observe public var maxDelta:Float = 0.1;
+
+    /**
      * Setup screen orientation. Default is `NONE`,
      * meaning nothing is enforced and project defaults will be used.
      */

@@ -274,8 +274,11 @@ class App extends Entity {
     }
     var _computeFps = new ComputeFps();
 
-    /** Current frame delta time */
+    /** Current frame delta time (never above `settings.maxDelta`) */
     public var delta(default,null):Float;
+
+    /** Current frame real delta time (the actual elapsed time since last frame update) */
+    public var realDelta(default,null):Float;
 
     /** Backend instance */
     public var backend(default,null):Backend;
@@ -692,7 +695,14 @@ class App extends Entity {
 
     }
 
-    function update(delta:Float):Void {
+    function update(realDelta:Float):Void {
+
+        var delta = realDelta;
+
+        // Never allow an update delta above maxDelta
+        if (delta > settings.maxDelta) {
+            delta = settings.maxDelta;
+        }
 
 #if ceramic_debug_cputime
         _debugCpuTimeThisFrame();
@@ -703,6 +713,7 @@ class App extends Entity {
 
         // Update frame delta time
         this.delta = delta;
+        this.realDelta = realDelta;
 
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
@@ -714,7 +725,7 @@ class App extends Entity {
 
 #if ceramic_debug_cputime cpuTimeRec(0); #end
 
-        Timer.update(delta);
+        Timer.update(delta, realDelta);
         
 #if ceramic_debug_cputime cpuTimePause(0); #end
 #if ceramic_debug_cputime cpuTimeRec(1); #end
