@@ -35,6 +35,8 @@ class Input extends Entity {
 
     var gamepadAxisValues:IntFloatMap = new IntFloatMap(16, 0.5, false);
 
+    public var activeGamepads:ReadOnlyArray<Int> = [];
+
     public function new() {
 
         super();
@@ -124,7 +126,34 @@ class Input extends Entity {
 
 /// Gamepad
 
-    inline function willEmitGamepadDown(gamepadId:Int, button:GamepadButton):Void {
+    function willEmitGamepadEnable(gamepadId:Int, name:String):Void {
+
+        // Reset gamepad state
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE;
+        for (i in 0...GAMEPAD_STORAGE_SIZE) {
+            var k = key + i;
+            pressedGamepadButtons.set(k, 0);
+            gamepadAxisValues.set(k, 0.0);
+        }
+
+        // Add gamepad to active list
+        if (activeGamepads.indexOf(gamepadId) == -1) {
+            activeGamepads.original.push(gamepadId);
+        }
+
+    }
+
+    function willEmitGamepadDisable(gamepadId:Int):Void {
+
+        // Remove gamepad from active list
+        var index = activeGamepads.indexOf(gamepadId);
+        if (index != -1) {
+            activeGamepads.original.splice(index, 1);
+        }
+
+    }
+
+    function willEmitGamepadDown(gamepadId:Int, button:GamepadButton):Void {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         var prevValue = pressedGamepadButtons.get(key);
@@ -146,7 +175,7 @@ class Input extends Entity {
 
     }
 
-    inline function willEmitGamepadUp(gamepadId:Int, button:GamepadButton):Void {
+    function willEmitGamepadUp(gamepadId:Int, button:GamepadButton):Void {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         pressedGamepadButtons.set(key, -1);
