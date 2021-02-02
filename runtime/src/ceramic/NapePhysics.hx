@@ -1,10 +1,11 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
-class NapePhysics extends Entity {
+class NapePhysics extends System {
 
 #if ceramic_nape_physics
 
@@ -90,7 +91,7 @@ class NapePhysics extends Entity {
 
     }
 
-    inline function update(delta:Float):Void {
+    override function preUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 

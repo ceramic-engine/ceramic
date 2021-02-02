@@ -754,12 +754,6 @@ class App extends Entity {
             // Run systems preUpdate
             systems.preUpdate(delta);
 
-            // Update/pre-update physics bodies (if enabled)
-#if ceramic_nape_physics
-            flushImmediate();
-            if (_delta > 0) nape.update(_delta);
-#end
-
             // Flush immediate callbacks
             flushImmediate();
 
