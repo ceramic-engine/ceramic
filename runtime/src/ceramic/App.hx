@@ -288,6 +288,9 @@ class App extends Entity {
     /** App settings */
     public var settings(default,null):Settings;
 
+    /** Systems are objects to structure app work and update cycle */
+    public var systems(default,null):Systems;
+
     /** Logger. Used by log.info() shortcut */
     public var logger(default,null):Logger = new Logger();
 
@@ -432,6 +435,7 @@ class App extends Entity {
         screen = new Screen();
         audio = new Audio();
         input = new Input();
+        systems = new Systems();
 
         backend = new Backend();
         backend.onceReady(this, backendReady);
@@ -700,10 +704,6 @@ class App extends Entity {
             delta = settings.maxDelta;
         }
 
-#if ceramic_debug_cputime
-        _debugCpuTimeThisFrame();
-#end
-
         // Update computed fps
         _computeFps.addFrame(delta);
 
@@ -719,22 +719,12 @@ class App extends Entity {
         hxt.advance_frame();
 #end
 
-#if ceramic_debug_cputime cpuTimeRec(0); #end
-
         Timer.update(delta, realDelta);
-        
-#if ceramic_debug_cputime cpuTimePause(0); #end
-#if ceramic_debug_cputime cpuTimeRec(1); #end
 
         Runner.tick();
 
-#if ceramic_debug_cputime cpuTimePause(1); #end
-#if ceramic_debug_cputime cpuTimeRec(2); #end
-
         // Screen pointer over/out events detection
         screen.updatePointerOverState(delta);
-
-#if ceramic_debug_cputime cpuTimePause(2); #end
 
         inUpdate = true;
         shouldUpdateAndDrawAgain = true;
@@ -745,8 +735,6 @@ class App extends Entity {
         while (shouldUpdateAndDrawAgain) {
             shouldUpdateAndDrawAgain = false;
             var _delta:Float = isFirstUpdateInFrame ? delta : 0;
-
-#if ceramic_debug_cputime cpuTimeRec(3); #end
             
             // Reset screen deltas
             screen.resetDeltas();
@@ -759,15 +747,12 @@ class App extends Entity {
                     callback();
                 }
             }
-            
-#if ceramic_debug_cputime cpuTimePause(3); #end
-#if ceramic_debug_cputime cpuTimeRec(4); #end
 
             // Trigger pre-update event
             emitPreUpdate(_delta);
 
-#if ceramic_debug_cputime cpuTimePause(4); #end
-#if ceramic_debug_cputime cpuTimeRec(5); #end
+            // Run systems preUpdate
+            systems.preUpdate(delta);
 
             // Update/pre-update physics bodies (if enabled)
 #if ceramic_arcade_physics
@@ -791,9 +776,6 @@ class App extends Entity {
                 flushImmediate();
             }
 
-#if ceramic_debug_cputime cpuTimePause(5); #end
-#if ceramic_debug_cputime cpuTimeRec(6); #end
-
             // Then update
             emitUpdate(_delta);
 
@@ -808,6 +790,8 @@ class App extends Entity {
 
 #if ceramic_debug_cputime cpuTimePause(6); #end
 #if ceramic_debug_cputime cpuTimeRec(7); #end
+            // Run systems postUpdate
+            systems.postUpdate(delta);
 
             // Emit post-update event
             emitPostUpdate(_delta);
@@ -821,38 +805,23 @@ class App extends Entity {
                 toDestroy.destroy();
             }
 
-#if ceramic_debug_cputime cpuTimePause(7); #end
-#if ceramic_debug_cputime cpuTimeRec(8); #end
-
             // Sync pending and destroyed visuals
             syncPendingVisuals();
 
             // Update visuals
             updateVisuals(visuals);
 
-#if ceramic_debug_cputime cpuTimePause(8); #end
-#if ceramic_debug_cputime cpuTimeRec(9); #end
-
             // Update hierarchy from depth
             computeHierarchy();
 
-#if ceramic_debug_cputime cpuTimePause(9); #end
-#if ceramic_debug_cputime cpuTimeRec(10); #end
-
             // Compute render textures priority
             computeRenderTexturesPriority(renderTextures);
-
-#if ceramic_debug_cputime cpuTimePause(10); #end
-#if ceramic_debug_cputime cpuTimeRec(11); #end
 
             // Sync destroyed visuals again, if needed, before sorting
             syncDestroyedVisuals();
 
             // Sort visuals depending on their settings
             sortVisuals(visuals);
-
-#if ceramic_debug_cputime cpuTimePause(11); #end
-#if ceramic_debug_cputime cpuTimeRec(12); #end
 
             // First update in frame finished
             isFirstUpdateInFrame = false;
@@ -865,8 +834,6 @@ class App extends Entity {
 
             // End draw
             emitFinishDraw();
-
-#if ceramic_debug_cputime cpuTimePause(12); #end
 
             // Will update again if requested
             // or continue with drawing
@@ -1151,66 +1118,5 @@ class App extends Entity {
         return null;
 
     }
-
-#if ceramic_debug_cputime
-
-    @:noCompletion public var _cpuStart:Array<Float> = [];
-    @:noCompletion public var _cpuTotal:Array<Float> = [];
-
-    var _debugCpuTime:Bool = false;
-    var _lastDebugCpuTime:Float = -1;
-
-    @:noCompletion inline public function cpuTimeRec(index:Int):Void {
-        _cpuStart.unsafeSet(index, Sys.cpuTime());
-    }
-
-    @:noCompletion inline public function cpuTimePause(index:Int):Void {
-        var val = Sys.cpuTime() - _cpuStart.unsafeGet(index);
-        val += _cpuTotal.unsafeGet(index);
-        _cpuTotal.unsafeSet(index, val);
-    }
-
-    function _debugCpuTimeThisFrame() {
-
-        if (ceramic.Timer.now - _lastDebugCpuTime > 10) {
-            _debugCpuTime = true;
-            _lastDebugCpuTime = ceramic.Timer.now;
-
-            if (_cpuTotal.length > 0) {
-                _printCpuTime();
-            }
-
-            for (i in 0..._cpuTotal.length) {
-                _cpuTotal[i] = 0.0;
-            }
-        } else {
-            _debugCpuTime = false;
-        }
-
-        _cpuStart[200] = 0;
-        _cpuTotal[200] = 0;
-
-    }
-
-    function _printCpuTime() {
-
-        log.info('// cpu time //');
-        log.debug(' - timer: ' + _cpuTotal[0]);
-        log.debug(' - runner: ' + _cpuTotal[1]);
-        log.debug(' - pointer over: ' + _cpuTotal[2]);
-        log.debug(' - begin update cb: ' + _cpuTotal[3]);
-        log.debug(' - pre update: ' + _cpuTotal[4]);
-        log.debug(' - physics: ' + _cpuTotal[5]);
-        log.debug(' - update: ' + _cpuTotal[6]);
-        log.debug(' - post update: ' + _cpuTotal[7]);
-        log.debug(' - update visuals: ' + _cpuTotal[8]);
-        log.debug(' - compute hierarchy: ' + _cpuTotal[9]);
-        log.debug(' - texture priority: ' + _cpuTotal[10]);
-        log.debug(' - sort visuals: ' + _cpuTotal[11]);
-        log.debug(' - draw: ' + _cpuTotal[12]);
-
-    }
-
-#end
 
 }
