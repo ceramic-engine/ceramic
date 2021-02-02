@@ -84,7 +84,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    inline function preUpdate(delta:Float):Void {
+    function preUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 
@@ -132,7 +132,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    inline function postUpdate(delta:Float):Void {
+    function postUpdate(delta:Float):Void {
 
         _freezeItems = true;
 
