@@ -329,7 +329,7 @@ class ClayEvents extends clay.Events {
         else {
             #if !ceramic_no_axis_round
             var prevValue = gamepadAxisValues.get(id * 1024 + axisId);
-            var newValue = Math.round(value * 1024) / 100.0;
+            var newValue = Math.round(value * 100.0) / 100.0;
             if (Math.abs(prevValue - newValue) > 0.01) {
                 gamepadAxisValues.set(id * 1024 + axisId, newValue);
                 backend.input.emitControllerAxis(id, axisId, newValue);
