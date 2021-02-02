@@ -151,7 +151,7 @@ class StateMachineMacro {
                                     stateInstancesByIndex[index] = stateInstance;
 
                                     if (stateInstance != null) {
-                                        stateInstance.machine = this;
+                                        stateInstance.machine = cast this;
 
                                         if (key == state) {
                                             // We changed state instance for the current state,
@@ -236,6 +236,20 @@ class StateMachineMacro {
                     name: 'StateMachineImpl',
                     params: [TPType(macro :Dynamic)]
                 });
+
+            case TInst(_, [TAbstract(t, params)]):
+
+                var abstractType = t.get();
+                if (abstractType.pack.length == 0 && abstractType.name == 'Any') {
+
+                    // Just referencing any implementation in code
+
+                    return TPath({
+                        pack: ['ceramic'],
+                        name: 'StateMachineImpl',
+                        params: [TPType(macro :Any)]
+                    });
+                }
 
             default:
         }

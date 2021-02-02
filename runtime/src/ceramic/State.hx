@@ -3,7 +3,7 @@ package ceramic;
 @:allow(ceramic.StateMachineImpl)
 class State extends Entity {
 
-    public var machine(default,null):StateMachine<Dynamic> = null;
+    public var machine(default,null):StateMachine<Any> = null;
 
     public function new() {
 

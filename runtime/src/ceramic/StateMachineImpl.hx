@@ -7,6 +7,11 @@ import tracker.Observable;
 #end
 class StateMachineImpl<T> extends Entity implements Observable implements Component {
 
+    /**
+     * Shared state machine system
+     */
+    static var system:StateMachineSystem = null;
+
     /** The current state */
     @observe public var state(default,set):T = null;
 
@@ -74,7 +79,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         stateInstances.set(name, stateInstance);
 
         if (stateInstance != null) {
-            stateInstance.machine = this;
+            stateInstance.machine = cast this;
 
             if (key == state) {
                 // We changed state instance for the current state,
@@ -106,7 +111,11 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         super();
 
-        ceramic.App.app.onUpdate(this, _updateState);
+        if (system == null) {
+            system = new StateMachineSystem();
+        }
+
+        system.stateMachines.push(cast this);
 
     }
 
@@ -120,6 +129,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         
     }
 
+    @:allow(ceramic.StateMachineSystem)
     function _updateState(delta:Float):Void {
 
         if (paused || state == null) return;
