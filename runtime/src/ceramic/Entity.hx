@@ -1,13 +1,13 @@
 package ceramic;
 
-import tracker.Events;
 import tracker.Autorun;
+import tracker.Events;
 
+using ceramic.Extensions;
 #if ceramic_entity_dynamic_events
 import tracker.DynamicEvents;
 #end
 
-using ceramic.Extensions;
 
 @editable
 #if (!macro && !display && !completion)

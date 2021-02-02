@@ -919,13 +919,8 @@ class Draw implements spec.Draw {
 
                     // Update geometry values
                     //
-                    if (quad.rotateFrame == RotateFrame.ROTATE_90) {
-                        w = quad.height;
-                        h = quad.width;
-                    } else {
-                        w = quad.width;
-                        h = quad.height;
-                    }
+                    w = quad.width;
+                    h = quad.height;
 
                     // Update clipping and check if this should even be drawn
                     //
@@ -1099,21 +1094,12 @@ class Draw implements spec.Draw {
                     //
                     if (quad.texture != null) {
                         quadGeom.texture = quad.texture.backendItem;
-                        if (quad.rotateFrame == RotateFrame.ROTATE_90) {
-                            rect.set(
-                                quad.frameX * quad.texture.density,
-                                quad.frameY * quad.texture.density,
-                                quad.frameHeight * quad.texture.density,
-                                quad.frameWidth * quad.texture.density
-                            );
-                        } else {
-                            rect.set(
-                                quad.frameX * quad.texture.density,
-                                quad.frameY * quad.texture.density,
-                                quad.frameWidth * quad.texture.density,
-                                quad.frameHeight * quad.texture.density
-                            );
-                        }
+                        rect.set(
+                            quad.frameX * quad.texture.density,
+                            quad.frameY * quad.texture.density,
+                            quad.frameWidth * quad.texture.density,
+                            quad.frameHeight * quad.texture.density
+                        );
                         quadGeom.uv(rect);
                     }
                     else {

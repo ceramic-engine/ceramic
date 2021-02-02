@@ -427,17 +427,9 @@ class Renderer extends Entity {
             flushAndCleanState();
         }
 
-        var w:Float;
-        var h:Float;
-
         // Update size
-        if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-            w = quad.height;
-            h = quad.width;
-        } else {
-            w = quad.width;
-            h = quad.height;
-        }
+        var w:Float = quad.width;
+        var h:Float = quad.height;
 
         // Fetch matrix
         //
@@ -640,18 +632,10 @@ class Renderer extends Entity {
 
             // UV
             //
-            if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                uvX = (quad.frameX * texDensity) / texWidthActual;
-                uvY = (quad.frameY * texDensity) / texHeightActual;
-                uvW = (quad.frameHeight * texDensity) / texWidthActual;
-                uvH = (quad.frameWidth * texDensity) / texHeightActual;
-            }
-            else {
-                uvX = (quad.frameX * texDensity) / texWidthActual;
-                uvY = (quad.frameY * texDensity) / texHeightActual;
-                uvW = (quad.frameWidth * texDensity) / texWidthActual;
-                uvH = (quad.frameHeight * texDensity) / texHeightActual;
-            }
+            uvX = (quad.frameX * texDensity) / texWidthActual;
+            uvY = (quad.frameY * texDensity) / texHeightActual;
+            uvW = (quad.frameWidth * texDensity) / texWidthActual;
+            uvH = (quad.frameHeight * texDensity) / texHeightActual;
 
             //tl
             draw.putUVs(uvX, uvY);
@@ -1519,17 +1503,9 @@ class Renderer extends Entity {
             uvFloats = this.uvFloats;
         }
 
-        var w:Float;
-        var h:Float;
-
         // Update size
-        if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-            w = quad.height;
-            h = quad.width;
-        } else {
-            w = quad.width;
-            h = quad.height;
-        }
+        var w:Float = quad.width;
+        var h:Float = quad.height;
 
         // Fetch matrix
         //
@@ -1705,18 +1681,10 @@ class Renderer extends Entity {
 
             // UV
             //
-            if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                uvX = (quad.frameX * texDensity) / texWidthActual;
-                uvY = (quad.frameY * texDensity) / texHeightActual;
-                uvW = (quad.frameHeight * texDensity) / texWidthActual;
-                uvH = (quad.frameWidth * texDensity) / texHeightActual;
-            }
-            else {
-                uvX = (quad.frameX * texDensity) / texWidthActual;
-                uvY = (quad.frameY * texDensity) / texHeightActual;
-                uvW = (quad.frameWidth * texDensity) / texWidthActual;
-                uvH = (quad.frameHeight * texDensity) / texHeightActual;
-            }
+            uvX = (quad.frameX * texDensity) / texWidthActual;
+            uvY = (quad.frameY * texDensity) / texHeightActual;
+            uvW = (quad.frameWidth * texDensity) / texWidthActual;
+            uvH = (quad.frameHeight * texDensity) / texHeightActual;
 
             var uvList = draw.getUvList();
 
