@@ -838,8 +838,6 @@ class Assets extends Entity {
 
         runtimeAssets = assets.runtimeAssets;
         defaultImageOptions = assets.defaultImageOptions;
-        hotReload = assets.hotReload;
-        assets.onAssetFilesChange(this, emitAssetFilesChange);
 
     }
 
