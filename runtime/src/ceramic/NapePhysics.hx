@@ -39,6 +39,8 @@ class NapePhysics extends System {
 
         super();
 
+        preUpdateOrder = 3000;
+
         this.space = createSpace();
 
     }
