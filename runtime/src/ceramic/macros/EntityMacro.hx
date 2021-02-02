@@ -162,17 +162,11 @@ class EntityMacro {
                                                             expr: fn.expr.expr
                                                         }]);
                                                 }
-                                                
-                                                switch (fn.expr.expr) {
-                                                    case EBlock(exprs):
 
-                                                        exprs.push(macro {
-                                                            this.$fieldName = @:privateAccess ${expr};
-                                                        });
-
-                                                    default:
-                                                        throw new Error("Invalid constructor body", field.pos);
-                                                }
+                                                fn.expr = appendConstructorSuper(
+                                                    fn.expr,
+                                                    macro this.$fieldName = @:privateAccess ${expr}
+                                                );
 
                                             default:
                                                 throw new Error("Invalid constructor", field.pos);
@@ -401,6 +395,29 @@ class EntityMacro {
                 return macro { _lifecycleState = -1; ${e}; };
             default:
                 return ExprTools.map(e, transformSuperDestroy);
+        }
+
+    }
+
+    static var _appendConstructorSuperToAppend:Expr;
+
+    /** Append constructor `super(...);`
+        with `toAppend` expr */
+    static function appendConstructorSuper(e:Expr, toAppend:Expr):Expr {
+
+        _appendConstructorSuperToAppend = toAppend;
+
+        return doAppendConstructorSuper(e);
+
+    }
+
+    static function doAppendConstructorSuper(e:Expr):Expr {
+
+        switch (e.expr) {
+            case ECall({expr: EConst(CIdent('super')), pos: _}, _):
+                return macro { ${e}; ${_appendConstructorSuperToAppend}; };
+            default:
+                return ExprTools.map(e, doAppendConstructorSuper);
         }
 
     }
