@@ -15,14 +15,19 @@ using ceramic.Extensions;
 
 class Input implements tracker.Events implements spec.Input {
 
+    /**
+     * Internal value to store gamepad state
+     */
+    inline static final GAMEPAD_STORAGE_SIZE:Int = 20;
+
     @event function keyDown(key:ceramic.Key);
     @event function keyUp(key:ceramic.Key);
 
-    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
-    @event function controllerDown(controllerId:Int, buttonId:Int);
-    @event function controllerUp(controllerId:Int, buttonId:Int);
-    @event function controllerEnable(controllerId:Int, name:String);
-    @event function controllerDisable(controllerId:Int);
+    @event function gamepadAxis(gamepadId:Int, axisId:Int, value:Float);
+    @event function gamepadDown(gamepadId:Int, buttonId:Int);
+    @event function gamepadUp(gamepadId:Int, buttonId:Int);
+    @event function gamepadEnable(gamepadId:Int, name:String);
+    @event function gamepadDisable(gamepadId:Int);
 
     public function new() {
 
@@ -323,9 +328,9 @@ class Input implements tracker.Events implements spec.Input {
                     gamepads.push(gamepad);
                     index = gamepads.length - 1;
                 }
-                emitControllerEnable(index, gamepad.displayName);
-                for (n in 0...20) {
-                    gamepadPressed.set(index * 20 + n, 0);
+                emitGamepadEnable(index, gamepad.displayName);
+                for (n in 0...GAMEPAD_STORAGE_SIZE) {
+                    gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + n, 0);
                 }
             }
 
@@ -368,13 +373,13 @@ class Input implements tracker.Events implements spec.Input {
                 var index = gamepads.indexOf(gamepad);
                 if (index != -1) {
                     gamepads.unsafeSet(index, null);
-                    for (n in 0...20) {
-                        if (gamepadPressed.get(index * 20 + n) == 1) {
-                            gamepadPressed.set(index * 20 + n, 0);
-                            emitControllerUp(index, n);
+                    for (n in 0...GAMEPAD_STORAGE_SIZE) {
+                        if (gamepadPressed.get(index * GAMEPAD_STORAGE_SIZE + n) == 1) {
+                            gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + n, 0);
+                            emitGamepadUp(index, n);
                         }
                     }
-                    emitControllerDisable(index);
+                    emitGamepadDisable(index);
                 }
                 unusedGamepads.unsafeSet(i, null);
             }
@@ -384,18 +389,18 @@ class Input implements tracker.Events implements spec.Input {
 
     function updateGamepadButton(index:Int, button:Int, pressed:Bool) {
 
-        var wasPressed = gamepadPressed.get(index * 20 + button) == 1;
+        var wasPressed = gamepadPressed.get(index * GAMEPAD_STORAGE_SIZE + button) == 1;
 
         if (pressed) {
             if (!wasPressed) {
-                gamepadPressed.set(index * 20 + button, 1);
-                emitControllerDown(index, button);
+                gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + button, 1);
+                emitGamepadDown(index, button);
             }
         }
         else {
             if (wasPressed) {
-                gamepadPressed.set(index * 20 + button, 0);
-                emitControllerUp(index, button);
+                gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + button, 0);
+                emitGamepadUp(index, button);
             }
         }
 
@@ -406,7 +411,7 @@ class Input implements tracker.Events implements spec.Input {
         var prevValue = gamepadAxis.get(index * 5 + axis);
         if (prevValue != value) {
             gamepadAxis.set(index * 5 + axis, value);
-            emitControllerAxis(index, axis, value);
+            emitGamepadAxis(index, axis, value);
         }
 
     }

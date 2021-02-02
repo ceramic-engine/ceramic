@@ -19,6 +19,11 @@ import clay.Clay;
 @:access(ceramic.App)
 class ClayEvents extends clay.Events {
 
+    /**
+     * Internal value to store gamepad state
+     */
+    inline static final GAMEPAD_STORAGE_SIZE:Int = 32;
+
     var backend:backend.Backend;
 
     var lastDensity:Float = -1;
@@ -38,8 +43,8 @@ class ClayEvents extends clay.Events {
     var mouseY:Float = 0;
     #end
 
-    var activeControllers:IntBoolMap = new IntBoolMap();
-    var removedControllers:IntBoolMap = new IntBoolMap();
+    var activeGamepads:IntBoolMap = new IntBoolMap();
+    var removedGamepads:IntBoolMap = new IntBoolMap();
 
     var gamepadAxisToButton:IntIntMap = new IntIntMap();
     var gamepadButtonMapping:IntIntMap = new IntIntMap();
@@ -68,7 +73,7 @@ class ClayEvents extends clay.Events {
         #if (cpp && linc_sdl)
 
         // Tweak a few values to make these match what we got with HTML5 gamepad API
-        // This is expected to work on PS4 and Xbox controllers for now.
+        // This is expected to work on PS4 and Xbox gamepads for now.
         // (better support of more gamepad could be done later if needed though)
 
         gamepadButtonMapping.set(9, 4);
@@ -304,38 +309,38 @@ class ClayEvents extends clay.Events {
         
         #if !(ios || android) // No gamepad on ios & android for now
 
-        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
-            activeControllers.set(id, true);
+        if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
+            activeGamepads.set(id, true);
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            backend.input.emitControllerEnable(id, name);
+            backend.input.emitGamepadEnable(id, name);
         }
 
         if (gamepadAxisToButton.exists(axisId)) {
             var buttonId = gamepadAxisToButton.get(axisId);
             var pressed = value >= 0.5;
             if (pressed) {
-                if (gamepadPressedValues.get(id * 1024 + buttonId) != 1) {
-                    gamepadPressedValues.set(id * 1024 + buttonId, 1);
-                    backend.input.emitControllerDown(id, buttonId);
+                if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) != 1) {
+                    gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 1);
+                    backend.input.emitGamepadDown(id, buttonId);
                 }
             }
             else {
-                if (gamepadPressedValues.get(id * 1024 + buttonId) == 1) {
-                    gamepadPressedValues.set(id * 1024 + buttonId, 0);
-                    backend.input.emitControllerUp(id, buttonId);
+                if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) == 1) {
+                    gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 0);
+                    backend.input.emitGamepadUp(id, buttonId);
                 }
             }
         }
         else {
             #if !ceramic_no_axis_round
-            var prevValue = gamepadAxisValues.get(id * 1024 + axisId);
+            var prevValue = gamepadAxisValues.get(id * GAMEPAD_STORAGE_SIZE + axisId);
             var newValue = Math.round(value * 100.0) / 100.0;
             if (Math.abs(prevValue - newValue) > 0.01) {
-                gamepadAxisValues.set(id * 1024 + axisId, newValue);
-                backend.input.emitControllerAxis(id, axisId, newValue);
+                gamepadAxisValues.set(id * GAMEPAD_STORAGE_SIZE + axisId, newValue);
+                backend.input.emitGamepadAxis(id, axisId, newValue);
             }
             #else
-            backend.input.emitControllerAxis(id, axisId, event.value);
+            backend.input.emitGamepadAxis(id, axisId, event.value);
             #end
         }
 
@@ -347,22 +352,22 @@ class ClayEvents extends clay.Events {
 
         #if !(ios || android)
 
-        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
-            activeControllers.set(id, true);
-            for (i in 0...1024) {
-                gamepadPressedValues.set(id * 1024 + i, 0);
+        if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
+            activeGamepads.set(id, true);
+            for (i in 0...GAMEPAD_STORAGE_SIZE) {
+                gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
             }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            backend.input.emitControllerEnable(id, name);
+            backend.input.emitGamepadEnable(id, name);
         }
 
         if (gamepadButtonMapping.exists(buttonId)) {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
 
-        if (gamepadPressedValues.get(id * 1024 + buttonId) != 1) {
-            gamepadPressedValues.set(id * 1024 + buttonId, 1);
-            backend.input.emitControllerDown(id, buttonId);
+        if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) != 1) {
+            gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 1);
+            backend.input.emitGamepadDown(id, buttonId);
         }
 
         #end
@@ -373,22 +378,22 @@ class ClayEvents extends clay.Events {
         
         #if !(ios || android)
 
-        if (!activeControllers.exists(id) && !removedControllers.exists(id)) {
-            activeControllers.set(id, true);
-            for (i in 0...1024) {
-                gamepadPressedValues.set(id * 1024 + i, 0);
+        if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
+            activeGamepads.set(id, true);
+            for (i in 0...GAMEPAD_STORAGE_SIZE) {
+                gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
             }
             var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-            backend.input.emitControllerEnable(id, name);
+            backend.input.emitGamepadEnable(id, name);
         }
 
         if (gamepadButtonMapping.exists(buttonId)) {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
 
-        if (gamepadPressedValues.get(id * 1024 + buttonId) == 1) {
-            gamepadPressedValues.set(id * 1024 + buttonId, 0);
-            backend.input.emitControllerUp(id, buttonId);
+        if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) == 1) {
+            gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 0);
+            backend.input.emitGamepadUp(id, buttonId);
         }
 
         #end
@@ -400,30 +405,30 @@ class ClayEvents extends clay.Events {
         #if !(ios || android)
 
         if (type == GamepadDeviceEventType.DEVICE_REMOVED) {
-            if (activeControllers.exists(id)) {
-                for (i in 0...1024) {
-                    if (gamepadPressedValues.get(id * 1024 + i) == 1) {
-                        backend.input.emitControllerUp(id, i);
-                        gamepadPressedValues.set(id * 1024 + i, 0);
+            if (activeGamepads.exists(id)) {
+                for (i in 0...GAMEPAD_STORAGE_SIZE) {
+                    if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + i) == 1) {
+                        backend.input.emitGamepadUp(id, i);
+                        gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
                     }
                 }
-                backend.input.emitControllerDisable(id);
-                activeControllers.remove(id);
-                removedControllers.set(id, true);
+                backend.input.emitGamepadDisable(id);
+                activeGamepads.remove(id);
+                removedGamepads.set(id, true);
                 ceramic.App.app.onceUpdate(null, function(_) {
-                    removedControllers.remove(id);
+                    removedGamepads.remove(id);
                 });
             }
         }
         else if (type == GamepadDeviceEventType.DEVICE_ADDED) {
-            if (!activeControllers.exists(id)) {
-                activeControllers.set(id, true);
-                for (i in 0...1024) {
-                    gamepadPressedValues.set(id * 1024 + i, 0);
+            if (!activeGamepads.exists(id)) {
+                activeGamepads.set(id, true);
+                for (i in 0...GAMEPAD_STORAGE_SIZE) {
+                    gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
                 }
-                removedControllers.remove(id);
+                removedGamepads.remove(id);
                 var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
-                backend.input.emitControllerEnable(id, name);
+                backend.input.emitGamepadEnable(id, name);
             }
         }
 

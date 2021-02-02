@@ -1,6 +1,20 @@
 package ceramic;
 
+import backend.Backend;
+import ceramic.Assets;
+import ceramic.BitmapFont;
+import ceramic.CollectionEntry;
+import ceramic.ConvertField;
+import ceramic.Fragment;
+import ceramic.PlatformSpecific;
+import ceramic.Settings;
+import ceramic.Shortcuts.*;
+import ceramic.Texture;
+import haxe.CallStack;
 import haxe.ds.ArraySort;
+import tracker.Tracker;
+
+using ceramic.Extensions;
 #if hxtelemetry
 import hxtelemetry.HxTelemetry;
 #end
@@ -13,24 +27,6 @@ import sdl.SDL;
 import assets.AllAssets;
 #end
 
-import ceramic.PlatformSpecific;
-
-import ceramic.Settings;
-import ceramic.Assets;
-import ceramic.Fragment;
-import ceramic.Texture;
-import ceramic.BitmapFont;
-import ceramic.ConvertField;
-import ceramic.CollectionEntry;
-import ceramic.Shortcuts.*;
-
-import tracker.Tracker;
-
-import haxe.CallStack;
-
-import backend.Backend;
-
-using ceramic.Extensions;
 
 /**
  * `App` class is the starting point of any ceramic app.
@@ -670,21 +666,21 @@ class App extends Entity {
             beginUpdateCallbacks.push(function() input.emitKeyUp(key));
         });
 
-        // Forward controller events
-        backend.input.onControllerEnable(this, function(controllerId, name) {
-            beginUpdateCallbacks.push(function() input.emitControllerEnable(controllerId, name));
+        // Forward gamepad events
+        backend.input.onGamepadEnable(this, function(gamepadId, name) {
+            beginUpdateCallbacks.push(function() input.emitGamepadEnable(gamepadId, name));
         });
-        backend.input.onControllerDisable(this, function(controllerId) {
-            beginUpdateCallbacks.push(function() input.emitControllerDisable(controllerId));
+        backend.input.onGamepadDisable(this, function(gamepadId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadDisable(gamepadId));
         });
-        backend.input.onControllerDown(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() input.emitControllerDown(controllerId, buttonId));
+        backend.input.onGamepadDown(this, function(gamepadId, buttonId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadDown(gamepadId, buttonId));
         });
-        backend.input.onControllerUp(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() input.emitControllerUp(controllerId, buttonId));
+        backend.input.onGamepadUp(this, function(gamepadId, buttonId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadUp(gamepadId, buttonId));
         });
-        backend.input.onControllerAxis(this, function(controllerId, axisId, value) {
-            beginUpdateCallbacks.push(function() input.emitControllerAxis(controllerId, axisId, value));
+        backend.input.onGamepadAxis(this, function(gamepadId, axisId, value) {
+            beginUpdateCallbacks.push(function() input.emitGamepadAxis(gamepadId, axisId, value));
         });
 
     }
