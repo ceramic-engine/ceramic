@@ -293,9 +293,9 @@ class StateMachineMacro {
             return fields;
         }
 
-        var methodSuffixes = [];
+        var methodPrefixes = [];
         for (value in enumValues) {
-            methodSuffixes.push(ceramic.Utils.upperCaseToCamelCase(value));
+            methodPrefixes.push(value + '_');
         }
 
         var enterCases = [];
@@ -304,12 +304,12 @@ class StateMachineMacro {
 
         for (i in 0...enumValues.length) {
             var enumValue = enumValues[i];
-            var methodSuffix = methodSuffixes[i];
+            var methodPrefix = methodPrefixes[i];
 
             enterCases.push({
                 expr: {
-                    expr: fieldsByName.exists('enter$methodSuffix') ? ECall({
-                        expr: EConst(CIdent('enter$methodSuffix')),
+                    expr: fieldsByName.exists(methodPrefix + 'enter') ? ECall({
+                        expr: EConst(CIdent(methodPrefix + 'enter')),
                         pos: currentPos
                     }, []) : EBlock([]),
                     pos: currentPos
@@ -322,8 +322,8 @@ class StateMachineMacro {
 
             updateCases.push({
                 expr: {
-                    expr: fieldsByName.exists('update$methodSuffix') ? ECall({
-                        expr: EConst(CIdent('update$methodSuffix')),
+                    expr: fieldsByName.exists(methodPrefix + 'update') ? ECall({
+                        expr: EConst(CIdent(methodPrefix + 'update')),
                         pos: currentPos
                     }, [macro delta]) : EBlock([]),
                     pos: currentPos
@@ -336,8 +336,8 @@ class StateMachineMacro {
 
             exitCases.push({
                 expr: {
-                    expr: fieldsByName.exists('exit$methodSuffix') ? ECall({
-                        expr: EConst(CIdent('exit$methodSuffix')),
+                    expr: fieldsByName.exists(methodPrefix + 'exit') ? ECall({
+                        expr: EConst(CIdent(methodPrefix + 'exit')),
                         pos: currentPos
                     }, []) : EBlock([]),
                     pos: currentPos
