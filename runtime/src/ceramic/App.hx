@@ -755,10 +755,6 @@ class App extends Entity {
             systems.preUpdate(delta);
 
             // Update/pre-update physics bodies (if enabled)
-#if ceramic_arcade_physics
-            flushImmediate();
-            if (_delta > 0) arcade.preUpdate(_delta);
-#end
 #if ceramic_nape_physics
             flushImmediate();
             if (_delta > 0) nape.update(_delta);
@@ -782,14 +778,6 @@ class App extends Entity {
             // Flush immediate callbacks
             flushImmediate();
 
-            // Post-update physics bodies (if enabled)
-#if ceramic_arcade_physics
-            if (_delta > 0) arcade.postUpdate(_delta);
-            flushImmediate();
-#end
-
-#if ceramic_debug_cputime cpuTimePause(6); #end
-#if ceramic_debug_cputime cpuTimeRec(7); #end
             // Run systems postUpdate
             systems.postUpdate(delta);
 

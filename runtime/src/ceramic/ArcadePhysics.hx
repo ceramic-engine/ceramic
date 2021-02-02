@@ -1,10 +1,11 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
-class ArcadePhysics extends Entity {
+class ArcadePhysics extends System {
 
 #if ceramic_arcade_physics
 
@@ -33,6 +34,9 @@ class ArcadePhysics extends Entity {
     public function new() {
 
         super();
+
+        preUpdateOrder = 1000;
+        postUpdateOrder = 1000;
 
         this.world = createWorld();
 
@@ -84,7 +88,7 @@ class ArcadePhysics extends Entity {
 
     }
 
-    function preUpdate(delta:Float):Void {
+    override function preUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 
@@ -132,7 +136,9 @@ class ArcadePhysics extends Entity {
 
     }
 
-    function postUpdate(delta:Float):Void {
+    override function postUpdate(delta:Float):Void {
+
+        if (delta <= 0) return;
 
         _freezeItems = true;
 
