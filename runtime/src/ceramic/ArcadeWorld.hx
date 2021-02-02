@@ -1,12 +1,14 @@
 package ceramic;
 
 #if ceramic_arcade_physics
-import ceramic.Group;
-import ceramic.ArcadeSortGroup;
-import arcade.Collidable;
 import arcade.Body;
+import arcade.Collidable;
 import arcade.SortDirection;
+import ceramic.ArcadeSortGroup;
+import ceramic.Group;
 #end
+
+using ceramic.Extensions;
 
 class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
 
@@ -29,8 +31,15 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
             case Visual | Quad | Mesh: return Visual;
             case Group: return Group;
             case Body: return Body;
+            #if plugin_tilemap
+            case Tilemap: return Tilemap;
+            #end
             case arcade.Group: return arcade.Group;
             default:
+                #if plugin_tilemap
+                if (Std.is(element, Tilemap))
+                    return Tilemap;
+                #end
                 if (Std.is(element, Visual))
                     return Visual;
                 if (Std.is(element, Group))
@@ -192,6 +201,8 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
     
     override function collide(element1:Collidable, ?element2:Collidable, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
+        // TODO collide ceramic elements with arcade groups
+
         if (element2 == null) {
             return switch getCollidableType(element1) {
                 case Group: collideCeramicGroupVsItself(cast element1, collideCallback, processCallback);
@@ -214,6 +225,11 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
                         case Body:
                             var visual1:Visual = cast element1;
                             return collideBodyVsBody(visual1.body, cast element2, collideCallback, processCallback);
+                        #if plugin_tilemap
+                        case Tilemap:
+                            var visual1:Visual = cast element1;
+                            return collideBodyVsTilemap(visual1.body, cast element2, collideCallback, processCallback);
+                        #end
                     }
                 case Group:
                     switch getCollidableType(element2) {
@@ -225,6 +241,10 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
                             return collideCeramicGroupVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
                         case Body:
                             return collideBodyVsCeramicGroup(cast element2, cast element1, collideCallback, processCallback);
+                        #if plugin_tilemap
+                        case Tilemap:
+                            return collideCeramicGroupVsTilemap(cast element1, cast element2, collideCallback, processCallback);
+                        #end
                     }
                 case Body:
                     switch getCollidableType(element2) {
@@ -236,7 +256,24 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
                             return collideBodyVsCeramicGroup(cast element1, cast element2, collideCallback, processCallback);
                         case Body:
                             return collideBodyVsBody(cast element1, cast element2, collideCallback, processCallback);
+                        #if plugin_tilemap
+                        case Tilemap:
+                            return collideBodyVsTilemap(cast element1, cast element2, collideCallback, processCallback);
+                        #end
                     }
+                #if plugin_tilemap
+                case Tilemap:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return collideBodyVsTilemap(visual2.body, cast element1, collideCallback, processCallback);
+                        case Group:
+                            return collideCeramicGroupVsTilemap(cast element2, cast element1, collideCallback, processCallback);
+                        case Body:
+                            return collideBodyVsTilemap(cast element2, cast element1, collideCallback, processCallback);
+                    }
+                #end
             }
             return super.collide(element1, element2, collideCallback, processCallback);
         }
@@ -335,6 +372,66 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
         return (_total > 0);
 
     }
+
+#if plugin_tilemap
+
+    public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        // TODO optimize! (no need to iterate over every tile)
+
+        _total = 0;
+
+        if (tilemap.collidableLayersDirty) {
+            tilemap.computeCollidableLayers();
+        }
+
+        var layers = tilemap.computedCollidableLayers;
+        if (layers != null) {
+            for (i in 0...layers.length) {
+                var layer = layers.unsafeGet(i);
+                var tileQuads = layer.tileQuads;
+                for (q in 0...tileQuads.length) {
+                    var tileQuad = tileQuads.unsafeGet(q);
+
+                    // Only collide with tiles gid > 0
+                    if (tileQuad.tilemapTile.gid > 0) {
+                        
+                        // Init tile physics if needed
+                        if (tileQuad.body == null) {
+                            tileQuad.immovable = true;
+                        }
+    
+                        var body2 = tileQuad.body;
+                        if (separate(body, body2, processCallback, false)) {
+    
+                            if (collideCallback != null) {
+                                collideCallback(body, body2);
+                            }
+                
+                            _total++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return (_total > 0);
+
+    }
+
+    public function collideCeramicGroupVsTilemap(group:Group<Visual>, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        // TODO optimize! (no need to iterate over every tile)
+
+        _total = 0;
+
+        // TODO
+        
+        return (_total > 0);
+
+    }
+
+#end
 
     public function sortCeramicGroup(group:Group<Visual>, sortDirection:SortDirection = SortDirection.INHERIT) {
 
