@@ -303,7 +303,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     }
 
-    public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
+    public function transformIcons(cwd:String, appIcon:String, appIconFlat:String, target:tools.BuildTarget, variant:String):Void {
 
         var toTransform:Array<TargetImage> = [];
         var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
@@ -325,10 +325,17 @@ class BackendTools implements tools.spec.BackendTools {
                 });
             
             case 'web':
+                outIconsPath = Path.join([cwd, 'project/web']);
                 toTransform.push({
-                    path: 'web/app.png',
+                    path: 'favicon.png',
                     width: 128,
                     height: 128
+                });
+                toTransform.push({
+                    path: 'touch-icon.png',
+                    width: 128,
+                    height: 128,
+                    flat: true
                 });
             
             case 'ios':
@@ -337,107 +344,128 @@ class BackendTools implements tools.spec.BackendTools {
                 toTransform.push({
                     path: 'Icon-App-20x20@1x.png',
                     width: 20,
-                    height: 20
+                    height: 20,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-20x20@2x.png',
                     width: 20 * 2,
-                    height: 20 * 2
+                    height: 20 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-20x20@3x.png',
                     width: 20 * 3,
-                    height: 20 * 3
+                    height: 20 * 3,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-29x29@1x.png',
                     width: 29,
-                    height: 29
+                    height: 29,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-29x29@2x.png',
                     width: 29 * 2,
-                    height: 29 * 2
+                    height: 29 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-29x29@3x.png',
                     width: 29 * 3,
-                    height: 29 * 3
+                    height: 29 * 3,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-40x40@1x.png',
                     width: 40,
-                    height: 40
+                    height: 40,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-40x40@2x.png',
                     width: 40 * 2,
-                    height: 40 * 2
+                    height: 40 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-40x40@3x.png',
                     width: 40 * 3,
-                    height: 40 * 3
+                    height: 40 * 3,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-57x57@1x.png',
                     width: 57,
-                    height: 57
+                    height: 57,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-57x57@2x.png',
                     width: 57 * 2,
-                    height: 57 * 2
+                    height: 57 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-60x60@2x.png',
                     width: 60 * 2,
-                    height: 60 * 2
+                    height: 60 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-60x60@3x.png',
                     width: 60 * 3,
-                    height: 60 * 3
+                    height: 60 * 3,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-72x72@1x.png',
                     width: 72,
-                    height: 72
+                    height: 72,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-72x72@2x.png',
                     width: 72 * 2,
-                    height: 72 * 2
+                    height: 72 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-76x76@1x.png',
                     width: 76,
-                    height: 76
+                    height: 76,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-76x76@2x.png',
                     width: 76 * 2,
-                    height: 76 * 2
+                    height: 76 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-App-83.5x83.5@2x.png',
                     width: 167,
-                    height: 167
+                    height: 167,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-Small-50x50@1x.png',
                     width: 50,
-                    height: 50
+                    height: 50,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'Icon-Small-50x50@2x.png',
                     width: 50 * 2,
-                    height: 50 * 2
+                    height: 50 * 2,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'ItunesArtwork@2x.png',
                     width: 1024,
-                    height: 1024
+                    height: 1024,
+                    flat: true
                 });
             
             case 'android':
@@ -446,12 +474,14 @@ class BackendTools implements tools.spec.BackendTools {
                 toTransform.push({
                     path: 'mipmap-ldpi/ic_launcher.png',
                     width: 36,
-                    height: 36
+                    height: 36,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-mdpi/ic_launcher.png',
                     width: 48,
-                    height: 48
+                    height: 48,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-mdpi/ic_launcher_foreground.png',
@@ -460,12 +490,14 @@ class BackendTools implements tools.spec.BackendTools {
                     padLeft: 18,
                     padRight: 18,
                     padTop: 18,
-                    padBottom: 18
+                    padBottom: 18,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-hdpi/ic_launcher.png',
                     width: 72,
-                    height: 72
+                    height: 72,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-hdpi/ic_launcher_foreground.png',
@@ -474,12 +506,14 @@ class BackendTools implements tools.spec.BackendTools {
                     padLeft: 26,
                     padRight: 26,
                     padTop: 26,
-                    padBottom: 26
+                    padBottom: 26,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xhdpi/ic_launcher.png',
                     width: 96,
-                    height: 96
+                    height: 96,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xhdpi/ic_launcher_foreground.png',
@@ -488,12 +522,14 @@ class BackendTools implements tools.spec.BackendTools {
                     padLeft: 35,
                     padRight: 35,
                     padTop: 35,
-                    padBottom: 35
+                    padBottom: 35,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xxhdpi/ic_launcher.png',
                     width: 144,
-                    height: 144
+                    height: 144,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xxhdpi/ic_launcher_foreground.png',
@@ -502,12 +538,14 @@ class BackendTools implements tools.spec.BackendTools {
                     padLeft: 52,
                     padRight: 52,
                     padTop: 52,
-                    padBottom: 52
+                    padBottom: 52,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xxxhdpi/ic_launcher.png',
                     width: 192,
-                    height: 192
+                    height: 192,
+                    flat: true
                 });
                 toTransform.push({
                     path: 'mipmap-xxxhdpi/ic_launcher_foreground.png',
@@ -516,7 +554,8 @@ class BackendTools implements tools.spec.BackendTools {
                     padLeft: 69,
                     padRight: 69,
                     padTop: 69,
-                    padBottom: 69
+                    padBottom: 69,
+                    flat: true
                 });
 
             default:
@@ -527,8 +566,10 @@ class BackendTools implements tools.spec.BackendTools {
         for (entry in toTransform) {
             entry.path = Path.join([outIconsPath, entry.path]);
 
+            var usedIcon = entry.flat ? appIconFlat : appIcon;
+
             // Compare with original
-            if (!Files.haveSameLastModified(appIcon, entry.path)) {
+            if (!Files.haveSameLastModified(usedIcon, entry.path)) {
 
                 // Icons did change
                 iconsChanged = true;
@@ -537,20 +578,20 @@ class BackendTools implements tools.spec.BackendTools {
 
                     // Resize
                     if (entry.padTop != null) {
-                        Images.resize(appIcon, entry.path, entry.width, entry.height, entry.padTop, entry.padRight, entry.padBottom, entry.padLeft);
+                        Images.resize(usedIcon, entry.path, entry.width, entry.height, entry.padTop, entry.padRight, entry.padBottom, entry.padLeft);
                     }
                     else {
-                        Images.resize(appIcon, entry.path, entry.width, entry.height);
+                        Images.resize(usedIcon, entry.path, entry.width, entry.height);
                     }
 
                 } else if (entry.path.endsWith('.ico')) {
 
                     // Create ico
-                    Images.createIco(appIcon, entry.path, entry.width, entry.height);
+                    Images.createIco(usedIcon, entry.path, entry.width, entry.height);
                 }
 
                 // Set to same last modified
-                Files.setToSameLastModified(appIcon, entry.path);
+                Files.setToSameLastModified(usedIcon, entry.path);
             }
         }
 

@@ -68,9 +68,24 @@ class Icons extends tools.Task {
             fail('Invalid icon: $appIcon');
         }
 
+        var appIconFlat = project.app.iconFlat;
+        if (!Path.isAbsolute(appIconFlat)) {
+            var projectAppIconFlat = Path.join([context.cwd, appIconFlat]);
+            var ceramicAppIconFlat = Path.join([context.ceramicToolsPath, appIconFlat]);
+            if (FileSystem.exists(projectAppIconFlat)) {
+                appIconFlat = projectAppIconFlat;
+            } else if (FileSystem.exists(ceramicAppIconFlat)) {
+                appIconFlat = ceramicAppIconFlat;
+            } else {
+                fail('Invalid flat icon: $appIconFlat');
+            }
+        } else if (!FileSystem.exists(appIconFlat)) {
+            fail('Invalid flat icon: $appIconFlat');
+        }
+
         print('Update project icons');
 
-        context.backend.transformIcons(cwd, appIcon, target, context.variant);
+        context.backend.transformIcons(cwd, appIcon, appIconFlat, target, context.variant);
 
     }
 

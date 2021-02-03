@@ -41,21 +41,10 @@ class Web extends tools.Task {
         // Create web project if needed
         WebProject.createWebProjectIfNeeded(cwd, project);
 
-        // Copy built files and assets
+        // Resolve paths and assets
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'web', cwd, context.debug, context.variant);
-        //var flowWebHtmlPath = Path.join([outTargetPath, 'bin/web']);
-
-        // Copy assets
-        //Files.copyDirectory(Path.join([flowWebHtmlPath, 'assets']), Path.join([cwd, 'project/web/assets']));
-
-        // Copy javascript files
         var jsName = project.app.name;
-        /*
-        if (FileSystem.exists(Path.join([flowWebHtmlPath, jsName + '.js.map']))) {
-            File.copy(Path.join([flowWebHtmlPath, jsName + '.js.map']), Path.join([cwd, 'project/web', jsName + '.js.map']));
-        }
-        File.copy(Path.join([flowWebHtmlPath, jsName + '.js']), Path.join([cwd, 'project/web', jsName + '.js']));*/
-
+    
         // Stop if not running
         if (!doRun) return;
 

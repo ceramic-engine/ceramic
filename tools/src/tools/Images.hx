@@ -39,6 +39,8 @@ typedef TargetImage = {
 
     var height:Int;
 
+    @:optional var flat:Bool;
+
     @:optional var padLeft:Int;
 
     @:optional var padRight:Int;
