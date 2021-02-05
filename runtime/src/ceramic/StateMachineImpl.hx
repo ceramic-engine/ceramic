@@ -143,8 +143,6 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     override function updateState(delta:Float):Void {
 
-        trace('- update state $delta ' + Type.getClassName(Type.getClass(this)));
-
         if (paused || !stateDefined) return;
 
         if (currentStateInstance != null) {
