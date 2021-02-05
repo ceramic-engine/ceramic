@@ -1,12 +1,12 @@
 package ceramic.macros;
 
-import haxe.macro.TypeTools;
+import haxe.DynamicAccess;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.DynamicAccess;
+import haxe.macro.TypeTools;
 
-using haxe.macro.ExprTools;
 using StringTools;
+using haxe.macro.ExprTools;
 
 class EntityMacro {
 
@@ -85,18 +85,15 @@ class EntityMacro {
 
         var componentFields = [];
         var ownFields:Array<String> = null;
-        #if (!display && !completion)
         var hasDestroyOverride = false;
-        #end
+        var resolvedStateEnums:Array<haxe.macro.Type> = null;
         var index = 0;
 
         for (field in fields) {
 
-            #if (!display && !completion)
             if (!hasDestroyOverride && field.name == 'destroy') {
                 hasDestroyOverride = true;
             }
-            #end
 
             var hasMeta = hasOwnerOrComponentMeta(field);
 
@@ -132,9 +129,11 @@ class EntityMacro {
                         if (field.access.indexOf(AStatic) != -1) {
                             throw new Error("Component cannot be static", field.pos);
                         }
-                        if (field.access.indexOf(APrivate) != -1) {
-                            throw new Error("Component cannot be private", field.pos);
-                        }
+                        // Why a component could not be private?
+                        // Forgot why I did put this...
+                        // if (field.access.indexOf(APrivate) != -1) {
+                        //     throw new Error("Component cannot be private", field.pos);
+                        // }
 
                         var fieldName = field.name;
 
@@ -142,9 +141,99 @@ class EntityMacro {
                             // Compute type from expr
                             switch (expr.expr) {
                                 case ENew(t,p):
+
+                                    // Some syntactic sugar with StateMachine used as a component
+                                    // StateMachine<S> will map to StateMachineComponent<S,E>,
+                                    // E being our current Entity class, automatically resolved
+                                    if (t.name == 'StateMachine' && (t.pack.length == 0 || (t.pack.length == 1 && t.pack[0] == 'ceramic'))) {
+                                        if (t.params.length == 1) {
+                                            var resolvedType:haxe.macro.Type = null;
+                                            var isCeramicStateMachine = false;
+                                            try {
+                                                // Ensure we are matching ceramic's StateMachine type,
+                                                // and not another type with the same name
+                                                resolvedType = Context.resolveType(TPath({
+                                                    pack: t.pack,
+                                                    name: t.name,
+                                                    params: [TPType(macro :Dynamic)]
+                                                }), field.pos);
+                                                if (resolvedType != null) {
+                                                    switch resolvedType {
+                                                        default:
+                                                        case TInst(t, params):
+                                                            var res = t.get();
+                                                            if ((res.name == 'StateMachineImpl' || res.name.startsWith('StateMachineImpl_')) && res.pack.length == 1 && res.pack[0] == 'ceramic') {
+                                                                isCeramicStateMachine = true;
+                                                            }
+                                                    }
+                                                }
+                                            }
+                                            catch (e:Dynamic) {}
+                                            if (isCeramicStateMachine) {
+                                                // This is indeed a ceramic StateMachine.
+
+                                                // Check if state is an enum or enum abstract type
+                                                var resolvedTypeParam:haxe.macro.Type = null;
+                                                var typeParamIsEnum:Bool = false;
+                                                var typeParamIsEnumAbstract:Bool = false;
+                                                try {
+                                                    switch t.params[0] {
+                                                        default:
+                                                        case TPType(tp):
+                                                            resolvedTypeParam = Context.resolveType(tp, field.pos);
+                                                            if (resolvedTypeParam != null) {
+                                                                switch resolvedTypeParam {
+                                                                    default:
+                                                                    case TAbstract(t, params):
+                                                                        if (t.get().meta.has(':enum')) {
+                                                                            typeParamIsEnumAbstract = true;
+                                                                        }
+                                                                    case TEnum(t, params):
+                                                                        typeParamIsEnum = true;
+                                                                }
+                                                            }
+                                                    }
+                                                }
+                                                catch (e:Dynamic) {}
+
+                                                if (typeParamIsEnum || typeParamIsEnumAbstract) {
+
+                                                    // Yes, it's an enum or enum abstract type. Perform replace
+                                                    var localClassParams = [];
+                                                    for (param in localClass.params) {
+                                                        localClassParams.push(TPType(TypeTools.toComplexType(param.t)));
+                                                    }
+                                                    t = {
+                                                        pack: ['ceramic'],
+                                                        name: 'StateMachineComponent',
+                                                        params: [
+                                                            t.params[0],
+                                                            TPType(TPath({
+                                                                pack: localClass.pack,
+                                                                name: localClass.name,
+                                                                params: localClassParams
+                                                            }))
+                                                        ]
+                                                    }
+                                                    expr = {
+                                                        expr: ENew(t,p),
+                                                        pos: field.pos
+                                                    };
+
+                                                    // Also keep enum type around to perform further checks after
+                                                    if (resolvedStateEnums == null)
+                                                        resolvedStateEnums = [];
+                                                    resolvedStateEnums.push(resolvedTypeParam);
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                    
                                     if (type == null) {
                                         type = TPath(t);
                                     }
+
                                     if (constructor == null) {
                                         throw new Error("A constructor is required to initialize a component's default instance", field.pos);
                                     }
@@ -236,7 +325,6 @@ class EntityMacro {
             index++;
         }
 
-        #if (!display && !completion)
         // In some cases, destroy override is a requirement, add it if not there already
         if (ownFields != null && !hasDestroyOverride) {
             newFields.push({
@@ -253,7 +341,6 @@ class EntityMacro {
                 meta: []
             });
         }
-        #end
 
         var isProcessed = processed.exists(classPath);
         if (!isProcessed) {
@@ -370,6 +457,44 @@ class EntityMacro {
                     pos: pos
                 }]
             });
+        }
+
+        // Check state machine enum state collisions
+        if (resolvedStateEnums != null) {
+
+            var enumNames:Map<String,Bool> = new Map();
+            var duplicateNames:Map<String,Bool> = new Map();
+
+            for (type in resolvedStateEnums) {
+
+                switch type {
+                    default:
+                    case TAbstract(t, params):
+                        for (field in t.get().impl.get().statics.get()) {
+                            if (field.meta.has(':enum') && field.meta.has(':impl')) {
+                                var name = field.name;
+                                if (!enumNames.exists(name)) {
+                                    enumNames.set(name, true);
+                                }
+                                else if (!duplicateNames.exists(name)) {
+                                    duplicateNames.set(name, true);
+                                    Context.error("Duplicate state: enum value `" + name + "` is used by multiple StateMachine components", Context.currentPos());
+                                }
+                            }
+                        }
+                    case TEnum(t, params):
+                        for (name in t.get().names) {
+                            if (!enumNames.exists(name)) {
+                                enumNames.set(name, true);
+                            }
+                            else if (!duplicateNames.exists(name)) {
+                                duplicateNames.set(name, true);
+                                Context.error("Duplicate state: enum value `" + name + "` is used by multiple StateMachine components", Context.currentPos());
+                            }
+                        }
+                }
+
+            }
         }
 
         #if ceramic_debug_macro

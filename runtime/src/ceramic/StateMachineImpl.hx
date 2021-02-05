@@ -1,54 +1,64 @@
 package ceramic;
 
-import tracker.Observable;
-
-#if !macro
-@:autoBuild(ceramic.macros.StateMachineMacro.buildFields())
-#end
-class StateMachineImpl<T> extends Entity implements Observable implements Component {
-
-    /**
-     * Shared state machine system
-     */
-    static var system:StateMachineSystem = null;
+#if (!ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
+class StateMachineImpl<T> extends StateMachineBase {
 
     /** The current state */
-    @observe public var state(default,set):T = null;
+    @observe public var state(default,set):T = StateMachineBase.NO_STATE;
 
     /** When transitioning from one state to another,
         this will be set to the next incoming state */
-    public var nextState(default,null):T = null;
+    public var nextState(default,null):T = StateMachineBase.NO_STATE;
 
     /** When set to `true`, the state machine will stop calling `update()` on current state and related. */
     public var paused:Bool = false;
+
+    /** Is `true` if a state has been assigned, `false` otherwise. */
+    public var stateDefined(default,null):Bool = false;
+
+    /** Is `true` if a nextState has been assigned, `false` otherwise. */
+    public var nextStateDefined(default,null):Bool = false;
 
     var stateInstances:Map<String, State> = null;
 
     var currentStateInstance:State = null;
 
     function set_state(state:T):T {
-        if (this.state == state) return state;
+        if (stateDefined && this.state == state) return state;
 
         // Assign next state value
         nextState = state;
 
+        // Compute nextStateDefined
+        nextStateDefined = computeStateDefined(nextState);
+
         // Exit previous state
-        if (this.state != null) {
-            _exitState();
+        if (stateDefined) {
+            exitState();
+            stateDefined = false;
         }
 
         // Update state value
         this.state = state;
 
+        // Compute stateDefined
+        stateDefined = nextStateDefined;
+
         // Enter new state
-        if (this.state != null) {
-            _enterState();
+        if (stateDefined) {
+            enterState();
         }
 
         // Remove next state value
-        nextState = null;
+        nextState = StateMachineBase.NO_STATE;
 
         return state;
+    }
+
+    function computeStateDefined(state:T):Bool {
+
+        return (state != StateMachineBase.NO_STATE);
+
     }
 
     function keyToString(key:T):String {
@@ -111,15 +121,17 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
         super();
 
+        var system = StateMachineSystem.sharedSystem;
         if (system == null) {
-            system = new StateMachineSystem();
+            StateMachineSystem.sharedSystem = new StateMachineSystem();
+            system = StateMachineSystem.sharedSystem;
         }
 
-        system.stateMachines.push(cast this);
+        system.stateMachines.push(this);
 
     }
 
-    function _enterState():Void {
+    function enterState():Void {
 
         // Enter new state object (if any)
         currentStateInstance = get(state);
@@ -129,10 +141,11 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         
     }
 
-    @:allow(ceramic.StateMachineSystem)
-    function _updateState(delta:Float):Void {
+    override function updateState(delta:Float):Void {
 
-        if (paused || state == null) return;
+        trace('- update state $delta ' + Type.getClassName(Type.getClass(this)));
+
+        if (paused || !stateDefined) return;
 
         if (currentStateInstance != null) {
             currentStateInstance.update(delta);
@@ -140,7 +153,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
     }
 
-    function _exitState():Void {
+    function exitState():Void {
 
         // Exit previous state object (if any)
         if (currentStateInstance != null) {
@@ -148,12 +161,6 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             currentStateInstance = null;
         }
         
-    }
-
-    function bindAsComponent():Void {
-
-        // Nothing to do
-
     }
 
     override function destroy():Void {

@@ -7,9 +7,14 @@ using ceramic.Extensions;
 @:allow(ceramic.StateMachineImpl)
 class StateMachineSystem extends System {
 
-    var stateMachines:Array<StateMachine<Any>> = [];
+    /**
+     * Shared state machine system
+     */
+    static var sharedSystem:StateMachineSystem = null;
 
-    var _updatingStateMachines:Array<StateMachine<Any>> = [];
+    var stateMachines:Array<StateMachineBase> = [];
+
+    var _updatingStateMachines:Array<StateMachineBase> = [];
 
     override function new() {
 
@@ -31,7 +36,7 @@ class StateMachineSystem extends System {
         // Call
         for (i in 0...len) {
             var machine = _updatingStateMachines.unsafeGet(i);
-            machine._updateState(delta);
+            machine.updateState(delta);
         }
 
         // Cleanup array
