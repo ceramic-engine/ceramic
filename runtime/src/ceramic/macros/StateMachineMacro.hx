@@ -65,8 +65,8 @@ class StateMachineMacro {
 
                     return TPath({
                         pack: ['ceramic'],
-                        name: 'StateMachineImpl',
-                        params: [TPType(macro :Any)]
+                        name: 'StateMachineBase',
+                        params: []
                     });
                 }
 
@@ -122,8 +122,8 @@ class StateMachineMacro {
 
                 return TPath({
                     pack: ['ceramic'],
-                    name: 'StateMachineImpl',
-                    params: [TPType(macro :Dynamic)]
+                    name: 'StateMachineBase',
+                    params: []
                 });
 
             default:

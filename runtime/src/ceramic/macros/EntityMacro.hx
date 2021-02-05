@@ -162,7 +162,7 @@ class EntityMacro {
                                                         default:
                                                         case TInst(t, params):
                                                             var res = t.get();
-                                                            if ((res.name == 'StateMachineImpl' || res.name.startsWith('StateMachineImpl_')) && res.pack.length == 1 && res.pack[0] == 'ceramic') {
+                                                            if ((res.name == 'StateMachineBase' || res.name == 'StateMachineImpl' || res.name.startsWith('StateMachineImpl_')) && res.pack.length == 1 && res.pack[0] == 'ceramic') {
                                                                 isCeramicStateMachine = true;
                                                             }
                                                     }
