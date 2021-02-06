@@ -8,6 +8,8 @@ using haxe.macro.ExprTools;
 
 class StateMachineMacro {
 
+    @:persistent static var stateTypeByImplName:Map<String,haxe.macro.ComplexType> = null;
+
     static var usedNames:Map<String,Bool> = null;
 
     static var namesForTypePath:Map<String,String> = null;
@@ -27,6 +29,10 @@ class StateMachineMacro {
         var currentPos = Context.currentPos();
 
         //trace('localType: $localType');
+
+        if (stateTypeByImplName == null) {
+            stateTypeByImplName = new Map();
+        }
 
         if (usedNames == null) {
             namesForTypePath = new Map();
@@ -177,6 +183,13 @@ class StateMachineMacro {
             }
             usedNames.set(implName, true);
             namesForTypePath.set(typePathStr, implName);
+
+            if (enumComplexType != null) {
+                stateTypeByImplName.set(implName, enumComplexType);
+            }
+            else {
+                stateTypeByImplName.set(implName, abstractComplexType);
+            }
 
             // Gather enum values
             var enumValues:Array<haxe.macro.Type.EnumField> = null;
@@ -730,6 +743,14 @@ class StateMachineMacro {
         });
 
         return fields;
+
+    }
+
+    public static function getStateTypeFromImplName(implName:String):haxe.macro.ComplexType {
+
+        if (stateTypeByImplName == null)
+            return null;
+        return stateTypeByImplName.get(implName);
 
     }
 
