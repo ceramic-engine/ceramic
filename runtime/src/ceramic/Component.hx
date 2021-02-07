@@ -16,8 +16,14 @@ interface Component /* extends Entity (enforced by ComponentMacro) */ {
         This field is automatically added to implementing class by ComponentMacro */
     var initializerName(default,null):String;
 
-    // If implementing class doesn't provide an `entity` field,
-    // it is automatically added by ComponentMacro with type `ceramic.Entity`
+    // If implementing class doesn't provide an `entity` field or a field marked with `@entity`,
+    // it is automatically added by ComponentMacro with name `entity` and type `ceramic.Entity`
+
+    /**
+     * Called by target entity to assign itself to the component
+     * @param entity 
+     */
+    private function setEntity(entity:Entity):Void;
 
     /** Called when the component is bound to an entity. At this stage, the `entity` property
         should be assigned and work properly. Use this method to run initialization code once
