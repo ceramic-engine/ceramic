@@ -34,7 +34,7 @@ class StateMachineImpl<T> extends StateMachineBase {
 
         // Exit previous state
         if (stateDefined) {
-            exitState();
+            _exitState();
             stateDefined = false;
         }
 
@@ -46,7 +46,7 @@ class StateMachineImpl<T> extends StateMachineBase {
 
         // Enter new state
         if (stateDefined) {
-            enterState();
+            _enterState();
         }
 
         // Remove next state value
@@ -131,7 +131,7 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
-    function enterState():Void {
+    function _enterState():Void {
 
         // Enter new state object (if any)
         currentStateInstance = get(state);
@@ -141,7 +141,7 @@ class StateMachineImpl<T> extends StateMachineBase {
         
     }
 
-    override function updateState(delta:Float):Void {
+    override function _updateState(delta:Float):Void {
 
         if (paused || !stateDefined) return;
 
@@ -151,7 +151,7 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
-    function exitState():Void {
+    function _exitState():Void {
 
         // Exit previous state object (if any)
         if (currentStateInstance != null) {

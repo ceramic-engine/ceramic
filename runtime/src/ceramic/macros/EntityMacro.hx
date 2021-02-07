@@ -10,6 +10,8 @@ using haxe.macro.ExprTools;
 
 class EntityMacro {
 
+    @:persistent static var fieldNamesByTypeName:Map<String,Array<String>> = null;
+
     #if (haxe_ver < 4)
     static var onReused:Bool = false;
     #end
@@ -81,15 +83,18 @@ class EntityMacro {
             }
 
             if (!isStateMachine && !inheritsFromStateMachine && clazz.pack.length == 1 && clazz.pack[0] == 'ceramic') {
-                if (clazz.name.startsWith('StateMachine_')) {//} || clazz.name == 'StateMachine' || clazz.name == 'StateMachineBase' || clazz.name.startsWith('StateMachineImpl_')) {
+                if (clazz.name.startsWith('StateMachine_')) {
                     inheritsFromStateMachine = true;
 
-                    trace('STATE MACHINE PARENT ${localClass.name} extends ${clazz.name}');
                     var stateComplexType = StateMachineMacro.getStateTypeFromImplName(clazz.name);
-                    trace('state type: $stateComplexType');
                     if (stateComplexType != null) {
                         try {
                             var resolvedType = Context.resolveType(stateComplexType, Context.currentPos());
+                            switch resolvedType {
+                                default:
+                                case TLazy(f):
+                                    resolvedType = f();
+                            }
                             switch resolvedType {
                                 default:
                                 case TEnum(t, params):
@@ -114,12 +119,23 @@ class EntityMacro {
         var newFields:Array<Field> = [];
 
         var constructor = null;
+        var fieldNames = [];
         for (field in fields) {
             if (field.name == 'new') {
                 constructor = field;
-                break;
+            }
+            else {
+                fieldNames.push(field.name);
             }
         }
+        var typeName = localClass.name;
+        if (localClass.pack.length > 0) {
+            typeName = localClass.pack.join('.') + '.' + typeName;
+        }
+        if (fieldNamesByTypeName == null) {
+            fieldNamesByTypeName = new Map();
+        }
+        fieldNamesByTypeName.set(typeName, fieldNames);
 
         var componentFields = [];
         var ownFields:Array<String> = null;
@@ -167,13 +183,9 @@ class EntityMacro {
                         if (field.access.indexOf(AStatic) != -1) {
                             throw new Error("Component cannot be static", field.pos);
                         }
-                        // Why a component could not be private?
-                        // Forgot why I did put this...
-                        // if (field.access.indexOf(APrivate) != -1) {
-                        //     throw new Error("Component cannot be private", field.pos);
-                        // }
 
                         var fieldName = field.name;
+                        var processedStateMachineType = false;
 
                         if (expr != null) {
                             // Compute type from expr
@@ -198,6 +210,11 @@ class EntityMacro {
                                                 if (resolvedType != null) {
                                                     switch resolvedType {
                                                         default:
+                                                        case TLazy(f):
+                                                            resolvedType = f();
+                                                    }
+                                                    switch resolvedType {
+                                                        default:
                                                         case TInst(t, params):
                                                             var res = t.get();
                                                             if ((res.name == 'StateMachineBase' || res.name == 'StateMachineImpl' || res.name.startsWith('StateMachineImpl_')) && res.pack.length == 1 && res.pack[0] == 'ceramic') {
@@ -210,6 +227,7 @@ class EntityMacro {
                                             if (isCeramicStateMachine) {
                                                 // This is indeed a ceramic StateMachine.
                                                 checkStateMachineFields = true;
+                                                processedStateMachineType = true;
 
                                                 // Check if state is an enum or enum abstract type
                                                 var resolvedTypeParam:haxe.macro.Type = null;
@@ -221,6 +239,11 @@ class EntityMacro {
                                                         case TPType(tp):
                                                             resolvedTypeParam = Context.resolveType(tp, field.pos);
                                                             if (resolvedTypeParam != null) {
+                                                                switch resolvedTypeParam {
+                                                                    default:
+                                                                    case TLazy(f):
+                                                                        resolvedTypeParam = f();
+                                                                }
                                                                 switch resolvedTypeParam {
                                                                     default:
                                                                     case TAbstract(t, params):
@@ -302,6 +325,68 @@ class EntityMacro {
                                     }
                                 default:
                                     throw new Error("Invalid component default value", field.pos);
+                            }
+                        }
+
+                        // Check if this type is a StateMachine subclass to resolve associated enum (if any)
+                        if (!processedStateMachineType) {
+                            processedStateMachineType = true;
+                            if (type != null) {
+                                var resolvedType:haxe.macro.Type = null;
+                                try {
+                                    resolvedType = Context.resolveType(type, field.pos);
+                                }
+                                catch (e:Dynamic) {}
+                                if (resolvedType != null) {
+                                    switch resolvedType {
+                                        default:
+                                        case TLazy(f):
+                                            resolvedType = f();
+                                    }
+                                    switch resolvedType {
+                                        default:
+                                        case TInst(t, params):
+                                            var parent = t;
+                                            while (parent != null) {
+                                    
+                                                var clazz = parent.get();
+                                    
+                                                if (clazz.pack.length == 1 && clazz.pack[0] == 'ceramic') {
+                                                    if (clazz.name.startsWith('StateMachine_')) {
+                                                        inheritsFromStateMachine = true;
+                                    
+                                                        var stateComplexType = StateMachineMacro.getStateTypeFromImplName(clazz.name);
+                                                        if (stateComplexType != null) {
+                                                            try {
+                                                                var resolvedType = Context.resolveType(stateComplexType, Context.currentPos());
+                                                                switch resolvedType {
+                                                                    default:
+                                                                    case TLazy(f):
+                                                                        resolvedType = f();
+                                                                }
+                                                                switch resolvedType {
+                                                                    default:
+                                                                    case TEnum(t, params):
+                                                                        if (resolvedStateEnums == null)
+                                                                            resolvedStateEnums = [];
+                                                                        resolvedStateEnums.push(resolvedType);
+                                                                    case TAbstract(t, params):
+                                                                        if (resolvedStateEnums == null)
+                                                                            resolvedStateEnums = [];
+                                                                        resolvedStateEnums.push(resolvedType);
+                                                                }
+                                                            }
+                                                            catch (e:Dynamic) {}
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                    
+                                                var parentHold = clazz.superClass;
+                                                parent = parentHold != null ? parentHold.t : null;
+                                            }
+                                    }
+                                }
                             }
                         }
 
@@ -775,6 +860,14 @@ class EntityMacro {
         }
 
         return fields;
+
+    }
+
+    public static function getFieldNamesFromTypeName(typeName:String):Array<String> {
+
+        if (fieldNamesByTypeName == null)
+            return null;
+        return fieldNamesByTypeName.get(typeName);
 
     }
 

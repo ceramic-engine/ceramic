@@ -36,7 +36,7 @@ class StateMachineSystem extends System {
         // Call
         for (i in 0...len) {
             var machine = _updatingStateMachines.unsafeGet(i);
-            machine.updateState(delta);
+            machine._updateState(delta);
         }
 
         // Cleanup array

@@ -9,8 +9,10 @@ class StateMachineBase extends Entity implements Observable implements Component
      */
     static final NO_STATE:Dynamic = null;
 
+    @:noCompletion @entity var rawEntity:ceramic.Entity;
+
     @:allow(ceramic.StateMachineSystem)
-    function updateState(delta:Float):Void {
+    function _updateState(delta:Float):Void {
 
         // Override in subclasses
 

@@ -412,25 +412,9 @@ class StateMachineMacro {
 
                 fields.push({
                     pos: currentPos,
-                    name: 'machineEntity',
-                    kind: FVar(entityComplexType, macro null),
-                    access: [APrivate],
-                    doc: '',
-                    meta: []
-                });
-
-                fields.push({
-                    pos: currentPos,
-                    name: 'bindAsComponent',
-                    kind: FFun({
-                        args: [],
-                        ret: macro :Void,
-                        expr: macro {
-                            super.bindAsComponent();
-                            machineEntity = cast entity;
-                        }
-                    }),
-                    access: [AOverride],
+                    name: 'entity',
+                    kind: FProp('default', 'null', entityComplexType, macro null),
+                    access: [APublic],
                     doc: '',
                     meta: []
                 });
@@ -493,17 +477,21 @@ class StateMachineMacro {
         var localClass = Context.getLocalClass().get();
         var currentPos = Context.currentPos();
 
-        //trace('BUILD ${localClass.name}');
-
         // Not inserting `self calls` in the class generated from genericBuild, only its subclasses
         var callSelfMethods:Bool = !usedNamesWithEnumValues.exists(localClass.name);
-        var callEntityMethods:Bool = false;
 
         // Gather every field by name
         var fieldsByName = new Map<String,Bool>();
         for (field in fields) {
             fieldsByName.set(field.name, true);
         }
+
+        if (fieldsByName.exists('_enterState')) {
+            // Already processed
+            return fields;
+        }
+
+        //trace('BUILD ${localClass.name}');
 
         var enumValues:Array<haxe.macro.Type.EnumField> = null;
         var abstractValues:Array<String> = null;
@@ -555,10 +543,34 @@ class StateMachineMacro {
                 if (resolvedEntityType != null) {
                     switch resolvedEntityType {
                         default:
+                        case TLazy(f):
+                            resolvedEntityType = f();
+                    }
+                    switch resolvedEntityType {
+                        default:
                         case TInst(t, params):
                             var classType = t.get();
-                            for (field in classType.fields.get()) {
-                                entityFieldsByName.set(field.name, true);
+
+                            var typeName = classType.name;
+                            if (classType.pack.length > 0) {
+                                typeName = classType.pack.join('.') + '.' + typeName;
+                            }
+                            // We may need to fetch field names from entity macro directly,
+                            // Because our state machine type might actually be currently resolved
+                            // from entity macro execution, meaning class is not totally ready.
+                            // To workaround this limitation, EntityMacro starts with gathering all field
+                            // names and makes them available from the following helper, even before it
+                            // has finished building entity class.
+                            var classFieldNames = EntityMacro.getFieldNamesFromTypeName(typeName);
+                            if (classFieldNames != null) {
+                                for (name in classFieldNames) {
+                                    entityFieldsByName.set(name, true);
+                                }
+                            }
+                            else {
+                                for (field in classType.fields.get()) {
+                                    entityFieldsByName.set(field.name, true);
+                                }
                             }
 
                             // Check parents
@@ -640,21 +652,21 @@ class StateMachineMacro {
                 enterExprs.push(stateValue + '_enter();');
             }
             if (callEntityMethods && entityFieldsByName.exists(stateValue + '_enter')) {
-                enterExprs.push('@:privateAccess machineEntity.' + stateValue + '_enter();');
+                enterExprs.push('@:privateAccess entity.' + stateValue + '_enter();');
             }
 
             if (callSelfMethods && fieldsByName.exists(stateValue + '_update')) {
                 updateExprs.push(stateValue + '_update(delta);');
             }
             if (callEntityMethods && entityFieldsByName.exists(stateValue + '_update')) {
-                updateExprs.push('@:privateAccess machineEntity.' + stateValue + '_update(delta);');
+                updateExprs.push('@:privateAccess entity.' + stateValue + '_update(delta);');
             }
 
             if (callSelfMethods && fieldsByName.exists(stateValue + '_exit')) {
                 exitExprs.push(stateValue + '_exit();');
             }
             if (callEntityMethods && entityFieldsByName.exists(stateValue + '_exit')) {
-                exitExprs.push('@:privateAccess machineEntity.' + stateValue + '_exit();');
+                exitExprs.push('@:privateAccess entity.' + stateValue + '_exit();');
             }
         }
 
@@ -670,7 +682,7 @@ class StateMachineMacro {
         //
         fields.push({
             pos: currentPos,
-            name: 'enterState',
+            name: '_enterState',
             kind: FFun({
                 args: [],
                 ret: macro :Void,
@@ -686,14 +698,14 @@ class StateMachineMacro {
                     }
                 }
             }),
-            access: [AOverride],
+            access: [APrivate, AOverride],
             doc: '',
             meta: []
         });
 
         fields.push({
             pos: currentPos,
-            name: 'updateState',
+            name: '_updateState',
             kind: FFun({
                 args: [{
                     name: 'delta',
@@ -714,14 +726,14 @@ class StateMachineMacro {
                     }
                 }
             }),
-            access: [AOverride],
+            access: [APrivate, AOverride],
             doc: '',
             meta: []
         });
 
         fields.push({
             pos: currentPos,
-            name: 'exitState',
+            name: '_exitState',
             kind: FFun({
                 args: [],
                 ret: macro :Void,
@@ -737,7 +749,7 @@ class StateMachineMacro {
                     }
                 }
             }),
-            access: [AOverride],
+            access: [APrivate, AOverride],
             doc: '',
             meta: []
         });
