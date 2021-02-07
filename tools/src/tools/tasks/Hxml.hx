@@ -119,6 +119,10 @@ class Hxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
+
+        // When getting completion hxml, disable dead code elimitation
+        hxmlData = tools.Hxml.disableDeadCodeElimination(hxmlData);
+
         var hxmlTargetCwd = cwd;
         var output = extractArgValue(args, 'output');
 

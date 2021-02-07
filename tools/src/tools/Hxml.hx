@@ -129,6 +129,19 @@ class Hxml {
         return updatedData;
     }
 
+    public static function disableDeadCodeElimination(hxml:Array<String>):Array<String> {
+
+        var result = [];
+        for (i in 0...hxml.length) {
+            var item = hxml[i];
+            if (!item.startsWith('-dce ')) {
+                result.push(item);
+            }
+        }
+        result.push('-dce no');
+        return result;
+
+    }
 
     /** Match any single/double quoted string */
     static var RE_BEGINS_WITH_STRING:EReg = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;

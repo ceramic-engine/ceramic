@@ -111,7 +111,6 @@ class PluginHxml extends tools.Task {
 
         if (completionFlag) {
             extraHxml.push('-D completion');
-            //extraHxml.push('-D display');
         }
 
         // Main entry point
@@ -131,6 +130,11 @@ class PluginHxml extends tools.Task {
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
+
+        if (completionFlag) {
+            hxmlData = tools.Hxml.disableDeadCodeElimination(hxmlData);
+        }
+
         var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
 
         var output = extractArgValue(args, 'output');
