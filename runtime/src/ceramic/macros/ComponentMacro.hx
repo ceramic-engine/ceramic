@@ -253,6 +253,7 @@ class ComponentMacro {
         if (callSuper) {
             setEntityExprs.push('super.setEntity(entity);');
         }
+        #if (!display && !completion)
         for (entityField in entityFields) {
             var entityFieldName = entityField.name;
             var entityType:haxe.macro.ComplexType = null;
@@ -284,6 +285,7 @@ class ComponentMacro {
                 setEntityExprs.push('this.$entityFieldName = cast entity;');
             }
         }
+        #end
         setEntityExprs.push('}');
         fields.push({
             pos: Context.currentPos(),

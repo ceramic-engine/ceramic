@@ -1,6 +1,6 @@
 package ceramic;
 
-#if (!ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
+#if (!completion && !display && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
 class StateMachineImpl<T> extends StateMachineBase {
 
     /** The current state */

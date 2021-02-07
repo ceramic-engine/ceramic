@@ -432,13 +432,86 @@ class StateMachineMacro {
             catch (e:Dynamic) {}
 
             if (existingType == null) {
-
-                var meta = [{
-                    name: ':autoBuild',
-                    params: [ macro ceramic.macros.StateMachineMacro.buildFields() ],
-                    pos: currentPos
-                }];
+                var meta = [];
                 if (parentImplName == null) {
+                    #if (!completion && !display)
+                    // Generic class with `@:generic` doesn't trigger autoBuild macros,
+                    // So we add these "manually"
+                    // This workaround can be removed when this issue is resolved: https://github.com/HaxeFoundation/haxe/issues/5536
+                    if ((Context.definedValue('cpp') != null || Context.definedValue('cs') != null)
+                        && Context.definedValue('ceramic_no_statemachine_generic') == null) {
+                            #if (display || completion)
+                            meta.push({
+                                name: ':build',
+                                params: [ macro ceramic.macros.EntityMacro.buildForCompletion() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro ceramic.macros.EntityMacro.buildForCompletion() ],
+                                pos: currentPos
+                            });
+                            #else
+                            meta.push({
+                                name: ':build',
+                                params: [ macro ceramic.macros.EntityMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro ceramic.macros.EntityMacro.build() ],
+                                pos: currentPos
+                            });
+                            #end
+                            meta.push({
+                                name: ':build',
+                                params: [ macro tracker.macros.EventsMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro tracker.macros.EventsMacro.build() ],
+                                pos: currentPos
+                            });
+                            #if (!completion && !display)
+                            meta.push({
+                                name: ':build',
+                                params: [ macro ceramic.macros.LazyMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro ceramic.macros.LazyMacro.build() ],
+                                pos: currentPos
+                            });
+                            #end
+                            meta.push({
+                                name: ':build',
+                                params: [ macro tracker.macros.ObservableMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro tracker.macros.ObservableMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':build',
+                                params: [ macro ceramic.macros.ComponentMacro.build() ],
+                                pos: currentPos
+                            });
+                            meta.push({
+                                name: ':autoBuild',
+                                params: [ macro ceramic.macros.ComponentMacro.build() ],
+                                pos: currentPos
+                            });
+                    }
+                    #end
+                    meta.push({
+                        name: ':autoBuild',
+                        params: [ macro ceramic.macros.StateMachineMacro.buildFields() ],
+                        pos: currentPos
+                    });
                     meta.push({
                         name: ':build',
                         params: [ macro ceramic.macros.StateMachineMacro.buildFields() ],
