@@ -10,7 +10,7 @@ package backend;
 @:keep
 class NativeAndroid {
 
-    @:keep static function init():Void {}
+    @:keep public static function init():Void {}
 
 }
 #end
