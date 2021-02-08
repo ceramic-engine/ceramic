@@ -35,6 +35,10 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public function init(app:ceramic.App) {
 
+        #if android
+        NativeAndroid.init();
+        #end
+
     }
 
 /// Events
