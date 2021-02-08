@@ -35,6 +35,14 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public function init(app:ceramic.App) {
 
+        #if mac
+        NativeMac.setAppleMomentumScrollSupported(false);
+        #end
+
+        #if windows
+        NativeWindows.init();
+        #end
+
     }
 
 /// Events
