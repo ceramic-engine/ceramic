@@ -43,6 +43,10 @@ class Backend implements tracker.Events implements spec.Backend {
         NativeWindows.init();
         #end
 
+        #if android
+        NativeAndroid.init();
+        #end
+        
     }
 
 /// Events
