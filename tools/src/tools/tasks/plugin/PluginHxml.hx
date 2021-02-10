@@ -131,10 +131,6 @@ class PluginHxml extends tools.Task {
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
 
-        if (completionFlag) {
-            hxmlData = tools.Hxml.disableDeadCodeElimination(hxmlData);
-        }
-
         var finalHxml = tools.Hxml.formatAndChangeRelativeDir(hxmlData, hxmlOriginalCwd, cwd).join(" ").replace(" \n ", "\n").trim();
 
         var output = extractArgValue(args, 'output');
