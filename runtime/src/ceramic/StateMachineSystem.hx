@@ -4,13 +4,13 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-@:allow(ceramic.StateMachineImpl)
+@:allow(ceramic.StateMachineBase)
 class StateMachineSystem extends System {
 
     /**
      * Shared state machine system
      */
-    static var sharedSystem:StateMachineSystem = null;
+    @lazy static var shared = new StateMachineSystem();
 
     var stateMachines:Array<StateMachineBase> = [];
 
@@ -20,11 +20,11 @@ class StateMachineSystem extends System {
 
         super();
 
-        preUpdateOrder = 2000;
+        lateUpdateOrder = 1000;
 
     }
 
-    override function preUpdate(delta:Float):Void {
+    override function lateUpdate(delta:Float):Void {
 
         // Work on a copy of list, to ensure nothing bad happens
         // if a new item is created or destroyed during iteration
@@ -36,7 +36,9 @@ class StateMachineSystem extends System {
         // Call
         for (i in 0...len) {
             var machine = _updatingStateMachines.unsafeGet(i);
-            machine._updateState(delta);
+            if (machine.autoUpdate) {
+                machine.update(delta);
+            }
         }
 
         // Cleanup array
