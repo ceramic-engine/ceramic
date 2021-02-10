@@ -143,6 +143,9 @@ class EntityMacro {
         var index = 0;
         var checkStateMachineFields = true; // Always true for now
 
+        var constructorFn = null;
+        var toAppendInConstructorSuper:Array<Expr> = null;
+
         for (field in fields) {
 
             if (!hasDestroyOverride && field.name == 'destroy') {
@@ -314,8 +317,10 @@ class EntityMacro {
                                                         }]);
                                                 }
 
-                                                fn.expr = appendConstructorSuper(
-                                                    fn.expr,
+                                                constructorFn = fn;
+                                                if (toAppendInConstructorSuper == null)
+                                                    toAppendInConstructorSuper = [];
+                                                toAppendInConstructorSuper.push(
                                                     macro this.$fieldName = @:privateAccess ${expr}
                                                 );
 
@@ -447,6 +452,21 @@ class EntityMacro {
             }
 
             index++;
+        }
+
+        // Append initialization in constructor
+        if (constructorFn != null && toAppendInConstructorSuper != null) {
+
+            var toAppend:Expr = {
+                expr: EBlock(toAppendInConstructorSuper),
+                pos: constructor.pos
+            }
+
+            constructorFn.expr = appendConstructorSuper(
+                constructorFn.expr,
+                toAppend
+            );
+
         }
 
         // In some cases, destroy override is a requirement, add it if not there already
