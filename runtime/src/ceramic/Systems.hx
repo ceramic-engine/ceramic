@@ -10,24 +10,24 @@ using ceramic.Extensions;
 class Systems extends Entity {
 
     /**
-     * If `true`, `preUpdateOrdered` list needs to be sorted
+     * If `true`, `earlyUpdateOrdered` list needs to be sorted
      */
-    var preUpdateOrderDirty:Bool = false;
+    var earlyUpdateOrderDirty:Bool = false;
 
     /**
-     * If `true`, `postUpdateOrdered` list needs to be sorted
+     * If `true`, `lateUpdateOrdered` list needs to be sorted
      */
-    var postUpdateOrderDirty:Bool = false;
+    var lateUpdateOrderDirty:Bool = false;
 
     /**
-     * List of systems, ordered ascending according to their `preUpdateOrder` property
+     * List of systems, ordered ascending according to their `earlyUpdateOrder` property
      */
-    var preUpdateOrdered:ReadOnlyArray<System> = [];
+    var earlyUpdateOrdered:ReadOnlyArray<System> = [];
 
     /**
-     * List of systems, ordered ascending according to their `postUpdateOrder` property
+     * List of systems, ordered ascending according to their `lateUpdateOrder` property
      */
-    var postUpdateOrdered:ReadOnlyArray<System> = [];
+    var lateUpdateOrdered:ReadOnlyArray<System> = [];
 
     /**
      * Internal pre-allocated array used for iteration
@@ -42,43 +42,45 @@ class Systems extends Entity {
 
     function addSystem(system:System):Void {
 
-        preUpdateOrdered.original.push(system);
-        preUpdateOrderDirty = true;
+        earlyUpdateOrdered.original.push(system);
+        earlyUpdateOrderDirty = true;
 
-        postUpdateOrdered.original.push(system);
-        postUpdateOrderDirty = true;
+        lateUpdateOrdered.original.push(system);
+        lateUpdateOrderDirty = true;
 
     }
 
     function removeSystem(system:System):Void {
 
-        preUpdateOrdered.original.remove(system);
-        preUpdateOrderDirty = true;
+        earlyUpdateOrdered.original.remove(system);
+        earlyUpdateOrderDirty = true;
 
-        postUpdateOrdered.original.remove(system);
-        postUpdateOrderDirty = true;
+        lateUpdateOrdered.original.remove(system);
+        lateUpdateOrderDirty = true;
 
     }
 
-    function preUpdate(delta:Float):Void {
+    function earlyUpdate(delta:Float):Void {
 
         // Sort if needed
-        if (preUpdateOrderDirty) {
-            ArraySort.sort(preUpdateOrdered.original, sortSystemsByPreUpdateOrder);
-            preUpdateOrderDirty = false;
+        if (earlyUpdateOrderDirty) {
+            ArraySort.sort(earlyUpdateOrdered.original, sortSystemsByEarlyUpdateOrder);
+            earlyUpdateOrderDirty = false;
         }
 
         // Work on a copy of systems list, to ensure nothing bad happens
         // if a new system is created or destroyed during iteration
-        var len = preUpdateOrdered.length;
+        var len = earlyUpdateOrdered.length;
         for (i in 0...len) {
-            _udpatingSystems[i] = preUpdateOrdered.unsafeGet(i);
+            _udpatingSystems[i] = earlyUpdateOrdered.unsafeGet(i);
         }
 
         // Call
         for (i in 0...len) {
             var system = _udpatingSystems.unsafeGet(i);
-            system.preUpdate(delta);
+            system.emitBeginEarlyUpdate(delta);
+            system.earlyUpdate(delta);
+            system.emitEndEarlyUpdate(delta);
 
             // Flush immediate
             ceramic.App.app.flushImmediate();
@@ -91,25 +93,27 @@ class Systems extends Entity {
         
     }
 
-    function postUpdate(delta:Float):Void {
+    function lateUpdate(delta:Float):Void {
 
         // Sort if needed
-        if (postUpdateOrderDirty) {
-            ArraySort.sort(postUpdateOrdered.original, sortSystemsByPostUpdateOrder);
-            postUpdateOrderDirty = false;
+        if (lateUpdateOrderDirty) {
+            ArraySort.sort(lateUpdateOrdered.original, sortSystemsByLateUpdateOrder);
+            lateUpdateOrderDirty = false;
         }
 
         // Work on a copy of systems list, to ensure nothing bad happens
         // if a new system is created or destroyed during iteration
-        var len = postUpdateOrdered.length;
+        var len = lateUpdateOrdered.length;
         for (i in 0...len) {
-            _udpatingSystems[i] = postUpdateOrdered.unsafeGet(i);
+            _udpatingSystems[i] = lateUpdateOrdered.unsafeGet(i);
         }
 
         // Call
         for (i in 0...len) {
             var system = _udpatingSystems.unsafeGet(i);
-            system.postUpdate(delta);
+            system.emitBeginLateUpdate(delta);
+            system.lateUpdate(delta);
+            system.emitEndLateUpdate(delta);
 
             // Flush immediate
             ceramic.App.app.flushImmediate();
@@ -126,8 +130,8 @@ class Systems extends Entity {
 
     public function get(name:String):System {
 
-        for (i in 0...preUpdateOrdered.length) {
-            var system = preUpdateOrdered.unsafeGet(i);
+        for (i in 0...earlyUpdateOrdered.length) {
+            var system = earlyUpdateOrdered.unsafeGet(i);
             if (system.name == name) {
                 return system;
             }
@@ -139,22 +143,22 @@ class Systems extends Entity {
 
 /// Sorting
 
-    static function sortSystemsByPreUpdateOrder(a:System, b:System):Int {
+    static function sortSystemsByEarlyUpdateOrder(a:System, b:System):Int {
 
-        if (a.preUpdateOrder > b.preUpdateOrder)
+        if (a.earlyUpdateOrder > b.earlyUpdateOrder)
             return 1;
-        else if (a.preUpdateOrder < b.preUpdateOrder)
+        else if (a.earlyUpdateOrder < b.earlyUpdateOrder)
             return -1;
         else
             return 0;
 
     }
 
-    static function sortSystemsByPostUpdateOrder(a:System, b:System):Int {
+    static function sortSystemsByLateUpdateOrder(a:System, b:System):Int {
 
-        if (a.postUpdateOrder > b.postUpdateOrder)
+        if (a.lateUpdateOrder > b.lateUpdateOrder)
             return 1;
-        else if (a.postUpdateOrder < b.postUpdateOrder)
+        else if (a.lateUpdateOrder < b.lateUpdateOrder)
             return -1;
         else
             return 0;

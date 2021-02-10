@@ -744,8 +744,8 @@ class App extends Entity {
             // Trigger pre-update event
             emitPreUpdate(_delta);
 
-            // Run systems preUpdate
-            systems.preUpdate(delta);
+            // Run systems early update
+            systems.earlyUpdate(delta);
 
             // Flush immediate callbacks
             flushImmediate();
@@ -765,8 +765,8 @@ class App extends Entity {
             // Flush immediate callbacks
             flushImmediate();
 
-            // Run systems postUpdate
-            systems.postUpdate(delta);
+            // Run systems late update
+            systems.lateUpdate(delta);
 
             // Emit post-update event
             emitPostUpdate(_delta);

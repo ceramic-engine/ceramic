@@ -6,7 +6,16 @@ package ceramic;
  * Systems can be ordered with `order` properties
  */
 @:access(ceramic.Systems)
+@:allow(ceramic.Systems)
 class System extends Entity {
+
+    @event function beginEarlyUpdate(delta:Float);
+
+    @event function endEarlyUpdate(delta:Float);
+
+    @event function beginLateUpdate(delta:Float);
+
+    @event function endLateUpdate(delta:Float);
 
     /**
      * System name.
@@ -14,34 +23,38 @@ class System extends Entity {
      */
     public var name:String = null;
 
+    /** When set to `true` (default). This system will be updated automatically.
+        If `false`, you'll need to call `earlyUpdate()` and `lateUpdate()` manually. */
+    public var autoUpdate:Bool = true;
+
     /**
-     * Order of preUpdate execution.
-     * Given two systems, a system with a lower `preUpdateOrder` value will have
-     * it's `preUpdate()` method called before another system's `preUpdate()`
+     * Order of earlyUpdate execution.
+     * Given two systems, a system with a lower `earlyUpdateOrder` value will have
+     * it's `earlyUpdate()` method called before another system's `earlyUpdate()`
      * method with a higher `order` value.
      */
-    public var preUpdateOrder(default, set):Float = 0;
-    function set_preUpdateOrder(preUpdateOrder:Float):Float {
-        if (this.preUpdateOrder != preUpdateOrder) {
-            this.preUpdateOrder = preUpdateOrder;
-            ceramic.App.app.systems.preUpdateOrderDirty = true;
+    public var earlyUpdateOrder(default, set):Float = 0;
+    function set_earlyUpdateOrder(earlyUpdateOrder:Float):Float {
+        if (this.earlyUpdateOrder != earlyUpdateOrder) {
+            this.earlyUpdateOrder = earlyUpdateOrder;
+            ceramic.App.app.systems.earlyUpdateOrderDirty = true;
         }
-        return preUpdateOrder;
+        return earlyUpdateOrder;
     }
 
     /**
-     * Order of postUpdate execution.
-     * Given two systems, a system with a lower `postUpdateOrder` value will have
-     * it's `postUpdate()` method called before another system's `postUpdate()`
+     * Order of lateUpdate execution.
+     * Given two systems, a system with a lower `lateUpdateOrder` value will have
+     * it's `lateUpdate()` method called before another system's `lateUpdate()`
      * method with a higher `order` value.
      */
-    public var postUpdateOrder(default, set):Float = 0;
-    function set_postUpdateOrder(postUpdateOrder:Float):Float {
-        if (this.postUpdateOrder != postUpdateOrder) {
-            this.postUpdateOrder = postUpdateOrder;
-            ceramic.App.app.systems.postUpdateOrderDirty = true;
+    public var lateUpdateOrder(default, set):Float = 0;
+    function set_lateUpdateOrder(lateUpdateOrder:Float):Float {
+        if (this.lateUpdateOrder != lateUpdateOrder) {
+            this.lateUpdateOrder = lateUpdateOrder;
+            ceramic.App.app.systems.lateUpdateOrderDirty = true;
         }
-        return postUpdateOrder;
+        return lateUpdateOrder;
     }
 
     public function new() {
@@ -64,7 +77,7 @@ class System extends Entity {
      * Method automatically called right before app's `update` event
      * @param delta 
      */
-    public function preUpdate(delta:Float):Void {
+    function earlyUpdate(delta:Float):Void {
 
     }
 
@@ -72,7 +85,7 @@ class System extends Entity {
      * Method automatically called right before app's right after `update` event
      * @param delta 
      */
-    public function postUpdate(delta:Float):Void {
+    function lateUpdate(delta:Float):Void {
 
     }
 
