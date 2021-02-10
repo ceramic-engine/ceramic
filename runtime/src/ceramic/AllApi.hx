@@ -35,7 +35,7 @@ import ceramic.scriptable.ScriptableAlphaColor;
 #if ceramic_cppia_host import ceramic.AlphaColor; #end
 import ceramic.App;
 import ceramic.Arc;
-import ceramic.ArcadePhysics;
+import ceramic.ArcadeSystem;
 import ceramic.Asset;
 import ceramic.AssetId;
 import ceramic.AssetOptions;
@@ -123,7 +123,7 @@ import ceramic.MeshPool;
 import ceramic.Ngon;
 import ceramic.scriptable.ScriptableMouseButton;
 #if ceramic_cppia_host import ceramic.MouseButton; #end
-import ceramic.NapePhysics;
+import ceramic.NapeSystem;
 import ceramic.ParticleItem;
 import ceramic.Particles;
 import ceramic.ParticlesLaunchMode;
@@ -210,7 +210,7 @@ import ceramic.HttpRequestOptions;
 import ceramic.HttpResponse;
 
 #if ceramic_arcade_physics
-import ceramic.ArcadePhysics;
+import ceramic.ArcadeSystem;
 import ceramic.ArcadeWorld;
 import arcade.Body;
 import arcade.World;
@@ -258,7 +258,7 @@ class AllApi {
         
         interp.variables.set('AlphaColor', ceramic.scriptable.ScriptableAlphaColor);
         interp.variables.set('App', ceramic.App);
-        interp.variables.set('ArcadePhysics', ceramic.ArcadePhysics);
+        interp.variables.set('ArcadeSystem', ceramic.ArcadeSystem);
         interp.variables.set('Asset', ceramic.Asset);
         interp.variables.set('AssetPathInfo', ceramic.AssetPathInfo);
         interp.variables.set('Assets', ceramic.Assets);
@@ -330,7 +330,7 @@ class AllApi {
         interp.variables.set('MeshColorMapping', ceramic.scriptable.ScriptableMeshColorMapping);
         interp.variables.set('MeshPool', ceramic.MeshPool);
         interp.variables.set('MouseButton', ceramic.scriptable.ScriptableMouseButton);
-        interp.variables.set('NapePhysics', ceramic.NapePhysics);
+        interp.variables.set('NapeSystem', ceramic.NapeSystem);
         interp.variables.set('ParticleItem', ceramic.ParticleItem);
         interp.variables.set('Particles', ceramic.Particles);
         interp.variables.set('ParticlesLaunchMode', ceramic.ParticlesLaunchMode);

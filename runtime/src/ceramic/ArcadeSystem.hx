@@ -5,9 +5,15 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
-class ArcadePhysics extends System {
+class ArcadeSystem extends System {
 
 #if ceramic_arcade_physics
+
+    /**
+     * When this event is fired, it's the right time to make your bodies collide/overlap
+     * @param delta 
+     */
+    @event function update(delta:Float);
 
     @:allow(ceramic.VisualArcadePhysics)
     var _destroyedItems:Array<VisualArcadePhysics> = [];
@@ -35,8 +41,8 @@ class ArcadePhysics extends System {
 
         super();
 
-        preUpdateOrder = 1000;
-        postUpdateOrder = 1000;
+        earlyUpdateOrder = 2000;
+        lateUpdateOrder = 2000;
 
         this.world = createWorld();
 
@@ -60,7 +66,7 @@ class ArcadePhysics extends System {
             worlds.push(world);
         }
         else {
-            log.warning('World already added to ArcadePhysics');
+            log.warning('World already added to ArcadeSystem');
         }
 
     }
@@ -68,7 +74,7 @@ class ArcadePhysics extends System {
     public function removeWorld(world:ArcadeWorld):Void {
 
         if (!worlds.remove(world)) {
-            log.warning('World not removed from ArcadePhysics because it was not added at the first place');
+            log.warning('World not removed from ArcadeSystem because it was not added at the first place');
         }
         
     }
@@ -88,7 +94,7 @@ class ArcadePhysics extends System {
 
     }
 
-    override function preUpdate(delta:Float):Void {
+    override function earlyUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 
@@ -134,9 +140,11 @@ class ArcadePhysics extends System {
         flushDestroyedItems();
         flushCreatedItems();
 
+        emitUpdate(delta);
+
     }
 
-    override function postUpdate(delta:Float):Void {
+    override function lateUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 

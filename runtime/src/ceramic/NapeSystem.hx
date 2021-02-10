@@ -5,7 +5,7 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 @:allow(ceramic.App)
-class NapePhysics extends System {
+class NapeSystem extends System {
 
 #if ceramic_nape_physics
 
@@ -39,7 +39,7 @@ class NapePhysics extends System {
 
         super();
 
-        preUpdateOrder = 3000;
+        earlyUpdateOrder = 3000;
 
         this.space = createSpace();
 
@@ -63,7 +63,7 @@ class NapePhysics extends System {
             spaces.push(space);
         }
         else {
-            log.warning('Space already added to NapePhysics');
+            log.warning('Space already added to NapeSystem');
         }
 
     }
@@ -71,7 +71,7 @@ class NapePhysics extends System {
     public function removeSpace(space:nape.space.Space):Void {
 
         if (!spaces.remove(space)) {
-            log.warning('Space not removed from NapePhysics because it was not added at the first place');
+            log.warning('Space not removed from NapeSystem because it was not added at the first place');
         }
         
     }
@@ -93,7 +93,7 @@ class NapePhysics extends System {
 
     }
 
-    override function preUpdate(delta:Float):Void {
+    override function earlyUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
 

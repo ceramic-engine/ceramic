@@ -353,13 +353,13 @@ class App extends Entity {
 
 #if ceramic_arcade_physics
 
-    public var arcade:ArcadePhysics = null;
+    public var arcade:ArcadeSystem = null;
 
 #end
 
 #if ceramic_nape_physics
 
-    public var nape:NapePhysics = null;
+    public var nape:NapeSystem = null;
 
 #end
 
@@ -470,11 +470,11 @@ class App extends Entity {
         }
 
 #if ceramic_arcade_physics
-        arcade = new ArcadePhysics();
+        arcade = new ArcadeSystem();
 #end
 
 #if ceramic_nape_physics
-        nape = new NapePhysics();
+        nape = new NapeSystem();
 #end
 
         // Load default assets
