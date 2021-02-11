@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 abstract ViewLayoutMask(Int) from Int to Int {
 

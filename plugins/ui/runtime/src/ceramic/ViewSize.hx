@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 /** View size helpers */
 class ViewSize {

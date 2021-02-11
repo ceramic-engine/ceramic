@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 /** Control how children depth is sorted. */
 enum ChildrenDepth {

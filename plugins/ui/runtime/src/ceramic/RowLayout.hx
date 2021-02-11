@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 /** A layout that arranges its children horizontally in a single row.
     This class is a `LinearLayout` subclass, restricted to its horizontal direction. */

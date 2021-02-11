@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 import ceramic.Scroller;
 import ceramic.ScrollDirection;

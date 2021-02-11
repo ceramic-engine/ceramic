@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 enum ImageViewScaling {
 

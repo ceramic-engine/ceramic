@@ -1,0 +1,7 @@
+plugin:
+    name: UI
+
+    runtime:
+        if plugin_ui:
+            +paths:
+                - {plugin:cwd}/runtime/src

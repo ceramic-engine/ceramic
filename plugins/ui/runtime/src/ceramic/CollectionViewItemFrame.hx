@@ -1,6 +1,6 @@
-package ceramic.ui;
+package ceramic;
 
-@:allow(ceramic.ui.CollectionView)
+@:allow(ceramic.CollectionView)
 class CollectionViewItemFrame {
 
     public var x:Float;

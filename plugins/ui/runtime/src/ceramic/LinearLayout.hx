@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 /** A layout that arranges its children either horizontally
     in a single column or vertically in a single row. */

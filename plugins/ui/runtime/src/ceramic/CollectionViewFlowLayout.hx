@@ -1,4 +1,4 @@
-package ceramic.ui;
+package ceramic;
 
 class CollectionViewFlowLayout implements CollectionViewLayout {
 

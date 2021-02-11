@@ -1,7 +1,5 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
-
 using ceramic.Extensions;
 
 @:allow(ceramic.StateMachineBase)
