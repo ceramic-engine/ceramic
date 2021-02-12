@@ -1,6 +1,20 @@
 package ceramic;
 
+import backend.Backend;
+import ceramic.Assets;
+import ceramic.BitmapFont;
+import ceramic.CollectionEntry;
+import ceramic.ConvertField;
+import ceramic.Fragment;
+import ceramic.PlatformSpecific;
+import ceramic.Settings;
+import ceramic.Shortcuts.*;
+import ceramic.Texture;
+import haxe.CallStack;
 import haxe.ds.ArraySort;
+import tracker.Tracker;
+
+using ceramic.Extensions;
 #if hxtelemetry
 import hxtelemetry.HxTelemetry;
 #end
@@ -13,24 +27,6 @@ import sdl.SDL;
 import assets.AllAssets;
 #end
 
-import ceramic.PlatformSpecific;
-
-import ceramic.Settings;
-import ceramic.Assets;
-import ceramic.Fragment;
-import ceramic.Texture;
-import ceramic.BitmapFont;
-import ceramic.ConvertField;
-import ceramic.CollectionEntry;
-import ceramic.Shortcuts.*;
-
-import tracker.Tracker;
-
-import haxe.CallStack;
-
-import backend.Backend;
-
-using ceramic.Extensions;
 
 /**
  * `App` class is the starting point of any ceramic app.
@@ -274,8 +270,11 @@ class App extends Entity {
     }
     var _computeFps = new ComputeFps();
 
-    /** Current frame delta time */
+    /** Current frame delta time (never above `settings.maxDelta`) */
     public var delta(default,null):Float;
+
+    /** Current frame real delta time (the actual elapsed time since last frame update) */
+    public var realDelta(default,null):Float;
 
     /** Backend instance */
     public var backend(default,null):Backend;
@@ -288,6 +287,9 @@ class App extends Entity {
 
     /** App settings */
     public var settings(default,null):Settings;
+
+    /** Systems are objects to structure app work and update cycle */
+    public var systems(default,null):Systems;
 
     /** Logger. Used by log.info() shortcut */
     public var logger(default,null):Logger = new Logger();
@@ -351,13 +353,13 @@ class App extends Entity {
 
 #if ceramic_arcade_physics
 
-    public var arcade:ArcadePhysics = null;
+    public var arcade:ArcadeSystem = null;
 
 #end
 
 #if ceramic_nape_physics
 
-    public var nape:NapePhysics = null;
+    public var nape:NapeSystem = null;
 
 #end
 
@@ -414,16 +416,9 @@ class App extends Entity {
         hxt = new HxTelemetry(cfg);
 #end
 
-        // TODO find a way to insert this code with any enabled plugin
-        // (doable with macro that checks `plugin_*` defines and looks for `*Plugin` type)
-
-#if plugin_spine
-        @:privateAccess ceramic.SpinePlugin.pluginInit();
-#end
-
-#if plugin_tilemap
-        @:privateAccess ceramic.TilemapPlugin.pluginInit();
-#end
+        // Initialize plugins
+        // (resolved from `plugin_*` defines)
+        ceramic.macros.PluginsMacro.initPlugins();
 
         Runner.init();
 
@@ -433,6 +428,7 @@ class App extends Entity {
         screen = new Screen();
         audio = new Audio();
         input = new Input();
+        systems = new Systems();
 
         backend = new Backend();
         backend.onceReady(this, backendReady);
@@ -474,11 +470,11 @@ class App extends Entity {
         }
 
 #if ceramic_arcade_physics
-        arcade = new ArcadePhysics();
+        arcade = new ArcadeSystem();
 #end
 
 #if ceramic_nape_physics
-        nape = new NapePhysics();
+        nape = new NapeSystem();
 #end
 
         // Load default assets
@@ -667,21 +663,21 @@ class App extends Entity {
             beginUpdateCallbacks.push(function() input.emitKeyUp(key));
         });
 
-        // Forward controller events
-        backend.input.onControllerEnable(this, function(controllerId, name) {
-            beginUpdateCallbacks.push(function() input.emitControllerEnable(controllerId, name));
+        // Forward gamepad events
+        backend.input.onGamepadEnable(this, function(gamepadId, name) {
+            beginUpdateCallbacks.push(function() input.emitGamepadEnable(gamepadId, name));
         });
-        backend.input.onControllerDisable(this, function(controllerId) {
-            beginUpdateCallbacks.push(function() input.emitControllerDisable(controllerId));
+        backend.input.onGamepadDisable(this, function(gamepadId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadDisable(gamepadId));
         });
-        backend.input.onControllerDown(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() input.emitControllerDown(controllerId, buttonId));
+        backend.input.onGamepadDown(this, function(gamepadId, buttonId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadDown(gamepadId, buttonId));
         });
-        backend.input.onControllerUp(this, function(controllerId, buttonId) {
-            beginUpdateCallbacks.push(function() input.emitControllerUp(controllerId, buttonId));
+        backend.input.onGamepadUp(this, function(gamepadId, buttonId) {
+            beginUpdateCallbacks.push(function() input.emitGamepadUp(gamepadId, buttonId));
         });
-        backend.input.onControllerAxis(this, function(controllerId, axisId, value) {
-            beginUpdateCallbacks.push(function() input.emitControllerAxis(controllerId, axisId, value));
+        backend.input.onGamepadAxis(this, function(gamepadId, axisId, value) {
+            beginUpdateCallbacks.push(function() input.emitGamepadAxis(gamepadId, axisId, value));
         });
 
     }
@@ -692,17 +688,21 @@ class App extends Entity {
 
     }
 
-    function update(delta:Float):Void {
+    function update(realDelta:Float):Void {
 
-#if ceramic_debug_cputime
-        _debugCpuTimeThisFrame();
-#end
+        var delta = realDelta;
+
+        // Never allow an update delta above maxDelta
+        if (delta > settings.maxDelta) {
+            delta = settings.maxDelta;
+        }
 
         // Update computed fps
         _computeFps.addFrame(delta);
 
         // Update frame delta time
         this.delta = delta;
+        this.realDelta = realDelta;
 
 #if (cpp && linc_sdl)
         SDL.setLCNumericCLocale();
@@ -712,22 +712,12 @@ class App extends Entity {
         hxt.advance_frame();
 #end
 
-#if ceramic_debug_cputime cpuTimeRec(0); #end
-
-        Timer.update(delta);
-        
-#if ceramic_debug_cputime cpuTimePause(0); #end
-#if ceramic_debug_cputime cpuTimeRec(1); #end
+        Timer.update(delta, realDelta);
 
         Runner.tick();
 
-#if ceramic_debug_cputime cpuTimePause(1); #end
-#if ceramic_debug_cputime cpuTimeRec(2); #end
-
         // Screen pointer over/out events detection
         screen.updatePointerOverState(delta);
-
-#if ceramic_debug_cputime cpuTimePause(2); #end
 
         inUpdate = true;
         shouldUpdateAndDrawAgain = true;
@@ -738,8 +728,6 @@ class App extends Entity {
         while (shouldUpdateAndDrawAgain) {
             shouldUpdateAndDrawAgain = false;
             var _delta:Float = isFirstUpdateInFrame ? delta : 0;
-
-#if ceramic_debug_cputime cpuTimeRec(3); #end
             
             // Reset screen deltas
             screen.resetDeltas();
@@ -752,25 +740,12 @@ class App extends Entity {
                     callback();
                 }
             }
-            
-#if ceramic_debug_cputime cpuTimePause(3); #end
-#if ceramic_debug_cputime cpuTimeRec(4); #end
 
             // Trigger pre-update event
             emitPreUpdate(_delta);
 
-#if ceramic_debug_cputime cpuTimePause(4); #end
-#if ceramic_debug_cputime cpuTimeRec(5); #end
-
-            // Update/pre-update physics bodies (if enabled)
-#if ceramic_arcade_physics
-            flushImmediate();
-            if (_delta > 0) arcade.preUpdate(_delta);
-#end
-#if ceramic_nape_physics
-            flushImmediate();
-            if (_delta > 0) nape.update(_delta);
-#end
+            // Run systems early update
+            systems.earlyUpdate(delta);
 
             // Flush immediate callbacks
             flushImmediate();
@@ -784,23 +759,14 @@ class App extends Entity {
                 flushImmediate();
             }
 
-#if ceramic_debug_cputime cpuTimePause(5); #end
-#if ceramic_debug_cputime cpuTimeRec(6); #end
-
             // Then update
             emitUpdate(_delta);
 
             // Flush immediate callbacks
             flushImmediate();
 
-            // Post-update physics bodies (if enabled)
-#if ceramic_arcade_physics
-            if (_delta > 0) arcade.postUpdate(_delta);
-            flushImmediate();
-#end
-
-#if ceramic_debug_cputime cpuTimePause(6); #end
-#if ceramic_debug_cputime cpuTimeRec(7); #end
+            // Run systems late update
+            systems.lateUpdate(delta);
 
             // Emit post-update event
             emitPostUpdate(_delta);
@@ -814,38 +780,23 @@ class App extends Entity {
                 toDestroy.destroy();
             }
 
-#if ceramic_debug_cputime cpuTimePause(7); #end
-#if ceramic_debug_cputime cpuTimeRec(8); #end
-
             // Sync pending and destroyed visuals
             syncPendingVisuals();
 
             // Update visuals
             updateVisuals(visuals);
 
-#if ceramic_debug_cputime cpuTimePause(8); #end
-#if ceramic_debug_cputime cpuTimeRec(9); #end
-
             // Update hierarchy from depth
             computeHierarchy();
 
-#if ceramic_debug_cputime cpuTimePause(9); #end
-#if ceramic_debug_cputime cpuTimeRec(10); #end
-
             // Compute render textures priority
             computeRenderTexturesPriority(renderTextures);
-
-#if ceramic_debug_cputime cpuTimePause(10); #end
-#if ceramic_debug_cputime cpuTimeRec(11); #end
 
             // Sync destroyed visuals again, if needed, before sorting
             syncDestroyedVisuals();
 
             // Sort visuals depending on their settings
             sortVisuals(visuals);
-
-#if ceramic_debug_cputime cpuTimePause(11); #end
-#if ceramic_debug_cputime cpuTimeRec(12); #end
 
             // First update in frame finished
             isFirstUpdateInFrame = false;
@@ -858,8 +809,6 @@ class App extends Entity {
 
             // End draw
             emitFinishDraw();
-
-#if ceramic_debug_cputime cpuTimePause(12); #end
 
             // Will update again if requested
             // or continue with drawing
@@ -1144,66 +1093,5 @@ class App extends Entity {
         return null;
 
     }
-
-#if ceramic_debug_cputime
-
-    @:noCompletion public var _cpuStart:Array<Float> = [];
-    @:noCompletion public var _cpuTotal:Array<Float> = [];
-
-    var _debugCpuTime:Bool = false;
-    var _lastDebugCpuTime:Float = -1;
-
-    @:noCompletion inline public function cpuTimeRec(index:Int):Void {
-        _cpuStart.unsafeSet(index, Sys.cpuTime());
-    }
-
-    @:noCompletion inline public function cpuTimePause(index:Int):Void {
-        var val = Sys.cpuTime() - _cpuStart.unsafeGet(index);
-        val += _cpuTotal.unsafeGet(index);
-        _cpuTotal.unsafeSet(index, val);
-    }
-
-    function _debugCpuTimeThisFrame() {
-
-        if (ceramic.Timer.now - _lastDebugCpuTime > 10) {
-            _debugCpuTime = true;
-            _lastDebugCpuTime = ceramic.Timer.now;
-
-            if (_cpuTotal.length > 0) {
-                _printCpuTime();
-            }
-
-            for (i in 0..._cpuTotal.length) {
-                _cpuTotal[i] = 0.0;
-            }
-        } else {
-            _debugCpuTime = false;
-        }
-
-        _cpuStart[200] = 0;
-        _cpuTotal[200] = 0;
-
-    }
-
-    function _printCpuTime() {
-
-        log.info('// cpu time //');
-        log.debug(' - timer: ' + _cpuTotal[0]);
-        log.debug(' - runner: ' + _cpuTotal[1]);
-        log.debug(' - pointer over: ' + _cpuTotal[2]);
-        log.debug(' - begin update cb: ' + _cpuTotal[3]);
-        log.debug(' - pre update: ' + _cpuTotal[4]);
-        log.debug(' - physics: ' + _cpuTotal[5]);
-        log.debug(' - update: ' + _cpuTotal[6]);
-        log.debug(' - post update: ' + _cpuTotal[7]);
-        log.debug(' - update visuals: ' + _cpuTotal[8]);
-        log.debug(' - compute hierarchy: ' + _cpuTotal[9]);
-        log.debug(' - texture priority: ' + _cpuTotal[10]);
-        log.debug(' - sort visuals: ' + _cpuTotal[11]);
-        log.debug(' - draw: ' + _cpuTotal[12]);
-
-    }
-
-#end
 
 }

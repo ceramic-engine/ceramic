@@ -107,15 +107,6 @@ class Quad extends Visual {
         return texture;
     }
 
-    public var rotateFrame(default,set):RotateFrame = RotateFrame.NONE;
-    inline function set_rotateFrame(rotateFrame:RotateFrame):RotateFrame {
-        if (this.rotateFrame == rotateFrame) return rotateFrame;
-        
-        this.rotateFrame = rotateFrame;
-        matrixDirty = true;
-        return rotateFrame;
-    }
-
     public var frameX:Float = -1;
 
     public var frameY:Float = -1;
@@ -181,13 +172,6 @@ class Quad extends Visual {
         }
 
         _matrix.identity();
-
-        if (texture != null) {
-            if (rotateFrame == RotateFrame.ROTATE_90) {
-                _matrix.rotate(90 * _degToRad);
-                _matrix.tx += frameWidth;
-            }
-        }
 
         doComputeMatrix();
 

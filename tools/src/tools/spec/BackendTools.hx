@@ -37,6 +37,6 @@ interface BackendTools {
     function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset>;
 
     /** Transform icons */
-    function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void;
+    function transformIcons(cwd:String, appIcon:String, appIconFlat:String, target:tools.BuildTarget, variant:String):Void;
 
 }

@@ -496,13 +496,8 @@ class CeramicBatcher extends phoenix.Batcher {
             }
 
             // Update size
-            if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                w = quad.height;
-                h = quad.width;
-            } else {
-                w = quad.width;
-                h = quad.height;
-            }
+            w = quad.width;
+            h = quad.height;
 
             // Fetch matrix
             //
@@ -601,18 +596,10 @@ class CeramicBatcher extends phoenix.Batcher {
             if (lastTexture != null) {
                 // UV
                 //
-                if (quad.rotateFrame == ceramic.RotateFrame.ROTATE_90) {
-                    uvX = (quad.frameX * quad.texture.density) / texWidthActual;
-                    uvY = (quad.frameY * quad.texture.density) / texHeightActual;
-                    uvW = (quad.frameHeight * quad.texture.density) / texWidthActual;
-                    uvH = (quad.frameWidth * quad.texture.density) / texHeightActual;
-                }
-                else {
-                    uvX = (quad.frameX * quad.texture.density) / texWidthActual;
-                    uvY = (quad.frameY * quad.texture.density) / texHeightActual;
-                    uvW = (quad.frameWidth * quad.texture.density) / texWidthActual;
-                    uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
-                }
+                uvX = (quad.frameX * quad.texture.density) / texWidthActual;
+                uvY = (quad.frameY * quad.texture.density) / texHeightActual;
+                uvW = (quad.frameWidth * quad.texture.density) / texWidthActual;
+                uvH = (quad.frameHeight * quad.texture.density) / texHeightActual;
 
                 //tl
                 tcoord_list[tcoord_floats++] = uvX;

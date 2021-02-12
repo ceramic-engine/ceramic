@@ -93,6 +93,19 @@ class TilemapData extends Model {
 
     }
 
+    public function setTexturesFilter(filter:TextureFilter):Void {
+
+        for (i in 0...tilesets.length) {
+            var tileset = tilesets.unsafeGet(i);
+            if (tileset.image != null) {
+                if (tileset.image.texture != null) {
+                    tileset.image.texture.filter = filter;
+                }
+            }
+        }
+
+    }
+
 /// Print
 
     override function toString():String {

@@ -1,17 +1,20 @@
 package ceramic;
 
-import tracker.Events;
 import tracker.Autorun;
+import tracker.Events;
 
+using ceramic.Extensions;
 #if ceramic_entity_dynamic_events
 import tracker.DynamicEvents;
 #end
 
-using ceramic.Extensions;
 
 @editable
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
+#end
+#if (!macro && (display || completion))
+@:autoBuild(ceramic.macros.EntityMacro.buildForCompletion())
 #end
 class Entity implements Events implements Lazy {
 
@@ -37,7 +40,7 @@ class Entity implements Events implements Lazy {
 
 /// Properties
 
-    var _data:Dynamic = null;
+    @:noCompletion var _data:Dynamic = null;
 
     public var hasData(get,never):Bool;
     inline function get_hasData():Bool {
@@ -61,7 +64,7 @@ class Entity implements Events implements Lazy {
      - -2: Entity is marked destroyed and additional calls to destroy() are ignored
      - -3: Entity root is destroyed (Entity.destroy() was called). Additional calls to destroy() are ignored
      */
-    var _lifecycleState:Int = 0;
+    @:noCompletion var _lifecycleState:Int = 0;
 
 #if ceramic_entity_script
     public var scriptContent(get,set):ScriptContent;
@@ -552,7 +555,7 @@ class Entity implements Events implements Lazy {
     }
 
     /** Internal components representation. */
-    var _components:Map<String,Component> = null;
+    @:noCompletion var _components:Map<String,Component> = null;
 
     public function component(?name:String, ?component:Component):Component {
 
@@ -585,7 +588,7 @@ class Entity implements Events implements Lazy {
                 }
             }
             _components.set(name, component);
-            component.setProperty('entity', this);
+            @:privateAccess component.setEntity(this);
             var componentAsEntity:Entity = cast component;
             componentAsEntity.onceDestroy(this, function(_) {
                 // Remove entity reference from component

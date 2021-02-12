@@ -129,7 +129,7 @@ class Project {
             fail('Unable to read project at path $path: $e');
         }
 
-        app = ProjectLoader.loadAppConfig(data, context.defines, context.plugins);
+        app = ProjectLoader.loadAppConfig(data, context.defines, context.plugins, context.unbuiltPlugins);
 
         // Add path
         app.path = Path.isAbsolute(path) ? path : Path.normalize(Path.join([context.cwd, path]));
@@ -246,7 +246,12 @@ class ProjectLoader {
 
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*$/g;
 
-    public static function loadAppConfig(input:String, defines:Map<String,String>, plugins:Map<String, tools.spec.ToolsPlugin>):Dynamic<Dynamic> {
+    public static function loadAppConfig(
+        input:String,
+        defines:Map<String,String>,
+        plugins:Map<String, tools.spec.ToolsPlugin>,
+        unbuiltPlugins:Map<String, {path:String, name:String, runtime:Dynamic}>
+    ):Dynamic<Dynamic> {
 
         var app:Dynamic<Dynamic> = null;
 
@@ -317,9 +322,23 @@ class ProjectLoader {
             }
 
             // Add plugin runtime extra config
+            var pluginI = 0;
             if (plugins != null) {
-                var pluginI = 0;
                 for (plugin in plugins) {
+                    if (plugin.runtime != null) {
+                        Reflect.setField(
+                            app,
+                            'if true || plugin_runtime_' + (pluginI++),
+                            Json.parse(Json.stringify(plugin.runtime)) // Copy to prevent plugin to be modified
+                        );
+                    }
+                }
+            }
+
+            // Also use unbuilt plugins for runtime info
+            // (unbuilt plugin include plugins without any tool extension)
+            if (unbuiltPlugins != null) {
+                for (plugin in unbuiltPlugins) {
                     if (plugin.runtime != null) {
                         Reflect.setField(
                             app,
@@ -381,13 +400,10 @@ class ProjectLoader {
             }
 
             if (app.icon == null) {
-                if (context.defines.exists('android') || context.defines.exists('ios')) {
-                    // Looks nicer on mobile devices so far
-                    app.icon = 'resources/AppIcon-flat.png';
-                }
-                else {
-                    app.icon = 'resources/AppIcon.png';
-                }
+                app.icon = 'resources/AppIcon.png';
+            }
+            if (app.iconFlat == null) {
+                app.iconFlat = 'resources/AppIcon-flat.png';
             }
             if (app.screen == null) app.screen = {};
             if (app.screen.width == null) {

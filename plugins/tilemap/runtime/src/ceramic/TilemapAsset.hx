@@ -19,9 +19,9 @@ class TilemapAsset extends Asset {
 
 /// Properties
 
-    public var tmxMap:TmxMap = null;
+    @observe public var tmxMap:TmxMap = null;
 
-    public var tilemapData:TilemapData = null;
+    @observe public var tilemapData:TilemapData = null;
 
 /// Internal
 
@@ -43,6 +43,8 @@ class TilemapAsset extends Asset {
     }
 
     override public function load() {
+
+        assets.inheritRuntimeAssetsFromAssets(owner);
 
         // Load tilemap data
         status = LOADING;
@@ -299,6 +301,27 @@ class TilemapAsset extends Asset {
 
         // This is called, but we don't need to do anything so far,
         // as tileset textures are already updating themselfes as needed
+
+    }
+
+    override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
+
+        if (!app.backend.texts.supportsHotReloadPath() && !app.backend.textures.supportsHotReloadPath())
+            return;
+
+        var previousTime:Float = -1;
+        if (previousFiles.exists(path)) {
+            previousTime = previousFiles.get(path);
+        }
+        var newTime:Float = -1;
+        if (newFiles.exists(path)) {
+            newTime = newFiles.get(path);
+        }
+
+        if (newTime > previousTime) {
+            log.info('Reload tilemap (file has changed)');
+            load();
+        }
 
     }
 

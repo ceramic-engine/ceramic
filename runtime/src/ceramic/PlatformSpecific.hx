@@ -1,15 +1,15 @@
 package ceramic;
 
+import haxe.io.Bytes;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
-import haxe.io.Bytes;
 #if (bind && android && (snow || clay))
 import bind.java.Support;
 #end
 #if cpp
-import sys.io.File;
-import sys.FileSystem;
 import haxe.crypto.Md5;
+import sys.FileSystem;
+import sys.io.File;
 #end
 
 /** An internal class that encapsulate platform-specific code.
@@ -209,7 +209,7 @@ class PlatformSpecific {
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
-                electron = untyped __js__("require('electron')");
+                electron = js.Syntax.code("require('electron')");
             }
             catch (e:Dynamic) {}
         }
@@ -224,7 +224,7 @@ class PlatformSpecific {
     
         if (electron != null) {
     
-            var required:Dynamic = untyped __js__("{0}.remote.require({1})", electron, module);
+            var required:Dynamic = js.Syntax.code("{0}.remote.require({1})", electron, module);
             return required;
 
         }

@@ -1,49 +1,51 @@
 package ceramic;
 
-import tracker.Observable;
-
-#if !macro
-@:autoBuild(ceramic.macros.StateMachineMacro.buildFields())
-#end
-class StateMachineImpl<T> extends Entity implements Observable implements Component {
+#if (!completion && !display && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
+class StateMachineImpl<T> extends StateMachineBase {
 
     /** The current state */
-    @observe public var state(default,set):T = null;
+    @observe public var state(default,set):T = StateMachineBase.NO_STATE;
 
     /** When transitioning from one state to another,
         this will be set to the next incoming state */
-    public var nextState(default,null):T = null;
-
-    /** When set to `true`, the state machine will stop calling `update()` on current state and related. */
-    public var paused:Bool = false;
-
-    var stateInstances:Map<String, State> = null;
-
-    var currentStateInstance:State = null;
+    public var nextState(default,null):T = StateMachineBase.NO_STATE;
 
     function set_state(state:T):T {
-        if (this.state == state) return state;
+        if (stateDefined && this.state == state) return state;
 
         // Assign next state value
         nextState = state;
 
+        // Compute nextStateDefined
+        nextStateDefined = computeStateDefined(nextState);
+
         // Exit previous state
-        if (this.state != null) {
+        if (stateDefined) {
             _exitState();
+            stateDefined = false;
         }
 
         // Update state value
         this.state = state;
 
+        // Compute stateDefined
+        stateDefined = nextStateDefined;
+
         // Enter new state
-        if (this.state != null) {
+        if (stateDefined) {
             _enterState();
         }
 
         // Remove next state value
-        nextState = null;
+        nextState = StateMachineBase.NO_STATE;
 
         return state;
+    }
+
+    function computeStateDefined(state:T):Bool {
+
+        return (state != StateMachineBase.NO_STATE);
+
     }
 
     function keyToString(key:T):String {
@@ -74,7 +76,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
         stateInstances.set(name, stateInstance);
 
         if (stateInstance != null) {
-            stateInstance.machine = this;
+            stateInstance.machine = cast this;
 
             if (key == state) {
                 // We changed state instance for the current state,
@@ -100,13 +102,9 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
     }
 
-    /// Lifecycle
+    override function update(delta:Float):Void {
 
-    public function new() {
-
-        super();
-
-        ceramic.App.app.onUpdate(this, _updateState);
+        _updateState(delta);
 
     }
 
@@ -122,7 +120,7 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
 
     function _updateState(delta:Float):Void {
 
-        if (paused || state == null) return;
+        if (paused || !stateDefined) return;
 
         if (currentStateInstance != null) {
             currentStateInstance.update(delta);
@@ -138,28 +136,6 @@ class StateMachineImpl<T> extends Entity implements Observable implements Compon
             currentStateInstance = null;
         }
         
-    }
-
-    function bindAsComponent():Void {
-
-        // Nothing to do
-
-    }
-
-    override function destroy():Void {
-
-        if (stateInstances != null) {
-            var _stateInstances = stateInstances;
-            stateInstances = null;
-            for (state in _stateInstances) {
-                if (state != null) {
-                    state.destroy();
-                }
-            }
-        }
-
-        super.destroy();
-
     }
 
 }

@@ -4,6 +4,11 @@ package ceramic;
 class Input extends Entity {
 
     /**
+     * Internal value to store gamepad state
+     */
+    inline static final GAMEPAD_STORAGE_SIZE:Int = 32;
+
+    /**
      * @event keyDown
      * Triggered when a key from the keyboard is being pressed.
      * @param key The key being pressed
@@ -16,17 +21,21 @@ class Input extends Entity {
      */
     @event function keyUp(key:Key);
 
-    @event function controllerAxis(controllerId:Int, axisId:Int, value:Float);
-    @event function controllerDown(controllerId:Int, buttonId:Int);
-    @event function controllerUp(controllerId:Int, buttonId:Int);
-    @event function controllerEnable(controllerId:Int, name:String);
-    @event function controllerDisable(controllerId:Int);
+    @event function gamepadAxis(gamepadId:Int, axis:GamepadAxis, value:Float);
+    @event function gamepadDown(gamepadId:Int, button:GamepadButton);
+    @event function gamepadUp(gamepadId:Int, button:GamepadButton);
+    @event function gamepadEnable(gamepadId:Int, name:String);
+    @event function gamepadDisable(gamepadId:Int);
 
     var pressedScanCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
     var pressedKeyCodes:IntIntMap = new IntIntMap(16, 0.5, false);
 
-    var pressedControllerButtons:IntIntMap = new IntIntMap(16, 0.5, false);
+    var pressedGamepadButtons:IntIntMap = new IntIntMap(16, 0.5, false);
+
+    var gamepadAxisValues:IntFloatMap = new IntFloatMap(16, 0.5, false);
+
+    public var activeGamepads:ReadOnlyArray<Int> = [];
 
     public function new() {
 
@@ -115,61 +124,102 @@ class Input extends Entity {
 
     }
 
-/// Controller
+/// Gamepad
 
-    function willEmitControllerDown(controllerId:Int, buttonId:Int):Void {
+    function willEmitGamepadEnable(gamepadId:Int, name:String):Void {
 
-        var key = controllerId * 1024 + buttonId;
-        var prevValue = pressedControllerButtons.get(key);
+        // Reset gamepad state
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE;
+        for (i in 0...GAMEPAD_STORAGE_SIZE) {
+            var k = key + i;
+            pressedGamepadButtons.set(k, 0);
+            gamepadAxisValues.set(k, 0.0);
+        }
+
+        // Add gamepad to active list
+        if (activeGamepads.indexOf(gamepadId) == -1) {
+            activeGamepads.original.push(gamepadId);
+        }
+
+    }
+
+    function willEmitGamepadDisable(gamepadId:Int):Void {
+
+        // Remove gamepad from active list
+        var index = activeGamepads.indexOf(gamepadId);
+        if (index != -1) {
+            activeGamepads.original.splice(index, 1);
+        }
+
+    }
+
+    function willEmitGamepadDown(gamepadId:Int, button:GamepadButton):Void {
+
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
+        var prevValue = pressedGamepadButtons.get(key);
 
         if (prevValue == -1) {
             prevValue = 0;
         }
 
-        pressedControllerButtons.set(key, prevValue + 1);
+        pressedGamepadButtons.set(key, prevValue + 1);
 
         if (prevValue == 0) {
             // Used to differenciate "pressed" and "just pressed" states
             ceramic.App.app.beginUpdateCallbacks.push(function() {
-                if (pressedControllerButtons.get(key) == 1) {
-                    pressedControllerButtons.set(key, 2);
+                if (pressedGamepadButtons.get(key) == 1) {
+                    pressedGamepadButtons.set(key, 2);
                 }
             });
         }
 
     }
 
-    function willEmitControllerUp(controllerId:Int, buttonId:Int):Void {
+    function willEmitGamepadUp(gamepadId:Int, button:GamepadButton):Void {
 
-        var key = controllerId * 1024 + buttonId;
-        pressedControllerButtons.set(key, -1);
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
+        pressedGamepadButtons.set(key, -1);
         // Used to differenciate "released" and "just released" states
         ceramic.App.app.beginUpdateCallbacks.push(function() {
-            if (pressedControllerButtons.get(key) == -1) {
-                pressedControllerButtons.set(key, 0);
+            if (pressedGamepadButtons.get(key) == -1) {
+                pressedGamepadButtons.set(key, 0);
             }
         });
 
     }
 
-    public function controllerPressed(controllerId:Int, buttonId:Int):Bool {
+    public function gamepadPressed(gamepadId:Int, button:GamepadButton):Bool {
 
-        var key = controllerId * 1024 + buttonId;
-        return pressedControllerButtons.get(key) > 0;
-
-    }
-
-    public function controllerJustPressed(controllerId:Int, buttonId:Int):Bool {
-
-        var key = controllerId * 1024 + buttonId;
-        return pressedControllerButtons.get(key) == 1;
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
+        return pressedGamepadButtons.get(key) > 0;
 
     }
 
-    public function controllerJustReleased(controllerId:Int, buttonId:Int):Bool {
+    public function gamepadJustPressed(gamepadId:Int, button:GamepadButton):Bool {
 
-        var key = controllerId * 1024 + buttonId;
-        return pressedControllerButtons.get(key) == -1;
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
+        return pressedGamepadButtons.get(key) == 1;
+
+    }
+
+    public function gamepadJustReleased(gamepadId:Int, button:GamepadButton):Bool {
+
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
+        return pressedGamepadButtons.get(key) == -1;
+
+    }
+
+    inline function willEmitGamepadAxis(gamepadId:Int, axis:GamepadAxis, value:Float):Void {
+
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + axis;
+        gamepadAxisValues.set(key, value);
+
+    }
+
+    public function gamepadAxisValue(gamepadId:Int, axis:GamepadAxis):Float {
+
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE + axis;
+        return gamepadAxisValues.get(key);
 
     }
 

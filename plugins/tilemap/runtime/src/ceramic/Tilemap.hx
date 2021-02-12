@@ -146,4 +146,53 @@ class Tilemap extends Quad {
 
     }
 
+#if ceramic_arcade_physics
+
+/// Arcade physics
+
+    public var collidableLayers(default, set):ReadOnlyArray<String> = null;
+    function set_collidableLayers(collidableLayers:ReadOnlyArray<String>):ReadOnlyArray<String> {
+        if (this.collidableLayers == collidableLayers) return collidableLayers;
+        this.collidableLayers = collidableLayers;
+        collidableLayersDirty = true;
+        return collidableLayers;
+    }
+
+    public var computedCollidableLayers(default, null):ReadOnlyArray<TilemapLayer> = null;
+
+    public var collidableLayersDirty:Bool = false;
+
+    @:allow(ceramic.ArcadeWorld)
+    function computeCollidableLayers():Void {
+        
+        if (contentDirty)
+            computeContent();
+
+        var result:Array<TilemapLayer> = null;
+
+        if (layers != null && layers.length > 0 && collidableLayers != null && collidableLayers.length > 0) {
+            for (i in 0...collidableLayers.length) {
+                var name = collidableLayers.unsafeGet(i);
+                for (l in 0...layers.length) {
+                    var layer = layers.unsafeGet(l);
+                    var layerData = layer.layerData;
+                    if (layerData != null && layerData.name == name) {
+                        if (result == null) {
+                            result = [];
+                        }
+                        result.push(layer);
+                    }
+                }
+            }
+        }
+
+        // TODO destroy arcade bodies on layers that are not collidable anymore, if any
+
+        computedCollidableLayers = result;
+        collidableLayersDirty = false;
+
+    }
+
+#end
+
 }

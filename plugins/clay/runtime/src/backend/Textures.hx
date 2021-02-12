@@ -1,16 +1,16 @@
 package backend;
 
+import ceramic.Path;
 import clay.Clay;
 import clay.Immediate;
-import ceramic.Path;
 
+using StringTools;
 #if cpp
 import opengl.GL;
 #else
 import clay.opengl.GL;
 #end
 
-using StringTools;
 
 class Textures implements spec.Textures {
 
@@ -69,6 +69,7 @@ class Textures implements spec.Textures {
         }]);
 
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        var premultiplyAlpha:Bool = options != null && options.premultiplyAlpha;
 
         function doFail() {
             
@@ -88,11 +89,16 @@ class Textures implements spec.Textures {
         }
 
         // Load image
-        Clay.app.assets.loadImage(fullPath, function(image) {
+        Clay.app.assets.loadImage(fullPath, function(image:clay.Image) {
 
             if (image == null) {
                 doFail();
                 return;
+            }
+
+            // Premultiply alpha if needed
+            if (premultiplyAlpha) {
+                image.premultiplyAlpha();
             }
 
             // Transform image into texture

@@ -39,8 +39,23 @@ class BuildPlugin extends tools.Task {
             var prevCwd = context.cwd;
             context.cwd = pluginPath;
 
+            var toolsPluginPath = Path.join([pluginPath, 'tools/src/tools/ToolsPlugin.hx']);
+            var toolsPluginIndexPath = Path.join([pluginPath, 'index.js']);
+
             if (all) {
-                print('Build ' + pluginPath.bold());
+                if (FileSystem.exists(toolsPluginPath)) {
+                    print('Build ' + pluginPath.bold());
+                }
+                else {
+                    print('Skip ' + pluginPath.bold());
+                    if (FileSystem.exists(toolsPluginIndexPath)) {
+                        FileSystem.deleteFile(toolsPluginIndexPath);
+                    }
+                    if (FileSystem.exists(toolsPluginIndexPath + '.map')) {
+                        FileSystem.deleteFile(toolsPluginIndexPath + '.map');
+                    }
+                    continue;
+                }
             }
 
             // Use same HXML as completion

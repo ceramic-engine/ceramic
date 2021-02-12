@@ -149,7 +149,7 @@ class Spine extends Visual {
     var runScheduledRenderDyn:Void->Void = null;
 
     /** Internal flag to know if render became dirty because of a skin change or a new animation was set. */
-    public var renderDirtyAgressive(default,set):Bool = false;
+    public var renderDirtyAgressive(default, set):Bool = false;
     function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
         if (renderDirtyAgressive && parent != null && Std.is(parent, Spine)) {
             var parentSpine:Spine = cast parent;
@@ -168,7 +168,7 @@ class Spine extends Visual {
         return (this.renderDirtyAgressive = renderDirtyAgressive);
     }
 
-    public var renderDirty(default,set):Bool = false;
+    public var renderDirty(default, set):Bool = false;
     function set_renderDirty(renderDirty:Bool):Bool {
         if (renderDirty && parent != null && Std.is(parent, Spine)) {
             var parentSpine:Spine = cast parent;
@@ -194,7 +194,7 @@ class Spine extends Visual {
 
     /** Skeleton origin X */
     @editable
-    public var skeletonOriginX(default,set):Float = 0.5;
+    public var skeletonOriginX(default, set):Float = 0.5;
     function set_skeletonOriginX(skeletonOriginX:Float):Float {
         if (this.skeletonOriginX == skeletonOriginX) return skeletonOriginX;
         this.skeletonOriginX = skeletonOriginX;
@@ -204,7 +204,7 @@ class Spine extends Visual {
 
     /** Skeleton origin Y */
     @editable
-    public var skeletonOriginY(default,set):Float = 0.5;
+    public var skeletonOriginY(default, set):Float = 0.5;
     function set_skeletonOriginY(skeletonOriginY:Float):Float {
         if (this.skeletonOriginY == skeletonOriginY) return skeletonOriginY;
         this.skeletonOriginY = skeletonOriginY;
@@ -214,7 +214,7 @@ class Spine extends Visual {
 
     /** Skeleton scale */
     @editable
-    public var skeletonScale(default,set):Float = 1.0;
+    public var skeletonScale(default, set):Float = 1.0;
     function set_skeletonScale(skeletonScale:Float):Float {
         if (this.skeletonScale == skeletonScale) return skeletonScale;
         this.skeletonScale = skeletonScale;
@@ -224,7 +224,7 @@ class Spine extends Visual {
 
     /** Force tint black even if skeleton doesn't need it */
     @editable
-    public var forceTintBlack(default,set):Bool = false;
+    public var forceTintBlack(default, set):Bool = false;
     function set_forceTintBlack(forceTintBlack:Bool):Bool {
         if (this.forceTintBlack == forceTintBlack) return forceTintBlack;
         this.forceTintBlack = forceTintBlack;
@@ -234,7 +234,7 @@ class Spine extends Visual {
 
     /** Hidden slots (slot blacklist) */
     @editable
-    public var hiddenSlots(default,set):IntBoolMap = null;
+    public var hiddenSlots(default, set):IntBoolMap = null;
     function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
         if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
         this.hiddenSlots = hiddenSlots;
@@ -244,7 +244,7 @@ class Spine extends Visual {
 
     /** Visible slots (slot whitelist) */
     @editable
-    public var visibleSlots(default,set):IntBoolMap = null;
+    public var visibleSlots(default, set):IntBoolMap = null;
     function set_visibleSlots(visibleSlots:IntBoolMap):IntBoolMap {
         if (this.visibleSlots == visibleSlots) return visibleSlots;
         this.visibleSlots = visibleSlots;
@@ -254,7 +254,7 @@ class Spine extends Visual {
 
     /** Disabled slots */
     @editable
-    public var disabledSlots(default,set):IntBoolMap = null;
+    public var disabledSlots(default, set):IntBoolMap = null;
     function set_disabledSlots(disabledSlots:IntBoolMap):IntBoolMap {
         if (this.disabledSlots == disabledSlots) return disabledSlots;
         this.disabledSlots = disabledSlots;
@@ -264,7 +264,7 @@ class Spine extends Visual {
 
     /** Animation triggers */
     @editable
-    public var animationTriggers(default,set):Map<String,String> = null;
+    public var animationTriggers(default, set):Map<String,String> = null;
     function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
         if (this.animationTriggers == animationTriggers) return animationTriggers;
         this.animationTriggers = animationTriggers;
@@ -274,7 +274,7 @@ class Spine extends Visual {
 
     /** Specify which slot to use to hit this visual or `-1` (default) is not using any. */
     @editable
-    public var hitWithSlotIndex(default,set):Int = -1;
+    public var hitWithSlotIndex(default, set):Int = -1;
     function set_hitWithSlotIndex(hitWithSlotIndex:Int):Int {
         if (this.hitWithSlotIndex == hitWithSlotIndex) return hitWithSlotIndex;
         this.hitWithSlotIndex = hitWithSlotIndex;
@@ -284,7 +284,7 @@ class Spine extends Visual {
     /** Use first bounding box to hit this visual.
         When this is set to `true`, `hitWithSlotIndex` value is ignored. */
     @editable
-    public var hitWithFirstBoundingBox(default,set):Bool = false;
+    public var hitWithFirstBoundingBox(default, set):Bool = false;
     function set_hitWithFirstBoundingBox(hitWithFirstBoundingBox:Bool):Bool {
         if (this.hitWithFirstBoundingBox == hitWithFirstBoundingBox) return hitWithFirstBoundingBox;
         this.hitWithFirstBoundingBox = hitWithFirstBoundingBox;
@@ -301,7 +301,7 @@ class Spine extends Visual {
     }
 
     @editable
-    public var renderWhenInvisible(default,set):Bool = false;
+    public var renderWhenInvisible(default, set):Bool = false;
     function set_renderWhenInvisible(renderWhenInvisible:Bool):Bool {
         if (this.renderWhenInvisible == renderWhenInvisible) return renderWhenInvisible;
         this.renderWhenInvisible = renderWhenInvisible;
@@ -319,7 +319,7 @@ class Spine extends Visual {
 
     /** Tint color */
     @editable
-    public var color(default,set):Color = Color.WHITE;
+    public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
         this.color = color;
@@ -332,7 +332,7 @@ class Spine extends Visual {
 
     /** The Spine data used to animate this animation. */
     @editable
-    public var spineData(default,set):SpineData = null;
+    public var spineData(default, set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
 
@@ -379,10 +379,6 @@ class Spine extends Visual {
             }
         }
 
-#if legacy_editor
-        computeAnimationList();
-#end
-
         contentDirty = true;
         computeContent();
 
@@ -428,7 +424,7 @@ class Spine extends Visual {
         return spineData;
     }
 
-    public var skin(default,set):String = null;
+    public var skin(default, set):String = null;
     function set_skin(skin:String):String {
         if (this.skin == skin) return skin;
         this.skin = skin;
@@ -451,7 +447,7 @@ class Spine extends Visual {
     var _settingNextAnimation = false;
 
     @editable({ localCollection: 'animationList', empty: 0 })
-    public var animation(default,set):String = null;
+    public var animation(default, set):String = null;
     function set_animation(animation:String):String {
         if (!_settingNextAnimation) {
             if (nextAnimations != null) nextAnimations = null;
@@ -467,7 +463,7 @@ class Spine extends Visual {
         return animation;
     }
 
-    public var nextAnimations(default,set):Array<String> = null;
+    public var nextAnimations(default, set):Array<String> = null;
     function set_nextAnimations(nextAnimations:Array<String>) {
         if (this.nextAnimations == nextAnimations) return nextAnimations;
         this.nextAnimations = nextAnimations;
@@ -475,7 +471,7 @@ class Spine extends Visual {
     }
 
     @editable
-    public var loop(default,set):Bool = true;
+    public var loop(default, set):Bool = true;
     function set_loop(loop:Bool):Bool {
         if (this.loop == loop) return loop;
         this.loop = loop;
@@ -500,27 +496,11 @@ class Spine extends Visual {
         `update(delta)` at every frame yourself. Use this if you want to have control over
         when the animation update is actually happening. Don't use it to pause animation.
         (animation can be paused with `paused` property instead) */
-    public var autoUpdate(default, null):Bool = true;
-    function set_autoUpdate(autoUpdate:Bool):Bool {
-        if (this.autoUpdate == autoUpdate) return autoUpdate;
+    public var autoUpdate:Bool = true;
 
-        this.autoUpdate = autoUpdate;
-        bindOrUnbindUpdateIfNeeded();
+    public var pausedOrFrozen(default, null):Bool = false;
 
-        return autoUpdate;
-    }
-
-    public var pausedOrFrozen(default, set):Bool = false;
-    function set_pausedOrFrozen(pausedOrFrozen:Bool):Bool {
-        if (this.pausedOrFrozen == pausedOrFrozen) return pausedOrFrozen;
-
-        this.pausedOrFrozen = pausedOrFrozen;
-        bindOrUnbindUpdateIfNeeded();
-
-        return pausedOrFrozen;
-    }
-
-    public var autoFreeze(default,set):Bool = true;
+    public var autoFreeze(default, set):Bool = true;
     function set_autoFreeze(autoFreeze:Bool):Bool {
         if (this.autoFreeze == autoFreeze) return autoFreeze;
         this.autoFreeze = autoFreeze;
@@ -531,7 +511,7 @@ class Spine extends Visual {
     }
 
     /** Is this animation paused? */
-    public var paused(default,set):Bool = #if legacy_editor true #else false #end;
+    public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
 
@@ -542,7 +522,7 @@ class Spine extends Visual {
     }
 
     /** Is this animation frozen? **/
-    public var frozen(default,set):Bool = false;
+    public var frozen(default, set):Bool = false;
     function set_frozen(frozen:Bool):Bool {
         if (this.frozen == frozen) return frozen;
 
@@ -554,14 +534,6 @@ class Spine extends Visual {
 
     /** Reset at change */
     public var resetAtChange:Bool = true;
-
-/// Editor collections
-
-#if legacy_editor
-
-    public var animationList:Collection<CollectionEntry> = new Collection();
-
-#end
 
 /// Properties (internal)
 
@@ -575,32 +547,7 @@ class Spine extends Visual {
 
         if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader('shader:tintBlack');
 
-        bindOrUnbindUpdateIfNeeded();
-
-#if legacy_editor
-
-        function render(delta:Float) {
-            editor.render();
-        }
-
-        ceramic.App.app.onceUpdate(this, function(delta) {
-
-            // Do nothing if this is not the object being edited
-            if (!edited) return;
-
-            onPointerDown(this, function(info) {
-
-                app.onUpdate(this, render);
-                paused = false;
-
-                screen.oncePointerUp(this, function(info) {
-                    app.offUpdate(render);
-                    paused = true;
-                });
-            });
-        });
-
-#end
+        SpineSystem.shared.spines.push(this);
 
     }
 
@@ -904,6 +851,8 @@ class Spine extends Visual {
 
         super.destroy();
 
+        SpineSystem.shared.spines.remove(this);
+
         // Will update reference counting
         spineData = null;
 
@@ -991,18 +940,6 @@ class Spine extends Visual {
     }
 
 /// Internal
-
-    /** Internal function to bind or update to app
-        update event depending on current settings */
-    inline function bindOrUnbindUpdateIfNeeded():Void {
-
-        ceramic.App.app.offUpdate(update);
-
-        if (!pausedOrFrozen && autoUpdate) {
-            ceramic.App.app.onUpdate(this, update);
-        }
-
-    }
 
     /** Update skeleton with the given delta time. */
     function updateSkeleton(delta:Float):Void {
@@ -1985,58 +1922,6 @@ class Spine extends Visual {
             return super.hits(x, y);
         }
     }
-
-/// Editor stuff
-
-#if legacy_editor
-
-    function computeAnimationList():Void {
-
-        // If not edited, nothing to do
-        if (!edited) return;
-
-        // Clear previous
-        animationList.splice(0, animationList.length);
-
-        // Create initial list
-        var collectionData = [{
-            id: null,
-            name: 'none'
-        }];
-
-        // Fill list
-        if (spineData != null) {
-
-            // Compute content
-            var anims = spineData.skeletonData.animations;
-            for (a in 0...anims.length) {
-                var animation = anims[a];
-                animationList.push({
-                    id: animation.name,
-                    name: animation.name
-                });
-            }
-
-            // Send to editor
-            for (e in 0...animationList.length) {
-                var entry = animationList[e];
-                collectionData.push(entry.getEditableData());
-            }
-        }
-
-        // Send
-        editor.send({
-            type: 'collections/local',
-            value: {
-                owner: id,
-                name: 'animationList',
-                data: collectionData
-            }
-        });
-
-    }
-
-#end
 
     static var _globalSlotIndexes:Map<String,Int> = new Map();
     static var _nextGlobalSlotIndex:Int = 1;

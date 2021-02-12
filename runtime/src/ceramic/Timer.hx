@@ -15,7 +15,7 @@ class Timer {
 
     /** Current unix time synchronized with ceramic Timer.
         `Timer.now` and `Timer.timestamp` are garanteed to get incremented
-        exactly at the same rate.
+        exactly at the same rate, except when app frame real delta > 1s
         (number of seconds since January 1st, 1970) **/
     public static var timestamp(get,null):Float;
     inline static function get_timestamp():Float {
@@ -25,10 +25,10 @@ class Timer {
     public static var startTimestamp(default,null):Float = Date.now().getTime() / 1000.0;
 
     @:allow(ceramic.App)
-    static function update(delta:Float):Void {
+    static function update(delta:Float, realDelta:Float):Void {
 
         now += delta;
-        timestamp += delta;
+        timestamp += realDelta;
 
         if (next <= now) {
             ceramic.App.app.beginUpdateCallbacks.push(flush);

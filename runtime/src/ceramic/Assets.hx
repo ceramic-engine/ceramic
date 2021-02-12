@@ -752,15 +752,29 @@ class Assets extends Entity {
      * When using web target via electron, be sure to add `ceramic_use_electron` define.
      * @param path
      *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getDefine('assets_path')`
-     *     to watch default asset path in project.
+     *     to watch default asset path in project. It's the path that will be used if none is provided
      * @param hotReload 
      *     `true` by default. Will enable hot reload of assets when related file changes on disk
      * @return WatchDirectory instance used internally
      */
-    public function watchDirectory(path:String, hotReload:Bool = true):WatchDirectory {
+    public function watchDirectory(?path:String, hotReload:Bool = true):WatchDirectory {
         
         if (runtimeAssets != null) {
             throw 'There is already an instance of RuntimeAssets assigned. Cannot watch a directory, which also need its own instance';
+        }
+
+        if (path == null) {
+            #if (web && !ceramic_use_electron)
+            throw 'Cannot watch directory when using web target! (unless using electron runner and `ceramic_use_electron` define)';
+            #else
+            path = ceramic.macros.DefinesMacro.getDefine('assets_path');
+            
+            // Pre-multiply images alpha on the fly because we are reading from source assets
+            if (defaultImageOptions == null) {
+                defaultImageOptions = {};
+            }
+            defaultImageOptions.premultiplyAlpha = true;
+            #end
         }
 
         if (hotReload) {
@@ -812,6 +826,18 @@ class Assets extends Entity {
         });
 
         return watch;
+
+    }
+
+    /**
+     * Inherit runtime asset settings from parent assets instance.
+     * Used internally to make sure sub-instances of `Assets` take owner live reload settings and related
+     * @param assets 
+     */
+    @:noCompletion public function inheritRuntimeAssetsFromAssets(assets:Assets):Void {
+
+        runtimeAssets = assets.runtimeAssets;
+        defaultImageOptions = assets.defaultImageOptions;
 
     }
 

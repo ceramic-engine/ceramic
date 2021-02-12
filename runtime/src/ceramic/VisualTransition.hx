@@ -1,6 +1,8 @@
 package ceramic;
 
-import ceramic.ui.View;
+#if plugin_ui
+import ceramic.View;
+#end
 
 using ceramic.Extensions;
 
@@ -109,6 +111,7 @@ class VisualTransition extends Entity implements Component {
     var transformEndToNull:Bool = false;
     var transformInTransition:Transform = null;
 
+    #if plugin_ui
     var offsetXChanged:Bool = false;
     var offsetXTween:Tween = null;
     var offsetXTarget:Float = 0;
@@ -134,6 +137,7 @@ class VisualTransition extends Entity implements Component {
     var viewHeightEnd:Float = 0;
 
     var isView:Bool = false;
+    #end
 
     public function new(?easing:Easing, duration:Float = 0.3) {
 
@@ -146,7 +150,9 @@ class VisualTransition extends Entity implements Component {
 
     function bindAsComponent() {
 
+        #if plugin_ui
         isView = Std.is(entity, View);
+        #end
 
     }
 
@@ -180,10 +186,12 @@ class VisualTransition extends Entity implements Component {
         transformAssigned = false;
         transformAssignedInstance = null;
         transformChanged = false;
+        #if plugin_ui
         offsetXChanged = false;
         offsetYChanged = false;
         viewWidthChanged = false;
         viewHeightChanged = false;
+        #end
 
         inline function copyCurrentTransform(transform) {
             _currentTransform.setToTransform(transform);
@@ -199,7 +207,9 @@ class VisualTransition extends Entity implements Component {
             return _targetTransform;
         }
 
+        #if plugin_ui
         var asView:View = isView ? cast entity : null;
+        #end
 
         // Initial visual values
         //
@@ -226,10 +236,12 @@ class VisualTransition extends Entity implements Component {
         }
         var alphaCurrent = entity.alpha;
         var transformCurrent = entity.transform != null ? copyCurrentTransform(entity.transform) : null;
+        #if plugin_ui
         var offsetXCurrent = isView ? asView.offsetX : 0.0;
         var offsetYCurrent = isView ? asView.offsetY : 0.0;
         var viewWidthCurrent = isView ? asView.viewWidth : 0.0;
         var viewHeightCurrent = isView ? asView.viewHeight : 0.0;
+        #end
 
         // Update target values with initial values
         xTarget = xCurrent;
@@ -246,10 +258,12 @@ class VisualTransition extends Entity implements Component {
         colorTarget = colorCurrent;
         alphaTarget = alphaCurrent;
         transformTarget = transformCurrent != null ? copyTargetTransform(transformCurrent) : null;
+        #if plugin_ui
         offsetXTarget = offsetXCurrent;
         offsetYTarget = offsetYCurrent;
         viewWidthTarget = viewWidthCurrent;
         viewHeightTarget = viewHeightCurrent;
+        #end
 
         // Compute target values
         var props:VisualTransitionProperties = this;
@@ -327,6 +341,7 @@ class VisualTransition extends Entity implements Component {
                         );
                     }
                 }
+                #if plugin_ui
                 if (offsetXTween == propsTween)
                     asView.offsetX = offsetXStart + (offsetXEnd - offsetXStart) * value;
                 if (offsetYTween == propsTween)
@@ -335,6 +350,7 @@ class VisualTransition extends Entity implements Component {
                     asView.viewWidth = viewWidthStart + (viewWidthEnd - viewWidthStart) * value;
                 if (viewHeightTween == propsTween)
                     asView.viewHeight = viewHeightStart + (viewHeightEnd - viewHeightStart) * value;
+                #end
             });
             propsTween.onDestroy(this, propsTween -> {
                 if (xTween == propsTween)
@@ -365,6 +381,7 @@ class VisualTransition extends Entity implements Component {
                     alphaTween = null;
                 if (transformTween == propsTween)
                     transformTween = null;
+                #if plugin_ui
                 if (offsetXTween == propsTween)
                     offsetXTween = null;
                 if (offsetYTween == propsTween)
@@ -373,6 +390,7 @@ class VisualTransition extends Entity implements Component {
                     viewWidthTween = null;
                 if (viewHeightTween == propsTween)
                     viewHeightTween = null;
+                #end
             });
 
             if (xChanged) {
@@ -472,6 +490,7 @@ class VisualTransition extends Entity implements Component {
                     transformEndToNull = true;
                 }
             }
+            #if plugin_ui
             if (offsetXChanged) {
                 offsetXTween = propsTween;
                 offsetXStart = offsetXCurrent;
@@ -492,6 +511,7 @@ class VisualTransition extends Entity implements Component {
                 viewHeightStart = viewHeightCurrent;
                 viewHeightEnd = viewHeightTarget;
             }
+            #end
         }
 
         return propsTween;
@@ -716,6 +736,7 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return transform;
     }
 
+    #if plugin_ui
     public var offsetX(get, set):Float;
     function get_offsetX():Float return this.offsetXTarget;
     function set_offsetX(offsetX:Float):Float {
@@ -769,5 +790,6 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         inline set_viewWidth(viewWidth);
         inline set_viewHeight(viewHeight);
     }
+    #end
 
 }

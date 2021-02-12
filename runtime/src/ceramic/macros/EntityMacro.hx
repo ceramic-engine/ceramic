@@ -1,14 +1,16 @@
 package ceramic.macros;
 
-import haxe.macro.TypeTools;
+import haxe.DynamicAccess;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.DynamicAccess;
+import haxe.macro.TypeTools;
 
-using haxe.macro.ExprTools;
 using StringTools;
+using haxe.macro.ExprTools;
 
 class EntityMacro {
+
+    @:persistent static var fieldNamesByTypeName:Map<String,Array<String>> = null;
 
     #if (haxe_ver < 4)
     static var onReused:Bool = false;
@@ -54,49 +56,101 @@ class EntityMacro {
                 storeAllFieldInfo = true;
             }
         }
-        if (!storeAllFieldInfo) {
-            var parentHold = localClass.superClass;
-            var parent = parentHold != null ? parentHold.t : null;
-            while (parent != null) {
 
-                for (meta in parent.get().meta.get()) {
+        // Gather info from parents
+        var inheritsFromStateMachine = false;
+        var isStateMachine = false;
+        if (localClass.pack.length == 1 && localClass.pack[0] == 'ceramic') {
+            if (localClass.name == 'StateMachine' || localClass.name == 'StateMachineBase' || localClass.name == 'StateMachineImpl' || localClass.name.startsWith('StateMachineImpl_') || localClass.name.startsWith('StateMachine_')) {
+                isStateMachine = true;
+            }
+        }
+        var resolvedStateEnums:Array<haxe.macro.Type> = null;
+        var parentHold = localClass.superClass;
+        var parent = parentHold != null ? parentHold.t : null;
+        while (parent != null) {
+
+            var clazz = parent.get();
+
+            if (!storeAllFieldInfo) {
+                for (meta in clazz.meta.get()) {
                     if (meta.name == 'autoFieldInfo') {
                         if (fieldInfoData == null)
                             fieldInfoData = {};
                         storeAllFieldInfo = true;
-                        break;
                     }
                 }
-
-                parentHold = parent.get().superClass;
-                parent = parentHold != null ? parentHold.t : null;
             }
+
+            if (!isStateMachine && !inheritsFromStateMachine && clazz.pack.length == 1 && clazz.pack[0] == 'ceramic') {
+                if (clazz.name.startsWith('StateMachine_')) {
+                    inheritsFromStateMachine = true;
+
+                    var stateComplexType = StateMachineMacro.getStateTypeFromImplName(clazz.name);
+                    if (stateComplexType != null) {
+                        try {
+                            var resolvedType = Context.resolveType(stateComplexType, Context.currentPos());
+                            switch resolvedType {
+                                default:
+                                case TLazy(f):
+                                    resolvedType = f();
+                            }
+                            switch resolvedType {
+                                default:
+                                case TEnum(t, params):
+                                    if (resolvedStateEnums == null)
+                                        resolvedStateEnums = [];
+                                    resolvedStateEnums.push(resolvedType);
+                                case TAbstract(t, params):
+                                    if (resolvedStateEnums == null)
+                                        resolvedStateEnums = [];
+                                    resolvedStateEnums.push(resolvedType);
+                            }
+                        }
+                        catch (e:Dynamic) {}
+                    }
+                }
+            }
+
+            parentHold = clazz.superClass;
+            parent = parentHold != null ? parentHold.t : null;
         }
 
         var newFields:Array<Field> = [];
 
         var constructor = null;
+        var fieldNames = [];
         for (field in fields) {
             if (field.name == 'new') {
                 constructor = field;
-                break;
+            }
+            else {
+                fieldNames.push(field.name);
             }
         }
+        var typeName = localClass.name;
+        if (localClass.pack.length > 0) {
+            typeName = localClass.pack.join('.') + '.' + typeName;
+        }
+        if (fieldNamesByTypeName == null) {
+            fieldNamesByTypeName = new Map();
+        }
+        fieldNamesByTypeName.set(typeName, fieldNames);
 
         var componentFields = [];
         var ownFields:Array<String> = null;
-        #if (!display && !completion)
         var hasDestroyOverride = false;
-        #end
         var index = 0;
+        var checkStateMachineFields = true; // Always true for now
+
+        var constructorFn = null;
+        var toAppendInConstructorSuper:Array<Expr> = null;
 
         for (field in fields) {
 
-            #if (!display && !completion)
             if (!hasDestroyOverride && field.name == 'destroy') {
                 hasDestroyOverride = true;
             }
-            #end
 
             var hasMeta = hasOwnerOrComponentMeta(field);
 
@@ -132,19 +186,119 @@ class EntityMacro {
                         if (field.access.indexOf(AStatic) != -1) {
                             throw new Error("Component cannot be static", field.pos);
                         }
-                        if (field.access.indexOf(APrivate) != -1) {
-                            throw new Error("Component cannot be private", field.pos);
-                        }
 
                         var fieldName = field.name;
+                        var processedStateMachineType = false;
 
                         if (expr != null) {
                             // Compute type from expr
                             switch (expr.expr) {
                                 case ENew(t,p):
+
+                                    // Some syntactic sugar with StateMachine used as a component
+                                    // StateMachine<S> will map to StateMachineComponent<S,E>,
+                                    // E being our current Entity class, automatically resolved
+                                    if (t.name == 'StateMachine' && (t.pack.length == 0 || (t.pack.length == 1 && t.pack[0] == 'ceramic'))) {
+                                        if (t.params.length == 1) {
+                                            var resolvedType:haxe.macro.Type = null;
+                                            var isCeramicStateMachine = false;
+                                            try {
+                                                // Ensure we are matching ceramic's StateMachine type,
+                                                // and not another type with the same name
+                                                resolvedType = Context.resolveType(TPath({
+                                                    pack: t.pack,
+                                                    name: t.name,
+                                                    params: [TPType(macro :Dynamic)]
+                                                }), field.pos);
+                                                if (resolvedType != null) {
+                                                    switch resolvedType {
+                                                        default:
+                                                        case TLazy(f):
+                                                            resolvedType = f();
+                                                    }
+                                                    switch resolvedType {
+                                                        default:
+                                                        case TInst(t, params):
+                                                            var res = t.get();
+                                                            if ((res.name == 'StateMachineBase' || res.name == 'StateMachineImpl' || res.name.startsWith('StateMachineImpl_')) && res.pack.length == 1 && res.pack[0] == 'ceramic') {
+                                                                isCeramicStateMachine = true;
+                                                            }
+                                                    }
+                                                }
+                                            }
+                                            catch (e:Dynamic) {}
+                                            if (isCeramicStateMachine) {
+                                                // This is indeed a ceramic StateMachine.
+                                                checkStateMachineFields = true;
+                                                processedStateMachineType = true;
+
+                                                // Check if state is an enum or enum abstract type
+                                                var resolvedTypeParam:haxe.macro.Type = null;
+                                                var typeParamIsEnum:Bool = false;
+                                                var typeParamIsEnumAbstract:Bool = false;
+                                                try {
+                                                    switch t.params[0] {
+                                                        default:
+                                                        case TPType(tp):
+                                                            resolvedTypeParam = Context.resolveType(tp, field.pos);
+                                                            if (resolvedTypeParam != null) {
+                                                                switch resolvedTypeParam {
+                                                                    default:
+                                                                    case TLazy(f):
+                                                                        resolvedTypeParam = f();
+                                                                }
+                                                                switch resolvedTypeParam {
+                                                                    default:
+                                                                    case TAbstract(t, params):
+                                                                        if (t.get().meta.has(':enum')) {
+                                                                            typeParamIsEnumAbstract = true;
+                                                                        }
+                                                                    case TEnum(t, params):
+                                                                        typeParamIsEnum = true;
+                                                                }
+                                                            }
+                                                    }
+                                                }
+                                                catch (e:Dynamic) {}
+
+                                                if (typeParamIsEnum || typeParamIsEnumAbstract) {
+
+                                                    // Yes, it's an enum or enum abstract type. Perform replace
+                                                    var localClassParams = [];
+                                                    for (param in localClass.params) {
+                                                        localClassParams.push(TPType(TypeTools.toComplexType(param.t)));
+                                                    }
+                                                    t = {
+                                                        pack: ['ceramic'],
+                                                        name: 'StateMachineComponent',
+                                                        params: [
+                                                            t.params[0],
+                                                            TPType(TPath({
+                                                                pack: localClass.pack,
+                                                                name: localClass.name,
+                                                                params: localClassParams
+                                                            }))
+                                                        ]
+                                                    }
+                                                    expr = {
+                                                        expr: ENew(t,p),
+                                                        pos: field.pos
+                                                    };
+
+                                                    // Also keep enum type around to perform further checks after
+                                                    if (resolvedStateEnums == null)
+                                                        resolvedStateEnums = [];
+                                                    resolvedStateEnums.push(resolvedTypeParam);
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                    
                                     if (type == null) {
                                         type = TPath(t);
                                     }
+
                                     if (constructor == null) {
                                         throw new Error("A constructor is required to initialize a component's default instance", field.pos);
                                     }
@@ -162,17 +316,13 @@ class EntityMacro {
                                                             expr: fn.expr.expr
                                                         }]);
                                                 }
-                                                
-                                                switch (fn.expr.expr) {
-                                                    case EBlock(exprs):
 
-                                                        exprs.push(macro {
-                                                            this.$fieldName = @:privateAccess ${expr};
-                                                        });
-
-                                                    default:
-                                                        throw new Error("Invalid constructor body", field.pos);
-                                                }
+                                                constructorFn = fn;
+                                                if (toAppendInConstructorSuper == null)
+                                                    toAppendInConstructorSuper = [];
+                                                toAppendInConstructorSuper.push(
+                                                    macro this.$fieldName = @:privateAccess ${expr}
+                                                );
 
                                             default:
                                                 throw new Error("Invalid constructor", field.pos);
@@ -180,6 +330,68 @@ class EntityMacro {
                                     }
                                 default:
                                     throw new Error("Invalid component default value", field.pos);
+                            }
+                        }
+
+                        // Check if this type is a StateMachine subclass to resolve associated enum (if any)
+                        if (!processedStateMachineType) {
+                            processedStateMachineType = true;
+                            if (type != null) {
+                                var resolvedType:haxe.macro.Type = null;
+                                try {
+                                    resolvedType = Context.resolveType(type, field.pos);
+                                }
+                                catch (e:Dynamic) {}
+                                if (resolvedType != null) {
+                                    switch resolvedType {
+                                        default:
+                                        case TLazy(f):
+                                            resolvedType = f();
+                                    }
+                                    switch resolvedType {
+                                        default:
+                                        case TInst(t, params):
+                                            var parent = t;
+                                            while (parent != null) {
+                                    
+                                                var clazz = parent.get();
+                                    
+                                                if (clazz.pack.length == 1 && clazz.pack[0] == 'ceramic') {
+                                                    if (clazz.name.startsWith('StateMachine_')) {
+                                                        inheritsFromStateMachine = true;
+                                    
+                                                        var stateComplexType = StateMachineMacro.getStateTypeFromImplName(clazz.name);
+                                                        if (stateComplexType != null) {
+                                                            try {
+                                                                var resolvedType = Context.resolveType(stateComplexType, Context.currentPos());
+                                                                switch resolvedType {
+                                                                    default:
+                                                                    case TLazy(f):
+                                                                        resolvedType = f();
+                                                                }
+                                                                switch resolvedType {
+                                                                    default:
+                                                                    case TEnum(t, params):
+                                                                        if (resolvedStateEnums == null)
+                                                                            resolvedStateEnums = [];
+                                                                        resolvedStateEnums.push(resolvedType);
+                                                                    case TAbstract(t, params):
+                                                                        if (resolvedStateEnums == null)
+                                                                            resolvedStateEnums = [];
+                                                                        resolvedStateEnums.push(resolvedType);
+                                                                }
+                                                            }
+                                                            catch (e:Dynamic) {}
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                    
+                                                var parentHold = clazz.superClass;
+                                                parent = parentHold != null ? parentHold.t : null;
+                                            }
+                                    }
+                                }
                             }
                         }
 
@@ -242,7 +454,21 @@ class EntityMacro {
             index++;
         }
 
-        #if (!display && !completion)
+        // Append initialization in constructor
+        if (constructorFn != null && toAppendInConstructorSuper != null) {
+
+            var toAppend:Expr = {
+                expr: EBlock(toAppendInConstructorSuper),
+                pos: constructor.pos
+            }
+
+            constructorFn.expr = appendConstructorSuper(
+                constructorFn.expr,
+                toAppend
+            );
+
+        }
+
         // In some cases, destroy override is a requirement, add it if not there already
         if (ownFields != null && !hasDestroyOverride) {
             newFields.push({
@@ -259,7 +485,6 @@ class EntityMacro {
                 meta: []
             });
         }
-        #end
 
         var isProcessed = processed.exists(classPath);
         if (!isProcessed) {
@@ -378,6 +603,104 @@ class EntityMacro {
             });
         }
 
+        // Check state machine enum state collisions
+        var enumNames:Map<String,Bool> = null;
+        if (resolvedStateEnums != null) {
+
+            enumNames = new Map();
+            
+            var duplicateNames:Map<String,Bool> = new Map();
+
+            for (type in resolvedStateEnums) {
+
+                switch type {
+                    default:
+                    case TAbstract(t, params):
+                        for (field in t.get().impl.get().statics.get()) {
+                            if (field.meta.has(':enum') && field.meta.has(':impl')) {
+                                var name = field.name;
+                                if (!enumNames.exists(name)) {
+                                    enumNames.set(name, true);
+                                }
+                                else if (!duplicateNames.exists(name)) {
+                                    duplicateNames.set(name, true);
+                                    Context.error("Duplicate state: enum value `" + name + "` is used by multiple StateMachine components", Context.currentPos());
+                                }
+                            }
+                        }
+                    case TEnum(t, params):
+                        for (name in t.get().names) {
+                            if (!enumNames.exists(name)) {
+                                enumNames.set(name, true);
+                            }
+                            else if (!duplicateNames.exists(name)) {
+                                duplicateNames.set(name, true);
+                                Context.error("Duplicate state: enum value `" + name + "` is used by multiple StateMachine components", Context.currentPos());
+                            }
+                        }
+                }
+
+            }
+        }
+
+        if (checkStateMachineFields) {
+
+            for (field in newFields) {
+                var name = field.name;
+                if (name.endsWith('_enter')) {
+                    var stateName = name.substring(0, name.length - 6);
+                    if (enumNames == null || !enumNames.exists(stateName)) {
+                        Context.error("Unknown state value: " + stateName + "", field.pos);
+                    }
+                    
+                    // Check args
+                    switch field.kind {
+                        default:
+                        case FFun(f):
+                            if (f.args.length != 0) {
+                                Context.error("Too many arguments", field.pos);
+                            }
+                    }
+                }
+                else if (name.endsWith('_exit')) {
+                    var stateName = name.substring(0, name.length - 5);
+                    if (enumNames == null || !enumNames.exists(stateName)) {
+                        Context.error("Unknown state value: " + stateName + "", field.pos);
+                    }
+
+                    // Check args
+                    switch field.kind {
+                        default:
+                        case FFun(f):
+                            if (f.args.length != 0) {
+                                Context.error("Too many arguments", field.pos);
+                            }
+                    }
+                }
+                else if (name.endsWith('_update')) {
+                    var stateName = name.substring(0, name.length - 7);
+                    if (enumNames == null || !enumNames.exists(stateName)) {
+                        Context.error("Unknown state value: " + stateName + "", field.pos);
+                    }
+
+                    // Check args
+                    switch field.kind {
+                        default:
+                        case FFun(f):
+                            if (f.args.length != 1) {
+                                Context.error("Missing argument: delta", field.pos);
+                            }
+                            else {
+                                if (f.args[0].type == null) {
+                                    f.args[0].type = macro :Float;
+                                }
+                            }
+                    }
+                }
+            }
+
+        }
+
         #if ceramic_debug_macro
         trace(Context.getLocalClass() + ' -> END EntityMacro.build()');
         #end
@@ -401,6 +724,29 @@ class EntityMacro {
                 return macro { _lifecycleState = -1; ${e}; };
             default:
                 return ExprTools.map(e, transformSuperDestroy);
+        }
+
+    }
+
+    static var _appendConstructorSuperToAppend:Expr;
+
+    /** Append constructor `super(...);`
+        with `toAppend` expr */
+    static function appendConstructorSuper(e:Expr, toAppend:Expr):Expr {
+
+        _appendConstructorSuperToAppend = toAppend;
+
+        return doAppendConstructorSuper(e);
+
+    }
+
+    static function doAppendConstructorSuper(e:Expr):Expr {
+
+        switch (e.expr) {
+            case ECall({expr: EConst(CIdent('super')), pos: _}, _):
+                return macro { ${e}; ${_appendConstructorSuperToAppend}; };
+            default:
+                return ExprTools.map(e, doAppendConstructorSuper);
         }
 
     }
@@ -506,6 +852,42 @@ class EntityMacro {
         }
 
         return typeStr;
+
+    }
+
+/// Completion specific
+
+    macro static public function buildForCompletion():Array<Field> {
+
+        var fields = Context.getBuildFields();
+
+        for (field in fields) {
+
+            // Infer delta type
+            if (field.name.endsWith('_update')) {
+
+                switch field.kind {
+                    default:
+                    case FFun(f):
+                        if (f.args.length > 0) {
+                            var arg = f.args[0];
+                            if (arg.type == null) {
+                                arg.type = macro :Float;
+                            }
+                        }
+                }
+            }
+        }
+
+        return fields;
+
+    }
+
+    public static function getFieldNamesFromTypeName(typeName:String):Array<String> {
+
+        if (fieldNamesByTypeName == null)
+            return null;
+        return fieldNamesByTypeName.get(typeName);
 
     }
 

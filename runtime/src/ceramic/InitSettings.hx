@@ -106,6 +106,20 @@ class InitSettings {
     }
 
     /**
+     * Maximum app update delta time.
+     * During app update (at each frame), `app.delta` will be capped to `maxDelta`
+     * if its value is above `maxDelta`.
+     * If needed, use `app.realDelta` to get real elapsed time since last frame.
+     */
+    public var maxDelta(get,set):Float;
+    inline function get_maxDelta():Float {
+        return settings.maxDelta;
+    }
+    inline function set_maxDelta(maxDelta:Float):Float {
+        return settings.maxDelta = maxDelta;
+    }
+
+    /**
      * Setup screen orientation. Default is `NONE`,
      * meaning nothing is enforced and project defaults will be used.
      */

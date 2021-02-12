@@ -3,6 +3,7 @@ package ceramic;
 import ceramic.App;
 import ceramic.Screen;
 import ceramic.Settings;
+import ceramic.System;
 import haxe.PosInfos;
 
 /** Shortcuts adds convenience identifiers to access ceramic app, screen, ...
@@ -32,5 +33,9 @@ class Shortcuts {
     /** Shared logger instance */
     public static var log(get,never):Logger;
     #if !haxe_server inline #end static function get_log():Logger { return App.app.logger; }
+
+    /** Systems manager */
+    public static var systems(get,never):Systems;
+    #if !haxe_server inline #end static function get_systems():Systems { return App.app.systems; }
 
 }

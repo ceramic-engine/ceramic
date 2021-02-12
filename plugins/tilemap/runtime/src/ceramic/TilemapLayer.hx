@@ -52,7 +52,7 @@ class TilemapLayer extends Visual {
         return clipTilesHeight;
     }
 
-    public var tileQuads(default,null):Array<Quad> = [];
+    public var tileQuads(default,null):Array<TilemapQuad> = [];
 
 /// Overrides
 
@@ -137,8 +137,10 @@ class TilemapLayer extends Visual {
 
                     var tileLeft = ((t % layerData.width) + layerData.x) * tileset.tileWidth + layerData.offsetX;
                     var tileTop = (Math.floor(t / layerData.width) + layerData.y) * tileset.tileWidth + layerData.offsetY;
-                    var tileRight = tileLeft + tileset.tileWidth;
-                    var tileBottom = tileTop + tileset.tileHeight;
+                    var tileWidth = tileset.tileWidth;
+                    var tileHeight = tileset.tileHeight;
+                    var tileRight = tileLeft + tileWidth;
+                    var tileBottom = tileTop + tileHeight;
 
                     var doesClip = false;
                     if (hasClipping) {
@@ -149,15 +151,17 @@ class TilemapLayer extends Visual {
 
                     if (!doesClip) {
 
-                        var quad:Quad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
+                        var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
                         if (quad == null) {
-                            quad = new Quad();
+                            quad = new TilemapQuad();
+                            quad.anchor(0.5, 0.5);
                             quad.inheritAlpha = true;
                             tileQuads.push(quad);
                             add(quad);
                         }
                         usedQuads++;
 
+                        quad.tilemapTile = tile;
                         quad.visible = true;
                         quad.texture = tileset.image.texture;
                         quad.frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
@@ -165,11 +169,37 @@ class TilemapLayer extends Visual {
                         quad.frameWidth = tileset.tileWidth;
                         quad.frameHeight = tileset.tileHeight;
                         quad.depth = startDepthX + (t % layerData.width) * depthXStep + startDepthY + Math.floor(t / layerData.width) * depthYStep;
-                        quad.x = tileLeft;
-                        quad.y = tileTop;
-                        quad.scaleX = (tile.horizontalFlip ? -1 : 1) * tileScale;
-                        quad.scaleY = (tile.verticalFlip ? -1 : 1) * tileScale;
-                        quad.rotation = tile.diagonalFlip ? -90 : 0; // Not sure about this, need to test
+                        quad.x = tileWidth * 0.5 + tileLeft;
+                        quad.y = tileHeight * 0.5 + tileTop;
+
+                        if (tile.diagonalFlip) {
+                            
+                            if (tile.verticalFlip)
+                                quad.scaleX = -1.0 * tileScale;
+                            else
+                                quad.scaleX = tileScale;
+
+                            if (tile.horizontalFlip)
+                                quad.scaleY = tileScale;
+                            else
+                                quad.scaleY = -1.0 * tileScale;
+
+                            quad.rotation = 90;
+                        }
+                        else {
+
+                            if (tile.horizontalFlip)
+                                quad.scaleX = -1.0 * tileScale;
+                            else
+                                quad.scaleX = tileScale;
+
+                            if (tile.verticalFlip)
+                                quad.scaleY = -1.0 * tileScale;
+                            else
+                                quad.scaleY = tileScale;
+
+                            quad.rotation = 0;
+                        }
                     }
 
                 }

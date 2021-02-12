@@ -181,7 +181,7 @@ class Helpers {
                     context.plugins.set(name, plugin);
                 }
                 else {
-                    context.unbuiltPlugins.set(name, { path: path });
+                    context.unbuiltPlugins.set(name, { path: path, name: name, runtime: runtime });
                 }
             }
             catch (e:Dynamic) {

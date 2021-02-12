@@ -223,7 +223,7 @@ class BackendTools implements tools.spec.BackendTools {
 
     }
 
-    public function transformIcons(cwd:String, appIcon:String, target:tools.BuildTarget, variant:String):Void {
+    public function transformIcons(cwd:String, appIcon:String, appIconFlat:String, target:tools.BuildTarget, variant:String):Void {
 
         // TODO
 
