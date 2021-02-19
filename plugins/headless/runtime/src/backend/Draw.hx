@@ -1,7 +1,5 @@
 package backend;
 
-import ceramic.RotateFrame;
-
 using ceramic.Extensions;
 
 @:allow(backend.Backend)
