@@ -7,6 +7,7 @@ app:
 
     defines:
         - ceramic_no_skip
+        # - ceramic_arcade_physics
         # - ceramic_debug_draw
         # - ceramic_debug_draw_backend
         # - ceramic_debug_unsafe
@@ -16,3 +17,5 @@ app:
 
     plugins:
         - clay
+        - tilemap
+        - spine

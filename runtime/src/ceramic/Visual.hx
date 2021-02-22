@@ -1879,6 +1879,37 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
 
     }
 
+    /**
+     * Sort children by depth in ascending order.
+     * This will simply reorder children in `children` array.
+     * No depth value will be changed on any child.
+     */
+    public function sortChildrenByDepth():Void {
+
+        if (children != null && children.length > 0) {
+
+            SortVisualsByDepth.sort(children.original);
+
+        }
+
+    }
+
+    /**
+     * This is the equivalent of calling `sortChildrenByDepth()` followed with `autoChildrenDepth()`
+     * @param start the depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
+     * @param step the depth step to use when increment depth for each child
+     */
+    public function normalizeChildrenDepth(start:Float = 1, step:Float = 1):Void {
+
+        if (children != null && children.length > 0) {
+
+            sortChildrenByDepth();
+            autoChildrenDepth();
+
+        }
+
+    }
+
     /** Compute children depth. The result depends on whether
         a parent defines a custom `depthRange` value or not. */
     function computeChildrenDepth():Void {
