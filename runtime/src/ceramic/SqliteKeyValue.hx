@@ -50,8 +50,8 @@ class SqliteKeyValue extends Entity {
         mutex = new Mutex();
 
         mutex.acquire();
+        connections = [];
         tlsConnection = new Tls();
-        tlsConnection.value = null;
         mutex.release();
 
         this.path = path;
