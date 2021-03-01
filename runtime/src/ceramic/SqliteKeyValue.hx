@@ -8,6 +8,7 @@ import haxe.crypto.Base64;
 import sys.db.Sqlite;
 import sys.db.Connection;
 import sys.thread.Mutex;
+import sys.thread.Tls;
 import sys.FileSystem;
 
 import ceramic.Shortcuts.*;
@@ -24,11 +25,23 @@ class SqliteKeyValue extends Entity {
 
     var escapedTable:String;
 
-    var connection:Connection;
+    var connections:Array<Connection>;
+
+    var tlsConnection:Tls<Connection>;
 
     var mutex:Mutex;
 
     var mutexAcquiredInParent:Bool = false;
+
+    function getConnection():Connection {
+        var connection = tlsConnection.value;
+        if (connection == null) {
+            connection = Sqlite.open(path);
+            connections.push(connection);
+            tlsConnection.value = connection;
+        }
+        return connection;
+    }
 
     public function new(path:String, table:String = 'KeyValue') {
 
@@ -36,12 +49,16 @@ class SqliteKeyValue extends Entity {
 
         mutex = new Mutex();
 
+        mutex.acquire();
+        tlsConnection = new Tls();
+        tlsConnection.value = null;
+        mutex.release();
+
         this.path = path;
         this.table = table;
 
         var fileExists = FileSystem.exists(path);
 
-        connection = Sqlite.open(path);
         escapedTable = escape(table);
 
         if (!fileExists) {
@@ -52,7 +69,11 @@ class SqliteKeyValue extends Entity {
 
     override function destroy() {
 
-        connection.close();
+        mutex.acquire();
+        for (connection in connections) {
+            connection.close();
+        }
+        mutex.release();
 
         super.destroy();
 
@@ -74,6 +95,8 @@ class SqliteKeyValue extends Entity {
         }
 
         try {
+            var connection = getConnection();
+
             connection.request('BEGIN TRANSACTION');
 
             connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
@@ -104,6 +127,7 @@ class SqliteKeyValue extends Entity {
         }
 
         try {
+            var connection = getConnection();
             connection.request('DELETE FROM $escapedTable WHERE k = $escapedKey');
         }
         catch (e:Dynamic) {
@@ -129,6 +153,7 @@ class SqliteKeyValue extends Entity {
         mutex.acquire();
 
         try {
+            var connection = getConnection();
             connection.request('INSERT INTO $escapedTable (k, v) VALUES ($escapedKey, $escapedValue)');
         }
         catch (e:Dynamic) {
@@ -152,6 +177,7 @@ class SqliteKeyValue extends Entity {
         var numEntries:Int = 0;
 
         try {
+            var connection = getConnection();
             var result = connection.request('SELECT v FROM $escapedTable WHERE k = $escapedKey ORDER BY i ASC');
 
             for (entry in result) {
@@ -194,6 +220,8 @@ class SqliteKeyValue extends Entity {
     function createDb():Void {
 
         mutex.acquire();
+        
+        var connection = getConnection();
 
         connection.request('BEGIN TRANSACTION');
 
