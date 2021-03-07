@@ -9,8 +9,6 @@ import backend.impl.CeramicBatcher;
 import snow.modules.opengl.GL;
 import snow.api.buffers.Float32Array;
 
-import ceramic.RotateFrame;
-
 using ceramic.Extensions;
 
 @:allow(backend.Backend)
