@@ -64,8 +64,6 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 @:allow(ceramic.CollectionUtils)
 class CollectionImpl<T:CollectionEntry> implements Events {
 
-    public static var CLOTHES_ID:Int = -1;
-
     static var _lastCheckedCombined:Dynamic = null;
 
     static var _nextInternalId:Int = 0;
