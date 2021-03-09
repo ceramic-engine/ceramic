@@ -134,6 +134,17 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+	public function remove(entry:T) {
+
+        assert(combinedCollections == null, 'Cannot remove entries from combined collections');
+
+        this.entries.remove(entry);
+        indexDirty = true;
+        lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
+        _lastCheckedCombined = null;
+
+    }
+
     public function synchronize():Void {
 
         if (entriesDirty) computeEntries();
