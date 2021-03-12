@@ -10,7 +10,7 @@ class ConvertSpineData implements ConvertField<String,SpineData> {
 
     public function new() {}
 
-    public function basicToField(assets:Assets, basic:String, done:SpineData->Void):Void {
+    public function basicToField(instance:Entity, assets:Assets, basic:String, done:SpineData->Void):Void {
 
         if (basic != null) {
             assets.ensureSpine(basic, null, function(asset:SpineAsset) {
@@ -23,7 +23,7 @@ class ConvertSpineData implements ConvertField<String,SpineData> {
 
     }
 
-    public function fieldToBasic(value:SpineData):String {
+    public function fieldToBasic(instance:Entity, value:SpineData):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 

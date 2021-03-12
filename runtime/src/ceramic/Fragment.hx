@@ -267,6 +267,7 @@ class Fragment extends Layer {
             pendingLoads++;
             var converter = app.converters.get('ceramic.ReadOnlyMap<String,ceramic.Component>');
             converter.basicToField(
+                this,
                 assets,
                 fragmentData.components,
                 function(value) {
@@ -528,6 +529,7 @@ class Fragment extends Layer {
 
         pendingLoads++;
         converter.basicToField(
+            instance,
             assets,
             value,
             function(value:Dynamic) {

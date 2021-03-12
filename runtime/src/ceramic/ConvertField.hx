@@ -12,9 +12,9 @@ interface ConvertField<T,U> {
     /** Get field value from basic type. As this may require loading assets,
         A usable `Assets` instance must be provided and the result will only be
         provided asynchronously by calling `done` callback. */
-    function basicToField(assets:Assets, basic:T, done:U->Void):Void;
+    function basicToField(instance:Entity, assets:Assets, basic:T, done:U->Void):Void;
 
     /** Get a basic type from the field value. */
-    function fieldToBasic(value:U):T;
+    function fieldToBasic(instance:Entity, value:U):T;
 
 }

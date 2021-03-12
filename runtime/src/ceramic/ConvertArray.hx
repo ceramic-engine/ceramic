@@ -6,7 +6,7 @@ class ConvertArray<T> implements ConvertField<Array<T>,Array<T>> {
 
     public function new() {}
 
-    public function basicToField(assets:Assets, basic:Array<T>, done:Array<T>->Void):Void {
+    public function basicToField(instance:Entity, assets:Assets, basic:Array<T>, done:Array<T>->Void):Void {
 
         if (basic == null) {
             done(null);
@@ -20,7 +20,7 @@ class ConvertArray<T> implements ConvertField<Array<T>,Array<T>> {
 
     }
 
-    public function fieldToBasic(value:Array<T>):Array<T> {
+    public function fieldToBasic(instance:Entity, value:Array<T>):Array<T> {
 
         if (value == null) return null;
 
