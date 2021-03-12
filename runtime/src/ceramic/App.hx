@@ -126,6 +126,10 @@ class App extends Entity {
 
     var postFlushImmediateCallbacksLen:Int = 0;
 
+#if ceramic_use_component_initializers
+    public var componentInitializers:Map<String,Array<Dynamic>->Component> = new Map();
+#end
+
 #if hxtelemetry
     var hxt:HxTelemetry;
 #end
