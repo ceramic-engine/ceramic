@@ -541,11 +541,15 @@ class App extends Entity {
         converters.set('ceramic.FragmentData', new ConvertFragmentData());
         converters.set('Map<String,String>', new ConvertMap<String>());
         converters.set('Map<String,Bool>', new ConvertMap<Bool>());
+        converters.set('ceramic.ReadOnlyMap<String,String>', new ConvertMap<String>());
+        converters.set('ceramic.ReadOnlyMap<String,Bool>', new ConvertMap<Bool>());
         converters.set('Array<Float>', new ConvertArray<Float>());
         converters.set('Array<Int>', new ConvertArray<Int>());
         converters.set('Array<String>', new ConvertArray<String>());
-        converters.set('ceramic.ReadOnlyMap<String,String>', new ConvertMap<String>());
-        converters.set('ceramic.ReadOnlyMap<String,Bool>', new ConvertMap<Bool>());
+        converters.set('ceramic.ReadOnlyArray<Float>', new ConvertArray<Float>());
+        converters.set('ceramic.ReadOnlyArray<Int>', new ConvertArray<Int>());
+        converters.set('ceramic.ReadOnlyArray<String>', new ConvertArray<String>());
+        converters.set('Map<String,ceramic.Component>', new ConvertComponentMap());
         converters.set('ceramic.ReadOnlyMap<String,ceramic.Component>', new ConvertComponentMap());
 
     }
