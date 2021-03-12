@@ -113,6 +113,17 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         return immovable;
     }
 
+    /** If set to `true`, arcade world will always separate on the X axis before Y when this body is involved. Otherwise it will check gravity totals first. */
+    public var forceX(get,set):Bool;
+    inline function get_forceX():Bool {
+        return arcade != null ? arcade.body.forceX : false;
+    }
+    inline function set_forceX(forceX:Bool):Bool {
+        if (arcade == null) initArcadePhysics();
+        arcade.body.forceX = forceX;
+        return forceX;
+    }
+
     /** The x velocity, or rate of change the visual position. Measured in points per second. */
     public var velocityX(get,set):Float;
     inline function get_velocityX():Float {
