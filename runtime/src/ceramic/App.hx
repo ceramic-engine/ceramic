@@ -551,6 +551,7 @@ class App extends Entity {
         converters.set('ceramic.ReadOnlyArray<String>', new ConvertArray<String>());
         converters.set('Map<String,ceramic.Component>', new ConvertComponentMap());
         converters.set('ceramic.ReadOnlyMap<String,ceramic.Component>', new ConvertComponentMap());
+        converters.set('ceramic.IntBoolMap', new ConvertIntBoolMap());
 
     }
 

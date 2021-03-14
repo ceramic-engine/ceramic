@@ -6,7 +6,7 @@ class ConvertFont implements ConvertField<String,BitmapFont> {
 
     public function new() {}
 
-    public function basicToField(instance:Entity, assets:Assets, basic:String, done:BitmapFont->Void):Void {
+    public function basicToField(instance:Entity, field:String, assets:Assets, basic:String, done:BitmapFont->Void):Void {
 
         if (basic != null) {
             if (basic == app.defaultFont.asset.name) {
@@ -24,7 +24,7 @@ class ConvertFont implements ConvertField<String,BitmapFont> {
 
     }
 
-    public function fieldToBasic(instance:Entity, value:BitmapFont):String {
+    public function fieldToBasic(instance:Entity, field:String, value:BitmapFont):String {
 
         return (value == null || value.asset == null) ? null : value.asset.name;
 

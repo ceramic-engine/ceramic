@@ -8,7 +8,7 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
 
     public function new() {}
 
-    public function basicToField(instance:Entity, assets:Assets, basic:DynamicAccess<String>, done:Map<String,Component>->Void):Void {
+    public function basicToField(instance:Entity, field:String, assets:Assets, basic:DynamicAccess<String>, done:Map<String,Component>->Void):Void {
 
         if (basic == null) {
             done(null);
@@ -43,7 +43,7 @@ class ConvertComponentMap implements ConvertField<DynamicAccess<String>,Map<Stri
 
     }
 
-    public function fieldToBasic(instance:Entity, value:Map<String,Component>):DynamicAccess<String> {
+    public function fieldToBasic(instance:Entity, field:String, value:Map<String,Component>):DynamicAccess<String> {
 
         if (value == null) return null;
 

@@ -6,7 +6,7 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
 
     public function new() {}
 
-    public function basicToField(instance:Entity, assets:Assets, basic:DynamicAccess<T>, done:Map<String,T>->Void):Void {
+    public function basicToField(instance:Entity, field:String, assets:Assets, basic:DynamicAccess<T>, done:Map<String,T>->Void):Void {
 
         if (basic == null) {
             done(null);
@@ -23,7 +23,7 @@ class ConvertMap<T> implements ConvertField<DynamicAccess<T>,Map<String,T>> {
 
     }
 
-    public function fieldToBasic(instance:Entity, value:Map<String,T>):DynamicAccess<T> {
+    public function fieldToBasic(instance:Entity, field:String, value:Map<String,T>):DynamicAccess<T> {
 
         if (value == null) return null;
 
