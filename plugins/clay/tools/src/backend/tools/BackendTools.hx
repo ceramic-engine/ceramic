@@ -214,8 +214,6 @@ class BackendTools implements tools.spec.BackendTools {
         }
         var assetsPrefixIsPath = assetsPrefix.indexOf('/') != -1 || assetsPrefix.indexOf('\\') != -1;
 
-        var premultiplyPngAlpha = (target.name != 'web');
-
         if (dstAssetsPath == null) {
             switch (target.name) {
                 case 'mac':
@@ -255,7 +253,7 @@ class BackendTools implements tools.spec.BackendTools {
                 if (srcPath.toLowerCase().endsWith('.png')) {
                     // If it's a png with alpha channel, premultiply its alpha
                     var raw = Images.getRaw(srcPath);
-                    if (premultiplyPngAlpha && raw.channels == 4) {
+                    if (raw.channels == 4) {
                         Images.premultiplyAlpha(raw.pixels);
                     }
                     Images.saveRaw(dstPath, raw);

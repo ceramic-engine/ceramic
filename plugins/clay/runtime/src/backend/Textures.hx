@@ -69,10 +69,7 @@ class Textures implements spec.Textures {
         }]);
 
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
-        var premultiplyAlpha:Bool = #if web true #else false #end;
-        if (options != null && options.premultiplyAlpha != null) {
-            premultiplyAlpha = options.premultiplyAlpha;
-        }
+        var premultiplyAlpha:Bool = options != null && options.premultiplyAlpha;
 
         function doFail() {
             
@@ -99,10 +96,15 @@ class Textures implements spec.Textures {
                 return;
             }
 
+            // Premultiply alpha if needed
+            if (premultiplyAlpha) {
+                image.premultiplyAlpha();
+            }
+
             // Transform image into texture
             var texture:clay.graphics.Texture = null;
             //try {
-                texture = clay.graphics.Texture.fromImage(image, premultiplyAlpha);
+                texture = clay.graphics.Texture.fromImage(image);
                 if (texture == null) {
                     doFail();
                     return;
