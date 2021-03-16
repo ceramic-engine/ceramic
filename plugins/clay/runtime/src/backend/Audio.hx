@@ -272,7 +272,6 @@ class Audio implements spec.Audio {
         }
 
         if (pan != 0) {
-            trace('SET PAN $handle -> $pan');
             Clay.app.audio.pan(handle, pan);
         }
         if (pitch != 1) Clay.app.audio.pitch(handle, pitch);
@@ -285,10 +284,11 @@ class Audio implements spec.Audio {
     public function pause(handle:AudioHandle):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return;
         }
 
         if (loopingStreams.exists(handle)) {
@@ -302,10 +302,11 @@ class Audio implements spec.Audio {
     public function resume(handle:AudioHandle):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return;
         }
 
         if (loopingStreams.exists(handle)) {
@@ -319,7 +320,7 @@ class Audio implements spec.Audio {
     public function stop(handle:AudioHandle):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             var prevHandle = handle;
@@ -329,6 +330,7 @@ class Audio implements spec.Audio {
 
         loopingStreams.remove(handle);
 
+        if (handle == null || (handle:Int) == -1) return;
         Clay.app.audio.stop(handle);
 
     }
@@ -336,9 +338,11 @@ class Audio implements spec.Audio {
     public function getVolume(handle:AudioHandle):Float {
                     
         if (!Clay.app.audio.active) return 0;
+        if (handle == null || (handle:Int) == -1) return 0;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return 0;
         }
 
         return Clay.app.audio.volumeOf(handle);
@@ -348,7 +352,7 @@ class Audio implements spec.Audio {
     public function setVolume(handle:AudioHandle, volume:Float):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -361,7 +365,7 @@ class Audio implements spec.Audio {
     public function getPan(handle:AudioHandle):Float {
                     
         if (!Clay.app.audio.active) return 0;
-        if ((handle:Int) == -1) return 0;
+        if (handle == null || (handle:Int) == -1) return 0;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -374,7 +378,7 @@ class Audio implements spec.Audio {
     public function setPan(handle:AudioHandle, pan:Float):Void {
 
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
@@ -387,10 +391,11 @@ class Audio implements spec.Audio {
     public function getPitch(handle:AudioHandle):Float {
                     
         if (!Clay.app.audio.active) return 1;
-        if ((handle:Int) == -1) return 1;
+        if (handle == null || (handle:Int) == -1) return 1;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return 1;
         }
 
         return Clay.app.audio.pitchOf(handle);
@@ -400,10 +405,11 @@ class Audio implements spec.Audio {
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return;
         }
 
         Clay.app.audio.pitch(handle, pitch);
@@ -413,10 +419,11 @@ class Audio implements spec.Audio {
     public function getPosition(handle:AudioHandle):Float {
                     
         if (!Clay.app.audio.active) return 0;
-        if ((handle:Int) == -1) return 0;
+        if (handle == null || (handle:Int) == -1) return 0;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return 0;
         }
 
         return Clay.app.audio.positionOf(handle);
@@ -426,10 +433,11 @@ class Audio implements spec.Audio {
     public function setPosition(handle:AudioHandle, position:Float):Void {
                     
         if (!Clay.app.audio.active) return;
-        if ((handle:Int) == -1) return;
+        if (handle == null || (handle:Int) == -1) return;
         
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
+            if (handle == null || (handle:Int) == -1) return;
         }
 
         Clay.app.audio.position(handle, position);
