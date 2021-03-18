@@ -177,17 +177,22 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         var content = entity.content;
 
-        var x = entity.x;
-        var y = entity.y;
-        var width = entity.width;
-        var height = entity.height;
-        var anchorX = entity.anchorX;
-        var anchorY = entity.anchorY;
+        var rectTarget:ceramic.Visual = entity;
+        if (container != null) {
+            rectTarget = container;
+        }
 
-        entity.visualToScreen(x - width * anchorX, y - height * anchorY, _point);
+        var x = rectTarget.x;
+        var y = rectTarget.y;
+        var width = rectTarget.width;
+        var height = rectTarget.height;
+        var anchorX = rectTarget.anchorX;
+        var anchorY = rectTarget.anchorY;
+
+        rectTarget.visualToScreen(x - width * anchorX, y - height * anchorY, _point);
         var screenLeft = _point.x;
         var screenTop = _point.y;
-        entity.visualToScreen(x - width * anchorX + width, y - height * anchorY + height, _point);
+        rectTarget.visualToScreen(x - width * anchorX + width, y - height * anchorY + height, _point);
         var screenRight = _point.x;
         var screenBottom = _point.y;
 
