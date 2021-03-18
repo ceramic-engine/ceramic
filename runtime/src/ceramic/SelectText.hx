@@ -26,6 +26,12 @@ class SelectText extends Entity implements Component implements Observable {
 
     public var textCursorColor:Color;
 
+    public var textCursorOffsetX:Float = 0;
+
+    public var textCursorOffsetY:Float = 0;
+
+    public var textCursorHeightFactor:Float = 1;
+
     /** Optional container on which pointer events are bound */
     @observe public var container:Visual = null;
 
@@ -59,12 +65,15 @@ class SelectText extends Entity implements Component implements Observable {
 
 /// Lifecycle
 
-    public function new(selectionColor:Color, textCursorColor:Color) {
+    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1) {
 
         super();
 
         this.selectionColor = selectionColor;
         this.textCursorColor = textCursorColor;
+        this.textCursorOffsetX = textCursorOffsetX;
+        this.textCursorOffsetY = textCursorOffsetY;
+        this.textCursorHeightFactor = textCursorHeightFactor;
 
     }
 
@@ -130,7 +139,7 @@ class SelectText extends Entity implements Component implements Observable {
         var backgroundRight:Float = -1;
         var backgroundBottom:Float = -1;
         var backgroundPad = Math.round(entity.pointSize * 0.1);
-        var cursorPad = Math.round(entity.pointSize * 0.2);
+        var cursorPad = Math.round(entity.pointSize * (textCursorHeightFactor - 0.8));
         var selectionHeight = Math.ceil(entity.pointSize * 1.0);
         var cursorWidth:Float = 1;
         var cursorHeight:Float = Math.ceil(entity.pointSize);
@@ -156,11 +165,11 @@ class SelectText extends Entity implements Component implements Observable {
                 });
             }
             if (backgroundLeft == 0) {
-                bg.pos(backgroundLeft - backgroundPad, backgroundTop - backgroundPad);
+                bg.pos(backgroundLeft - backgroundPad + textCursorOffsetX, backgroundTop - backgroundPad + textCursorOffsetY);
                 bg.size(backgroundRight + backgroundPad - backgroundLeft + selectionRightPadding, backgroundBottom + backgroundPad * 2 - backgroundTop);
             } 
             else {
-                bg.pos(backgroundLeft, backgroundTop - backgroundPad);
+                bg.pos(backgroundLeft + textCursorOffsetX, backgroundTop - backgroundPad + textCursorOffsetY);
                 bg.size(backgroundRight - backgroundLeft + selectionRightPadding, backgroundBottom + backgroundPad * 2 - backgroundTop);
             }
 
@@ -263,8 +272,8 @@ class SelectText extends Entity implements Component implements Observable {
                 if (index == selectionStart - 1) {
                     createTextCursorIfNeeded();
                     textCursor.pos(
-                        glyphQuad.glyphX + glyphQuad.glyphAdvance,
-                        glyphQuad.glyphY - cursorPad
+                        glyphQuad.glyphX + glyphQuad.glyphAdvance + textCursorOffsetX,
+                        glyphQuad.glyphY - cursorPad + textCursorOffsetY
                     );
                     textCursor.size(
                         cursorWidth,
@@ -275,8 +284,8 @@ class SelectText extends Entity implements Component implements Observable {
                 else if (index >= selectionStart) {
                     createTextCursorIfNeeded();
                     textCursor.pos(
-                        glyphQuad.glyphX,
-                        glyphQuad.glyphY - cursorPad * 0.5
+                        glyphQuad.glyphX + textCursorOffsetX,
+                        glyphQuad.glyphY - cursorPad * 0.5 + textCursorOffsetY
                     );
                     textCursor.size(
                         cursorWidth,
@@ -296,8 +305,8 @@ class SelectText extends Entity implements Component implements Observable {
                 else if (i == glyphQuads.length - 1) {
                     createTextCursorIfNeeded();
                     textCursor.pos(
-                        glyphQuad.glyphX + glyphQuad.glyphAdvance,
-                        glyphQuad.glyphY - cursorPad * 0.5
+                        glyphQuad.glyphX + glyphQuad.glyphAdvance + textCursorOffsetX,
+                        glyphQuad.glyphY - cursorPad * 0.5 + textCursorOffsetY
                     );
                     textCursor.size(
                         cursorWidth,

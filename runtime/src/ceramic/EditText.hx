@@ -28,6 +28,11 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     public var multiline:Bool = false;
 
+    public var editing(get, never):Bool;
+    function get_editing():Bool {
+        return (_activeEditTextInput == this);
+    }
+
     public var selectionColor(default, set):Color;
     function set_selectionColor(selectionColor:Color):Color {
         this.selectionColor = selectionColor;
@@ -42,6 +47,30 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         if (selectText != null)
             selectText.textCursorColor = textCursorColor;
         return textCursorColor;
+    }
+
+    public var textCursorOffsetX(default, set):Float;
+    function set_textCursorOffsetX(textCursorOffsetX:Float):Float {
+        this.textCursorOffsetX = textCursorOffsetX;
+        if (selectText != null)
+            selectText.textCursorOffsetX = textCursorOffsetX;
+        return textCursorOffsetX;
+    }
+
+    public var textCursorOffsetY(default, set):Float;
+    function set_textCursorOffsetY(textCursorOffsetY:Float):Float {
+        this.textCursorOffsetY = textCursorOffsetY;
+        if (selectText != null)
+            selectText.textCursorOffsetY = textCursorOffsetY;
+        return textCursorOffsetY;
+    }
+
+    public var textCursorHeightFactor(default, set):Float;
+    function set_textCursorHeightFactor(textCursorHeightFactor:Float):Float {
+        this.textCursorHeightFactor = textCursorHeightFactor;
+        if (selectText != null)
+            selectText.textCursorHeightFactor = textCursorHeightFactor;
+        return textCursorHeightFactor;
     }
 
     public var disabled(default, set):Bool = false;
@@ -66,11 +95,15 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return container;
     }
 
+    /**
+     * SelectText instance used internally to manage text selection.
+     * Will be defined after component has been assigned to an entity.
+     */
+    public var selectText(default, null):SelectText = null;
+
 /// Internal properties
 
     var boundContainer:Visual = null;
-
-    var selectText:SelectText = null;
 
     var selectionBackgrounds:Array<Quad> = [];
 
@@ -84,13 +117,16 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
 /// Lifecycle
 
-    public function new(selectionColor:Color, textCursorColor:Color) {
+    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1) {
 
         super();
 
         id = Utils.uniqueId();
         this.selectionColor = selectionColor;
         this.textCursorColor = textCursorColor;
+        this.textCursorOffsetX = textCursorOffsetX;
+        this.textCursorOffsetY = textCursorOffsetY;
+        this.textCursorHeightFactor = textCursorHeightFactor;
 
     }
 
@@ -99,7 +135,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         // Get or init SelectText component
         selectText = cast entity.component('selectText');
         if (selectText == null) {
-            selectText = new SelectText(selectionColor, textCursorColor);
+            selectText = new SelectText(
+                selectionColor, textCursorColor, textCursorOffsetX, textCursorOffsetY, textCursorHeightFactor
+            );
             entity.component('selectText', selectText);
         }
 
@@ -121,6 +159,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             _activeEditTextInput.stopInput();
             _activeEditTextInput = null;
             app.onceImmediate(function() {
+                if (destroyed || disabled)
+                    return;
                 startInput(selectionStart, selectionEnd);
             });
             return;
@@ -217,6 +257,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         screen.focusedVisual = entity;
         if (!inputActive) {
             app.onceImmediate(function() {
+                if (destroyed || disabled)
+                    return;
                 // This way of calling will ensure any previous text input
                 // can be stopped before we start this new one
                 startInput(0, entity.content.length);
