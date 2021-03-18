@@ -124,6 +124,9 @@ class UnityCSharp {
         // Disable stripping
         //content = '[assembly: Preserve] ' + content;
 
+        // Somehow, there are cases where System is not marked with global:: and that conflicts with ceramic's System class
+        content = content.replace('\tSystem.Type', '\tglobal::System.Type');
+
         // Disable Timer.getTime() warning
         // TODO: fix the actual code!
         content = content.replace('#pragma warning disable ', '#pragma warning disable 618, ');
