@@ -121,6 +121,7 @@ class ArcadeSystem extends System {
                     item.destroy();
                 }
                 else {
+                    // TODO ensure position is accurate when rotation/scale with non-centered anchor?
                     var w = visual.width * visual.scaleX;
                     var h = visual.height * visual.scaleY;
                     item.body.preUpdate(

@@ -150,6 +150,7 @@ class NapeSystem extends System {
                     var h = visual.height * visual.scaleY;
                     var allowRotation = body.allowRotation;
 
+                    // TODO handle nested visuals position?
                     _matrix.identity();
                     _matrix.translate(
                         w * (0.5 - visual.anchorX),
