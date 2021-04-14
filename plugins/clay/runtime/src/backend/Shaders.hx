@@ -57,6 +57,10 @@ class Shaders implements spec.Shaders {
             vertSource = processMultiTextureVertTemplate(vertSource, maxTextures, maxIfs);
         }
 
+        #if ceramic_shader_premultiply_texture
+        fragSource = processPremultiplyTextureShader(fragSource);
+        #end
+
         var shader = new ShaderImpl();
 
         shader.attributes = isMultiTextureTemplate ? SHADER_ATTRIBUTES_MULTITEXTURE.original : SHADER_ATTRIBUTES.original;
@@ -181,6 +185,39 @@ class Shaders implements spec.Shaders {
         return newLines.join('\n');
         
     }
+
+    #if ceramic_shader_premultiply_texture
+
+    static var RE_VOID_MAIN:EReg = ~/^void\s+main\(\s*\)/;
+
+    static var RE_TEXTURE_2D:EReg = ~/texture2D\s*\(/;
+
+    static function processPremultiplyTextureShader(fragSource:String):String {
+
+        var lines = fragSource.split('\n');
+        var newLines:Array<String> = [];
+
+        for (i in 0...lines.length) {
+            var line = lines[i];
+            if (RE_VOID_MAIN.match(line.trim())) {
+                newLines.push('vec4 texture2D_premultiply(sampler2D texture, vec2 tcoord) {');
+                newLines.push('    vec4 result = texture2D(texture, tcoord);');
+                newLines.push('    result.rgb *= result.a;');
+                newLines.push('    return result;');
+                newLines.push('}');
+                newLines.push('');
+                newLines.push(line);
+            }
+            else {
+                newLines.push(RE_TEXTURE_2D.replace(line, 'texture2D_premultiply('));
+            }
+        }
+
+        return newLines.join('\n');
+        
+    }
+
+    #end
 
     inline public function destroy(shader:Shader):Void {
 

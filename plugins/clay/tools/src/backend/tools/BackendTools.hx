@@ -250,7 +250,7 @@ class BackendTools implements tools.spec.BackendTools {
                     sys.FileSystem.createDirectory(dir);
                 }
 
-                if (srcPath.toLowerCase().endsWith('.png')) {
+                if (target.name != 'web' && srcPath.toLowerCase().endsWith('.png')) {
                     // If it's a png with alpha channel, premultiply its alpha
                     var raw = Images.getRaw(srcPath);
                     if (raw.channels == 4) {
