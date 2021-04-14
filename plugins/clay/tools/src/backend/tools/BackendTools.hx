@@ -213,6 +213,7 @@ class BackendTools implements tools.spec.BackendTools {
             assetsPrefix = context.defines.get('ceramic_assets_prefix');
         }
         var assetsPrefixIsPath = assetsPrefix.indexOf('/') != -1 || assetsPrefix.indexOf('\\') != -1;
+        var premultiplyAlpha = (target.name != 'web');
 
         if (dstAssetsPath == null) {
             switch (target.name) {
@@ -250,7 +251,7 @@ class BackendTools implements tools.spec.BackendTools {
                     sys.FileSystem.createDirectory(dir);
                 }
 
-                if (target.name != 'web' && srcPath.toLowerCase().endsWith('.png')) {
+                if (premultiplyAlpha && srcPath.toLowerCase().endsWith('.png')) {
                     // If it's a png with alpha channel, premultiply its alpha
                     var raw = Images.getRaw(srcPath);
                     if (raw.channels == 4) {

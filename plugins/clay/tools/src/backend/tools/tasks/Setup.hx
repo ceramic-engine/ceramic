@@ -166,7 +166,7 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-D clay_web';
             targetFlags += '\n' + '-D ceramic_soft_inline';
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
-            targetFlags += '\n' + '-D ceramic_shader_premultiply_texture';
+            targetFlags += '\n' + '-D clay_webgl_unpack_premultiply_alpha';
         }
         else {
             if (target.name == 'cppia') {
