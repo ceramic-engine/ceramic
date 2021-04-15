@@ -4,6 +4,7 @@ package ceramic;
 import arcade.Body;
 import arcade.Collidable;
 import arcade.SortDirection;
+import arcade.Tile;
 import ceramic.ArcadeSortGroup;
 import ceramic.Group;
 #end
@@ -199,7 +200,11 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
 
     }
     
-    override function collide(element1:Collidable, ?element2:Collidable, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+    override function collide(
+        element1:Collidable, ?element2:Collidable,
+        ?collideCallback:Body->Body->Void,
+        ?processCallback:Body->Body->Bool
+        ):Bool {
 
         // TODO collide ceramic elements with arcade groups
 
@@ -377,7 +382,22 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
 
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
+        return inline separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
+
+    }
+
+    public function overlapBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        return inline separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
+
+    }
+
+    function separateBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool, overlapOnly:Bool = false):Bool {
+
         // TODO optimize! (no need to iterate over every tile)
+
+        //trace('collide body vs tilemap ! ${Timer.now}');
+        //trace('--- begin separate $boundsX,$boundsY,$boundsWidth,$boundsHeight --');
 
         _total = 0;
 
@@ -386,34 +406,59 @@ class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
         }
 
         var layers = tilemap.computedCollidableLayers;
-        if (layers != null) {
+        if (layers != null && layers.length > 0) {
+
             for (i in 0...layers.length) {
                 var layer = layers.unsafeGet(i);
-                var tileQuads = layer.tileQuads;
-                for (q in 0...tileQuads.length) {
-                    var tileQuad = tileQuads.unsafeGet(q);
+                var tileQuads = layer.surroundingTileQuads(body.left, body.top, body.right, body.bottom);
+
+                for (index in 0...tileQuads.length) {
+                    var tileQuad = tileQuads.unsafeGet(index);
 
                     // Only collide with tiles gid > 0
                     if (tileQuad.tilemapTile.gid > 0) {
                         
                         // Init tile physics if needed
-                        if (tileQuad.body == null) {
+                        if (tileQuad.arcade == null) {
+                            tileQuad.initArcadePhysics();
                             tileQuad.immovable = true;
                         }
-    
-                        var body2 = tileQuad.body;
-                        if (separate(body, body2, processCallback, false)) {
-    
+
+                        var tileBody = tileQuad.arcade.body;
+                        if (separate(body, tileBody, processCallback, overlapOnly)) {
+            
                             if (collideCallback != null) {
-                                collideCallback(body, body2);
+                                collideCallback(body, tileBody);
                             }
                 
                             _total++;
                         }
+    
+                        // var tileBody = tileQuad.arcade.body;
+                        // quadTree.insert(tileBody);
+                        // numInserted++;
                     }
                 }
             }
+
+            //var items = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+            //trace('RETRIEVED ITEMS: ${items.length} (inserted=$numInserted)');
+
+            // for (i in 0...items.length)
+            // {
+            //     var item = items.unsafeGet(i);
+    
+            //     if (separate(body, item, processCallback, overlapOnly)) {
+    
+            //         if (collideCallback != null) {
+            //             collideCallback(body, item);
+            //         }
+        
+            //         _total++;
+            //     }
+            // }
         }
+        //trace('--- end separate --');
 
         return (_total > 0);
 

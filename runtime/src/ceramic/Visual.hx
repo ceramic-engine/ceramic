@@ -66,7 +66,8 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         var w = width * scaleX;
         var h = height * scaleY;
 
-        arcade = new VisualArcadePhysics(
+        arcade = new VisualArcadePhysics();
+        arcade.initBody(
             x - w * anchorX,
             y - h * anchorY,
             w,
@@ -94,429 +95,447 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
     /** Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc... */
     public var allowRotation(get,set):Bool;
     inline function get_allowRotation():Bool {
-        return arcade != null ? arcade.body.allowRotation : true;
+        return arcade != null && arcade.body != null ? arcade.body.allowRotation : true;
     }
     inline function set_allowRotation(allowRotation:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.allowRotation = allowRotation;
+        if (arcade.body != null) arcade.body.allowRotation = allowRotation;
         return allowRotation;
     }
 
     /** An immovable visual will not receive any impacts from other visual bodies. **Two** immovable visuas can't separate or exchange momentum and will pass through each other. */
     public var immovable(get,set):Bool;
     inline function get_immovable():Bool {
-        return arcade != null ? arcade.body.immovable : false;
+        return arcade != null && arcade.body != null ? arcade.body.immovable : false;
     }
     inline function set_immovable(immovable:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.immovable = immovable;
+        if (arcade.body != null) arcade.body.immovable = immovable;
         return immovable;
     }
 
     /** If set to `true`, arcade world will always separate on the X axis before Y when this body is involved. Otherwise it will check gravity totals first. */
     public var forceX(get,set):Bool;
     inline function get_forceX():Bool {
-        return arcade != null ? arcade.body.forceX : false;
+        return arcade != null && arcade.body != null ? arcade.body.forceX : false;
     }
     inline function set_forceX(forceX:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.forceX = forceX;
+        if (arcade.body != null) arcade.body.forceX = forceX;
         return forceX;
     }
 
     /** The x velocity, or rate of change the visual position. Measured in points per second. */
     public var velocityX(get,set):Float;
     inline function get_velocityX():Float {
-        return arcade != null ? arcade.body.velocityX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.velocityX : 0;
     }
     inline function set_velocityX(velocityX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.velocityX = velocityX;
+        if (arcade.body != null) arcade.body.velocityX = velocityX;
         return velocityX;
     }
 
     /** The y velocity, or rate of change the visual position. Measured in points per second. */
     public var velocityY(get,set):Float;
     inline function get_velocityY():Float {
-        return arcade != null ? arcade.body.velocityY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.velocityY : 0;
     }
     inline function set_velocityY(velocityY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.velocityY = velocityY;
+        if (arcade.body != null) arcade.body.velocityY = velocityY;
         return velocityY;
     }
 
     /** The velocity, or rate of change the visual position. Measured in points per second. */
     inline public function velocity(velocityX:Float, velocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.velocityX = velocityX;
-        arcade.body.velocityY = velocityY;
+        if (arcade.body != null) {
+            arcade.body.velocityX = velocityX;
+            arcade.body.velocityY = velocityY;
+        }
     }
 
     /** The maximum x velocity that the visual can reach. */
     public var maxVelocityX(get,set):Float;
     inline function get_maxVelocityX():Float {
-        return arcade != null ? arcade.body.maxVelocityX : 10000;
+        return arcade != null && arcade.body != null ? arcade.body.maxVelocityX : 10000;
     }
     inline function set_maxVelocityX(maxVelocityX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxVelocityX = maxVelocityX;
+        if (arcade.body != null) arcade.body.maxVelocityX = maxVelocityX;
         return maxVelocityX;
     }
 
     /** The maximum y velocity that the visual can reach. */
     public var maxVelocityY(get,set):Float;
     inline function get_maxVelocityY():Float {
-        return arcade != null ? arcade.body.maxVelocityY : 10000;
+        return arcade != null && arcade.body != null ? arcade.body.maxVelocityY : 10000;
     }
     inline function set_maxVelocityY(maxVelocityY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxVelocityY = maxVelocityY;
+        if (arcade.body != null) arcade.body.maxVelocityY = maxVelocityY;
         return maxVelocityY;
     }
 
     /** The maximum velocity that the visual can reach. */
     inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxVelocityX = maxVelocityX;
-        arcade.body.maxVelocityY = maxVelocityY;
+        if (arcade.body != null) {
+            arcade.body.maxVelocityX = maxVelocityX;
+            arcade.body.maxVelocityY = maxVelocityY;
+        }
     }
 
     /** The x acceleration is the rate of change of the x velocity. Measured in points per second squared. */
     public var accelerationX(get,set):Float;
     inline function get_accelerationX():Float {
-        return arcade != null ? arcade.body.accelerationX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.accelerationX : 0;
     }
     inline function set_accelerationX(accelerationX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.accelerationX = accelerationX;
+        if (arcade.body != null) arcade.body.accelerationX = accelerationX;
         return accelerationX;
     }
 
     /** The y acceleration is the rate of change of the y velocity. Measured in points per second squared. */
     public var accelerationY(get,set):Float;
     inline function get_accelerationY():Float {
-        return arcade != null ? arcade.body.accelerationY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.accelerationY : 0;
     }
     inline function set_accelerationY(accelerationY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.accelerationY = accelerationY;
+        if (arcade.body != null) arcade.body.accelerationY = accelerationY;
         return accelerationY;
     }
 
     /** The acceleration is the rate of change of the y velocity. Measured in points per second squared. */
     inline public function acceleration(accelerationX:Float, accelerationY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.accelerationX = accelerationX;
-        arcade.body.accelerationY = accelerationY;
+        if (arcade.body != null) {
+            arcade.body.accelerationX = accelerationX;
+            arcade.body.accelerationY = accelerationY;
+        }
     }
 
     /** Allow this visual to be influenced by drag */
     public var allowDrag(get,set):Bool;
     inline function get_allowDrag():Bool {
-        return arcade != null ? arcade.body.allowDrag : true;
+        return arcade != null && arcade.body != null ? arcade.body.allowDrag : true;
     }
     inline function set_allowDrag(allowDrag:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.allowDrag = allowDrag;
+        if (arcade.body != null) arcade.body.allowDrag = allowDrag;
         return allowDrag;
     }
 
     /** The x drag is the rate of reduction of the x velocity, kind of deceleration. Measured in points per second squared. */
     public var dragX(get,set):Float;
     inline function get_dragX():Float {
-        return arcade != null ? arcade.body.dragX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.dragX : 0;
     }
     inline function set_dragX(dragX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.dragX = dragX;
+        if (arcade.body != null) arcade.body.dragX = dragX;
         return dragX;
     }
 
     /** The y drag is the rate of reduction of the y velocity, kind of deceleration. Measured in points per second squared. */
     public var dragY(get,set):Float;
     inline function get_dragY():Float {
-        return arcade != null ? arcade.body.dragY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.dragY : 0;
     }
     inline function set_dragY(dragY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.dragY = dragY;
+        if (arcade.body != null) arcade.body.dragY = dragY;
         return dragY;
     }
 
     /** The drag is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared. */
     inline public function drag(dragX:Float, dragY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.dragX = dragX;
-        arcade.body.dragY = dragY;
+        if (arcade.body != null) {
+            arcade.body.dragX = dragX;
+            arcade.body.dragY = dragY;
+        }
     }
 
     /** The x elasticity of the visual when colliding. `bounceX = 1` means full rebound, `bounceX = 0.5` means 50% rebound velocity. */
     public var bounceX(get,set):Float;
     inline function get_bounceX():Float {
-        return arcade != null ? arcade.body.bounceX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.bounceX : 0;
     }
     inline function set_bounceX(bounceX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.bounceX = bounceX;
+        if (arcade.body != null) arcade.body.bounceX = bounceX;
         return bounceX;
     }
 
     /** The y elasticity of the visual when colliding. `bounceY = 1` means full rebound, `bounceY = 0.5` means 50% rebound velocity. */
     public var bounceY(get,set):Float;
     inline function get_bounceY():Float {
-        return arcade != null ? arcade.body.bounceY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.bounceY : 0;
     }
     inline function set_bounceY(bounceY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.bounceY = bounceY;
+        if (arcade.body != null) arcade.body.bounceY = bounceY;
         return bounceY;
     }
 
     /** The elasticity of the visual when colliding. `1` means full rebound, `0.5` means 50% rebound velocity. */
     inline public function bounce(bounceX:Float, bounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.bounceX = bounceX;
-        arcade.body.bounceY = bounceY;
+        if (arcade.body != null) {
+            arcade.body.bounceX = bounceX;
+            arcade.body.bounceY = bounceY;
+        }
     }
 
     /** Enable or disable world bounds specific bounce value with `worldBounceX` and `worldBounceY`.
         Disabled by default, meaning `bounceX` and `bounceY` are used by default. */
     public var useWorldBounce(get,set):Bool;
     inline function get_useWorldBounce():Bool {
-        return arcade != null ? arcade.body.useWorldBounce : false;
+        return arcade != null && arcade.body != null ? arcade.body.useWorldBounce : false;
     }
     inline function set_useWorldBounce(useWorldBounce:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.useWorldBounce = useWorldBounce;
+        if (arcade.body != null) arcade.body.useWorldBounce = useWorldBounce;
         return useWorldBounce;
     }
 
     /** The x elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceX` used instead). */
     public var worldBounceX(get,set):Float;
     inline function get_worldBounceX():Float {
-        return arcade != null ? arcade.body.worldBounceX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.worldBounceX : 0;
     }
     inline function set_worldBounceX(worldBounceX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.worldBounceX = worldBounceX;
+        if (arcade.body != null) arcade.body.worldBounceX = worldBounceX;
         return worldBounceX;
     }
 
     /** The y elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead). */
     public var worldBounceY(get,set):Float;
     inline function get_worldBounceY():Float {
-        return arcade != null ? arcade.body.worldBounceY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.worldBounceY : 0;
     }
     inline function set_worldBounceY(worldBounceY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.worldBounceY = worldBounceY;
+        if (arcade.body != null) arcade.body.worldBounceY = worldBounceY;
         return worldBounceY;
     }
 
     /** The elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead). */
     inline public function worldBounce(worldBounceX:Float, worldBounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.worldBounceX = worldBounceX;
-        arcade.body.worldBounceY = worldBounceY;
+        if (arcade.body != null) {
+            arcade.body.worldBounceX = worldBounceX;
+            arcade.body.worldBounceY = worldBounceY;
+        }
     }
 
     /** The maximum x delta per frame. `0` (default) means no maximum delta. */
     public var maxDeltaX(get,set):Float;
     inline function get_maxDeltaX():Float {
-        return arcade != null ? arcade.body.maxDeltaX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.maxDeltaX : 0;
     }
     inline function set_maxDeltaX(maxDeltaX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxDeltaX = maxDeltaX;
+        if (arcade.body != null) arcade.body.maxDeltaX = maxDeltaX;
         return maxDeltaX;
     }
 
     /** The maximum y delta per frame. `0` (default) means no maximum delta. */
     public var maxDeltaY(get,set):Float;
     inline function get_maxDeltaY():Float {
-        return arcade != null ? arcade.body.maxDeltaY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.maxDeltaY : 0;
     }
     inline function set_maxDeltaY(maxDeltaY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxDeltaY = maxDeltaY;
+        if (arcade.body != null) arcade.body.maxDeltaY = maxDeltaY;
         return maxDeltaY;
     }
 
     /** The maxDelta, or rate of change the visual position. Measured in points per second. */
     inline public function maxDelta(maxDeltaX:Float, maxDeltaY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxDeltaX = maxDeltaX;
-        arcade.body.maxDeltaY = maxDeltaY;
+        if (arcade.body != null) {
+            arcade.body.maxDeltaX = maxDeltaX;
+            arcade.body.maxDeltaY = maxDeltaY;
+        }
     }
 
     /** Allow this visual to be influenced by gravity, either world or local. */
     public var allowGravity(get,set):Bool;
     inline function get_allowGravity():Bool {
-        return arcade != null ? arcade.body.allowGravity : false;
+        return arcade != null && arcade.body != null ? arcade.body.allowGravity : false;
     }
     inline function set_allowGravity(allowGravity:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.allowGravity = allowGravity;
+        if (arcade.body != null) arcade.body.allowGravity = allowGravity;
         return allowGravity;
     }
 
     /** This visual's local y gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
     public var gravityX(get,set):Float;
     inline function get_gravityX():Float {
-        return arcade != null ? arcade.body.gravityX : 0;
+        return arcade != null && arcade.body != null ? arcade.body.gravityX : 0;
     }
     inline function set_gravityX(gravityX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.gravityX = gravityX;
+        if (arcade.body != null) arcade.body.gravityX = gravityX;
         return gravityX;
     }
 
     /** This visual's local x gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
     public var gravityY(get,set):Float;
     inline function get_gravityY():Float {
-        return arcade != null ? arcade.body.gravityY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.gravityY : 0;
     }
     inline function set_gravityY(gravityY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.gravityY = gravityY;
+        if (arcade.body != null) arcade.body.gravityY = gravityY;
         return gravityY;
     }
 
     /** This visual's local gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
     inline public function gravity(gravityX:Float, gravityY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.gravityX = gravityX;
-        arcade.body.gravityY = gravityY;
+        if (arcade.body != null) {
+            arcade.body.gravityX = gravityX;
+            arcade.body.gravityY = gravityY;
+        }
     }
 
     /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x axis. */
     public var frictionX(get,set):Float;
     inline function get_frictionX():Float {
-        return arcade != null ? arcade.body.frictionX : 1;
+        return arcade != null && arcade.body != null ? arcade.body.frictionX : 1;
     }
     inline function set_frictionX(frictionX:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.frictionX = frictionX;
+        if (arcade.body != null) arcade.body.frictionX = frictionX;
         return frictionX;
     }
 
     /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on y axis. */
     public var frictionY(get,set):Float;
     inline function get_frictionY():Float {
-        return arcade != null ? arcade.body.frictionY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.frictionY : 0;
     }
     inline function set_frictionY(frictionY:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.frictionY = frictionY;
+        if (arcade.body != null) arcade.body.frictionY = frictionY;
         return frictionY;
     }
 
     /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x & y axis. */
     inline public function friction(frictionX:Float, frictionY:Float):Void {
         if (arcade == null) initArcadePhysics();
-        arcade.body.frictionX = frictionX;
-        arcade.body.frictionY = frictionY;
+        if (arcade.body != null) {
+            arcade.body.frictionX = frictionX;
+            arcade.body.frictionY = frictionY;
+        }
     }
 
     /** The angular velocity is the rate of change of the visual's rotation. It is measured in degrees per second. */
     public var angularVelocity(get,set):Float;
     inline function get_angularVelocity():Float {
-        return arcade != null ? arcade.body.angularVelocity : 0;
+        return arcade != null && arcade.body != null ? arcade.body.angularVelocity : 0;
     }
     inline function set_angularVelocity(angularVelocity:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.angularVelocity = angularVelocity;
+        if (arcade.body != null) arcade.body.angularVelocity = angularVelocity;
         return angularVelocity;
     }
 
     /** The maximum angular velocity in degrees per second that the visual can reach. */
     public var maxAngularVelocity(get,set):Float;
     inline function get_maxAngularVelocity():Float {
-        return arcade != null ? arcade.body.maxAngularVelocity : 1000;
+        return arcade != null && arcade.body != null ? arcade.body.maxAngularVelocity : 1000;
     }
     inline function set_maxAngularVelocity(maxAngularVelocity:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.maxAngularVelocity = maxAngularVelocity;
+        if (arcade.body != null) arcade.body.maxAngularVelocity = maxAngularVelocity;
         return maxAngularVelocity;
     }
 
     /** The angular acceleration is the rate of change of the angular velocity. Measured in degrees per second squared. */
     public var angularAcceleration(get,set):Float;
     inline function get_angularAcceleration():Float {
-        return arcade != null ? arcade.body.angularAcceleration : 0;
+        return arcade != null && arcade.body != null ? arcade.body.angularAcceleration : 0;
     }
     inline function set_angularAcceleration(angularAcceleration:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.angularAcceleration = angularAcceleration;
+        if (arcade.body != null) arcade.body.angularAcceleration = angularAcceleration;
         return angularAcceleration;
     }
 
     /** The angular drag is the rate of reduction of the angular velocity. Measured in degrees per second squared. */
     public var angularDrag(get,set):Float;
     inline function get_angularDrag():Float {
-        return arcade != null ? arcade.body.angularDrag : 0;
+        return arcade != null && arcade.body != null ? arcade.body.angularDrag : 0;
     }
     inline function set_angularDrag(angularDrag:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.angularDrag = angularDrag;
+        if (arcade.body != null) arcade.body.angularDrag = angularDrag;
         return angularDrag;
     }
 
     /** The mass of the visual's body. When two bodies collide their mass is used in the calculation to determine the exchange of velocity. */
     public var mass(get,set):Float;
     inline function get_mass():Float {
-        return arcade != null ? arcade.body.mass : 1;
+        return arcade != null && arcade.body != null ? arcade.body.mass : 1;
     }
     inline function set_mass(mass:Float):Float {
         if (arcade == null) initArcadePhysics();
-        arcade.body.mass = mass;
+        if (arcade.body != null) arcade.body.mass = mass;
         return mass;
     }
 
     /** The speed of the visual's body (read only). Equal to the magnitude of the velocity. */
     public var speed(get,never):Float;
     inline function get_speed():Float {
-        return arcade != null ? arcade.body.speed : 0;
+        return arcade != null && arcade.body != null ? arcade.body.speed : 0;
     }
 
     /** Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, drag, and gravity. */
     public var moves(get,set):Bool;
     inline function get_moves():Bool {
-        return arcade != null ? arcade.body.moves : false;
+        return arcade != null && arcade.body != null ? arcade.body.moves : false;
     }
     inline function set_moves(moves:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.moves = moves;
+        if (arcade.body != null) arcade.body.moves = moves;
         return moves;
     }
 
     /** When this visual's body collides with another, the amount of overlap (x axis) is stored here. */
     public var overlapX(get,never):Float;
     inline function get_overlapX():Float {
-        return arcade != null ? arcade.body.overlapX : 1;
+        return arcade != null && arcade.body != null ? arcade.body.overlapX : 1;
     }
 
     /** When this visual's body collides with another, the amount of overlap (y axis) is stored here. */
     public var overlapY(get,never):Float;
     inline function get_overlapY():Float {
-        return arcade != null ? arcade.body.overlapY : 0;
+        return arcade != null && arcade.body != null ? arcade.body.overlapY : 0;
     }
     
     /** If a visual's body is overlapping with another body, but neither of them are moving (maybe they spawned on-top of each other?) this is set to `true`. */
     public var embedded(get,never):Bool;
     inline function get_embedded():Bool {
-        return arcade != null ? arcade.body.embedded : false;
+        return arcade != null && arcade.body != null ? arcade.body.embedded : false;
     }
     
     /** A visual body can be set to collide against the world bounds automatically and rebound back into the world if this is set to true. Otherwise it will leave the world. */
     public var collideWorldBounds(get,never):Bool;
     inline function get_collideWorldBounds():Bool {
-        return arcade != null ? arcade.body.collideWorldBounds : false;
+        return arcade != null && arcade.body != null ? arcade.body.collideWorldBounds : false;
     }
     inline function set_collideWorldBounds(collideWorldBounds:Bool):Bool {
         if (arcade == null) initArcadePhysics();
-        arcade.body.collideWorldBounds = collideWorldBounds;
+        if (arcade.body != null) arcade.body.collideWorldBounds = collideWorldBounds;
         return collideWorldBounds;
     }
 

@@ -64,6 +64,15 @@ class Tilemap extends Quad {
 
     public var layers:Array<TilemapLayer> = [];
 
+    public var destroyUnusedBodies(default, set):Bool = false;
+    function set_destroyUnusedBodies(destroyUnusedBodies:Bool):Bool {
+        if (this.destroyUnusedBodies != destroyUnusedBodies) {
+            this.destroyUnusedBodies = destroyUnusedBodies;
+            collidableLayersDirty = true;
+        }
+        return destroyUnusedBodies;
+    }
+
 /// Overrides
 
     override function get_width():Float {
@@ -150,6 +159,8 @@ class Tilemap extends Quad {
 
 /// Arcade physics
 
+    static var _layers:Array<TilemapLayer> = [];
+
     public var collidableLayers(default, set):ReadOnlyArray<String> = null;
     function set_collidableLayers(collidableLayers:ReadOnlyArray<String>):ReadOnlyArray<String> {
         if (this.collidableLayers == collidableLayers) return collidableLayers;
@@ -169,6 +180,26 @@ class Tilemap extends Quad {
             computeContent();
 
         var result:Array<TilemapLayer> = null;
+        var len = layers.length;
+
+        // Keep track of layers already collidable if needed
+        if (destroyUnusedBodies) {
+            for (i in 0...len) {
+                var layer = layers.unsafeGet(i);
+                if (layer.collidable) {
+                    // Layer already collidable, keep it in array so that
+                    // we clean it if not collidable anymore afterwards
+                    _layers[i] = layer;
+                    // Temporary mark layer as non collidable, if will be re-marked as collidable
+                    // if still relevant in the next loop
+                    layer.collidable = false;
+                }
+                else {
+                    // No need to check this layer after as it was not collidable before
+                    _layers[i] = null;
+                }
+            }
+        }
 
         if (layers != null && layers.length > 0 && collidableLayers != null && collidableLayers.length > 0) {
             for (i in 0...collidableLayers.length) {
@@ -177,6 +208,8 @@ class Tilemap extends Quad {
                     var layer = layers.unsafeGet(l);
                     var layerData = layer.layerData;
                     if (layerData != null && layerData.name == name) {
+                        // Mark layer as collidable
+                        layer.collidable = true;
                         if (result == null) {
                             result = [];
                         }
@@ -186,7 +219,17 @@ class Tilemap extends Quad {
             }
         }
 
-        // TODO destroy arcade bodies on layers that are not collidable anymore, if any
+        // Destroy arcade tiles on layers that are not collidable anymore, if any
+        if (destroyUnusedBodies) {
+            for (i in 0...len) {
+                var layer = _layers.unsafeGet(i);
+                if (layer != null && !layer.collidable) {
+                    // Layer not collidable anymore, cleanup arcade tiles
+                    layer.clearArcadeTiles();
+                }
+                _layers.unsafeSet(i, null);
+            }
+        }
 
         computedCollidableLayers = result;
         collidableLayersDirty = false;

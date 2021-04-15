@@ -27,12 +27,13 @@ class VisualArcadePhysics extends Entity {
 
     public var world:ArcadeWorld = null;
 
-    public function new(x:Float, y:Float, width:Float, height:Float, rotation:Float) {
+    public var offsetX:Float = 0;
+
+    public var offsetY:Float = 0;
+
+    public function new() {
 
         super();
-
-        body = new arcade.Body(x, y, width, height, rotation);
-        body.data = this;
 
         if (ceramic.App.app.arcade._freezeItems) {
             ceramic.App.app.arcade._createdItems.push(this);
@@ -40,6 +41,13 @@ class VisualArcadePhysics extends Entity {
         else {
             ceramic.App.app.arcade.items.push(this);
         }
+
+    }
+
+    public function initBody(x:Float, y:Float, width:Float, height:Float, rotation:Float) {
+
+        body = new arcade.Body(x, y, width, height, rotation);
+        body.data = this;
 
     }
 
@@ -71,19 +79,19 @@ class VisualArcadePhysics extends Entity {
     /// Event handling
 
     inline function willListenCollideBody()
-        body.onCollide = handleCollide;
+        if (body != null) body.onCollide = handleCollide;
 
     inline function willListenCollide()
-        body.onCollide = handleCollide;
+        if (body != null) body.onCollide = handleCollide;
 
     inline function willListenOverlapBody()
-        body.onOverlap = handleOverlap;
+        if (body != null) body.onOverlap = handleOverlap;
 
     inline function willListenOverlap()
-        body.onOverlap = handleOverlap;
+        if (body != null) body.onOverlap = handleOverlap;
 
     inline function willListenWorldBounds()
-        body.onWorldBounds = handleWorldBounds;
+        if (body != null) body.onWorldBounds = handleWorldBounds;
 
     function handleCollide(body1:arcade.Body, body2:arcade.Body):Void {
 
@@ -137,7 +145,7 @@ class VisualArcadePhysics extends Entity {
 
     }
 
-    /// Static helpers
+/// Static helpers
 
     public static function fromBody(body:arcade.Body):VisualArcadePhysics {
 

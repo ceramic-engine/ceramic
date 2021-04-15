@@ -124,14 +124,17 @@ class ArcadeSystem extends System {
                     // TODO ensure position is accurate when rotation/scale with non-centered anchor?
                     var w = visual.width * visual.scaleX;
                     var h = visual.height * visual.scaleY;
-                    item.body.preUpdate(
-                        item.world,
-                        visual.x - w * visual.anchorX,
-                        visual.y - h * visual.anchorY,
-                        w,
-                        h,
-                        visual.rotation
-                    );
+                    var body = item.body;
+                    if (body != null) {
+                        body.preUpdate(
+                            item.world,
+                            item.offsetX + visual.x - w * visual.anchorX,
+                            item.offsetY + visual.y - h * visual.anchorY,
+                            w,
+                            h,
+                            visual.rotation
+                        );
+                    }
                 }
             }
         }
@@ -166,11 +169,13 @@ class ArcadeSystem extends System {
                 }
                 else {
                     var body = item.body;
-                    body.postUpdate(world);
-                    visual.x += body.dx;
-                    visual.y += body.dy;
-                    if (body.allowRotation) {
-                        visual.rotation += body.deltaZ();
+                    if (body != null) {
+                        body.postUpdate(world);
+                        visual.x += body.dx;
+                        visual.y += body.dy;
+                        if (body.allowRotation) {
+                            visual.rotation += body.deltaZ();
+                        }
                     }
                 }
             }
