@@ -64,15 +64,6 @@ class Tilemap extends Quad {
 
     public var layers:Array<TilemapLayer> = [];
 
-    public var destroyUnusedBodies(default, set):Bool = false;
-    function set_destroyUnusedBodies(destroyUnusedBodies:Bool):Bool {
-        if (this.destroyUnusedBodies != destroyUnusedBodies) {
-            this.destroyUnusedBodies = destroyUnusedBodies;
-            collidableLayersDirty = true;
-        }
-        return destroyUnusedBodies;
-    }
-
 /// Overrides
 
     override function get_width():Float {
@@ -91,6 +82,8 @@ class Tilemap extends Quad {
 
         super();
 
+        transparent = true;
+
     }
 
 /// Display
@@ -103,6 +96,12 @@ class Tilemap extends Quad {
             contentDirty = false;
             return;
         }
+
+        // Update size
+        size(
+            tilemapData.width * tilemapData.tileWidth,
+            tilemapData.height * tilemapData.tileHeight
+        );
 
         computeLayers();
 
@@ -130,10 +129,6 @@ class Tilemap extends Quad {
 
             layer.depth = l + 1;
             layer.layerData = layerData;
-            layer.clipTilesX = clipTilesX;
-            layer.clipTilesY = clipTilesY;
-            layer.clipTilesWidth = clipTilesWidth;
-            layer.clipTilesHeight = clipTilesHeight;
         }
 
         // Remove unused layers
@@ -155,6 +150,24 @@ class Tilemap extends Quad {
 
     }
 
+/// Helpers
+
+    public function layer(name:String):TilemapLayer {
+
+        if (contentDirty)
+            computeContent();
+
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            var layerData = layer.layerData;
+            if (layerData != null && layerData.name == name)
+                return layer;
+        }
+
+        return null;
+
+    }
+
 #if ceramic_arcade_physics
 
 /// Arcade physics
@@ -172,6 +185,15 @@ class Tilemap extends Quad {
     public var computedCollidableLayers(default, null):ReadOnlyArray<TilemapLayer> = null;
 
     public var collidableLayersDirty:Bool = false;
+
+    public var destroyUnusedBodies(default, set):Bool = false;
+    function set_destroyUnusedBodies(destroyUnusedBodies:Bool):Bool {
+        if (this.destroyUnusedBodies != destroyUnusedBodies) {
+            this.destroyUnusedBodies = destroyUnusedBodies;
+            collidableLayersDirty = true;
+        }
+        return destroyUnusedBodies;
+    }
 
     @:allow(ceramic.ArcadeWorld)
     function computeCollidableLayers():Void {

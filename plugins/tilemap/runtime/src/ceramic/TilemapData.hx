@@ -93,6 +93,20 @@ class TilemapData extends Model {
 
     }
 
+    public function layer(name:String):TilemapLayerData {
+
+        var layers = this.layers;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            if (layer.name == name) {
+                return layer;
+            }
+        }
+
+        return null;
+
+    }
+
     public function setTexturesFilter(filter:TextureFilter):Void {
 
         for (i in 0...tilesets.length) {
@@ -104,6 +118,26 @@ class TilemapData extends Model {
             }
         }
 
+    }
+
+    /**
+     * A shorthand to set `tileWidth` and `tileHeight`
+     * @param tileWidth 
+     * @param tileHeight 
+     */
+    public function tileSize(tileWidth:Int, tileHeight:Int):Void {
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+    }
+
+    /**
+     * A shorthand to set `width` and `height`
+     * @param width 
+     * @param height 
+     */
+    public function size(width:Int, height:Int):Void {
+        this.width = width;
+        this.height = height;
     }
 
 /// Print

@@ -21,6 +21,10 @@ class TilesetImage extends Model {
                 this.texture.asset.onReplaceTexture(this, replaceTexture);
             }
             if (this.texture.asset != null) this.texture.asset.retain();
+            if (width == -1)
+                width = Std.int(this.texture.width);
+            if (height == -1)
+                height = Std.int(this.texture.height);
         }
         return texture;
     }

@@ -5,7 +5,7 @@ import tracker.Model;
 class Tileset extends Model {
 
     /** First global id. Maps to the first tile in this tileset. */
-    @serialize public var firstGid:Int = -1;
+    @serialize public var firstGid:Int = 0;
 
     /** The name of this tileset */
     @serialize public var name:String = null;
@@ -35,7 +35,18 @@ class Tileset extends Model {
     @serialize public var tileOffsetY:Int = 0;
 
     /** The image used to display tiles in this tileset */
-    @serialize public var image:TilesetImage = null;
+    @serialize public var image(default, set):TilesetImage = null;
+    function set_image(image:TilesetImage):TilesetImage {
+        if (image != this.image) {
+            var prevImage = this.image;
+            this.image = image;
+            if (implicitImage && prevImage != null) {
+                prevImage.destroy();
+            }
+            implicitImage = false;
+        }
+        return image;
+    }
 
     /** Orientation of the grid for the tiles in this tileset.
         Only used in case of isometric orientation,
@@ -51,5 +62,52 @@ class Tileset extends Model {
         Only used in case of isometric orientation,
         to determine how tile overlays for terrain an collision information are rendered. */
     @serialize public var gridCellHeight:Int = 0;
+
+    /**
+     * Internal: `true` if TilesetImage instance was created
+     * implicitly from assigning a texture object.
+     */
+    var implicitImage:Bool = false;
+
+    /**
+     * The texture used to display tiles in this tileset.
+     * This is a shorthand of `image.texture`
+     */
+    public var texture(get, set):Texture;
+    inline function get_texture():Texture {
+        return image != null ? unobservedImage.texture : null;
+    }
+    function set_texture(texture:Texture):Texture {
+        if (texture != null) {
+            if (unobservedImage == null || unobservedImage.texture != texture) {
+                unobservedImage = new TilesetImage();
+                implicitImage = true;
+                unobservedImage.texture = texture;
+            }
+        }
+        else {
+            unobservedImage = null;
+        }
+        return texture;
+    }
+
+    /**
+     * A shorthand to set `tileWidth` and `tileHeight`
+     * @param tileWidth 
+     * @param tileHeight 
+     */
+    public function tileSize(tileWidth:Int, tileHeight:Int):Void {
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+    }
+
+    override function destroy() {
+
+        // To unbind tileset image/texture events
+        image = null;
+
+        super.destroy();
+
+    }
 
 }
