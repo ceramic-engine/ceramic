@@ -62,6 +62,7 @@ class ShaderAsset extends Asset {
                     }
                 }
             }
+            // If no vertex shader is provided, use default (textured one)
             log.info('Load shader' + (options.vertId != null ? ' ' + options.vertId : '') + (options.fragId != null ? ' ' + options.fragId : ''));
         }
         else {
@@ -69,10 +70,7 @@ class ShaderAsset extends Asset {
         }
 
         if (options.vertId == null) {
-            status = BROKEN;
-            log.error('Missing vertId option to load shader at path: $path');
-            emitComplete(false);
-            return;
+            options.vertId = 'textured.vert';
         }
 
         if (options.fragId == null) {
