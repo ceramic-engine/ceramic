@@ -47,6 +47,21 @@ class Texture extends Entity {
 
 /// Lifecycle
 
+    /**
+     * Create a new texture from the given pixels buffer
+     * @param width Width of the texture
+     * @param height Height of the texture
+     * @param pixels A pixel buffer in integer RGBA format
+     * @param density (optional) density of the texture
+     * @return Texture
+     */
+    public static function fromPixels(width:Int, height:Int, pixels:ceramic.UInt8Array, density:Float = -1):Texture {
+
+        var backendItem = app.backend.textures.createTexture(width, height, pixels);
+        return new Texture(backendItem, density);
+
+    }
+
     public function new(backendItem:backend.Texture, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
