@@ -45,6 +45,11 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     public var color(get, set):Color;
 
     /**
+     * RGB color component typed as `ceramic.Color` (alias of `color`)
+     */
+    public var rgb(get, set):Color;
+
+    /**
      * Create a new `AlphaColor` (ARGB) object from a `ceramic.Color` object and the given `alpha`
      * @param color RGB color object (`ceramic.Color`)
      * @param alpha alpha component between `0` and `255`
@@ -59,6 +64,16 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
         return Color.fromRGB(red, green, blue);
     }
     inline function set_color(color:Color):Color {
+        red = color.red;
+        green = color.green;
+        blue = color.blue;
+        return color;
+    }
+
+    inline function get_rgb():Color {
+        return Color.fromRGB(red, green, blue);
+    }
+    inline function set_rgb(color:Color):Color {
         red = color.red;
         green = color.green;
         blue = color.blue;
