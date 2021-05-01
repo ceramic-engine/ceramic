@@ -16,7 +16,7 @@ using ceramic.Extensions;
 @dynamicEvents
 @:dce
 #end
-class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collidable #end {
+class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end {
     
     /** A factor applied to every computed depth. This factor is used to avoid having
         all computed depth values being too small and risking to create precision issues.
@@ -37,7 +37,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
     @event function focus();
     @event function blur();
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
 /// Arcade physics
 
@@ -770,7 +770,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
      * When arcade physics are enabled, they are also stopped from this call.
      */
     public function stop():Void {
-#if ceramic_arcade_physics
+#if plugin_arcade
         if (arcade != null) arcade.body.stop;
 #end
     }
@@ -1197,7 +1197,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         if (active) {
             visible = flags.bool(1);
             touchable = flags.bool(2);
-#if ceramic_arcade_physics
+#if plugin_arcade
             var body = this.body;
             if (body != null) {
                 body.enable = flags.bool(3);
@@ -1209,7 +1209,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
             flags.setBool(2, touchable);
             visible = false;
             touchable = false;
-#if ceramic_arcade_physics
+#if plugin_arcade
             var body = this.body;
             if (body != null) {
                 flags.setBool(3, body.enable);
@@ -1388,7 +1388,7 @@ class Visual extends Entity #if ceramic_arcade_physics implements arcade.Collida
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
 
-#if ceramic_arcade_physics
+#if plugin_arcade
         if (arcade != null) {
             arcade.destroy();
             arcade = null;

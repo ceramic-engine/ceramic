@@ -4,7 +4,7 @@ import ceramic.Shortcuts.*;
 
 class VisualArcadePhysics extends Entity {
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
     /** Dispatched when this visual body collides with another body. */
     @event function collideBody(visual:Visual, body:arcade.Body);

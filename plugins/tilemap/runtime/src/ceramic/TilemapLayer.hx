@@ -6,7 +6,7 @@ class TilemapLayer extends Visual {
     
     @event function tileQuadsChange();
 
-    #if ceramic_arcade_physics
+    #if plugin_arcade
 
     /**
      * Internal flag used when walking through layers

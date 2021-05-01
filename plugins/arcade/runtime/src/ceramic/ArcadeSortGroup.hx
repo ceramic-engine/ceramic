@@ -1,6 +1,6 @@
 package ceramic;
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
 /*
  * Copyright (C)2005-2018 Haxe Foundation

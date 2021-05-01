@@ -168,7 +168,7 @@ class Tilemap extends Quad {
 
     }
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
 /// Arcade physics
 

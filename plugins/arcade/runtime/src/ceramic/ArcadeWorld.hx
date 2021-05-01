@@ -1,6 +1,6 @@
 package ceramic;
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 import arcade.Body;
 import arcade.Collidable;
 import arcade.SortDirection;
@@ -11,9 +11,9 @@ import ceramic.Group;
 
 using ceramic.Extensions;
 
-class ArcadeWorld #if ceramic_arcade_physics extends arcade.World #end {
+class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
     public function new(boundsX:Float, boundsY:Float, boundsWidth:Float, boundsHeight:Float) {
 

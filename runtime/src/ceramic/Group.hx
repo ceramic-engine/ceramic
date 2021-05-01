@@ -8,9 +8,9 @@ using ceramic.Extensions;
 /**
  * A group of entities, which is itself an entity.
  */
-class Group<T:Entity> extends Entity #if ceramic_arcade_physics implements arcade.Collidable #end {
+class Group<T:Entity> extends Entity #if plugin_arcade implements arcade.Collidable #end {
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
     /**
      * The order items are sorted before using the group to overlap or collide with over collidables.

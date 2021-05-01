@@ -355,7 +355,7 @@ class App extends Entity {
 
     public var timelines:Timelines = new Timelines();
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
     public var arcade:ArcadeSystem = null;
 
@@ -473,7 +473,7 @@ class App extends Entity {
             initCollections(settings.collections(), settings.appInfo);
         }
 
-#if ceramic_arcade_physics
+#if plugin_arcade
         arcade = new ArcadeSystem();
 #end
 

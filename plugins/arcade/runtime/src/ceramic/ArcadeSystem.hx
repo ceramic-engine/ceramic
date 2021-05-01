@@ -7,7 +7,7 @@ using ceramic.Extensions;
 @:allow(ceramic.App)
 class ArcadeSystem extends System {
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 
     /**
      * When this event is fired, it's the right time to make your bodies collide/overlap

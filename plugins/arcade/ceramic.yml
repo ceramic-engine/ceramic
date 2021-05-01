@@ -1,0 +1,9 @@
+plugin:
+    name: Arcade
+
+    runtime:
+        if plugin_arcade:
+            +libs:
+                - arcade
+            +paths:
+                - {plugin:cwd}/runtime/src

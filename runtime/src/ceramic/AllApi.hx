@@ -209,7 +209,7 @@ import ceramic.HttpMethod;
 import ceramic.HttpRequestOptions;
 import ceramic.HttpResponse;
 
-#if ceramic_arcade_physics
+#if plugin_arcade
 import ceramic.ArcadeSystem;
 import ceramic.ArcadeWorld;
 import arcade.Body;
