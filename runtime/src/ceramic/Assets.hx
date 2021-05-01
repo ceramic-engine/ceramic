@@ -420,6 +420,23 @@ class Assets extends Entity {
 
 /// Load
 
+    /**
+     * Returns `true` if there are assets that should be loaded
+     * @return Bool
+     */
+    public function hasAnythingToLoad():Bool {
+
+        for (i in 0...addedAssets.length) {
+            var asset = addedAssets.unsafeGet(i);
+            if (asset.status == NONE) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     public function load(warnIfNothingToLoad:Bool = true, ?pos:haxe.PosInfos):Void {
 
         var total = 0;
