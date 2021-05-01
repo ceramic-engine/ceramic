@@ -8,7 +8,7 @@ class StateMachineSystem extends System {
     /**
      * Shared state machine system
      */
-    @lazy static var shared = new StateMachineSystem();
+    @lazy public static var shared = new StateMachineSystem();
 
     var stateMachines:Array<StateMachineBase> = [];
 

@@ -8,7 +8,7 @@ class SpineSystem extends System {
     /**
      * Shared spine system
      */
-    @lazy static var shared = new SpineSystem();
+    @lazy public static var shared = new SpineSystem();
 
     var spines:Array<Spine> = [];
 
@@ -18,7 +18,7 @@ class SpineSystem extends System {
 
         super();
 
-        lateUpdateOrder = 3000;
+        lateUpdateOrder = 4000;
 
     }
 
