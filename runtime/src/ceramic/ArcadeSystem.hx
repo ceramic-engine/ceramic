@@ -122,14 +122,26 @@ class ArcadeSystem extends System {
                 }
                 else {
                     // TODO ensure position is accurate when rotation/scale with non-centered anchor?
-                    var w = visual.width * visual.scaleX;
-                    var h = visual.height * visual.scaleY;
+                    var scaleX = visual.scaleX;
+                    var scaleY = visual.scaleY;
+                    var anchorX = visual.anchorX;
+                    var anchorY = visual.anchorY;
+                    if (scaleX < 0) {
+                        scaleX = -scaleX;
+                        anchorX = 1.0 - anchorX;
+                    }
+                    if (scaleY < 0) {
+                        scaleY = -scaleY;
+                        anchorY = 1.0 - anchorY;
+                    }
+                    var w = visual.width * scaleX;
+                    var h = visual.height * scaleY;
                     var body = item.body;
                     if (body != null) {
                         body.preUpdate(
                             item.world,
-                            item.offsetX + visual.x - w * visual.anchorX,
-                            item.offsetY + visual.y - h * visual.anchorY,
+                            item.offsetX + visual.x - w * anchorX,
+                            item.offsetY + visual.y - h * anchorY,
                             w,
                             h,
                             visual.rotation
