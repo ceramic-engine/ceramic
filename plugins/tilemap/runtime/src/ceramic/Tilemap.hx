@@ -8,6 +8,13 @@ using ceramic.Extensions;
  */
 class Tilemap extends Quad {
 
+    /**
+     * Fired when a layer is created on this tilemap
+     * @param tilemap The tilemap creating the layer
+     * @param layer The layer being created
+     */
+    @event function createLayer(tilemap:Tilemap, layer:TilemapLayer);
+
 /// Properties
 
     public var tilemapData(default,set):TilemapData = null;
@@ -86,6 +93,21 @@ class Tilemap extends Quad {
 
     }
 
+    override function destroy() {
+
+        var layers = this.layers;
+        if (layers != null) {
+            layers = [].concat(layers);
+            for (i in 0...layers.length) {
+                var layer = layers.unsafeGet(i);
+                layer.destroy();
+            }
+        }
+
+        super.destroy();
+
+    }
+
 /// Display
 
     override function computeContent() {
@@ -116,10 +138,13 @@ class Tilemap extends Quad {
 
         for (l in 0...tilemapData.layers.length) {
             var layerData = tilemapData.layers.unsafeGet(l);
+            var isNew = false;
 
             var layer:TilemapLayer = usedLayers < layers.length ? layers[usedLayers] : null;
             if (layer == null) {
+                isNew = true;
                 layer = new TilemapLayer();
+                layer.tilemap = this;
                 if (tileScale != -1) layer.tileScale = tileScale;
                 layer.depthRange = 1;
                 layers.push(layer);
@@ -129,6 +154,9 @@ class Tilemap extends Quad {
 
             layer.depth = l + 1;
             layer.layerData = layerData;
+
+            if (isNew)
+                emitCreateLayer(this, layer);
         }
 
         // Remove unused layers

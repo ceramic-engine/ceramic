@@ -20,6 +20,10 @@ class TilemapEditor extends Entity implements Component {
 
     var hoveredTileIndexes:IntBoolMap = null;
 
+    // var offsetX:Float = 0;
+
+    // var offsetY:Float = 0;
+
     public function new(layerName:String = 'main', fillValue:TilemapTile = 1, emptyValue:TilemapTile = 0) {
 
         super();
@@ -44,8 +48,9 @@ class TilemapEditor extends Entity implements Component {
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
-                if (layerData != null) {
-                    tilemap.screenToVisual(info.x, info.y, _point);
+                var layer = tilemap.layer(layerName);
+                if (layerData != null && layer != null) {
+                    layer.screenToVisual(info.x, info.y, _point);
                     var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
                     if (index >= 0 && index < layerData.tiles.length) {
@@ -96,8 +101,9 @@ class TilemapEditor extends Entity implements Component {
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
-                if (layerData != null) {
-                    tilemap.screenToVisual(info.x, info.y, _point);
+                var layer = tilemap.layer(layerName);
+                if (layerData != null && layer != null) {
+                    layer.screenToVisual(info.x, info.y, _point);
                     var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
                     if (index >= 0 && index < layerData.tiles.length) {

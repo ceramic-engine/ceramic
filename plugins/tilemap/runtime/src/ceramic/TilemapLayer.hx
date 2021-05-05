@@ -30,6 +30,9 @@ class TilemapLayer extends Visual {
 
     #end
 
+    @:allow(ceramic.Tilemap)
+    public var tilemap(default, null):Tilemap = null;
+
     public var layerData(default,set):TilemapLayerData = null;
     function set_layerData(layerData:TilemapLayerData):TilemapLayerData {
         if (this.layerData == layerData) return layerData;
@@ -46,6 +49,7 @@ class TilemapLayer extends Visual {
         return tileScale;
     }
 
+    /*
     public var clipTilesX(default,set):Float = -1;
     function set_clipTilesX(clipTilesX:Float):Float {
         if (this.clipTilesX == clipTilesX) return clipTilesX;
@@ -77,6 +81,7 @@ class TilemapLayer extends Visual {
         contentDirty = true;
         return clipTilesHeight;
     }
+    */
 
     public var tileQuads(default,null):Array<TilemapQuad> = [];
 
@@ -95,38 +100,38 @@ class TilemapLayer extends Visual {
     }
 
     /**
-     * If `true`, removing (assign null) or replacing a filter will destroy it.
-     * Note that a filter will be destroyed if assigned when
+     * If `true`, removing (assign null) or replacing a tilesFilter will destroy it.
+     * Note that a tilesFilter will be destroyed if assigned when
      * (parent) layer is destroyed, regardless of this setting.
      */
-    public var destroyFilterOnRemove:Bool = true;
+    public var destroyTilesFilterOnRemove:Bool = true;
 
-    public var filter(default,set):Filter = null;
-    function set_filter(filter:Filter):Filter {
-        if (this.filter == filter) return filter;
-        if (this.filter != null) {
-            var filterContent = this.filter.content;
+    public var tilesFilter(default,set):Filter = null;
+    function set_tilesFilter(tilesFilter:Filter):Filter {
+        if (this.tilesFilter == tilesFilter) return tilesFilter;
+        if (this.tilesFilter != null) {
+            var tilesFilterContent = this.tilesFilter.content;
             for (i in 0...tileQuads.length) {
                 var tileQuad = tileQuads.unsafeGet(i);
-                if (tileQuad.parent == filterContent) {
-                    filterContent.remove(tileQuad);
+                if (tileQuad.parent == tilesFilterContent) {
+                    tilesFilterContent.remove(tileQuad);
                 }
             }
-            if (destroyFilterOnRemove) {
-                this.filter.destroy();
+            if (destroyTilesFilterOnRemove) {
+                this.tilesFilter.destroy();
             }
-            this.filter = null;
+            this.tilesFilter = null;
         }
-        this.filter = filter;
-        if (filter != null) {
-            var filterContent = filter.content;
+        this.tilesFilter = tilesFilter;
+        if (tilesFilter != null) {
+            var tilesFilterContent = tilesFilter.content;
             for (i in 0...tileQuads.length) {
                 var tileQuad = tileQuads.unsafeGet(i);
-                filterContent.add(tileQuad);
+                tilesFilterContent.add(tileQuad);
             }
-            filter.pos(0, 0);
-            filter.size(width, height);
-            add(filter);
+            tilesFilter.pos(0, 0);
+            tilesFilter.size(width, height);
+            add(tilesFilter);
         }
         else {
             for (i in 0...tileQuads.length) {
@@ -134,7 +139,7 @@ class TilemapLayer extends Visual {
                 add(tileQuad);
             }
         }
-        return filter;
+        return tilesFilter;
     }
 
     /**
@@ -173,7 +178,7 @@ class TilemapLayer extends Visual {
             return;
         }
 
-        var tilemap:Tilemap = cast parent;
+        var tilemap:Tilemap = this.tilemap;
         var tilemapData:TilemapData = tilemap.tilemapData;
 
         computePosAndSize(tilemap, tilemapData);
@@ -195,8 +200,8 @@ class TilemapLayer extends Visual {
             layerData.height * tilemapData.tileHeight
         );
 
-        if (filter != null) {
-            filter.size(
+        if (tilesFilter != null) {
+            tilesFilter.size(
                 layerData.width * tilemapData.tileWidth,
                 layerData.height * tilemapData.tileHeight
             );
@@ -209,6 +214,10 @@ class TilemapLayer extends Visual {
         var usedQuads = 0;
 
         var hasClipping = false;
+        var clipTilesX = tilemap.clipTilesX;
+        var clipTilesY = tilemap.clipTilesY;
+        var clipTilesWidth = tilemap.clipTilesWidth;
+        var clipTilesHeight = tilemap.clipTilesHeight;
         if (clipTilesX != -1 && clipTilesY != -1 && clipTilesWidth != -1 && clipTilesHeight != -1) {
             hasClipping = true;
         }
@@ -293,8 +302,8 @@ class TilemapLayer extends Visual {
                                 quad.anchor(0.5, 0.5);
                                 quad.inheritAlpha = true;
                                 tileQuads.push(quad);
-                                if (filter != null) {
-                                    filter.content.add(quad);
+                                if (tilesFilter != null) {
+                                    tilesFilter.content.add(quad);
                                 }
                                 else {
                                     add(quad);
@@ -387,7 +396,8 @@ class TilemapLayer extends Visual {
     }
 
     /**
-     * Retrieve surrounding tile quads (that could collide within the given area)
+     * Retrieve surrounding tile quads (that could collide within the given area).
+     * The area is relative to this layer and does not take into account any offset or layer position.
      * @param left 
      * @param top 
      * @param right 
@@ -401,21 +411,17 @@ class TilemapLayer extends Visual {
             result = [];
         }
 
-        var firstTileQuad = tileQuads[0];
-        if (firstTileQuad != null && parent != null) {
+        if (parent != null) {
 
-            // We assume every tile has the same size
-            var tilemap:Tilemap = cast parent;
+            var tilemap:Tilemap = this.tilemap;
             var tilemapData:TilemapData = tilemap.tilemapData;
-            var tile = firstTileQuad.tilemapTile;
-            var tileset = tilemapData.tilesetForGid(tile.gid);
-            var tileWidth = tileset.tileWidth;
-            var tileHeight = tileset.tileHeight;
+            var tileWidth = tilemapData.tileWidth;
+            var tileHeight = tilemapData.tileHeight;
 
-            var minColumn = Math.floor((left - layerData.offsetX) / tileWidth);
-            var maxColumn = Math.ceil((right - layerData.offsetY) / tileWidth);
-            var minRow = Math.floor((top - layerData.offsetX) / tileHeight);
-            var maxRow = Math.ceil((bottom - layerData.offsetY) / tileHeight);
+            var minColumn = Math.floor(left / tileWidth);
+            var maxColumn = Math.ceil(right / tileWidth);
+            var minRow = Math.floor(top / tileHeight);
+            var maxRow = Math.ceil(bottom / tileHeight);
 
             //trace('surrounding minColumn=$minColumn maxColumn=$maxColumn minRow=$minRow maxRow=$maxRow');
     

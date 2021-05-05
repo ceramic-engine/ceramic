@@ -380,6 +380,12 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
 #if plugin_tilemap
 
+    // /**
+    //  * A cache of tilemap tile bodies.
+    //  * Key is `tileWidth * 10000 + tileHeight` and value is an array of bodies by tile index
+    //  */
+    // var tileBodies:IntMap<Array<Body>> = new IntMap();
+
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return inline separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
@@ -392,14 +398,21 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * A body instance used internally to perform tilemap collisions
+     */
+    var tileBody:Body = null;
+
     function separateBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool, overlapOnly:Bool = false):Bool {
 
-        // TODO optimize! (no need to iterate over every tile)
-
-        //trace('collide body vs tilemap ! ${Timer.now}');
-        //trace('--- begin separate $boundsX,$boundsY,$boundsWidth,$boundsHeight --');
+        // TODO handle layer offset & position
 
         _total = 0;
+
+        if (tileBody == null) {
+            tileBody = new Body(0, 0, 1, 1);
+            tileBody.immovable = true;
+        }
 
         if (tilemap.collidableLayersDirty) {
             tilemap.computeCollidableLayers();
@@ -410,6 +423,62 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
             for (i in 0...layers.length) {
                 var layer = layers.unsafeGet(i);
+                var layerData = layer.layerData;
+                if (layerData == null)
+                    continue;
+                ///*
+                var tilemapData:TilemapData = tilemap.tilemapData;
+                var tileWidth = tilemapData.tileWidth;
+                var tileHeight = tilemapData.tileHeight;
+                var offsetX = layerData.offsetX + layerData.x * tileWidth;
+                var offsetY = layerData.offsetY + layerData.y * tileHeight;
+
+                var minColumn = Math.floor((body.left - offsetX) / tileWidth);
+                var maxColumn = Math.ceil((body.right - offsetX) / tileWidth);
+                var minRow = Math.floor((body.top - offsetY) / tileHeight);
+                var maxRow = Math.ceil((body.bottom - offsetY) / tileHeight);
+
+                if (minColumn < 0)
+                    minColumn = 0;
+                if (maxColumn >= layerData.width)
+                    maxColumn = layerData.width - 1;
+                if (minRow < 0)
+                    minRow = 0;
+                if (maxRow >= layerData.height)
+                    maxRow = layerData.height - 1;
+
+                var column = minColumn;
+                while (column <= maxColumn) {
+                    var row = minRow;
+                    while (row <= maxRow) {
+                        var index = row * layerData.width + column;
+                        var tile = layerData.tiles.unsafeGet(index);
+                        if (tile.gid > 0) {
+                            // We reuse the same body for every tile collision
+                            tileBody.reset(
+                                offsetX + column * tileWidth,
+                                offsetY + row * tileHeight,
+                                tileWidth,
+                                tileHeight
+                            );
+                            tileBody.index = index;
+                            if (separate(body, tileBody, processCallback, overlapOnly)) {
+                
+                                if (collideCallback != null) {
+                                    collideCallback(body, tileBody);
+                                }
+                    
+                                _total++;
+                            }
+                        }
+                        row++;
+                    }
+                    column++;
+                }
+                //*/
+
+                
+                /*
                 var tileQuads = layer.surroundingTileQuads(body.left, body.top, body.right, body.bottom);
 
                 for (index in 0...tileQuads.length) {
@@ -439,6 +508,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         // numInserted++;
                     }
                 }
+                //*/
+                
             }
 
             //var items = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
