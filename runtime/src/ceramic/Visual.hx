@@ -1044,12 +1044,14 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * If `true`, matrix translation (tx & ty) will be rounded.
+     * If set to a value above zero, matrix translation (tx & ty) will be rounded.
+     * `roundTranslation = 1; // Pixel perfect rounding`
+     * `roundTranslation = 2; // Half-pixel rounding`
      * May be useful to render pixel perfect scenes onto `ceramic.Filter`.
      */
     @editable
-    public var roundTranslation(default,set):Bool = false;
-    function set_roundTranslation(roundTranslation:Bool):Bool {
+    public var roundTranslation(default,set):Int = -1;
+    function set_roundTranslation(roundTranslation:Int):Int {
         if (this.roundTranslation == roundTranslation) return roundTranslation;
         this.roundTranslation = roundTranslation;
         matrixDirty = true;
@@ -1577,9 +1579,15 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         matTX = _matrix.tx;
         matTY = _matrix.ty;
         
-        if (roundTranslation) {
-            matTX = Math.round(matTX);
-            matTY = Math.round(matTY);
+        if (roundTranslation > 0) {
+            if (roundTranslation == 1) {
+                matTX = Math.round(matTX);
+                matTY = Math.round(matTY);
+            }
+            else {
+                matTX = Math.round(matTX * roundTranslation) / roundTranslation;
+                matTY = Math.round(matTY * roundTranslation) / roundTranslation;
+            }
         }
 
         // Matrix is up to date
