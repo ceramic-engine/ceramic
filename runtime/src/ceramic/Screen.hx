@@ -94,6 +94,16 @@ class Screen extends Entity implements Observable {
      */
     public var mouseDeltaY(default, null):Float = 0;
 
+    /**
+     * Mouse wheel x delta since last frame
+     */
+    public var mouseWheelDeltaX(default, null):Float = 0;
+
+    /**
+     * Mouse wheel y delta since last frame
+     */
+    public var mouseWheelDeltaY(default, null):Float = 0;
+
     /** Touches x and y coordinates by touch index. */
     public var touches(default,null):Touches = new Touches(8, 0.5, false);
 
@@ -1082,6 +1092,9 @@ class Screen extends Entity implements Observable {
         mouseDeltaX = 0;
         mouseDeltaY = 0;
 
+        mouseWheelDeltaX = 0;
+        mouseWheelDeltaY = 0;
+
         var i = 0;
         while (i <= maxTouchIndex) {
             var touch:Touch = touches.get(i);
@@ -1138,6 +1151,13 @@ class Screen extends Entity implements Observable {
                 pressedMouseButtons.set(buttonId, 0);
             }
         });
+
+    }
+
+    function willEmitMouseWheel(x:Float, y:Float):Void {
+
+        mouseWheelDeltaX += x;
+        mouseWheelDeltaY += y;
 
     }
 
