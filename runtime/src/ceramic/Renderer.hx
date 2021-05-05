@@ -288,6 +288,23 @@ class Renderer extends Entity {
         }
     #end
 
+        // Restore state
+        draw.setActiveTexture(0);
+        activeTextureSlot = 0;
+        draw.setRenderTarget(null, true);
+        draw.enableBlending();
+        activeShader = null;
+        lastShader = null;
+        useShader(draw, null);
+
+        // Default blending
+        draw.setBlendFuncSeparate(
+            backend.BlendMode.ONE,
+            backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+            backend.BlendMode.ONE,
+            backend.BlendMode.ONE_MINUS_SRC_ALPHA
+        );
+
     }
 
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function drawQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
