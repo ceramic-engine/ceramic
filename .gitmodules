@@ -89,6 +89,6 @@
 	path = git/clay
 	url = https://github.com/ceramic-engine/clay.git
 	branch = main
-[submodule "git/linc_imgui"]
-	path = git/linc_imgui
-	url = https://github.com/jeremyfa/linc_imgui.git
+[submodule "git/imgui-hx"]
+	path = git/imgui-hx
+	url = https://github.com/jeremyfa/imgui-hx.git

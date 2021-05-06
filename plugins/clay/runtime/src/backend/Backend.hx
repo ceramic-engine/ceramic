@@ -55,6 +55,10 @@ class Backend implements tracker.Events implements spec.Backend {
 
     @event function update(delta:Float);
 
+#if (linc_sdl && cpp)
+    @event function sdlEvent(event:sdl.Event);
+#end
+
 /// Internal update logic
 
     inline function willEmitUpdate(delta:Float) {

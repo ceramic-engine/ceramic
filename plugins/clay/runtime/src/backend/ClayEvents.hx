@@ -126,6 +126,16 @@ class ClayEvents extends clay.Events {
 
     }
 
+    #if (linc_sdl && cpp)
+
+    override function sdlEvent(event:sdl.Event) {
+
+        backend.emitSdlEvent(event);
+
+    }
+
+    #end
+
 /// Internal
 
     function triggerResizeIfNeeded():Void {
