@@ -519,6 +519,10 @@ class View extends Quad {
 
     override function destroy() {
 
+        // Remove view from global list
+        _allViews.splice(_allViews.indexOf(this), 1);
+
+        // Parent destroy
         super.destroy();
 
         // No layout allowed anymore
@@ -526,9 +530,6 @@ class View extends Quad {
 
         // Clean, if it was not null
         customParentView = null;
-
-        // Remove view from global list
-        _allViews.splice(_allViews.indexOf(this), 1);
 
     }
 
