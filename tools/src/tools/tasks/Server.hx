@@ -41,7 +41,7 @@ class Server extends tools.Task {
 
                     try {
                         var json = Json.parse(body);
-                        if (json.query == 'command' && Std.is(json.args, Array)) {
+                        if (json.query == 'command' && Std.isOfType(json.args, Array)) {
                             var queryId = handleCommand(json.args);
                             res.writeHead(200, {'Content-Type': 'text/plain'});
                             res.end('$queryId\n');

@@ -54,7 +54,7 @@ class Dialogs {
             }
             var result:Dynamic = dialog.showOpenDialogSync(options);
             ceramic.KeyBindings.forceKeysUp();
-            if (Std.is(result, Array)) {
+            if (Std.isOfType(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
                     done(null);
@@ -63,7 +63,7 @@ class Dialogs {
                     done(first);
                 }
             }
-            else if (Std.is(result, String)) {
+            else if (Std.isOfType(result, String)) {
                 var resultStr:String = result;
                 if (resultStr != null && resultStr.trim() == '') {
                     done(null);
@@ -113,7 +113,7 @@ class Dialogs {
             };
             var result:Dynamic = dialog.showOpenDialogSync(options);
             ceramic.KeyBindings.forceKeysUp();
-            if (Std.is(result, Array)) {
+            if (Std.isOfType(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
                     done(null);
@@ -122,7 +122,7 @@ class Dialogs {
                     done(first);
                 }
             }
-            else if (Std.is(result, String)) {
+            else if (Std.isOfType(result, String)) {
                 var resultStr:String = result;
                 if (resultStr != null && resultStr.trim() == '') {
                     done(null);
@@ -185,7 +185,7 @@ class Dialogs {
             }
             var result:Dynamic = dialog.showSaveDialogSync(options);
             ceramic.KeyBindings.forceKeysUp();
-            if (Std.is(result, Array)) {
+            if (Std.isOfType(result, Array)) {
                 var first:Null<String> = result[0];
                 if (first != null && first.trim() == '') {
                     done(null);
@@ -194,7 +194,7 @@ class Dialogs {
                     done(first);
                 }
             }
-            else if (Std.is(result, String)) {
+            else if (Std.isOfType(result, String)) {
                 var resultStr:String = result;
                 if (resultStr != null && resultStr.trim() == '') {
                     done(null);

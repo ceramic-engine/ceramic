@@ -194,7 +194,7 @@ class Scroller extends Visual {
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
         var doesHit = hits(x, y);
-        pointerOnScrollerChild = doesHit && !Std.is(hittingVisual, Scroller);
+        pointerOnScrollerChild = doesHit && !Std.isOfType(hittingVisual, Scroller);
 
         if (!allowPointerOutside && !doesHit) {
             return true;

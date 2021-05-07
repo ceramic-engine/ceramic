@@ -38,16 +38,16 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             case arcade.Group: return arcade.Group;
             default:
                 #if plugin_tilemap
-                if (Std.is(element, Tilemap))
+                if (Std.isOfType(element, Tilemap))
                     return Tilemap;
                 #end
-                if (Std.is(element, Visual))
+                if (Std.isOfType(element, Visual))
                     return Visual;
-                if (Std.is(element, Group))
+                if (Std.isOfType(element, Group))
                     return Group;
-                if (Std.is(element, Body)) 
+                if (Std.isOfType(element, Body)) 
                     return Body;
-                if (Std.is(element, arcade.Group))
+                if (Std.isOfType(element, arcade.Group))
                     return arcade.Group;
                 return clazz;
         }

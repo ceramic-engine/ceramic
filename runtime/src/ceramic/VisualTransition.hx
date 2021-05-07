@@ -151,7 +151,7 @@ class VisualTransition extends Entity implements Component {
     function bindAsComponent() {
 
         #if plugin_ui
-        isView = Std.is(entity, View);
+        isView = Std.isOfType(entity, View);
         #end
 
     }

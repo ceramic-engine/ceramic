@@ -32,7 +32,7 @@ class AppMacro {
         // Load editable types from ceramic.yml
         for (key in Reflect.fields(data.editable)) {
             var val = Reflect.field(data.editable, key);
-            if (Std.is(val, String)) {
+            if (Std.isOfType(val, String)) {
                 #if editor
                 Context.getType(val);
                 #end
@@ -50,7 +50,7 @@ class AppMacro {
         // Load collection types from ceramic.yml
         for (key in Reflect.fields(data.collections)) {
             var val = Reflect.field(data.collections, key);
-            if (Std.is(val, String)) {
+            if (Std.isOfType(val, String)) {
                 Context.getType(val);
             }
             else {
@@ -106,7 +106,7 @@ class AppMacro {
 
             var val = Reflect.field(data, key);
             
-            if (Std.is(val, Array)) {
+            if (Std.isOfType(val, Array)) {
                 var items:Dynamic = {};
                 var list:Array<Dynamic> = val;
                 var i = 0;
@@ -116,7 +116,7 @@ class AppMacro {
                 }
                 Reflect.setField(newData, key, items);
             }
-            else if (val == null || Std.is(val, String) || Std.is(val, Int) || Std.is(val, Float) || Std.is(val, Bool)) {
+            else if (val == null || Std.isOfType(val, String) || Std.isOfType(val, Int) || Std.isOfType(val, Float) || Std.isOfType(val, Bool)) {
                 Reflect.setField(newData, key, val);
             }
             else {

@@ -286,11 +286,11 @@ class ProjectLoader {
 
             // Defines (before evaluating conditions)
             if (app.defines != null) {
-                if (Std.is(app.defines, Array)) {
+                if (Std.isOfType(app.defines, Array)) {
                     var appDefinesList:Array<Dynamic> = app.defines;
                     app.defines = {};
                     for (item in appDefinesList) {
-                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                        if (Std.isOfType(item, String) || Std.isOfType(item, Bool) || Std.isOfType(item, Float) || Std.isOfType(item, Int)) {
                             Reflect.setField(app.defines, item, true);
                         } else {
                             for (key in Reflect.fields(item)) {
@@ -311,7 +311,7 @@ class ProjectLoader {
             }
 
             // Create `plugin_{plugin}` define from every plugin entry explicitly put in project file
-            if (app.plugins != null && Std.is(app.plugins, Array)) {
+            if (app.plugins != null && Std.isOfType(app.plugins, Array)) {
                 var pluginList:Array<String> = app.plugins;
                 for (pluginName in pluginList) {
                     var key = 'plugin_' + pluginName;
@@ -365,7 +365,7 @@ class ProjectLoader {
 
             // Add required libs
             for (item in Project.runtimeLibraries) {
-                if (Std.is(item, String)) {
+                if (Std.isOfType(item, String)) {
                     app.libs.push(item);
                 }
                 else {
@@ -486,11 +486,11 @@ class ProjectLoader {
 
             // Defines (before evaluating conditions)
             if (plugin.defines != null) {
-                if (Std.is(plugin.defines, Array)) {
+                if (Std.isOfType(plugin.defines, Array)) {
                     var pluginDefinesList:Array<Dynamic> = plugin.defines;
                     plugin.defines = {};
                     for (item in pluginDefinesList) {
-                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                        if (Std.isOfType(item, String) || Std.isOfType(item, Bool) || Std.isOfType(item, Float) || Std.isOfType(item, Int)) {
                             Reflect.setField(plugin.defines, item, true);
                         } else {
                             for (key in Reflect.fields(item)) {
@@ -615,11 +615,11 @@ class ProjectLoader {
 
             // Ensure defines is a map and not an array
             if (key == 'defines') {
-                if (Std.is(value, Array)) {
+                if (Std.isOfType(value, Array)) {
                     var valueList:Array<Dynamic> = value;
                     value = {};
                     for (item in valueList) {
-                        if (Std.is(item, String) || Std.is(item, Bool) || Std.is(item, Float) || Std.is(item, Int)) {
+                        if (Std.isOfType(item, String) || Std.isOfType(item, Bool) || Std.isOfType(item, Float) || Std.isOfType(item, Int)) {
                             Reflect.setField(value, item, true);
                         } else {
                             for (key in Reflect.fields(item)) {
@@ -632,7 +632,7 @@ class ProjectLoader {
 
             if (orig != null && modifier == '+') {
                 // Add in array
-                if (Std.is(orig, Array) && Std.is(value, Array)) {
+                if (Std.isOfType(orig, Array) && Std.isOfType(value, Array)) {
                     var list:Array<Dynamic> = cast value;
                     var origList:Array<Dynamic> = cast orig;
                     for (entry in list) {
@@ -640,7 +640,7 @@ class ProjectLoader {
                     }
                 }
                 // Add in string
-                else if (Std.is(orig, String) && Std.is(value, String)) {
+                else if (Std.isOfType(orig, String) && Std.isOfType(value, String)) {
                     var str:String = cast value;
                     var origStr:String = cast orig;
                     origStr = origStr.rtrim() + "\n" + str.ltrim();
@@ -648,7 +648,7 @@ class ProjectLoader {
                     Reflect.setField(data, origKey, orig);
                 }
                 // Add in mapping
-                else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
+                else if (!Std.isOfType(orig, String) && !Std.isOfType(orig, Bool) && !Std.isOfType(orig, Int) && !Std.isOfType(orig, Float)) {
                     for (subKey in Reflect.fields(value)) {
                         var subValue = Reflect.field(value, subKey);
                         Reflect.setField(orig, subKey, subValue);
@@ -660,7 +660,7 @@ class ProjectLoader {
             }
             else if (orig != null && modifier == '-') {
                 // Remove in array
-                if (Std.is(orig, Array) && Std.is(value, Array)) {
+                if (Std.isOfType(orig, Array) && Std.isOfType(value, Array)) {
                     var list:Array<Dynamic> = cast value;
                     var origList:Array<Dynamic> = cast orig;
                     for (entry in list) {
@@ -668,7 +668,7 @@ class ProjectLoader {
                     }
                 }
                 // Remove in string
-                else if (Std.is(orig, String) && Std.is(value, String)) {
+                else if (Std.isOfType(orig, String) && Std.isOfType(value, String)) {
                     var str:String = cast value;
                     var origStr:String = cast orig;
                     origStr = origStr.replace(str, '');
@@ -676,8 +676,8 @@ class ProjectLoader {
                     Reflect.setField(data, origKey, orig);
                 }
                 // Remove in mapping
-                else if (!Std.is(orig, String) && !Std.is(orig, Bool) && !Std.is(orig, Int) && !Std.is(orig, Float)) {
-                    if (Std.is(value, Array)) {
+                else if (!Std.isOfType(orig, String) && !Std.isOfType(orig, Bool) && !Std.isOfType(orig, Int) && !Std.isOfType(orig, Float)) {
+                    if (Std.isOfType(value, Array)) {
                         var list:Array<Dynamic> = cast value;
                         for (entry in list) {
                             Reflect.deleteField(orig, entry);

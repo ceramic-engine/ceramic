@@ -276,7 +276,7 @@ class ComponentMacro {
                 }
             }
             if (strType != null) {
-                setEntityExprs.push('if (Std.is(entity, $strType))');
+                setEntityExprs.push('if (Std.isOfType(entity, $strType))');
                 setEntityExprs.push('    this.$entityFieldName = cast entity;');
                 setEntityExprs.push('else');
                 setEntityExprs.push('    this.$entityFieldName = null;');

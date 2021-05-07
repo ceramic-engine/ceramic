@@ -34,7 +34,7 @@ class ToolsPlugin {
 
         var app = project.app;
         
-        if (app.plugins != null && Std.is(app.plugins, Array)) {
+        if (app.plugins != null && Std.isOfType(app.plugins, Array)) {
             var plugins:Array<String> = app.plugins;
             if (plugins.indexOf('tilemap') != -1) {
                 app.paths.push(Path.join([context.plugins.get('Tilemap').path, 'runtime/src']));

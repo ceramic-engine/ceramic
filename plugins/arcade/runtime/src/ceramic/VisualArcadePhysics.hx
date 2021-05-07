@@ -150,7 +150,7 @@ class VisualArcadePhysics extends Entity {
     public static function fromBody(body:arcade.Body):VisualArcadePhysics {
 
         var data = body.data;
-        if (Std.is(data, VisualArcadePhysics)) {
+        if (Std.isOfType(data, VisualArcadePhysics)) {
             return cast data;
         }
         return null;

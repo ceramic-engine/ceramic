@@ -94,22 +94,22 @@ class IdeInfo extends tools.Task {
 
                 if (projectTargets != null) {
                     for (item in projectTargets) {
-                        if (item == null || Std.is(item, Bool) || Std.is(item, Array) || Std.is(item, Int) || Std.is(item, Float)) {
+                        if (item == null || Std.isOfType(item, Bool) || Std.isOfType(item, Array) || Std.isOfType(item, Int) || Std.isOfType(item, Float)) {
                             fail('Invalid target item: $item');
                         }
-                        if (item.name == null || !Std.is(item.name, String) || ('' + item.name).trim() == '') {
+                        if (item.name == null || !Std.isOfType(item.name, String) || ('' + item.name).trim() == '') {
                             fail('Invalid target name in ceramic.yml: ${item.name}');
                         }
                         var itemName = ('' + item.name).trim();
-                        if (item.command == null || !Std.is(item.command, String) || ('' + item.command).trim() == '') {
+                        if (item.command == null || !Std.isOfType(item.command, String) || ('' + item.command).trim() == '') {
                             fail('Invalid target command in ceramic.yml: ${item.command}');
                         }
                         var itemCommand = ('' + item.command).trim();
-                        if (item.cwd != null && (!Std.is(item.cwd, String) || ('' + item.cwd).trim() == '')) {
+                        if (item.cwd != null && (!Std.isOfType(item.cwd, String) || ('' + item.cwd).trim() == '')) {
                             fail('Invalid target cwd in ceramic.yml: ${item.cwd}');
                         }
                         var itemCwd = ('' + item.cwd).trim();
-                        if (item.args != null && !Std.is(item.args, Array)) {
+                        if (item.args != null && !Std.isOfType(item.args, Array)) {
                             fail('Invalid target args in ceramic.yml: ${item.args}');
                         }
                         var itemArgs:Array<String> = [];
@@ -121,7 +121,7 @@ class IdeInfo extends tools.Task {
                                 }
                             }
                         }
-                        if (item.groups != null && !Std.is(item.groups, Array)) {
+                        if (item.groups != null && !Std.isOfType(item.groups, Array)) {
                             fail('Invalid target groups in ceramic.yml: ${item.groups}');
                         }
                         var itemGroups:Array<String> = [];
@@ -138,7 +138,7 @@ class IdeInfo extends tools.Task {
                                 }
                             }
                         }
-                        if (Reflect.hasField(item, 'group') && Std.is(Reflect.field(item, 'group'), String)) {
+                        if (Reflect.hasField(item, 'group') && Std.isOfType(Reflect.field(item, 'group'), String)) {
                             var group:String = ('' + Reflect.field(item, 'group')).trim();
                             if (group != '') {
                                 if (itemGroups.indexOf(group) == -1) {
@@ -148,11 +148,11 @@ class IdeInfo extends tools.Task {
                         }
                         var itemSelect:IdeInfoTargetSelectItem = null;
                         if (item.select != null) {
-                            if (Std.is(item.select, Bool) || Std.is(item.select, Array) || Std.is(item.select, Int) || Std.is(item.select, Float)) {
+                            if (Std.isOfType(item.select, Bool) || Std.isOfType(item.select, Array) || Std.isOfType(item.select, Int) || Std.isOfType(item.select, Float)) {
                                 fail('Invalid target item select: ${item.select}');
                             }
                             var selectCommand = ('' + item.select.command).trim();
-                            if (item.select.args != null && !Std.is(item.select.args, Array)) {
+                            if (item.select.args != null && !Std.isOfType(item.select.args, Array)) {
                                 fail('Invalid target select args in ceramic.yml: ${item.select.args}');
                             }
                             var selectArgs:Array<String> = [];
@@ -182,14 +182,14 @@ class IdeInfo extends tools.Task {
                 
                 if (projectVariants != null) {
                     for (item in projectVariants) {
-                        if (item == null || Std.is(item, Bool) || Std.is(item, Array) || Std.is(item, Int) || Std.is(item, Float)) {
+                        if (item == null || Std.isOfType(item, Bool) || Std.isOfType(item, Array) || Std.isOfType(item, Int) || Std.isOfType(item, Float)) {
                             fail('Invalid variant item: $item');
                         }
-                        if (item.name == null || !Std.is(item.name, String) || ('' + item.name).trim() == '') {
+                        if (item.name == null || !Std.isOfType(item.name, String) || ('' + item.name).trim() == '') {
                             fail('Invalid variant name in ceramic.yml: ${item.name}');
                         }
                         var itemName = ('' + item.name).trim();
-                        if (item.args != null && !Std.is(item.args, Array)) {
+                        if (item.args != null && !Std.isOfType(item.args, Array)) {
                             fail('Invalid variant args in ceramic.yml: ${item.args}');
                         }
                         var itemArgs:Array<String> = [];
@@ -202,7 +202,7 @@ class IdeInfo extends tools.Task {
                             }
                         }
                         var itemGroup:String = null;
-                        if (item.group != null && Std.is(item.group, String)) {
+                        if (item.group != null && Std.isOfType(item.group, String)) {
                             var group:String = ('' + item.group).trim();
                             if (group != '') {
                                 itemGroup = group;
@@ -210,10 +210,10 @@ class IdeInfo extends tools.Task {
                         }
                         var itemSelect:IdeInfoVariantSelectItem = null;
                         if (item.select != null) {
-                            if (Std.is(item.select, Bool) || Std.is(item.select, Array) || Std.is(item.select, Int) || Std.is(item.select, Float)) {
+                            if (Std.isOfType(item.select, Bool) || Std.isOfType(item.select, Array) || Std.isOfType(item.select, Int) || Std.isOfType(item.select, Float)) {
                                 fail('Invalid variant item select: ${item.select}');
                             }
-                            if (item.select.args != null && !Std.is(item.select.args, Array)) {
+                            if (item.select.args != null && !Std.isOfType(item.select.args, Array)) {
                                 fail('Invalid variant select args in ceramic.yml: ${item.select.args}');
                             }
                             var selectArgs:Array<String> = [];

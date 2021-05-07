@@ -47,7 +47,7 @@ class ExportLibrary extends tools.Task {
             );
 
             for (item in tools.Project.runtimeLibraries) {
-                if (Std.is(item, String)) {
+                if (Std.isOfType(item, String)) {
                     Reflect.setField(haxelibJson.dependencies, item, '');
                 }
                 else {

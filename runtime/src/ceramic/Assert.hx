@@ -22,8 +22,8 @@ class Assert {
                 #if ceramic_assert_print_stack
                 ceramic.Utils.printStackTrace();
                 #end
-                ceramic.App.app.logger.error('$str' + $reason);
-                throw '$str' + $reason;
+                ceramic.App.app.logger.error($v{str} + $reason);
+                throw $v{str} + $reason;
             }
         }
 #else

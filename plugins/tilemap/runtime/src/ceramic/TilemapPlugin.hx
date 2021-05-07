@@ -49,7 +49,7 @@ class TilemapPlugin {
         if (!name.startsWith('tilemap:')) name = 'tilemap:' + name;
 
         assets.ensure(cast name, options, function(asset) {
-            done(Std.is(asset, TilemapAsset) ? cast asset : null);
+            done(Std.isOfType(asset, TilemapAsset) ? cast asset : null);
         });
 
     }

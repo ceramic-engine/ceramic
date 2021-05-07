@@ -72,11 +72,11 @@ class SpinePlugin {
 
     public static function ensureSpine(assets:Assets, name:Either<String,AssetId<Dynamic>>, ?options:AssetOptions, done:SpineAsset->Void):Void {
 
-        var realName:String = Std.is(name, String) ? cast name : cast Reflect.field(name, '_id');
+        var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (!realName.startsWith('spine:')) realName = 'spine:' + realName;
 
         assets.ensure(cast realName, options, function(asset) {
-            done(Std.is(asset, SpineAsset) ? cast asset : null);
+            done(Std.isOfType(asset, SpineAsset) ? cast asset : null);
         });
 
     }
@@ -94,7 +94,7 @@ class SpinePlugin {
     @:access(ceramic.Assets)
     public static function spineAsset(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineAsset {
 
-        var realName:String = Std.is(name, String) ? cast name : cast Reflect.field(name, '_id');
+        var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
         
         if (!assets.assetsByKindAndName.exists('spine')) return null;

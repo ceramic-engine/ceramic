@@ -70,7 +70,7 @@ class PluginHxml extends tools.Task {
         for (lib in pluginLibs) {
             var libName:String = null;
             var libVersion:String = "*";
-            if (Std.is(lib, String)) {
+            if (Std.isOfType(lib, String)) {
                 libName = lib;
             } else {
                 for (k in Reflect.fields(lib)) {

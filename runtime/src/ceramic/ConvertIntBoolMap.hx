@@ -17,7 +17,7 @@ class ConvertIntBoolMap implements ConvertField<Dynamic,IntBoolMap> {
         
         #if plugin_spine
         // Specific case
-        if (Std.is(instance, Spine) && field == 'hiddenSlots') {
+        if (Std.isOfType(instance, Spine) && field == 'hiddenSlots') {
             var spine:Spine = cast instance;
             for (key in Reflect.fields(basic)) {
                 var boolVal:Bool = Reflect.field(basic, key);

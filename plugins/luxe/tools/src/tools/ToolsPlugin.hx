@@ -60,7 +60,7 @@ class ToolsPlugin {
 
             var app = context.project.app;
             var hasLuxePlugin = false;
-            if (app.plugins != null && Std.is(app.plugins, Array)) {
+            if (app.plugins != null && Std.isOfType(app.plugins, Array)) {
                 var plugins:Array<String> = app.plugins;
                 if (plugins.indexOf('luxe') != -1) {
                     hasLuxePlugin = true;

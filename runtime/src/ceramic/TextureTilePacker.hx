@@ -195,7 +195,7 @@ class TextureTilePacker extends Entity {
 
         log.info('release tile $tile');
 
-        if (!(Std.is(tile, PackedTextureTile))) {
+        if (!(Std.isOfType(tile, PackedTextureTile))) {
             throw 'Cannot release tile: $tile.';
         }
 

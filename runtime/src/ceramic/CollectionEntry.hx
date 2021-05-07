@@ -63,7 +63,7 @@ class CollectionEntry {
                 switch (type) {
 
                     case 'Bool':
-                        if (Std.is(rawValue, Bool)) {
+                        if (Std.isOfType(rawValue, Bool)) {
                             value = rawValue;
                         }
                         else {
@@ -76,7 +76,7 @@ class CollectionEntry {
                         }
 
                     case 'Int', 'ceramic.Color':
-                        if (Std.is(rawValue, Int) || Std.is(rawValue, Float)) {
+                        if (Std.isOfType(rawValue, Int) || Std.isOfType(rawValue, Float)) {
                             value = Std.int(rawValue);
                         }
                         else {
@@ -85,7 +85,7 @@ class CollectionEntry {
                         }
 
                     case 'Float':
-                        if (Std.is(rawValue, Int) || Std.is(rawValue, Float)) {
+                        if (Std.isOfType(rawValue, Int) || Std.isOfType(rawValue, Float)) {
                             value = rawValue;
                         }
                         else {

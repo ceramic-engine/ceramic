@@ -220,7 +220,7 @@ class Textures implements spec.Textures {
     public function destroyTexture(texture:Texture):Void {
 
         var id = (texture:phoenix.Texture).id;
-        if (Std.is(texture, CeramicTexture)) {
+        if (Std.isOfType(texture, CeramicTexture)) {
             var ceramicTexture:CeramicTexture = cast texture;
             id = ceramicTexture.ceramicId;
         }

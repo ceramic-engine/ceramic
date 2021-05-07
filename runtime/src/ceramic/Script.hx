@@ -94,7 +94,7 @@ class Script extends Entity implements Component {
         if (ready && !running) {
             
             interp.variables.set('entity', entity);
-            if (Std.is(entity, Visual)) {
+            if (Std.isOfType(entity, Visual)) {
                 interp.variables.set('visual', entity);
             }
 
@@ -147,7 +147,7 @@ class Script extends Entity implements Component {
 
     public function getEntity(itemId:String):Entity {
 
-        if (Std.is(entity, Visual)) {
+        if (Std.isOfType(entity, Visual)) {
             // Try to get fragment from visual
             var visual:Visual = cast entity;
             var fragment = visual.firstParentWithClass(Fragment);
@@ -163,7 +163,7 @@ class Script extends Entity implements Component {
             var variables = interp.variables;
             if (variables != null) {
                 var rawFragment = variables.get('fragment');
-                if (rawFragment != null && Std.is(rawFragment, Fragment)) {
+                if (rawFragment != null && Std.isOfType(rawFragment, Fragment)) {
                     var fragment:Fragment = rawFragment;
                     var item = fragment.get(itemId);
                     return item;
@@ -291,7 +291,7 @@ class Interp extends hscript.Interp {
 
     override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic {
 
-        if (o != null && Std.is(o, ScriptModule)) {
+        if (o != null && Std.isOfType(o, ScriptModule)) {
             var module:ScriptModule = cast o;
             return module.owner.call(f, args);
         }
@@ -303,7 +303,7 @@ class Interp extends hscript.Interp {
 
 	override function get(o:Dynamic, f:String):Dynamic {
         if (o == null) error(EInvalidAccess(f));
-        if (Std.is(o, ScriptModule)) {
+        if (Std.isOfType(o, ScriptModule)) {
             var module:ScriptModule = cast o;
             return module.owner.get(f);
         }
@@ -330,7 +330,7 @@ class Interp extends hscript.Interp {
 
         // When creating an entity from script, tie it to the script
         // so that when the script is destroyed, related entities are destroyed too.
-        if (Std.is(instance, Entity)) {
+        if (Std.isOfType(instance, Entity)) {
             var entity:Entity = instance;
             owner.onDestroy(entity, _ -> {
                 entity.destroy();

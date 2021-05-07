@@ -43,7 +43,7 @@ class TrackEntities extends Entity implements Component {
 
         if (value == null) return;
 
-        if (Std.is(value, Entity)) {
+        if (Std.isOfType(value, Entity)) {
             var entity:Entity = cast value;
             if (entity.destroyed) return;
 
@@ -62,7 +62,7 @@ class TrackEntities extends Entity implements Component {
             return;
 
         }
-        else if (Std.is(value, Array)) {
+        else if (Std.isOfType(value, Array)) {
 
             var array:Array<Dynamic> = value;
             for (i in 0...array.length) {
@@ -72,7 +72,7 @@ class TrackEntities extends Entity implements Component {
             return;
 
         }
-        else if (Std.is(value, String) || Std.is(value, Int) || Std.is(value, Float) || Std.is(value, Bool)) {
+        else if (Std.isOfType(value, String) || Std.isOfType(value, Int) || Std.isOfType(value, Float) || Std.isOfType(value, Bool)) {
 
             return;
 

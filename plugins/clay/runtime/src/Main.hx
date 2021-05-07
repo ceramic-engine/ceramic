@@ -83,7 +83,7 @@ class Main {
                 var error = event.error;
 
                 // This seems needed to make exception dumping work as expected in some cases
-                if (Std.is(error, ValueException)) {
+                if (Std.isOfType(error, ValueException)) {
                     var valueException:ValueException = cast error;
                     var _stack = valueException.stack;
                 }

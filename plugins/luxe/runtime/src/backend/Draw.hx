@@ -833,10 +833,10 @@ class Draw implements spec.Draw {
         // a visual is instanciated that it can later re-use
         // at each draw iteration to read/store per visual data.
 
-        if (Std.is(visual, ceramic.Quad)) {
+        if (Std.isOfType(visual, ceramic.Quad)) {
             return QUAD;
         }
-        else if (Std.is(visual, ceramic.Mesh)) {
+        else if (Std.isOfType(visual, ceramic.Mesh)) {
             return MESH;
         }
         else {

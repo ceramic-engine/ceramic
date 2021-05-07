@@ -15,8 +15,8 @@ class Equal {
         if (a == b)
             return true;
 
-        if (Std.is(a, Array)) {
-            if (Std.is(b, Array)) {
+        if (Std.isOfType(a, Array)) {
+            if (Std.isOfType(b, Array)) {
                 return arrayEqual(a, b);
             }
             return false;

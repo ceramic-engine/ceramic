@@ -568,7 +568,7 @@ class App extends Entity {
         for (key in Reflect.fields(info.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
-                if (!Std.is(collectionInfo, String)) {
+                if (!Std.isOfType(collectionInfo, String)) {
                     var dataName = collectionInfo.data;
                     if (dataName != null) {
                         if (!addedAssets.exists(dataName)) {
@@ -590,7 +590,7 @@ class App extends Entity {
                 for (key in Reflect.fields(info.collections)) {
                     for (collectionName in Reflect.fields(Reflect.field(info.collections, key))) {
                         var collectionInfo:Dynamic = Reflect.field(Reflect.field(info.collections, key), collectionName);
-                        if (!Std.is(collectionInfo, String)) {
+                        if (!Std.isOfType(collectionInfo, String)) {
                             var dataName = collectionInfo.data;
                             if (dataName != null) {
                                 

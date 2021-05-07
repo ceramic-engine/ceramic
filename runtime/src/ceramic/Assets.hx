@@ -87,7 +87,7 @@ class Assets extends Entity {
 
     public function add(id:AssetId<Dynamic>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
-        var value:String = Std.is(id, String) ? cast id : cast Reflect.field(id, '_id');
+        var value:String = Std.isOfType(id, String) ? cast id : cast Reflect.field(id, '_id');
         var colonIndex = value.indexOf(':');
 
         if (colonIndex == -1) {
@@ -302,7 +302,7 @@ class Assets extends Entity {
         if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
         var byName = assetsByKindAndName.get(asset.kind);
 
-        if (Std.is(asset, ImageAsset)) {
+        if (Std.isOfType(asset, ImageAsset)) {
             var imageAsset:ImageAsset = cast asset;
             imageAsset.defaultImageOptions = defaultImageOptions;
         }
@@ -384,7 +384,7 @@ class Assets extends Entity {
     
     public function asset(idOrName:Dynamic, ?kind:String):Asset {
 
-        var value:String = Std.is(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
+        var value:String = Std.isOfType(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
         var colonIndex = value.indexOf(':');
 
         var name:String = value;
@@ -580,7 +580,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'image:')) _name = 'image:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, ImageAsset) ? cast asset : null);
+            done(Std.isOfType(asset, ImageAsset) ? cast asset : null);
         });
 
     }
@@ -590,7 +590,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'font:')) _name = 'font:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, FontAsset) ? cast asset : null);
+            done(Std.isOfType(asset, FontAsset) ? cast asset : null);
         });
 
     }
@@ -600,7 +600,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'text:')) _name = 'text:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, TextAsset) ? cast asset : null);
+            done(Std.isOfType(asset, TextAsset) ? cast asset : null);
         });
 
     }
@@ -610,7 +610,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'sound:')) _name = 'sound:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, SoundAsset) ? cast asset : null);
+            done(Std.isOfType(asset, SoundAsset) ? cast asset : null);
         });
 
     }
@@ -620,7 +620,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'database:')) _name = 'database:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, DatabaseAsset) ? cast asset : null);
+            done(Std.isOfType(asset, DatabaseAsset) ? cast asset : null);
         });
 
     }
@@ -630,7 +630,7 @@ class Assets extends Entity {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'shader:')) _name = 'shader:' + _name;
         ensure(_name, options, function(asset) {
-            done(Std.is(asset, ShaderAsset) ? cast asset : null);
+            done(Std.isOfType(asset, ShaderAsset) ? cast asset : null);
         });
 
     }

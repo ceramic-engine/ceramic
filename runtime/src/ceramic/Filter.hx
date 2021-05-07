@@ -389,7 +389,7 @@ class Filter extends Layer implements Observable {
                     var parent = hv.parent;
                     if (parent != null) {
                         do {
-                            if (parent.asQuad != null && Std.is(parent, Filter)) {
+                            if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                                 var filter:Filter = cast parent;
                                 if (filter.renderTexture == hv.computedRenderTarget) {
                                     // Yes

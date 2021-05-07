@@ -71,7 +71,7 @@ class Entity implements Events implements Lazy {
     function get_scriptContent():ScriptContent {
         var comp = component('script');
         var content:ScriptContent = null;
-        if (comp != null && Std.is(comp, Script)) {
+        if (comp != null && Std.isOfType(comp, Script)) {
             var scriptComp:Script = cast comp;
             content = scriptComp.content;
         }
@@ -93,7 +93,7 @@ class Entity implements Events implements Lazy {
     public var script(get,set):Script;
     function get_script():Script {
         var comp = component('script');
-        if (comp != null && Std.is(comp, Script)) {
+        if (comp != null && Std.isOfType(comp, Script)) {
             return cast comp;
         }
         return null;
@@ -215,7 +215,7 @@ class Entity implements Events implements Lazy {
                         for (weakRef in weakRefs) {
                             var entity:Entity = weakRef.get();
                             if (entity != null) {
-                                if (Std.is(entity, ceramic.Autorun)) {
+                                if (Std.isOfType(entity, ceramic.Autorun)) {
                                     var autor:ceramic.Autorun = cast entity;
                                     if (@:privateAccess autor.onRun != null) {
                                         throw "AUTORUN onRun is not null!!!!";

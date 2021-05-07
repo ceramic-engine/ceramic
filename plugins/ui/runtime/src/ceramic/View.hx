@@ -401,7 +401,7 @@ class View extends Quad {
 
     override function add(visual:Visual):Void {
         super.add(visual);
-        if (Std.is(visual,View)) {
+        if (Std.isOfType(visual,View)) {
             var view:View = cast visual;
             if (subviews == null) {
                 subviews = [];
@@ -414,7 +414,7 @@ class View extends Quad {
 
     override function remove(visual:Visual):Void {
         super.remove(visual);
-        if (Std.is(visual,View)) {
+        if (Std.isOfType(visual,View)) {
             var view:View = cast visual;
             @:privateAccess subviews.original.splice(subviews.indexOf(view), 1);
             view.layoutDirty = true;
@@ -477,7 +477,7 @@ class View extends Quad {
     function get_parentView():Null<View> {
         if (customParentView != null)
             return customParentView;
-        if (Std.is(parent, View))
+        if (Std.isOfType(parent, View))
             return cast parent;
         return null;
     }

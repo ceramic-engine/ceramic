@@ -369,7 +369,7 @@ class Fragment extends Layer {
         
         // Remove previous object if entity class is different
         if (existing != null) {
-            existingWasVisual = Std.is(existing, Visual);
+            existingWasVisual = Std.isOfType(existing, Visual);
             if (item.entity != Type.getClassName(Type.getClass(existing))) {
                 removeItem(item.id);
                 existing = null;
@@ -484,7 +484,7 @@ class Fragment extends Layer {
             // Add instance (if new)
             entities.push(instance);
         }
-        var isVisual = Std.is(instance, Visual);
+        var isVisual = Std.isOfType(instance, Visual);
         // Add it to display tree if it is a visual
         if (isVisual && !existingWasVisual) {
             add(cast instance);
@@ -751,7 +751,7 @@ class Fragment extends Layer {
             entity = get(itemId);
         }
         if (entity != null) {
-            var isVisual = Std.is(entity, Visual);
+            var isVisual = Std.isOfType(entity, Visual);
             if (isVisual) {
                 var visual:Visual = cast entity;
                 if (visual.contentDirty) {

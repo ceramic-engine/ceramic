@@ -80,35 +80,35 @@ class Timelines extends Entity {
 
     function handleBindTrack(type:String, options:Dynamic<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String) {
 
-        if (Std.is(track, TimelineFloatTrack)) {
+        if (Std.isOfType(track, TimelineFloatTrack)) {
             var floatTrack:TimelineFloatTrack = cast track;
             floatTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
             });
         }
-        else if (Std.is(track, TimelineDegreesTrack)) {
+        else if (Std.isOfType(track, TimelineDegreesTrack)) {
             var degreesTrack:TimelineDegreesTrack = cast track;
             degreesTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
             });
         }
-        else if (Std.is(track, TimelineColorTrack)) {
+        else if (Std.isOfType(track, TimelineColorTrack)) {
             var colorTrack:TimelineColorTrack = cast track;
             colorTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
             });
         }
-        else if (Std.is(track, TimelineBoolTrack)) {
+        else if (Std.isOfType(track, TimelineBoolTrack)) {
             var boolTrack:TimelineBoolTrack = cast track;
             boolTrack.onChange(entity, track -> {
                 // TODO optimize / avoid using reflection on visual properties etc...
                 entity.setProperty(field, track.value);
             });
         }
-        else if (Std.is(track, TimelineFloatArrayTrack)) {
+        else if (Std.isOfType(track, TimelineFloatArrayTrack)) {
             var copyArray:Bool = (options != null && options.copyArray == true);
             var floatArrayTrack:TimelineFloatArrayTrack = cast track;
             floatArrayTrack.onChange(entity, track -> {
@@ -145,7 +145,7 @@ class Timelines extends Entity {
             return;
 
         if (type == 'Float') {
-            if (existing != null && Std.is(existing, TimelineFloatKeyframe)) {
+            if (existing != null && Std.isOfType(existing, TimelineFloatKeyframe)) {
                 var floatKeyframe:TimelineFloatKeyframe = cast existing;
                 floatKeyframe.value = value;
                 floatKeyframe.index = index;
@@ -157,7 +157,7 @@ class Timelines extends Entity {
             }
         }
         else if (type == 'ceramic.Color') {
-            if (existing != null && Std.is(existing, TimelineColorKeyframe)) {
+            if (existing != null && Std.isOfType(existing, TimelineColorKeyframe)) {
                 var colorKeyframe:TimelineColorKeyframe = cast existing;
                 colorKeyframe.value = value;
                 colorKeyframe.index = index;
@@ -169,7 +169,7 @@ class Timelines extends Entity {
             }
         }
         else if (type == 'Bool') {
-            if (existing != null && Std.is(existing, TimelineBoolKeyframe)) {
+            if (existing != null && Std.isOfType(existing, TimelineBoolKeyframe)) {
                 var boolKeyframe:TimelineBoolKeyframe = cast existing;
                 boolKeyframe.value = value;
                 boolKeyframe.index = index;
@@ -181,7 +181,7 @@ class Timelines extends Entity {
             }
         }
         else if (type == 'Array<Float>') {
-            if (existing != null && Std.is(existing, TimelineFloatArrayKeyframe)) {
+            if (existing != null && Std.isOfType(existing, TimelineFloatArrayKeyframe)) {
                 var floatArrayKeyframe:TimelineFloatArrayKeyframe = cast existing;
                 var floatArrayValue:Array<Float> = cast value;
                 floatArrayKeyframe.value = [].concat(floatArrayValue);

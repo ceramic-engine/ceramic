@@ -1607,7 +1607,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
             var parent = this.parent;
             if (parent != null) {
                 do {
-                    if (parent.asQuad != null && Std.is(parent, Filter)) {
+                    if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                         var filter:Filter = cast parent;
                         if (filter.renderTexture == computedRenderTarget) {
                             if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
@@ -1690,7 +1690,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
                 var parent = this.parent;
                 if (parent != null) {
                     do {
-                        if (parent.asQuad != null && Std.is(parent, Filter)) {
+                        if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
                             if (filter.renderTexture == computedRenderTarget) {
                                 filter.screenToVisual(point.x, point.y, point);
@@ -1726,7 +1726,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
                 var parent = this.parent;
                 if (parent != null) {
                     do {
-                        if (parent.asQuad != null && Std.is(parent, Filter)) {
+                        if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
                             if (filter.renderTexture == computedRenderTarget) {
                                 filter.visualToScreen(point.x, point.y, point);
@@ -2033,7 +2033,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
         var parent = this.parent;
         while (parent != null) {
-            if (Std.is(parent, clazz)) return cast parent;
+            if (Std.isOfType(parent, clazz)) return cast parent;
             parent = parent.parent;
         }
 

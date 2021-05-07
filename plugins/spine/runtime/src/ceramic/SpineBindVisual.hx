@@ -42,7 +42,7 @@ class SpineBindVisual {
         if (options.visual != null) {
 
             // Keep pre-casted text visual if applicable
-            if (Std.is(visual, Text)) {
+            if (Std.isOfType(visual, Text)) {
                 options.textVisual = cast visual;
             }
 
@@ -75,7 +75,7 @@ class SpineBindVisual {
 
                     if (options.compensateRegionRotation) {
                         var region:RegionAttachment = null;
-                        if (Std.is(info.slot.attachment, RegionAttachment)) {
+                        if (Std.isOfType(info.slot.attachment, RegionAttachment)) {
                             region = cast info.slot.attachment;
                         }
                         if (region != null) {

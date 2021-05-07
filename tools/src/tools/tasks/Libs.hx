@@ -64,7 +64,7 @@ class Libs extends tools.Task {
         for (lib in appLibs) {
             var libName:String = null;
             var libVersion:String = null;
-            if (Std.is(lib, String)) {
+            if (Std.isOfType(lib, String)) {
                 libName = lib;
             } else {
                 for (k in Reflect.fields(lib)) {

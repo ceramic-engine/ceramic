@@ -33,7 +33,7 @@ class ExportImages extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
-        if (project.app.images == null || !Std.is(project.app.images.export, Array)) {
+        if (project.app.images == null || !Std.isOfType(project.app.images.export, Array)) {
             fail('Missing images export option in ceramic.yml file like:
 
     images:

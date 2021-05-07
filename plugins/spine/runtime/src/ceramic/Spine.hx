@@ -151,7 +151,7 @@ class Spine extends Visual {
     /** Internal flag to know if render became dirty because of a skin change or a new animation was set. */
     public var renderDirtyAgressive(default, set):Bool = false;
     function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
-        if (renderDirtyAgressive && parent != null && Std.is(parent, Spine)) {
+        if (renderDirtyAgressive && parent != null && Std.isOfType(parent, Spine)) {
             var parentSpine:Spine = cast parent;
             parentSpine.renderDirty = true;
         }
@@ -170,7 +170,7 @@ class Spine extends Visual {
 
     public var renderDirty(default, set):Bool = false;
     function set_renderDirty(renderDirty:Bool):Bool {
-        if (renderDirty && parent != null && Std.is(parent, Spine)) {
+        if (renderDirty && parent != null && Std.isOfType(parent, Spine)) {
             var parentSpine:Spine = cast parent;
             parentSpine.renderDirty = true;
         }
@@ -1095,9 +1095,9 @@ class Spine extends Visual {
                     boundSlot = null;
                 }
 
-                regionAttachment = Std.is(slot.attachment, RegionAttachment) ? cast slot.attachment : null;
-                meshAttachment = Std.is(slot.attachment, MeshAttachment) ? cast slot.attachment : null;
-                boundingBoxAttachment = regionAttachment == null && meshAttachment == null && Std.is(slot.attachment, BoundingBoxAttachment) ? cast slot.attachment : null;
+                regionAttachment = Std.isOfType(slot.attachment, RegionAttachment) ? cast slot.attachment : null;
+                meshAttachment = Std.isOfType(slot.attachment, MeshAttachment) ? cast slot.attachment : null;
+                boundingBoxAttachment = regionAttachment == null && meshAttachment == null && Std.isOfType(slot.attachment, BoundingBoxAttachment) ? cast slot.attachment : null;
                 if (regionAttachment != null || meshAttachment != null || boundingBoxAttachment != null) {
 
                     tx = skeleton.x + bone.worldX;
@@ -1463,7 +1463,7 @@ class Spine extends Visual {
                         }
                     }
                 }
-                else if (Std.is(slot.attachment, ClippingAttachment)) {
+                else if (Std.isOfType(slot.attachment, ClippingAttachment)) {
 
                     clipAttachment = cast slot.attachment;
                     clipper.clipStart(slot, clipAttachment);
@@ -1598,7 +1598,7 @@ class Spine extends Visual {
         super.add(visual);
 
         // Spine case
-        if (Std.is(visual, Spine)) {
+        if (Std.isOfType(visual, Spine)) {
             if (subSpines == null) subSpines = [];
             var item:Spine = cast visual;
             item.hasParentSpine = true;
@@ -1613,7 +1613,7 @@ class Spine extends Visual {
         super.remove(visual);
 
         // Spine case
-        if (Std.is(visual, Spine)) {
+        if (Std.isOfType(visual, Spine)) {
             var item:Spine = cast visual;
             item.hasParentSpine = false;
             subSpines.remove(item);

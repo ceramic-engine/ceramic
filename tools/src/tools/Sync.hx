@@ -27,7 +27,7 @@ class Sync {
             if (!sent) {
                 if (simplify) {
                     payload = args[0];
-                    if (Std.is(payload, InternalError)) {
+                    if (Std.isOfType(payload, InternalError)) {
                         resultError = payload.err;
                     }
                 } else {

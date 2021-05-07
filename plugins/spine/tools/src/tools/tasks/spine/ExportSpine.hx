@@ -35,7 +35,7 @@ class ExportSpine extends tools.Task {
         var prettyPrint = extractArgFlag(args, 'pretty');
         project.loadAppFile(projectPath);
 
-        if (project.app.spine == null || !Std.is(project.app.spine.export, Array)) {
+        if (project.app.spine == null || !Std.isOfType(project.app.spine.export, Array)) {
             fail('Missing spine export option in ceramic.yml file like:
 
     spine:
@@ -64,7 +64,7 @@ class ExportSpine extends tools.Task {
             var spineConfigPath:String = null;
 
             var path:String = null;
-            if (Std.is(rawItem, String)) {
+            if (Std.isOfType(rawItem, String)) {
                 path = rawItem;
             } else {
                 path = rawItem.path;

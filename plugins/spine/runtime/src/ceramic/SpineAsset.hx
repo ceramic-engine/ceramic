@@ -191,7 +191,7 @@ class SpineAsset extends Asset {
                             emitReplaceSpineData(this.spineData, prevSpineData);
 
                             for (visual in [].concat(ceramic.App.app.visuals)) {
-                                if (Std.is(visual, Spine)) {
+                                if (Std.isOfType(visual, Spine)) {
                                     var spine:Spine = cast visual;
                                     if (spine.spineData == prevSpineData) {
                                         spine.spineData = spineData;
