@@ -1,0 +1,16 @@
+plugin:
+    name: ImGui
+
+    runtime:
+        if plugin_imgui:
+        
+            +libs:
+                - imgui-hx
+            +paths:
+                - {plugin:cwd}/runtime/src
+
+            if web:
+              +hooks:
+                  - when: begin build
+                    command: ceramic
+                    args: ['imgui', 'setup', 'js']

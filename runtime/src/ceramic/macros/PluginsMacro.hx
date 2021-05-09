@@ -20,6 +20,11 @@ class PluginsMacro {
             if (key.startsWith('plugin_')) {
                 var pluginName = key.substring('plugin_'.length);
                 var pluginTypeName = pluginName.charAt(0).toUpperCase() + pluginName.substring(1) + 'Plugin';
+
+                // Special cases (better if we did not have to do that though)
+                if (pluginTypeName == 'ImguiPlugin')
+                    pluginTypeName = 'ImGuiPlugin';
+
                 var pluginType = TPath({
                     pack: ['ceramic'],
                     name: pluginTypeName
