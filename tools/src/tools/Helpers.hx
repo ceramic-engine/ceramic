@@ -920,6 +920,8 @@ class Helpers {
 
         try {
             var yml = File.getContent(ceramicYamlPath);
+            yml = yml.replace('{plugin:cwd}', cwd);
+            yml = yml.replace('{cwd}', cwd);
             var data = Yaml.parse(yml);
             if (data == null) {
                 fail('Invalid IDE data at path: $ceramicYamlPath');

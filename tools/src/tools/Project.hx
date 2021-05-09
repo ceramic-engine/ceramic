@@ -79,7 +79,7 @@ class Project {
 
         var data:String = null;
         try {
-            data = File.getContent(path).replace('{cwd}', context.cwd);
+            data = File.getContent(path).replace('{plugin:cwd}', context.cwd).replace('{cwd}', context.cwd);
         }
         catch (e:Dynamic) {
             fail('Unable to read project at path $path: $e');
@@ -123,7 +123,7 @@ class Project {
 
         var data:String = null;
         try {
-            data = File.getContent(path).replace('{cwd}', context.cwd);
+            data = File.getContent(path).replace('{plugin:cwd}', context.cwd).replace('{cwd}', context.cwd);
         }
         catch (e:Dynamic) {
             fail('Unable to read project at path $path: $e');
