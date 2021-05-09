@@ -134,6 +134,8 @@ class App extends Entity {
     var hxt:HxTelemetry;
 #end
 
+    @:noCompletion public var loaders:Array<(done:()->Void)->Void> = [];
+
     /** Schedule immediate callback that is garanteed to be executed before the next time frame
         (before elements are drawn onto screen) */
     public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
@@ -619,6 +621,25 @@ class App extends Entity {
     }
 
     function assetsLoaded():Void {
+
+        runNextLoader();
+
+    }
+
+    function runNextLoader():Void {
+
+        if (loaders.length > 0) {
+            var loader = loaders.shift();
+            loader(runNextLoader);
+        }
+        else {
+            loaders = null;
+            runReady();
+        }
+
+    }
+
+    function runReady():Void {
 
         // Platform specific code (which is not in backend code)
         PlatformSpecific.postAppInit();
