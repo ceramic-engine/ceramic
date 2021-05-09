@@ -3,7 +3,7 @@ package ceramic;
 using ceramic.Extensions;
 
 import ceramic.Shortcuts.*;
-import clay.opengl.GLGraphics;
+import clay.graphics.Graphics;
 
 #if web
 
@@ -106,9 +106,9 @@ class ImGuiSystem extends System {
 
         // Ensure font texture is using NEAREST filtering
         // Note: if in a future version we handle loading custom fonts, we might want to use LINEAR filtering
-        GLGraphics.bindTexture2d(io.fonts.texID);
-        GLGraphics.setTexture2dMagFilter(NEAREST);
-        GLGraphics.setTexture2dMinFilter(NEAREST);
+        Graphics.bindTexture2d(io.fonts.texID);
+        Graphics.setTexture2dMagFilter(NEAREST);
+        Graphics.setTexture2dMinFilter(NEAREST);
     
         app.onFinishDraw(this, finishDraw);
 
@@ -182,9 +182,9 @@ class ImGuiSystem extends System {
             // Note: if in a future version we handle loading custom fonts, we might want to use LINEAR filtering
             var io = ImGui.getIO();
             var textureID:clay.Types.TextureId = untyped __cpp__('(int)(long long){0}', io.fonts.texID);
-            GLGraphics.bindTexture2d(textureID);
-            GLGraphics.setTexture2dMagFilter(NEAREST);
-            GLGraphics.setTexture2dMinFilter(NEAREST);
+            Graphics.bindTexture2d(textureID);
+            Graphics.setTexture2dMagFilter(NEAREST);
+            Graphics.setTexture2dMinFilter(NEAREST);
 
             didSetTextureFilter = true;
         }
