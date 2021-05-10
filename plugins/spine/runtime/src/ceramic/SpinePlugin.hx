@@ -70,7 +70,7 @@ class SpinePlugin {
 
     }
 
-    public static function ensureSpine(assets:Assets, name:Either<String,AssetId<Dynamic>>, ?options:AssetOptions, done:SpineAsset->Void):Void {
+    public static function ensureSpine(assets:Assets, name:Either<String,Dynamic>, ?options:AssetOptions, done:SpineAsset->Void):Void {
 
         var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (!realName.startsWith('spine:')) realName = 'spine:' + realName;
@@ -82,7 +82,7 @@ class SpinePlugin {
     }
 
     @:access(ceramic.Assets)
-    public static function spine(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineData {
+    public static function spine(assets:Assets, name:Either<String,Dynamic>):SpineData {
 
         var asset = spineAsset(assets, name);
         if (asset == null) return null;
@@ -92,7 +92,7 @@ class SpinePlugin {
     }
 
     @:access(ceramic.Assets)
-    public static function spineAsset(assets:Assets, name:Either<String,AssetId<Dynamic>>):SpineAsset {
+    public static function spineAsset(assets:Assets, name:Either<String,Dynamic>):SpineAsset {
 
         var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
@@ -103,7 +103,7 @@ class SpinePlugin {
 
     }
 
-    inline public static function toSkeletonName(name:AssetId<Dynamic>):String {
+    inline public static function toSkeletonName(name:Dynamic):String {
 
         return Reflect.field(name, '_id');
 
