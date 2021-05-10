@@ -1,5 +1,6 @@
 package backend;
 
+import haxe.io.Bytes;
 import ceramic.Path;
 
 #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
@@ -9,15 +10,15 @@ import sys.io.File;
 
 using StringTools;
 
-class Texts implements spec.Texts {
+class Binaries implements spec.Binaries {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
+    public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
-        var done = function(text:String) {
+        var done = function(binary:Bytes) {
             ceramic.App.app.onceImmediate(function() {
-                _done(text);
+                _done(binary);
                 _done = null;
             });
         };
@@ -37,7 +38,7 @@ class Texts implements spec.Texts {
 
         if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
             try {
-                done(File.getContent(path));
+                done(File.getBytes(path));
             } catch (e:Dynamic) {
                 ceramic.App.app.logger.error('Failed to load file at path: $path, $e');
                 done(null);

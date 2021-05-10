@@ -3,6 +3,7 @@ package ceramic;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
 import haxe.DynamicAccess;
+import haxe.io.Bytes;
 
 using StringTools;
 using ceramic.Extensions;
@@ -100,6 +101,7 @@ class Assets extends Entity {
         switch (kind) {
             case 'image': addImage(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'text': addText(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'binary': addBinary(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'sound': addSound(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'database': addDatabase(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'fragments': addFragments(name, options #if ceramic_debug_entity_allocs , pos #end);
@@ -265,6 +267,13 @@ class Assets extends Entity {
         
         if (name.startsWith('text:')) name = name.substr(5);
         addAsset(new TextAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+
+    }
+
+    public function addBinary(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+        
+        if (name.startsWith('binary:')) name = name.substr(5);
+        addAsset(new BinaryAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
@@ -686,6 +695,19 @@ class Assets extends Entity {
         if (asset == null) return null;
 
         return asset.text;
+
+    }
+
+    public function bytes(name:Either<String,AssetId<String>>):Bytes {
+
+        var realName:String = cast name;
+        if (realName.startsWith('binary:')) realName = realName.substr(5);
+        
+        if (!assetsByKindAndName.exists('binary')) return null;
+        var asset:BinaryAsset = cast assetsByKindAndName.get('binary').get(realName);
+        if (asset == null) return null;
+
+        return asset.bytes;
 
     }
 

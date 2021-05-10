@@ -1,5 +1,6 @@
 package backend;
 
+import haxe.io.Bytes;
 import clay.Immediate;
 import clay.buffers.Uint8Array;
 import clay.Clay;
@@ -12,15 +13,15 @@ import sys.io.File;
 
 using StringTools;
 
-class Texts implements spec.Texts {
+class Binaries implements spec.Binaries {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
+    public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
-        var done = function(text:String) {
+        var done = function(binary:Bytes) {
             ceramic.App.app.onceImmediate(function() {
-                _done(text);
+                _done(binary);
                 _done = null;
             });
         };
@@ -30,17 +31,17 @@ class Texts implements spec.Texts {
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
-        // Is text currently loading?
-        if (loadingTextCallbacks.exists(path)) {
+        // Is binary currently loading?
+        if (loadingBinaryCallbacks.exists(path)) {
             // Yes, just bind it
-            loadingTextCallbacks.get(path).push(function(text:String) {
-                done(text);
+            loadingBinaryCallbacks.get(path).push(function(binary:Bytes) {
+                done(binary);
             });
             return;
         }
         else {
             // Add loading callbacks array
-            loadingTextCallbacks.set(path, []);
+            loadingBinaryCallbacks.set(path, []);
         }
 
         // Remove ?something in path
@@ -56,9 +57,9 @@ class Texts implements spec.Texts {
             
             if (res == null) {
 
-                var callbacks = loadingTextCallbacks.get(path);
+                var callbacks = loadingBinaryCallbacks.get(path);
                 if (callbacks != null) {
-                    loadingTextCallbacks.remove(path);
+                    loadingBinaryCallbacks.remove(path);
                     done(null);
                     for (callback in callbacks) {
                         callback(null);
@@ -71,18 +72,18 @@ class Texts implements spec.Texts {
                 return;
             }
 
-            var text = res.toBytes().toString();
+            var binary = res.toBytes();
 
-            var callbacks = loadingTextCallbacks.get(path);
+            var callbacks = loadingBinaryCallbacks.get(path);
             if (callbacks != null) {
-                loadingTextCallbacks.remove(path);
-                done(text);
+                loadingBinaryCallbacks.remove(path);
+                done(binary);
                 for (callback in callbacks) {
-                    callback(text);
+                    callback(binary);
                 }
             }
             else {
-                done(text);
+                done(binary);
             }
         });
 
@@ -101,6 +102,6 @@ class Texts implements spec.Texts {
 
 /// Internal
 
-    var loadingTextCallbacks:Map<String,Array<String->Void>> = new Map();
+    var loadingBinaryCallbacks:Map<String,Array<Bytes->Void>> = new Map();
 
 }

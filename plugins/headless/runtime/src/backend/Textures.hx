@@ -4,7 +4,14 @@ class Textures implements spec.Textures {
 
     public function new() {}
 
-    public function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void {
+    public function load(path:String, ?options:LoadTextureOptions, _done:Texture->Void):Void {
+
+        var done = function(texture:Texture) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(texture);
+                _done = null;
+            });
+        };
 
         done(new TextureImpl(0, 0));
 
