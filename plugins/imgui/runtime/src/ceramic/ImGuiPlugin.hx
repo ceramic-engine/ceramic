@@ -16,6 +16,13 @@ class ImGuiPlugin {
 
             log.info('Init imgui plugin');
 
+            #if imgui_font
+            // Load font for dear imgui
+            ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
+                assets.add('binary:' + ceramic.macros.DefinesMacro.getDefine('imgui_font'));
+            });
+            #end
+
             app.loaders.push(initImGui);
             
         });

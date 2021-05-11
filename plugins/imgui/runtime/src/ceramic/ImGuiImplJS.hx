@@ -1,5 +1,6 @@
 package ceramic;
 
+import js.lib.Uint8Array;
 import imguijs.ImGui;
 import ceramic.Shortcuts.*;
 import clay.graphics.Graphics;
@@ -12,6 +13,10 @@ class ImGuiImplJS {
     static var io:ImGuiIO = null;
 
     static var framePending:Bool = false;
+
+    #if imgui_font
+    static var imFont:ImFont;
+    #end
 
     public static function init(done:()->Void):Void {
 
@@ -65,20 +70,56 @@ class ImGuiImplJS {
 
         io = ImGui.getIO();
 
-        // Ensure font texture is using NEAREST filtering
-        // Note: if in a future version we handle loading custom fonts, we might want to use LINEAR filtering
+        #if imgui_font
+        loadFont();
+        #else
         Graphics.bindTexture2d(io.fonts.texID);
         Graphics.setTexture2dMagFilter(NEAREST);
         Graphics.setTexture2dMinFilter(NEAREST);
+        #end
 
         done();
 
     }
 
+    #if imgui_font
+    static function loadFont() {
+
+        var font = app.assets.bytes(ceramic.macros.DefinesMacro.getDefine('imgui_font'));
+        var io = ImGui.getIO();
+
+        var fontData = new js.lib.Uint8Array(font.getData());
+        imFont = js.Syntax.code('{0}.AddFontFromMemoryTTF({1}, {2})', io.fonts, fontData.buffer, Math.round(14 / 0.75));
+        var texData = js.Syntax.code('{0}.GetTexDataAsRGBA32()', io.fonts);
+        var texDataPixels:js.lib.Uint8ClampedArray = texData.pixels;
+        var width:Int = texData.width;
+        var height:Int = texData.height;
+        var buffer = new UInt8Array(width * height * 4);
+        for (i in 0...width * height * 4) {
+            buffer[i] = texDataPixels[i];
+        }
+        var texture:clay.graphics.Texture = app.backend.textures.createTexture(
+            width,
+            height,
+            buffer
+        );
+        io.fonts.setTexID(texture.textureId);
+        io.fontGlobalScale = 0.75;
+
+        Graphics.bindTexture2d(io.fonts.texID);
+        Graphics.setTexture2dMagFilter(LINEAR);
+        Graphics.setTexture2dMinFilter(LINEAR);
+
+    }
+    #end
+
     public static function newFrame():Void {
 
         ImGui_Impl.NewFrame(Timer.now * 1000);
         ImGui.newFrame();
+        #if imgui_font
+        ImGui.pushFont(imFont);
+        #end
 
         framePending = true;
 
@@ -89,6 +130,9 @@ class ImGuiImplJS {
         if (!framePending) return;
         framePending = false;
 
+        #if imgui_font
+        ImGui.popFont();
+        #end
         ImGui.endFrame();
         ImGui.render();
 
