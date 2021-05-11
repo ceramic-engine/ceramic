@@ -272,7 +272,7 @@ class Assets extends Entity {
 
     public function addBinary(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         
-        if (name.startsWith('binary:')) name = name.substr(5);
+        if (name.startsWith('binary:')) name = name.substr(7);
         addAsset(new BinaryAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
@@ -701,7 +701,7 @@ class Assets extends Entity {
     public function bytes(name:Either<String,AssetId<String>>):Bytes {
 
         var realName:String = cast name;
-        if (realName.startsWith('binary:')) realName = realName.substr(5);
+        if (realName.startsWith('binary:')) realName = realName.substr(7);
         
         if (!assetsByKindAndName.exists('binary')) return null;
         var asset:BinaryAsset = cast assetsByKindAndName.get('binary').get(realName);
