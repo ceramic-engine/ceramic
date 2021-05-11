@@ -20,26 +20,43 @@ class Texture extends Entity {
 
 /// Properties
 
+    /**
+     * The texture ID used by the underlying backend (OpenGL etc...)
+     */
     public var textureId(get,never):backend.TextureId;
     inline function get_textureId():backend.TextureId {
         return app.backend.textures.getTextureId(backendItem);
     }
 
+    /**
+     * The native width of the texture, not depending on texture density
+     */
     public var nativeWidth(get,never):Int;
     inline function get_nativeWidth():Int {
         return app.backend.textures.getTextureWidth(backendItem);
     }
 
+    /**
+     * The native height of the texture, not depending on texture density
+     */
     public var nativeHeight(get,never):Int;
     inline function get_nativeHeight():Int {
         return app.backend.textures.getTextureHeight(backendItem);
     }
 
+    /**
+     * The native actual width of the texture.
+     * Same as native width unless underlying backend needs pot (power of two) sizes.
+     */
     public var nativeWidthActual(get,never):Int;
     inline function get_nativeWidthActual():Int {
         return app.backend.textures.getTextureWidthActual(backendItem);
     }
 
+    /**
+     * The native actual height of the texture.
+     * Same as native height unless underlying backend needs pot (power of two) sizes.
+     */
     public var nativeHeightActual(get,never):Int;
     inline function get_nativeHeightActual():Int {
         return app.backend.textures.getTextureHeightActual(backendItem);
