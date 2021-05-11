@@ -220,6 +220,12 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function getTextureId(texture:Texture):backend.TextureId {
+
+        return (texture:clay.graphics.Texture).textureId;
+
+    }
+
     inline public function getTextureWidth(texture:Texture):Int {
 
         return (texture:clay.graphics.Texture).width;
@@ -229,6 +235,18 @@ class Textures implements spec.Textures {
     inline public function getTextureHeight(texture:Texture):Int {
 
         return (texture:clay.graphics.Texture).height;
+
+    }
+
+    inline public function getTextureWidthActual(texture:Texture):Int {
+
+        return (texture:clay.graphics.Texture).widthActual;
+
+    }
+
+    inline public function getTextureHeightActual(texture:Texture):Int {
+
+        return (texture:clay.graphics.Texture).heightActual;
 
     }
 

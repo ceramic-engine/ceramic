@@ -20,6 +20,31 @@ class Texture extends Entity {
 
 /// Properties
 
+    public var textureId(get,never):backend.TextureId;
+    inline function get_textureId():backend.TextureId {
+        return app.backend.textures.getTextureId(backendItem);
+    }
+
+    public var nativeWidth(get,never):Int;
+    inline function get_nativeWidth():Int {
+        return app.backend.textures.getTextureWidth(backendItem);
+    }
+
+    public var nativeHeight(get,never):Int;
+    inline function get_nativeHeight():Int {
+        return app.backend.textures.getTextureHeight(backendItem);
+    }
+
+    public var nativeWidthActual(get,never):Int;
+    inline function get_nativeWidthActual():Int {
+        return app.backend.textures.getTextureWidthActual(backendItem);
+    }
+
+    public var nativeHeightActual(get,never):Int;
+    inline function get_nativeHeightActual():Int {
+        return app.backend.textures.getTextureHeightActual(backendItem);
+    }
+
     public var width(default,null):Float;
 
     public var height(default,null):Float;

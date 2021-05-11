@@ -20,9 +20,15 @@ interface Textures {
     
     function destroyTexture(texture:Texture):Void;
 
+    function getTextureId(texture:Texture):backend.TextureId;
+
     function getTextureWidth(texture:Texture):Int;
 
     function getTextureHeight(texture:Texture):Int;
+
+    function getTextureWidthActual(texture:Texture):Int;
+
+    function getTextureHeightActual(texture:Texture):Int;
 
     function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array;
 
