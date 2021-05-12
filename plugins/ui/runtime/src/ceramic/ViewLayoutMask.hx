@@ -6,25 +6,25 @@ abstract ViewLayoutMask(Int) from Int to Int {
         this = value;
     }
 
-    inline public static var INCREASE_WIDTH = new ViewLayoutMask(1 << 0);
+    #if !completion inline #end public static var INCREASE_WIDTH = new ViewLayoutMask(1 << 0);
 
-    inline public static var DECREASE_WIDTH = new ViewLayoutMask(1 << 1);
+    #if !completion inline #end public static var DECREASE_WIDTH = new ViewLayoutMask(1 << 1);
 
-    inline public static var INCREASE_HEIGHT = new ViewLayoutMask(1 << 2);
+    #if !completion inline #end public static var INCREASE_HEIGHT = new ViewLayoutMask(1 << 2);
 
-    inline public static var DECREASE_HEIGHT = new ViewLayoutMask(1 << 3);
+    #if !completion inline #end public static var DECREASE_HEIGHT = new ViewLayoutMask(1 << 3);
 
-    inline public static var FIXED = new ViewLayoutMask(0);
+    #if !completion inline #end public static var FIXED = new ViewLayoutMask(0);
 
-    inline public static var FLEXIBLE_WIDTH = new ViewLayoutMask(INCREASE_WIDTH | DECREASE_WIDTH);
+    #if !completion inline #end public static var FLEXIBLE_WIDTH = new ViewLayoutMask(INCREASE_WIDTH | DECREASE_WIDTH);
 
-    inline public static var FLEXIBLE_HEIGHT = new ViewLayoutMask(INCREASE_HEIGHT | DECREASE_HEIGHT);
+    #if !completion inline #end public static var FLEXIBLE_HEIGHT = new ViewLayoutMask(INCREASE_HEIGHT | DECREASE_HEIGHT);
 
-    inline public static var FLEXIBLE = new ViewLayoutMask(FLEXIBLE_WIDTH | FLEXIBLE_HEIGHT);
+    #if !completion inline #end public static var FLEXIBLE = new ViewLayoutMask(FLEXIBLE_WIDTH | FLEXIBLE_HEIGHT);
 
-    inline public static var INCREASE = new ViewLayoutMask(INCREASE_WIDTH | INCREASE_HEIGHT);
+    #if !completion inline #end public static var INCREASE = new ViewLayoutMask(INCREASE_WIDTH | INCREASE_HEIGHT);
 
-    inline public static var DECREASE = new ViewLayoutMask(DECREASE_WIDTH | DECREASE_HEIGHT);
+    #if !completion inline #end public static var DECREASE = new ViewLayoutMask(DECREASE_WIDTH | DECREASE_HEIGHT);
 
 /// Layout helpers
 
