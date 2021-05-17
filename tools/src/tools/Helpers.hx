@@ -365,9 +365,9 @@ class Helpers {
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
         
-        var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,1,15']);
+        var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,2,1']);
         if (!FileSystem.exists(hxcppPath)) {
-            haxelib(['install', 'hxcpp', '4.1.15', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxcpp', '4.2.1', '--always'], {cwd: cwd});
         }
         // Patch hxcpp if needed
         var androidClangToolchainPath = Path.join([hxcppPath, 'toolchain/android-toolchain-clang.xml']);
