@@ -27,6 +27,7 @@
 		7E7BE9292029EA0300CBF16B /* SwiftClasses.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */; };
 		7E7BE92A2029EA0300CBF16B /* SwiftClasses.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		7E7BE9302029EAE800CBF16B /* AppSwiftInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7BE92F2029EAE800CBF16B /* AppSwiftInterface.swift */; };
+		7E921177265301CB002B8DA5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E921176265301CB002B8DA5 /* Metal.framework */; };
 		7E98D3DB201505160043EFE0 /* AppNativeInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E98D3DA201505160043EFE0 /* AppNativeInterface.m */; };
 		D6368FAAC054F36ABE278E25 /* Pods_MyApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F1ACD781366BF21F2B6A922C /* Pods_MyApp.framework */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,7 @@
 		7E7BE9242029EA0300CBF16B /* SwiftClasses.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftClasses.h; sourceTree = "<group>"; };
 		7E7BE9252029EA0300CBF16B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7E7BE92F2029EAE800CBF16B /* AppSwiftInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwiftInterface.swift; sourceTree = "<group>"; };
+		7E921176265301CB002B8DA5 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		7E98D3D9201505160043EFE0 /* AppNativeInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppNativeInterface.h; sourceTree = "<group>"; };
 		7E98D3DA201505160043EFE0 /* AppNativeInterface.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppNativeInterface.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* project/project-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "project/project-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E921177265301CB002B8DA5 /* Metal.framework in Frameworks */,
 				4079DA641C769A2700B81DF7 /* GameController.framework in Frameworks */,
 				1EEEBA9B121AF1C60048A9DF /* UIKit.framework in Frameworks */,
 				1EEEBAA3121AF2210048A9DF /* OpenAL.framework in Frameworks */,
@@ -141,6 +144,7 @@
 		1EEEBA99121AF18B0048A9DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7E921176265301CB002B8DA5 /* Metal.framework */,
 				4079DA631C769A2700B81DF7 /* GameController.framework */,
 				1EEEBA9A121AF1C60048A9DF /* UIKit.framework */,
 				1EEEBAA2121AF2210048A9DF /* OpenAL.framework */,
