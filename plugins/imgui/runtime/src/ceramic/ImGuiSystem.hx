@@ -47,7 +47,11 @@ class ImGuiSystem extends System {
 
     override function earlyUpdate(delta:Float):Void {
 
+        #if (web || cpp)
+
         ImGuiImpl.newFrame();
+
+        #end
 
     }
 
