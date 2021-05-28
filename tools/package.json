@@ -50,7 +50,7 @@
     "to-ico": "github:ceramic-engine/to-ico",
     "msdf-bmfont-xml": "github:ceramic-engine/msdf-bmfont-xml",
     "tree-kill": "^1.2.2",
-    "ws": "^7.2.3",
+    "ws": "^7.4.5",
     "xcode": "^2.0.0",
     "yamljs": "^0.3.0"
   }
