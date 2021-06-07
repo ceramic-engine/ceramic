@@ -531,8 +531,8 @@ class Screen extends Entity implements Observable {
         }
 
         // Init default values
-        actualWidth = nativeWidth * nativeDensity * scale;
-        actualHeight = nativeHeight * nativeDensity * scale;
+        actualWidth = Math.ceil(nativeWidth * nativeDensity * scale);
+        actualHeight = Math.ceil(nativeHeight * nativeDensity * scale);
         density = 1.0 / scale;
 
         // Offset
