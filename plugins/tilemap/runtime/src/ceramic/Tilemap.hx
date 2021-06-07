@@ -22,6 +22,10 @@ class Tilemap extends Quad {
         if (this.tilemapData == tilemapData) return tilemapData;
         this.tilemapData = tilemapData;
         contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
         return tilemapData;
     }
 
@@ -42,6 +46,10 @@ class Tilemap extends Quad {
         if (this.clipTilesX == clipTilesX) return clipTilesX;
         this.clipTilesX = clipTilesX;
         contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
         return clipTilesX;
     }
 
@@ -50,6 +58,10 @@ class Tilemap extends Quad {
         if (this.clipTilesY == clipTilesY) return clipTilesY;
         this.clipTilesY = clipTilesY;
         contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
         return clipTilesY;
     }
 
@@ -58,6 +70,10 @@ class Tilemap extends Quad {
         if (this.clipTilesWidth == clipTilesWidth) return clipTilesWidth;
         this.clipTilesWidth = clipTilesWidth;
         contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
         return clipTilesWidth;
     }
 
@@ -66,6 +82,10 @@ class Tilemap extends Quad {
         if (this.clipTilesHeight == clipTilesHeight) return clipTilesHeight;
         this.clipTilesHeight = clipTilesHeight;
         contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
         return clipTilesHeight;
     }
 

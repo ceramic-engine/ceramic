@@ -106,6 +106,18 @@ class TilemapLayer extends Visual {
      */
     public var destroyTilesFilterOnRemove:Bool = true;
 
+    /**
+     * Set to `false` if you need to assign a tiles filter but want to keep control
+     * on how it is layouted (size, position...)
+     */
+    public var autoSizeTilesFilter:Bool = true;
+
+    /**
+     * A filter that will be applied to every tile of this layer.
+     * If `autoSizeTilesFilter` is `true` (default), filter size will be set to layer content size.
+     * Existing filter is automatically destroyed if `tilesFilter` is set to `null` or the layer destroyed,
+     * unless you set `destroyTilesFilterOnRemove` to `false`.
+     */
     public var tilesFilter(default,set):Filter = null;
     function set_tilesFilter(tilesFilter:Filter):Filter {
         if (this.tilesFilter == tilesFilter) return tilesFilter;
@@ -130,7 +142,8 @@ class TilemapLayer extends Visual {
                 tilesFilterContent.add(tileQuad);
             }
             tilesFilter.pos(0, 0);
-            tilesFilter.size(width, height);
+            if (autoSizeTilesFilter)
+                tilesFilter.size(width, height);
             add(tilesFilter);
         }
         else {
@@ -200,7 +213,7 @@ class TilemapLayer extends Visual {
             layerData.height * tilemapData.tileHeight
         );
 
-        if (tilesFilter != null) {
+        if (autoSizeTilesFilter && tilesFilter != null) {
             tilesFilter.size(
                 layerData.width * tilemapData.tileWidth,
                 layerData.height * tilemapData.tileHeight
@@ -218,7 +231,7 @@ class TilemapLayer extends Visual {
         var clipTilesY = tilemap.clipTilesY;
         var clipTilesWidth = tilemap.clipTilesWidth;
         var clipTilesHeight = tilemap.clipTilesHeight;
-        if (clipTilesX != -1 && clipTilesY != -1 && clipTilesWidth != -1 && clipTilesHeight != -1) {
+        if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
             hasClipping = true;
         }
         
