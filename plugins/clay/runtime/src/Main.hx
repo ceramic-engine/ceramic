@@ -15,6 +15,8 @@ class Main {
 
     static var events:ClayEvents = null;
 
+    static var app:ceramic.App;
+
     #if web
 
     static var lastResizeTime:Float = -1;
@@ -22,6 +24,10 @@ class Main {
     static var lastNewWidth:Int = -1;
 
     static var lastNewHeight:Int = -1;
+
+    static var readyToDisplay:Bool = false;
+
+    static var resizing:Int = 0;
     
     #end
 
@@ -114,7 +120,7 @@ class Main {
         #end
 
         project = @:privateAccess new Project(ceramic.App.init());
-        var app = @:privateAccess ceramic.App.app;
+        app = @:privateAccess ceramic.App.app;
 
         #if web
         if (ElectronRunner.electronRunner == null) {
@@ -172,14 +178,9 @@ class Main {
             var containerWidth:Int = 0;
             var containerHeight:Int = 0;
             var containerPixelRatio:Float = 0;
-            var resizing = 0;
             var shouldFixSize = false;
 
-            var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
-            if (appEl != null) {
-                js.Browser.document.body.classList.add('ceramic-invisible');
-                appEl.style.visibility = 'hidden';
-            }
+            js.Browser.document.body.classList.add('ceramic-invisible');
 
             /*
             var forceResize = false;
@@ -210,7 +211,6 @@ class Main {
                         if (width != lastNewWidth || height != lastNewHeight) {
                             if (lastNewWidth != -1 || lastNewHeight != -1) {
                                 js.Browser.document.body.classList.add('ceramic-invisible');
-                                appEl.style.visibility = 'hidden';
                             }
                             lastResizeTime = ceramic.Timer.now;
                             lastNewWidth = width;
@@ -245,7 +245,6 @@ class Main {
                         resizing++;
                         if (lastResizeTime != -1) {
                             js.Browser.document.body.classList.add('ceramic-invisible');
-                            appEl.style.visibility = 'hidden';
                         }
                         var fn = null;
                         fn = function() {
@@ -253,9 +252,8 @@ class Main {
                                 ceramic.Timer.delay(null, 0.1, fn);
                                 return;
                             }*/
-                            if (resizing == 0) {
+                            if (resizing == 0 && readyToDisplay) {
                                 js.Browser.document.body.classList.remove('ceramic-invisible');
-                                appEl.style.visibility = 'visible';
                             }
                         };
                         ceramic.Timer.delay(null, 0.1, () -> {
@@ -317,11 +315,31 @@ class Main {
     static function ready():Void {
 
         #if web
+
         var ext;
         ext = clay.opengl.GL.gl.getExtension('OES_standard_derivatives');
+
         if (ElectronRunner.electronRunner != null) {
             ElectronRunner.electronRunner.ceramicReady();
         }
+
+        // Remove "ceramic-invisible" class once we are ready to display
+        var intervalId:Dynamic = null;
+        function checkSizeReady() {
+            var containerElId:String = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
+            var containerEl = js.Browser.document.getElementById(containerElId);
+            var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
+            if (appEl.offsetWidth == containerEl.offsetWidth) {
+                // If container size is different than app size, that means layout
+                // is not at a stable state and we should wait more
+                readyToDisplay = true;
+                js.Browser.window.clearInterval(intervalId);
+            }
+            if (readyToDisplay && resizing == 0) {
+                js.Browser.document.body.classList.remove('ceramic-invisible');
+            }
+        }
+        intervalId = js.Browser.window.setInterval(checkSizeReady, 100);
         #end
 
     }
