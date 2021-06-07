@@ -74,7 +74,7 @@ class InitSettings {
     inline function get_background():Color {
         return settings.background;
     }
-    inline function set_background(background:Int):Int {
+    inline function set_background(background:Color):Color {
         return settings.background = background;
     }
 
