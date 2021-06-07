@@ -154,6 +154,10 @@ class Renderer extends Entity {
 
         draw.beginRender();
 
+        // Ensure no texture at all are bound before starting rendering
+        usedTextures = maxUsableTexturesInBatch;
+        unbindUsedTextures(draw);
+
         // Initialize default state
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
@@ -163,7 +167,6 @@ class Renderer extends Entity {
         activeShader = null;
         lastShader = null;
         useShader(draw, null);
-
 
         // Default blending
         draw.setBlendFuncSeparate(

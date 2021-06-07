@@ -448,7 +448,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
 
+        #if web
+        var backendItem = ceramic.App.app.defaultWhiteTexture.backendItem;
+        Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
+        #else
         Graphics.bindTexture2d(Graphics.NO_TEXTURE);
+        #end
 
     }
 
