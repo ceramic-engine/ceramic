@@ -33,6 +33,12 @@ class Layer extends Quad {
 
     }
 
+    function willEmitResize(width:Float, height:Float):Void {
+
+        // Implemented to allow subclass overrides
+
+    }
+
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         super.set_width(width);
