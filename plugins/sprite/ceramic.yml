@@ -1,0 +1,7 @@
+plugin:
+    name: Sprite
+
+    runtime:
+        if plugin_sprite:
+            +paths:
+                - {plugin:cwd}/runtime/src
