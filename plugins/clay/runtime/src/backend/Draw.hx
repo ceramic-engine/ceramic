@@ -442,7 +442,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
-        Graphics.setActiveTexture(_activeTextureSlot);
         Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
 
     }
