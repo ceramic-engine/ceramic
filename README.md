@@ -3,11 +3,11 @@
 | ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Cross-platform 2D multimedia framework. |
 | - | - |
 
-## ⚠️ ACTIVE DEVELOPMENT / DON'T USE IT YET! ⚠️
+## ℹ️ More updates about ceramic soon
 
-**You've been warned**, everything in this repository is subject to change and **it is strongly advised not to use `ceramic` yet** on your own projects.
+Ceramic is _almost_ ready to be used by more developers. That said, it is advised to wait for a few more weeks: a **Getting Started** guide will be published soon and that will be the right time to try ceramic!
 
-`ceramic` should be considered usable when its [Alpha Milestone](https://github.com/ceramic-engine/ceramic/milestone/1) gets completed. Until then, **no issue will be accepted**, and anyway **you should not use it at all for now** 🙂.
+Meanwhile, you can already read an introduction article: [Discover ceramic, a cross-platform and open-source 2D framework](https://jeremyfa.com/what-is-ceramic-engine/).
 
 ## Why ceramic?
 
