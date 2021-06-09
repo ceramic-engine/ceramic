@@ -36,6 +36,8 @@ class Font extends Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        var isWindows = (Sys.systemName() == 'Windows');
+
         var fontPath = extractArgValue(args, 'font');
         var outputPath = extractArgValue(args, 'out');
         var charset = extractArgValue(args, 'charset');
@@ -93,10 +95,13 @@ class Font extends Task {
         if (rawFactor != null)
             factor = 1.0 / Std.parseFloat(rawFactor);
 
+        var msdfCmd = Path.join([context.ceramicToolsPath, 'node_modules/.bin/msdf-bmfont']);
+        if (isWindows)
+            msdfCmd += '.cmd';
+
         if (msdf) {
             // Run generator (export msdf with factor)
-            command('node', [
-                Path.join([context.ceramicToolsPath, 'node_modules/.bin/msdf-bmfont']),
+            command(msdfCmd, [
                 tmpFontPath,
                 '-f', 'json',
                 '-s', '' + Math.round(size / factor),
@@ -111,8 +116,7 @@ class Font extends Task {
         }
         else {
             // Run generator (export vector file)
-            command(Path.join([context.ceramicToolsPath, 'npx']), [
-                'msdf-bmfont',
+            command(msdfCmd, [
                 tmpFontPath,
                 '-f', 'json',
                 '-s', '' + size,
