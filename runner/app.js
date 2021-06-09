@@ -57,6 +57,9 @@ if (process.platform == 'darwin') {
 // App flags
 app.commandLine.appendSwitch('force_high_performance_gpu');
 
+// Allow reusing processes (will be the default on electron 9+ anyway)
+app.allowRendererProcessReuse = true;
+
 // App name
 app.setName(appName);
 exports.app = app;
