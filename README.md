@@ -37,7 +37,7 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 - A `headless` backend allows to run ceramic as a server/cli app (via C++ or Node.js).
 
-- A `unity` backend is allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
+- A `unity` backend allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
 
 ## Credits
 
