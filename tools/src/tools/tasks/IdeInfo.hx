@@ -108,7 +108,7 @@ class IdeInfo extends tools.Task {
                         if (item.cwd != null && (!Std.isOfType(item.cwd, String) || ('' + item.cwd).trim() == '')) {
                             fail('Invalid target cwd in ceramic.yml: ${item.cwd}');
                         }
-                        var itemCwd = ('' + item.cwd).trim();
+                        var itemCwd = item.cwd != null ? ('' + item.cwd).trim() : null;
                         if (item.args != null && !Std.isOfType(item.args, Array)) {
                             fail('Invalid target args in ceramic.yml: ${item.args}');
                         }
