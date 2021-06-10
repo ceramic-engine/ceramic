@@ -167,18 +167,22 @@ exports.ceramicSettings = function(settings) {
         }, 100);
     }
 
+    if (process.platform == 'win32' || process.platform == 'linux') {
+        mainWindow.removeMenu();
+    }
+
     var targetWidth = settings.targetWidth;
     var targetHeight = settings.targetHeight;
-    if (process.platform == 'win32') {
-        // Somehow, setContentSize() is not working as expected on windows,
-        // so we are doing some hacky hardcoded magic instead :(
-        targetWidth += 8;
-        targetHeight += 93;
-        mainWindow.setSize(targetWidth, targetHeight, false);
-    }
-    else {
+    // if (process.platform == 'win32') {
+    //     // Somehow, setContentSize() is not working as expected on windows,
+    //     // so we are doing some hacky hardcoded magic instead :(
+    //     targetWidth += 8;
+    //     targetHeight += 93;
+    //     mainWindow.setSize(targetWidth, targetHeight, false);
+    // }
+    // else {
         mainWindow.setContentSize(targetWidth, targetHeight, false);
-    }
+    // }
 
     //var prevPos = mainWindow.getPosition();
     //var prevSize = mainWindow.getContentSize();
