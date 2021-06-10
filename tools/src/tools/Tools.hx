@@ -36,6 +36,9 @@ class Tools {
 
     static function run(cwd:String, args:Array<String>, ceramicPath:String) {
 
+        // Check windows args paths
+        fixWindowsArgsPaths(args);
+
         // Initialize context with default values
         Helpers.context = {
             project: null,

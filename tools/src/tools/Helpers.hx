@@ -1143,4 +1143,27 @@ class Helpers {
         return result;
 
     }
+
+    static var RE_NORMALIZED_WINDOWS_PATH_PREFIX = ~/^\/[a-zA-Z]:\//;
+
+    public static function fixWindowsArgsPaths(args:Array<String>):Void {
+
+        // Remove absolute path leading slash on windows, if any
+        // This let us accept absolute paths that start with `/c:/` instead of `c:/`
+        // which could happen after joining/normalizing paths via node.js or vscode extension
+        if (Sys.systemName() == 'Windows') {
+            var i = 0;
+            while (i + 1 < args.length) {
+                if (args[i].startsWith('--')) {
+                    var value = args[i + 1];
+                    if (value != null && value.startsWith('/') && RE_NORMALIZED_WINDOWS_PATH_PREFIX.match(value)) {
+                        args[i + 1] = value.substring(1);
+                        i++;
+                    }
+                }
+                i++;
+            }
+        }
+
+    }
 }
