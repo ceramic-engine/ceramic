@@ -35,7 +35,7 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 - Current default backend is `clay`. It allows to natively target Mac, Windows, Linux, iOS, Android and HTML5 (WebGL).
 
-- A `headless` backend allows to run ceramic as a server/cli app (via C++ or Node.js).
+- A `headless` backend allows to run ceramic as a server/cli app (via Node.js for now, even if that could work with other language targets too).
 
 - A `unity` backend allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
 
