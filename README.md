@@ -14,7 +14,7 @@ Meanwhile, you can already read an introduction article: [Discover ceramic, a cr
 Ceramic is made with a few goals in mind:
 
 * Provide a runtime with high level cross-platform [Haxe](http://haxe.org) API to make apps, 2d games, animations and creative coding projects.
-* Bundle a set of command line tools that handle building for different targets. Currently supported: iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux), Headless (C++/Node.js).
+* Bundle a set of command line tools that handle building for different targets. Currently supported: iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux), Headless (Node.js).
 * Make it extensible with a plugin system. A plugin can extend both the runtime and the command line tools.
 * Ensure adding new backends is as easy as possible by keeping the API clean and platform independant. New backends/targets can be added via separate plugins without changing the framework itself.
 * Provide opinionated features out of the box (event system, observables, physics, data model...), but always try to make these optional.
