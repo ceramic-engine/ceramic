@@ -195,6 +195,15 @@ class Files {
 
         var isWindows = Sys.systemName() == 'Windows';
 
+        if (isWindows) {
+            var driveA = Path.normalize(absolutePath).substr(0, 2).toLowerCase();
+            var driveB = Path.normalize(relativeTo).substr(0, 2).toLowerCase();
+            if (driveA.charAt(1) == ':' && driveB.charAt(1) == ':' && driveA != driveB) {
+                // Path located on different drives, can't be relative
+                return absolutePath;
+            }
+        }
+
         var fromParts = Path.normalize(relativeTo).substr(isWindows ? 3 : 1).split('/');
         var toParts = Path.normalize(absolutePath).substr(isWindows ? 3 : 1).split('/');
 
