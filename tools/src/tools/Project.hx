@@ -566,6 +566,9 @@ class ProjectLoader {
                     interp.variables.set(defKey, val == null || val.trim() == '' ? true : val);
                 }
 
+                // Add os-specific defines
+                interp.variables.set('os_' + Sys.systemName().toLowerCase(), true);
+
                 // Add missing identifiers used in expression, if any
                 for (identifier in identifiers) {
                     if (!interp.variables.exists(identifier)) {
