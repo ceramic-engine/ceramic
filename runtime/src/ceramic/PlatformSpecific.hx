@@ -91,10 +91,10 @@ class PlatformSpecific {
 
         var assetsPrefix:String = ceramic.macros.DefinesMacro.getDefine('ceramic_assets_prefix');
         if (assetsPrefix != null) {
-            root += assetsPrefix;
+            root += '/' + assetsPrefix;
         }
 
-        var filePath = ceramic.Path.join([root, assetPath]);
+        var filePath = assetsPrefix != null ? root + assetPath : ceramic.Path.join([root, assetPath]);
         var fullPath = clay.Clay.app.assets.fullPath(filePath);
         var data = clay.Clay.app.io.loadData(fullPath, false);
         if (data != null)
