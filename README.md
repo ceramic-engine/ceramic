@@ -5,9 +5,12 @@
 
 ## ℹ️ More updates about ceramic soon
 
-Ceramic is _almost_ ready to be used by more developers. That said, it is advised to wait for a few more weeks: a **Getting Started** guide will be published soon and that will be the right time to try ceramic!
+Ceramic is _almost_ ready to be used by more developers.
 
-Meanwhile, you can already read an introduction article: [Discover ceramic, a cross-platform and open-source 2D framework](https://jeremyfa.com/what-is-ceramic-engine/).
+At the moment, it lacks a lot of documentation, but you can already read a few articles:
+- Start with the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://jeremyfa.com/what-is-ceramic-engine/)
+- Then, continue with the [Getting Started with ceramic](https://jeremyfa.com/getting-started-with-ceramic/) guide to create your first project.
+- Find some more info on the [Wiki Page](https://github.com/ceramic-engine/ceramic/wiki).
 
 ## Why ceramic?
 
@@ -29,7 +32,7 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 ## Getting started
 
-**Start with the [Setup guide](https://github.com/ceramic-engine/ceramic/wiki/Setup).**
+**Take a look at the [Wiki](https://github.com/ceramic-engine/ceramic/wiki).**
 
 ## Available backends
 
