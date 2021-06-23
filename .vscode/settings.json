@@ -1,0 +1,4 @@
+{
+    "haxe.executable": "tools/haxe",
+    "haxelib.executable": "tools/haxelib"
+}
