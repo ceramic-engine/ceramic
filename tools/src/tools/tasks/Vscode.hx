@@ -76,6 +76,9 @@ class Vscode extends tools.Task {
 
         }
 
+        var haxePath = Path.normalize(Path.join([context.ceramicToolsPath, 'haxe']));
+        var haxelibPath = Path.normalize(Path.join([context.ceramicToolsPath, 'haxelib']));
+
         // Save settings.json
         //
         var vscodeSettings = {
@@ -88,7 +91,9 @@ class Vscode extends tools.Task {
                 "**/node_modules": true,
                 "**/tmp": true,
                 "**/out": true
-            }
+            },
+            "haxe.executable": Files.getRelativePath(haxePath, cwd),
+            "haxelib.executable": Files.getRelativePath(haxelibPath, cwd)
         };
 
         // If settings already exist, just change haxe.configurations
