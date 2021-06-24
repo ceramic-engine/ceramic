@@ -149,7 +149,7 @@ jobs:
           sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
           sudo ln -s $NEKOPATH                      /usr/local/lib/neko
           sudo ln -s $NEKOPATH/libneko.dylib        /usr/local/lib/libneko.dylib
-          sudo ln -s $NEKOPATH/libneko.2.1.0.dylib  /usr/local/lib/libneko.2.1.0.dylib
+          sudo ln -s $NEKOPATH/libneko.2.3.0.dylib  /usr/local/lib/libneko.2.3.0.dylib
           sudo ln -s $NEKOPATH/libneko.2.dylib      /usr/local/lib/libneko.2.dylib
           set +x
           echo 'neko: '$(neko -version)
@@ -244,7 +244,7 @@ jobs:
           sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
           sudo ln -s $NEKOPATH                      /usr/local/lib/neko
           sudo ln -s $NEKOPATH/libneko.so           /usr/local/lib/libneko.so
-          sudo ln -s $NEKOPATH/libneko.so.2.2.0     /usr/local/lib/libneko.so.2.2.0
+          sudo ln -s $NEKOPATH/libneko.so.2.3.0     /usr/local/lib/libneko.so.2.3.0
           sudo ln -s $NEKOPATH/libneko.so.2         /usr/local/lib/libneko.so.2
           sudo ldconfig
           sudo ldconfig /usr/local/lib
