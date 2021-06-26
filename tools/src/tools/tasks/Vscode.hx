@@ -79,6 +79,12 @@ class Vscode extends tools.Task {
         var haxePath = Path.normalize(Path.join([context.ceramicToolsPath, 'haxe']));
         var haxelibPath = Path.normalize(Path.join([context.ceramicToolsPath, 'haxelib']));
 
+        // Required on windows
+        if (Sys.systemName() == 'Windows') {
+            haxePath += '.cmd';
+            haxelibPath += '.cmd';
+        }
+
         // Save settings.json
         //
         var vscodeSettings = {
