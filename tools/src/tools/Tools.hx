@@ -123,11 +123,9 @@ class Tools {
         context.tasks.set('info', new tools.tasks.Info());
         context.tasks.set('libs', new tools.tasks.Libs());
         context.tasks.set('hxml', new tools.tasks.Hxml());
-        context.tasks.set('module', new tools.tasks.Module());
+        //context.tasks.set('module', new tools.tasks.Module());
 
         context.tasks.set('font', new tools.tasks.Font());
-
-        context.tasks.set('tools zip', new tools.tasks.ZipTools());
 
         context.tasks.set('haxe server', new tools.tasks.HaxeServer());
 
@@ -136,8 +134,6 @@ class Tools {
         context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());
 
         context.tasks.set('ide info', new tools.tasks.IdeInfo());
-
-        context.tasks.set('lib export', new tools.tasks.haxelib.ExportLibrary());
 
         context.tasks.set('images export', new tools.tasks.images.ExportImages());
 
