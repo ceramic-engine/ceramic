@@ -65,7 +65,7 @@ while (pathParts.length > 0) {
     pathParts.pop();
 }
 
-// Give access to haxe, haxelib, neko commands from ceramic
+// Give access to haxe, haxelib, neko, node, npm commands from ceramic
 // Example: on Mac & Linux, you type `$(ceramic haxe) -version` to run haxe command and get haxe version
 if (process.argv.length == 3) {
     if (process.argv[2] == 'haxelib') {
@@ -78,6 +78,14 @@ if (process.argv.length == 3) {
     }
     if (process.argv[2] == 'neko') {
         process.stdout.write(path.join(__dirname, 'neko') + '\n');
+        process.exit(0);
+    }
+    if (process.argv[2] == 'node') {
+        process.stdout.write(path.join(__dirname, 'node') + '\n');
+        process.exit(0);
+    }
+    if (process.argv[2] == 'npm') {
+        process.stdout.write(path.join(__dirname, 'npm') + '\n');
         process.exit(0);
     }
 }
