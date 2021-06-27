@@ -1,11 +1,15 @@
 #!/bin/bash
 export PATH=${0%/*}':'$PATH
 if [ "$(uname)" == "Darwin" ]; then
-    export PATH=${0%/*}/git/haxe-binary/mac/neko':'$PATH
-    export PATH=${0%/*}/git/haxe-binary/mac/haxe':'$PATH
+    export HAXEPATH=${0%/*}/../git/haxe-binary/mac/haxe
+    export NEKOPATH=${0%/*}/../git/haxe-binary/mac/neko
+    export PATH=$HAXEPATH:$NEKOPATH:$PATH
+    export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
     "${0%/*}"/../git/haxe-binary/mac/neko/neko "$@"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    export PATH=${0%/*}/git/haxe-binary/linux/neko':'$PATH
-    export PATH=${0%/*}/git/haxe-binary/linux/haxe':'$PATH
+    export HAXEPATH=${0%/*}/../git/haxe-binary/linux/haxe
+    export NEKOPATH=${0%/*}/../git/haxe-binary/linux/neko
+    export PATH=$HAXEPATH:$NEKOPATH:$PATH
+    export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
     "${0%/*}"/../git/haxe-binary/linux/neko/neko "$@"
 fi
