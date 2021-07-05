@@ -31,8 +31,6 @@ class Tasks {
 
     public static function run(taskName:String):Void {
 
-        trace('RUN TASK $taskName');
-
         var clazz = Type.resolveClass('tasks.$taskName');
 
         if (clazz == null) {
