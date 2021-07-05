@@ -11,17 +11,25 @@ class StateMachineBase extends Entity implements Observable implements Component
 
     @:noCompletion @entity var rawEntity:ceramic.Entity;
 
-    /** When set to `true`, the state machine will stop calling `update()` on current state and related. */
+    /**
+     * When set to `true`, the state machine will stop calling `update()` on current state and related.
+     */
     public var paused:Bool = false;
 
-    /** When set to `true` (default). This state machine will be updated automatically.
-        If `false`, you'll need to call `update()` manually. */
+    /**
+     * When set to `true` (default). This state machine will be updated automatically.
+     * If `false`, you'll need to call `update()` manually.
+     */
     public var autoUpdate:Bool = true;
 
-    /** Is `true` if a state has been assigned, `false` otherwise. */
+    /**
+     * Is `true` if a state has been assigned, `false` otherwise.
+     */
     public var stateDefined(default,null):Bool = false;
 
-    /** Is `true` if a nextState has been assigned, `false` otherwise. */
+    /**
+     * Is `true` if a nextState has been assigned, `false` otherwise.
+     */
     public var nextStateDefined(default,null):Bool = false;
 
     var stateInstances:Map<String, State> = null;

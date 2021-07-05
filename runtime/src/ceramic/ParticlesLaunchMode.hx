@@ -6,10 +6,14 @@ package ceramic;
  */
 enum ParticlesLaunchMode {
 
-    /** Particles will use `launchAngle` and `speed` to be launched */
+    /**
+     * Particles will use `launchAngle` and `speed` to be launched
+     */
     CIRCLE;
 
-    /** Particles will use `velocityX` and `velocityY` to be launched */
+    /**
+     * Particles will use `velocityX` and `velocityY` to be launched
+     */
     SQUARE;
 
 }

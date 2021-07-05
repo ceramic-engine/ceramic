@@ -6,7 +6,9 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
-/** Utility to track a tree of entity objects and perform specific actions when some entities get untracked */
+/**
+ * Utility to track a tree of entity objects and perform specific actions when some entities get untracked
+ */
 class TrackEntities extends Entity implements Component {
 
 /// Properties
@@ -26,8 +28,10 @@ class TrackEntities extends Entity implements Component {
 
 /// Public API
 
-    /** Compute the whole object tree to see which entities are in it.
-        It will then be possible to compare the result with a previous scan and detect new and unused entities. */
+    /**
+     * Compute the whole object tree to see which entities are in it.
+     * It will then be possible to compare the result with a previous scan and detect new and unused entities.
+     */
     public function scan():Void {
 
         var prevEntityMap = entityMap;

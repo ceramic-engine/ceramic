@@ -23,8 +23,10 @@ class System extends Entity {
      */
     public var name:String = null;
 
-    /** When set to `true` (default). This system will be updated automatically.
-        If `false`, you'll need to call `earlyUpdate()` and `lateUpdate()` manually. */
+    /**
+     * When set to `true` (default). This system will be updated automatically.
+     * If `false`, you'll need to call `earlyUpdate()` and `lateUpdate()` manually.
+     */
     public var autoUpdate:Bool = true;
 
     /**

@@ -9,8 +9,10 @@ import sys.FileSystem;
 
 using StringTools;
 
-/** Runtime utilities to compute asset lists/names from raw (relative) file list.
-    Code is very similar to AssetsMacro, but for runtime execution, with any list of asset. */
+/**
+ * Runtime utilities to compute asset lists/names from raw (relative) file list.
+ * Code is very similar to AssetsMacro, but for runtime execution, with any list of asset.
+ */
 class RuntimeAssets {
 
     var allAssets:Array<String> = null;
@@ -210,7 +212,9 @@ class RuntimeAssets {
 
     }
 
-    /** Same as getLists(), but will transform Maps into JSON-encodable raw objects. */
+    /**
+     * Same as getLists(), but will transform Maps into JSON-encodable raw objects.
+     */
     public function getEncodableLists():{
         all: Array<String>,
         allDirs: Array<String>,

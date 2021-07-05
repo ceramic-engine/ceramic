@@ -5,7 +5,9 @@ import ceramic.Assert.*;
 
 using ceramic.Extensions;
 
-/** Draw anything composed of triangles/vertices. */
+/**
+ * Draw anything composed of triangles/vertices.
+ */
 @editable({
     highlight: {
         points: 'vertices'
@@ -51,13 +53,17 @@ class Mesh extends Visual {
 
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
-    /** The number of floats to add to fill float attributes in vertices array.
-        Default is zero: no custom attributes. Update this value when using shaders with custom attributes. */
+    /**
+     * The number of floats to add to fill float attributes in vertices array.
+     * Default is zero: no custom attributes. Update this value when using shaders with custom attributes.
+     */
     public var customFloatAttributesSize:Int = 0;
 
-    /** When set to `true` hit test on this mesh will be performed at vertices level instead
-        of simply using bounds. This make the test substancially more expensive however.
-        Use only when needed. */
+    /**
+     * When set to `true` hit test on this mesh will be performed at vertices level instead
+     * of simply using bounds. This make the test substancially more expensive however.
+     * Use only when needed.
+     */
     @editable
     public var complexHit:Bool = false;
 
@@ -82,7 +88,9 @@ class Mesh extends Visual {
 
 /// Color
 
-    /** On `Mesh` instances, can be used instead of colors array when the mesh is only composed of a single color. */
+    /**
+     * On `Mesh` instances, can be used instead of colors array when the mesh is only composed of a single color.
+     */
     @editable
     public var color(get,set):Color;
     inline function get_color():Color {
@@ -98,20 +106,28 @@ class Mesh extends Visual {
 
 /// Vertices
 
-    /** An array of floats where each pair of numbers is treated as a coordinate location (x,y) */
+    /**
+     * An array of floats where each pair of numbers is treated as a coordinate location (x,y)
+     */
     @editable
     public var vertices:Array<Float> = [];
 
-    /** An array of integers or indexes, where every three indexes define a triangle. */
+    /**
+     * An array of integers or indexes, where every three indexes define a triangle.
+     */
     @editable
     public var indices:Array<Int> = [];
 
-    /** An array of colors for each vertex. */
+    /**
+     * An array of colors for each vertex.
+     */
     public var colors:Array<AlphaColor> = [];
 
 /// Texture
 
-    /** The texture used on the mesh (optional) */
+    /**
+     * The texture used on the mesh (optional)
+     */
     @editable
     public var texture(default,set):Texture = null;
     #if !debug inline #end function set_texture(texture:Texture):Texture {
@@ -157,8 +173,10 @@ class Mesh extends Visual {
         return texture;
     }
 
-    /** An array of normalized coordinates used to apply texture mapping.
-        Required if the texture is set. */
+    /**
+     * An array of normalized coordinates used to apply texture mapping.
+     * Required if the texture is set.
+     */
     @editable
     public var uvs:Array<Float> = [];
 
@@ -248,7 +266,9 @@ class Mesh extends Visual {
 
 /// Helpers
 
-    /** Compute width and height from vertices */
+    /**
+     * Compute width and height from vertices
+     */
     public function computeSize() {
 
         if (vertices != null && vertices.length >= 2) {

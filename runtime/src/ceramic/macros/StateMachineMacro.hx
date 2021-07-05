@@ -22,7 +22,9 @@ class StateMachineMacro {
 
     static var stringStateMachineDefined:Bool = false;
 
-    /** Depending on the generic type parameter used, will return (and create, if needed) a specific implementation. */
+    /**
+     * Depending on the generic type parameter used, will return (and create, if needed) a specific implementation.
+     */
     macro static public function buildGeneric():ComplexType {
 
         var localType = Context.getLocalType();
@@ -541,9 +543,11 @@ class StateMachineMacro {
 
     }
 
-    /** Called on `StateMachinImpl` subclasses. Will generate code that will automatically
-        call `enter{State}()`, `update{State}(delta)` and `exit{State}()` from the enum definition.
-        Won't do anything on dynamic (String-based) implementation */
+    /**
+     * Called on `StateMachinImpl` subclasses. Will generate code that will automatically
+     * call `enter{State}()`, `update{State}(delta)` and `exit{State}()` from the enum definition.
+     * Won't do anything on dynamic (String-based) implementation
+     */
     static function buildFields():Array<Field> {
 
         var fields = Context.getBuildFields();

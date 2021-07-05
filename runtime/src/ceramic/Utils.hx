@@ -8,7 +8,9 @@ import ceramic.Shortcuts.*;
 using StringTools;
 using ceramic.Extensions;
 
-/** Various utilities. Some of them are used by ceramic itself or its backends. */
+/**
+ * Various utilities. Some of them are used by ceramic itself or its backends.
+ */
 class Utils {
 
     static var RE_ASCII_CHAR = ~/^[a-zA-Z0-9]$/;
@@ -40,8 +42,10 @@ class Utils {
     static var _uniqueIdMutex:sys.thread.Mutex = new sys.thread.Mutex();
     #end
 
-    /** Provides an identifier which is garanteed to be unique on this local device.
-        It however doesn't garantee that this identifier is not predictable. */
+    /**
+     * Provides an identifier which is garanteed to be unique on this local device.
+     * It however doesn't garantee that this identifier is not predictable.
+     */
     public static function uniqueId():String {
 
         #if (cpp || cs || sys)
@@ -70,8 +74,10 @@ class Utils {
 
     }
 
-    /** Provides a random identifier which should be fairly unpredictable and
-        should have an extremely low chance to provide the same identifier twice. */
+    /**
+     * Provides a random identifier which should be fairly unpredictable and
+     * should have an extremely low chance to provide the same identifier twice.
+     */
     public static function randomId(?size:Int = 32):String {
 
         var chars = [];
@@ -88,11 +94,13 @@ class Utils {
 
     static var _persistentIds:Map<Int,String> = null;
 
-    /** Return a persistent identifier for this device. The identifier is expected
-        to stay the same as long as the user keeps the app installed.
-        Multiple identifiers can be generated/retrieved by using different slots (default 0).
-        Size of the persistent identifier can be provided, but will only have effect when
-        generating a new identifier. */
+    /**
+     * Return a persistent identifier for this device. The identifier is expected
+     * to stay the same as long as the user keeps the app installed.
+     * Multiple identifiers can be generated/retrieved by using different slots (default 0).
+     * Size of the persistent identifier can be provided, but will only have effect when
+     * generating a new identifier.
+     */
     public static function persistentId(?slot:Int = 0, ?size:Int = 32):String {
 
         // Create map if needed
@@ -289,7 +297,9 @@ class Utils {
         }
     }
 
-    /** Clamp an degrees (angle) value between 0 (included) and 360 (excluded) */
+    /**
+     * Clamp an degrees (angle) value between 0 (included) and 360 (excluded)
+     */
     inline public static function clampDegrees(deg:Float):Float {
 
         // Clamp between 0-360
@@ -313,10 +323,10 @@ class Utils {
 
     }
 
-	/**
-	 * Java's String.hashCode() method implemented in Haxe.
-	 * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
-	 */
+    /**
+     * Java's String.hashCode() method implemented in Haxe.
+     * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
+     */
     inline public static function hashCode(s:String):Int {
         var hash = 0;
         if (s.length == 0) return hash;
@@ -327,11 +337,13 @@ class Utils {
         return hash;
     }
 
-    /** Generate an uniform list of the requested size,
-        containing values uniformly repartited from frequencies.
-        @param values the values to put in list
-        @param probabilities the corresponding probability for each value
-        @param size the size of the final list */
+    /**
+     * Generate an uniform list of the requested size,
+     * containing values uniformly repartited from frequencies.
+     * @param values the values to put in list
+     * @param probabilities the corresponding probability for each value
+     * @param size the size of the final list
+     */
     public static function uniformFrequencyList(values:Array<Int>, frequencies:Array<Float>, size:Int):Array<Int> {
 
         var list:Array<Int> = [];
@@ -372,7 +384,9 @@ class Utils {
 
     }
 
-    /** Transforms `SOME_IDENTIFIER` to `SomeIdentifier` */
+    /**
+     * Transforms `SOME_IDENTIFIER` to `SomeIdentifier`
+     */
     public static function upperCaseToCamelCase(input:String, firstLetterUppercase:Bool = true):String {
 
         var res = new StringBuf();
@@ -401,7 +415,9 @@ class Utils {
 
     }
 
-    /** Transforms `SomeIdentifier`/`someIdentifier`/`some identifier` to `SOME_IDENTIFIER` */
+    /**
+     * Transforms `SomeIdentifier`/`someIdentifier`/`some identifier` to `SOME_IDENTIFIER`
+     */
     public static function camelCaseToUpperCase(input:String, firstLetterUppercase:Bool = true):String {
 
         var res = new StringBuf();

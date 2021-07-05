@@ -40,23 +40,33 @@ class Sound extends Entity {
 
 /// Public API
 
-    /** Default volume when playing this sound. */
+    /**
+     * Default volume when playing this sound.
+     */
     public var volume:Float = 0.5;
 
-    /** Default pan when playing this sound. */
+    /**
+     * Default pan when playing this sound.
+     */
     public var pan:Float = 0;
 
-    /** Default pitch when playing this sound. */
+    /**
+     * Default pitch when playing this sound.
+     */
     public var pitch:Float = 1;
 
-    /** Sound duration. */
+    /**
+     * Sound duration.
+     */
     public var duration(get, never):Float;
     inline function get_duration():Float {
         return app.backend.audio.getDuration(backendItem);
     }
 
-    /** Play the sound at requested position. If volume/pan/pitch are not provided,
-        sound instance properties will be used instead. */
+    /**
+     * Play the sound at requested position. If volume/pan/pitch are not provided,
+     * sound instance properties will be used instead.
+     */
     public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float):SoundPlayer {
 
         var mixer = audio.mixers.getInline(group);

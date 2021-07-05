@@ -2,8 +2,10 @@ package ceramic;
 
 import haxe.ds.Vector;
 
-/** A reusable array to use in places that need a temporary array many times.
-    Changing array size only increases the backing array size but never decreases it. */
+/**
+ * A reusable array to use in places that need a temporary array many times.
+ * Changing array size only increases the backing array size but never decreases it.
+ */
 class ReusableArray<T> {
 
     @:noCompletion

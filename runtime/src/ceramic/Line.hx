@@ -4,7 +4,9 @@ import polyline.Stroke;
 
 using ceramic.Extensions;
 
-/** Display lines composed of multiple segments, curves... */
+/**
+ * Display lines composed of multiple segments, curves...
+ */
 @editable({
     implicitSize: true,
     highlight: {
@@ -18,9 +20,11 @@ class Line extends Mesh {
 
     static var _stroke:Stroke = new Stroke();
 
-    /** Line points.
-        Note: when editing array content without reassigning it,
-        `contentDirty` must be set to `true` to let the line being updated accordingly. */
+    /**
+     * Line points.
+     * Note: when editing array content without reassigning it,
+     * `contentDirty` must be set to `true` to let the line being updated accordingly.
+     */
     @editable
     public var points(default, set):Array<Float> = null;
     inline function set_points(points:Array<Float>):Array<Float> {
@@ -29,7 +33,9 @@ class Line extends Mesh {
         return points;
     }
 
-    /** The limit before miters turn into bevels. Default 10 */
+    /**
+     * The limit before miters turn into bevels. Default 10
+     */
     @editable
     public var miterLimit(default, set):Float = 10;
     inline function set_miterLimit(miterLimit:Float):Float {
@@ -39,7 +45,9 @@ class Line extends Mesh {
         return miterLimit;
     }
 
-    /** The line thickness */
+    /**
+     * The line thickness
+     */
     @editable({ slider: [1, 64] })
     public var thickness(default, set):Float = 1;
     inline function set_thickness(thickness:Float):Float {
@@ -49,7 +57,9 @@ class Line extends Mesh {
         return thickness;
     }
 
-    /** The join type, can be `MITER` or `BEVEL`. Default `BEVEL` */
+    /**
+     * The join type, can be `MITER` or `BEVEL`. Default `BEVEL`
+     */
     @editable
     public var join(default, set):LineJoin = BEVEL;
     inline function set_join(join:LineJoin):LineJoin {
@@ -59,7 +69,9 @@ class Line extends Mesh {
         return join;
     }
 
-    /** The cap type. Can be `BUTT` or `SQUARE`. Default `BUTT` */
+    /**
+     * The cap type. Can be `BUTT` or `SQUARE`. Default `BUTT`
+     */
     @editable
     public var cap(default, set):LineCap = BUTT;
     inline function set_cap(cap:LineCap):LineCap {
@@ -69,8 +81,10 @@ class Line extends Mesh {
         return cap;
     }
 
-    /** If `loop` is `true`, will try to join the first and last
-        points together if they are identical. Default `false` */
+    /**
+     * If `loop` is `true`, will try to join the first and last
+     * points together if they are identical. Default `false`
+     */
     @editable
     public var loop(default, set):Bool = false;
     inline function set_loop(loop:Bool):Bool {
@@ -80,7 +94,9 @@ class Line extends Mesh {
         return loop;
     }
 
-    /** If set to `true`, width and heigh will be computed from line points. */
+    /**
+     * If set to `true`, width and heigh will be computed from line points.
+     */
     @editable({ label: 'Auto Size' })
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {

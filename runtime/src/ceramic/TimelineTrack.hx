@@ -4,49 +4,73 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-/** A track meant to be updated by a timeline.
-    Base implementation doesn't do much by itself.
-    Create subclasses to implement details */
+/**
+ * A track meant to be updated by a timeline.
+ * Base implementation doesn't do much by itself.
+ * Create subclasses to implement details
+ */
 class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
-    /** Track size. Default `0`, meaning this track won't do anything.
-        By default, because `autoFitSize` is `true`, adding new keyframes to this
-        track will update `size` accordingly so it may not be needed to update `size` explicitly.
-        Setting `size` to `-1` means the track will never finish. */
+    /**
+     * Track size. Default `0`, meaning this track won't do anything.
+     * By default, because `autoFitSize` is `true`, adding new keyframes to this
+     * track will update `size` accordingly so it may not be needed to update `size` explicitly.
+     * Setting `size` to `-1` means the track will never finish.
+     */
     public var size:Int = 0;
 
-    /** If set to `true` (default), adding keyframes to this track will update
-        its size accordingly to match last keyframe time. */
+    /**
+     * If set to `true` (default), adding keyframes to this track will update
+     * its size accordingly to match last keyframe time.
+     */
     public var autoFitSize:Bool = true;
 
-    /** Whether this track should loop. Ignored if track's `size` is `-1` (not defined). */
+    /**
+     * Whether this track should loop. Ignored if track's `size` is `-1` (not defined).
+     */
     public var loop:Bool = false;
 
-    /** Whether this track is locked or not.
-        A locked track doesn't get updated by the timeline it is attached to, if any. */
+    /**
+     * Whether this track is locked or not.
+     * A locked track doesn't get updated by the timeline it is attached to, if any.
+     */
     public var locked:Bool = false;
 
-    /** Timeline on which this track is added to */
+    /**
+     * Timeline on which this track is added to
+     */
     @:allow(ceramic.Timeline)
     public var timeline(default, null):Timeline = null;
 
-    /** Position on this track.
-        Gets back to zero when `loop=true` and position reaches a defined `size`. */
+    /**
+     * Position on this track.
+     * Gets back to zero when `loop=true` and position reaches a defined `size`.
+     */
     public var position(default, null):Float = 0;
 
-    /** The key frames on this track. */
+    /**
+     * The key frames on this track.
+     */
     public var keyframes(default, null):ReadOnlyArray<K> = [];
 
-    /** The keyframe right before or equal to current time, if any. */
+    /**
+     * The keyframe right before or equal to current time, if any.
+     */
     public var before(default, null):K = null;
 
-    /** The keyframe right after current time, if any. */
+    /**
+     * The keyframe right after current time, if any.
+     */
     public var after(default, null):K = null;
 
-    /** The index of the last resolved `key index before`. Used internally. */
+    /**
+     * The index of the last resolved `key index before`. Used internally.
+     */
     private var keyframeBeforeIndex:Int = -1;
 
-    /** The index of the last resolved `key index after`. Used internally. */
+    /**
+     * The index of the last resolved `key index after`. Used internally.
+     */
     private var keyframeAfterIndex:Int = -1;
 
     public function new() {
@@ -65,8 +89,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Seek the given position (in frames) in the track.
-        Will take care of clamping `position` or looping it depending on `size` and `loop` properties. */
+    /**
+     * Seek the given position (in frames) in the track.
+     * Will take care of clamping `position` or looping it depending on `size` and `loop` properties.
+     */
     final public function seek(targetPosition:Float):Void {
 
         inlineSeek(targetPosition);
@@ -112,7 +138,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Add a keyframe to this track */
+    /**
+     * Add a keyframe to this track
+     */
     public function add(keyframe:K):Void {
 
         var mutableKeyframes:Array<TimelineKeyframe> = cast keyframes.original;
@@ -158,7 +186,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Remove a keyframe from this track */
+    /**
+     * Remove a keyframe from this track
+     */
     public function remove(keyframe:K):Void {
 
         var index = keyframes.indexOf(keyframe);
@@ -188,8 +218,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Update `size` property to make it fit
-        the index of the last keyframe on this track. */
+    /**
+     * Update `size` property to make it fit
+     * the index of the last keyframe on this track.
+     */
     public function fitSize():Void {
 
         if (keyframes.length > 0) {
@@ -201,7 +233,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Apply changes that this track is responsible of. Usually called after `update(delta)` or `seek(time)`. */
+    /**
+     * Apply changes that this track is responsible of. Usually called after `update(delta)` or `seek(time)`.
+     */
     public function apply(forceChange:Bool = false):Void {
 
         // Override in subclasses
@@ -218,7 +252,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Find the keyframe right before or equal to given `position` */
+    /**
+     * Find the keyframe right before or equal to given `position`
+     */
     public function findKeyframeBefore(position:Float):Null<K> {
 
         var result:K = null;
@@ -241,7 +277,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Find the keyframe right after given `position` */
+    /**
+     * Find the keyframe right after given `position`
+     */
     public function findKeyframeAfter(position:Float):Null<K> {
 
         var result:K = null;
@@ -264,7 +302,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Internal. Compute `before` keyframe, if any matching. */
+    /**
+     * Internal. Compute `before` keyframe, if any matching.
+     */
     inline function computeKeyframeBefore():Void {
         
         var result:K = null;
@@ -312,7 +352,9 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
-    /** Internal. Compute `after` keyframe, if any matching. */
+    /**
+     * Internal. Compute `after` keyframe, if any matching.
+     */
     inline function computeKeyframeAfter():Void {
         
         var result:K = null;

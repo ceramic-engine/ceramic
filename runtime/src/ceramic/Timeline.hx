@@ -21,20 +21,28 @@ class Timeline extends Entity implements Component {
      */
     @event function endLabel(index:Int, name:String);
 
-    /** Timeline size. Default `0`, meaning this timeline won't do anything.
-        By default, because `autoFitSize` is `true`, adding or updating tracks on this
-        timeline will update timeline `size` accordingly so it may not be needed to update `size` explicitly.
-        Setting `size` to `-1` means the timeline will never finish. */
+    /**
+     * Timeline size. Default `0`, meaning this timeline won't do anything.
+     * By default, because `autoFitSize` is `true`, adding or updating tracks on this
+     * timeline will update timeline `size` accordingly so it may not be needed to update `size` explicitly.
+     * Setting `size` to `-1` means the timeline will never finish.
+     */
     public var size:Int = 0;
 
-    /** If set to `true` (default), adding or updating tracks on this timeline will update
-        timeline size accordingly to match longest track size. */
+    /**
+     * If set to `true` (default), adding or updating tracks on this timeline will update
+     * timeline size accordingly to match longest track size.
+     */
     public var autoFitSize:Bool = true;
 
-    /** Whether this timeline should loop. Ignored if timeline's `size` is `-1` (not defined). */
+    /**
+     * Whether this timeline should loop. Ignored if timeline's `size` is `-1` (not defined).
+     */
     public var loop:Bool = true;
 
-    /** Whether this timeline should bind itself to update cycle automatically or not (default `true`). */
+    /**
+     * Whether this timeline should bind itself to update cycle automatically or not (default `true`).
+     */
     public var autoUpdate(default, set):Bool = true;
     function set_autoUpdate(autoUpdate:Bool):Bool {
         if (this.autoUpdate != autoUpdate) {
@@ -51,14 +59,20 @@ class Timeline extends Entity implements Component {
      **/
     public var fps:Int = 30;
 
-    /** Position on this timeline.
-        Gets back to zero when `loop=true` and position reaches a defined `size`. */
+    /**
+     * Position on this timeline.
+     * Gets back to zero when `loop=true` and position reaches a defined `size`.
+     */
     public var position(default, null):Float = 0;
 
-    /** The tracks updated by this timeline */
+    /**
+     * The tracks updated by this timeline
+     */
     public var tracks(default, null):ReadOnlyArray<TimelineTrack<TimelineKeyframe>> = [];
 
-    /** Whether this timeline is paused or not. */
+    /**
+     * Whether this timeline is paused or not.
+     */
     public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
@@ -128,8 +142,10 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Internal function to bind or update to app
-        update event depending on current settings */
+    /**
+     * Internal function to bind or update to app
+     * update event depending on current settings
+     */
     inline function bindOrUnbindUpdateIfNeeded():Void {
 
         app.offPreUpdate(update);
@@ -146,8 +162,10 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Seek the given position (in frames) in the timeline.
-        Will take care of clamping `position` or looping it depending on `size` and `loop` properties. */
+    /**
+     * Seek the given position (in frames) in the timeline.
+     * Will take care of clamping `position` or looping it depending on `size` and `loop` properties.
+     */
     final public function seek(targetPosition:Float):Void {
 
         inlineSeek(targetPosition);
@@ -244,7 +262,9 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Apply (or re-apply) every track of this timeline at the current position */
+    /**
+     * Apply (or re-apply) every track of this timeline at the current position
+     */
     final public function apply(forceChange:Bool = false):Void {
 
         inlineSeek(position, true, forceChange);
@@ -372,7 +392,9 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Add a track to this timeline */
+    /**
+     * Add a track to this timeline
+     */
     public function add(track:TimelineTrack<TimelineKeyframe>):Void {
 
         if (track.timeline != null) {
@@ -402,7 +424,9 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Remove a track from this timeline */
+    /**
+     * Remove a track from this timeline
+     */
     public function remove(track:TimelineTrack<TimelineKeyframe>):Void {
 
         if (track.timeline == this) {
@@ -416,8 +440,10 @@ class Timeline extends Entity implements Component {
 
     }
 
-    /** Update `size` property to make it fit
-        the size of the longuest track. */
+    /**
+     * Update `size` property to make it fit
+     * the size of the longuest track.
+     */
     public function fitSize():Void {
 
         var newSize = 0;

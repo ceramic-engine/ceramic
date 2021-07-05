@@ -2,22 +2,34 @@ package ceramic;
 
 typedef FragmentItem = {
 
-    /** Entity class (ex: ceramic.Visual, ceramic.Quad, ...). */
+    /**
+     * Entity class (ex: ceramic.Visual, ceramic.Quad, ...).
+     */
     var entity:String;
 
-    /** Entity identifier. */
+    /**
+     * Entity identifier.
+     */
     var id:String;
 
-    /** Entity components. */
+    /**
+     * Entity components.
+     */
     var components:Dynamic<String>;
 
-    /** Entity name. */
+    /**
+     * Entity name.
+     */
     @:optional var name:String;
 
-    /** Properties assigned after creating entity. */
+    /**
+     * Properties assigned after creating entity.
+     */
     var props:Dynamic<Dynamic>;
 
-    /** Arbitrary data hold by this item. */
+    /**
+     * Arbitrary data hold by this item.
+     */
     @:optional var data:Dynamic<Dynamic>;
 
 }

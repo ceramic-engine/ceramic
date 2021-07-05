@@ -75,8 +75,10 @@ class Scroller extends Visual {
 
 /// Fine tuning
 
-    /** When set to `true`, vertical mouse wheel event
-        will also work on horizontal scroller. */
+    /**
+     * When set to `true`, vertical mouse wheel event
+     * will also work on horizontal scroller.
+     */
     public var verticalToHorizontalWheel = false;
 
     public var deceleration = 300.0;

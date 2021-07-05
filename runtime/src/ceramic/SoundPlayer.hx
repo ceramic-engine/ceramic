@@ -4,28 +4,36 @@ import ceramic.App.app;
 
 abstract SoundPlayer(backend.AudioHandle) {
 
-    /** Pause the sound (for later resume). */
+    /**
+     * Pause the sound (for later resume).
+     */
     inline public function pause():Void {
 
         app.backend.audio.pause(this);
 
     }
 
-    /** Resume playing the sound. */
+    /**
+     * Resume playing the sound.
+     */
     inline public function resume():Void {
 
         app.backend.audio.resume(this);
 
     }
 
-    /** Stop the sound. */
+    /**
+     * Stop the sound.
+     */
     inline public function stop():Void {
 
         app.backend.audio.stop(this);
 
     }
 
-    /** The volume of the sound being played. */
+    /**
+     * The volume of the sound being played.
+     */
     public var volume(get,set):Float;
     inline function get_volume():Float {
         return app.backend.audio.getVolume(this);
@@ -35,7 +43,9 @@ abstract SoundPlayer(backend.AudioHandle) {
         return volume;
     }
 
-    /** The pan of the sound being played. */
+    /**
+     * The pan of the sound being played.
+     */
     public var pan(get,set):Float;
     inline function get_pan():Float {
         return app.backend.audio.getPan(this);
@@ -45,7 +55,9 @@ abstract SoundPlayer(backend.AudioHandle) {
         return pan;
     }
 
-    /** The pitch of the sound being played. */
+    /**
+     * The pitch of the sound being played.
+     */
     public var pitch(get,set):Float;
     inline function get_pitch():Float {
         return app.backend.audio.getPitch(this);
@@ -55,7 +67,9 @@ abstract SoundPlayer(backend.AudioHandle) {
         return pitch;
     }
 
-    /** The position (in seconds) of the sound being played. */
+    /**
+     * The position (in seconds) of the sound being played.
+     */
     public var position(get,set):Float;
     inline function get_position():Float {
         return app.backend.audio.getPosition(this);

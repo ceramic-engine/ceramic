@@ -20,8 +20,8 @@ class Errors {
             #end
         }
 
-		// Check if we have custom handler
-		var hasCustomHandler = app.listensCriticalError();
+        // Check if we have custom handler
+        var hasCustomHandler = app.listensCriticalError();
 
         // Get stack trace
         var stack = CallStack.exceptionStack();

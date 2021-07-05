@@ -2,7 +2,9 @@ package ceramic;
 
 #if (!documentation && cpp)
 
-/** A map that uses int as keys and booleans as values. */
+/**
+ * A map that uses int as keys and booleans as values.
+ */
 abstract IntBoolMap(IntIntMap) {
 
     public var size(get,never):Int;

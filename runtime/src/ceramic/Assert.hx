@@ -5,8 +5,10 @@ import haxe.macro.Expr;
 
 class Assert {
 
-    /** Assert the expression evaluates to `true`.
-        This check is only done in `debug` builds and doesn't affect `release` builds. */
+    /**
+     * Assert the expression evaluates to `true`.
+     * This check is only done in `debug` builds and doesn't affect `release` builds.
+     */
     macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
 
 #if (debug || ceramic_assert)

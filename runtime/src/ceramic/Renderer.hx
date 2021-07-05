@@ -4,8 +4,10 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-/** An implementation-independant GPU 2D renderer.
-    To be used in pair with a draw backend implementation. */
+/**
+ * An implementation-independant GPU 2D renderer.
+ * To be used in pair with a draw backend implementation.
+ */
 class Renderer extends Entity {
 
 #if !ceramic_render_no_indice

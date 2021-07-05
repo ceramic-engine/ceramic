@@ -15,7 +15,9 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
-/** Filesystem-related utilities. Only work on sys targets and/or nodejs depending on the methods */
+/**
+ * Filesystem-related utilities. Only work on sys targets and/or nodejs depending on the methods
+ */
 class Files {
 
     public static function haveSameContent(filePath1:String, filePath2:String):Bool {
@@ -79,7 +81,9 @@ class Files {
 
     }
 
-    /** Only works in nodejs for now. */
+    /**
+     * Only works in nodejs for now.
+     */
     public static function setToSameLastModified(srcFilePath:String, dstFilePath:String):Void {
 
         #if (node || nodejs || hxnodejs)

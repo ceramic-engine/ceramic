@@ -37,15 +37,17 @@ abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
     @:noCompletion @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
 
-    /** Returns the underlying (and mutable) data. Use at your own risk! */
+    /**
+     * Returns the underlying (and mutable) data. Use at your own risk!
+     */
     public var original(get,never):Array<T>;
     inline private function get_original():Array<T> return this;
 
-	/**
-		The length of `this` Array.
-	**/
-	public var length(get, never):Int;
-	inline function get_length()
+    /**
+        The length of `this` Array.
+    **/
+    public var length(get, never):Int;
+    inline function get_length()
         return this.length;
 
 /// Array extensions

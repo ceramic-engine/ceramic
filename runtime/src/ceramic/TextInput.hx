@@ -476,7 +476,9 @@ class TextInput implements Events {
 
 /// Helpers
 
-    /** Get the position in the current line, from the given global position in text */
+    /**
+     * Get the position in the current line, from the given global position in text
+     */
     function posInCurrentLine(globalPos:Int):Int {
 
         if (delegate != null) return delegate.textInputPosInLineForIndex(globalPos);
@@ -498,7 +500,9 @@ class TextInput implements Events {
 
     }
 
-    /** Get the current line (starts from 0) from the given global position in text */
+    /**
+     * Get the current line (starts from 0) from the given global position in text
+     */
     function lineForPos(globalPos:Int):Int {
 
         if (delegate != null) return delegate.textInputLineForIndex(globalPos);

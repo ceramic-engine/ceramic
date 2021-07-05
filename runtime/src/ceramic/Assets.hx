@@ -35,7 +35,9 @@ class Assets extends Entity {
 
     var assetsByKindAndName:Map<String,Map<String,Asset>> = new Map();
 
-    /** If set, will be provided to each added asset in this `Assets` instance. */
+    /**
+     * If set, will be provided to each added asset in this `Assets` instance.
+     */
     public var runtimeAssets:RuntimeAssets = null;
 
     public var defaultImageOptions:AssetOptions = null;
@@ -75,7 +77,9 @@ class Assets extends Entity {
 
     }
 
-    /** Destroy assets that have their refCount at `0`. */
+    /**
+     * Destroy assets that have their refCount at `0`.
+     */
     public function flush() {
 
         for (asset in [].concat(addedAssets)) {
@@ -305,7 +309,9 @@ class Assets extends Entity {
 
     }
 
-    /** Add the given asset. If a previous asset was replaced, return it. */
+    /**
+     * Add the given asset. If a previous asset was replaced, return it.
+     */
     public function addAsset(asset:Asset):Asset {
 
         if (!assetsByKindAndName.exists(asset.kind)) assetsByKindAndName.set(asset.kind, new Map());
@@ -531,10 +537,12 @@ class Assets extends Entity {
 
 /// Ensure
 
-    /** Ensures and asset is loaded and return it on the callback.
-        This will check if the requested asset is currently being loaded,
-        already loaded or should be added and loaded. In all cases, it will try
-        its best to deliver the requested asset or `null` if something went wrong. */
+    /**
+     * Ensures and asset is loaded and return it on the callback.
+     * This will check if the requested asset is currently being loaded,
+     * already loaded or should be added and loaded. In all cases, it will try
+     * its best to deliver the requested asset or `null` if something went wrong.
+     */
     public function ensure(id:AssetId<Dynamic>, ?options:AssetOptions, done:Asset->Void):Void {
 
         // Asset already added?

@@ -5,7 +5,9 @@ import haxe.macro.Expr;
 
 class Enums {
 
-    /** Returns true if the given enum value has its name equal to the given name */
+    /**
+     * Returns true if the given enum value has its name equal to the given name
+     */
     macro public static function isEnumWithName<T>(valueExpr:ExprOf<Enum<T>>, nameExpr:Expr) {
 
         //var valueStr = haxe.macro.ExprTools.toString(valueExpr);

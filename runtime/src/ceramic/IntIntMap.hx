@@ -6,7 +6,9 @@ import ceramic.Assert.assert;
 
 import haxe.ds.Vector;
 
-/** Port of https://github.com/mikvor/hashmapTest/blob/55669a0c3ee1f9c2525580e4ace06e910d5972ec/src/main/java/map/intint/IntIntMap4a.java to haxe */
+/**
+ * Port of https://github.com/mikvor/hashmapTest/blob/55669a0c3ee1f9c2525580e4ace06e910d5972ec/src/main/java/map/intint/IntIntMap4a.java to haxe
+ */
 class IntIntMap {
 
     static inline var INT_PHI = 0x9E3779B9;
@@ -15,28 +17,46 @@ class IntIntMap {
 
     static inline var NO_VALUE = 0;
 
-    /** Keys and values */
+    /**
+     * Keys and values
+     */
     var data:Vector<Int>;
 
-    /** Do we have `free` key in the map? */
+    /**
+     * Do we have `free` key in the map?
+     */
     var hasFreeKey:Bool;
-    /** Value of `free` key */
+    /**
+     * Value of `free` key
+     */
     var freeValue:Int;
 
-    /** Fill factor, must be between 0 (excluded) and 1 (excluded) */
+    /**
+     * Fill factor, must be between 0 (excluded) and 1 (excluded)
+     */
     var fillFactor:Float;
-    /** We will resize a map once it reaches this size */
+    /**
+     * We will resize a map once it reaches this size
+     */
     var threshold:Int;
-    /** Current map size */
+    /**
+     * Current map size
+     */
     public var size(default,null):Int;
 
-    /** When this map is marked as iterable, this array will contain every key. */
+    /**
+     * When this map is marked as iterable, this array will contain every key.
+     */
     public var iterableKeys(default,null):Array<Int> = null;
     var iterableKeysUsed:IntBoolMap = null;
 
-    /** Mask to calculate the original position */
+    /**
+     * Mask to calculate the original position
+     */
     var mask:Int;
-    /** Mask to calculate the original position */
+    /**
+     * Mask to calculate the original position
+     */
     var mask2:Int;
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
@@ -381,7 +401,9 @@ class IntIntMap {
 
 /// Tools
 
-    /** Return the least power of two greater than or equal to the specified value. */
+    /**
+     * Return the least power of two greater than or equal to the specified value.
+     */
     inline static function nextPowerOfTwo(x:Int):Int {
 
         var result = 1;
@@ -398,21 +420,23 @@ class IntIntMap {
 
     }
 
-    /** Returns the least power of two smaller than or equal to 2^30 and larger than or equal to ```Math.ceil(expected / fillFactor)``` **/
+    /**
+     * Returns the least power of two smaller than or equal to 2^30 and larger than or equal to ```Math.ceil(expected / fillFactor)```
+     */
     inline static function arraySize(expected:Int, fillFactor:Float):Int {
 
-   		var s = Math.max(2, nextPowerOfTwo(Math.ceil(expected / fillFactor)));
-   		assert(s <= (1 << 30), "array size too large (" + expected + " expected elements with fill factor " + fillFactor + ")");
-   		return Std.int(s);
+           var s = Math.max(2, nextPowerOfTwo(Math.ceil(expected / fillFactor)));
+           assert(s <= (1 << 30), "array size too large (" + expected + " expected elements with fill factor " + fillFactor + ")");
+           return Std.int(s);
 
     }
 
     inline static function phiMix(x:Int):Int {
 
-   		var h = x * INT_PHI;
-   		return h ^ (h >> 16);
+           var h = x * INT_PHI;
+           return h ^ (h >> 16);
 
-   	}
+       }
 
 }
 

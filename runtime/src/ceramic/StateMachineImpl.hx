@@ -3,11 +3,15 @@ package ceramic;
 #if (!completion && !display && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
 class StateMachineImpl<T> extends StateMachineBase {
 
-    /** The current state */
+    /**
+     * The current state
+     */
     @observe public var state(default,set):T = StateMachineBase.NO_STATE;
 
-    /** When transitioning from one state to another,
-        this will be set to the next incoming state */
+    /**
+     * When transitioning from one state to another,
+     * this will be set to the next incoming state
+     */
     public var nextState(default,null):T = StateMachineBase.NO_STATE;
 
     function set_state(state:T):T {

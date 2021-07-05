@@ -21,7 +21,9 @@ class Entity implements Events implements Lazy {
 /// Statics
 
     #if (!macro && !display && !completion)
-    /** Field info */
+    /**
+     * Field info
+     */
     @:noCompletion public static var _fieldInfo(default, null) = {
         components: {
             editable: [],
@@ -58,11 +60,12 @@ class Entity implements Events implements Lazy {
 
     public var id:String = null;
 
-    /** Internal flag to keep track of current entity state:
-     - 0: Entity is not destroyed, can be used normally
-     - -1: Entity is marked destroyed still allowing calls to super.destroy()
-     - -2: Entity is marked destroyed and additional calls to destroy() are ignored
-     - -3: Entity root is destroyed (Entity.destroy() was called). Additional calls to destroy() are ignored
+    /**
+     * Internal flag to keep track of current entity state:
+     *  - 0: Entity is not destroyed, can be used normally
+     *  - -1: Entity is marked destroyed still allowing calls to super.destroy()
+     *  - -2: Entity is marked destroyed and additional calls to destroy() are ignored
+     *  - -3: Entity root is destroyed (Entity.destroy() was called). Additional calls to destroy() are ignored
      */
     @:noCompletion var _lifecycleState:Int = 0;
 
@@ -152,7 +155,9 @@ class Entity implements Events implements Lazy {
 
 /// Lifecycle
 
-    /** Create a new entity */
+    /**
+     * Create a new entity
+     */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         // Default implementation
@@ -301,11 +306,13 @@ class Entity implements Events implements Lazy {
     }
     #end
 
-    /** Destroy this entity. This method is automatically protected from duplicate calls. That means
-        calling multiple times an entity's `destroy()` method will run the destroy code only one time.
-        As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
-        method on a subclass (a macro is inserting a code to marke the object
-        as destroyed at the beginning of every `destroy()` override function. */
+    /**
+     * Destroy this entity. This method is automatically protected from duplicate calls. That means
+     * calling multiple times an entity's `destroy()` method will run the destroy code only one time.
+     * As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
+     * method on a subclass (a macro is inserting a code to marke the object
+     * as destroyed at the beginning of every `destroy()` override function.
+     */
     public function destroy():Void {
 
         if (_lifecycleState <= -2) return;
@@ -363,7 +370,9 @@ class Entity implements Events implements Lazy {
 
     }
 
-    /** Remove all events handlers from this entity. */
+    /**
+     * Remove all events handlers from this entity.
+     */
     public function unbindEvents():Void {
 
         // Events macro will automatically fill this method
@@ -375,9 +384,11 @@ class Entity implements Events implements Lazy {
 
     public var autoruns(default, null):Array<Autorun> = null;
 
-    /** Creates a new `Autorun` instance with the given callback associated with the current entity.
-        @param run The run callback
-        @return The autorun instance */
+    /**
+     * Creates a new `Autorun` instance with the given callback associated with the current entity.
+     * @param run The run callback
+     * @return The autorun instance
+     */
     public function autorun(run:Void->Void, ?afterRun:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
         /*
         if (destroyed) return null;
@@ -509,8 +520,10 @@ class Entity implements Events implements Lazy {
 
     }
 
-    /** Public components mapping. Contain components
-        created separately with `component()` or macro-based components as well. */
+    /**
+     * Public components mapping. Contain components
+     * created separately with `component()` or macro-based components as well.
+     */
     @editable
     public var components(get,set):ReadOnlyMap<String,Component>;
     #if !haxe_server inline #end function get_components():ReadOnlyMap<String,Component> {
@@ -554,7 +567,9 @@ class Entity implements Events implements Lazy {
         return components;
     }
 
-    /** Internal components representation. */
+    /**
+     * Internal components representation.
+     */
     @:noCompletion var _components:Map<String,Component> = null;
 
     public function component(?name:String, ?component:Component):Component {
@@ -632,7 +647,9 @@ class Entity implements Events implements Lazy {
 
 #if editor
 
-    /** If set to true, that means this entity is managed by editor. */
+    /**
+     * If set to true, that means this entity is managed by editor.
+     */
     public var edited:Bool = false;
 
 #end

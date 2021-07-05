@@ -76,7 +76,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Arcade physics
 
-    /** The arcade physics body bound to this visual. */
+    /**
+     * The arcade physics body bound to this visual.
+     */
     public var arcade(default,set):VisualArcadePhysics = null;
     function set_arcade(arcade:VisualArcadePhysics):VisualArcadePhysics {
         if (this.arcade == arcade) return arcade;
@@ -90,7 +92,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return arcade;
     }
 
-    /** Init arcade physics (body) bound to this visual. */
+    /**
+     * Init arcade physics (body) bound to this visual.
+     */
     public function initArcadePhysics(?world:ArcadeWorld):VisualArcadePhysics {
 
         if (arcade != null) {
@@ -121,13 +125,17 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     #if !ceramic_no_arcade_shortcuts
 
-    /** The arcade physics body linked to this visual */
+    /**
+     * The arcade physics body linked to this visual
+     */
     public var body(get,never):arcade.Body;
     inline function get_body():arcade.Body {
         return arcade != null ? arcade.body : null;
     }
 
-    /** Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc... */
+    /**
+     * Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc...
+     */
     public var allowRotation(get,set):Bool;
     inline function get_allowRotation():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowRotation : true;
@@ -138,7 +146,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return allowRotation;
     }
 
-    /** An immovable visual will not receive any impacts from other visual bodies. **Two** immovable visuas can't separate or exchange momentum and will pass through each other. */
+    /**
+     * An immovable visual will not receive any impacts from other visual bodies. **Two** immovable visuas can't separate or exchange momentum and will pass through each other.
+     */
     public var immovable(get,set):Bool;
     inline function get_immovable():Bool {
         return arcade != null && arcade.body != null ? arcade.body.immovable : false;
@@ -149,7 +159,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return immovable;
     }
 
-    /** If set to `true`, arcade world will always separate on the X axis before Y when this body is involved. Otherwise it will check gravity totals first. */
+    /**
+     * If set to `true`, arcade world will always separate on the X axis before Y when this body is involved. Otherwise it will check gravity totals first.
+     */
     public var forceX(get,set):Bool;
     inline function get_forceX():Bool {
         return arcade != null && arcade.body != null ? arcade.body.forceX : false;
@@ -160,7 +172,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return forceX;
     }
 
-    /** The x velocity, or rate of change the visual position. Measured in points per second. */
+    /**
+     * The x velocity, or rate of change the visual position. Measured in points per second.
+     */
     public var velocityX(get,set):Float;
     inline function get_velocityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.velocityX : 0;
@@ -171,7 +185,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return velocityX;
     }
 
-    /** The y velocity, or rate of change the visual position. Measured in points per second. */
+    /**
+     * The y velocity, or rate of change the visual position. Measured in points per second.
+     */
     public var velocityY(get,set):Float;
     inline function get_velocityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.velocityY : 0;
@@ -182,7 +198,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return velocityY;
     }
 
-    /** The velocity, or rate of change the visual position. Measured in points per second. */
+    /**
+     * The velocity, or rate of change the visual position. Measured in points per second.
+     */
     inline public function velocity(velocityX:Float, velocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -191,7 +209,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** The maximum x velocity that the visual can reach. */
+    /**
+     * The maximum x velocity that the visual can reach.
+     */
     public var maxVelocityX(get,set):Float;
     inline function get_maxVelocityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxVelocityX : 10000;
@@ -202,7 +222,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return maxVelocityX;
     }
 
-    /** The maximum y velocity that the visual can reach. */
+    /**
+     * The maximum y velocity that the visual can reach.
+     */
     public var maxVelocityY(get,set):Float;
     inline function get_maxVelocityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxVelocityY : 10000;
@@ -213,7 +235,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return maxVelocityY;
     }
 
-    /** The maximum velocity that the visual can reach. */
+    /**
+     * The maximum velocity that the visual can reach.
+     */
     inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -222,7 +246,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** The x acceleration is the rate of change of the x velocity. Measured in points per second squared. */
+    /**
+     * The x acceleration is the rate of change of the x velocity. Measured in points per second squared.
+     */
     public var accelerationX(get,set):Float;
     inline function get_accelerationX():Float {
         return arcade != null && arcade.body != null ? arcade.body.accelerationX : 0;
@@ -233,7 +259,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return accelerationX;
     }
 
-    /** The y acceleration is the rate of change of the y velocity. Measured in points per second squared. */
+    /**
+     * The y acceleration is the rate of change of the y velocity. Measured in points per second squared.
+     */
     public var accelerationY(get,set):Float;
     inline function get_accelerationY():Float {
         return arcade != null && arcade.body != null ? arcade.body.accelerationY : 0;
@@ -244,7 +272,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return accelerationY;
     }
 
-    /** The acceleration is the rate of change of the y velocity. Measured in points per second squared. */
+    /**
+     * The acceleration is the rate of change of the y velocity. Measured in points per second squared.
+     */
     inline public function acceleration(accelerationX:Float, accelerationY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -253,7 +283,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** Allow this visual to be influenced by drag */
+    /**
+     * Allow this visual to be influenced by drag
+     */
     public var allowDrag(get,set):Bool;
     inline function get_allowDrag():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowDrag : true;
@@ -264,7 +296,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return allowDrag;
     }
 
-    /** The x drag is the rate of reduction of the x velocity, kind of deceleration. Measured in points per second squared. */
+    /**
+     * The x drag is the rate of reduction of the x velocity, kind of deceleration. Measured in points per second squared.
+     */
     public var dragX(get,set):Float;
     inline function get_dragX():Float {
         return arcade != null && arcade.body != null ? arcade.body.dragX : 0;
@@ -275,7 +309,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return dragX;
     }
 
-    /** The y drag is the rate of reduction of the y velocity, kind of deceleration. Measured in points per second squared. */
+    /**
+     * The y drag is the rate of reduction of the y velocity, kind of deceleration. Measured in points per second squared.
+     */
     public var dragY(get,set):Float;
     inline function get_dragY():Float {
         return arcade != null && arcade.body != null ? arcade.body.dragY : 0;
@@ -286,7 +322,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return dragY;
     }
 
-    /** The drag is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared. */
+    /**
+     * The drag is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared.
+     */
     inline public function drag(dragX:Float, dragY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -295,7 +333,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** The x elasticity of the visual when colliding. `bounceX = 1` means full rebound, `bounceX = 0.5` means 50% rebound velocity. */
+    /**
+     * The x elasticity of the visual when colliding. `bounceX = 1` means full rebound, `bounceX = 0.5` means 50% rebound velocity.
+     */
     public var bounceX(get,set):Float;
     inline function get_bounceX():Float {
         return arcade != null && arcade.body != null ? arcade.body.bounceX : 0;
@@ -306,7 +346,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return bounceX;
     }
 
-    /** The y elasticity of the visual when colliding. `bounceY = 1` means full rebound, `bounceY = 0.5` means 50% rebound velocity. */
+    /**
+     * The y elasticity of the visual when colliding. `bounceY = 1` means full rebound, `bounceY = 0.5` means 50% rebound velocity.
+     */
     public var bounceY(get,set):Float;
     inline function get_bounceY():Float {
         return arcade != null && arcade.body != null ? arcade.body.bounceY : 0;
@@ -317,7 +359,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return bounceY;
     }
 
-    /** The elasticity of the visual when colliding. `1` means full rebound, `0.5` means 50% rebound velocity. */
+    /**
+     * The elasticity of the visual when colliding. `1` means full rebound, `0.5` means 50% rebound velocity.
+     */
     inline public function bounce(bounceX:Float, bounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -326,8 +370,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** Enable or disable world bounds specific bounce value with `worldBounceX` and `worldBounceY`.
-        Disabled by default, meaning `bounceX` and `bounceY` are used by default. */
+    /**
+     * Enable or disable world bounds specific bounce value with `worldBounceX` and `worldBounceY`.
+     * Disabled by default, meaning `bounceX` and `bounceY` are used by default.
+     */
     public var useWorldBounce(get,set):Bool;
     inline function get_useWorldBounce():Bool {
         return arcade != null && arcade.body != null ? arcade.body.useWorldBounce : false;
@@ -338,7 +384,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return useWorldBounce;
     }
 
-    /** The x elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceX` used instead). */
+    /**
+     * The x elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceX` used instead).
+     */
     public var worldBounceX(get,set):Float;
     inline function get_worldBounceX():Float {
         return arcade != null && arcade.body != null ? arcade.body.worldBounceX : 0;
@@ -349,7 +397,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return worldBounceX;
     }
 
-    /** The y elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead). */
+    /**
+     * The y elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead).
+     */
     public var worldBounceY(get,set):Float;
     inline function get_worldBounceY():Float {
         return arcade != null && arcade.body != null ? arcade.body.worldBounceY : 0;
@@ -360,7 +410,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return worldBounceY;
     }
 
-    /** The elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead). */
+    /**
+     * The elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead).
+     */
     inline public function worldBounce(worldBounceX:Float, worldBounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -369,7 +421,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** The maximum x delta per frame. `0` (default) means no maximum delta. */
+    /**
+     * The maximum x delta per frame. `0` (default) means no maximum delta.
+     */
     public var maxDeltaX(get,set):Float;
     inline function get_maxDeltaX():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxDeltaX : 0;
@@ -380,7 +434,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return maxDeltaX;
     }
 
-    /** The maximum y delta per frame. `0` (default) means no maximum delta. */
+    /**
+     * The maximum y delta per frame. `0` (default) means no maximum delta.
+     */
     public var maxDeltaY(get,set):Float;
     inline function get_maxDeltaY():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxDeltaY : 0;
@@ -391,7 +447,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return maxDeltaY;
     }
 
-    /** The maxDelta, or rate of change the visual position. Measured in points per second. */
+    /**
+     * The maxDelta, or rate of change the visual position. Measured in points per second.
+     */
     inline public function maxDelta(maxDeltaX:Float, maxDeltaY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -400,7 +458,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** Allow this visual to be influenced by gravity, either world or local. */
+    /**
+     * Allow this visual to be influenced by gravity, either world or local.
+     */
     public var allowGravity(get,set):Bool;
     inline function get_allowGravity():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowGravity : false;
@@ -411,7 +471,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return allowGravity;
     }
 
-    /** This visual's local y gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
+    /**
+     * This visual's local y gravity, **added** to any world gravity, unless `allowGravity` is set to false.
+     */
     public var gravityX(get,set):Float;
     inline function get_gravityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.gravityX : 0;
@@ -422,7 +484,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return gravityX;
     }
 
-    /** This visual's local x gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
+    /**
+     * This visual's local x gravity, **added** to any world gravity, unless `allowGravity` is set to false.
+     */
     public var gravityY(get,set):Float;
     inline function get_gravityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.gravityY : 0;
@@ -433,7 +497,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return gravityY;
     }
 
-    /** This visual's local gravity, **added** to any world gravity, unless `allowGravity` is set to false. */
+    /**
+     * This visual's local gravity, **added** to any world gravity, unless `allowGravity` is set to false.
+     */
     inline public function gravity(gravityX:Float, gravityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -442,7 +508,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x axis. */
+    /**
+     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x axis.
+     */
     public var frictionX(get,set):Float;
     inline function get_frictionX():Float {
         return arcade != null && arcade.body != null ? arcade.body.frictionX : 1;
@@ -453,7 +521,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return frictionX;
     }
 
-    /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on y axis. */
+    /**
+     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on y axis.
+     */
     public var frictionY(get,set):Float;
     inline function get_frictionY():Float {
         return arcade != null && arcade.body != null ? arcade.body.frictionY : 0;
@@ -464,7 +534,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return frictionY;
     }
 
-    /** If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x & y axis. */
+    /**
+     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x & y axis.
+     */
     inline public function friction(frictionX:Float, frictionY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -473,7 +545,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
     }
 
-    /** The angular velocity is the rate of change of the visual's rotation. It is measured in degrees per second. */
+    /**
+     * The angular velocity is the rate of change of the visual's rotation. It is measured in degrees per second.
+     */
     public var angularVelocity(get,set):Float;
     inline function get_angularVelocity():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularVelocity : 0;
@@ -484,7 +558,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return angularVelocity;
     }
 
-    /** The maximum angular velocity in degrees per second that the visual can reach. */
+    /**
+     * The maximum angular velocity in degrees per second that the visual can reach.
+     */
     public var maxAngularVelocity(get,set):Float;
     inline function get_maxAngularVelocity():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxAngularVelocity : 1000;
@@ -495,7 +571,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return maxAngularVelocity;
     }
 
-    /** The angular acceleration is the rate of change of the angular velocity. Measured in degrees per second squared. */
+    /**
+     * The angular acceleration is the rate of change of the angular velocity. Measured in degrees per second squared.
+     */
     public var angularAcceleration(get,set):Float;
     inline function get_angularAcceleration():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularAcceleration : 0;
@@ -506,7 +584,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return angularAcceleration;
     }
 
-    /** The angular drag is the rate of reduction of the angular velocity. Measured in degrees per second squared. */
+    /**
+     * The angular drag is the rate of reduction of the angular velocity. Measured in degrees per second squared.
+     */
     public var angularDrag(get,set):Float;
     inline function get_angularDrag():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularDrag : 0;
@@ -517,7 +597,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return angularDrag;
     }
 
-    /** The mass of the visual's body. When two bodies collide their mass is used in the calculation to determine the exchange of velocity. */
+    /**
+     * The mass of the visual's body. When two bodies collide their mass is used in the calculation to determine the exchange of velocity.
+     */
     public var mass(get,set):Float;
     inline function get_mass():Float {
         return arcade != null && arcade.body != null ? arcade.body.mass : 1;
@@ -528,13 +610,17 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return mass;
     }
 
-    /** The speed of the visual's body (read only). Equal to the magnitude of the velocity. */
+    /**
+     * The speed of the visual's body (read only). Equal to the magnitude of the velocity.
+     */
     public var speed(get,never):Float;
     inline function get_speed():Float {
         return arcade != null && arcade.body != null ? arcade.body.speed : 0;
     }
 
-    /** Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, drag, and gravity. */
+    /**
+     * Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, drag, and gravity.
+     */
     public var moves(get,set):Bool;
     inline function get_moves():Bool {
         return arcade != null && arcade.body != null ? arcade.body.moves : false;
@@ -545,25 +631,33 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return moves;
     }
 
-    /** When this visual's body collides with another, the amount of overlap (x axis) is stored here. */
+    /**
+     * When this visual's body collides with another, the amount of overlap (x axis) is stored here.
+     */
     public var overlapX(get,never):Float;
     inline function get_overlapX():Float {
         return arcade != null && arcade.body != null ? arcade.body.overlapX : 1;
     }
 
-    /** When this visual's body collides with another, the amount of overlap (y axis) is stored here. */
+    /**
+     * When this visual's body collides with another, the amount of overlap (y axis) is stored here.
+     */
     public var overlapY(get,never):Float;
     inline function get_overlapY():Float {
         return arcade != null && arcade.body != null ? arcade.body.overlapY : 0;
     }
     
-    /** If a visual's body is overlapping with another body, but neither of them are moving (maybe they spawned on-top of each other?) this is set to `true`. */
+    /**
+     * If a visual's body is overlapping with another body, but neither of them are moving (maybe they spawned on-top of each other?) this is set to `true`.
+     */
     public var embedded(get,never):Bool;
     inline function get_embedded():Bool {
         return arcade != null && arcade.body != null ? arcade.body.embedded : false;
     }
     
-    /** A visual body can be set to collide against the world bounds automatically and rebound back into the world if this is set to true. Otherwise it will leave the world. */
+    /**
+     * A visual body can be set to collide against the world bounds automatically and rebound back into the world if this is set to true. Otherwise it will leave the world.
+     */
     public var collideWorldBounds(get,never):Bool;
     inline function get_collideWorldBounds():Bool {
         return arcade != null && arcade.body != null ? arcade.body.collideWorldBounds : false;
@@ -576,139 +670,189 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     #if documentation
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     @event function collide(visual1:Visual, visual2:Visual);
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     @event function overlap(visual1:Visual, visual2:Visual);
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     @event function collideBody(visual:Visual, body:arcade.Body);
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     @event function overlapBody(visual:Visual, body:arcade.Body);
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     @event function worldBounds(visual:Visual, up:Bool, down:Bool, left:Bool, right:Bool);
 
     #else
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     inline public function onCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollide(owner, handleVisual1Visual2);
     }
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     inline public function onceCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollide(owner, handleVisual1Visual2);
     }
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     inline public function offCollide(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offCollide(handleVisual1Visual2);
         }
     }
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     inline public function listensCollide():Bool {
         return arcade != null ? arcade.listensCollide() : false;
     }
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     inline public function onCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollideBody(owner, handleVisualBody);
     }
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     inline public function onceCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollideBody(owner, handleVisualBody);
     }
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     inline public function offCollideBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offCollideBody(handleVisualBody);
         }
     }
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     inline public function listensCollideBody():Bool {
         return arcade != null ? arcade.listensCollideBody() : false;
     }
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     inline public function onOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlap(owner, handleVisual1Visual2);
     }
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     inline public function onceOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlap(owner, handleVisual1Visual2);
     }
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     inline public function offOverlap(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offOverlap(handleVisual1Visual2);
         }
     }
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     inline public function listensOverlap():Bool {
         return arcade != null ? arcade.listensOverlap() : false;
     }
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     inline public function onOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlapBody(owner, handleVisualBody);
     }
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     inline public function onceOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlapBody(owner, handleVisualBody);
     }
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     inline public function offOverlapBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offOverlapBody(handleVisualBody);
         }
     }
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     inline public function listensOverlapBody():Bool {
         return arcade != null ? arcade.listensOverlapBody() : false;
     }
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     inline public function offWorldBounds(?handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade != null) {
             arcade.offWorldBounds(handleVisualUpDownLeftRight);
         }
     }
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     inline public function listensWorldBounds():Bool {
         return arcade != null ? arcade.listensWorldBounds() : false;
     }
@@ -723,7 +867,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Arcade physics
 
-    /** The nape physics (body) of this visual. */
+    /**
+     * The nape physics (body) of this visual.
+     */
     public var nape(default,set):VisualNapePhysics = null;
     function set_nape(nape:VisualNapePhysics):VisualNapePhysics {
         if (this.nape == nape) return nape;
@@ -737,7 +883,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return nape;
     }
 
-    /** Init nape physics body bound to this visual. */
+    /**
+     * Init nape physics body bound to this visual.
+     */
     public function initNapePhysics(
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,
@@ -777,33 +925,45 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Access as specific types
 
-    /** Get this visual typed as `Quad` or null if it isn't a `Quad` */
+    /**
+     * Get this visual typed as `Quad` or null if it isn't a `Quad`
+     */
     public var asQuad:Quad = null;
 
-    /** Get this visual typed as `Mesh` or null if it isn't a `Mesh` */
+    /**
+     * Get this visual typed as `Mesh` or null if it isn't a `Mesh`
+     */
     public var asMesh:Mesh = null;
 
 /// Properties
 
-    /** When enabled, this visual will receive as many up/down/click/over/out events as
-        there are fingers or mouse pointer interacting with it.
-        Default is `false`, ensuring there is never multiple up/down/click/over/out that
-        overlap each other. In that case, it triggers `pointer down` when the first finger/pointer hits
-        the visual and trigger `pointer up` when the last finger/pointer stops touching it. Behavior is
-        similar for `pointer over` and `pointer out` events. */
+    /**
+     * When enabled, this visual will receive as many up/down/click/over/out events as
+     * there are fingers or mouse pointer interacting with it.
+     * Default is `false`, ensuring there is never multiple up/down/click/over/out that
+     * overlap each other. In that case, it triggers `pointer down` when the first finger/pointer hits
+     * the visual and trigger `pointer up` when the last finger/pointer stops touching it. Behavior is
+     * similar for `pointer over` and `pointer out` events.
+     */
     public var multiTouch:Bool = false;
 
-    /** Whether this visual is between a `pointer down` and an `pointer up` event or not. */
+    /**
+     * Whether this visual is between a `pointer down` and an `pointer up` event or not.
+     */
     public var isPointerDown(get,null):Bool;
     var _numPointerDown:Int = 0;
     inline function get_isPointerDown():Bool { return _numPointerDown > 0; }
 
-    /** Whether this visual is between a `pointer over` and an `pointer out` event or not. */
+    /**
+     * Whether this visual is between a `pointer over` and an `pointer out` event or not.
+     */
     public var isPointerOver(get,null):Bool;
     var _numPointerOver:Int = 0;
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
-    /** Use the given visual's bounds as clipping area. */
+    /**
+     * Use the given visual's bounds as clipping area.
+     */
     public var clip(default,set):Visual = null;
     inline function set_clip(clip:Visual):Visual {
         if (this.clip == clip) return clip;
@@ -812,7 +972,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return clip;
     }
 
-    /** Whether this visual should inherit its parent alpha state or not. **/
+    /**
+     * Whether this visual should inherit its parent alpha state or not.
+     */
     public var inheritAlpha(default,set):Bool = false;
     inline function set_inheritAlpha(inheritAlpha:Bool):Bool {
         if (this.inheritAlpha == inheritAlpha) return inheritAlpha;
@@ -839,21 +1001,29 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 #if ceramic_luxe_legacy
 
-    /** Allows the backend to keep data associated with this visual. */
+    /**
+     * Allows the backend to keep data associated with this visual.
+     */
     public var backendItem:VisualItem;
 
 #end
 
-    /** Computed flag that tells whether this visual is only translated,
-        thus not rotated, skewed nor scaled.
-        When this is `true`, matrix computation may be a bit faster as it
-        will skip some unneeded matrix computation. */
+    /**
+     * Computed flag that tells whether this visual is only translated,
+     * thus not rotated, skewed nor scaled.
+     * When this is `true`, matrix computation may be a bit faster as it
+     * will skip some unneeded matrix computation.
+     */
     public var translatesOnly:Bool = true;
 
-    /** Whether we should re-check if this visual is only translating or having a more complex transform */
+    /**
+     * Whether we should re-check if this visual is only translating or having a more complex transform
+     */
     public var translatesOnlyDirty:Bool = false;
 
-    /** Setting this to true will force the visual to recompute its displayed content */
+    /**
+     * Setting this to true will force the visual to recompute its displayed content
+     */
     public var contentDirty(default, set):Bool = true;
     inline function set_contentDirty(contentDirty:Bool):Bool {
         this.contentDirty = contentDirty;
@@ -863,7 +1033,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return contentDirty;
     }
 
-    /** Setting this to true will force the visual's matrix to be re-computed */
+    /**
+     * Setting this to true will force the visual's matrix to be re-computed
+     */
     public var matrixDirty(default,set):Bool = true;
     inline function set_matrixDirty(matrixDirty:Bool):Bool {
         this.matrixDirty = matrixDirty;
@@ -878,7 +1050,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return matrixDirty;
     }
 
-    /** Setting this to true will force the visual's computed render target to be re-computed */
+    /**
+     * Setting this to true will force the visual's computed render target to be re-computed
+     */
     public var renderTargetDirty(default,set):Bool = true;
     inline function set_renderTargetDirty(renderTargetDirty:Bool):Bool {
         this.renderTargetDirty = renderTargetDirty;
@@ -894,7 +1068,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return renderTargetDirty;
     }
 
-    /** Setting this to true will force the visual to compute it's visility in hierarchy */
+    /**
+     * Setting this to true will force the visual to compute it's visility in hierarchy
+     */
     public var visibilityDirty(default,set):Bool = true;
     inline function set_visibilityDirty(visibilityDirty:Bool):Bool {
         this.visibilityDirty = visibilityDirty;
@@ -909,7 +1085,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return visibilityDirty;
     }
 
-    /** Setting this to true will force the visual to compute it's touchability in hierarchy */
+    /**
+     * Setting this to true will force the visual to compute it's touchability in hierarchy
+     */
     public var touchableDirty(default,set):Bool = true;
     inline function set_touchableDirty(touchableDirty:Bool):Bool {
         this.touchableDirty = touchableDirty;
@@ -924,7 +1102,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return touchableDirty;
     }
 
-    /** Setting this to true will force the visual to compute it's clipping state in hierarchy */
+    /**
+     * Setting this to true will force the visual to compute it's clipping state in hierarchy
+     */
     public var clipDirty(default,set):Bool = true;
     inline function set_clipDirty(clipDirty:Bool):Bool {
         this.clipDirty = clipDirty;
@@ -938,8 +1118,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
         return clipDirty;
     }
-    /** If set, the visual will be rendered into this target RenderTexture instance
-        instead of being drawn onto screen directly. */
+    /**
+     * If set, the visual will be rendered into this target RenderTexture instance
+     * instead of being drawn onto screen directly.
+     */
     public var renderTarget(default,set):RenderTexture = null;
     function set_renderTarget(renderTarget:RenderTexture):RenderTexture {
         if (this.renderTarget == renderTarget) return renderTarget;
@@ -982,8 +1164,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
 
-    /** If set, children will be sort by depth and their computed depth
-        will be within range [parent.depth, parent.depth + depthRange] */
+    /**
+     * If set, children will be sort by depth and their computed depth
+     * will be within range [parent.depth, parent.depth + depthRange]
+     */
     @editable({ group: 'depth', label: 'Range' })
     #if ceramic_no_depth_range
     public var depthRange(default,set):Float = -1;
@@ -1191,7 +1375,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return translateY;
     }
 
-    /** Set additional matrix-based transform to this visual. Default is null. */
+    /**
+     * Set additional matrix-based transform to this visual. Default is null.
+     */
     public var transform(default,set):Transform = null;
     function set_transform(transform:Transform):Transform {
         if (this.transform == transform) return transform;
@@ -1211,7 +1397,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return transform;
     }
 
-    /** Assign a shader to this visual. */
+    /**
+     * Assign a shader to this visual.
+     */
     @editable
     public var shader(default, set):Shader = null;
     function set_shader(shader:Shader):Shader {
@@ -1220,8 +1408,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Flags
 
-    /** Read and write arbitrary boolean flags on this visual.
-        Index should be between 0 (included) and 16 (excluded) or result is undefined. */
+    /**
+     * Read and write arbitrary boolean flags on this visual.
+     * Index should be between 0 (included) and 16 (excluded) or result is undefined.
+     */
     inline public function flag(index:Int, ?value:Bool):Bool {
 
         var i = index + 16;
@@ -1229,22 +1419,28 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Read and write arbitrary boolean flags on this visual.
-        Index should be between 0 (included) and 16 (excluded) or result is undefined.
-        /!\ Reserved for internal use */
+    /**
+     * Read and write arbitrary boolean flags on this visual.
+     * Index should be between 0 (included) and 16 (excluded) or result is undefined.
+     * /!\ Reserved for internal use
+     */
     inline private function internalFlag(index:Int, ?value:Bool):Bool {
 
         return value != null ? flags.setBool(index, value) : flags.bool(index);
 
     }
 
-    /** Just a way to store some flags. **/
+    /**
+     * Just a way to store some flags.
+     */
     var flags:Flags = new Flags();
 
-    /** Whether this visual is `active`. Default is **true**. When setting it to **false**,
-        the visual won't be `visible` nor `touchable` anymore (these get set to **false**).
-        When restoring `active` to **true**, `visible` and `touchable` will also get back
-        their previous state. **/
+    /**
+     * Whether this visual is `active`. Default is **true**. When setting it to **false**,
+     * the visual won't be `visible` nor `touchable` anymore (these get set to **false**).
+     * When restoring `active` to **true**, `visible` and `touchable` will also get back
+     * their previous state.
+     */
     public var active(get,set):Bool;
     inline function get_active():Bool {
         return !flags.bool(0);
@@ -1369,8 +1565,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Advanced helpers
 
-    /** Change the visual's anchor but update its x and y values to make
-        it keep its current position. */
+    /**
+     * Change the visual's anchor but update its x and y values to make
+     * it keep its current position.
+     */
     public function anchorKeepPosition(anchorX:Float, anchorY:Float):Void {
 
         if (this.anchorX == anchorX && this.anchorY == anchorY) return;
@@ -1398,7 +1596,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Returns the first child matching the requested `id` or `null` otherwise. */
+    /**
+     * Returns the first child matching the requested `id` or `null` otherwise.
+     */
     public function childWithId(id:String, recursive:Bool = true):Visual {
 
         if (children != null) {
@@ -1653,7 +1853,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Hit test
 
-    /** Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds */
+    /**
+     * Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds
+     */
     public function hits(x:Float, y:Float):Bool {
 
         // A visuals that renders to texture never hits by default
@@ -1692,9 +1894,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** The actual hit test performed on the visual.
-        If needed to change how hit test is performed
-        on a visual subclass, this is the method to override. */
+    /**
+     * The actual hit test performed on the visual.
+     * If needed to change how hit test is performed
+     * on a visual subclass, this is the method to override.
+     */
     function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
         var testX = _matrix.transformX(x, y);
@@ -1707,16 +1911,20 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
-        Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
+    /**
+     * Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
+     * Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise.
+     */
     function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float, touchIndex:Int, buttonId:Int):Bool {
 
         return false;
 
     }
 
-    /** Override this method in subclasses to intercept hitting pointer over events on this visual's children (any level in sub-hierarchy).
-        Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise. */
+    /**
+     * Override this method in subclasses to intercept hitting pointer over events on this visual's children (any level in sub-hierarchy).
+     * Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise.
+     */
     function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
         return false;
@@ -1725,7 +1933,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Screen to visual positions and vice versa
 
-    /** Assign X and Y to given point after converting them from screen coordinates to current visual coordinates. */
+    /**
+     * Assign X and Y to given point after converting them from screen coordinates to current visual coordinates.
+     */
     public function screenToVisual(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
         if (matrixDirty) {
@@ -1762,7 +1972,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
+    /**
+     * Assign X and Y to given point after converting them from current visual coordinates to screen coordinates.
+     */
     public function visualToScreen(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
         if (matrixDirty) {
@@ -1800,7 +2012,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Transform from visual
 
-    /** Assign X and Y to given point after converting them from current visual coordinates to screen coordinates. */
+    /**
+     * Assign X and Y to given point after converting them from current visual coordinates to screen coordinates.
+     */
     public function visualToTransform(transform:Transform):Void {
 
         if (matrixDirty) {
@@ -2004,8 +2218,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Compute children depth. The result depends on whether
-        a parent defines a custom `depthRange` value or not. */
+    /**
+     * Compute children depth. The result depends on whether
+     * a parent defines a custom `depthRange` value or not.
+     */
     function computeChildrenDepth():Void {
 
         if (children != null) {
@@ -2142,10 +2358,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Returns `true` if the current visual contains this child.
-        When `recursive` option is `true`, will return `true` if
-        the current visual contains this child or one of
-        its direct or indirect children does. */
+    /**
+     * Returns `true` if the current visual contains this child.
+     * When `recursive` option is `true`, will return `true` if
+     * the current visual contains this child or one of
+     * its direct or indirect children does.
+     */
     public function contains(child:Visual, recursive:Bool = false):Bool {
 
         var parent = child.parent;
@@ -2164,9 +2382,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Size helpers
 
-    /** Compute bounds from children this visual contains.
-        This overwrites width, height, anchorX and anchorY properties accordingly.
-        Warning: this may be an expensive operation. */
+    /**
+     * Compute bounds from children this visual contains.
+     * This overwrites width, height, anchorX and anchorY properties accordingly.
+     * Warning: this may be an expensive operation.
+     */
     function computeBounds():Void {
 
         if (children == null) {
@@ -2280,7 +2500,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Screen size helpers
 
-    /** Will set this visual size to screen size */
+    /**
+     * Will set this visual size to screen size
+     */
     public function bindToScreenSize():Void {
 
         // Bind to screen size
@@ -2291,7 +2513,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
-    /** Will set this visual size to target size (`settings.targetWidth` and `settings.targetHeight`) */
+    /**
+     * Will set this visual size to target size (`settings.targetWidth` and `settings.targetHeight`)
+     */
     public function bindToTargetSize():Void {
 
         // Bind to screen size

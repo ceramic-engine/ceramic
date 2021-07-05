@@ -2,7 +2,9 @@ package ceramic;
 
 using ceramic.Extensions;
 
-/** A rectangle visual that display a border */
+/**
+ * A rectangle visual that display a border
+ */
 class Border extends Mesh {
 
     @:noCompletion public var autoComputeVertices(default,set):Bool = true;

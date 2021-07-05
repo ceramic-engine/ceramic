@@ -1,11 +1,15 @@
 package ceramic;
 
-/** Same as Settings, but for app startup (inside Project.new(settings)).
-    Read-only values can still
-    be edited at that stage. */
+/**
+ * Same as Settings, but for app startup (inside Project.new(settings)).
+ * Read-only values can still
+ * be edited at that stage.
+ */
 class InitSettings {
 
-    /** App settings */
+    /**
+     * App settings
+     */
     private var settings:Settings;
 
     @:allow(ceramic.App)
@@ -15,9 +19,11 @@ class InitSettings {
 
     }
 
-    /** Target width. Affects window size at startup
-        and affects screen scaling at any time.
-        Ignored if set to 0 (default) */
+    /**
+     * Target width. Affects window size at startup
+     * and affects screen scaling at any time.
+     * Ignored if set to 0 (default)
+     */
     public var targetWidth(get,set):Int;
     inline function get_targetWidth():Int {
         return settings.targetWidth;
@@ -26,9 +32,11 @@ class InitSettings {
         return settings.targetWidth = targetWidth;
     }
 
-    /** Target height. Affects window size at startup
-        and affects screen scaling at any time.
-        Ignored if set to 0 (default) */
+    /**
+     * Target height. Affects window size at startup
+     * and affects screen scaling at any time.
+     * Ignored if set to 0 (default)
+     */
     public var targetHeight(get,set):Int;
     inline function get_targetHeight():Int {
         return settings.targetHeight;
@@ -37,8 +45,10 @@ class InitSettings {
         return settings.targetHeight = targetHeight;
     }
 
-    /** Target window width at startup
-        Use `targetWidth` as fallback if set to 0 (default) */
+    /**
+     * Target window width at startup
+     * Use `targetWidth` as fallback if set to 0 (default)
+     */
     public var windowWidth(get,set):Int;
     inline function get_windowWidth():Int {
         return settings.windowWidth;
@@ -47,8 +57,10 @@ class InitSettings {
         return @:privateAccess settings.windowWidth = windowWidth;
     }
 
-    /** Target window height at startup
-        Use `targetHeight` as fallback if set to 0 (default) */
+    /**
+     * Target window height at startup
+     * Use `targetHeight` as fallback if set to 0 (default)
+     */
     public var windowHeight(get,set):Int;
     inline function get_windowHeight():Int {
         return settings.windowHeight;
@@ -57,10 +69,12 @@ class InitSettings {
         return @:privateAccess settings.windowHeight = windowHeight;
     }
 
-    /** Target density. Affects the quality of textures
-        being loaded. Changing it at runtime will update
-        texture quality if needed.
-        Ignored if set to 0 (default) */
+    /**
+     * Target density. Affects the quality of textures
+     * being loaded. Changing it at runtime will update
+     * texture quality if needed.
+     * Ignored if set to 0 (default)
+     */
     public var targetDensity(get,set):Int;
     inline function get_targetDensity():Int {
         return settings.targetDensity;
@@ -69,7 +83,9 @@ class InitSettings {
         return settings.targetDensity = targetDensity;
     }
 
-    /** Background color. */
+    /**
+     * Background color.
+     */
     public var background(get,set):Color;
     inline function get_background():Color {
         return settings.background;
@@ -78,7 +94,9 @@ class InitSettings {
         return settings.background = background;
     }
 
-    /** Screen scaling (FIT, FILL, RESIZE, FIT_RESIZE). */
+    /**
+     * Screen scaling (FIT, FILL, RESIZE, FIT_RESIZE).
+     */
     public var scaling(get,set):ScreenScaling;
     inline function get_scaling():ScreenScaling {
         return settings.scaling;
@@ -87,7 +105,9 @@ class InitSettings {
         return settings.scaling = scaling;
     }
 
-    /** App window title. */
+    /**
+     * App window title.
+     */
     public var title(get,set):String;
     inline function get_title():String {
         return settings.title;
@@ -96,7 +116,9 @@ class InitSettings {
         return settings.title = title;
     }
 
-    /** Fullscreen enabled or not. */
+    /**
+     * Fullscreen enabled or not.
+     */
     public var fullscreen(get,set):Bool;
     inline function get_fullscreen():Bool {
         return settings.fullscreen;
@@ -131,7 +153,9 @@ class InitSettings {
         return @:privateAccess settings.orientation = orientation;
     }
 
-    /** Antialiasing value (0 means disabled). */
+    /**
+     * Antialiasing value (0 means disabled).
+     */
     public var antialiasing(get,set):Int;
     inline function get_antialiasing():Int {
         return settings.antialiasing;
@@ -140,7 +164,9 @@ class InitSettings {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
-    /** App collections. */
+    /**
+     * App collections.
+     */
     public var collections(get,set):Void->AutoCollections;
     inline function get_collections():Void->AutoCollections {
         return settings.collections;
@@ -149,7 +175,9 @@ class InitSettings {
         return @:privateAccess settings.collections = collections;
     }
 
-    /** App info (useful when dynamically loaded, not needed otherwise). */
+    /**
+     * App info (useful when dynamically loaded, not needed otherwise).
+     */
     public var appInfo(get,set):Dynamic;
     inline function get_appInfo():Dynamic {
         return settings.appInfo;
@@ -158,7 +186,9 @@ class InitSettings {
         return @:privateAccess settings.appInfo = appInfo;
     }
 
-    /** Whether the window can be resized or not. */
+    /**
+     * Whether the window can be resized or not.
+     */
     public var resizable(get,set):Bool;
     inline function get_resizable():Bool {
         return settings.resizable;
@@ -167,7 +197,9 @@ class InitSettings {
         return @:privateAccess settings.resizable = resizable;
     }
 
-    /** Assets path. */
+    /**
+     * Assets path.
+     */
     public var assetsPath(get,set):String;
     inline function get_assetsPath():String {
         return settings.assetsPath;
@@ -176,7 +208,9 @@ class InitSettings {
         return @:privateAccess settings.assetsPath = assetsPath;
     }
 
-    /** Settings passed to backend. */
+    /**
+     * Settings passed to backend.
+     */
     public var backend(get,set):Dynamic;
     inline function get_backend():Dynamic {
         return settings.backend;
@@ -185,7 +219,9 @@ class InitSettings {
         return @:privateAccess settings.backend = backend;
     }
 
-    /** Default font asset */
+    /**
+     * Default font asset
+     */
     public var defaultFont(get,set):AssetId<String>;
     inline function get_defaultFont():AssetId<String> {
         return settings.defaultFont;
@@ -194,7 +230,9 @@ class InitSettings {
         return @:privateAccess settings.defaultFont = defaultFont;
     }
 
-    /** Default shader asset */
+    /**
+     * Default shader asset
+     */
     public var defaultShader(get,set):AssetId<String>;
     inline function get_defaultShader():AssetId<String> {
         return settings.defaultShader;

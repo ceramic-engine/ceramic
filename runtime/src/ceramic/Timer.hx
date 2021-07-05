@@ -9,14 +9,18 @@ class Timer {
     static var callbacks:Array<TimerCallback> = [];
     static var next:Float = 999999999;
 
-    /** Current time, relative to app.
-        (number of active seconds since app was started) */
+    /**
+     * Current time, relative to app.
+     * (number of active seconds since app was started)
+     */
     public static var now(default,null):Float = 0;
 
-    /** Current unix time synchronized with ceramic Timer.
-        `Timer.now` and `Timer.timestamp` are garanteed to get incremented
-        exactly at the same rate, except when app frame real delta > 1s
-        (number of seconds since January 1st, 1970) **/
+    /**
+     * Current unix time synchronized with ceramic Timer.
+     * `Timer.now` and `Timer.timestamp` are garanteed to get incremented
+     * exactly at the same rate, except when app frame real delta > 1s
+     * (number of seconds since January 1st, 1970)
+     */
     public static var timestamp(get,null):Float;
     inline static function get_timestamp():Float {
         return startTimestamp + now;
@@ -91,16 +95,20 @@ class Timer {
 
 // Public API
 
-    /** Execute a callback after the given delay in seconds.
-        @return a function to cancel this timer delay */
+    /**
+     * Execute a callback after the given delay in seconds.
+     * @return a function to cancel this timer delay
+     */
     inline public static function delay(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, seconds:Float, callback:Void->Void):Void->Void {
 
         return schedule(owner, seconds, callback, -1);
 
     }
 
-    /** Execute a callback periodically at the given interval in seconds.
-        @return a function to cancel this timer interval */
+    /**
+     * Execute a callback periodically at the given interval in seconds.
+     * @return a function to cancel this timer interval
+     */
     inline public static function interval(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, seconds:Float, callback:Void->Void):Void->Void {
         
         return schedule(owner, seconds, callback, seconds);

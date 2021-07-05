@@ -330,7 +330,9 @@ class Tween extends Entity {
 
     }
 
-    /** Get a tween easing function as a plain Float->Float function. */
+    /**
+     * Get a tween easing function as a plain Float->Float function.
+     */
     public static function easingFunction(easing:Easing):Float->Float {
 
         computeEasing(easing);
@@ -352,10 +354,12 @@ class Tween extends Entity {
 @:allow(ceramic.Tween)
 private class TweenEasingFunction {
 
-    /** Using `k` as static variable allows us to call easing function dynamically
-        without needing boxing of float type on c++ target when it is passed as arg.
-        (boxing of primitive types on c++ creates trash object references that give pressure to GC.
-        When we can, we try to avoid it.) */
+    /**
+     * Using `k` as static variable allows us to call easing function dynamically
+     * without needing boxing of float type on c++ target when it is passed as arg.
+     * (boxing of primitive types on c++ creates trash object references that give pressure to GC.
+     * When we can, we try to avoid it.)
+     */
     public static var k:Float = 0;
 
     public static var customEasing:Float->Float = null;
@@ -386,12 +390,12 @@ private class TweenEasingFunction {
 
     public static function backEaseInOut():Void {
         var s:Float = 1.70158;
-		if ((k *= 2) < 1) k = 0.5 * (k * k * (((s *= (1.525)) + 1) * k - s));
-		else k = 0.5 * ((k -= 2) * k * (((s *= (1.525)) + 1) * k + s) + 2);
+        if ((k *= 2) < 1) k = 0.5 * (k * k * (((s *= (1.525)) + 1) * k - s));
+        else k = 0.5 * ((k -= 2) * k * (((s *= (1.525)) + 1) * k + s) + 2);
     }
 
     public static function backEaseOut():Void {
-		k = ((k = k - 1) * k * ((1.70158 + 1) * k + 1.70158) + 1);
+        k = ((k = k - 1) * k * ((1.70158 + 1) * k + 1.70158) + 1);
     }
 
 /// Quad
@@ -401,14 +405,14 @@ private class TweenEasingFunction {
     }
 
     public static function quadEaseInOut():Void {
-		if ((k *= 2) < 1) {
-			k = 1 / 2 * k * k;
-		}
-		else k = -1 / 2 * ((k - 1) * (k - 3) - 1);
+        if ((k *= 2) < 1) {
+            k = 1 / 2 * k * k;
+        }
+        else k = -1 / 2 * ((k - 1) * (k - 3) - 1);
     }
 
     public static function quadEaseOut():Void {
-		k = -k * (k - 2);
+        k = -k * (k - 2);
     }
 
 /// Cubic
@@ -418,11 +422,11 @@ private class TweenEasingFunction {
     }
 
     public static function cubicEaseInOut():Void {
-		k = ((k /= 1 / 2) < 1) ? 0.5 * k * k * k : 0.5 * ((k -= 2) * k * k + 2);
+        k = ((k /= 1 / 2) < 1) ? 0.5 * k * k * k : 0.5 * ((k -= 2) * k * k + 2);
     }
 
     public static function cubicEaseOut():Void {
-		k = --k * k * k + 1;
+        k = --k * k * k + 1;
     }
 
 /// Quart
@@ -432,12 +436,12 @@ private class TweenEasingFunction {
     }
 
     public static function quartEaseInOut():Void {
-		if ((k *= 2) < 1) k = 0.5 * k * k * k * k;
-		else k = -0.5 * ((k -= 2) * k * k * k - 2);
+        if ((k *= 2) < 1) k = 0.5 * k * k * k * k;
+        else k = -0.5 * ((k -= 2) * k * k * k - 2);
     }
 
     public static function quartEaseOut():Void {
-		k = -(--k * k * k * k - 1);
+        k = -(--k * k * k * k - 1);
     }
 
 /// Quint
@@ -447,12 +451,12 @@ private class TweenEasingFunction {
     }
 
     public static function quintEaseInOut():Void {
-		if ((k *= 2) < 1) k = 0.5 * k * k * k * k * k;
-		else k = 0.5 * ((k -= 2) * k * k * k * k + 2);
+        if ((k *= 2) < 1) k = 0.5 * k * k * k * k * k;
+        else k = 0.5 * ((k -= 2) * k * k * k * k + 2);
     }
 
     public static function quintEaseOut():Void {
-		k = --k * k * k * k * k + 1;
+        k = --k * k * k * k * k + 1;
     }
 
 /// Bounce
@@ -462,15 +466,15 @@ private class TweenEasingFunction {
     }
 
     public static function bounceEaseInOut():Void {
-		if (k < .5) {
-			k = _bounceEaseIn(k * 2, 0, 1, 1) * 0.5;
-		} else {
-			k = _bounceEaseOut(k * 2 - 1, 0, 1, 1) * 0.5 + 1 * 0.5; 
-		}
+        if (k < .5) {
+            k = _bounceEaseIn(k * 2, 0, 1, 1) * 0.5;
+        } else {
+            k = _bounceEaseOut(k * 2 - 1, 0, 1, 1) * 0.5 + 1 * 0.5; 
+        }
     }
 
     public static function bounceEaseOut():Void {
-		k = _bounceEaseOut(k, 0, 1, 1);
+        k = _bounceEaseOut(k, 0, 1, 1);
     }
 
     inline static function _bounceEaseIn(t:Float, b:Float, c:Float, d:Float):Float {
@@ -479,69 +483,69 @@ private class TweenEasingFunction {
 
     inline static function _bounceEaseOut(t:Float, b:Float, c:Float, d:Float):Float {
         var result:Float;
-		if ((t/=d) < (1/2.75)) {
-			result = c * (7.5625 * t * t) + b;
-		}
+        if ((t/=d) < (1/2.75)) {
+            result = c * (7.5625 * t * t) + b;
+        }
         else if (t < (2/2.75)) {
-			result = c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
-		}
+            result = c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+        }
         else if (t < (2.5/2.75)) {
-			result = c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
-		}
+            result = c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+        }
         else {
-			result = c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
-		}
+            result = c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+        }
         return result;
     }
 
 /// Elastic
 
     public static function elasticEaseIn():Void {
-		if (k == 0) return;
+        if (k == 0) return;
         if (k == 1) return;
         var a:Float = 0.1;
         var p:Float = 0.4;
-		var s:Float;
-		if (a < 1) {
+        var s:Float;
+        if (a < 1) {
             a = 1;
             s = p / 4;
         }
-		else {
+        else {
             s = p / (2 * Math.PI) * Math.asin (1 / a);
         }
-		k = -(a * Math.exp(6.931471805599453 * (k -= 1)) * Math.sin( (k - s) * (2 * Math.PI) / p ));
+        k = -(a * Math.exp(6.931471805599453 * (k -= 1)) * Math.sin( (k - s) * (2 * Math.PI) / p ));
     }
 
     public static function elasticEaseInOut():Void {
-		if (k == 0) return;
-		if ((k *= 2) == 2) {
+        if (k == 0) return;
+        if ((k *= 2) == 2) {
             k = 1;
-			return;
-		}
-		
-		var p:Float = (0.3 * 1.5);
-		var s:Float = p / 4;
-		
-		if (k < 1) {
-			k = -0.5 * (Math.exp(6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
-		}
-		else k = Math.exp(-6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+            return;
+        }
+        
+        var p:Float = (0.3 * 1.5);
+        var s:Float = p / 4;
+        
+        if (k < 1) {
+            k = -0.5 * (Math.exp(6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+        }
+        else k = Math.exp(-6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
     }
 
     public static function elasticEaseOut():Void {
-		if (k == 0) return;
+        if (k == 0) return;
         if (k == 1) return;
         var a:Float = 0.1;
         var p:Float = 0.4;
-		var s:Float;
-		if (a < 1) {
+        var s:Float;
+        if (a < 1) {
             a = 1;
             s = p / 4;
         }
-		else {
+        else {
             s = p / (2 * Math.PI) * Math.asin (1 / a);
         }
-		k = (a * Math.exp(-6.931471805599453 * k) * Math.sin((k - s) * (2 * Math.PI) / p ) + 1);
+        k = (a * Math.exp(-6.931471805599453 * k) * Math.sin((k - s) * (2 * Math.PI) / p ) + 1);
     }
 
 /// Expo
@@ -551,16 +555,16 @@ private class TweenEasingFunction {
     }
 
     public static function expoEaseInOut():Void {
-		if (k == 0) return;
-		if (k == 1) return;
-		if ((k /= 1 / 2.0) < 1.0) {
-			k = 0.5 * Math.exp(6.931471805599453 * (k - 1));
-		}
-		else k = 0.5 * (2 - Math.exp(-6.931471805599453 * --k));
+        if (k == 0) return;
+        if (k == 1) return;
+        if ((k /= 1 / 2.0) < 1.0) {
+            k = 0.5 * Math.exp(6.931471805599453 * (k - 1));
+        }
+        else k = 0.5 * (2 - Math.exp(-6.931471805599453 * --k));
     }
 
     public static function expoEaseOut():Void {
-		k = (k == 1 ? 1 : (1 - Math.exp(-6.931471805599453 * k)));
+        k = (k == 1 ? 1 : (1 - Math.exp(-6.931471805599453 * k)));
     }
 
 /// Sine
@@ -570,11 +574,11 @@ private class TweenEasingFunction {
     }
 
     public static function sineEaseInOut():Void {
-		k = -(Math.cos(Math.PI * k) - 1) / 2;
+        k = -(Math.cos(Math.PI * k) - 1) / 2;
     }
 
     public static function sineEaseOut():Void {
-		k = Math.sin(k * (Math.PI / 2));
+        k = Math.sin(k * (Math.PI / 2));
     }
 
 }

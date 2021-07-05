@@ -53,11 +53,13 @@ class RenderTexture extends Texture {
 
 /// Public API / Utilities
 
-    /** Draws the given visual onto the render texture.
-        The drawing operation is not done synchronously.
-        It waits for the next draw stage of the app to perform it,
-        then calls done() when finished.
-        This is expected to be used with a texture `autoRender` set to `false`. */
+    /**
+     * Draws the given visual onto the render texture.
+     * The drawing operation is not done synchronously.
+     * It waits for the next draw stage of the app to perform it,
+     * then calls done() when finished.
+     * This is expected to be used with a texture `autoRender` set to `false`.
+     */
     public function stamp(visual:Visual, done:Void->Void) {
 
         // Keep original values as needed
@@ -107,11 +109,13 @@ class RenderTexture extends Texture {
 
     }
 
-    /** Clears the texture, or a specific area of it with a fill color and alpha.
-        The drawing operation is not done synchronously.
-        It waits for the next draw stage of the app to perform it,
-        then calls done() when finished.
-        This is expected to be used with a texture `autoRender` set to `false`. */
+    /**
+     * Clears the texture, or a specific area of it with a fill color and alpha.
+     * The drawing operation is not done synchronously.
+     * It waits for the next draw stage of the app to perform it,
+     * then calls done() when finished.
+     * This is expected to be used with a texture `autoRender` set to `false`.
+     */
     public function clear(color:Color = 0xFFFFFF, alpha:Float = 0, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1, done:Void->Void) {
 
         if (_clearQuad == null) {

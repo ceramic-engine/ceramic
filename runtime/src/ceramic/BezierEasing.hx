@@ -4,8 +4,10 @@ import ceramic.Assert.*;
 
 using ceramic.Extensions;
 
-/** Bezier curve easing, ported from https://github.com/gre/bezier-easing
-    then extended to work with both cubic and quadratic settings */
+/**
+ * Bezier curve easing, ported from https://github.com/gre/bezier-easing
+ * then extended to work with both cubic and quadratic settings
+ */
 class BezierEasing {
 
     static var SPLINE_TABLE_SIZE = 11;
@@ -38,20 +40,24 @@ class BezierEasing {
 
     var mY2:Float;
 
-    /** Create a new instance with the given arguments.
-        If only `x1` and `y1` are provided, the curve is treated as quadratic.
-        If all four values `x1`, `y1`, `x2`, `y2` are provided,
-        the curve is treated as cubic. */
+    /**
+     * Create a new instance with the given arguments.
+     * If only `x1` and `y1` are provided, the curve is treated as quadratic.
+     * If all four values `x1`, `y1`, `x2`, `y2` are provided,
+     * the curve is treated as cubic.
+     */
     public function new(x1:Float, y1:Float, ?x2:Float, ?y2:Float) {
 
         inline configure(x1, y1, x2, y2);
 
     }
 
-    /** Configure the instance with the given arguments.
-        If only `x1` and `y1` are provided, the curve is treated as quadratic.
-        If all four values `x1`, `y1`, `x2`, `y2` are provided,
-        the curve is treated as cubic. */
+    /**
+     * Configure the instance with the given arguments.
+     * If only `x1` and `y1` are provided, the curve is treated as quadratic.
+     * If all four values `x1`, `y1`, `x2`, `y2` are provided,
+     * the curve is treated as cubic.
+     */
     public function configure(x1:Float, y1:Float, ?x2:Float, ?y2:Float) {
 
         // If this instance was part of the cache,
@@ -127,14 +133,18 @@ class BezierEasing {
 
     }
 
-    /** Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2 */
+    /**
+     * Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2
+     */
     inline function calcBezier(aT:Float, aA1:Float, aA2:Float) {
 
         return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
 
     }
 
-    /** Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2 **/
+    /**
+     * Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2
+     */
     inline function getSlope(aT:Float, aA1:Float, aA2:Float) {
         
         return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
@@ -231,8 +241,10 @@ class BezierEasing {
 
     }
 
-    /** Get or create a `BezierEasing` instance with the given parameters.
-        Created instances are cached and reused. */
+    /**
+     * Get or create a `BezierEasing` instance with the given parameters.
+     * Created instances are cached and reused.
+     */
     public static function get(x1:Float, y1:Float, ?x2:Float, ?y2:Float):BezierEasing {
 
         var quadratic = (x2 == null || y2 == null);

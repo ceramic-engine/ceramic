@@ -6,10 +6,14 @@ using ceramic.Extensions;
 
 class BitmapFont extends Entity {
 
-    /** The map of font texture pages to their id. */
+    /**
+     * The map of font texture pages to their id.
+     */
     public var pages:Map<Int,Texture> = new Map();
 
-    /** The bitmap font fontData. */
+    /**
+     * The bitmap font fontData.
+     */
     private var fontData(default, set):BitmapFontData;
     function set_fontData(fontData:BitmapFontData) {
 
@@ -60,7 +64,9 @@ class BitmapFont extends Entity {
     public var msdf(get,never):Bool;
     inline function get_msdf():Bool { return fontData.distanceField != null && fontData.distanceField.fieldType == 'msdf'; }
 
-    /** Cached reference of the ' '(32) character, for sizing on tabs/spaces */
+    /**
+     * Cached reference of the ' '(32) character, for sizing on tabs/spaces
+     */
     public var spaceChar:BitmapFontCharacter;
 
     /**
@@ -230,8 +236,10 @@ class BitmapFont extends Entity {
 
     }
 
-    /** Returns the kerning between two glyphs, or 0 if none.
-        A glyph int id is the value from 'c'.charCodeAt(0) */
+    /**
+     * Returns the kerning between two glyphs, or 0 if none.
+     * A glyph int id is the value from 'c'.charCodeAt(0)
+     */
     public inline function kerning(first:Int, second:Int) {
 
         var map = fontData.kernings.get(first);

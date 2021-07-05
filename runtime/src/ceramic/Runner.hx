@@ -50,8 +50,10 @@ class Runner {
 
     }
 
-    /** Call this on your thread to make primary,
-        the calling thread will be used for callbacks. */
+    /**
+     * Call this on your thread to make primary,
+     * the calling thread will be used for callbacks.
+     */
     @:noCompletion public static function init() {
         #if (cpp || cs)
         queue = new Deque<Void->Void>();
@@ -59,8 +61,10 @@ class Runner {
         #end
     }
 
-    /** Call this on the primary manually,
-        Returns the number of callbacks called. */
+    /**
+     * Call this on the primary manually,
+     * Returns the number of callbacks called.
+     */
     @:noCompletion public static function tick():Void {
 
         #if (cpp || cs)
@@ -79,8 +83,10 @@ class Runner {
 
     }
 
-    /** Returns `true` if _running in background_ is emulated on this platform by
-        running _background_ code in main thread instead of using background thread. */
+    /**
+     * Returns `true` if _running in background_ is emulated on this platform by
+     * running _background_ code in main thread instead of using background thread.
+     */
     inline public static function isEmulatingBackgroundWithMain():Bool {
 
         #if (cpp || cs)
@@ -91,8 +97,10 @@ class Runner {
 
     }
 
-    /** Call a function on the primary thread without waiting or blocking.
-        If you want return values see runInMainBlocking */
+    /**
+     * Call a function on the primary thread without waiting or blocking.
+     * If you want return values see runInMainBlocking
+     */
     public static function runInMain(_fn:Void->Void) {
 
         #if (cpp || cs)
@@ -103,7 +111,9 @@ class Runner {
 
     }
 
-    /** Create a background thread using the given function, or just run (deferred) the function if threads are not supported */
+    /**
+     * Create a background thread using the given function, or just run (deferred) the function if threads are not supported
+     */
     public static function runInBackground(fn:Void->Void):Void {
 
         #if (cpp || cs)

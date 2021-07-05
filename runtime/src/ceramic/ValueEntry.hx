@@ -1,6 +1,8 @@
 package ceramic;
 
-/** A collection entry that can hold any value */
+/**
+ * A collection entry that can hold any value
+ */
 class ValueEntry<T> extends CollectionEntry {
 
     public var value:T;

@@ -2,7 +2,9 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-/** Incremental texture tile packer that allows to alloc, release and reuse tiles as needed. */
+/**
+ * Incremental texture tile packer that allows to alloc, release and reuse tiles as needed.
+ */
 class TextureTilePacker extends Entity {
 
     public var texture(default,null):RenderTexture;
@@ -286,20 +288,30 @@ class TextureTilePacker extends Entity {
 
 }
 
-/** Private class used internally to store additional texture tile data. */
+/**
+ * Private class used internally to store additional texture tile data.
+ */
 @:allow(ceramic.TextureTilePacker)
 private class PackedTextureTile extends TextureTile {
 
-    /** The column index of this tile */
+    /**
+     * The column index of this tile
+     */
     public var col:Int = -1;
 
-    /** The row index of this tile */
+    /**
+     * The row index of this tile
+     */
     public var row:Int = -1;
 
-    /** The number of column blocks used by this packed texture tile (starting from column index) */
+    /**
+     * The number of column blocks used by this packed texture tile (starting from column index)
+     */
     public var usedCols:Int = 1;
 
-    /** The number of row blocks used by this packed texture tile (starting from row index) */
+    /**
+     * The number of row blocks used by this packed texture tile (starting from row index)
+     */
     public var usedRows:Int = 1;
 
     public function new(texture:Texture, frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float) {

@@ -2,7 +2,9 @@ package ceramic;
 
 import haxe.ds.Vector;
 
-/** An object map that uses integers as key. */
+/**
+ * An object map that uses integers as key.
+ */
 class IntMap<V> {
 
     inline static var NO_VALUE = 0;
@@ -15,12 +17,16 @@ class IntMap<V> {
 
     var nextFreeIndex:Int = 0;
 
-    /** When this map is marked as iterable, this array will contain every key. */
+    /**
+     * When this map is marked as iterable, this array will contain every key.
+     */
     public var iterableKeys(default,null):Array<Int> = null;
 
-    /** Values as they are stored.
-        Can be used to iterate on values directly,
-        but can contain null values. */
+    /**
+     * Values as they are stored.
+     * Can be used to iterate on values directly,
+     * but can contain null values.
+     */
     #if (cs && unity)
     public var values(default,null):Vector<Any>;
     #else

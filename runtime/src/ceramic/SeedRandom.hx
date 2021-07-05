@@ -34,7 +34,9 @@ package ceramic;
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/** Seeded random number generator to get reproducible sequences of values. */
+/**
+ * Seeded random number generator to get reproducible sequences of values.
+ */
 class SeedRandom {
 
     public var seed(default,null):Float;
@@ -52,17 +54,23 @@ class SeedRandom {
 
 // Public API
 
-    /** Returns a float number between [0,1) */
+    /**
+     * Returns a float number between [0,1)
+     */
     public inline function random():Float {
         return (seed = (seed * 16807) % 0x7FFFFFFF) / 0x7FFFFFFF + 0.000000000233;
     }
 
-    /** Return an integer between [min, max). */
+    /**
+     * Return an integer between [min, max).
+     */
     public inline function between(min:Int, max:Int):Int {
         return Math.floor(min + (max - min) * random());
     }
 
-    /** Reset the initial value to that of the current seed. */
+    /**
+     * Reset the initial value to that of the current seed.
+     */
     public inline function reset(?initialSeed:Float) {
         if (initialSeed != null) {
             this.initialSeed = initialSeed;

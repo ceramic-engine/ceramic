@@ -258,7 +258,9 @@ enum abstract KeyCode(Int) from Int to Int {
     var EJECT:KeyCode               = 281 | (1<<30);
     var SLEEP:KeyCode               = 282 | (1<<30);
 
-    /** Convert a keyCode to string */
+    /**
+     * Convert a keyCode to string
+     */
     public static function name(keyCode:KeyCode):String {
 
         //we don't use toScanCode because it would consume

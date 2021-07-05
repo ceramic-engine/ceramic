@@ -1,6 +1,8 @@
 package ceramic;
 
-/** An object that can hold any value */
+/**
+ * An object that can hold any value
+ */
 class Value<T> {
 
     public var value:T;

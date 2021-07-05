@@ -14,74 +14,106 @@ class Screen extends Entity implements Observable {
 
 /// Properties
 
-    /** Screen density computed from app's logical width/height
-        settings and native width/height. */
+    /**
+     * Screen density computed from app's logical width/height
+     * settings and native width/height.
+     */
     public var density(default,null):Float = 1.0;
 
-    /** Logical width used in app to position elements.
-        Updated when the screen is resized. */
+    /**
+     * Logical width used in app to position elements.
+     * Updated when the screen is resized.
+     */
     public var width(default,null):Float = 0;
 
-    /** Logical height used in app to position elements.
-        Updated when the screen is resized. */
+    /**
+     * Logical height used in app to position elements.
+     * Updated when the screen is resized.
+     */
     public var height(default,null):Float = 0;
 
-    /** The actual width available on screen, including offsets, in the same unit as `width`.
-        Updated when the screen is resized. */
+    /**
+     * The actual width available on screen, including offsets, in the same unit as `width`.
+     * Updated when the screen is resized.
+     */
     public var actualWidth(default,null):Float = 0;
 
-    /** The actual height available on screen, including offsets, in the same unit as `width`.
-        Updated when the screen is resized. */
+    /**
+     * The actual height available on screen, including offsets, in the same unit as `width`.
+     * Updated when the screen is resized.
+     */
     public var actualHeight(default,null):Float = 0;
 
-    /** Logical x offset.
-        Updated when the screen is resized. */
+    /**
+     * Logical x offset.
+     * Updated when the screen is resized.
+     */
     public var offsetX(default,null):Float = 0;
 
-    /** Logical y offset.
-        Updated when the screen is resized. */
+    /**
+     * Logical y offset.
+     * Updated when the screen is resized.
+     */
     public var offsetY(default,null):Float = 0;
 
-    /** Native width */
+    /**
+     * Native width
+     */
     public var nativeWidth(get,null):Float;
     inline function get_nativeWidth():Float {
         return app.backend.screen.getWidth();
     }
 
-    /** Native height */
+    /**
+     * Native height
+     */
     public var nativeHeight(get,null):Float;
     inline function get_nativeHeight():Float {
         return app.backend.screen.getHeight();
     }
 
-    /** Native pixel ratio/density. */
+    /**
+     * Native pixel ratio/density.
+     */
     public var nativeDensity(get,null):Float;
     inline function get_nativeDensity():Float {
         return app.backend.screen.getDensity();
     }
 
-    /** Pointer x coordinate, computed from mouse and touch events.
-        When using multiple touch inputs at the same time, x will be
-        the mean value of all touches x value. Use this as a
-        convenience when you don't want to deal with multiple positions. */
+    /**
+     * Pointer x coordinate, computed from mouse and touch events.
+     * When using multiple touch inputs at the same time, x will be
+     * the mean value of all touches x value. Use this as a
+     * convenience when you don't want to deal with multiple positions.
+     */
     public var pointerX(default,null):Float = 0;
 
-    /** Pointer y coordinate, computed from mouse and touch events.
-        When using multiple touch inputs at the same time, y will be
-        the mean value of all touches y value. Use this as a
-        convenience when you don't want to deal with multiple positions. */
+    /**
+     * Pointer y coordinate, computed from mouse and touch events.
+     * When using multiple touch inputs at the same time, y will be
+     * the mean value of all touches y value. Use this as a
+     * convenience when you don't want to deal with multiple positions.
+     */
     public var pointerY(default,null):Float = 0;
 
-    /** Pointer x delta since last frame */
+    /**
+     * Pointer x delta since last frame
+     */
     public var pointerDeltaX(default,null):Float = 0;
 
-    /** Pointer y delta since last frame */
+    /**
+     * Pointer y delta since last frame
+     */
     public var pointerDeltaY(default,null):Float = 0;
 
-    /** Mouse x coordinate, computed from mouse events. */
+    /**
+     * Mouse x coordinate, computed from mouse events.
+     */
     public var mouseX(default,null):Float = 0;
 
-    /** Mouse y coordinate, computed from mouse events. */
+    /**
+     * Mouse y coordinate, computed from mouse events.
+     */
     public var mouseY(default,null):Float = 0;
 
     /**
@@ -104,10 +136,14 @@ class Screen extends Entity implements Observable {
      */
     public var mouseWheelDeltaY(default, null):Float = 0;
 
-    /** Touches x and y coordinates by touch index. */
+    /**
+     * Touches x and y coordinates by touch index.
+     */
     public var touches(default,null):Touches = new Touches(8, 0.5, false);
 
-    /** Focused visual */
+    /**
+     * Focused visual
+     */
     public var focusedVisual(default,set):Visual = null;
     function set_focusedVisual(focusedVisual:Visual):Visual {
         if (this.focusedVisual == focusedVisual) return focusedVisual;
@@ -128,24 +164,34 @@ class Screen extends Entity implements Observable {
         return focusedVisual;
     }
 
-    /** Ideal textures density, computed from settings
-        targetDensity and current screen state. */
+    /**
+     * Ideal textures density, computed from settings
+     * targetDensity and current screen state.
+     */
     @observe public var texturesDensity:Float = 1.0;
 
-    /** Root matrix applied to every visual.
-        This is recomputed on screen resize but
-        can be changed otherwise. */
+    /**
+     * Root matrix applied to every visual.
+     * This is recomputed on screen resize but
+     * can be changed otherwise.
+     */
     @:allow(ceramic.Visual)
     private var matrix:Transform = new Transform();
 
-    /** Internal inverted matrix computed from root matrix. */
+    /**
+     * Internal inverted matrix computed from root matrix.
+     */
     @:allow(ceramic.Visual)
     private var reverseMatrix:Transform = new Transform();
 
-    /** In order to prevent nested resizes. */
+    /**
+     * In order to prevent nested resizes.
+     */
     private var resizing:Bool = false;
 
-    /** Whether the screen is between a `pointer down` and an `pointer up` event or not. */
+    /**
+     * Whether the screen is between a `pointer down` and an `pointer up` event or not.
+     */
     public var isPointerDown(get,null):Bool;
     var _numPointerDown:Int = 0;
     inline function get_isPointerDown():Bool { return _numPointerDown > 0; }
@@ -164,8 +210,10 @@ class Screen extends Entity implements Observable {
 
 /// Events
 
-    /** Resize event occurs once at startup, then each time any
-        of native width, height or density changes. */
+    /**
+     * Resize event occurs once at startup, then each time any
+     * of native width, height or density changes.
+     */
     @event function resize();
 
     // Mouse events
@@ -493,7 +541,9 @@ class Screen extends Entity implements Observable {
 
     }
 
-    /** Recompute screen width, height and density from settings and native state. */
+    /**
+     * Recompute screen width, height and density from settings and native state.
+     */
     function updateScaling():Void {
 
         // Update screen scaling
@@ -562,7 +612,9 @@ class Screen extends Entity implements Observable {
 
     }
 
-    /** Recompute transform from screen width, height and density. */
+    /**
+     * Recompute transform from screen width, height and density.
+     */
     function updateTransform():Void {
         
         var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth * density : nativeWidth * nativeDensity;
@@ -1043,8 +1095,10 @@ class Screen extends Entity implements Observable {
 
 /// Hit visual logic
 
-    /** Internal reference to a matched hit visual. This is used to let Visual.hit() return `false`
-        on every visual not related to the matched hit visual, if any is defined. */
+    /**
+     * Internal reference to a matched hit visual. This is used to let Visual.hit() return `false`
+     * on every visual not related to the matched hit visual, if any is defined.
+     */
     @:noCompletion
     public static var matchedHitVisual:Visual = null;
 

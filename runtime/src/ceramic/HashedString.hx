@@ -8,12 +8,16 @@ import haxe.Json;
 
 using StringTools;
 
-/** An utility to encode strings with hashes, allowing to check their validity on decode. */
+/**
+ * An utility to encode strings with hashes, allowing to check their validity on decode.
+ */
 class HashedString {
 
     static var _lastDecodeIncomplete:Bool = false;
 
-    /** Encode the given string `str` and return the result. */
+    /**
+     * Encode the given string `str` and return the result.
+     */
     public static function encode(str:String):String {
 
         var hash = Md5.encode(str);
@@ -23,15 +27,19 @@ class HashedString {
 
     }
 
-    /** Encode and append `str` to the already encoded string `encoded` and return the results.
-        This is equivalent to `result = encoded + HashedString.encode(str)` */
+    /**
+     * Encode and append `str` to the already encoded string `encoded` and return the results.
+     * This is equivalent to `result = encoded + HashedString.encode(str)`
+     */
     public static function append(encoded:String, str:String):String {
 
         return encoded + encode(str);
 
     }
 
-    /** Decode the given `encoded` string and return the result. */
+    /**
+     * Decode the given `encoded` string and return the result.
+     */
     public static function decode(encoded:String):String {
 
         _lastDecodeIncomplete = false;

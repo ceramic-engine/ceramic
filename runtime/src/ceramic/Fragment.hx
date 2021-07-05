@@ -10,7 +10,9 @@ import haxe.Json;
 using ceramic.Extensions;
 using StringTools;
 
-/** A fragment is a group of visuals rendered from data (.fragment file) */
+/**
+ * A fragment is a group of visuals rendered from data (.fragment file)
+ */
 @editable({
     implicitSizeUnlessTrue: 'resizable'
 })
@@ -892,8 +894,10 @@ class Fragment extends Layer {
         return components;
     }
 
-    /** Fragment components mapping. Does not contain components
-        created separatelywith `component()` or macro-based components or components property. */
+    /**
+     * Fragment components mapping. Does not contain components
+     * created separatelywith `component()` or macro-based components or components property.
+     */
     public var fragmentComponents(default,set):ReadOnlyMap<String,Component> = null;
     function set_fragmentComponents(fragmentComponents:ReadOnlyMap<String,Component>):ReadOnlyMap<String,Component> {
         if (this.fragmentComponents == fragmentComponents) return fragmentComponents;

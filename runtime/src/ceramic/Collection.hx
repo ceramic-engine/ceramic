@@ -15,13 +15,15 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
     }
 
-	@:arrayAccess public inline function arrayAccess(index:Int) {
+    @:arrayAccess public inline function arrayAccess(index:Int) {
         
         return this.getByIndex(index);
     
     }
 
-    /** Return a random element contained in the collection */
+    /**
+     * Return a random element contained in the collection
+     */
     public function randomElement():T {
 
         this.checkCombined();
@@ -31,10 +33,12 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
     }
 
-    /** Return a random element contained in the given array that is not equal to the `except` arg.
-        @param except The element we don't want
-        @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
-        @return The random element or `null` if nothing was found */
+    /**
+     * Return a random element contained in the given array that is not equal to the `except` arg.
+     * @param except The element we don't want
+     * @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
+     * @return The random element or `null` if nothing was found
+     */
     public function randomElementExcept(except:T, unsafe:Bool = false):T {
 
         this.checkCombined();
@@ -44,11 +48,13 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
     }
 
-    /** Return a random element contained in the given array that is validated by the provided validator.
-        If no item is valid, returns null.
-        @param array  The array in which we extract the element from
-        @param validator A function that returns true if the item is valid, false if not
-        @return The random element or `null` if nothing was found */
+    /**
+     * Return a random element contained in the given array that is validated by the provided validator.
+     * If no item is valid, returns null.
+     * @param array  The array in which we extract the element from
+     * @param validator A function that returns true if the item is valid, false if not
+     * @return The random element or `null` if nothing was found
+     */
     public function randomElementMatchingValidator(validator:T->Bool):T {
 
         this.checkCombined();
@@ -85,7 +91,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
     var combinedCollections:Array<CollectionImpl<T>> = null;
     var combinedCollectionLastChanges:Array<Int> = null;
     
-	public var length(get,never):Int;
+    public var length(get,never):Int;
     function get_length():Int {
         this.checkCombined();
         if (this.entriesDirty) this.computeEntries();
@@ -94,7 +100,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     public function new() {}
 
-	public function pushAll(entries:Array<T>) {
+    public function pushAll(entries:Array<T>) {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
 
@@ -123,7 +129,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
-	public function push(entry:T) {
+    public function push(entry:T) {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
 
@@ -134,7 +140,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
-	public function remove(entry:T) {
+    public function remove(entry:T) {
 
         assert(combinedCollections == null, 'Cannot remove entries from combined collections');
 
@@ -204,15 +210,15 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
-	inline public function iterator():Iterator<T> {
+    inline public function iterator():Iterator<T> {
 
         checkCombined();
 
         if (entriesDirty) computeEntries();
 
-		return entries.iterator();
+        return entries.iterator();
 
-	}
+    }
 
 /// Internal
 

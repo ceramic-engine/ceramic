@@ -16,7 +16,9 @@ class CollectionUtils {
 
     public function new() {}
 
-    /** Converts an array to an equivalent collection */
+    /**
+     * Converts an array to an equivalent collection
+     */
     public static function toCollection<T>(array:Array<T>):Collection<ValueEntry<T>> {
 
         var collection = new Collection<ValueEntry<T>>();
@@ -28,7 +30,9 @@ class CollectionUtils {
 
     }
 
-    /** Returns a filtered collection from the provided collection and filter. */
+    /**
+     * Returns a filtered collection from the provided collection and filter.
+     */
     public static function filtered<T:CollectionEntry>(collection:Collection<T>, filter:Array<T>->Array<T>, ?cacheKey:String):Collection<T> {
 
         if (cacheKey != null) {
@@ -58,7 +62,9 @@ class CollectionUtils {
 
     }
 
-    /** Returns a combined collection from the provided ones. */
+    /**
+     * Returns a combined collection from the provided ones.
+     */
     public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
     //public static function combined<T:CollectionEntry>(collections:Array<Collection<T>>, cache:Bool = true):Collection<T> {
 

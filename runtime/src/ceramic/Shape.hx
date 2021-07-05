@@ -1,6 +1,8 @@
 package ceramic;
 
-/** Draw shapes by triangulating vertices automatically, with optional holes in it. */
+/**
+ * Draw shapes by triangulating vertices automatically, with optional holes in it.
+ */
 @editable({
     implicitSize: true,
     highlight: {
@@ -12,10 +14,12 @@ package ceramic;
 })
 class Shape extends Mesh {
 
-    /** A flat array of vertex coordinates to describe the shape.
-        `points = ...` is identical to `vertices = ... ; contentDirty = true ;`
-        Note: when editing array content without reassigning it,
-        `contentDirty` must be set to `true` to let the shape being updated accordingly. */
+    /**
+     * A flat array of vertex coordinates to describe the shape.
+     * `points = ...` is identical to `vertices = ... ; contentDirty = true ;`
+     * Note: when editing array content without reassigning it,
+     * `contentDirty` must be set to `true` to let the shape being updated accordingly.
+     */
     @editable({ minItems: 6, points: true })
     public var points(get, set):Array<Float>;
     inline function get_points():Array<Float> {
@@ -37,11 +41,13 @@ class Shape extends Mesh {
         return triangulation;
     }
 
-    /** An array of hole indices, if any.
-        (e.g. `[5, 8]` for a 12-vertex input would mean
-        one hole with vertices 5–7 and another with 8–11).
-        Note: when editing array content without reassigning it,
-        `contentDirty` must be set to `true` to let the shape being updated accordingly. */
+    /**
+     * An array of hole indices, if any.
+     * (e.g. `[5, 8]` for a 12-vertex input would mean
+     * one hole with vertices 5–7 and another with 8–11).
+     * Note: when editing array content without reassigning it,
+     * `contentDirty` must be set to `true` to let the shape being updated accordingly.
+     */
     @editable
     public var holes:Array<Int> = null;
     inline function set_holes(holes:Array<Int>):Array<Int> {
@@ -50,7 +56,9 @@ class Shape extends Mesh {
         return holes;
     }
 
-    /** If set to `true`, width and heigh will be computed from shape points. */
+    /**
+     * If set to `true`, width and heigh will be computed from shape points.
+     */
     @editable({ label: 'Auto Size' })
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {

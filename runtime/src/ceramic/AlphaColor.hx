@@ -1,8 +1,10 @@
 package ceramic;
 
-/** RGBA Color stored as integer.
-    Can be decomposed to Color/Int (RGB) + Float (A) and
-    constructed from Color/Int (RGB) + Float (A). */
+/**
+ * RGBA Color stored as integer.
+ * Can be decomposed to Color/Int (RGB) + Float (A) and
+ * constructed from Color/Int (RGB) + Float (A).
+ */
 abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
     /**

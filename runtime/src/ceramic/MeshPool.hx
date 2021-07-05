@@ -2,7 +2,9 @@ package ceramic;
 
 using ceramic.Extensions;
 
-/** An utility to reuse meshes at application level. */
+/**
+ * An utility to reuse meshes at application level.
+ */
 class MeshPool {
 
     static var availableMeshes:Array<Mesh> = [];
@@ -52,7 +54,9 @@ class MeshPool {
 
     }
 
-    /** Get or create a mesh. The mesh is active an ready to be displayed. */
+    /**
+     * Get or create a mesh. The mesh is active an ready to be displayed.
+     */
     public static function get(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end):Mesh {
 
         if (availableMeshes.length > 0) {
@@ -80,7 +84,9 @@ class MeshPool {
 
     }
 
-    /** Recycle an existing mesh. The mesh will be cleaned up and marked as inactive (e.g. not displayed) */
+    /**
+     * Recycle an existing mesh. The mesh will be cleaned up and marked as inactive (e.g. not displayed)
+     */
     public static function recycle(mesh:Mesh #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         mesh.clear();

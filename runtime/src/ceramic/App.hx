@@ -498,8 +498,10 @@ class App extends Entity {
 
     var visualsContentDirty:Bool = false;
 
-    /** List of functions that will be called and purged when update iteration begins.
-        Useful to run some specific code once exactly before update event is sent. */
+    /**
+     * List of functions that will be called and purged when update iteration begins.
+     * Useful to run some specific code once exactly before update event is sent.
+     */
     var beginUpdateCallbacks:Array<Void->Void> = [];
 
     var disposedEntities:Array<Entity> = [];

@@ -32,7 +32,9 @@ class SelectText extends Entity implements Component implements Observable {
 
     public var textCursorHeightFactor:Float = 1;
 
-    /** Optional container on which pointer events are bound */
+    /**
+     * Optional container on which pointer events are bound
+     */
     @observe public var container:Visual = null;
 
     @observe public var allowSelectingFromPointer:Bool = false;

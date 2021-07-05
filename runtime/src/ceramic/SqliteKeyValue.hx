@@ -13,8 +13,10 @@ import sys.FileSystem;
 
 import ceramic.Shortcuts.*;
 
-/** A string-based key value store using Sqlite as backend.
-    This is expected to be thread safe. */
+/**
+ * A string-based key value store using Sqlite as backend.
+ * This is expected to be thread safe.
+ */
 class SqliteKeyValue extends Entity {
 
     static final APPEND_ENTRIES_LIMIT:Int = 128;

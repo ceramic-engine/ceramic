@@ -16,7 +16,9 @@ import sys.io.File;
 
 using StringTools;
 
-/** Export Runtime Type Information into external XML files. */
+/**
+ * Export Runtime Type Information into external XML files.
+ */
 class ExportApi {
 
     static var outputSubPath:String = 'api';

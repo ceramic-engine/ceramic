@@ -2,7 +2,9 @@ package ceramic;
 
 enum abstract ScanCode(Int) from Int to Int {
 
-    /** Convert a scanCode to a readable name */
+    /**
+     * Convert a scanCode to a readable name
+     */
     public static function name(scanCode:ScanCode):String {
 
         var res = null;

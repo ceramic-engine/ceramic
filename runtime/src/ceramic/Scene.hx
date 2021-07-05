@@ -20,14 +20,18 @@ class Scene extends Layer {
         return _assets = assets;
     }
 
-    /** Set to `false` if you want to disable auto update on this scene object.
-        If auto update is disabled, you become responsible to explicitly call
-        `update(delta)` at every frame yourself. Use this if you want to have control over
-        when the animation update is actually happening. Don't use it to pause animation.
-        (animation can be paused with `paused` property instead) */
+    /**
+     * Set to `false` if you want to disable auto update on this scene object.
+     * If auto update is disabled, you become responsible to explicitly call
+     * `update(delta)` at every frame yourself. Use this if you want to have control over
+     * when the animation update is actually happening. Don't use it to pause animation.
+     * (animation can be paused with `paused` property instead)
+     */
     public var autoUpdate:Bool = true;
 
-    /** Is this scene paused? */
+    /**
+     * Is this scene paused?
+     */
     public var paused:Bool = false;
 
     public function new() {

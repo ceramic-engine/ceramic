@@ -5,7 +5,9 @@ import sys.io.File;
 import sys.FileSystem;
 #end
 
-/** A file watcher for ceramic compatible with `interpret.Watcher`. */
+/**
+ * A file watcher for ceramic compatible with `interpret.Watcher`.
+ */
 class FileWatcher extends Entity #if interpret implements interpret.Watcher #end {
 
     public static var UPDATE_INTERVAL:Float = 1.0;

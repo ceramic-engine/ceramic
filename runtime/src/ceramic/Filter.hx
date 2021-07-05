@@ -7,8 +7,10 @@ import ceramic.Visual;
 
 import ceramic.Shortcuts.*;
 
-/** A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
-    allowing to process the result through a shader, apply blending or alpha on the final result... */
+/**
+ * A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
+ * allowing to process the result through a shader, apply blending or alpha on the final result...
+ */
 class Filter extends Layer implements Observable {
 
 /// Internal
@@ -17,7 +19,9 @@ class Filter extends Layer implements Observable {
 
 /// Public properties
 
-    /** If provided, this id will be assigned to `renderTexture.id`. */
+    /**
+     * If provided, this id will be assigned to `renderTexture.id`.
+     */
     public var textureId(default, set):String = null;
     function set_textureId(textureId:String):String {
         this.textureId = textureId;
@@ -29,9 +33,11 @@ class Filter extends Layer implements Observable {
 
     public var content(default,null):Quad;
 
-    /** If provided, visuals in content will react to hit tests
-        and touch events as if they were inside this hit visual.
-        By default, `hitVisual` is the `Filter` instance itself. */
+    /**
+     * If provided, visuals in content will react to hit tests
+     * and touch events as if they were inside this hit visual.
+     * By default, `hitVisual` is the `Filter` instance itself.
+     */
     public var hitVisual(default, set):Visual = null;
     function set_hitVisual(hitVisual:Visual):Visual {
         if (this.hitVisual == hitVisual) return hitVisual;
@@ -45,9 +51,11 @@ class Filter extends Layer implements Observable {
         return hitVisual;
     }
 
-    /** If `enabled` is set to `false`, no render texture will be used.
-        The children will be displayed on screen directly.
-        Useful to toggle a filter without touching visuals hierarchy. */
+    /**
+     * If `enabled` is set to `false`, no render texture will be used.
+     * The children will be displayed on screen directly.
+     * Useful to toggle a filter without touching visuals hierarchy.
+     */
     public var enabled(default,set):Bool = true;
     function set_enabled(enabled:Bool):Bool {
         if (this.enabled == enabled) return enabled;
@@ -57,7 +65,9 @@ class Filter extends Layer implements Observable {
         return enabled;
     }
 
-    /** Texture filter */
+    /**
+     * Texture filter
+     */
     public var textureFilter(default,set):TextureFilter = LINEAR;
     function set_textureFilter(textureFilter:TextureFilter):TextureFilter {
         if (this.textureFilter == textureFilter) return textureFilter;
@@ -66,7 +76,9 @@ class Filter extends Layer implements Observable {
         return textureFilter;
     }
 
-    /** Auto render? */
+    /**
+     * Auto render?
+     */
     public var autoRender(default,set):Bool = true;
     function set_autoRender(autoRender:Bool):Bool {
         if (this.autoRender == autoRender) return autoRender;
@@ -75,10 +87,12 @@ class Filter extends Layer implements Observable {
         return autoRender;
     }
 
-    /** If set to true, this filter will not render automatically its children.
-        It will instead set their `active` state to `false` unless explicitly rendered.
-        Note that when using explicit render, `active` property on children is managed
-        by this filter. */
+    /**
+     * If set to true, this filter will not render automatically its children.
+     * It will instead set their `active` state to `false` unless explicitly rendered.
+     * Note that when using explicit render, `active` property on children is managed
+     * by this filter.
+     */
     public var explicitRender(default,set):Bool = false;
     function set_explicitRender(explicitRender:Bool):Bool {
         if (this.explicitRender == explicitRender) return explicitRender;
@@ -116,10 +130,14 @@ class Filter extends Layer implements Observable {
         return density;
     }
 
-    /** Internal flag used to keep track of current explicit render state */
+    /**
+     * Internal flag used to keep track of current explicit render state
+     */
     var explicitRenderState:Int = 0;
 
-    /** Used internally when concurrent renders are trigerred */
+    /**
+     * Used internally when concurrent renders are trigerred
+     */
     var explicitRenderPendingResultCallbacks:Array<Void->Void> = null;
 
 /// Lifecycle

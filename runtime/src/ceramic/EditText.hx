@@ -83,7 +83,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return disabled;
     }
 
-    /** Optional container on which pointer events are bound */
+    /**
+     * Optional container on which pointer events are bound
+     */
     public var container(default,set):Visual = null;
     function set_container(container:Visual):Visual {
         if (this.container == container) return container;

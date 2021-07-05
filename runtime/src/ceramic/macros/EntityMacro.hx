@@ -709,9 +709,10 @@ class EntityMacro {
 
     }
 
-    /** Replace `super.destroy();`
-        with `{ _lifecycleState = -1; super.destroy(); }`
-        */
+    /**
+     * Replace `super.destroy();`
+     * with `{ _lifecycleState = -1; super.destroy(); }`
+     */
     static function transformSuperDestroy(e:Expr):Expr {
 
         // This super.destroy() call patch ensures
@@ -730,8 +731,10 @@ class EntityMacro {
 
     static var _appendConstructorSuperToAppend:Expr;
 
-    /** Append constructor `super(...);`
-        with `toAppend` expr */
+    /**
+     * Append constructor `super(...);`
+     * with `toAppend` expr
+     */
     static function appendConstructorSuper(e:Expr, toAppend:Expr):Expr {
 
         _appendConstructorSuperToAppend = toAppend;

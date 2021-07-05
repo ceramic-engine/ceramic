@@ -6,8 +6,10 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 using StringTools;
 
-/** A visual to layout and display text.
-    Works with UTF-8 strings. */
+/**
+ * A visual to layout and display text.
+ * Works with UTF-8 strings.
+ */
 @editable({ implicitSize: true })
 class Text extends Visual {
     
@@ -169,8 +171,10 @@ class Text extends Visual {
         return align;
     }
 
-    /** If set to `true`, text will be displayed with line breaks
-        as needed so that it fits in the requested width. */
+    /**
+     * If set to `true`, text will be displayed with line breaks
+     * as needed so that it fits in the requested width.
+     */
     @editable
     public var fitWidth(default, set):Float = -1;
     function set_fitWidth(fitWidth:Float):Float {
@@ -641,8 +645,10 @@ class Text extends Visual {
 
 /// Helpers
 
-    /** Get the line number matching the given `y` position.
-        `y` is relative this `Text` visual. */
+    /**
+     * Get the line number matching the given `y` position.
+     * `y` is relative this `Text` visual.
+     */
     public function lineForYPosition(y:Float):Int {
 
         if (contentDirty) computeContent();
@@ -665,8 +671,10 @@ class Text extends Visual {
 
     }
 
-    /** Get the character index position relative to `line` at the requested `x` value.
-        `x` is relative this `Text` visual. */
+    /**
+     * Get the character index position relative to `line` at the requested `x` value.
+     * `x` is relative this `Text` visual.
+     */
     public function posInLineForX(line:Int, x:Float):Int {
 
         if (contentDirty) computeContent();
@@ -698,7 +706,9 @@ class Text extends Visual {
 
     }
 
-    /** Get the _global_ character index from the given `line` and `posInLine` index position relative to `line` */
+    /**
+     * Get the _global_ character index from the given `line` and `posInLine` index position relative to `line`
+     */
     public function indexForPosInLine(line:Int, posInLine:Int):Int {
 
         if (contentDirty) computeContent();
@@ -720,8 +730,10 @@ class Text extends Visual {
 
     }
 
-    /** Get an `x` position from the given character `index`.
-        `x` is relative to this `Text` visual. */
+    /**
+     * Get an `x` position from the given character `index`.
+     * `x` is relative to this `Text` visual.
+     */
     public function xPositionAtIndex(index:Int):Float {
 
         if (contentDirty) computeContent();
@@ -755,7 +767,9 @@ class Text extends Visual {
 
     }
 
-    /** Get the line number (starting from zero) of the character at the given `index` */
+    /**
+     * Get the line number (starting from zero) of the character at the given `index`
+     */
     public function lineForIndex(index:Int):Int {
 
         if (contentDirty) computeContent();
@@ -785,7 +799,9 @@ class Text extends Visual {
 
     }
 
-    /** Get a character index position relative to its line from its _global_ `index` position. */
+    /**
+     * Get a character index position relative to its line from its _global_ `index` position.
+     */
     public function posInLineForIndex(index:Int):Int {
 
         if (contentDirty) computeContent();

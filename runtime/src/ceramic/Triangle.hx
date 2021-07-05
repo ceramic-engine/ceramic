@@ -2,8 +2,10 @@ package ceramic;
 
 using ceramic.Extensions;
 
-/** A simple colored triangle, to fulfill all your triangle-shaped needs.
-    The triangle is facing top and fits exactly in `width` and `height` */
+/**
+ * A simple colored triangle, to fulfill all your triangle-shaped needs.
+ * The triangle is facing top and fits exactly in `width` and `height`
+ */
 class Triangle extends Mesh {
 
 /// Overrides

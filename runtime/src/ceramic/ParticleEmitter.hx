@@ -8,7 +8,9 @@ using ceramic.Extensions;
 // Ported to ceramic from HaxeFlixel FlxEmitter, FlxParticle & FlxVelocity:
 // https://github.com/HaxeFlixel/flixel/blob/02e2d18158761d0d508a06126daef2487aa7373c/flixel/effects/particles/FlxEmitter.hx
 
-/** A particle emitter. */
+/**
+ * A particle emitter.
+ */
 class ParticleEmitter extends Entity implements Component implements Observable {
 
 /// Entity/Visual
@@ -25,27 +27,27 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
 /// Configuration shorthands
 
-	/**
-	 * The width and height of the emission area.
+    /**
+     * The width and height of the emission area.
      * If not defined (`-1`), will use visual's width and height bound to this `ParticleEmitter` object, if any
-	 */
+     */
     inline public function size(width:Float, height:Float):Void {
         this.width = width;
         this.height = height;
     }
   
-	/**
-	 * The x and y position of the emission, relative to particles parent (if any)
-	 */
+    /**
+     * The x and y position of the emission, relative to particles parent (if any)
+     */
     inline public function pos(x:Float, y:Float):Void {
         this.x = x;
         this.y = y;
     }
 
-	/**
-	 * If you are using `acceleration`, you can use `maxVelocity` with it
-	 * to cap the speed automatically (very useful!).
-	 */
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
     inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
         this.maxVelocityX = maxVelocityX;
         this.maxVelocityY = maxVelocityY;
@@ -380,35 +382,35 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      */
     public var visualAlphaActive:Bool = true;
 
-	/**
-	 * The width of the emission area.
+    /**
+     * The width of the emission area.
      * If not defined (`-1`), will use visual's width bound to this `ParticleEmitter` object, if any
-	 */
+     */
     public var width:Float = -1;
-	/**
-	 * The height of the emission area.
+    /**
+     * The height of the emission area.
      * If not defined (`-1`), will use visual's height bound to this `ParticleEmitter` object, if any
-	 */
+     */
     public var height:Float = -1;
 
-	/**
-	 * The x position of the emission, relative to particles parent (if any)
-	 */
+    /**
+     * The x position of the emission, relative to particles parent (if any)
+     */
     public var x:Float = 0;
-	/**
-	 * The y position of the emission, relative to particles parent (if any)
-	 */
+    /**
+     * The y position of the emission, relative to particles parent (if any)
+     */
     public var y:Float = 0;
 
-	/**
-	 * If you are using `acceleration`, you can use `maxVelocity` with it
-	 * to cap the speed automatically (very useful!).
-	 */
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
     public var maxVelocityX:Float = 10000;
-	/**
-	 * If you are using `acceleration`, you can use `maxVelocity` with it
-	 * to cap the speed automatically (very useful!).
-	 */
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
     public var maxVelocityY:Float = 10000;
 
     /**
@@ -466,9 +468,9 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     public var speedEndMax:Float = 100;
     
     /**
-	 * Use in conjunction with angularAcceleration for fluid spin speed control.
-	 */
-	public var maxAngularVelocity:Float = 10000;
+     * Use in conjunction with angularAcceleration for fluid spin speed control.
+     */
+    public var maxAngularVelocity:Float = 10000;
 
     /**
      * Enable or disable the angular acceleration range of particles launched from this emitter.
@@ -853,7 +855,9 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
-    /** Emit one or more particles if continuous emission is active and enough time has passed */
+    /**
+     * Emit one or more particles if continuous emission is active and enough time has passed
+     */
     inline function emitContinuousParticlesIfNeeded(delta:Float):Void {
 
         _continuousTimer += delta;
@@ -886,7 +890,9 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
-    /** Update a particle (and its visual) from its parameter and elapsed time */
+    /**
+     * Update a particle (and its visual) from its parameter and elapsed time
+     */
     function updateParticle(particle:ParticleItem, delta:Float):Void {
 
         if (particle.age < particle.lifespan) {
@@ -1005,8 +1011,10 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
-    /** Get a visual for a particle that will be emitted right after.
-        If a visual is being recycled, provide it as argument. */
+    /**
+     * Get a visual for a particle that will be emitted right after.
+     * If a visual is being recycled, provide it as argument.
+     */
     function getParticleVisual(existingVisual:Visual):Visual {
 
         // Default implementation returns a 5x5 quad
@@ -1047,7 +1055,9 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
-    /** Recycle a particle's visual to reuse it later. */
+    /**
+     * Recycle a particle's visual to reuse it later.
+     */
     function recycleParticleVisual(visualToRecycle:Visual):Void {
 
         // Just make the visual inactive
@@ -1098,7 +1108,9 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
-    /** Stop emitting (if it was emitting) */
+    /**
+     * Stop emitting (if it was emitting)
+     */
     public function stop():Void {
 
         status = _activeParticles.length > 0 ? SPREADING : IDLE;

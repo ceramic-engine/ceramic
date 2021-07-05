@@ -10,7 +10,9 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
-/** An utility to triangulate indices from a set of vertices */
+/**
+ * An utility to triangulate indices from a set of vertices
+ */
 class Triangulate {
 
     static var poly2triPointsPool:Array<Poly2TriPoint> = [];
@@ -18,7 +20,9 @@ class Triangulate {
     static var poly2triSweepContext:SweepContext;
     static var poly2triSweep:Sweep;
 
-    /** Triangulate the given vertices and fills the indices array accordingly */
+    /**
+     * Triangulate the given vertices and fills the indices array accordingly
+     */
     public static function triangulate(vertices:Array<Float>, indices:Array<Int>, ?holes:Array<Int>, method:TriangulateMethod = POLY2TRI):Void {
 
         // Empty indices data

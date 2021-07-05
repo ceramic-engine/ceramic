@@ -4,12 +4,14 @@ import tracker.Events;
 
 // Portions of matrix manipulation code taken from OpenFL and PIXI
 
-/** Transform holds matrix data to make 2d rotate, translate, scale and skew transformations.
-    Angles are in degrees.
-    Representation:
-    | a | c | tx |
-    | b | d | ty |
-    | 0 | 0 | 1  | */
+/**
+ * Transform holds matrix data to make 2d rotate, translate, scale and skew transformations.
+ * Angles are in degrees.
+ * Representation:
+ * | a | c | tx |
+ * | b | d | ty |
+ * | 0 | 0 | 1  |
+ */
 @:allow(ceramic.TransformPool)
 class Transform implements Events {
 
@@ -280,7 +282,9 @@ class Transform implements Events {
 
     }
 
-    /** Rotate by angle (in radians) */
+    /**
+     * Rotate by angle (in radians)
+     */
     inline public function rotate(angle:Float):Void {
 
         var cos = Math.cos(angle);

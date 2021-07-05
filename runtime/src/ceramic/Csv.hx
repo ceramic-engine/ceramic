@@ -8,7 +8,9 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
-/** Utilities to parse CSV and related */
+/**
+ * Utilities to parse CSV and related
+ */
 class Csv {
 
     public static function parse(csv:String):Array<DynamicAccess<String>> {

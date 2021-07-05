@@ -4,7 +4,9 @@ import haxe.ds.Vector;
 
 #if (!documentation && (cpp || cs))
 
-/** An float map that uses integers as key. */
+/**
+ * An float map that uses integers as key.
+ */
 class IntFloatMap {
 
     inline static var NO_VALUE = 0;
@@ -17,12 +19,16 @@ class IntFloatMap {
 
     var nextFreeIndex:Int = 0;
 
-    /** When this map is marked as iterable, this array will contain every key. */
+    /**
+     * When this map is marked as iterable, this array will contain every key.
+     */
     public var iterableKeys(default,null):Array<Int> = null;
 
-    /** Values as they are stored.
-        Can be used to iterate on values directly,
-        but can contain null values. */
+    /**
+     * Values as they are stored.
+     * Can be used to iterate on values directly,
+     * but can contain null values.
+     */
     public var values(default,null):Vector<Float>;
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {

@@ -6,7 +6,9 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 using StringTools;
 
-/** A texture is an image ready to be drawn. */
+/**
+ * A texture is an image ready to be drawn.
+ */
 class Texture extends Entity {
 
 /// Internal

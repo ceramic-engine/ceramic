@@ -1,9 +1,13 @@
 package ceramic;
 
-/** Geometry-related utilities. */
+/**
+ * Geometry-related utilities.
+ */
 class GeometryUtils {
 
-    /** Returns `true` if the point `(x,y)` is inside the given (a,b,c) triangle */
+    /**
+     * Returns `true` if the point `(x,y)` is inside the given (a,b,c) triangle
+     */
     public static inline function pointInTriangle(x:Float, y:Float, ax:Float, ay:Float, bx:Float, by:Float, cx:Float, cy:Float):Bool {
 
         inline function sign(x:Float, y:Float, ax:Float, ay:Float, bx:Float, by:Float):Float {

@@ -1,6 +1,8 @@
 package ceramic;
 
-/** A bunch of static extensions to make life easier. */
+/**
+ * A bunch of static extensions to make life easier.
+ */
 class Extensions<T> {
 
 /// Array extensions
@@ -47,18 +49,22 @@ class Extensions<T> {
         }
     }
 
-    /** Return a random element contained in the given array */
+    /**
+     * Return a random element contained in the given array
+     */
     inline public static function randomElement<T>(array:Array<T>):T {
 
         return array[Math.floor(Math.random() * 0.99999 * array.length)];
 
     }
 
-    /** Return a random element contained in the given array that is not equal to the `except` arg.
-        @param array  The array in which we extract the element from
-        @param except The element we don't want
-        @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
-        @return The random element or `null` if nothing was found */
+    /**
+     * Return a random element contained in the given array that is not equal to the `except` arg.
+     * @param array  The array in which we extract the element from
+     * @param except The element we don't want
+     * @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
+     * @return The random element or `null` if nothing was found
+     */
     public static function randomElementExcept<T>(array:Array<T>, except:T, unsafe:Bool = false):T {
 
         if (unsafe) {
@@ -93,11 +99,13 @@ class Extensions<T> {
 
     }
 
-    /** Return a random element contained in the given array that is validated by the provided validator.
-        If no item is valid, returns null.
-        @param array  The array in which we extract the element from
-        @param validator A function that returns true if the item is valid, false if not
-        @return The random element or `null` if nothing was found */
+    /**
+     * Return a random element contained in the given array that is validated by the provided validator.
+     * If no item is valid, returns null.
+     * @param array  The array in which we extract the element from
+     * @param validator A function that returns true if the item is valid, false if not
+     * @return The random element or `null` if nothing was found
+     */
     public static function randomElementMatchingValidator<T>(array:Array<T>, validator:T->Bool):T {
 
         // Work on a copy
@@ -118,26 +126,28 @@ class Extensions<T> {
 
     }
 
-    /** Shuffle an Array. This operation affects the array in place.
-        The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle) */
-	public static function shuffle<T>(arr:Array<T>):Void
-	{
+    /**
+     * Shuffle an Array. This operation affects the array in place.
+     * The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
+     */
+    public static function shuffle<T>(arr:Array<T>):Void
+    {
         inline function int(from:Int, to:Int):Int
         {
             return from + Math.floor(((to - from + 1) * Math.random()));
         }
 
-		if (arr != null) {
-			for (i in 0...arr.length) {
-				var j = int(0, arr.length - 1);
-				var a = arr[i];
-				var b = arr[j];
-				arr[i] = b;
-				arr[j] = a;
-			}
-		}
+        if (arr != null) {
+            for (i in 0...arr.length) {
+                var j = int(0, arr.length - 1);
+                var a = arr[i];
+                var b = arr[j];
+                arr[i] = b;
+                arr[j] = a;
+            }
+        }
 
-	}
+    }
 
     public static function swapElements<T>(arr:Array<T>, index0:Int, index1:Int):Void {
 

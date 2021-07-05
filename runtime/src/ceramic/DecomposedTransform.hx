@@ -1,8 +1,10 @@
 package ceramic;
 
-/** Decomposed transform holds rotation, translation, scale, skew and pivot informations.
-    Provided by Transform.decompose() method.
-    Angles are in radians. */
+/**
+ * Decomposed transform holds rotation, translation, scale, skew and pivot informations.
+ * Provided by Transform.decompose() method.
+ * Angles are in radians.
+ */
 class DecomposedTransform {
 
     inline public function new() {}

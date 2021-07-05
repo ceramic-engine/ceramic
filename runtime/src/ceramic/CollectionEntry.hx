@@ -24,15 +24,19 @@ class CollectionEntry {
     @editable
     public var name:String;
 
-    /** A unique index for this collection entry instance.
-        Warning:
-            this index is in no way predictable and may vary
-            for each entry between each run of the app!
-            This is intended to be used as a fast integer-typed runtime identifier,
-            but do not use this to identify entries when persisting data to disk etc... */
+    /**
+     * A unique index for this collection entry instance.
+     * Warning:
+     *     this index is in no way predictable and may vary
+     *     for each entry between each run of the app!
+     *     This is intended to be used as a fast integer-typed runtime identifier,
+     *     but do not use this to identify entries when persisting data to disk etc...
+     */
     public var index(default,null):Int;
 
-    /** Constructor */
+    /**
+     * Constructor
+     */
     public function new(?id:String, ?name:String) {
 
         this.index = (_nextIndex++);
@@ -41,10 +45,12 @@ class CollectionEntry {
 
     }
 
-    /** Set entry fields from given raw data.
-        Takes care of converting types when needed, and possible.
-        It's ok if raw field are strings, like when stored in CSV files.
-        Raw types can be converted to: `Bool`, `Int`, `Float`, `Color` (`Int`), `String` and `enum` types */
+    /**
+     * Set entry fields from given raw data.
+     * Takes care of converting types when needed, and possible.
+     * It's ok if raw field are strings, like when stored in CSV files.
+     * Raw types can be converted to: `Bool`, `Int`, `Float`, `Color` (`Int`), `String` and `enum` types
+     */
     public function setRawData(data:Dynamic) {
 
         var clazz = Type.getClass(this);
@@ -116,8 +122,10 @@ class CollectionEntry {
 
     }
 
-    /** Override this method to perform custom deserialisation on a specific field. If the overrided method
-        returns `true`, default behavior will be skipped for the related field.*/
+    /**
+     * Override this method to perform custom deserialisation on a specific field. If the overrided method
+     * returns `true`, default behavior will be skipped for the related field.
+     */
     public function setRawField(name:String, rawValue:Dynamic):Bool {
 
         return false;

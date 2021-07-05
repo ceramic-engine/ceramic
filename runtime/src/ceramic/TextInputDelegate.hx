@@ -2,9 +2,11 @@ package ceramic;
 
 interface TextInputDelegate {
 
-    /** Returns the position in `toLine` which is closest
-        to the position in `fromLine`/`fromPosition` (in X coordinates).
-        Positions are relative to their line. */
+    /**
+     * Returns the position in `toLine` which is closest
+     * to the position in `fromLine`/`fromPosition` (in X coordinates).
+     * Positions are relative to their line.
+     */
     function textInputClosestPositionInLine(fromPosition:Int, fromLine:Int, toLine:Int):Int;
 
     function textInputNumberOfLines():Int;

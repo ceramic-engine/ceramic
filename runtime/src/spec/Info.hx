@@ -1,7 +1,9 @@
 package spec;
 
-/** Various backend informations.
-    Important: implementstions can be instanciated both at runtime and at compile time. */
+/**
+ * Various backend informations.
+ * Important: implementstions can be instanciated both at runtime and at compile time.
+ */
 interface Info {
 
 /// System

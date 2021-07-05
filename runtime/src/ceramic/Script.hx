@@ -301,25 +301,25 @@ class Interp extends hscript.Interp {
 
     }
 
-	override function get(o:Dynamic, f:String):Dynamic {
+    override function get(o:Dynamic, f:String):Dynamic {
         if (o == null) error(EInvalidAccess(f));
         if (Std.isOfType(o, ScriptModule)) {
             var module:ScriptModule = cast o;
             return module.owner.get(f);
         }
-		return {
-			#if php
-				// https://github.com/HaxeFoundation/haxe/issues/4915
-				try {
-					Reflect.getProperty(o, f);
-				} catch (e:Dynamic) {
-					Reflect.field(o, f);
-				}
-			#else
-				Reflect.getProperty(o, f);
-			#end
-		}
-	}
+        return {
+            #if php
+                // https://github.com/HaxeFoundation/haxe/issues/4915
+                try {
+                    Reflect.getProperty(o, f);
+                } catch (e:Dynamic) {
+                    Reflect.field(o, f);
+                }
+            #else
+                Reflect.getProperty(o, f);
+            #end
+        }
+    }
 
     override function cnew(cl:String, args:Array<Dynamic>):Dynamic {
 

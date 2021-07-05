@@ -196,33 +196,33 @@ class Particles<T:ParticleEmitter> extends Visual {
     inline function get_emitterVisualRotationActive():Bool return emitter.visualRotationActive;
     inline function set_emitterVisualRotationActive(visualRotationActive:Bool):Bool return emitter.visualRotationActive = visualRotationActive;
 
-	/**
-	 * The width of the emission area.
+    /**
+     * The width of the emission area.
      * If not defined (`-1`), will use visual's width bound to this `ParticleEmitter` object, if any
-	 */
+     */
     @editable({ label: 'Emitter Width', group: 'emitterSize' })
     public var emitterWidth(get,set):Float;
     inline function get_emitterWidth():Float return emitter.width;
     inline function set_emitterWidth(width:Float):Float return emitter.width = width;
-	/**
-	 * The height of the emission area.
+    /**
+     * The height of the emission area.
      * If not defined (`-1`), will use visual's height bound to this `ParticleEmitter` object, if any
-	 */
+     */
     @editable({ label: 'Emitter Height', group: 'emitterSize' })
     public var emitterHeight(get,set):Float;
     inline function get_emitterHeight():Float return emitter.height;
     inline function set_emitterHeight(height:Float):Float return emitter.height = height;
 
-	/**
-	 * The x position of the emission, relative to particles parent (if any)
-	 */
+    /**
+     * The x position of the emission, relative to particles parent (if any)
+     */
     @editable({ label: 'Emitter X', group: 'emitterPos' })
     public var emitterX(get,set):Float;
     inline function get_emitterX():Float return emitter.x;
     inline function set_emitterX(x:Float):Float return emitter.x = x;
-	/**
-	 * The y position of the emission, relative to particles parent (if any)
-	 */
+    /**
+     * The y position of the emission, relative to particles parent (if any)
+     */
     @editable({ label: 'Emitter Y', group: 'emitterPos' })
     public var emitterY(get,set):Float;
     inline function get_emitterY():Float return emitter.y;
@@ -236,18 +236,18 @@ class Particles<T:ParticleEmitter> extends Visual {
     inline function get_emitterVelocityActive():Bool return emitter.velocityActive;
     inline function set_emitterVelocityActive(velocityActive:Bool):Bool return emitter.velocityActive = velocityActive;
 
-	/**
-	 * If you are using `acceleration`, you can use `maxVelocity` with it
-	 * to cap the speed automatically (very useful!).
-	 */
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
     @editable({ label: 'Max Vel. X', group: 'emitterMaxVelocity' })
     public var emitterMaxVelocityX(get,set):Float;
     inline function get_emitterMaxVelocityX():Float return emitter.maxVelocityX;
     inline function set_emitterMaxVelocityX(maxVelocityX:Float):Float return emitter.maxVelocityX = maxVelocityX;
-	/**
-	 * If you are using `acceleration`, you can use `maxVelocity` with it
-	 * to cap the speed automatically (very useful!).
-	 */
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
     @editable({ label: 'Max Vel. Y', group: 'emitterMaxVelocity' })
     public var emitterMaxVelocityY(get,set):Float;
     inline function get_emitterMaxVelocityY():Float return emitter.maxVelocityY;
@@ -328,9 +328,9 @@ class Particles<T:ParticleEmitter> extends Visual {
     public var speedEndMax:Float = 100;
     
     /**
-	 * Use in conjunction with angularAcceleration for fluid spin speed control.
-	 */
-	public var maxAngularVelocity:Float = 10000;
+     * Use in conjunction with angularAcceleration for fluid spin speed control.
+     */
+    public var maxAngularVelocity:Float = 10000;
 
     /**
      * Enable or disable the angular acceleration range of particles launched from this emitter.

@@ -15,35 +15,53 @@ class Asset extends Entity implements Observable {
 
 /// Properties
 
-    /** Asset kind */
+    /**
+     * Asset kind
+     */
     public var kind(default,null):String;
 
-    /** Asset name */
+    /**
+     * Asset name
+     */
     public var name(default,set):String;
 
-    /** Asset path */
+    /**
+     * Asset path
+     */
     public var path(default,set):String;
 
-    /** Asset target density. Some assets depend on current screen density,
-        like bitmap fonts, textures. Default is 1.0 */
+    /**
+     * Asset target density. Some assets depend on current screen density,
+     * like bitmap fonts, textures. Default is 1.0
+     */
     public var density(default,null):Float = 1.0;
 
-    /** Asset owner. The owner is a group of assets (Assets instance). When the owner gets
-        destroyed, every asset it owns get destroyed as well. */
+    /**
+     * Asset owner. The owner is a group of assets (Assets instance). When the owner gets
+     * destroyed, every asset it owns get destroyed as well.
+     */
     public var owner(default,null):Assets;
 
-    /** Optional runtime assets, used to compute path. */
+    /**
+     * Optional runtime assets, used to compute path.
+     */
     public var runtimeAssets(default,set):RuntimeAssets;
 
-    /** Asset options. Depends on asset kind and even backend in some cases. */
+    /**
+     * Asset options. Depends on asset kind and even backend in some cases.
+     */
     public var options(default,null):AssetOptions;
 
-    /** Sub assets-list. Defaults to null but some kind of assets (like bitmap fonts) instanciate it to load sub-assets it depends on. */
+    /**
+     * Sub assets-list. Defaults to null but some kind of assets (like bitmap fonts) instanciate it to load sub-assets it depends on.
+     */
     public var assets(default,null):Assets = null;
 
-    /** Manage asset retain count. Increase it by calling `retain()` and decrease it by calling `release()`.
-        This can be used when mutliple objects are using the same assets
-        without knowing in advance when they will be needed. */
+    /**
+     * Manage asset retain count. Increase it by calling `retain()` and decrease it by calling `release()`.
+     * This can be used when mutliple objects are using the same assets
+     * without knowing in advance when they will be needed.
+     */
     public var refCount(default,null):Int = 0;
 
     @observe public var status:AssetStatus = NONE;

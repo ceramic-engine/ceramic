@@ -12,10 +12,12 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** An internal class that encapsulate platform-specific code.
-    We usually want platform-specific code to be located in a backend,
-    but it may happen that sometimes creating a backend interface is overkill.
-    That's where this comes handy. */
+/**
+ * An internal class that encapsulate platform-specific code.
+ * We usually want platform-specific code to be located in a backend,
+ * but it may happen that sometimes creating a backend interface is overkill.
+ * That's where this comes handy.
+ */
 class PlatformSpecific {
 
     public static function postAppInit():Void {

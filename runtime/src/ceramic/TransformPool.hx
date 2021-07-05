@@ -2,19 +2,25 @@ package ceramic;
 
 using ceramic.Extensions;
 
-/** An utility to reuse transform matrix object at application level. */
+/**
+ * An utility to reuse transform matrix object at application level.
+ */
 class TransformPool {
 
     static var availableTransforms:Array<Transform> = [];
 
-    /** Get or create a transform. The transform object is ready to be used. */
+    /**
+     * Get or create a transform. The transform object is ready to be used.
+     */
     inline public static function get():Transform {
 
         return (availableTransforms.length > 0) ? availableTransforms.pop() : new Transform();
 
     }
 
-    /** Recycle an existing transform. The transform will be cleaned up. */
+    /**
+     * Recycle an existing transform. The transform will be cleaned up.
+     */
     public static function recycle(transform:Transform):Void {
 
         transform.offChange();
