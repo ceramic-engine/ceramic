@@ -32,7 +32,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
-                electron = untyped __js__("require('electron')");
+                electron = js.Syntax.code("require('electron')");
             }
             catch (e:Dynamic) {}
         }
@@ -160,7 +160,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return FileSystem.exists(path) && !FileSystem.isDirectory(path);
         #elseif web
         if (electron != null) {
-            var fs = untyped __js__("{0}.remote.require('fs')", electron);
+            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
             return fs.existsSync(path);
         }
         else {
@@ -180,7 +180,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return stat.mtime.getTime();
         #elseif web
         if (electron != null) {
-            var fs = untyped __js__("{0}.remote.require('fs')", electron);
+            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
             var stat = fs.statSync(path);
             if (stat == null) return -1;
             return stat.mtime.getTime();
@@ -200,7 +200,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return File.getContent(path);
         #elseif web
         if (electron != null) {
-            var fs = untyped __js__("{0}.remote.require('fs')", electron);
+            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
             return fs.readFileSync(path, 'utf8');
         }
         else {

@@ -261,7 +261,7 @@ class Files {
         // Use shell if available
         #if (node || nodejs || hxnodejs)
         if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
-            ChildProcess.execSync('rm -rf ' + toDelete.quoteUnixArg());
+            ChildProcess.execSync('rm -rf ' + haxe.SysTools.quoteUnixArg(toDelete));
             return;
         }
         #end
