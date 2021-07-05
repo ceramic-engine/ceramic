@@ -66,7 +66,7 @@ class Entity implements Events implements Lazy {
      */
     @:noCompletion var _lifecycleState:Int = 0;
 
-#if ceramic_entity_script
+#if plugin_script
     public var scriptContent(get,set):ScriptContent;
     function get_scriptContent():ScriptContent {
         var comp = component('script');

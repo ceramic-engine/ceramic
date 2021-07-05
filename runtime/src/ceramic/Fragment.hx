@@ -490,7 +490,7 @@ class Fragment extends Layer {
             add(cast instance);
         }
 
-        #if ceramic_entity_script
+        #if plugin_script
         // If there is a script object, give access to fragment
         var script = instance.script;
         if (script != null) {
