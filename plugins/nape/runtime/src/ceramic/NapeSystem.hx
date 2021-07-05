@@ -7,7 +7,7 @@ using ceramic.Extensions;
 @:allow(ceramic.App)
 class NapeSystem extends System {
 
-#if ceramic_nape_physics
+#if plugin_nape
 
     static var _matrix:Transform = new Transform();
 

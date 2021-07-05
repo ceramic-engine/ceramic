@@ -2,7 +2,7 @@ package ceramic;
 
 class VisualNapePhysics extends Entity {
 
-#if ceramic_nape_physics
+#if plugin_nape
 
     public var visual:Visual = null;
 

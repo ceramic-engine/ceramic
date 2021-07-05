@@ -363,7 +363,7 @@ class App extends Entity {
 
 #end
 
-#if ceramic_nape_physics
+#if plugin_nape
 
     public var nape:NapeSystem = null;
 
@@ -479,7 +479,7 @@ class App extends Entity {
         arcade = new ArcadeSystem();
 #end
 
-#if ceramic_nape_physics
+#if plugin_nape
         nape = new NapeSystem();
 #end
 

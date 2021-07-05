@@ -663,7 +663,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 #end
 
-#if ceramic_nape_physics
+#if plugin_nape
 
 /// Arcade physics
 
@@ -1397,7 +1397,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         }
 #end
 
-#if ceramic_nape_physics
+#if plugin_nape
         if (nape != null) {
             nape.destroy();
             nape = null;

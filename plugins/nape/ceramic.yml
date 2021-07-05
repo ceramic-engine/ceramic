@@ -1,0 +1,9 @@
+plugin:
+    name: Nape
+
+    runtime:
+        if plugin_nape:
+            +libs:
+                - nape
+            +paths:
+                - {plugin:cwd}/runtime/src
