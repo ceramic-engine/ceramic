@@ -37,7 +37,7 @@ class Input extends Entity {
 
     public var activeGamepads:ReadOnlyArray<Int> = [];
 
-    public function new() {
+    private function new() {
 
         super();
 
