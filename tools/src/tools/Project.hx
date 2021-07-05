@@ -310,10 +310,12 @@ class ProjectLoader {
                 app.defines = {};
             }
 
+            // Extract enabled plugins
+            var enabledPlugins = extractEnabledPlugins(app, defines);
+
             // Create `plugin_{plugin}` define from every plugin entry explicitly put in project file
-            if (app.plugins != null && Std.isOfType(app.plugins, Array)) {
-                var pluginList:Array<String> = app.plugins;
-                for (pluginName in pluginList) {
+            if (enabledPlugins != null && enabledPlugins.length > 0) {
+                for (pluginName in enabledPlugins) {
                     var key = 'plugin_' + pluginName;
                     if (!defines.exists(key)) {
                         defines.set(key, '');
@@ -545,6 +547,25 @@ class ProjectLoader {
     }
 
 /// Internal
+
+    static function extractEnabledPlugins(data:Dynamic, defines:Map<String,String>):Array<String> {
+
+        var result = [];
+        data = Json.parse(Json.stringify(data));
+        defines = defines.copy();
+
+        evaluateConditionals(data, defines, true);
+
+        if (data.plugins != null && Std.isOfType(data.plugins, Array)) {
+            var pluginList:Array<String> = data.plugins;
+            for (pluginName in pluginList) {
+                result.push(pluginName);
+            }
+        }
+
+        return result;
+
+    }
 
     static function evaluateConditionals(data:Dynamic, defines:Map<String,String>, isRoot:Bool):Void {
 
