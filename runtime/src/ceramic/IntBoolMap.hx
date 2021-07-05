@@ -1,6 +1,6 @@
 package ceramic;
 
-#if cpp
+#if (!documentation && cpp)
 
 /** A map that uses int as keys and booleans as values. */
 abstract IntBoolMap(IntIntMap) {

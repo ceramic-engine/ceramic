@@ -2,7 +2,11 @@ package backend;
 
 import clay.graphics.Graphics;
 
-abstract TextureId(clay.Types.TextureId) from clay.Types.TextureId to clay.Types.TextureId {
+#if documentation
+typedef TextureId = TextureIdClayImpl;
+#end
+
+abstract #if documentation TextureIdClayImpl(clay.Types.TextureId) #else TextureId(clay.Types.TextureId) #end from clay.Types.TextureId to clay.Types.TextureId {
 
     #if (!debug && !completion) inline #end public static var DEFAULT:TextureId = Graphics.NO_TEXTURE;
 

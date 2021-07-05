@@ -2,7 +2,7 @@ package ceramic;
 
 import haxe.ds.Vector;
 
-#if (cpp || cs)
+#if (!documentation && (cpp || cs))
 
 /** An float map that uses integers as key. */
 class IntFloatMap {

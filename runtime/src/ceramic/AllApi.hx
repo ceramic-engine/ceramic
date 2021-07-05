@@ -7,7 +7,9 @@ import Array;
 import Type;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
+#if plugin_script
 import ceramic.scriptable.ScriptableMap;
+#end
 
 import tracker.Autorun;
 import tracker.DynamicEvents;
@@ -31,11 +33,15 @@ import assets.Sounds;
 import assets.Texts;
 */
 
+#if plugin_script
 import ceramic.scriptable.ScriptableAlphaColor;
-#if ceramic_cppia_host import ceramic.AlphaColor; #end
+#end
+#if (ceramic_cppia_host || documentation) import ceramic.AlphaColor; #end
 import ceramic.App;
 import ceramic.Arc;
+#if plugin_arcade
 import ceramic.ArcadeSystem;
+#end
 import ceramic.Asset;
 import ceramic.AssetId;
 import ceramic.AssetOptions;
@@ -51,15 +57,17 @@ import ceramic.BitmapFontCharacter;
 import ceramic.BitmapFontData;
 import ceramic.BitmapFontDistanceFieldData;
 import ceramic.BitmapFontParser;
+#if plugin_script
 import ceramic.scriptable.ScriptableBlending;
-#if ceramic_cppia_host import ceramic.Blending; #end
+#end
+#if (ceramic_cppia_host || documentation) import ceramic.Blending; #end
 import ceramic.Border;
 import ceramic.BorderPosition;
 import ceramic.Click;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
 import ceramic.scriptable.ScriptableColor;
-#if ceramic_cppia_host import ceramic.Color; #end
+#if (ceramic_cppia_host || documentation) import ceramic.Color; #end
 import ceramic.Component;
 import ceramic.ComputeFps;
 import ceramic.ConvertComponentMap;
@@ -72,7 +80,7 @@ import ceramic.Csv;
 import ceramic.CustomAssetKind;
 import ceramic.DatabaseAsset;
 import ceramic.scriptable.ScriptableDebugRendering;
-#if ceramic_cppia_host import ceramic.DebugRendering; #end
+#if (ceramic_cppia_host || documentation) import ceramic.DebugRendering; #end
 import ceramic.DecomposedTransform;
 import ceramic.DoubleClick;
 import ceramic.Easing;
@@ -86,7 +94,7 @@ import ceramic.Files;
 import ceramic.FileWatcher;
 import ceramic.Filter;
 import ceramic.scriptable.ScriptableFlags;
-#if ceramic_cppia_host import ceramic.Flags; #end
+#if (ceramic_cppia_host || documentation) import ceramic.Flags; #end
 import ceramic.Float32Array;
 import ceramic.FontAsset;
 import ceramic.Fragment;
@@ -118,12 +126,16 @@ import ceramic.LineJoin;
 import ceramic.Logger;
 import ceramic.Mesh;
 import ceramic.scriptable.ScriptableMeshColorMapping;
-#if ceramic_cppia_host import ceramic.MeshColorMapping; #end
+#if (ceramic_cppia_host || documentation) import ceramic.MeshColorMapping; #end
 import ceramic.MeshPool;
 import ceramic.Ngon;
+#if plugin_script
 import ceramic.scriptable.ScriptableMouseButton;
-#if ceramic_cppia_host import ceramic.MouseButton; #end
+#end
+#if (ceramic_cppia_host || documentation) import ceramic.MouseButton; #end
+#if plugin_nape
 import ceramic.NapeSystem;
+#end
 import ceramic.ParticleItem;
 import ceramic.Particles;
 import ceramic.ParticlesLaunchMode;
@@ -135,8 +147,6 @@ import ceramic.Quad;
 import ceramic.Renderer;
 import ceramic.RenderTexture;
 import ceramic.ReusableArray;
-import ceramic.scriptable.ScriptableRotateFrame;
-#if ceramic_cppia_host import ceramic.RotateFrame; #end
 import ceramic.Runner;
 import ceramic.RuntimeAssets;
 import ceramic.ScanCode;
@@ -199,8 +209,12 @@ import ceramic.Utils;
 import ceramic.ValueEntry;
 import ceramic.Velocity;
 import ceramic.Visual;
+#if plugin_arcade
 import ceramic.VisualArcadePhysics;
+#end
+#if plugin_nape
 import ceramic.VisualNapePhysics;
+#end
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 
@@ -231,6 +245,8 @@ class AllApi {
 
     public static function configureHscript(interp:hscript.Interp):Void {
 
+        #if plugin_script
+
         interp.variables.set('app', ceramic.Shortcuts.app);
         interp.variables.set('screen', ceramic.Shortcuts.screen);
         interp.variables.set('audio', ceramic.Shortcuts.audio);
@@ -258,7 +274,9 @@ class AllApi {
         
         interp.variables.set('AlphaColor', ceramic.scriptable.ScriptableAlphaColor);
         interp.variables.set('App', ceramic.App);
+        #if plugin_arcade
         interp.variables.set('ArcadeSystem', ceramic.ArcadeSystem);
+        #end
         interp.variables.set('Asset', ceramic.Asset);
         interp.variables.set('AssetPathInfo', ceramic.AssetPathInfo);
         interp.variables.set('Assets', ceramic.Assets);
@@ -330,7 +348,9 @@ class AllApi {
         interp.variables.set('MeshColorMapping', ceramic.scriptable.ScriptableMeshColorMapping);
         interp.variables.set('MeshPool', ceramic.MeshPool);
         interp.variables.set('MouseButton', ceramic.scriptable.ScriptableMouseButton);
+        #if plugin_nape
         interp.variables.set('NapeSystem', ceramic.NapeSystem);
+        #end
         interp.variables.set('ParticleItem', ceramic.ParticleItem);
         interp.variables.set('Particles', ceramic.Particles);
         interp.variables.set('ParticlesLaunchMode', ceramic.ParticlesLaunchMode);
@@ -342,7 +362,6 @@ class AllApi {
         interp.variables.set('Renderer', ceramic.Renderer);
         interp.variables.set('RenderTexture', ceramic.RenderTexture);
         interp.variables.set('ReusableArray', ceramic.ReusableArray);
-        interp.variables.set('RotateFrame', ceramic.scriptable.ScriptableRotateFrame);
         interp.variables.set('Runner', ceramic.Runner);
         interp.variables.set('RuntimeAssets', ceramic.RuntimeAssets);
         //interp.variables.set('ScanCode', ceramic.ScanCode);
@@ -406,10 +425,16 @@ class AllApi {
         interp.variables.set('ValueEntry', ceramic.ValueEntry);
         interp.variables.set('Velocity', ceramic.Velocity);
         interp.variables.set('Visual', ceramic.Visual);
+        #if plugin_arcade
         interp.variables.set('VisualArcadePhysics', ceramic.VisualArcadePhysics);
+        #end
+        #if plugin_nape
         interp.variables.set('VisualNapePhysics', ceramic.VisualNapePhysics);
+        #end
         interp.variables.set('VisualTransition', ceramic.VisualTransition);
         interp.variables.set('WatchDirectory', ceramic.WatchDirectory);
+
+        #end
 
     }
 

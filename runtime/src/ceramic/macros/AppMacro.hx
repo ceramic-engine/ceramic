@@ -4,7 +4,6 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.io.Path;
 import haxe.Json;
-import sys.FileSystem;
 
 using StringTools;
 
@@ -70,7 +69,11 @@ class AppMacro {
             kind: FVar(null, expr),
             access: [APublic],
             doc: 'App info extracted from `ceramic.yml`',
-            meta: []
+            meta: [{
+                name: ':dox',
+                params: [macro hide],
+                pos: Context.currentPos()
+            }]
         });
 
         #if ceramic_debug_macro
