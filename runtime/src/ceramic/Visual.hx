@@ -8,6 +8,11 @@ import ceramic.Point;
 
 using ceramic.Extensions;
 
+/**
+ * Visuals are the building blocks to display things on screen.
+ * A raw visual doesn't display anything but can have children
+ * that can be more specialized visuals like `Quad`, `Mesh` or `Text` etc...
+ */
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
 @:allow(ceramic.MeshPool)
@@ -17,24 +22,54 @@ using ceramic.Extensions;
 @:dce
 #end
 class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end {
-    
-    /** A factor applied to every computed depth. This factor is used to avoid having
-        all computed depth values being too small and risking to create precision issues.
-        It is expected to work best with use of `depthRange = 1` on visuals (default) */
-    inline static final DEPTH_FACTOR:Float = 2000000;
-    
-    /** A garanteed margin between max inner computed depth and container depth range,
-        and min inner depth and container's computed depth. */
-    inline static final DEPTH_MARGIN:Float = 0.01;
+
+    /**
+     * A factor applied to every computed depth. This factor is used to avoid having
+     * all computed depth values being too small and risking to create precision issues.
+     * It is expected to work best with use of `depthRange = 1` on visuals (default)
+     */
+    @:noCompletion inline static final DEPTH_FACTOR:Float = 2000000;
+
+    /**
+     * A garanteed margin between max inner computed depth and container depth range,
+     * and min inner depth and container's computed depth.
+     */
+    @:noCompletion inline static final DEPTH_MARGIN:Float = 0.01;
 
 /// Events
 
+    /**
+     * Fired when a pointer (touch or mouse) is down on the visual
+     * @param info The info related to this pointer event
+     */
     @event function pointerDown(info:TouchInfo);
+
+    /**
+     * Fired when a pointer (touch or mouse) was down on the visual and is not anymore
+     * @param info The info related to this pointer event
+     */
     @event function pointerUp(info:TouchInfo);
+
+    /**
+     * Fired when a pointer (touch or mouse) is over the visual
+     * @param info The info related to this pointer event
+     */
     @event function pointerOver(info:TouchInfo);
+
+    /**
+     * Fired when a pointer (touch or mouse) was over the visual and is not anymore
+     * @param info The info related to this pointer event
+     */
     @event function pointerOut(info:TouchInfo);
 
+    /**
+     * Fired when this visual gains focus (after handling a pointer event)
+     */
     @event function focus();
+    
+    /**
+     * Fired when this visual loses focus
+     */
     @event function blur();
 
 #if plugin_arcade
@@ -539,20 +574,39 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return collideWorldBounds;
     }
 
+    #if documentation
+
     /** Dispatched when this visual body collides with another visual's body. */
-    inline public function onCollide(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+    @event function collide(visual1:Visual, visual2:Visual);
+
+    /** Dispatched when this visual body overlaps with another visual's body. */
+    @event function overlap(visual1:Visual, visual2:Visual);
+
+    /** Dispatched when this visual body collides with another body. */
+    @event function collideBody(visual:Visual, body:arcade.Body);
+
+    /** Dispatched when this visual body overlaps with another body. */
+    @event function overlapBody(visual:Visual, body:arcade.Body);
+
+    /** Dispatched when this visual body collides with the world bounds. */
+    @event function worldBounds(visual:Visual, up:Bool, down:Bool, left:Bool, right:Bool);
+
+    #else
+
+    /** Dispatched when this visual body collides with another visual's body. */
+    inline public function onCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollide(owner, handleVisual1Visual2);
     }
 
     /** Dispatched when this visual body collides with another visual's body. */
-    inline public function onceCollide(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+    inline public function onceCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollide(owner, handleVisual1Visual2);
     }
 
     /** Dispatched when this visual body collides with another visual's body. */
-    inline public function offCollide(?handleVisual1Visual2:Visual->Visual->Void):Void {
+    inline public function offCollide(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offCollide(handleVisual1Visual2);
         }
@@ -564,19 +618,19 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /** Dispatched when this visual body collides with another body. */
-    inline public function onCollideBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function onCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollideBody(owner, handleVisualBody);
     }
 
     /** Dispatched when this visual body collides with another body. */
-    inline public function onceCollideBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function onceCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollideBody(owner, handleVisualBody);
     }
 
     /** Dispatched when this visual body collides with another body. */
-    inline public function offCollideBody(?handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function offCollideBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offCollideBody(handleVisualBody);
         }
@@ -588,19 +642,19 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /** Dispatched when this visual body overlaps with another visual's body. */
-    inline public function onOverlap(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+    inline public function onOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlap(owner, handleVisual1Visual2);
     }
 
     /** Dispatched when this visual body overlaps with another visual's body. */
-    inline public function onceOverlap(owner:Entity, handleVisual1Visual2:Visual->Visual->Void):Void {
+    inline public function onceOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlap(owner, handleVisual1Visual2);
     }
 
     /** Dispatched when this visual body overlaps with another visual's body. */
-    inline public function offOverlap(?handleVisual1Visual2:Visual->Visual->Void):Void {
+    inline public function offOverlap(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offOverlap(handleVisual1Visual2);
         }
@@ -612,19 +666,19 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /** Dispatched when this visual body overlaps with another body. */
-    inline public function onOverlapBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function onOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlapBody(owner, handleVisualBody);
     }
 
     /** Dispatched when this visual body overlaps with another body. */
-    inline public function onceOverlapBody(owner:Entity, handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function onceOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlapBody(owner, handleVisualBody);
     }
 
     /** Dispatched when this visual body overlaps with another body. */
-    inline public function offOverlapBody(?handleVisualBody:Visual->arcade.Body->Void):Void {
+    inline public function offOverlapBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offOverlapBody(handleVisualBody);
         }
@@ -636,19 +690,19 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /** Dispatched when this visual body collides with the world bounds. */
-    inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+    inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
     /** Dispatched when this visual body collides with the world bounds. */
-    inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+    inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
     /** Dispatched when this visual body collides with the world bounds. */
-    inline public function offWorldBounds(?handleVisualUpDownLeftRight:Visual->Bool->Bool->Bool->Bool->Void):Void {
+    inline public function offWorldBounds(?handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade != null) {
             arcade.offWorldBounds(handleVisualUpDownLeftRight);
         }
@@ -658,6 +712,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     inline public function listensWorldBounds():Bool {
         return arcade != null ? arcade.listensWorldBounds() : false;
     }
+
+    #end
 
     #end
 

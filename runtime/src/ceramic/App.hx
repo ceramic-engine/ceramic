@@ -29,7 +29,7 @@ import assets.AllAssets;
 
 
 /**
- * `App` class is the starting point of any ceramic app.
+ * `App` class is the root instance of any ceramic app.
  */
 #if !macro
 @:build(ceramic.macros.AppMacro.build())
@@ -55,15 +55,13 @@ class App extends Entity {
 /// Events
 
     /**
-     * @event ready
-     * Ready event is triggered when the app is ready
+     * Fired when the app is ready
      * and the game logic can be started.
      */
     @event function ready();
 
     /**
-     * @event update
-     * Update event is triggered as many times as there are frames per seconds.
+     * Fired as many times as there are frames per seconds.
      * It is in sync with screen FPS but used for everything that needs
      * to get updated depending on time (ceramic.Timer relies on it).
      * Use this event to update your contents before they get drawn again.
@@ -72,8 +70,7 @@ class App extends Entity {
     @event function update(delta:Float);
 
     /**
-     * @event preUpdate
-     * Pre-update event is triggered right before update event and
+     * Fired right before update event and
      * can be used when you want to run garantee your code
      * will be run before regular update event.
      * @param delta The elapsed delta time since last frame
@@ -81,35 +78,81 @@ class App extends Entity {
     @event function preUpdate(delta:Float);
 
     /**
-     * @event postUpdate
-     * Post-update event is triggered right after update event and
+     * Fired right after update event and
      * can be used when you want to run garantee your code
      * will be run after regular update event.
      * @param delta The elapsed delta time since last frame
      */
     @event function postUpdate(delta:Float);
 
-    /** Assets events */
+    /**
+     * Fired right before default assets are being loaded.
+     * @param assets
+     *      The `Assets` instance used to load default assets.
+     *      If you add custom assets to this instance, they will be loaded as well.
+     */
     @event function defaultAssetsLoad(assets:Assets);
 
-    /** Fired when the app hits an critical (uncaught) error. Can be used to perform custom crash reporting.
-        If this even is handled, app exit should be performed by the event handler. */
+    /**
+     * Fired when the app hits an critical (uncaught) error.
+     * Can be used to perform custom crash reporting.
+     * If this even is handled, app exit should be performed by the event handler.
+     * @param error The error
+     * @param stack The stack trace of the error
+     */
     @event function criticalError(error:Dynamic, stack:Array<StackItem>);
 
+    /**
+     * Fired when the app will enter background state.
+     */
     @event function beginEnterBackground();
+
+    /**
+     * Fired when the app did finish entering background state.
+     */
     @event function finishEnterBackground();
 
+    /**
+     * Fired when the app will enter foreground state.
+     */
     @event function beginEnterForeground();
+
+    /**
+     * Fired when the app did finish entering foreground state.
+     */
     @event function finishEnterForeground();
 
+    /**
+     * Fired right before sorting all visuals.
+     * Visual are sorted at each frame depending on their properties:
+     * depth, texture, blending, shader...
+     */
     @event function beginSortVisuals();
+
+    /**
+     * Fired right after all visuals have been sort.
+     */
     @event function finishSortVisuals();
 
+    /**
+     * Fired right before drawing phase of visuals.
+     */
     @event function beginDraw();
+
+    /**
+     * Fired right after drawing phase of visuals.
+     */
     @event function finishDraw();
 
+    /**
+     * Fired if the app is running low on memory.
+     * (not be implemented by all platforms/targets).
+     */
     @event function lowMemory();
 
+    /**
+     * Fired when the app terminates.
+     */
     @event function terminate();
 
 /// Immediate update event, custom implementation
@@ -136,8 +179,11 @@ class App extends Entity {
 
     @:noCompletion public var loaders:Array<(done:()->Void)->Void> = [];
 
-    /** Schedule immediate callback that is garanteed to be executed before the next time frame
-        (before elements are drawn onto screen) */
+    /**
+     * Schedule immediate callback that is garanteed to be executed before the next time frame
+     * (before elements are drawn onto screen)
+     * @param handleImmediate The callback to execute
+     */
     public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
         if (handleImmediate == null) {
@@ -162,8 +208,11 @@ class App extends Entity {
 
     }
 
-    /** Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
-        @param defer if `true` (default), will box this call into an immediate callback */
+    /**
+     * Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
+     * @param handlePostFlushImmediate The callback to execute
+     * @param defer if `true` (default), will box this call into an immediate callback
+     */
     public function oncePostFlushImmediate(handlePostFlushImmediate:Void->Void, defer:Bool = true):Void {
 
         if (!defer) {
@@ -190,8 +239,11 @@ class App extends Entity {
 
     }
 
-    /** Execute and flush every awaiting immediate callback, including the ones that
-        could have been added with `onceImmediate()` after executing the existing callbacks. */
+    /**
+     * Execute and flush every awaiting immediate callback, including the ones that
+     * could have been added with `onceImmediate()` after executing the existing callbacks.
+     * @return `true` if anything was flushed
+     */
     public function flushImmediate():Bool {
 
         var didFlush = false;
@@ -246,10 +298,19 @@ class App extends Entity {
 
     }
 
+    /**
+     * `true` if the app is currently running its update phase.
+     */
     public var inUpdate(default,null):Bool = false;
 
     var shouldUpdateAndDrawAgain(default,null):Bool = false;
 
+    /**
+     * This method can be called if you want to ensure a full update + draw will be performed in frame
+     * starting from now. Beware that this can be an expensive call as it may double the work
+     * on the current frame in some situations.
+     * This should not be used unless you really know what you are doing for some specific edge case.
+     */
     inline public function requestFullUpdateAndDrawInFrame():Void {
 
         if (inUpdate) {
@@ -268,36 +329,54 @@ class App extends Entity {
 
 /// Properties
 
-    /** Computed fps of the app. Read only.
-        Value is automatically computed from last second of frame updates. */
+    /**
+     * Computed fps of the app. Read only.
+     * Value is automatically computed from last second of frame updates.
+     */
     public var computedFps(get,never):Int;
     inline function get_computedFps():Int {
         return _computeFps.fps;
     }
     var _computeFps = new ComputeFps();
 
-    /** Current frame delta time (never above `settings.maxDelta`) */
+    /**
+     * Current frame delta time (never above `settings.maxDelta`)
+     */
     public var delta(default,null):Float;
 
-    /** Current frame real delta time (the actual elapsed time since last frame update) */
+    /**
+     * Current frame real delta time (the actual elapsed time since last frame update)
+     */
     public var realDelta(default,null):Float;
 
-    /** Backend instance */
+    /**
+     * Backend instance
+     */
     public var backend(default,null):Backend;
 
-    /** Screen instance */
+    /**
+     * Screen instance
+     */
     public var screen(default,null):Screen;
 
-    /** Audio instance */
+    /**
+     * Audio instance
+     */
     public var audio(default,null):Audio;
 
-    /** App settings */
+    /**
+     * App settings
+     */
     public var settings(default,null):Settings;
 
-    /** Systems are objects to structure app work and update cycle */
+    /**
+     * Systems are objects to structure app work/phases and update cycle
+     */
     public var systems(default,null):Systems;
 
-    /** Logger. Used by log.info() shortcut */
+    /**
+     * Logger. Used by log shortcut
+     */
     public var logger(default,null):Logger = new Logger();
 
     /**
@@ -321,50 +400,94 @@ class App extends Entity {
      */
     public var destroyedVisuals(default,null):Array<Visual> = [];
 
-    /** Groups */
+    /**
+     * All groups of entities in this app
+     */
     public var groups(default,null):Array<Group<Entity>> = [];
 
-    /** Input */
+    /**
+     * Shared instance of `Input`
+     */
     public var input(default,null):Input;
 
-    /** Render Textures */
+    /**
+     * All active render textures in this app
+     */
     public var renderTextures(default,null):Array<RenderTexture> = [];
 
-    /** App level assets. Used to load default bitmap font */
+    /**
+     * App level assets. Used to load default assets (font, texture, shader)
+     * required to make ceramic work properly.
+     */
     public var assets(default,null):Assets = new Assets();
 
-    /** Default textured shader **/
+    /**
+     * Default textured shader.
+     * This is the shader used for any visual (quad or mesh) that don't have a custom shader assigned.
+     */
     public var defaultTexturedShader(default,null):Shader = null;
 
-    /** Default white texture **/
+    /**
+     * Default white texture.
+     * When a quad or mesh doesn't have a texture assigned, it will use the default white texture
+     * instead to render as plain flat coloured object. This means that the same default shader
+     * is used and everything can be batched together (textured & non-textured in the same batch).
+     */
     public var defaultWhiteTexture(default,null):Texture = null;
 
-    /** Default font */
+    /**
+     * Default font used by `Text` instances.
+     */
     public var defaultFont(default,null):BitmapFont = null;
 
-    /** Project directory. May be null depending on the platform. */
+    /**
+     * Project directory. May be null depending on the platform.
+     */
     public var projectDir:String = null;
 
-    /** App level persistent data */
+    /**
+     * App level persistent data.
+     * This is a simple key-value store ready to be used.
+     * Don't forget to call `persistent.save()` to apply changes permanently.
+     */
     public var persistent(default,null):PersistentData = null;
 
-    /** Text input manager */
+    /**
+     * Shared text input manager. Usually not used directly as is.
+     * You might want to use `EditText` component instead.
+     */
     public var textInput(default,null):TextInput = null;
 
 /// Field converters
 
+    /**
+     * Converters are used to transform field data in `Fragment` instances.
+     * This map is matching a type (as string, like `"Array<Float>"`) with an instance
+     * of a `ConvertField` subclass.
+     */
     public var converters:Map<String,ConvertField<Dynamic,Dynamic>> = new Map();
 
+    /**
+     * All active timelines in this app.
+     */
     public var timelines:Timelines = new Timelines();
 
 #if plugin_arcade
 
+    /**
+     * Shared arcade system.
+     * (arcade plugin)
+     */
     public var arcade:ArcadeSystem = null;
 
 #end
 
 #if plugin_nape
 
+    /**
+     * Shared nape system.
+     * (nape plugin)
+     */
     public var nape:NapeSystem = null;
 
 #end
@@ -387,6 +510,7 @@ class App extends Entity {
 
 /// Public initializer
 
+    @:noCompletion
     public static function init():InitSettings {
 
 #if cpp
@@ -866,7 +990,7 @@ class App extends Entity {
 
     }
 
-    /*inline*/ function syncPendingVisuals():Void {
+    function syncPendingVisuals():Void {
 
         if (pendingVisuals.length > 0) {
 
@@ -881,7 +1005,7 @@ class App extends Entity {
 
     }
 
-    inline function syncDestroyedVisuals():Void {
+    function syncDestroyedVisuals():Void {
 
         if (destroyedVisuals.length > 0) {
 
@@ -1108,6 +1232,12 @@ class App extends Entity {
 
 /// Groups
 
+    /**
+     * Get a group with the given id.
+     * @param id The id of the group
+     * @param createIfNeeded `true` (default) to create a group if not created already for this id
+     * @return the group or null if no group was found and none created.
+     */
     public function group(id:String, createIfNeeded:Bool = true):Group<Entity> {
 
         for (i in 0...groups.length) {
