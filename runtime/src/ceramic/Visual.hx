@@ -12,6 +12,15 @@ using ceramic.Extensions;
  * Visuals are the building blocks to display things on screen.
  * A raw visual doesn't display anything but can have children
  * that can be more specialized visuals like `Quad`, `Mesh` or `Text` etc...
+ * 
+ * ```haxe
+ * var visual = new Visual();
+ * visual.pos(x, y);
+ * visual.size(someWidth, someHeight);
+ * visual.onPointerDown(this, info -> {
+ *     trace('clicked');
+ * });
+ * ```
  */
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
@@ -94,6 +103,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Init arcade physics (body) bound to this visual.
+     * @param world
+     *      (optional) A world instance where the body will be attached.
+     *      If none is provided, default world (app.arcade.world) will be used.
      */
     public function initArcadePhysics(?world:ArcadeWorld):VisualArcadePhysics {
 
@@ -199,7 +211,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The velocity, or rate of change the visual position. Measured in points per second.
+     * Set velocity, or rate of change of the visual position. Measured in points per second.
+     * @param velocityX The velocity on **x** axis
+     * @param velocityY The velocity on **y** axis
      */
     inline public function velocity(velocityX:Float, velocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -236,7 +250,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The maximum velocity that the visual can reach.
+     * Set maximum velocity that the visual can reach.
+     * @param maxVelocityX The max velocity on **x** axis
+     * @param maxVelocityY The max velocity on **y** axis
      */
     inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -273,7 +289,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The acceleration is the rate of change of the y velocity. Measured in points per second squared.
+     * Set acceleration, which is the rate of change of the velocity. Measured in points per second squared.
+     * @param accelerationX The acceleration on **x** axis
+     * @param accelerationY The acceleration on **y** axis
      */
     inline public function acceleration(accelerationX:Float, accelerationY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -323,7 +341,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The drag is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared.
+     * Set drag, which is the rate of reduction of the velocity, kind of deceleration. Measured in points per second squared.
+     * @param dragX The drag value on **x** axis
+     * @param dragY The drag value on **y** axis
      */
     inline public function drag(dragX:Float, dragY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -360,7 +380,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The elasticity of the visual when colliding. `1` means full rebound, `0.5` means 50% rebound velocity.
+     * Set elasticity of the visual when colliding. `1` means full rebound, `0.5` means 50% rebound velocity.
+     * @param bounceX The bounce value on **x** axis
+     * @param bounceY The bounce value on **y** axis
      */
     inline public function bounce(bounceX:Float, bounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -509,7 +531,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x axis.
+     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on **x** axis.
      */
     public var frictionX(get,set):Float;
     inline function get_frictionX():Float {
@@ -522,7 +544,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on y axis.
+     * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on **y** axis.
      */
     public var frictionY(get,set):Float;
     inline function get_frictionY():Float {
