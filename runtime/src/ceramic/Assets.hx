@@ -756,7 +756,7 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('fragments:')) realName = realName.substr(10);
         
-        if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragment(name) : null;
+        if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragments(name) : null;
         var asset:FragmentsAsset = cast assetsByKindAndName.get('fragments').get(realName);
         if (asset == null) return parent != null ? parent.fragments(name) : null;
 
