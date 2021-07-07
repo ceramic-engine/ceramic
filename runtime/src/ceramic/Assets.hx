@@ -48,6 +48,12 @@ class Assets extends Entity {
      */
     public var nonBlocking:Bool = false;
 
+    /**
+     * If provided, when requesting an asset, it will also check if the parent `Assets`
+     * instance has it and return it if that's the case.
+     */
+    public var parent:Assets = null;
+
 /// Internal
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
@@ -409,9 +415,9 @@ class Assets extends Entity {
             kind = value.substring(0, colonIndex);
         }
 
-        if (kind == null) return null;
+        if (kind == null) return parent != null ? parent.asset(idOrName, kind) : null;
         var byName = assetsByKindAndName.get(kind);
-        if (byName == null) return null;
+        if (byName == null) return parent != null ? parent.asset(idOrName, kind) : null;
         return byName.get(name);
 
     }
@@ -659,9 +665,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('image:')) realName = realName.substr(6);
 
-        if (!assetsByKindAndName.exists('image')) return null;
+        if (!assetsByKindAndName.exists('image')) return parent != null ? parent.texture(name) : null;
         var asset:ImageAsset = cast assetsByKindAndName.get('image').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.texture(name) : null;
 
         return asset.texture;
 
@@ -672,9 +678,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('font:')) realName = realName.substr(5);
         
-        if (!assetsByKindAndName.exists('font')) return null;
+        if (!assetsByKindAndName.exists('font')) return parent != null ? parent.font(name) : null;
         var asset:FontAsset = cast assetsByKindAndName.get('font').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.font(name) : null;
 
         return asset.font;
 
@@ -685,9 +691,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('sound:')) realName = realName.substr(6);
         
-        if (!assetsByKindAndName.exists('sound')) return null;
+        if (!assetsByKindAndName.exists('sound')) return parent != null ? parent.sound(name) : null;
         var asset:SoundAsset = cast assetsByKindAndName.get('sound').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.sound(name) : null;
 
         return asset.sound;
 
@@ -698,9 +704,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('text:')) realName = realName.substr(5);
         
-        if (!assetsByKindAndName.exists('text')) return null;
+        if (!assetsByKindAndName.exists('text')) return parent != null ? parent.text(name) : null;
         var asset:TextAsset = cast assetsByKindAndName.get('text').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.text(name) : null;
 
         return asset.text;
 
@@ -711,9 +717,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('binary:')) realName = realName.substr(7);
         
-        if (!assetsByKindAndName.exists('binary')) return null;
+        if (!assetsByKindAndName.exists('binary')) return parent != null ? parent.bytes(name) : null;
         var asset:BinaryAsset = cast assetsByKindAndName.get('binary').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.bytes(name) : null;
 
         return asset.bytes;
 
@@ -724,9 +730,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('shader:')) realName = realName.substr(7);
         
-        if (!assetsByKindAndName.exists('shader')) return null;
+        if (!assetsByKindAndName.exists('shader')) return parent != null ? parent.shader(name) : null;
         var asset:ShaderAsset = cast assetsByKindAndName.get('shader').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.shader(name) : null;
 
         return asset.shader;
 
@@ -737,9 +743,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('database:')) realName = realName.substr(9);
         
-        if (!assetsByKindAndName.exists('database')) return null;
+        if (!assetsByKindAndName.exists('database')) return parent != null ? parent.database(name) : null;
         var asset:DatabaseAsset = cast assetsByKindAndName.get('database').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.database(name) : null;
 
         return asset.database;
 
@@ -750,9 +756,9 @@ class Assets extends Entity {
         var realName:String = cast name;
         if (realName.startsWith('fragments:')) realName = realName.substr(10);
         
-        if (!assetsByKindAndName.exists('fragments')) return null;
+        if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragment(name) : null;
         var asset:FragmentsAsset = cast assetsByKindAndName.get('fragments').get(realName);
-        if (asset == null) return null;
+        if (asset == null) return parent != null ? parent.fragments(name) : null;
 
         return asset.fragments;
 
