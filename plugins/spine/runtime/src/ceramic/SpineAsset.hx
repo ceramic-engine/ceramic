@@ -1,6 +1,8 @@
 package ceramic;
 
 import spine.support.graphics.TextureAtlas;
+import spine.support.utils.JsonValue;
+import haxe.Json;
 import ceramic.Path;
 import ceramic.Asset;
 import ceramic.ImageAsset;
@@ -157,7 +159,7 @@ class SpineAsset extends Asset {
                         // Create final spine data with all info
                         spineData = new SpineData(
                             spineAtlas,
-                            json,
+                            new JsonDynamic(Json.parse(json.getContent())),
                             scale
                         );
                         spineData.asset = this;

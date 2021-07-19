@@ -51,7 +51,7 @@ class ExportSpine extends tools.Task {
 
         var spineAppPath:String = null;
         if (Sys.systemName() == 'Mac') {
-            spineAppPath = '/Applications/Spine/Spine.app/Contents/MacOS/Spine';
+            spineAppPath = '/Applications/Spine.app/Contents/MacOS/Spine';
         } else if (Sys.systemName() == 'Windows') {
             spineAppPath = 'C:\\Program Files (x86)\\Spine\\Spine.com';
         } else {
@@ -356,7 +356,7 @@ class ExportSpine extends tools.Task {
 
     }
 
-    static var RE_AT_NX = ~/@([0-9]+(?:\.[0-9]+)?)x([0-9]+)?$/;
+    static var RE_AT_NX = ~/@([0-9]+(?:\.[0-9]+)?)x(_?[0-9]+)?$/;
     static var RE_PNG = ~/\.(png|PNG)$/;
 
 }

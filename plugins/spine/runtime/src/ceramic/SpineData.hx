@@ -3,7 +3,7 @@ package ceramic;
 import ceramic.Entity;
 
 import spine.support.graphics.TextureAtlas;
-import spine.support.files.FileHandle;
+import spine.support.utils.JsonValue;
 import spine.attachments.*;
 import spine.*;
 
@@ -22,7 +22,7 @@ class SpineData extends Entity {
 
     public function new(
         atlas:TextureAtlas,
-        json:FileHandle,
+        json:JsonValue,
         scale:Float = 1.0
     ) {
 
