@@ -1,6 +1,8 @@
 package ceramic;
 
-/** Augmented and higher level HTTP request options. */
+/**
+ * Augmented and higher level HTTP request options.
+ */
 typedef HttpRequestOptions = {
 
     > backend.HttpRequestOptions,

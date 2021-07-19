@@ -279,7 +279,9 @@ class Draw implements spec.Draw {
 
     }
 
-    /** Number of floats in a single position. 3 = vec3, 4 = vec4 */
+    /**
+     * Number of floats in a single position. 3 = vec3, 4 = vec4
+     */
     inline static var numFloatsInPos:Int = 3;
 
     #if !ceramic_debug_draw inline #end public function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void {

@@ -41,7 +41,9 @@ class SpineData extends Entity {
 
     }
 
-    /** Find a slot index from its name */
+    /**
+     * Find a slot index from its name
+     */
     public function findSlotIndex(slotName:String):Int {
 
         // TODO cache this info

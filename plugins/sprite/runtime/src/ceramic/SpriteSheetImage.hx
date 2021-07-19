@@ -4,7 +4,9 @@ import tracker.Model;
 
 class SpriteSheetImage extends Model {
 
-    /** The texture used for this image, if loaded and ready to display */
+    /**
+     * The texture used for this image, if loaded and ready to display
+     */
     public var texture(default,set):Texture = null;
     function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
@@ -29,13 +31,19 @@ class SpriteSheetImage extends Model {
         return texture;
     }
 
-    /** The image width in points */
+    /**
+     * The image width in points
+     */
     @serialize public var width:Int = -1;
 
-    /** The image height in points */
+    /**
+     * The image height in points
+     */
     @serialize public var height:Int = -1;
 
-    /** The reference to the spritesheet image file, if any */
+    /**
+     * The reference to the spritesheet image file, if any
+     */
     @serialize public var source:String = null;
 
     override function destroy() {

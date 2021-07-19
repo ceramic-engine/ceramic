@@ -1,6 +1,8 @@
 package ceramic;
 
-/** View size helpers */
+/**
+ * View size helpers
+ */
 class ViewSize {
 
     inline public static function isStandard(encoded:Float):Bool {

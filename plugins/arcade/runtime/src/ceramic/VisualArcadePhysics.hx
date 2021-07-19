@@ -6,19 +6,29 @@ class VisualArcadePhysics extends Entity {
 
 #if plugin_arcade
 
-    /** Dispatched when this visual body collides with another body. */
+    /**
+     * Dispatched when this visual body collides with another body.
+     */
     @event function collideBody(visual:Visual, body:arcade.Body);
 
-    /** Dispatched when this visual body overlaps with another body. */
+    /**
+     * Dispatched when this visual body overlaps with another body.
+     */
     @event function overlapBody(visual:Visual, body:arcade.Body);
 
-    /** Dispatched when this visual body collides with another visual's body. */
+    /**
+     * Dispatched when this visual body collides with another visual's body.
+     */
     @event function collide(visual1:Visual, visual2:Visual);
 
-    /** Dispatched when this visual body overlaps with another visual's body. */
+    /**
+     * Dispatched when this visual body overlaps with another visual's body.
+     */
     @event function overlap(visual1:Visual, visual2:Visual);
 
-    /** Dispatched when this visual body collides with the world bounds. */
+    /**
+     * Dispatched when this visual body collides with the world bounds.
+     */
     @event function worldBounds(visual:Visual, up:Bool, down:Bool, left:Bool, right:Bool);
 
     public var visual:Visual = null;

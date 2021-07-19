@@ -307,9 +307,9 @@ class Draw #if !completion implements spec.Draw #end {
         //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
         //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
 
-		untyped __cs__('UnityEngine.Camera.main.orthographicSize = UnityEngine.Camera.main.pixelHeight * 0.5f');
+        untyped __cs__('UnityEngine.Camera.main.orthographicSize = UnityEngine.Camera.main.pixelHeight * 0.5f');
 
-		untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
+        untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
         untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
 
         // trace('cameraWidth=' + Std.string(untyped __cs__('cameraWidth')));
@@ -469,8 +469,8 @@ class Draw #if !completion implements spec.Draw #end {
 
         untyped __cs__('
         UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity;
-		m[12] = (float){0} * -0.5f;
-		m[13] = (float){1} * 0.5f;
+        m[12] = (float){0} * -0.5f;
+        m[13] = (float){1} * 0.5f;
         m[5] = m[5] * -1f;
         ', width, height);
 

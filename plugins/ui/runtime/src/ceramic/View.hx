@@ -13,16 +13,24 @@ class View extends Quad {
 
 /// Properties
 
-    /** Same as `children` but typed as a list of `View` instances instead of `Visual` (thus only contains children that are of `View` type). */
+    /**
+     * Same as `children` but typed as a list of `View` instances instead of `Visual` (thus only contains children that are of `View` type).
+     */
     public var subviews:ReadOnlyArray<View> = null;
 
-    /** Width after being computed by View layout engine from constraints and `viewWidth`/`viewHeight` */
+    /**
+     * Width after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
+     */
     public var computedWidth:Float = -1;
 
-    /** Height after being computed by View layout engine from constraints and `viewWidth`/`viewHeight` */
+    /**
+     * Height after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
+     */
     public var computedHeight:Float = -1;
 
-    /** Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    /**
+     * Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
+     */
     public var viewWidth(default,set):Float = ViewSize.auto();
     function set_viewWidth(viewWidth:Float):Float {
         if (this.viewWidth == viewWidth) return viewWidth;
@@ -31,7 +39,9 @@ class View extends Quad {
         return viewWidth;
     }
 
-    /** Height that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`). */
+    /**
+     * Height that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
+     */
     public var viewHeight(default,set):Float = ViewSize.auto();
     function set_viewHeight(viewHeight:Float):Float {
         if (this.viewHeight == viewHeight) return viewHeight;
@@ -40,19 +50,23 @@ class View extends Quad {
         return viewHeight;
     }
 
-    /** Set `viewWidth` and `viewHeight` */
+    /**
+     * Set `viewWidth` and `viewHeight`
+     */
     inline public function viewSize(width:Float, height:Float) {
         viewWidth = width;
         viewHeight = height;
     }
 
-    /** Set padding. Order and number of parameters following CSS padding convention.
-        Examples:
-        ```
-        padding(10) // top=10, right=10, bottom=10, left=10
-        padding(3, 5) // top=3, right=5, bottom=3, left=5
-        padding(3, 5, 8, 4) // top=3, right=5, bottom=8, left=4
-        ``` */
+    /**
+     * Set padding. Order and number of parameters following CSS padding convention.
+     * Examples:
+     * ```
+     * padding(10) // top=10, right=10, bottom=10, left=10
+     * padding(3, 5) // top=3, right=5, bottom=3, left=5
+     * padding(3, 5, 8, 4) // top=3, right=5, bottom=8, left=4
+     * ```
+     */
     public function padding(top:Float, ?right:Float, ?bottom:Float, ?left:Float):Void {
         if (right == null && bottom == null && left == null) {
             right = top;
@@ -106,19 +120,23 @@ class View extends Quad {
         return paddingBottom;
     }
 
-    /** Offset this view position by `x` and `y`.
-        This offset is added to the view's resulting position
-        from its default layout. This has only effect when the view is layouted
-        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
+    /**
+     * Offset this view position by `x` and `y`.
+     * This offset is added to the view's resulting position
+     * from its default layout. This has only effect when the view is layouted
+     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     */
     inline public function offset(x:Float, y:Float):Void {
         offsetX = x;
         offsetY = y;
     }
 
-    /** Offset this view position by `offsetX`.
-        This offset is added to the view's resulting position
-        from its default layout. This has only effect when the view is layouted
-        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
+    /**
+     * Offset this view position by `offsetX`.
+     * This offset is added to the view's resulting position
+     * from its default layout. This has only effect when the view is layouted
+     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     */
     public var offsetX(default,set):Float = 0;
     function set_offsetX(offsetX:Float):Float {
         if (this.offsetX == offsetX) return offsetX;
@@ -127,10 +145,12 @@ class View extends Quad {
         return offsetX;
     }
 
-    /** Offset this view position by `offsetY`.
-        This offset is added to the view's resulting position
-        from its default layout. This has only effect when the view is layouted
-        by a layout class that handle offsets: `LinearLayout`, `LayersLayout` */
+    /**
+     * Offset this view position by `offsetY`.
+     * This offset is added to the view's resulting position
+     * from its default layout. This has only effect when the view is layouted
+     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     */
     public var offsetY(default,set):Float = 0;
     function set_offsetY(offsetY:Float):Float {
         if (this.offsetY == offsetY) return offsetY;
@@ -139,13 +159,14 @@ class View extends Quad {
         return offsetY;
     }
 
-    /** A hint to tell how much space this view should take,
-        relative to the space taken by a whole group of views.
-        Example:
-
-            view1.flex = 1; // Fills 1/3 of available space
-            view2.flex = 2; // Fills 2/3 of available space
-        */
+    /**
+     * A hint to tell how much space this view should take,
+     *     relative to the space taken by a whole group of views.
+     *     Example:
+     * 
+     *         view1.flex = 1; // Fills 1/3 of available space
+     *         view2.flex = 2; // Fills 2/3 of available space
+     */
     public var flex(default,set):Int = 1;
     inline function set_flex(flex:Int):Int {
         if (this.flex == flex) return flex;
@@ -154,8 +175,10 @@ class View extends Quad {
         return flex;
     }
 
-    /** Setting this to `false` will prevent this view from updating its layout.
-        Default is `true` */
+    /**
+     * Setting this to `false` will prevent this view from updating its layout.
+     * Default is `true`
+     */
     public var canLayout:Bool;
 
     public var layoutDirty:Bool = true;
@@ -422,9 +445,11 @@ class View extends Quad {
         layoutDirty = true;
     }
 
-    /** Creates a new `Autorun` instance with the given callback associated with the current entity.
-        @param run The run callback
-        @return The autorun instance */
+    /**
+     * Creates a new `Autorun` instance with the given callback associated with the current entity.
+     * @param run The run callback
+     * @return The autorun instance
+     */
     override function autorun(run:Void->Void, ?afterRun:Void->Void #if (ceramic_debug_autorun || ceramic_debug_entity_allocs) , ?pos:haxe.PosInfos #end):Autorun {
 
         /*
@@ -551,8 +576,10 @@ class View extends Quad {
 
     }
 
-    /** Auto compute size from constraints and `viewWidth`/`viewHeight`.
-        @param applyComputedSize if `true`, apply the computed size to the view. */
+    /**
+     * Auto compute size from constraints and `viewWidth`/`viewHeight`.
+     * @param applyComputedSize if `true`, apply the computed size to the view.
+     */
     inline public function autoComputeSize(applyComputedSize:Bool = false):Void {
 
         computeSize(0, 0, ViewLayoutMask.FLEXIBLE, true);
@@ -560,8 +587,10 @@ class View extends Quad {
 
     }
 
-    /** Auto compute size (if needed) from constraints and `viewWidth`/`viewHeight`.
-        @param applyComputedSize if `true`, apply the computed size to the view. */
+    /**
+     * Auto compute size (if needed) from constraints and `viewWidth`/`viewHeight`.
+     * @param applyComputedSize if `true`, apply the computed size to the view.
+     */
     inline public function autoComputeSizeIfNeeded(applyComputedSize:Bool = false):Void {
 
         computeSizeIfNeeded(0, 0, ViewLayoutMask.FLEXIBLE, true);
@@ -569,16 +598,20 @@ class View extends Quad {
 
     }
 
-    /** Apply the computed size to the view.
-        This is equivalent to `size(computedWidth, computedHeight)` */
+    /**
+     * Apply the computed size to the view.
+     * This is equivalent to `size(computedWidth, computedHeight)`
+     */
     inline public function applyComputedSize():Void {
 
         size(computedWidth, computedHeight);
 
     }
 
-    /** Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
-        Typically used to compute image size with _scale to fit_ requirements and similar */
+    /**
+     * Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
+     * Typically used to compute image size with _scale to fit_ requirements and similar
+     */
     public function computeSizeWithIntrinsicBounds(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool, intrinsicWidth:Float, intrinsicHeight:Float):Float {
 
         var shouldComputeWidth = false;
@@ -895,7 +928,9 @@ class View extends Quad {
 
 /// Screen size helpers
 
-    /** Will set this view size to screen size, and update view size each time screen size changes. */
+    /**
+     * Will set this view size to screen size, and update view size each time screen size changes.
+     */
     override public function bindToScreenSize():Void {
 
         // Bind to screen size

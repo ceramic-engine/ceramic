@@ -4,7 +4,9 @@ package backend.impl;
 
 using ceramic.Extensions;
 
-/** A custom luxe/phoenix batcher for ceramic. */
+/**
+ * A custom luxe/phoenix batcher for ceramic.
+ */
 class CeramicBatcher extends phoenix.Batcher {
 
     public var ceramicRenderer:ceramic.Renderer = new ceramic.Renderer();
@@ -31,7 +33,9 @@ import snow.api.buffers.Float32Array;
 
 using ceramic.Extensions;
 
-/** A custom luxe/phoenix batcher for ceramic. */
+/**
+ * A custom luxe/phoenix batcher for ceramic.
+ */
 class CeramicBatcher extends phoenix.Batcher {
 
     public static inline var vert_attribute   : Int = 0;

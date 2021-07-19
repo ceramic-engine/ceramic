@@ -18,21 +18,31 @@ class NapeSystem extends System {
     @:allow(ceramic.VisualNapePhysics)
     var _freezeItems:Bool = false;
 
-    /** Triggered right before updating/stepping nape spaces */
+    /**
+     * Triggered right before updating/stepping nape spaces
+     */
     @event function updateSpaces(delta:Float);
 
-    /** Triggered right before applying nape bodies to visuals */
+    /**
+     * Triggered right before applying nape bodies to visuals
+     */
     @event function beginUpdateVisuals();
 
-    /** Triggered right after applying nape bodies to visuals */
+    /**
+     * Triggered right after applying nape bodies to visuals
+     */
     @event function endUpdateVisuals();
 
     public var items(default, null):Array<ceramic.VisualNapePhysics> = [];
 
-    /** All spaces used with nape physics */
+    /**
+     * All spaces used with nape physics
+     */
     public var spaces(default, null):Array<nape.space.Space> = [];
 
-    /** Default space for nape physics */
+    /**
+     * Default space for nape physics
+     */
     public var space(default, null):nape.space.Space = null;
 
     public function new() {

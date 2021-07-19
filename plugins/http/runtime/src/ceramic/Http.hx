@@ -4,7 +4,9 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
-/** A cross-platform and high level HTTP request utility */
+/**
+ * A cross-platform and high level HTTP request utility
+ */
 class Http {
 
     public static function request(

@@ -2,18 +2,26 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-/** An utility to group an pre-configure spine animations together as a single `montage` */
+/**
+ * An utility to group an pre-configure spine animations together as a single `montage`
+ */
 class SpineMontage<T> extends Entity implements Component {
 
     @:noCompletion public var entity:Spine;
 
-    /** Fired when starting an animation */
+    /**
+     * Fired when starting an animation
+     */
     @event function beginAnimation(animation:T);
 
-    /** Fired when completing an animation */
+    /**
+     * Fired when completing an animation
+     */
     @event function completeAnimation(animation:T);
 
-    /** The spine object this montage works with */
+    /**
+     * The spine object this montage works with
+     */
     public var spine(get, set):Spine;
 
     inline function get_spine():Spine {
@@ -43,27 +51,41 @@ class SpineMontage<T> extends Entity implements Component {
         return spine;
     }
 
-    /** The current animation in montage */
+    /**
+     * The current animation in montage
+     */
     @observe public var animation(default, set):T = null;
 
-    /** Default animation settings */
+    /**
+     * Default animation settings
+     */
     public var defaults(default, null):SpineMontageDefaults = null;
 
-    /** Animation instances by (stringified) key.
-        Note: this is not used on enum-based SpineMontage instances. */
+    /**
+     * Animation instances by (stringified) key.
+     * Note: this is not used on enum-based SpineMontage instances.
+     */
     var animationInstances:Map<String, SpineMontageAnimation<T>> = null;
 
-    /** Montage animation instance currently applied to display an animation (if any) */
+    /**
+     * Montage animation instance currently applied to display an animation (if any)
+     */
     var currentAnimationInstance:SpineMontageAnimation<T> = null;
 
-    /** Is `true` if the linked `Spine` instance is bound to this montage,
-        meaning it will be destroyed if montage gets destroyed and vice versa. */
+    /**
+     * Is `true` if the linked `Spine` instance is bound to this montage,
+     * meaning it will be destroyed if montage gets destroyed and vice versa.
+     */
     var boundToSpineInstance:Bool = false;
 
-    /** Internal value to keep track of the number of times we set animation */
+    /**
+     * Internal value to keep track of the number of times we set animation
+     */
     var numSetAnimation:Int = 0;
 
-    /** Used enum type, if applicable */
+    /**
+     * Used enum type, if applicable
+     */
     var enumType:Enum<T> = null;
 
     function set_animation(animation:T):T {
@@ -100,9 +122,11 @@ class SpineMontage<T> extends Entity implements Component {
 
     /// Lifecycle
 
-    /** Create a new spine montage.
-        @param  settings if provided, will be used to configure this montage.
-                See `SpineMontageSettings` for more info. */
+    /**
+     * Create a new spine montage.
+     * @param  settings if provided, will be used to configure this montage.
+     *         See `SpineMontageSettings` for more info.
+     */
     public function new(?settings:SpineMontageSettings<T>) {
 
         super();
@@ -279,7 +303,9 @@ class SpineMontage<T> extends Entity implements Component {
 
     }
 
-    /** Configure an animation for key matching name `name`. */
+    /**
+     * Configure an animation for key matching name `name`.
+     */
     function setByName(name:String, animationInstance:SpineMontageAnimation<T>):Void {
 
         if (name == null) {
@@ -315,7 +341,9 @@ class SpineMontage<T> extends Entity implements Component {
 
     }
 
-    /** Get configured animation for key matching name `name` */
+    /**
+     * Get configured animation for key matching name `name`
+     */
     function getByName(name:String):SpineMontageAnimation<T> {
 
         if (animationInstances == null) {
@@ -361,9 +389,11 @@ class SpineMontage<T> extends Entity implements Component {
 
     }
 
-    /** Create a spine object with the given `SpineData` object.
-        @param spineData The `SpineData` object to use
-        @param bound (default `true`) Whether this spine object is bound to montage lifecycle. */
+    /**
+     * Create a spine object with the given `SpineData` object.
+     * @param spineData The `SpineData` object to use
+     * @param bound (default `true`) Whether this spine object is bound to montage lifecycle.
+     */
     public function createSpine(spineData:SpineData, bound:Bool = true):Void {
 
         // Will unbind any managed spine if needed
@@ -381,15 +411,19 @@ class SpineMontage<T> extends Entity implements Component {
 
     }
 
-    /** Stop current animation (this is equivalent to `montage.animation = null;`) */
+    /**
+     * Stop current animation (this is equivalent to `montage.animation = null;`)
+     */
     public function stop():Void {
 
         animation = null;
 
     }
 
-    /** `montage.play(animation);` is stricly equivalent to: `montage.animation = animation;`
-        @param reset If set to `true`, will reset the animation to its initial state, even if setting the same animation a second time. */
+    /**
+     * `montage.play(animation);` is stricly equivalent to: `montage.animation = animation;`
+     * @param reset If set to `true`, will reset the animation to its initial state, even if setting the same animation a second time.
+     */
     public function play(animation:T, reset:Bool = false):Void {
         if (reset) {
             // Reset animation
@@ -401,14 +435,18 @@ class SpineMontage<T> extends Entity implements Component {
         this.animation = animation;
     }
 
-    /** Configure an animation for key `key` */
+    /**
+     * Configure an animation for key `key`
+     */
     public function set(key:T, animationInstance:SpineMontageAnimation<T>):Void {
 
         setByName(keyToString(key), animationInstance);
 
     }
 
-    /** Get configured animation for key `key` */
+    /**
+     * Get configured animation for key `key`
+     */
     public function get(key:T):SpineMontageAnimation<T> {
 
         if (animationInstances == null) {

@@ -12,7 +12,9 @@ class CollectionView extends ScrollView {
 
     public var autoDestroyItems:Bool = true;
 
-    /** Control how children depth is sorted. */
+    /**
+     * Control how children depth is sorted.
+     */
     public var childrenDepth(default,set):ChildrenDepth = SAME;
     function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {
         if (this.childrenDepth == childrenDepth) return childrenDepth;

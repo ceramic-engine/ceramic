@@ -1,7 +1,9 @@
 package ceramic;
 
-/** A layout that arranges its children either horizontally
-    in a single column or vertically in a single row. */
+/**
+ * A layout that arranges its children either horizontally
+ * in a single column or vertically in a single row.
+ */
 class LinearLayout extends View {
 
     public var direction(default, set):LayoutDirection = VERTICAL;
@@ -48,7 +50,9 @@ class LinearLayout extends View {
         return align;
     }
 
-    /** Control how children depth is sorted. */
+    /**
+     * Control how children depth is sorted.
+     */
     public var childrenDepth(default, set):ChildrenDepth = INCREMENT;
 
     function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {

@@ -80,36 +80,56 @@ class Spine extends Visual {
 
 /// Events
 
-    /** When a spine animation has completed/finished. */
+    /**
+     * When a spine animation has completed/finished.
+     */
     @event function complete();
 
-    /** When a render begins. */
+    /**
+     * When a render begins.
+     */
     @event function beginRender();
 
-    /** When a render ends. */
+    /**
+     * When a render ends.
+     */
     @event function endRender();
 
-    /** When a slot is about to be updated. */
+    /**
+     * When a slot is about to be updated.
+     */
     @event function updateSlot(info:SlotInfo);
 
-    /** When a visible slot is about to be updated. */
+    /**
+     * When a visible slot is about to be updated.
+     */
     @event function updateVisibleSlot(info:SlotInfo);
 
-    /** When the skeleton is going to be updated. */
+    /**
+     * When the skeleton is going to be updated.
+     */
     @event function updateSkeleton();
 
-    /** When the world transform is going to be updated.
-        Hook into this event to set custom bone transforms. */
+    /**
+     * When the world transform is going to be updated.
+     * Hook into this event to set custom bone transforms.
+     */
     @event function updateWorldTransform();
 
-    /** When the current animation chain finishes. If the chain is interrupted
-        (by setting another animation), this event is canceled. */
+    /**
+     * When the current animation chain finishes. If the chain is interrupted
+     * (by setting another animation), this event is canceled.
+     */
     @event function finishCurrentAnimationChain();
 
-    /** When a next animation is applied and assigned as main animation. */
+    /**
+     * When a next animation is applied and assigned as main animation.
+     */
     @event function applyNextAnimation(animation:String);
 
-    /** When a spine animation event is triggered. */
+    /**
+     * When a spine animation event is triggered.
+     */
     @event function spineEvent(entry:TrackEntry, event:Event);
 
 /// Render status
@@ -148,7 +168,9 @@ class Spine extends Visual {
     }
     var runScheduledRenderDyn:Void->Void = null;
 
-    /** Internal flag to know if render became dirty because of a skin change or a new animation was set. */
+    /**
+     * Internal flag to know if render became dirty because of a skin change or a new animation was set.
+     */
     public var renderDirtyAgressive(default, set):Bool = false;
     function set_renderDirtyAgressive(renderDirtyAgressive:Bool):Bool {
         if (renderDirtyAgressive && parent != null && Std.isOfType(parent, Spine)) {
@@ -187,12 +209,16 @@ class Spine extends Visual {
         return (this.renderDirty = renderDirty);
     }
 
-    /** Is `true` if one slot or more needs tint black to be rendered. */
+    /**
+     * Is `true` if one slot or more needs tint black to be rendered.
+     */
     public var hasSlotsWithTintBlack(default,null):Bool = false;
 
 /// Properties
 
-    /** Skeleton origin X */
+    /**
+     * Skeleton origin X
+     */
     @editable
     public var skeletonOriginX(default, set):Float = 0.5;
     function set_skeletonOriginX(skeletonOriginX:Float):Float {
@@ -202,7 +228,9 @@ class Spine extends Visual {
         return skeletonOriginX;
     }
 
-    /** Skeleton origin Y */
+    /**
+     * Skeleton origin Y
+     */
     @editable
     public var skeletonOriginY(default, set):Float = 0.5;
     function set_skeletonOriginY(skeletonOriginY:Float):Float {
@@ -212,7 +240,9 @@ class Spine extends Visual {
         return skeletonOriginY;
     }
 
-    /** Skeleton scale */
+    /**
+     * Skeleton scale
+     */
     @editable
     public var skeletonScale(default, set):Float = 1.0;
     function set_skeletonScale(skeletonScale:Float):Float {
@@ -222,7 +252,9 @@ class Spine extends Visual {
         return skeletonScale;
     }
 
-    /** Force tint black even if skeleton doesn't need it */
+    /**
+     * Force tint black even if skeleton doesn't need it
+     */
     @editable
     public var forceTintBlack(default, set):Bool = false;
     function set_forceTintBlack(forceTintBlack:Bool):Bool {
@@ -232,7 +264,9 @@ class Spine extends Visual {
         return forceTintBlack;
     }
 
-    /** Hidden slots (slot blacklist) */
+    /**
+     * Hidden slots (slot blacklist)
+     */
     @editable
     public var hiddenSlots(default, set):IntBoolMap = null;
     function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
@@ -242,7 +276,9 @@ class Spine extends Visual {
         return hiddenSlots;
     }
 
-    /** Visible slots (slot whitelist) */
+    /**
+     * Visible slots (slot whitelist)
+     */
     @editable
     public var visibleSlots(default, set):IntBoolMap = null;
     function set_visibleSlots(visibleSlots:IntBoolMap):IntBoolMap {
@@ -252,7 +288,9 @@ class Spine extends Visual {
         return visibleSlots;
     }
 
-    /** Disabled slots */
+    /**
+     * Disabled slots
+     */
     @editable
     public var disabledSlots(default, set):IntBoolMap = null;
     function set_disabledSlots(disabledSlots:IntBoolMap):IntBoolMap {
@@ -262,7 +300,9 @@ class Spine extends Visual {
         return disabledSlots;
     }
 
-    /** Animation triggers */
+    /**
+     * Animation triggers
+     */
     @editable
     public var animationTriggers(default, set):Map<String,String> = null;
     function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
@@ -272,7 +312,9 @@ class Spine extends Visual {
         return animationTriggers;
     }
 
-    /** Specify which slot to use to hit this visual or `-1` (default) is not using any. */
+    /**
+     * Specify which slot to use to hit this visual or `-1` (default) is not using any.
+     */
     @editable
     public var hitWithSlotIndex(default, set):Int = -1;
     function set_hitWithSlotIndex(hitWithSlotIndex:Int):Int {
@@ -281,8 +323,10 @@ class Spine extends Visual {
         return hitWithSlotIndex;
     }
 
-    /** Use first bounding box to hit this visual.
-        When this is set to `true`, `hitWithSlotIndex` value is ignored. */
+    /**
+     * Use first bounding box to hit this visual.
+     * When this is set to `true`, `hitWithSlotIndex` value is ignored.
+     */
     @editable
     public var hitWithFirstBoundingBox(default, set):Bool = false;
     function set_hitWithFirstBoundingBox(hitWithFirstBoundingBox:Bool):Bool {
@@ -314,10 +358,14 @@ class Spine extends Visual {
         return renderWhenInvisible;
     }
 
-    /** Is `true` if this spine animation has a parent animation. */
+    /**
+     * Is `true` if this spine animation has a parent animation.
+     */
     public var hasParentSpine(default,null):Bool = false;
 
-    /** Tint color */
+    /**
+     * Tint color
+     */
     @editable
     public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
@@ -330,7 +378,9 @@ class Spine extends Visual {
     @editable
     public var autoRenderOnAnimate:Bool = false;
 
-    /** The Spine data used to animate this animation. */
+    /**
+     * The Spine data used to animate this animation.
+     */
     @editable
     public var spineData(default, set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
@@ -479,23 +529,33 @@ class Spine extends Visual {
         return loop;
     }
 
-    /** The current pose for a skeleton. */
+    /**
+     * The current pose for a skeleton.
+     */
     public var skeleton(default,null):Skeleton;
 
-    /** The setup pose and all of the stateless data for a skeleton. */
+    /**
+     * The setup pose and all of the stateless data for a skeleton.
+     */
     public var skeletonData(default, null):SkeletonData;
 
-    /** Applies animations over time, queues animations for later playback, mixes (crossfading) between animations, and applies. */
+    /**
+     * Applies animations over time, queues animations for later playback, mixes (crossfading) between animations, and applies.
+     */
     public var state(default, null):AnimationState;
 
-    /** Stores mix (crossfade) durations to be applied when animations are changed. */
+    /**
+     * Stores mix (crossfade) durations to be applied when animations are changed.
+     */
     public var stateData(default, null):AnimationStateData;
 
-    /** Set to `false` if you want to disable auto update on this spine object.
-        If auto update is disabled, you become responsible to explicitly call
-        `update(delta)` at every frame yourself. Use this if you want to have control over
-        when the animation update is actually happening. Don't use it to pause animation.
-        (animation can be paused with `paused` property instead) */
+    /**
+     * Set to `false` if you want to disable auto update on this spine object.
+     * If auto update is disabled, you become responsible to explicitly call
+     * `update(delta)` at every frame yourself. Use this if you want to have control over
+     * when the animation update is actually happening. Don't use it to pause animation.
+     * (animation can be paused with `paused` property instead)
+     */
     public var autoUpdate:Bool = true;
 
     public var pausedOrFrozen(default, null):Bool = false;
@@ -510,7 +570,9 @@ class Spine extends Visual {
         return autoFreeze;
     }
 
-    /** Is this animation paused? */
+    /**
+     * Is this animation paused?
+     */
     public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
         if (this.paused == paused) return paused;
@@ -521,7 +583,9 @@ class Spine extends Visual {
         return paused;
     }
 
-    /** Is this animation frozen? **/
+    /**
+     * Is this animation frozen?
+     */
     public var frozen(default, set):Bool = false;
     function set_frozen(frozen:Bool):Bool {
         if (this.frozen == frozen) return frozen;
@@ -532,7 +596,9 @@ class Spine extends Visual {
         return frozen;
     }
 
-    /** Reset at change */
+    /**
+     * Reset at change
+     */
     public var resetAtChange:Bool = true;
 
 /// Properties (internal)
@@ -743,7 +809,9 @@ class Spine extends Visual {
 
 /// Public API
 
-    /** Start running an animation available in the skeleton. **/
+    /**
+     * Start running an animation available in the skeleton.
+     */
     public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0, trackTime:Float = -1):Void {
         if (destroyed) return;
 
@@ -837,7 +905,9 @@ class Spine extends Visual {
 
     }
 
-    /** Reset the animation (set to setup pose). */
+    /**
+     * Reset the animation (set to setup pose).
+     */
     public function reset():Void {
         if (destroyed) return;
 
@@ -911,8 +981,10 @@ class Spine extends Visual {
 
     }
 
-    /** Returns `true` if the current instance doesn't move
-        and doesn't need to get updated at every frame. */
+    /**
+     * Returns `true` if the current instance doesn't move
+     * and doesn't need to get updated at every frame.
+     */
     inline public function canFreeze():Bool {
 
         if (!autoFreeze) return false;
@@ -941,7 +1013,9 @@ class Spine extends Visual {
 
 /// Internal
 
-    /** Update skeleton with the given delta time. */
+    /**
+     * Update skeleton with the given delta time.
+     */
     function updateSkeleton(delta:Float):Void {
 
         if (contentDirty) {
@@ -979,7 +1053,9 @@ class Spine extends Visual {
 
     }
 
-    /** Process spine draw order and output quads and meshes. */
+    /**
+     * Process spine draw order and output quads and meshes.
+     */
     function render(delta:Float, z:Float, setup:Bool) {
 
         if (skeleton == null || destroyed) return;
@@ -1590,8 +1666,10 @@ class Spine extends Visual {
 
 /// Spine animations compositing
 
-    /** Add a child visual. If the child is a spine animation,
-        it will be managed by its parent and compositing becomes possible. */
+    /**
+     * Add a child visual. If the child is a spine animation,
+     * it will be managed by its parent and compositing becomes possible.
+     */
     override public function add(visual:Visual):Void {
 
         // Default behavior
@@ -1645,18 +1723,22 @@ class Spine extends Visual {
 
     }
 
-    /** A more optimal way of listening to updated slots.
-        With this method, we are targeting a specific slot by its name (global index internally).
-        This allows the spine object to skip calls to the handler for every other slots we don't care about. */
+    /**
+     * A more optimal way of listening to updated slots.
+     * With this method, we are targeting a specific slot by its name (global index internally).
+     * This allows the spine object to skip calls to the handler for every other slots we don't care about.
+     */
     inline public function onUpdateSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, slotName:String, handleInfo:SlotInfo->Void):Void {
 
         onUpdateSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
     }
 
-    /** A more optimal way of listening to updated slots.
-        With this method, we are targeting a specific slot by its global index.
-        This allows the spine object to skip calls to the handler for every other slots we don't care about. */
+    /**
+     * A more optimal way of listening to updated slots.
+     * With this method, we are targeting a specific slot by its global index.
+     * This allows the spine object to skip calls to the handler for every other slots we don't care about.
+     */
     public function onUpdateSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
@@ -1703,14 +1785,18 @@ class Spine extends Visual {
 
     }
 
-    /** Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`) */
+    /**
+     * Same as `onUpdateSlotWithName`, but fired only for visible slots (`drawDefault=true`)
+     */
     inline public function onUpdateVisibleSlotWithName(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, slotName:String, handleInfo:SlotInfo->Void):Void {
 
         onUpdateVisibleSlotWithGlobalIndex(owner, globalSlotIndexForName(slotName), handleInfo);
 
     }
 
-    /** Same as `onUpdateSlotWithGlobalIndex`, but fired only for visible slots (`drawDefault=true`) */
+    /**
+     * Same as `onUpdateSlotWithGlobalIndex`, but fired only for visible slots (`drawDefault=true`)
+     */
     public function onUpdateVisibleSlotWithGlobalIndex(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, index:Int, handleInfo:SlotInfo->Void):Void {
 
         // Create update slot binding map if needed
@@ -1787,7 +1873,9 @@ class Spine extends Visual {
 
     }
 
-    /** Bind a slot of parent animation to one of our local slots or bones. */
+    /**
+     * Bind a slot of parent animation to one of our local slots or bones.
+     */
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
 
         var parentSlotGlobalIndex = globalSlotIndexForName(parentSlot);
@@ -1827,8 +1915,10 @@ class Spine extends Visual {
 
     }
 
-    /** Compute `boundChildSlots` from `boundParentSlots` to make it more efficient
-        to gather parent slot transformations when drawing child animation. */
+    /**
+     * Compute `boundChildSlots` from `boundParentSlots` to make it more efficient
+     * to gather parent slot transformations when drawing child animation.
+     */
     function computeBoundChildSlots() {
 
         boundChildSlots = new IntMap();
@@ -1852,8 +1942,10 @@ class Spine extends Visual {
 
 /// Helpers
 
-    /** Encodes the ABGR int color as a float. The high bits are masked to avoid using floats in the NaN range, which unfortunately
-	 * means the full range of alpha cannot be used. */
+    /**
+     * Encodes the ABGR int color as a float. The high bits are masked to avoid using floats in the NaN range, which unfortunately
+     *  * means the full range of alpha cannot be used.
+     */
     inline static function intToFloatColor(value:Int):Float {
 
         return 1.0 * (value & 0xFEFFFFFF);
@@ -1926,11 +2018,13 @@ class Spine extends Visual {
     static var _globalSlotIndexes:Map<String,Int> = new Map();
     static var _nextGlobalSlotIndex:Int = 1;
 
-    /** Retrieve a slot index that works with any skeleton.
-        In other words, for a given slot name, its global index will always be identical
-        regardless of which skeleton is used. This is not the case with regular slot
-        indexes that depend on their skeleton structure.
-        A global slot index is a prefered solution over strings to identify a slot. */
+    /**
+     * Retrieve a slot index that works with any skeleton.
+     * In other words, for a given slot name, its global index will always be identical
+     * regardless of which skeleton is used. This is not the case with regular slot
+     * indexes that depend on their skeleton structure.
+     * A global slot index is a prefered solution over strings to identify a slot.
+     */
     inline static public function globalSlotIndexForName(slotName:String):Int {
 
         // Retrieve global slot index (an index that works with any skeleton)
@@ -1947,39 +2041,51 @@ class SpineListener implements AnimationStateListener {
 
     public function new() {}
     
-    /** Invoked when this entry has been set as the current entry. */
+    /**
+     * Invoked when this entry has been set as the current entry.
+     */
     public dynamic function onStart(entry:TrackEntry):Void {};
     public function start(entry:TrackEntry):Void {
         if (onStart != null) onStart(entry);
     }
 
-    /** Invoked when another entry has replaced this entry as the current entry. This entry may continue being applied for
-     * mixing. */
+    /**
+     * Invoked when another entry has replaced this entry as the current entry. This entry may continue being applied for
+     *  * mixing.
+     */
     public dynamic function onInterrupt(entry:TrackEntry):Void {}
     public function interrupt(entry:TrackEntry):Void {
         if (onInterrupt != null) onInterrupt(entry);
     }
 
-    /** Invoked when this entry is no longer the current entry and will never be applied again. */
+    /**
+     * Invoked when this entry is no longer the current entry and will never be applied again.
+     */
     public dynamic function onEnd(entry:TrackEntry):Void {}
     public function end(entry:TrackEntry):Void {
         if (onEnd != null) onEnd(entry);
     }
 
-    /** Invoked when this entry will be disposed. This may occur without the entry ever being set as the current entry.
-     * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused. */
+    /**
+     * Invoked when this entry will be disposed. This may occur without the entry ever being set as the current entry.
+     *  * References to the entry should not be kept after <code>dispose</code> is called, as it may be destroyed or reused.
+     */
     public dynamic function onDispose(entry:TrackEntry):Void {}
     public function dispose(entry:TrackEntry):Void {
         if (onDispose != null) onDispose(entry);
     }
 
-    /** Invoked every time this entry's animation completes a loop. */
+    /**
+     * Invoked every time this entry's animation completes a loop.
+     */
     public dynamic function onComplete(entry:TrackEntry):Void {}
     public function complete(entry:TrackEntry):Void {
         if (onComplete != null) onComplete(entry);
     }
 
-    /** Invoked when this entry's animation triggers an event. */
+    /**
+     * Invoked when this entry's animation triggers an event.
+     */
     public dynamic function onEvent(entry:TrackEntry, event:Event) {}
     public function event(entry:TrackEntry, event:Event) {
         if (onEvent != null) onEvent(entry, event);
@@ -2032,25 +2138,39 @@ private class BindSlot {
 
 }
 
-/** An object to hold every needed info about updating a slot. */
+/**
+ * An object to hold every needed info about updating a slot.
+ */
 class SlotInfo {
 
-    /** The slot that is about to have its attachment drawn (if any). */
+    /**
+     * The slot that is about to have its attachment drawn (if any).
+     */
     public var slot:spine.Slot = null;
 
-    /** The global index matching with this current slot name. */
+    /**
+     * The global index matching with this current slot name.
+     */
     public var globalSlotIndex:Int = -1;
 
-    /** A custom transform applied to this slot (defaults to identity). */
+    /**
+     * A custom transform applied to this slot (defaults to identity).
+     */
     public var customTransform:Transform = null;
 
-    /** The bone transform, applied to this slot. */
+    /**
+     * The bone transform, applied to this slot.
+     */
     public var transform(default,null):Transform = new Transform();
 
-    /** Set this to `false` if you want to disable drawing of this slot attachment. */
+    /**
+     * Set this to `false` if you want to disable drawing of this slot attachment.
+     */
     public var drawDefault:Bool = true;
 
-    /** The depth in which the slot attachment should be drawn. */
+    /**
+     * The depth in which the slot attachment should be drawn.
+     */
     public var depth:Float = 0;
 
     public function new() {}

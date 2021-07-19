@@ -3,18 +3,26 @@ package ceramic;
 import tracker.Observable;
 import tracker.Autorun;
 
-/** A view to display and layout images. */
+/**
+ * A view to display and layout images.
+ */
 class ImageView extends View implements Observable {
 
 /// Public properties
 
-    /** Image scale (ignored unless `scaling` is `CUSTOM`) */
+    /**
+     * Image scale (ignored unless `scaling` is `CUSTOM`)
+     */
     @observe public var imageScale:Float = 1.0;
 
-    /** How the image is scaled depending on its constraints */
+    /**
+     * How the image is scaled depending on its constraints
+     */
     @observe public var scaling:ImageViewScaling = ImageViewScaling.FIT;
 
-    /** The actual image (as asset id or string) to display */
+    /**
+     * The actual image (as asset id or string) to display
+     */
     @observe public var image:AssetId<String> = null;
 
 /// Internal

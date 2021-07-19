@@ -33,17 +33,23 @@ class Sprite<T> extends Visual {
         return sheet;
     }
 
-    /** Set to `false` if you want to disable auto update on this sprite object.
-        If auto update is disabled, you become responsible to explicitly call
-        `update(delta)` at every frame yourself. Use this if you want to have control over
-        when the animation update is actually happening. Don't use it to pause animation.
-        (animation can be paused with `paused` property instead) */
+    /**
+     * Set to `false` if you want to disable auto update on this sprite object.
+     * If auto update is disabled, you become responsible to explicitly call
+     * `update(delta)` at every frame yourself. Use this if you want to have control over
+     * when the animation update is actually happening. Don't use it to pause animation.
+     * (animation can be paused with `paused` property instead)
+     */
     public var autoUpdate:Bool = true;
 
-    /** Is this sprite paused? */
+    /**
+     * Is this sprite paused?
+     */
     public var paused:Bool = false;
 
-    /** Is this sprite looping? */
+    /**
+     * Is this sprite looping?
+     */
     public var loop:Bool = true;
 
     public var quad(default,null):Quad;

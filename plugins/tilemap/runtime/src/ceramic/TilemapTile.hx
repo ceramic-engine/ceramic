@@ -16,7 +16,9 @@ abstract TilemapTile(Int) from Int to Int {
 
     }
   
-    /** Global tile id */
+    /**
+     * Global tile id
+     */
     public var gid(get, set):Int;
     inline function get_gid():Int {
         return this & FLAGS_MASK;
@@ -25,7 +27,9 @@ abstract TilemapTile(Int) from Int to Int {
         return (this = (this & FLAGS_ONLY) | (gid & FLAGS_MASK));
     }
 
-    /** Is tile flipped horizontally */
+    /**
+     * Is tile flipped horizontally
+     */
     public var horizontalFlip(get, set):Bool;
     inline function get_horizontalFlip():Bool {
         return (this & HORIZONTAL_FLIP) != 0;
@@ -35,7 +39,9 @@ abstract TilemapTile(Int) from Int to Int {
         return value;
     }
 
-    /** Is tile flipped vertically */
+    /**
+     * Is tile flipped vertically
+     */
     public var verticalFlip(get, set):Bool;
     inline function get_verticalFlip():Bool {
         return (this & VERTICAL_FLIP) != 0;
@@ -45,7 +51,9 @@ abstract TilemapTile(Int) from Int to Int {
         return value;
     }
 
-    /** Is tile flipped diagonally */
+    /**
+     * Is tile flipped diagonally
+     */
     public var diagonalFlip(get, set):Bool;
     inline function get_diagonalFlip():Bool {
         return (this & DIAGONAL_FLIP) != 0;

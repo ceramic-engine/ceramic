@@ -24,17 +24,25 @@ class ArcadeSystem extends System {
 
     public var items(default, null):Array<VisualArcadePhysics> = [];
 
-    /** All worlds used with arcade physics */
+    /**
+     * All worlds used with arcade physics
+     */
     public var worlds(default, null):Array<ArcadeWorld> = [];
 
-    /** Default world used for arcade physics */
+    /**
+     * Default world used for arcade physics
+     */
     public var world:ArcadeWorld = null;
 
-    /** Groups by id */
+    /**
+     * Groups by id
+     */
     public var groups:Map<String, arcade.Group> = new Map();
 
-    /** If `true`, default world (`world`) bounds will be
-        updated automatically to match screen size. */
+    /**
+     * If `true`, default world (`world`) bounds will be
+     * updated automatically to match screen size.
+     */
     public var autoUpdateWorldBounds:Bool = true;
 
     public function new() {

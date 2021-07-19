@@ -43,7 +43,7 @@ class Compile extends tools.Task {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
 
-			// Android OpenAL built separately (because of LGPL license, we want to build
+            // Android OpenAL built separately (because of LGPL license, we want to build
             // it separately and link it dynamically at runtime)
             var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
             var buildOpenALArgs = [];

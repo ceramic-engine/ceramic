@@ -7,44 +7,70 @@ class SpineBindVisualOptions {
 
     /// Public options
 
-    /** Whether the original slot attachment is displayed */
+    /**
+     * Whether the original slot attachment is displayed
+     */
     public var drawDefault:Bool = false;
 
-    /** Offset x position of target visual */
+    /**
+     * Offset x position of target visual
+     */
     public var offsetX:Float = 0.0;
 
-    /** Offset y position of target visual */
+    /**
+     * Offset y position of target visual
+     */
     public var offsetY:Float = 0.0;
 
-    /** Whether we apply slot transform on the target visual */
+    /**
+     * Whether we apply slot transform on the target visual
+     */
     public var bindTransform:Bool = true;
 
-    /** Whether we apply slot color on the target visual */
+    /**
+     * Whether we apply slot color on the target visual
+     */
     public var bindColor:Bool = true;
 
-    /** Whether we apply slot alpha on the target visual */
+    /**
+     * Whether we apply slot alpha on the target visual
+     */
     public var bindAlpha:Bool = true;
 
-    /** Whether we apply slot depth on the target visual */
+    /**
+     * Whether we apply slot depth on the target visual
+     */
     public var bindDepth:Bool = true;
 
-    /** Whether we apply slot blending on the target visual */
+    /**
+     * Whether we apply slot blending on the target visual
+     */
     public var bindBlending:Bool = true;
 
-    /** Whether to compensate region attachment rotation on the target visual */
+    /**
+     * Whether to compensate region attachment rotation on the target visual
+     */
     public var compensateRegionRotation:Bool = false;
 
-    /** When enabled (default), if the bound slot is not active,
-        set the visual `active` property to `false`, set it to `true` otherwise. */
+    /**
+     * When enabled (default), if the bound slot is not active,
+     * set the visual `active` property to `false`, set it to `true` otherwise.
+     */
     public var manageActiveProperty:Bool = true;
 
-    /** If set to `true` and if the target visual exists but is not visible, no transform, color or alpha will be applied. */
+    /**
+     * If set to `true` and if the target visual exists but is not visible, no transform, color or alpha will be applied.
+     */
     public var skipIfInvisible:Bool = true;
 
-    /** If set to `true` transform assigned to visual will be set to `identity` on unbind. */
+    /**
+     * If set to `true` transform assigned to visual will be set to `identity` on unbind.
+     */
     public var resetTransformOnUnbind:Bool = true;
 
-    /** If set to `true` bound visual will be destroyed when unboud. */
+    /**
+     * If set to `true` bound visual will be destroyed when unboud.
+     */
     public var destroyVisualOnUnbind:Bool = false;
 
     /// Managed internally

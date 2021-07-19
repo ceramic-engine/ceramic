@@ -1,7 +1,9 @@
 package ceramic;
 
-/** A layout that arranges its children horizontally in a single row.
-    This class is a `LinearLayout` subclass, restricted to its horizontal direction. */
+/**
+ * A layout that arranges its children horizontally in a single row.
+ * This class is a `LinearLayout` subclass, restricted to its horizontal direction.
+ */
 class RowLayout extends LinearLayout {
 
     public function new() {
