@@ -1,8 +1,9 @@
 package ceramic;
 
-class VisualNapePhysics extends Entity {
-
 #if plugin_nape
+
+@:dox(show)
+class VisualNapePhysics extends Entity {
 
     public var visual:Visual = null;
 
@@ -65,6 +66,6 @@ class VisualNapePhysics extends Entity {
 
     }
 
-#end
-
 }
+
+#end

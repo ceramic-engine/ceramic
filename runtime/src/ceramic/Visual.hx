@@ -4,6 +4,11 @@ package ceramic;
 import backend.VisualItem;
 #end
 
+#if macro
+import haxe.macro.Context;
+import haxe.macro.Expr;
+#end
+
 import ceramic.Point;
 
 using ceramic.Extensions;
@@ -106,6 +111,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
      * @param world
      *      (optional) A world instance where the body will be attached.
      *      If none is provided, default world (app.arcade.world) will be used.
+     * @return A `VisualArcadePhysics` instance
      */
     public function initArcadePhysics(?world:ArcadeWorld):VisualArcadePhysics {
 
@@ -434,6 +440,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * The elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead).
+     * @param worldBounceX The elasticity value on **x** axis
+     * @param worldBounceY The elasticity value on **y** axis
      */
     inline public function worldBounce(worldBounceX:Float, worldBounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -470,7 +478,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * The maxDelta, or rate of change the visual position. Measured in points per second.
+     * The max delta, or rate of change the visual position. Measured in points per second.
+     * @param maxDeltaX The max delta value on **x** axis
+     * @param maxDeltaY The max delta value on **y** axis
      */
     inline public function maxDelta(maxDeltaX:Float, maxDeltaY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -521,6 +531,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * This visual's local gravity, **added** to any world gravity, unless `allowGravity` is set to false.
+     * @param gravityX The gravity on **x** axis
+     * @param gravityY The gravity on **y** axis
      */
     inline public function gravity(gravityX:Float, gravityY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -558,6 +570,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on x & y axis.
+     * @param frictionX The friction on **x** axis
+     * @param frictionY The friction on **y** axis
      */
     inline public function friction(frictionX:Float, frictionY:Float):Void {
         if (arcade == null) initArcadePhysics();
@@ -690,191 +704,144 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return collideWorldBounds;
     }
 
-    #if documentation
+    #if (documentation || completion)
 
     /**
      * Dispatched when this visual body collides with another visual's body.
+     * @param visual1 This visual
+     * @param visual2 The other colliding visual
      */
     @event function collide(visual1:Visual, visual2:Visual);
 
     /**
      * Dispatched when this visual body overlaps with another visual's body.
+     * @param visual1 This visual
+     * @param visual2 The other overlapping visual
      */
     @event function overlap(visual1:Visual, visual2:Visual);
 
     /**
      * Dispatched when this visual body collides with another body.
+     * @param visual This visual
+     * @param body The other colliding body
      */
     @event function collideBody(visual:Visual, body:arcade.Body);
 
     /**
      * Dispatched when this visual body overlaps with another body.
+     * @param visual The visual
+     * @param body The other overlapping body
      */
     @event function overlapBody(visual:Visual, body:arcade.Body);
 
     /**
      * Dispatched when this visual body collides with the world bounds.
+     * @param visual This visual
+     * @param up `true` if visual collides up with bounds
+     * @param down `true` if visual collides down with bounds
+     * @param left `true` if visual collides left with bounds
+     * @param right `true` if visual collides right with bounds
      */
     @event function worldBounds(visual:Visual, up:Bool, down:Bool, left:Bool, right:Bool);
 
     #else
 
-    /**
-     * Dispatched when this visual body collides with another visual's body.
-     */
     inline public function onCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollide(owner, handleVisual1Visual2);
     }
 
-    /**
-     * Dispatched when this visual body collides with another visual's body.
-     */
     inline public function onceCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollide(owner, handleVisual1Visual2);
     }
 
-    /**
-     * Dispatched when this visual body collides with another visual's body.
-     */
     inline public function offCollide(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offCollide(handleVisual1Visual2);
         }
     }
 
-    /**
-     * Dispatched when this visual body collides with another visual's body.
-     */
     inline public function listensCollide():Bool {
         return arcade != null ? arcade.listensCollide() : false;
     }
 
-    /**
-     * Dispatched when this visual body collides with another body.
-     */
     inline public function onCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollideBody(owner, handleVisualBody);
     }
 
-    /**
-     * Dispatched when this visual body collides with another body.
-     */
     inline public function onceCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollideBody(owner, handleVisualBody);
     }
 
-    /**
-     * Dispatched when this visual body collides with another body.
-     */
     inline public function offCollideBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offCollideBody(handleVisualBody);
         }
     }
 
-    /**
-     * Dispatched when this visual body collides with another body.
-     */
     inline public function listensCollideBody():Bool {
         return arcade != null ? arcade.listensCollideBody() : false;
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another visual's body.
-     */
     inline public function onOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlap(owner, handleVisual1Visual2);
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another visual's body.
-     */
     inline public function onceOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlap(owner, handleVisual1Visual2);
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another visual's body.
-     */
     inline public function offOverlap(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offOverlap(handleVisual1Visual2);
         }
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another visual's body.
-     */
     inline public function listensOverlap():Bool {
         return arcade != null ? arcade.listensOverlap() : false;
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another body.
-     */
     inline public function onOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlapBody(owner, handleVisualBody);
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another body.
-     */
     inline public function onceOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlapBody(owner, handleVisualBody);
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another body.
-     */
     inline public function offOverlapBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offOverlapBody(handleVisualBody);
         }
     }
 
-    /**
-     * Dispatched when this visual body overlaps with another body.
-     */
     inline public function listensOverlapBody():Bool {
         return arcade != null ? arcade.listensOverlapBody() : false;
     }
 
-    /**
-     * Dispatched when this visual body collides with the world bounds.
-     */
     inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
-    /**
-     * Dispatched when this visual body collides with the world bounds.
-     */
     inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
-    /**
-     * Dispatched when this visual body collides with the world bounds.
-     */
     inline public function offWorldBounds(?handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade != null) {
             arcade.offWorldBounds(handleVisualUpDownLeftRight);
         }
     }
 
-    /**
-     * Dispatched when this visual body collides with the world bounds.
-     */
     inline public function listensWorldBounds():Bool {
         return arcade != null ? arcade.listensWorldBounds() : false;
     }
@@ -907,6 +874,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Init nape physics body bound to this visual.
+     * @param type Physics body type (`STATIC`, `KINEMATIC` or `DYNAMIC`)
+     * @param space (optional) Related nape spaces. Will use default space if not provided.
+     * @param shape (optional) Shape used for this body. Default is a box matching visual bounds.
+     * @param material (optional) A custom material to use with this body.
+     * @return A `VisualNapePhysics` instance
      */
     public function initNapePhysics(
         type:ceramic.NapePhysicsBodyType,
@@ -984,7 +956,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
     /**
-     * Use the given visual's bounds as clipping area.
+     * Use the given visual's bounds as clipping area for **every children**.
+     * The clipping only affect childrens and not the visual it is assigned to.
+     * Clipping areas cannot be combined. That means if `clip` is not null and current
+     * visual instance is already clipped by a parent visual, its children's won't be clipped
+     * by it anymore as they are instead clipped by this `clip` property instead.
      */
     public var clip(default,set):Visual = null;
     inline function set_clip(clip:Visual):Visual {
@@ -995,7 +971,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * Whether this visual should inherit its parent alpha state or not.
+     * Whether this visual should inherit its parent alpha value or not.
+     * If it inherits, parent alpha value will be multiplied with current visual's own `alpha` property.
      */
     public var inheritAlpha(default,set):Bool = false;
     inline function set_inheritAlpha(inheritAlpha:Bool):Bool {
@@ -1007,11 +984,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Stop this visual, whatever that means (override in subclasses).
-     * When arcade physics are enabled, they are also stopped from this call.
+     * When arcade physics are enabled, visual's body is stopped from this call.
      */
     public function stop():Void {
 #if plugin_arcade
-        if (arcade != null) arcade.body.stop;
+        if (arcade != null) arcade.body.stop();
 #end
     }
 
@@ -1158,6 +1135,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return this.blending = blending;
     }
 
+    /**
+     * Set to `false` to make this visual (and all of its children) invisible and not rendered.
+     */
     @editable({ group: 'active' })
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
@@ -1167,6 +1147,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return visible;
     }
 
+    /**
+     * Set to `false` to make this visual (and all of its children) not touchable
+     */
     @editable({ group: 'active' })
     public var touchable(default,set):Bool = true;
     function set_touchable(touchable:Bool):Bool {
@@ -1176,6 +1159,13 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return touchable;
     }
 
+    /**
+     * Set this visual's depth.
+     * Visuals are rendered from back to front of the screen.
+     * Given two visuals, a visual with higher depth will be rendered **above** a visual with lower depth.
+     * In practice, it is advised to use integer values like `1`, `2`, `3`... to order your visuals,
+     * like you would do with z-index on CSS elements.
+     */
     @editable({ group: 'depth' })
     public var depth(default,set):Float = 0;
     function set_depth(depth:Float):Float {
@@ -1185,10 +1175,41 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return depth;
     }
 
-
     /**
-     * If set, children will be sort by depth and their computed depth
-     * will be within range [parent.depth, parent.depth + depthRange]
+     * If set to `1` (default), children will be sort by depth and their computed depth
+     * will be within range [parent.depth, parent.depth + depthRange].
+     * You'll usually won't need to change this value,
+     * unless you want to do advanced drawing where different
+     * hierarchies of visuals are blending with each other.
+     * 
+     * ```haxe
+     * // Children computed depths will be relative to their parent visual depth.
+     * // This is the default value and recommended approach in most situations as
+     * // its behaviour is similar to display trees, z-index etc...
+     * visual.depthRange = 1;
+     * 
+     * // More advanced, two visuals: visual2 above visual1 because of higher depth, but
+     * // visual1's depth range is `8`, so its children computed depths will be distributed
+     * // between `1` and `1 + 8` (9 excluded). That means some of visual1's children
+     * // can be above visual2's children. Can be useful on some specific edge cases,
+     * // but not recommended in general.
+     * visual1.depthRange = 8;
+     * visual1.depth = 1;
+     * visual2.depth = 2;
+     * 
+     * // Another case: two visuals with the same depth and depthRange.
+     * // There children will share the same computed depth space, so a child of visual1 at `depth = 6`
+     * // will be above a child of visual2 at `depth = 4`.
+     * // Resulting computed depths will be between `1` and `1 + 16` (17 excluded).
+     * visual1.depthRange = 16
+     * visual2.depthRange = 16
+     * visual1.depth = 1;
+     * visual2.depth = 1;
+     * 
+     * // Children computed depths won't be relative to their parent visual depth.
+     * // Instead, it will be relative to the higher parent (of the parent) in hierarchy that has a positive `depthRange` value,
+     * visual.depthRange = -1;
+     * ```
      */
     @editable({ group: 'depth', label: 'Range' })
     #if ceramic_no_depth_range
@@ -1203,6 +1224,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return depthRange;
     }
 
+    /**
+     * The **x** position of this visual.
+     * Relative to its parent, or screen if this visual has no parent.
+     */
     @editable({ group: 'position' })
     public var x(default,set):Float = 0;
     function set_x(x:Float):Float {
@@ -1212,6 +1237,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return x;
     }
 
+    /**
+     * The **y** position of this visual.
+     * Relative to its parent, or screen if this visual has no parent.
+     */
     @editable({ group: 'position' })
     public var y(default,set):Float = 0;
     function set_y(y:Float):Float {
@@ -1221,6 +1250,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return y;
     }
 
+    /**
+     * The **scaleX** value of this visual.
+     */
     @editable({ group: 'scale' })
     public var scaleX(default,set):Float = 1;
     function set_scaleX(scaleX:Float):Float {
@@ -1231,6 +1263,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return scaleX;
     }
 
+    /**
+     * The **scaleY** value of this visual.
+     */
     @editable({ group: 'scale' })
     public var scaleY(default,set):Float = 1;
     function set_scaleY(scaleY:Float):Float {
@@ -1241,6 +1276,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return scaleY;
     }
 
+    /**
+     * The **skewX** value of this visual.
+     */
     @editable({ group: 'skew' })
     public var skewX(default,set):Float = 0;
     function set_skewX(skewX:Float):Float {
@@ -1251,6 +1289,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return skewX;
     }
 
+    /**
+     * The **skewY** value of this visual.
+     */
     @editable({ group: 'skew' })
     public var skewY(default,set):Float = 0;
     function set_skewY(skewY:Float):Float {
@@ -1261,6 +1302,13 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return skewY;
     }
 
+    /**
+     * The **anchorX** value of this visual.
+     * Affects how position, scale, rotation and skew of the visual are rendered.
+     * Default is `0`, which means: anchor relative to the **left** of the visual.
+     * Use `1` to make it relative to the **right** of the visual, or `0.5` to make it
+     * relative to the **horizontal center** of the visual.
+     */
     @editable({ group: 'anchor' })
     public var anchorX(default,set):Float = 0;
     function set_anchorX(anchorX:Float):Float {
@@ -1270,6 +1318,13 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return anchorX;
     }
 
+    /**
+     * The **anchorY** value of this visual.
+     * Affects how position, scale, rotation and skew of the visual are rendered.
+     * Default is `0`, which means: anchor relative to the **top** of the visual.
+     * Use `1` to make it relative to the **bottom** of the visual, or `0.5` to make it
+     * relative to the **vertical center** of the visual.
+     */
     @editable({ group: 'anchor' })
     public var anchorY(default,set):Float = 0;
     function set_anchorY(anchorY:Float):Float {
@@ -1279,6 +1334,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return anchorY;
     }
 
+    /**
+     * The **width** of the visual.
+     * Default is `0`. Can be set to an explicit value.
+     * Some subclasses of `Visual` are computing it automatically
+     * like `Text` from its textual content or `Quad` when a texture is assigned to it.
+     */
     @editable({ min: 0, group: 'size' })
     public var width(get,set):Float;
     var _width:Float = 0;
@@ -1292,6 +1353,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return width;
     }
 
+    /**
+     * The **height** of the visual.
+     * Default is `0`. Can be set to an explicit value.
+     * Some subclasses of `Visual` are computing it automatically
+     * like `Text` from its textual content or `Quad` when a texture is assigned to it.
+     */
     @editable({ min: 0, group: 'size' })
     public var height(get,set):Float;
     var _height:Float = 0;
@@ -1307,8 +1374,13 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * If set to a value above zero, matrix translation (tx & ty) will be rounded.
-     * `roundTranslation = 1; // Pixel perfect rounding`
-     * `roundTranslation = 2; // Half-pixel rounding`
+     * 
+     * ```haxe
+     * roundTranslation = 0; // No rounding (default)
+     * roundTranslation = 1; // Pixel perfect rounding
+     * roundTranslation = 2; // Half-pixel rounding
+     * ```
+     * 
      * May be useful to render pixel perfect scenes onto `ceramic.Filter`.
      */
     @editable
@@ -1320,6 +1392,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return roundTranslation;
     }
 
+    /**
+     * Rotation of the visual in degrees.
+     * The center of the rotation depends on `anchorX` and `anchorY`.
+     */
     @editable({ slider: [0, 360], degrees: true })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
@@ -1330,6 +1406,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
         return rotation;
     }
 
+    /**
+     * Alpha of the visual. Must be a value between `0` (transparent) and `1` (fully opaque)
+     */
     @editable({ slider: [0, 1] })
     public var alpha(default,set):Float = 1;
     function set_alpha(alpha:Float):Float {
@@ -1342,7 +1421,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Visual X translation.
      * This is a shorthand equivalent to assigning a `Transform` object to
-     * the visual with a `tx` value of `translateX`
+     * the visual with a `tx` value of `translateX`.
+     * Only recommended for advanced usage as `x` property should be used in general instead.
      */
     @editable({ group: 'translate' })
     public var translateX(get, set):Float;
@@ -1371,7 +1451,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Visual Y translation.
      * This is a shorthand equivalent to assigning a `Transform` object to
-     * the visual with a `ty` value of `translateY`
+     * the visual with a `ty` value of `translateY`.
+     * Only recommended for advanced usage as `y` property should be used in general instead.
      */
     @editable({ group: 'translate' })
     public var translateY(get, set):Float;
@@ -1398,7 +1479,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * Set additional matrix-based transform to this visual. Default is null.
+     * Set additional matrix-based transform to this visual. Default is `null`.
+     * A `Transform` object will affect of the visual is rendered.
+     * The transform is applied after visual's properties (position, rotation, scale, skew).
      */
     public var transform(default,set):Transform = null;
     function set_transform(transform:Transform):Transform {
@@ -1421,6 +1504,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Assign a shader to this visual.
+     * When none is assigned, default shader will be used.
      */
     @editable
     public var shader(default, set):Shader = null;
@@ -1433,6 +1517,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Read and write arbitrary boolean flags on this visual.
      * Index should be between 0 (included) and 16 (excluded) or result is undefined.
+     * @param index The index of the flag to change, between 0 (included) and 16 (excluded)
+     * @param value (optional) The boolean value to set, or no value to simply read current value
+     * @return The existing value if just reading, or the new value if writing
      */
     inline public function flag(index:Int, ?value:Bool):Bool {
 
@@ -1454,6 +1541,7 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Just a way to store some flags.
+     * 32 boolean values stored inside an `Int`.
      */
     var flags:Flags = new Flags();
 
@@ -1462,6 +1550,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
      * the visual won't be `visible` nor `touchable` anymore (these get set to **false**).
      * When restoring `active` to **true**, `visible` and `touchable` will also get back
      * their previous state.
+     * If you want to keep a visual around without it being displayed or interactive, simply
+     * set its `active` property to `false`. It will be almost like it doesn't exist and its
+     * impact on rendering will be minimal.
      */
     public var active(get,set):Bool;
     inline function get_active():Bool {
@@ -1514,23 +1605,58 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Properties (Computed)
 
-    public var computedVisible:Bool = true;
+    /**
+     * Computed visible value. This is `true` if this visual is `visible` and all
+     * of its parents are `visible`. If you want to know if a visual is visible on screen,
+     * you should check with this property and not `visible` property, which doesn't account
+     * for parent visibility.
+     */
+    public var computedVisible(default, null):Bool = true;
 
-    public var computedAlpha:Float = 1;
+    /**
+     * Computed alpha value. This is the combination of this visual's alpha and its parent alpha
+     * if `inheritAlpha` is `true`
+     */
+    public var computedAlpha(default, null):Float = 1;
 
-    public var computedDepth:Float = 0;
+    /**
+     * Computed depth value. This is the final depth used by rendering, computed from this visual's `depth`
+     * and `depthRange` properties and its hierarchy of parent visuals.
+     */
+    public var computedDepth(default, null):Float = 0;
 
-    public var computedRenderTarget:RenderTexture = null;
+    /**
+     * Computed render target. When a visual has a `renderTarget` assigned, its `computedRenderTarget` will
+     * be assigned with the same instance, and its children's `computedRenderTarget` property as well.
+     */
+    public var computedRenderTarget(default, null):RenderTexture = null;
 
-    public var computedTouchable:Bool = true;
+    /**
+     * Computed touchable value. This is `true` if this visual is `touchable` and all
+     * of its parents are `touchable`.
+     */
+    public var computedTouchable(default, null):Bool = true;
 
-    public var computedClip:Bool = false;
+    /**
+     * If any parent of this visual has a `clip` visual assigned, `computedClip` will be `true`.
+     */
+    public var computedClip(default, null):Bool = false;
 
 /// Properties (Children)
 
+    /**
+     * A visual can have **children**.
+     * Children positions and transformations are relative to their parent.
+     * This property is read only. Use `add()` to add children to this visual
+     * and `remove()` to remove them.
+     * The order on the visuals in `children` should not be used to predict the order in which visuals are rendered.
+     * If you want to control the order of rendering of visuals, use `depth` property on the children instead.
+     */
     public var children(default,null):ReadOnlyArray<Visual> = null;
 
-    //@editable
+    /**
+     * The **parent visual** if there is any, or `null` if this visual doesn't have any parent.
+     */
     public var parent(default,null):Visual = null;
 
 /// Internal
@@ -1543,6 +1669,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Helpers
 
+    /**
+     * Shorthand to set `width` and `height` in a single call.
+     * @param width The width to set to the visual
+     * @param height The height to set to the visual
+     */
     inline public function size(width:Float, height:Float):Void {
 
         this.width = width;
@@ -1550,6 +1681,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Shorthand to set `anchorX` and `anchorY` in a single call.
+     * @param anchorX The anchor to set to the visual on **x** axis
+     * @param anchorY The anchor to set to the visual on **y** axis
+     */
     inline public function anchor(anchorX:Float, anchorY:Float):Void {
 
         this.anchorX = anchorX;
@@ -1557,6 +1693,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Shorthand to set `x` and `y` in a single call.
+     * @param x The x position to set to the visual
+     * @param y The y position to set to the visual
+     */
     inline public function pos(x:Float, y:Float):Void {
 
         this.x = x;
@@ -1564,6 +1705,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Shorthand to set `scaleX` and `scaleY` in a single call.
+     * @param scaleX The scale to set to the visual on **x** axis
+     * @param scaleY (optional) The scale to set to the visual on **y** axis. If not provided, will use scaleX value.
+     */
     inline public function scale(scaleX:Float, scaleY:Float = -1):Void {
 
         this.scaleX = scaleX;
@@ -1571,6 +1717,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Shorthand to set `skewX` and `skewY` in a single call.
+     * @param skewX The skew to set to the visual on **x** axis
+     * @param skewY The skew to set to the visual on **y** axis
+     */
     inline public function skew(skewX:Float, skewY:Float):Void {
 
         this.skewX = skewX;
@@ -1578,6 +1729,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Shorthand to set `translateX` and `translateY` in a single call.
+     * @param translateX The translation to set to the visual on **x** axis
+     * @param translateY The translation to set to the visual on **y** axis
+     */
     inline public function translate(translateX:Float, translateY:Float):Void {
 
         this.translateX = translateX;
@@ -1588,8 +1744,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 /// Advanced helpers
 
     /**
-     * Change the visual's anchor but update its x and y values to make
-     * it keep its current position.
+     * Change the visual's anchor but ensure the visual keeps its current position.
+     * This is similar to `anchor(anchorX, anchorY)` but visual with have its `x` and `y` properties
+     * updated to ensure it stays at the same position as before changing anchor.
+     * @param anchorX The anchor to set to the visual on **x** axis
+     * @param anchorY The anchor to set to the visual on **y** axis
      */
     public function anchorKeepPosition(anchorX:Float, anchorY:Float):Void {
 
@@ -1620,6 +1779,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Returns the first child matching the requested `id` or `null` otherwise.
+     * @param id The requested id
+     * @param recursive (optional) Recursive search in children
+     * @return A matching visual or `null`
      */
     public function childWithId(id:String, recursive:Bool = true):Visual {
 
@@ -1643,6 +1805,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Lifecycle
 
+    /**
+     * Create a new `Visual`
+     */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -1655,6 +1820,15 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Destroy the visual.
+     * When a visual is destroyed, `clear()` is called,
+     * which means all children are removed and destroyed.
+     * Events owned by this visual and events on this visual are
+     * unbound so they don't need to be unbound explicitly.
+     * As soon as `destroy()` is called, the `destroyed` property
+     * becomes `true`.
+     */
     override public function destroy() {
 
         super.destroy();
@@ -1686,6 +1860,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Remove and destroy all children.
+     */
     public function clear() {
 
         if (children != null && children.length > 0) {
@@ -1707,12 +1884,18 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Matrix
 
+    /**
+     * Called when this visual's transform has changed
+     */
     function transformDidChange() {
 
         matrixDirty = true;
 
     }
 
+    /**
+     * Called when this visual's matrix needs to be recomputed
+     */
     function computeMatrix() {
 
         if (parent != null && parent.matrixDirty) {
@@ -1877,6 +2060,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds
+     * @param x Screen **x** coordinate
+     * @param y Screen **y** coordinate
+     * @return `true` if it hits
      */
     public function hits(x:Float, y:Float):Bool {
 
@@ -1920,11 +2106,16 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
      * The actual hit test performed on the visual.
      * If needed to change how hit test is performed
      * on a visual subclass, this is the method to override.
+     * @param x Screen **x** coordinate
+     * @param y Screen **y** coordinate
+     * @param matrix The matrix being applied to visual, relative to screen space
+     * @return `true` if it hits
      */
+    @:dox(show)
     function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
-        var testX = _matrix.transformX(x, y);
-        var testY = _matrix.transformY(x, y);
+        var testX = matrix.transformX(x, y);
+        var testY = matrix.transformY(x, y);
 
         return testX >= 0
             && testX < width
@@ -1936,7 +2127,14 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Override this method in subclasses to intercept hitting pointer down events on this visual's children (any level in sub-hierarchy).
      * Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise.
+     * @param hittingVisual The hitting visual, meaning the visual on which the event applies
+     * @param x The **x** coordinate of the event
+     * @param y The **y** coordinate of the event
+     * @param touchIndex The **touch index** of the event (or `-1` if it is not a touch event)
+     * @param buttonId The **button id** of the event (or `-1` if it is not a mouse event)
+     * @return `true` if the event is intercepted
      */
+    @:dox(show)
     function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float, touchIndex:Int, buttonId:Int):Bool {
 
         return false;
@@ -1946,7 +2144,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Override this method in subclasses to intercept hitting pointer over events on this visual's children (any level in sub-hierarchy).
      * Return `true` to stop an event from being triggered on the hitting child, `false` (default) otherwise.
+     * @param hittingVisual The hitting visual, meaning the visual on which the event applies
+     * @param x The **x** coordinate of the event
+     * @param y The **y** coordinate of the event
+     * @return `true` if the event is intercepted
      */
+    @:dox(show)
     function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
         return false;
@@ -1956,7 +2159,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 /// Screen to visual positions and vice versa
 
     /**
-     * Assign X and Y to given point after converting them from screen coordinates to current visual coordinates.
+     * Assign **x** and **y** to given point after converting them from screen coordinates to current visual coordinates.
+     * @param x The **x** coordinate
+     * @param y The **y** coordinate
+     * @param point The point in which resulting x and y coordinate are stored
+     * @param handleFilters (optional) Make it `false` if you want to skip nested filter transformations
      */
     public function screenToVisual(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
@@ -1995,7 +2202,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     }
 
     /**
-     * Assign X and Y to given point after converting them from current visual coordinates to screen coordinates.
+     * Assign **x** and **y** to given point after converting them from current visual coordinates to screen coordinates.
+     * @param x The **x** coordinate
+     * @param y The **y** coordinate
+     * @param point The point in which resulting x and y coordinate are stored
+     * @param handleFilters (optional) Make it `false` if you want to skip nested filter transformations
      */
     public function visualToScreen(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
 
@@ -2035,7 +2246,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 /// Transform from visual
 
     /**
-     * Assign X and Y to given point after converting them from current visual coordinates to screen coordinates.
+     * Extract current visual transformation and write it into the given `transform`
+     * @param transform The transform object to write data into
      */
     public function visualToTransform(transform:Transform):Void {
 
@@ -2177,6 +2389,11 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
 /// Display
 
+    /**
+     * Compute content on this visual.
+     * This method is expected to be overrided in `Visual` subclasses
+     * to compute actual content (raw `Visual` class doesn't do anything).
+     */
     public function computeContent() {
         
         contentDirty = false;
@@ -2192,8 +2409,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
     /**
      * Will walk on every children and set their depths starting from 
      * `start` and incrementing depth by `step`.
-     * @param start the depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
-     * @param step the depth step to use when increment depth for each child
+     * @param start The depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
+     * @param step The depth step to use when increment depth for each child
      */
     public function autoChildrenDepth(start:Float = 1, step:Float = 1):Void {
 
@@ -2226,8 +2443,8 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     /**
      * This is the equivalent of calling `sortChildrenByDepth()` followed with `autoChildrenDepth()`
-     * @param start the depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
-     * @param step the depth step to use when increment depth for each child
+     * @param start The depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
+     * @param step The depth step to use when increment depth for each child
      */
     public function normalizeChildrenDepth(start:Float = 1, step:Float = 1):Void {
 
@@ -2311,6 +2528,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Check if current visual has `targetParent` as parent visual. The parent can possibly
+     * be indirect, meaning it can be the parent of the parent of the visual etc...
+     * @param targetParent The target parent to check
+     * @return `true` if the visual has the given target parent as indirect parent
+     */
     public function hasIndirectParent(targetParent:Visual):Bool {
 
         var parent = this.parent;
@@ -2323,6 +2546,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Returns the first parent (can be indirect) of this visual that matches
+     * the given class or `null` if none is matching
+     * @param clazz The requested class
+     * @return A matching parent or `null`
+     */
     public function firstParentWithClass<T>(clazz:Class<T>):T {
 
         var parent = this.parent;
@@ -2335,6 +2564,12 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Add the given visual as a child.
+     * When a visual is added as a child, it's `parent` property is updated
+     * and it will follow parent transformation in addition to its own.
+     * @param visual The visual to add
+     */
     public function add(visual:Visual):Void {
 
         if (visual == this) {
@@ -2359,6 +2594,10 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
 
     }
 
+    /**
+     * Remove the child from current visual.
+     * @param visual The child to remove
+     */
     public function remove(visual:Visual):Void {
 
         App.app.hierarchyDirty = true;
@@ -2385,6 +2624,9 @@ class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end 
      * When `recursive` option is `true`, will return `true` if
      * the current visual contains this child or one of
      * its direct or indirect children does.
+     * @param child The child to check in hierarchy
+     * @param recursive (optional) Set to `true` to search recursively on indirect children
+     * @return `true` if the current visual contains this child
      */
     public function contains(child:Visual, recursive:Bool = false):Bool {
 

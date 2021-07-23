@@ -2,9 +2,10 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-class VisualArcadePhysics extends Entity {
-
 #if plugin_arcade
+
+@:dox(show)
+class VisualArcadePhysics extends Entity {
 
     /**
      * Dispatched when this visual body collides with another body.
@@ -167,6 +168,6 @@ class VisualArcadePhysics extends Entity {
 
     }
 
-#end
-
 }
+
+#end

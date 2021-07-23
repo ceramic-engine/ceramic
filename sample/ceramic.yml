@@ -19,7 +19,8 @@ app:
         - clay
         - tilemap
         - spine
+        - nape
+        - arcade
     
     libs:
         - spine-hx
-        - arcade

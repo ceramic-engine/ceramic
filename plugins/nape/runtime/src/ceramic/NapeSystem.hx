@@ -4,10 +4,10 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+#if plugin_nape
+
 @:allow(ceramic.App)
 class NapeSystem extends System {
-
-#if plugin_nape
 
     static var _matrix:Transform = new Transform();
 
@@ -208,6 +208,6 @@ class NapeSystem extends System {
         
     }
 
-#end
-
 }
+
+#end

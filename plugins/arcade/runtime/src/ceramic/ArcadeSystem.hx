@@ -4,10 +4,10 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+#if plugin_arcade
+
 @:allow(ceramic.App)
 class ArcadeSystem extends System {
-
-#if plugin_arcade
 
     /**
      * When this event is fired, it's the right time to make your bodies collide/overlap
@@ -226,6 +226,6 @@ class ArcadeSystem extends System {
         
     }
 
-#end
-
 }
+
+#end
