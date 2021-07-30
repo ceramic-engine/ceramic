@@ -34,8 +34,6 @@ class Draw #if !completion implements spec.Draw #end {
 
         renderer = new ceramic.Renderer();
 
-        trace('NEW BACKEND DRAW');
-
         #if !unity_urp
         commandBuffer = untyped __cs__('new UnityEngine.Rendering.CommandBuffer()');
         untyped __cs__('UnityEngine.Camera.main.AddCommandBuffer(UnityEngine.Rendering.CameraEvent.AfterEverything, (UnityEngine.Rendering.CommandBuffer){0})', commandBuffer);
