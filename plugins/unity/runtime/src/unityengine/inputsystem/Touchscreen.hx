@@ -9,6 +9,8 @@ extern class Touchscreen extends Pointer {
 
     static var current(default, null):Touchscreen;
 
+    var primaryTouch(default, null):TouchControl;
+
     var touches(default, null):ReadOnlyArray<TouchControl>;
 
 }

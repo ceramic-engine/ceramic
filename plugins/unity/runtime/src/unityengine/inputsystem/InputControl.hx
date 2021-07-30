@@ -5,4 +5,6 @@ extern class InputControl<T> {
 
     var displayName(default, null):String;
 
+    function ReadValue():T;
+
 }

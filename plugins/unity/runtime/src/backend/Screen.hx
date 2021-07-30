@@ -1,10 +1,12 @@
 package backend;
 
 import ceramic.IntIntMap;
+import unityengine.inputsystem.controls.TouchControl;
+import unityengine.inputsystem.Touchscreen;
 import unityengine.inputsystem.TouchPhase;
 import unityengine.inputsystem.Mouse;
-import unityengine.inputsystem.enhancedtouch.Touch;
-import unityengine.inputsystem.enhancedtouch.EnhancedTouchSupport;
+
+using ceramic.Extensions;
 
 @:keep
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
@@ -13,8 +15,6 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         
         width = untyped __cs__('UnityEngine.Screen.width');
         height = untyped __cs__('UnityEngine.Screen.height');
-        
-        initTouchInput();
 
     }
 
@@ -178,60 +178,123 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     var usedTouchIndexes:IntIntMap = new IntIntMap(16, 0.5, false);
 
-    function initTouchInput() {
+    var processedTouchIndexes:Array<Int> = [];
 
-        if (!EnhancedTouchSupport.enabled) {
-            EnhancedTouchSupport.Enable();
-        }
+    var prevNumTouches:Int = 0;
 
-    }
+    var prevProcessedTouchIndexes:Array<Int> = [];
+
+    var processedTouchPositions:Array<Float> = [];
+
+    var prevProcessedTouchPositions:Array<Float> = [];
 
     function updateTouchInput() {
-        
-        var numTouches = Touch.activeTouches.Count;
+
+        var touchScreen = Touchscreen.current;
+
+        var numTouches = touchScreen.touches.Count;
 
         for (i in 0...numTouches) {
+            processedTouchIndexes[i] = 0;
 
-            var touch:Touch = untyped __cs__('{0}[{1}]', Touch.activeTouches, i);
+            var touch:TouchControl = untyped __cs__('{0}[{1}]', touchScreen.touches, i);
 
-            var touchId = touch.touchId;
-            var index = touchIdToIndex.get(touchId);
-            if (index == 0) {
+            var phase = touch.phase.ReadValue();
 
-                // We only accept touches that are starting.
-                // Anything else is not supposed to be handled
-                if (touch.phase != TouchPhase.Began)
-                    continue;
+            if (phase != TouchPhase.None) {
+                var touchId = touch.touchId.ReadValue();
+                
+                if (touchId > 0) {
+                    var index = touchIdToIndex.get(touchId);
+                    var positionX = touch.position.x.ReadValue();
+                    var positionY = touch.position.y.ReadValue();
 
-                index++;
-                while (usedTouchIndexes.get(index) != 0) {
-                    index++;
+                    if (index == 0) {
+                        // We only accept touches that are starting.
+                        // Anything else is not supposed to be handled
+                        if (phase != TouchPhase.Began)
+                            continue;
+        
+                        index++;
+                        while (usedTouchIndexes.get(index) != 0) {
+                            index++;
+                        }
+                        usedTouchIndexes.set(index, touchId);
+                        touchIdToIndex.set(touchId, index);
+
+                        // Emit touch down
+                        var x = positionX;
+                        var y = height - positionY;
+                        emitTouchDown(index - 1, x, y);
+                    }
+                    processedTouchIndexes[i] = index;
+                    processedTouchPositions[i * 2] = positionX;
+                    processedTouchPositions[i * 2 + 1] = positionY;
+
+                    if (phase == TouchPhase.Moved) {
+                        var deltaX = touch.delta.x.ReadValue();
+                        var deltaY = touch.delta.y.ReadValue();
+                        if (deltaX != 0 || deltaY != 0) {
+                            // Emit touch move
+                            var x = positionX;
+                            var y = height - positionY;
+                            emitTouchMove(index - 1, x, y);
+                        }
+                    }
+                    // We treat any ended/canceled touch phase like the touch ended (touch up)
+                    else if (phase == TouchPhase.Ended || phase == TouchPhase.Canceled) {
+                        // Emit touch up
+                        var x = positionX;
+                        var y = height - positionY;
+                        emitTouchUp(index - 1, x, y);
+
+                        usedTouchIndexes.remove(index);
+                        touchIdToIndex.remove(touchId);
+                    }
                 }
-                usedTouchIndexes.set(index, 1);
-                touchIdToIndex.set(touchId, index);
-            }
-
-            if (touch.phase == TouchPhase.Began) {
-                var x = touch.screenPosition.x;
-                var y = height - touch.screenPosition.y;
-                emitTouchDown(index - 1, x, y);
-            }
-            else if (touch.phase == TouchPhase.Moved) {
-                var x = touch.screenPosition.x;
-                var y = height - touch.screenPosition.y;
-                emitTouchMove(index - 1, x, y);
-            }
-            // We treat any ended/canceled/none touch phase like the touch ended (touch up)
-            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled || touch.phase == TouchPhase.None) {
-                var x = touch.screenPosition.x;
-                var y = height - touch.screenPosition.y;
-                emitTouchUp(index - 1, x, y);
-
-                usedTouchIndexes.remove(index);
-                touchIdToIndex.remove(touchId);
             }
 
         }
+
+        // Snippet for robustness: look for previously active touches that are not referenced
+        // anymore by unity's input system. This is not supposed to happen, but from previous
+        // tests on device, it does happen :(. Anyway we are safe with this check no matter what.
+        for (i in 0...prevNumTouches) {
+            var prevIndex = prevProcessedTouchIndexes.unsafeGet(i);
+            if (prevIndex > 0 && usedTouchIndexes.get(prevIndex) != 0) {
+                // Check that index is still processed this frame
+                var foundIndex = false;
+                for (n in 0...numTouches) {
+                    var index = processedTouchIndexes.unsafeGet(n);
+                    if (index == prevIndex) {
+                        foundIndex = true;
+                        break;
+                    }
+                }
+
+                if (!foundIndex) {
+                    // Index seems expired, remove it from list
+                    // and emit touch up
+
+                    var x = prevProcessedTouchPositions[i * 2];
+                    var y = prevProcessedTouchPositions[i * 2 + 1];
+                    emitTouchUp(prevIndex - 1, x, y);
+
+                    var touchId = usedTouchIndexes.get(prevIndex);
+                    usedTouchIndexes.remove(prevIndex);
+                    touchIdToIndex.remove(touchId);
+                }
+            }
+        }
+
+        // Swap processed indexes and positions for next iteration
+        prevNumTouches = numTouches;
+        var tmpProcessedIndexes = prevProcessedTouchIndexes;
+        prevProcessedTouchIndexes = processedTouchIndexes;
+        processedTouchIndexes = tmpProcessedIndexes;
+        var tmpProcessedPosition = prevProcessedTouchPositions;
+        prevProcessedTouchPositions = processedTouchPositions;
+        processedTouchPositions = tmpProcessedPosition;
 
     }
 
