@@ -197,6 +197,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             var touchId = touch.touchId;
             var index = touchIdToIndex.get(touchId);
             if (index == 0) {
+
+                // We only accept touches that are starting.
+                // Anything else is not supposed to be handled
+                if (touch.phase != TouchPhase.Began)
+                    continue;
+
                 index++;
                 while (usedTouchIndexes.get(index) != 0) {
                     index++;
@@ -215,7 +221,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                 var y = height - touch.screenPosition.y;
                 emitTouchMove(index - 1, x, y);
             }
-            else if (touch.phase == TouchPhase.Ended) {
+            // We treat any ended/canceled/none touch phase like the touch ended (touch up)
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled || touch.phase == TouchPhase.None) {
                 var x = touch.screenPosition.x;
                 var y = height - touch.screenPosition.y;
                 emitTouchUp(index - 1, x, y);
