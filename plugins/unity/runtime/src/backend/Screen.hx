@@ -192,6 +192,10 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         var touchScreen = Touchscreen.current;
 
+        // Skip if no touchscreen API available on this device
+        if (touchScreen == null)
+            return;
+
         var numTouches = touchScreen.touches.Count;
 
         for (i in 0...numTouches) {
