@@ -25,7 +25,7 @@ class Project extends Entity {
     function ready() {
 
         // Set MainScene as the current scene (see MainScene.hx)
-        SceneSystem.shared.setCurrentScene(new MainScene());
+        app.scenes.main = new MainScene();
 
     }
 

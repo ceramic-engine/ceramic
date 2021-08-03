@@ -10,44 +10,104 @@ class SceneSystem extends System {
      */
     @lazy public static var shared = new SceneSystem();
 
-    var scenes:Array<Scene> = [];
+    public var all(default, null):ReadOnlyArray<Scene> = [];
 
     var _updatingScenes:Array<Scene> = [];
 
-    public var currentScene(default,null):Scene = null;
+    /**
+     * If `true`, when assigning a new main scene, assets of the previous
+     * main scene will be kept instead of being destroyed and can be
+     * reused by the new main scene without having to reload these
+     */
+    public var keepAssetsForNextMain:Bool = false;
 
     /**
-     * Set the given scene as current.
-     * @param scene the scene to use as current scene
-     * @param keepAssets
-     *          if `true`, assets of the previous current scene will be kept instead of being destroyed
-     *          and can be reused by the new current scene without having to reload these
+     * If `true`, when assigning a new main scene, previous main
+     * scene will wait until the next scene is properly loaded and can fade-in
+     * before starting its own fade-out transition.
      */
-    public function setCurrentScene(scene:Scene, keepAssets:Bool = false):Void {
+    public var fadeOutWhenNextMainCanFadeIn:Bool = true;
 
-        if (this.currentScene != scene) {
+    public var main(default,set):Scene = null;
 
-            var prevScene = this.currentScene;
-            if (scene == null) {
-                this.currentScene = null;
-                prevScene.destroy();
+    function set_main(main:Scene):Scene {
+        
+        if (this.main != main) {
+
+            var prevScene = this.main;
+            if (main == null) {
+                this.main = null;
+                switch prevScene.transitionStatus {
+                    case NONE | FADE_IN:
+                        prevScene.scheduleWhenReady(prevScene.destroy);
+                    case READY:
+                        prevScene.fadeOut(prevScene.destroy);
+                    case FADE_OUT | DESTROYED:
+                        prevScene.destroy();
+                }
             }
             else {
+
+                if (main.destroyed)
+                    throw 'Cannot assign a destroyed scene as main scene!';
+
                 var prevAssets = null;
+                this.main = main;
+                
                 if (prevScene != null) {
+                    var keepAssets = keepAssetsForNextMain;
                     if (keepAssets) {
                         prevAssets = prevScene._assets;
-                        prevScene._assets = null;
                     }
-                    this.currentScene = null;
-                    prevScene.destroy();
+                    this.main = null;
+                    var fadeOutDone = function() {
+                        if (keepAssets) {
+                            prevScene._assets = null;
+                        }
+                        prevScene.destroy();
+                        prevScene = null;
+                    };
+
+                    if (fadeOutWhenNextMainCanFadeIn) {
+                        var handleTransitionStatusChange = null;
+                        switch main.transitionStatus {
+
+                            case NONE:
+                                handleTransitionStatusChange = function(current:SceneTransitionStatus, previous:SceneTransitionStatus) {
+                                    switch current {
+                                        case NONE:
+                                        case FADE_IN | READY | FADE_OUT | DESTROYED:
+                                            main.offTransitionStatusChange(handleTransitionStatusChange);
+                                            prevScene.fadeOut(fadeOutDone);
+                                    }
+                                };
+                                main.onTransitionStatusChange(prevScene, handleTransitionStatusChange);
+
+                            case FADE_IN | READY | FADE_OUT | DESTROYED:
+                                prevScene.fadeOut(fadeOutDone);
+                        }
+                    }
+                    else {
+                        prevScene.fadeOut(fadeOutDone);
+                    }
                 }
-                scene._assets = prevAssets;
-                scene.bindToScreenSize();
-                scene._boot();
+
+                main._assets = prevAssets;
+                main.bindToScreenSize();
+                main._boot();
             }
 
         }
+
+        return main;
+
+    }
+
+    @:deprecated('Deprecated: use `app.scenes.main = yourScene;` instead')
+    inline function setCurrentScene(scene:Scene, keepAssets:Bool = false):Void {
+
+        keepAssetsForNextMain = keepAssets;
+        main = scene;
 
     }
 
@@ -63,9 +123,9 @@ class SceneSystem extends System {
 
         // Work on a copy of list, to ensure nothing bad happens
         // if a new item is created or destroyed during iteration
-        var len = scenes.length;
+        var len = all.length;
         for (i in 0...len) {
-            _updatingScenes[i] = scenes.unsafeGet(i);
+            _updatingScenes[i] = all.unsafeGet(i);
         }
 
         // Call

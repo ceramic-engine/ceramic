@@ -492,6 +492,11 @@ class App extends Entity {
 
 #end
 
+    /**
+     * Shared scene system.
+     */
+    @lazy public var scenes:SceneSystem = SceneSystem.shared;
+
 /// Internal
 
     var hierarchyDirty:Bool = false;

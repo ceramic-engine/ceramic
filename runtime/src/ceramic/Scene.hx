@@ -1,13 +1,16 @@
 package ceramic;
 
+import tracker.Observable;
 import ceramic.Shortcuts.*;
 
 @:allow(ceramic.SceneSystem)
-class Scene extends Layer {
+class Scene extends Layer implements Observable {
 
     var _assets:Assets = null;
 
     var didCreate:Bool = false;
+
+    @observe var transitionStatus:SceneTransitionStatus = NONE;
 
     public var assets(get, set):Assets;
     function get_assets():Assets {
@@ -40,7 +43,7 @@ class Scene extends Layer {
 
         transparent = true;
 
-        SceneSystem.shared.scenes.push(cast this);
+        SceneSystem.shared.all.original.push(cast this);
 
     }
 
@@ -64,6 +67,15 @@ class Scene extends Layer {
 
         create();
         didCreate = true;
+
+        transitionStatus = FADE_IN;
+        fadeIn(_markReady);
+
+    }
+
+    function _markReady():Void {
+
+        transitionStatus = READY;
 
     }
 
@@ -143,9 +155,62 @@ class Scene extends Layer {
 
     }
 
+    /**
+     * Play **fade-in** transition of this scene. This is automatically called right after
+     * the scene is ready to use, meaning after `create()` has been called.
+     * Default implementation does nothing and calls `done()` right away.
+     * Override in subclasses to perform custom transitions.
+     * @param done Called when the fade-in transition has finished.
+     */
+    public function fadeIn(done:Void->Void):Void {
+
+        done();
+
+    }
+
+    /**
+     * Play **fade-out** transition of this scene. This is called manually on secondary scene
+     * but will be called automatically if the scene is the **main scene** and is replaced
+     * by a new scene or simply removed.
+     * @param done Called when the fade-out transition has finished.
+     */
+    public function fadeOut(done:Void->Void):Void {
+
+        done();
+
+    }
+
+    public function scheduleWhenReady(callback:Void->Void):Bool {
+
+        if (destroyed) {
+            log.warning('Cannot schedule callback on destroyed scene');
+            return false;
+        }
+
+        switch transitionStatus {
+
+            case NONE | FADE_IN:
+                onceTransitionStatusChange(this, function(_, _) {
+                    scheduleWhenReady(callback);
+                });
+                return true;
+
+            case READY:
+                callback();
+                return true;
+
+            case FADE_OUT | DESTROYED:
+                log.warning('Cannot schedule callback on scene with transition status: $transitionStatus');
+                return false;
+        }
+
+    }
+
     override function destroy() {
 
-        SceneSystem.shared.scenes.remove(cast this);
+        transitionStatus = DESTROYED;
+
+        SceneSystem.shared.all.original.remove(cast this);
 
         if (_assets != null) {
             _assets.destroy();
