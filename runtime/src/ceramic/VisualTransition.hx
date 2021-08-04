@@ -606,9 +606,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return scaleY;
     }
 
-    public function scale(scaleX:Float, scaleY:Float):Void {
+    public function scale(scaleX:Float, scaleY:Float = -1):Void {
         inline set_scaleX(scaleX);
-        inline set_scaleY(scaleY);
+        inline set_scaleY(scaleY != -1 ? scaleY : scaleX);
     }
 
     public var skewX(get, set):Float;
