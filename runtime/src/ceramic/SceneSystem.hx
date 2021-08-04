@@ -39,10 +39,10 @@ class SceneSystem extends System {
                 this.main = null;
                 switch prevScene.transitionStatus {
                     case NONE | FADE_IN:
-                        prevScene.scheduleWhenReady(prevScene.destroy);
+                        prevScene.scheduleOnceReady(prevScene, prevScene.destroy);
                     case READY:
                         prevScene.fadeOut(prevScene.destroy);
-                    case FADE_OUT | DESTROYED:
+                    case FADE_OUT | DISABLED:
                         prevScene.destroy();
                 }
             }
@@ -68,6 +68,15 @@ class SceneSystem extends System {
                         prevScene = null;
                     };
 
+                    inline function prevSceneFadeOut() {
+                        switch prevScene.transitionStatus {
+                            case READY:
+                                prevScene.fadeOut(fadeOutDone);
+                            case NONE | FADE_IN | FADE_OUT | DISABLED:
+                                fadeOutDone();
+                        }
+                    }
+
                     if (fadeOutWhenNextMainCanFadeIn) {
                         var handleTransitionStatusChange = null;
                         switch main.transitionStatus {
@@ -76,19 +85,19 @@ class SceneSystem extends System {
                                 handleTransitionStatusChange = function(current:SceneTransitionStatus, previous:SceneTransitionStatus) {
                                     switch current {
                                         case NONE:
-                                        case FADE_IN | READY | FADE_OUT | DESTROYED:
+                                        case FADE_IN | READY | FADE_OUT | DISABLED:
                                             main.offTransitionStatusChange(handleTransitionStatusChange);
-                                            prevScene.fadeOut(fadeOutDone);
+                                            prevSceneFadeOut();
                                     }
                                 };
                                 main.onTransitionStatusChange(prevScene, handleTransitionStatusChange);
 
-                            case FADE_IN | READY | FADE_OUT | DESTROYED:
-                                prevScene.fadeOut(fadeOutDone);
+                            case FADE_IN | READY | FADE_OUT | DISABLED:
+                                prevSceneFadeOut();
                         }
                     }
                     else {
-                        prevScene.fadeOut(fadeOutDone);
+                        prevSceneFadeOut();
                     }
                 }
 

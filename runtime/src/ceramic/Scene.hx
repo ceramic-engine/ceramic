@@ -3,6 +3,9 @@ package ceramic;
 import tracker.Observable;
 import ceramic.Shortcuts.*;
 
+#if (!macro && !completion)
+@:autoBuild(ceramic.macros.SceneMacro.build())
+#end
 @:allow(ceramic.SceneSystem)
 class Scene extends Layer implements Observable {
 
@@ -68,7 +71,6 @@ class Scene extends Layer implements Observable {
         create();
         didCreate = true;
 
-        transitionStatus = FADE_IN;
         fadeIn(_markReady);
 
     }
@@ -115,7 +117,7 @@ class Scene extends Layer implements Observable {
      * can continue its createialization process.
      * @param next The callback to call once asynchronous loading is done 
      */
-    function load(next:Void->Void):Void {
+    function load(next:()->Void):Void {
 
         // Override in subclasses
 
@@ -155,6 +157,18 @@ class Scene extends Layer implements Observable {
 
     }
 
+    @:noCompletion function _fadeIn(done:()->Void):Void {
+
+        done();
+
+    }
+
+    @:noCompletion function _fadeOut(done:()->Void):Void {
+
+        done();
+
+    }
+
     /**
      * Play **fade-in** transition of this scene. This is automatically called right after
      * the scene is ready to use, meaning after `create()` has been called.
@@ -162,9 +176,13 @@ class Scene extends Layer implements Observable {
      * Override in subclasses to perform custom transitions.
      * @param done Called when the fade-in transition has finished.
      */
-    public function fadeIn(done:Void->Void):Void {
+    public function fadeIn(done:()->Void):Void {
 
-        done();
+        transitionStatus = FADE_IN;
+        _fadeIn(() -> {
+            transitionStatus = READY;
+            done();
+        });
 
     }
 
@@ -174,13 +192,17 @@ class Scene extends Layer implements Observable {
      * by a new scene or simply removed.
      * @param done Called when the fade-out transition has finished.
      */
-    public function fadeOut(done:Void->Void):Void {
+    public function fadeOut(done:()->Void):Void {
 
-        done();
+        transitionStatus = FADE_OUT;
+        _fadeOut(() -> {
+            transitionStatus = DISABLED;
+            done();
+        });
 
     }
 
-    public function scheduleWhenReady(callback:Void->Void):Bool {
+    public function scheduleOnceReady(owner:Entity, callback:()->Void):Bool {
 
         if (destroyed) {
             log.warning('Cannot schedule callback on destroyed scene');
@@ -190,8 +212,8 @@ class Scene extends Layer implements Observable {
         switch transitionStatus {
 
             case NONE | FADE_IN:
-                onceTransitionStatusChange(this, function(_, _) {
-                    scheduleWhenReady(callback);
+                onceTransitionStatusChange(owner, function(_, _) {
+                    scheduleOnceReady(owner, callback);
                 });
                 return true;
 
@@ -199,7 +221,7 @@ class Scene extends Layer implements Observable {
                 callback();
                 return true;
 
-            case FADE_OUT | DESTROYED:
+            case FADE_OUT | DISABLED:
                 log.warning('Cannot schedule callback on scene with transition status: $transitionStatus');
                 return false;
         }
@@ -207,8 +229,6 @@ class Scene extends Layer implements Observable {
     }
 
     override function destroy() {
-
-        transitionStatus = DESTROYED;
 
         SceneSystem.shared.all.original.remove(cast this);
 

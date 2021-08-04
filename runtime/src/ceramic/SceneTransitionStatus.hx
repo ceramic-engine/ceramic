@@ -10,7 +10,7 @@ enum abstract SceneTransitionStatus(Int) from Int to Int {
 
     var FADE_OUT:Int = 3;
 
-    var DESTROYED:Int = 4;
+    var DISABLED:Int = 4;
 
     function toString() {
 
@@ -19,7 +19,7 @@ enum abstract SceneTransitionStatus(Int) from Int to Int {
             case FADE_IN: 'FADE_IN';
             case READY: 'READY';
             case FADE_OUT: 'FADE_OUT';
-            case DESTROYED: 'DESTROYED';
+            case DISABLED: 'DISABLED';
             case _: '_';
         }
 
