@@ -13,7 +13,7 @@ class Scene extends Layer implements Observable {
 
     var didCreate:Bool = false;
 
-    @observe var transitionStatus:SceneTransitionStatus = NONE;
+    @observe var status:SceneStatus = NONE;
 
     public var assets(get, set):Assets;
     function get_assets():Assets {
@@ -52,8 +52,10 @@ class Scene extends Layer implements Observable {
 
     function _boot() {
 
+        status = PRELOAD;
         preload();
 
+        status = LOAD;
         if (_assets != null && _assets.hasAnythingToLoad()) {
             // If assets have been added, load them
             _assets.onceComplete(this, _handleAssetsComplete);
@@ -68,16 +70,17 @@ class Scene extends Layer implements Observable {
 
     function internalCreate() {
 
+        status = CREATE;
         create();
         didCreate = true;
 
-        fadeIn(_markReady);
+        fadeIn(_fadeInDone);
 
     }
 
-    function _markReady():Void {
+    function _fadeInDone():Void {
 
-        transitionStatus = READY;
+        // Nothing to do here
 
     }
 
@@ -178,9 +181,9 @@ class Scene extends Layer implements Observable {
      */
     public function fadeIn(done:()->Void):Void {
 
-        transitionStatus = FADE_IN;
+        status = FADE_IN;
         _fadeIn(() -> {
-            transitionStatus = READY;
+            status = READY;
             done();
         });
 
@@ -194,9 +197,9 @@ class Scene extends Layer implements Observable {
      */
     public function fadeOut(done:()->Void):Void {
 
-        transitionStatus = FADE_OUT;
+        status = FADE_OUT;
         _fadeOut(() -> {
-            transitionStatus = DISABLED;
+            status = DISABLED;
             done();
         });
 
@@ -209,10 +212,10 @@ class Scene extends Layer implements Observable {
             return false;
         }
 
-        switch transitionStatus {
+        switch status {
 
-            case NONE | FADE_IN:
-                onceTransitionStatusChange(owner, function(_, _) {
+            case NONE | PRELOAD | LOAD | CREATE | FADE_IN:
+                onceStatusChange(owner, function(_, _) {
                     scheduleOnceReady(owner, callback);
                 });
                 return true;
@@ -222,7 +225,7 @@ class Scene extends Layer implements Observable {
                 return true;
 
             case FADE_OUT | DISABLED:
-                log.warning('Cannot schedule callback on scene with transition status: $transitionStatus');
+                log.warning('Cannot schedule callback on scene with status: $status');
                 return false;
         }
 
