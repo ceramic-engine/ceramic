@@ -179,6 +179,12 @@ class Setup extends tools.Task {
                 targetFlags = '-cpp cpp';
             }
             targetFlags += '\n' + '-lib hxcpp';
+            targetFlags += '\n' + '-lib linc_opengl';
+            targetFlags += '\n' + '-lib linc_sdl';
+            targetFlags += '\n' + '-lib linc_ogg';
+            targetFlags += '\n' + '-lib linc_stb';
+            targetFlags += '\n' + '-lib linc_timestamp';
+            targetFlags += '\n' + '-lib linc_openal';
             targetFlags += '\n' + '-D hxcpp_static_std';
             targetFlags += '\n' + '-D clay_native';
             targetFlags += '\n' + '-D clay_sdl';
@@ -208,12 +214,6 @@ $targetFlags
 -cp ' + '../../../src' + '
 ${libsHxml.join('\n')}
 -lib clay
--lib linc_opengl
--lib linc_sdl
--lib linc_ogg
--lib linc_stb
--lib linc_timestamp
--lib linc_openal
 -D clay_app_id=' + Json.stringify(project.app.name) + '
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
