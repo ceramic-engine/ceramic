@@ -79,7 +79,15 @@ app:
     author: My Company
     version: \'1.0\'
 
-    libs: []
+    libs:
+        #- somelib
+        #- somelib: someversion
+        #- somelib: git:https://github.com/somelibauthor/somelib.git
+    
+    defines:
+        #- some_define
+        #- some_define: \'some value\'
+
 '.ltrim();
 
         File.saveContent(Path.join([projectPath, 'ceramic.yml']), content);
