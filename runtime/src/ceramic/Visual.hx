@@ -35,7 +35,7 @@ using ceramic.Extensions;
 @dynamicEvents
 @:dce
 #end
-class Visual extends Entity #if plugin_arcade implements arcade.Collidable #end {
+class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if plugin_arcade implements arcade.Collidable #end {
 
     /**
      * A factor applied to every computed depth. This factor is used to avoid having
