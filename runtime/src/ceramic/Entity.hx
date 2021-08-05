@@ -16,7 +16,7 @@ import tracker.DynamicEvents;
 #if (!macro && (display || completion))
 @:autoBuild(ceramic.macros.EntityMacro.buildForCompletion())
 #end
-class Entity implements Events implements Lazy {
+class Entity #if ceramic_entity_base extends EntityBase #end implements Events implements Lazy {
 
 /// Statics
 
