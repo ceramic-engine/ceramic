@@ -101,6 +101,18 @@ class VisualTransition extends Entity implements Component {
     var alphaStart:Float = 0;
     var alphaEnd:Float = 0;
 
+    var translateXChanged:Bool = false;
+    var translateXTween:Tween = null;
+    var translateXTarget:Float = 0;
+    var translateXStart:Float = 0;
+    var translateXEnd:Float = 0;
+
+    var translateYChanged:Bool = false;
+    var translateYTween:Tween = null;
+    var translateYTarget:Float = 0;
+    var translateYStart:Float = 0;
+    var translateYEnd:Float = 0;
+
     var transformChanged:Bool = false;
     var transformAssigned:Bool = false;
     var transformAssignedInstance:Transform = null;
@@ -174,6 +186,8 @@ class VisualTransition extends Entity implements Component {
         yChanged = false;
         scaleXChanged = false;
         scaleYChanged = false;
+        translateXChanged = false;
+        translateYChanged = false;
         skewXChanged = false;
         skewYChanged = false;
         anchorXChanged = false;
@@ -217,6 +231,8 @@ class VisualTransition extends Entity implements Component {
         var yCurrent = entity.y;
         var scaleXCurrent = entity.scaleX;
         var scaleYCurrent = entity.scaleY;
+        var translateXCurrent = entity.translateX;
+        var translateYCurrent = entity.translateY;
         var skewXCurrent = entity.skewX;
         var skewYCurrent = entity.skewY;
         var anchorXCurrent = entity.anchorX;
@@ -248,6 +264,8 @@ class VisualTransition extends Entity implements Component {
         yTarget = yCurrent;
         scaleXTarget = scaleXCurrent;
         scaleYTarget = scaleYCurrent;
+        translateXTarget = translateXCurrent;
+        translateYTarget = translateYCurrent;
         skewXTarget = skewXCurrent;
         skewYTarget = skewYCurrent;
         anchorXTarget = anchorXCurrent;
@@ -296,6 +314,10 @@ class VisualTransition extends Entity implements Component {
                     entity.scaleX = scaleXStart + (scaleXEnd - scaleXStart) * value;
                 if (scaleYTween == propsTween)
                     entity.scaleY = scaleYStart + (scaleYEnd - scaleYStart) * value;
+                if (translateXTween == propsTween)
+                    entity.translateX = translateXStart + (translateXEnd - translateXStart) * value;
+                if (translateYTween == propsTween)
+                    entity.translateY = translateYStart + (translateYEnd - translateYStart) * value;
                 if (skewXTween == propsTween)
                     entity.skewX = skewXStart + (skewXEnd - skewXStart) * value;
                 if (skewYTween == propsTween)
@@ -361,6 +383,10 @@ class VisualTransition extends Entity implements Component {
                     scaleXTween = null;
                 if (scaleYTween == propsTween)
                     scaleYTween = null;
+                if (translateXTween == propsTween)
+                    translateXTween = null;
+                if (translateYTween == propsTween)
+                    translateYTween = null;
                 if (skewXTween == propsTween)
                     skewXTween = null;
                 if (skewYTween == propsTween)
@@ -412,6 +438,16 @@ class VisualTransition extends Entity implements Component {
                 scaleYTween = propsTween;
                 scaleYStart = scaleYCurrent;
                 scaleYEnd = scaleYTarget;
+            }
+            if (translateXChanged) {
+                translateXTween = propsTween;
+                translateXStart = translateXCurrent;
+                translateXEnd = translateXTarget;
+            }
+            if (translateYChanged) {
+                translateYTween = propsTween;
+                translateYStart = translateYCurrent;
+                translateYEnd = translateYTarget;
             }
             if (skewXChanged) {
                 skewXTween = propsTween;
@@ -609,6 +645,33 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
     public function scale(scaleX:Float, scaleY:Float = -1):Void {
         inline set_scaleX(scaleX);
         inline set_scaleY(scaleY != -1 ? scaleY : scaleX);
+    }
+
+    public var translateX(get, set):Float;
+    function get_translateX():Float return this.translateXTarget;
+    function set_translateX(translateX:Float):Float {
+        if (this.translateXTween == null || translateX != this.translateXEnd) {
+            this.anyPropertyChanged = true;
+            this.translateXChanged = true;
+        }
+        this.translateXTarget = translateX;
+        return translateX;
+    }
+
+    public var translateY(get, set):Float;
+    function get_translateY():Float return this.translateYTarget;
+    function set_translateY(translateY:Float):Float {
+        if (this.translateYTween == null || translateY != this.translateYEnd) {
+            this.anyPropertyChanged = true;
+            this.translateYChanged = true;
+        }
+        this.translateYTarget = translateY;
+        return translateY;
+    }
+
+    public function translate(translateX:Float, translateY:Float = -1):Void {
+        inline set_translateX(translateX);
+        inline set_translateY(translateY != -1 ? translateY : translateX);
     }
 
     public var skewX(get, set):Float;
