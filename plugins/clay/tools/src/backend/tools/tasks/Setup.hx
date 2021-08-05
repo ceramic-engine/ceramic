@@ -99,8 +99,11 @@ class Setup extends tools.Task {
                     break;
                 }
             }
-            if (libVersion == '*') {
+            if (libVersion.trim() == '' || libVersion == '*') {
                 libsHxml.push('-lib $libName');
+            }
+            else if (libVersion.startsWith('git:')) {
+                libsHxml.push('-lib ' + libName + ':git');
             }
             else {
                 libsHxml.push('-lib $libName:$libVersion');

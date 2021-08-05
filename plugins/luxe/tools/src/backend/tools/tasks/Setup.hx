@@ -101,8 +101,11 @@ class Setup extends tools.Task {
                 }
             }
             libsFlow.push(Json.stringify(libName) + ': ' + Json.stringify(libVersion));
-            if (libVersion == '*') {
+            if (libVersion.trim() == '' || libVersion == '*') {
                 libsHxml.push('-lib $libName');
+            }
+            else if (libVersion.startsWith('git:')) {
+                libsHxml.push('-lib ' + libName + ':git');
             }
             else {
                 libsHxml.push('-lib $libName:$libVersion');

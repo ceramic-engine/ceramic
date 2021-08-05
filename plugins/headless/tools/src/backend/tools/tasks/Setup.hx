@@ -95,7 +95,11 @@ class Setup extends tools.Task {
             }
             if (libVersion.trim() == '' || libVersion == '*') {
                 libs.push('-lib ' + libName);
-            } else {
+            }
+            else if (libVersion.startsWith('git:')) {
+                libs.push('-lib ' + libName + ':git');
+            }
+            else {
                 libs.push('-lib ' + libName + ':' + libVersion);
             }
         }

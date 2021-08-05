@@ -79,10 +79,14 @@ class PluginHxml extends tools.Task {
                     break;
                 }
             }
-            if (libVersion != "*") {
-                extraHxml.push('-lib ' + libName + ':' + libVersion);
-            } else {
+            if (libVersion.trim() == '' || libVersion == '*') {
                 extraHxml.push('-lib ' + libName);
+            }
+            else if (libVersion.startsWith('git:')) {
+                extraHxml.push('-lib ' + libName + ':git');
+            }
+            else {
+                extraHxml.push('-lib ' + libName + ':' + libVersion);
             }
         }
 
