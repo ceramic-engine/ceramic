@@ -5,7 +5,7 @@ import tracker.Autorun;
 
 using ceramic.Extensions;
 
-class View extends Quad {
+class View extends Layer {
 
 /// Events
 
@@ -396,6 +396,10 @@ class View extends Quad {
         layoutDirty = true;
         if (anchorX != 0) matrixDirty = true;
         if (borderSize > 0) updateBorder();
+        if (!sizeDirty) {
+            sizeDirty = true;
+            app.onceImmediate(emitResizeIfNeeded);
+        }
         return width;
     }
 
@@ -405,6 +409,10 @@ class View extends Quad {
         layoutDirty = true;
         if (anchorY != 0) matrixDirty = true;
         if (borderSize > 0) updateBorder();
+        if (!sizeDirty) {
+            sizeDirty = true;
+            app.onceImmediate(emitResizeIfNeeded);
+        }
         return height;
     }
 
