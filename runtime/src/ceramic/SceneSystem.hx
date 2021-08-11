@@ -2,6 +2,10 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * System managing scenes display and lifecycle.
+ * Use it to structure your app in different scenes.
+ */
 @:allow(ceramic.Scene)
 class SceneSystem extends System {
 
@@ -22,44 +26,93 @@ class SceneSystem extends System {
     public var keepAssetsForNextMain:Bool = false;
 
     /**
+     * If `true`, main scene will be bound to screen size automatically
+     */
+    public var bindMainToScreenSize:Bool = true;
+
+    /**
      * If `true`, when assigning a new main scene, previous main
      * scene will wait until the next scene is properly loaded and can fade-in
      * before starting its own fade-out transition.
      */
     public var fadeOutWhenNextMainCanFadeIn:Bool = true;
 
+    /**
+     * The main scene to display on screen.
+     */
     public var main(default,set):Scene = null;
+
+    public var rootScenes(default,null):ReadOnlyMap<String,Scene> = new Map();
 
     function set_main(main:Scene):Scene {
         
         if (this.main != main) {
+            this.main = main;
+            set('main', main, true, keepAssetsForNextMain);
+        }
 
-            var prevScene = this.main;
-            if (main == null) {
-                this.main = null;
-                switch prevScene.status {
-                    case NONE | PRELOAD | LOAD | CREATE | FADE_IN:
-                        prevScene.scheduleOnceReady(prevScene, prevScene.destroy);
-                    case READY:
-                        prevScene.fadeOut(prevScene.destroy);
-                    case FADE_OUT | DISABLED:
-                        prevScene.destroy();
+        return main;
+
+    }
+
+    /**
+     * Assign secondary scenes to display them directly on screen.
+     * @param name The slot name of the scene
+     * @param scene The scene to assign
+     * @param bindToScreenSize (optional) Set to `false` if you don't want the scene to follow screen size
+     * @param keepAssets
+     *          (optional) Set to `true` if you want this scene to keep the same **assets**
+     *          instance as the previous scene on the same slot.
+     */
+    public function set(name:String, scene:Scene, bindToScreenSize:Bool = true, keepAssets:Bool = false):Void {
+
+        var prevScene = rootScenes.get(name);
+
+        if (scene != prevScene) {
+
+            if (scene == null) {
+                rootScenes.original.remove(name);
+                if (name == 'main') {
+                    this.main = null;
+                }
+                if (!prevScene.destroyed) {
+                    switch prevScene.status {
+                        case NONE | PRELOAD | LOAD | CREATE | FADE_IN:
+                            prevScene.scheduleOnceReady(prevScene, prevScene.destroy);
+                        case READY:
+                            prevScene.fadeOut(prevScene.destroy);
+                        case FADE_OUT | DISABLED:
+                            prevScene.destroy();
+                    }
                 }
             }
             else {
-
-                if (main.destroyed)
-                    throw 'Cannot assign a destroyed scene as main scene!';
-
+    
+                if (scene.destroyed)
+                    throw 'Cannot assign a destroyed scene as root scene!';
+    
                 var prevAssets = null;
-                this.main = main;
+                rootScenes.original.set(name, scene);
+                if (name == 'main') {
+                    this.main = scene;
+                }
+
+                scene.onDestroy(this, destroyedScene -> {
+
+                    var sceneInSlot = rootScenes.get(name);
+                    if (destroyedScene == sceneInSlot) {
+                        rootScenes.original.remove(name);
+                        if (name == 'main') {
+                            this.main = null;
+                        }
+                    }
+
+                });
                 
                 if (prevScene != null) {
-                    var keepAssets = keepAssetsForNextMain;
                     if (keepAssets) {
                         prevAssets = prevScene._assets;
                     }
-                    this.main = null;
                     var fadeOutDone = function() {
                         if (keepAssets) {
                             prevScene._assets = null;
@@ -67,7 +120,7 @@ class SceneSystem extends System {
                         prevScene.destroy();
                         prevScene = null;
                     };
-
+    
                     inline function prevSceneFadeOut() {
                         switch prevScene.status {
                             case READY:
@@ -76,22 +129,22 @@ class SceneSystem extends System {
                                 fadeOutDone();
                         }
                     }
-
+    
                     if (fadeOutWhenNextMainCanFadeIn) {
                         var handleStatusChange = null;
-                        switch main.status {
-
+                        switch scene.status {
+    
                             case NONE | PRELOAD | LOAD | CREATE:
                                 handleStatusChange = function(current:SceneStatus, previous:SceneStatus) {
                                     switch current {
                                         case NONE | PRELOAD | LOAD | CREATE:
                                         case FADE_IN | READY | FADE_OUT | DISABLED:
-                                            main.offStatusChange(handleStatusChange);
+                                            scene.offStatusChange(handleStatusChange);
                                             prevSceneFadeOut();
                                     }
                                 };
-                                main.onStatusChange(prevScene, handleStatusChange);
-
+                                scene.onStatusChange(prevScene, handleStatusChange);
+    
                             case FADE_IN | READY | FADE_OUT | DISABLED:
                                 prevSceneFadeOut();
                         }
@@ -100,20 +153,30 @@ class SceneSystem extends System {
                         prevSceneFadeOut();
                     }
                 }
-
-                main._assets = prevAssets;
-                main.bindToScreenSize();
-                main._boot();
+    
+                scene._assets = prevAssets;
+                if (bindToScreenSize) {
+                    scene.bindToScreenSize();
+                }
+                scene._boot();
             }
-
         }
 
-        return main;
+    }
+
+    /**
+     * Retrieve a secondary scene from the given slot name
+     * @param name The slot name of the scene to retrieve
+     * @return A `Scene` instance or `null` if nothing was found
+     */
+    public function get(name:String):Scene {
+
+        return rootScenes.get(name);
 
     }
 
     @:deprecated('Deprecated: use `app.scenes.main = yourScene;` instead')
-    inline function setCurrentScene(scene:Scene, keepAssets:Bool = false):Void {
+    inline public function setCurrentScene(scene:Scene, keepAssets:Bool = false):Void {
 
         keepAssetsForNextMain = keepAssets;
         main = scene;
@@ -140,8 +203,22 @@ class SceneSystem extends System {
         // Call
         for (i in 0...len) {
             var scene = _updatingScenes.unsafeGet(i);
-            if (!scene.paused && scene.autoUpdate && scene.didCreate) {
-                scene.update(delta);
+
+            if (!scene.active)
+                continue;
+
+            // Auto-boot scene it's been added to screen
+            if (scene.status == NONE && scene.parent != null) {
+                scene._boot();
+            }
+
+            // Auto-update scene if applicable
+            if (!scene.paused && scene.autoUpdate) {
+                switch scene.status {
+                    case NONE | PRELOAD | LOAD | CREATE | DISABLED:
+                    case FADE_IN | READY | FADE_OUT:
+                        scene.update(delta);
+                }
             }
         }
 

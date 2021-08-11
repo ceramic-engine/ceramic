@@ -11,8 +11,6 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     var _assets:Assets = null;
 
-    var didCreate:Bool = false;
-
     @observe var status:SceneStatus = NONE;
 
     public var assets(get, set):Assets;
@@ -52,6 +50,11 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     function _boot() {
 
+        if (status != NONE) {
+            log.warning('Scene already booted! (status: $status)');
+            return;
+        }
+
         status = PRELOAD;
         preload();
 
@@ -72,7 +75,6 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
         status = CREATE;
         create();
-        didCreate = true;
 
         fadeIn(_fadeInDone);
 
@@ -140,6 +142,15 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     }
 
     /**
+     * Called when the scene's status becomes `READY`
+     */
+    public function ready():Void {
+
+        // Override in subclasses
+
+    }
+
+    /**
      * Called at every frame, but only after create() has been called and when the scene is not paused
      * @param delta 
      */
@@ -184,6 +195,7 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         status = FADE_IN;
         _fadeIn(() -> {
             status = READY;
+            ready();
             done();
         });
 
@@ -202,6 +214,21 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
             status = DISABLED;
             done();
         });
+
+    }
+
+    public function isReady():Bool {
+
+        return switch status {
+            case NONE: false;
+            case PRELOAD: false;
+            case LOAD: false;
+            case CREATE: false;
+            case FADE_IN: false;
+            case READY: true;
+            case FADE_OUT: false;
+            case DISABLED: false;
+        }
 
     }
 
