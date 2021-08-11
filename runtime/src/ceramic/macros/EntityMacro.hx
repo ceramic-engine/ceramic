@@ -300,33 +300,52 @@ class EntityMacro {
                                     }
 
                                     if (constructor == null) {
-                                        throw new Error("A constructor is required to initialize a component's default instance", field.pos);
-                                    }
-                                    else {
-                                        // Add initialization code in constructor
-                                        switch (constructor.kind) {
-                                            case FFun(fn):
 
-                                                // Ensure expr is surrounded with a block
-                                                switch (fn.expr.expr) {
-                                                    case EBlock(exprs):
-                                                    default:
-                                                        fn.expr.expr = EBlock([{
-                                                            pos: fn.expr.pos,
-                                                            expr: fn.expr.expr
-                                                        }]);
+                                        // Implicit constructor override because it is needed to initialize components
+                                        // TODO make it work even if parent constructor has arguments
+
+                                        constructor = {
+                                            name: 'new',
+                                            doc: null,
+                                            meta: [],
+                                            access: [APublic],
+                                            kind: FFun({
+                                                params: [],
+                                                args: [],
+                                                ret: null,
+                                                expr: macro {
+                                                    super();
                                                 }
+                                            }),
+                                            pos: Context.currentPos()
+                                        };
 
-                                                constructorFn = fn;
-                                                if (toAppendInConstructorSuper == null)
-                                                    toAppendInConstructorSuper = [];
-                                                toAppendInConstructorSuper.push(
-                                                    macro this.$fieldName = @:privateAccess ${expr}
-                                                );
+                                        newFields.push(constructor);
+                                    }
 
-                                            default:
-                                                throw new Error("Invalid constructor", field.pos);
-                                        }
+                                    // Add initialization code in constructor
+                                    switch (constructor.kind) {
+                                        case FFun(fn):
+
+                                            // Ensure expr is surrounded with a block
+                                            switch (fn.expr.expr) {
+                                                case EBlock(exprs):
+                                                default:
+                                                    fn.expr.expr = EBlock([{
+                                                        pos: fn.expr.pos,
+                                                        expr: fn.expr.expr
+                                                    }]);
+                                            }
+
+                                            constructorFn = fn;
+                                            if (toAppendInConstructorSuper == null)
+                                                toAppendInConstructorSuper = [];
+                                            toAppendInConstructorSuper.push(
+                                                macro this.$fieldName = @:privateAccess ${expr}
+                                            );
+
+                                        default:
+                                            throw new Error("Invalid constructor", field.pos);
                                     }
                                 default:
                                     throw new Error("Invalid component default value", field.pos);
