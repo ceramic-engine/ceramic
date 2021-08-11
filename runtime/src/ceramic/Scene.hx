@@ -7,7 +7,7 @@ import ceramic.Shortcuts.*;
 @:autoBuild(ceramic.macros.SceneMacro.build())
 #end
 @:allow(ceramic.SceneSystem)
-class Scene extends Layer implements Observable {
+class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer #end implements Observable {
 
     var _assets:Assets = null;
 
