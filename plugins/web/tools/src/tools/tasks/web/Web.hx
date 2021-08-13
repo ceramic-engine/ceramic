@@ -30,11 +30,15 @@ class Web extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
+        var pluginPath = context.plugins.get('Web').path;
+        var tplProjectPath = Path.join([pluginPath, 'tpl/project/web']);
+
         var webProjectPath = Path.join([cwd, 'project/web']);
         var webProjectFilePath = Path.join([webProjectPath, 'index.html']);
 
         var doRun = extractArgFlag(args, 'run');
         var doWatch = extractArgFlag(args, 'watch');
+        var doMinify = extractArgFlag(args, 'minify');
         var doHotReload = extractArgFlag(args, 'hot-reload');
         var electronErrors = extractArgFlag(args, 'electron-errors');
 
@@ -43,7 +47,93 @@ class Web extends tools.Task {
 
         // Resolve paths and assets
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'web', cwd, context.debug, context.variant);
-        var jsName = project.app.name;
+        var jsName:String = project.app.name;
+        var jsBasePath = Path.join([webProjectPath, jsName]);
+
+        // Patch index.html if needed
+        var htmlContent = File.getContent(webProjectFilePath);
+        var htmlContentChanged = false;
+        var sourceMapPath = Path.join([webProjectPath, '$jsName.js.map']);
+        var sourceMapSupportPath = Path.join([webProjectPath, 'sourceMapSupport.js']);
+        var tplSourceMapSupportPath = Path.join([tplProjectPath, 'sourceMapSupport.js']);
+        if (FileSystem.exists(sourceMapPath)) {
+            if (htmlContent.indexOf('"./sourceMapSupport.js"') == -1) {
+                htmlContentChanged = true;
+                htmlContent = htmlContent.replace(
+                    '<div id="ceramic-app">',
+                    '<div id="ceramic-app">
+            <script type="text/javascript" src="./sourceMapSupport.js"></script>
+            <script type="text/javascript">sourceMapSupport.install();</script>'
+                );
+            }
+            // Copy sourceMapSupport.js if needed
+            if (!FileSystem.exists(sourceMapSupportPath)) {
+                File.copy(tplSourceMapSupportPath, sourceMapSupportPath);
+            }
+        }
+        else {
+            if (htmlContent.indexOf('"./sourceMapSupport.js"') != -1) {
+                htmlContentChanged = true;
+                var lines = htmlContent.split('\n');
+                var newLines = [];
+                for (line in lines) {
+                    if (line.indexOf('<script type="text/javascript" src="./sourceMapSupport.js"></script>') == -1) {
+                        if (line.indexOf('<script type="text/javascript">sourceMapSupport.install();</script>') == -1) {
+                            newLines.push(line);
+                        }
+                    }
+                }
+                htmlContent = newLines.join('\n');
+            }
+            // Remove sourceMapSupport.js if needed
+            if (FileSystem.exists(sourceMapSupportPath)) {
+                FileSystem.deleteFile(sourceMapSupportPath);
+            }
+        }
+
+        // Minify?
+        if (doMinify) {
+            runTask('web minify');
+        }
+
+        // Ensure html content points to correct js file
+        if (doMinify) {
+            if (htmlContent.indexOf('<script type="text/javascript" src="./$jsName.js"></script>') != -1) {
+                htmlContentChanged = true;
+                htmlContent = htmlContent.replace(
+                    '<script type="text/javascript" src="./$jsName.js"></script>',
+                    '<script type="text/javascript" src="./$jsName.min.js"></script>'
+                );
+            }
+            // Cleanup unused files
+            if (FileSystem.exists('$jsBasePath.js')) {
+                FileSystem.deleteFile('$jsBasePath.js');
+            }
+            if (FileSystem.exists('$jsBasePath.js.map')) {
+                FileSystem.deleteFile('$jsBasePath.js.map');
+            }
+        }
+        else {
+            if (htmlContent.indexOf('<script type="text/javascript" src="./$jsName.min.js"></script>') != -1) {
+                htmlContentChanged = true;
+                htmlContent = htmlContent.replace(
+                    '<script type="text/javascript" src="./$jsName.min.js"></script>',
+                    '<script type="text/javascript" src="./$jsName.js"></script>'
+                );
+            }
+            // Cleanup unused files
+            if (FileSystem.exists('$jsBasePath.min.js')) {
+                FileSystem.deleteFile('$jsBasePath.min.js');
+            }
+            if (FileSystem.exists('$jsBasePath.min.js.map')) {
+                FileSystem.deleteFile('$jsBasePath.min.js.map');
+            }
+        }
+
+        // Save html if it changed
+        if (htmlContentChanged) {
+            File.saveContent(webProjectFilePath, htmlContent);
+        }
     
         // Stop if not running
         if (!doRun) return;

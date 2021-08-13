@@ -27,6 +27,7 @@ class ToolsPlugin {
         // Add tasks
         var tasks = context.tasks;
         tasks.set('web project', new tools.tasks.web.Web());
+        tasks.set('web minify', new tools.tasks.web.Minify());
 
     }
 

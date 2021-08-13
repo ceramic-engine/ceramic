@@ -96,13 +96,10 @@ class Font extends Task {
             factor = 1.0 / Std.parseFloat(rawFactor);
 
         var msdfCmd = Path.join([context.ceramicToolsPath, 'node_modules/msdf-bmfont-xml/cli.js']);
-        var nodeCmd = Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']);
-        if (isWindows)
-            nodeCmd += '.cmd';
 
         if (msdf) {
             // Run generator (export msdf with factor)
-            command(nodeCmd, [
+            node([
                 msdfCmd,
                 tmpFontPath,
                 '-f', 'json',
@@ -118,7 +115,7 @@ class Font extends Task {
         }
         else {
             // Run generator (export vector file)
-            command(nodeCmd, [
+            node([
                 msdfCmd,
                 tmpFontPath,
                 '-f', 'json',

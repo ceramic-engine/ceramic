@@ -21,10 +21,15 @@ class SetupJS extends tools.Task {
 
         ensureCeramicProject(cwd, args, App);
 
+        var doRemove = extractArgFlag(args, 'remove');
+
         var webProjectPath = Path.join([cwd, 'project/web']);
         var imguiJSDistPath = Path.join([context.ceramicGitDepsPath, 'imgui-hx/lib/imgui-js/dist']);
 
         if (!FileSystem.exists(webProjectPath)) {
+            if (doRemove) {
+                return;
+            }
             FileSystem.createDirectory(webProjectPath);
         }
 
@@ -34,10 +39,17 @@ class SetupJS extends tools.Task {
         ]) {
             var source = Path.join([imguiJSDistPath, name]);
             var dest = Path.join([webProjectPath, name]);
-            if (!Files.haveSameLastModified(source, dest)) {
-                success('Copy $name');
-                File.copy(source, dest);
-                Files.setToSameLastModified(source, dest);
+            if (doRemove) {
+                if (FileSystem.exists(dest)) {
+                    FileSystem.deleteFile(dest);
+                }
+            }
+            else {
+                if (!Files.haveSameLastModified(source, dest)) {
+                    success('Copy $name');
+                    File.copy(source, dest);
+                    Files.setToSameLastModified(source, dest);
+                }
             }
         }
 

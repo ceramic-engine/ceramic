@@ -14,3 +14,11 @@ plugin:
                   - when: begin build
                     command: ceramic
                     args: ['imgui', 'setup', 'js']
+        
+        if !plugin_imgui:
+
+            if web:
+              +hooks:
+                  - when: begin build
+                    command: ceramic
+                    args: ['imgui', 'setup', 'js', '--remove']

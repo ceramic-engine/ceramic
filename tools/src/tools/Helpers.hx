@@ -352,6 +352,15 @@ class Helpers {
 
     }
 
+    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+
+        var node = Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']);
+        if (Sys.systemName() == 'Windows')
+            node += '.cmd';
+        return command(node, args, options);
+
+    }
+
     public static function commandExists(name:String):Bool {
 
         return npm.CommandExists.existsSync(name);

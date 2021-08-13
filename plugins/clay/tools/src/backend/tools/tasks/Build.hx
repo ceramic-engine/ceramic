@@ -134,6 +134,7 @@ class Build extends tools.Task {
         // Build haxe
         var status = 0;
         if (!skipHaxeCompilation && (action == 'build' || action == 'run')) {
+
             runHooks(cwd, args, project.app.hooks, 'begin build');
 
             // General target build with haxe
@@ -307,6 +308,9 @@ class Build extends tools.Task {
                     taskArgs.push('--debug');
                 if (electronErrors) {
                     taskArgs.push('--electron-errors');
+                }
+                if (context.defines.exists('ceramic_web_minify')) {
+                    taskArgs.push('--minify');
                 }
                 if (hotReloadFlag) {
                     taskArgs.push('--hot-reload');
