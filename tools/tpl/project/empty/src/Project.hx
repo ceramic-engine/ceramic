@@ -1,6 +1,5 @@
 package;
 
-import ceramic.SceneSystem;
 import ceramic.Entity;
 import ceramic.Color;
 import ceramic.InitSettings;
