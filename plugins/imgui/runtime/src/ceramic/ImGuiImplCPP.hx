@@ -35,7 +35,12 @@ class ImGuiImplCPP {
         var window = clay.Clay.app.runtime.window;
 
         untyped __cpp__('ImGui_ImplSDL2_InitForOpenGL({0}, {1})', window, glContext);
+
+        #if (ios || tvos || android)
+        untyped __cpp__('ImGui_ImplOpenGL3_Init("#version 300 es")');
+        #else
         untyped __cpp__('ImGui_ImplOpenGL3_Init("#version 120")');
+        #end
 
         #if imgui_font
         loadFont();
