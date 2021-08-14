@@ -325,6 +325,10 @@ class ExportSpine extends tools.Task {
 
     function convertName(inName:String) {
 
+        if (RE_SCALE_SUFFIX.match(inName)) {
+            inName = inName.substring(RE_SCALE_SUFFIX.matched(1).length);
+        }
+
         var withoutExt = Path.withoutExtension(inName);
         var ext = Path.extension(inName);
         if (RE_AT_NX.match(withoutExt)) {
@@ -357,6 +361,7 @@ class ExportSpine extends tools.Task {
     }
 
     static var RE_AT_NX = ~/@([0-9]+(?:\.[0-9]+)?)x(_?[0-9]+)?$/;
+    static var RE_SCALE_SUFFIX = ~/^([0-9]+(\.[0-9]+)?(\/|\\))/;
     static var RE_PNG = ~/\.(png|PNG)$/;
 
 }
