@@ -17,7 +17,7 @@ using ceramic.Extensions;
  * Visuals are the building blocks to display things on screen.
  * A raw visual doesn't display anything but can have children
  * that can be more specialized visuals like `Quad`, `Mesh` or `Text` etc...
- * 
+ *
  * ```haxe
  * var visual = new Visual();
  * visual.pos(x, y);
@@ -80,7 +80,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Fired when this visual gains focus (after handling a pointer event)
      */
     @event function focus();
-    
+
     /**
      * Fired when this visual loses focus
      */
@@ -682,7 +682,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     inline function get_overlapY():Float {
         return arcade != null && arcade.body != null ? arcade.body.overlapY : 0;
     }
-    
+
     /**
      * If a visual's body is overlapping with another body, but neither of them are moving (maybe they spawned on-top of each other?) this is set to `true`.
      */
@@ -690,7 +690,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     inline function get_embedded():Bool {
         return arcade != null && arcade.body != null ? arcade.body.embedded : false;
     }
-    
+
     /**
      * A visual body can be set to collide against the world bounds automatically and rebound back into the world if this is set to true. Otherwise it will leave the world.
      */
@@ -898,7 +898,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         nape = new VisualNapePhysics(
             type,
             shape,
-            material, 
+            material,
             x - w * (anchorX - 0.5),
             y - h * (anchorY - 0.5),
             w,
@@ -1181,13 +1181,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * You'll usually won't need to change this value,
      * unless you want to do advanced drawing where different
      * hierarchies of visuals are blending with each other.
-     * 
+     *
      * ```haxe
      * // Children computed depths will be relative to their parent visual depth.
      * // This is the default value and recommended approach in most situations as
      * // its behaviour is similar to display trees, z-index etc...
      * visual.depthRange = 1;
-     * 
+     *
      * // More advanced, two visuals: visual2 above visual1 because of higher depth, but
      * // visual1's depth range is `8`, so its children computed depths will be distributed
      * // between `1` and `1 + 8` (9 excluded). That means some of visual1's children
@@ -1196,7 +1196,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * visual1.depthRange = 8;
      * visual1.depth = 1;
      * visual2.depth = 2;
-     * 
+     *
      * // Another case: two visuals with the same depth and depthRange.
      * // There children will share the same computed depth space, so a child of visual1 at `depth = 6`
      * // will be above a child of visual2 at `depth = 4`.
@@ -1205,7 +1205,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * visual2.depthRange = 16
      * visual1.depth = 1;
      * visual2.depth = 1;
-     * 
+     *
      * // Children computed depths won't be relative to their parent visual depth.
      * // Instead, it will be relative to the higher parent (of the parent) in hierarchy that has a positive `depthRange` value,
      * visual.depthRange = -1;
@@ -1374,13 +1374,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     /**
      * If set to a value above zero, matrix translation (tx & ty) will be rounded.
-     * 
+     *
      * ```haxe
      * roundTranslation = 0; // No rounding (default)
      * roundTranslation = 1; // Pixel perfect rounding
      * roundTranslation = 2; // Half-pixel rounding
      * ```
-     * 
+     *
      * May be useful to render pixel perfect scenes onto `ceramic.Filter`.
      */
     @editable
@@ -1759,7 +1759,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         if (parent != null) {
             parent.screenToVisual(_point.x, _point.y, _point, false);
         }
-        
+
         var prevX = _point.x;
         var prevY = _point.y;
         this.anchorX = anchorX;
@@ -1836,7 +1836,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         if (ceramic.App.app.screen.focusedVisual == this) {
             ceramic.App.app.screen.focusedVisual = null;
         }
-        
+
         ceramic.App.app.removeVisual(this);
 
         if (parent != null) parent.remove(this);
@@ -2039,7 +2039,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         matD = _matrix.d;
         matTX = _matrix.tx;
         matTY = _matrix.ty;
-        
+
         if (roundTranslation > 0) {
             if (roundTranslation == 1) {
                 matTX = Math.round(matTX);
@@ -2269,7 +2269,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         computedVisible = visible;
         computedAlpha = alpha;
-        
+
         if (computedVisible) {
 
             if (parent != null) {
@@ -2282,7 +2282,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             if (computedAlpha == 0 && blending != Blending.SET) {
                 computedVisible = false;
             }
-            
+
         }
 
         visibilityDirty = false;
@@ -2323,7 +2323,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         }
 
         computedTouchable = touchable;
-        
+
         if (computedTouchable) {
 
             if (parent != null) {
@@ -2331,7 +2331,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                     computedTouchable = false;
                 }
             }
-            
+
         }
 
         touchableDirty = false;
@@ -2382,7 +2382,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                 }
             }
         }*/
-        
+
         renderTargetDirty = false;
 
     }
@@ -2395,7 +2395,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * to compute actual content (raw `Visual` class doesn't do anything).
      */
     public function computeContent() {
-        
+
         contentDirty = false;
 
     }
@@ -2407,7 +2407,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     static var _maxDepth:Float = 0;
 
     /**
-     * Will walk on every children and set their depths starting from 
+     * Will walk on every children and set their depths starting from
      * `start` and incrementing depth by `step`.
      * @param start The depth starting value (default 1). First child will have this depth, next child `depthStart + depthStep` etc...
      * @param step The depth step to use when increment depth for each child

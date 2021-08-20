@@ -1211,14 +1211,23 @@ class App extends Entity {
         if (renderTextures.length == 0)
             return;
 
-        // Sort by dependance
-        SortRenderTextures.sort(renderTextures);
-    
-        // Update priorities from order
+        // Not so sure about the robustness of this in some edge cases,
+        // but this 2-pass walk to update priorities works better than stable sort
         var len = renderTextures.length;
         for (i in 0...len) {
             var renderTexture = renderTextures.unsafeGet(i);
-            renderTexture.priority = i + 1;
+            renderTexture.priority = 0;
+        }
+        for (n in 0...2) {
+            for (i in 0...len) {
+                var a = renderTextures.unsafeGet(i);
+                for (j in 0...len) {
+                    var b = renderTextures.unsafeGet(j);
+                    if (a.dependsOnTexture(b) && b.priority <= a.priority) {
+                        b.priority = a.priority + 1;
+                    }
+                }
+            }
         }
 
     }

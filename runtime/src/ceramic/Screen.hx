@@ -203,7 +203,7 @@ class Screen extends Entity implements Observable {
     private var prevTouchPositions:IntFloatMap = new IntFloatMap(16, 0.5, false);
 
     private var prevMouseX:Float = 0;
-    
+
     private var prevMouseY:Float = 0;
 
     private var maxTouchIndex:Int = -1;
@@ -261,7 +261,7 @@ class Screen extends Entity implements Observable {
 
         // Trigger resize once at startup
         resize();
-        
+
         // Observe visual settings
         //
         settings.onBackgroundChange(this, function(background, prevBackground) {
@@ -333,7 +333,7 @@ class Screen extends Entity implements Observable {
         app.backend.screen.onMouseUp(this, function(buttonId, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 app.flushImmediate();
-                
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -359,7 +359,7 @@ class Screen extends Entity implements Observable {
         app.backend.screen.onMouseMove(this, function(x, y) {
             app.beginUpdateCallbacks.push(function() {
                 app.flushImmediate();
-                
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -390,7 +390,7 @@ class Screen extends Entity implements Observable {
         app.backend.screen.onTouchDown(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 app.flushImmediate();
-                
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -416,7 +416,7 @@ class Screen extends Entity implements Observable {
         app.backend.screen.onTouchUp(this, function(touchIndex, x, y) {
             app.beginUpdateCallbacks.push(function() {
                 app.flushImmediate();
-                
+
                 var x0 = x * nativeDensity;
                 var y0 = y * nativeDensity;
                 var x1 = reverseMatrix.transformX(x0, y0);
@@ -535,7 +535,7 @@ class Screen extends Entity implements Observable {
             else {
                 texturesDensity = Math.round(texturesDensity);
             }
-    
+
             this.texturesDensity = texturesDensity;
         }
 
@@ -552,7 +552,7 @@ class Screen extends Entity implements Observable {
         var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight : nativeHeight;
 
         var scale:Float;
-        
+
         switch (app.settings.scaling) {
 
             case FIT:
@@ -616,7 +616,7 @@ class Screen extends Entity implements Observable {
      * Recompute transform from screen width, height and density.
      */
     function updateTransform():Void {
-        
+
         var targetWidth:Float = app.settings.targetWidth > 0 ? app.settings.targetWidth * density : nativeWidth * nativeDensity;
         var targetHeight:Float = app.settings.targetHeight > 0 ? app.settings.targetHeight * density : nativeHeight * nativeDensity;
 
@@ -653,14 +653,14 @@ class Screen extends Entity implements Observable {
 
         app.computeHierarchy();
 
-        for (i in 0...2) {
+        for (n in 0...2) {
 
             // We walk through visual up to 2 times to find the correct down listener
             // This double iteration is required when we hit first a visual that can re-route
             // its events to children that are rendered with a custom render target
 
             matchedHitVisual = null;
-            var testHitVisuals = (i == 0);
+            var testHitVisuals = (n == 0);
             var visuals = app.visuals;
             var i = visuals.length - 1;
             while (i >= 0) {
@@ -736,14 +736,14 @@ class Screen extends Entity implements Observable {
 
         app.computeHierarchy();
 
-        for (i in 0...2) {
+        for (n in 0...2) {
 
             // We walk through visual up to 2 times to find the correct down listener
             // This double iteration is required when we hit first a visual that can re-route
             // its events to children that are rendered with a custom render target
 
             matchedHitVisual = null;
-            var testHitVisuals = (i == 0);
+            var testHitVisuals = (n == 0);
             var visuals = app.visuals;
             var i = visuals.length - 1;
             while (i >= 0) {
@@ -824,7 +824,7 @@ class Screen extends Entity implements Observable {
             mouseX = info.x;
             mouseY = info.y;
         }
-        
+
         if (info.touchIndex != -1) {
             // Touch
             var pointer = touches.get(info.touchIndex);

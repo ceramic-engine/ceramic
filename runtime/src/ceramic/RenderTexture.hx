@@ -152,6 +152,16 @@ class RenderTexture extends Texture {
 
     }
 
+    @:noCompletion inline public function dependsOnTextureCount(texture:Texture):Int {
+
+        #if ceramic_rendertexture_priority_use_haxe_map
+        return dependingTextures != null && dependingTextures.exists(texture.index) ? dependingTextures.get(texture.index) : 0;
+        #else
+        return dependingTextures != null ? dependingTextures.get(texture.index) : 0;
+        #end
+
+    }
+
     @:noCompletion inline public function incrementDependingTextureCount(texture:Texture):Void {
 
         if (dependingTextures == null) {
@@ -161,7 +171,7 @@ class RenderTexture extends Texture {
             dependingTextures = new IntIntMap();
             #end
         }
-        
+
         #if ceramic_rendertexture_priority_use_haxe_map
         var prevValue = dependingTextures.exists(texture.index) ? dependingTextures.get(texture.index) : 0;
         #else
