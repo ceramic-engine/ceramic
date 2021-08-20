@@ -1,2 +1,7 @@
 plugin:
     name: Clay
+
+    runtime:
+        if clay:
+            +assets:
+                - {plugin:cwd}/assets

@@ -1,2 +1,7 @@
 plugin:
     name: Unity
+
+    runtime:
+        if unity:
+            +assets:
+                - {plugin:cwd}/assets

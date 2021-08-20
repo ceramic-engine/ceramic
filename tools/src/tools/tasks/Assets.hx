@@ -33,11 +33,13 @@ class Assets extends tools.Task {
         var fromPath = null;
         var toPath = null;
 
+        var project = null;
+
         // We are either processing assets for current project
         // or with provided source and destination
         if (fromArg == null || toArg == null) {
             processIcons = true;
-            var project = ensureCeramicProject(cwd, args, App);
+            project = ensureCeramicProject(cwd, args, App);
         }
         else {
             fromPath = fromArg;
@@ -95,7 +97,7 @@ class Assets extends tools.Task {
         }
         var names:Map<String,Bool> = new Map();
 
-        // Add project assets
+        // Add assets
         if (FileSystem.exists(assetsPath)) {
             for (name in Files.getFlatDirectory(assetsPath)) {
                 assets.push(new tools.Asset(name, assetsPath));
@@ -103,18 +105,35 @@ class Assets extends tools.Task {
             }
         }
 
-        // Add ceramic plugins assets (if not overrided by project assets)
-        for (plugin in context.plugins) {
-            var pluginAssetsPaths = Path.join([plugin.path, 'assets']);
-            if (FileSystem.exists(pluginAssetsPaths) && FileSystem.isDirectory(pluginAssetsPaths)) {
-                for (name in Files.getFlatDirectory(pluginAssetsPaths)) {
-                    if (!names.exists(name)) {
-                        assets.push(new tools.Asset(name, pluginAssetsPaths));
-                        names.set(name, true);
+        // Add extra asset paths
+        if (project != null) {
+            var extraAssets:Array<String> = project.app.assets;
+            if (extraAssets != null) {
+                for (extraAssetsPath in extraAssets) {
+                    if (FileSystem.exists(extraAssetsPath) && FileSystem.isDirectory(extraAssetsPath)) {
+                        for (name in Files.getFlatDirectory(extraAssetsPath)) {
+                            if (!names.exists(name)) {
+                                assets.push(new tools.Asset(name, extraAssetsPath));
+                                names.set(name, true);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        // // Add ceramic plugins assets (if not overrided by project assets)
+        // for (plugin in context.plugins) {
+        //     var pluginAssetsPaths = Path.join([plugin.path, 'assets']);
+        //     if (FileSystem.exists(pluginAssetsPaths) && FileSystem.isDirectory(pluginAssetsPaths)) {
+        //         for (name in Files.getFlatDirectory(pluginAssetsPaths)) {
+        //             if (!names.exists(name)) {
+        //                 assets.push(new tools.Asset(name, pluginAssetsPaths));
+        //                 names.set(name, true);
+        //             }
+        //         }
+        //     }
+        // }
 
         // Add ceramic default assets (if not overrided by project or plugins assets)
         if (FileSystem.exists(ceramicAssetsPath)) {
