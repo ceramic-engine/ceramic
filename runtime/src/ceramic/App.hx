@@ -5,13 +5,11 @@ import ceramic.Assets;
 import ceramic.BitmapFont;
 import ceramic.CollectionEntry;
 import ceramic.ConvertField;
-import ceramic.Fragment;
 import ceramic.PlatformSpecific;
 import ceramic.Settings;
 import ceramic.Shortcuts.*;
 import ceramic.Texture;
 import haxe.CallStack;
-import haxe.ds.ArraySort;
 import tracker.Tracker;
 
 using ceramic.Extensions;
@@ -220,7 +218,7 @@ class App extends Entity {
                 handlePostFlushImmediate();
             }
             else {
-                
+
                 if (postFlushImmediateCallbacksLen < postFlushImmediateCallbacksCapacity) {
                     postFlushImmediateCallbacks.unsafeSet(postFlushImmediateCallbacksLen, handlePostFlushImmediate);
                     postFlushImmediateCallbacksLen++;
@@ -338,6 +336,11 @@ class App extends Entity {
         return _computeFps.fps;
     }
     var _computeFps = new ComputeFps();
+
+    /**
+     * Current frame number
+     */
+    public var frame(default,null):Int = 0;
 
     /**
      * Current frame delta time (never above `settings.maxDelta`)
@@ -538,15 +541,15 @@ class App extends Entity {
         app.initSettings = initSettings;
 #end
         return initSettings;
-        
+
     }
-    
+
 /// Lifecycle
 
     function new() {
 
         super();
-        
+
 #if hxtelemetry
         var cfg = new hxtelemetry.HxTelemetry.Config();
         cfg.allocations = true;
@@ -633,33 +636,33 @@ class App extends Entity {
         assets.onceComplete(this, function(success) {
             // Default font
             assets.add(settings.defaultFont);
-    
+
             // Default textures
             assets.add('image:white');
-    
+
             assets.onceComplete(this, function(success) {
-    
+
                 if (success) {
-    
+
                     // Get default asset instances now that they are loaded
                     defaultFont = assets.font(settings.defaultFont);
                     defaultWhiteTexture = assets.texture('image:white');
                     defaultTexturedShader = assets.shader(settings.defaultShader);
-    
+
                     logger.success('Default assets loaded.');
                     assetsLoaded();
                 } else {
                     log.error('Failed to load default assets.');
                 }
-    
+
             });
-            
+
             // Allow to load more default assets
             emitDefaultAssetsLoad(assets);
-            
+
             assets.load();
             flushImmediate();
-            
+
         });
 
         assets.load();
@@ -715,7 +718,7 @@ class App extends Entity {
         }
 
         if (numAdded > 0) {
-            
+
             assets.onceComplete(this, function(success) {
 
                 // Fill collections with loaded data
@@ -726,10 +729,10 @@ class App extends Entity {
                         if (!Std.isOfType(collectionInfo, String)) {
                             var dataName = collectionInfo.data;
                             if (dataName != null) {
-                                
+
                                 var data = assets.database(dataName);
                                 var collection:Collection<CollectionEntry> = Reflect.field(collections, collectionName);
-                                
+
                                 var entryClass = Type.resolveClass(collectionInfo.type);
 
                                 for (item in data) {
@@ -851,6 +854,9 @@ class App extends Entity {
 
     function update(realDelta:Float):Void {
 
+        if (++frame > 999999999)
+            frame -= 999999999;
+
         var delta = realDelta;
 
         // Never allow an update delta above maxDelta
@@ -889,10 +895,10 @@ class App extends Entity {
         while (shouldUpdateAndDrawAgain) {
             shouldUpdateAndDrawAgain = false;
             var _delta:Float = isFirstUpdateInFrame ? delta : 0;
-            
+
             // Reset screen deltas
             screen.resetDeltas();
-            
+
             // Run 'begin update' callbacks, like touch/mouse/key events etc...
             if (beginUpdateCallbacks.length > 0) {
                 var callbacks = beginUpdateCallbacks;
@@ -1040,7 +1046,7 @@ class App extends Entity {
                     var key = i - gap;
                     visuals.unsafeSet(key, visuals.unsafeGet(i));
                 }
-                
+
                 i++;
             }
 
@@ -1078,16 +1084,16 @@ class App extends Entity {
                     if (visual.touchableDirty) {
                         visual.computeTouchable();
                     }
-    
+
                     // Compute displayed content
                     if (visual.contentDirty) {
-    
+
                         // Compute content only if visual is currently visible
                         //
                         if (visual.visibilityDirty) {
                             visual.computeVisibility();
                         }
-    
+
                         if (visual.computedVisible) {
                             visual.computeContent();
                         }
