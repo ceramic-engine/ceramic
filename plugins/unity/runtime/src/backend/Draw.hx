@@ -289,7 +289,6 @@ class Draw #if !completion implements spec.Draw #end {
             _floatAttributesIndex = 9;
         }
 
-
     }
 
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {

@@ -163,7 +163,7 @@ class Setup extends tools.Task {
         finalHxml.push('-cp ' + Path.join([runtimePathRelative, 'src']));
         finalHxml.push('-cp ' + Path.join([backendRuntimePathRelative, 'src']));
         finalHxml.push('-D ceramic_shader_vert_frag');
-        finalHxml.push('-D ceramic_render_no_indice');
+        // finalHxml.push('-D ceramic_render_no_indice');
         finalHxml = finalHxml.concat(classPaths);
         finalHxml = finalHxml.concat(libs);
         finalHxml = finalHxml.concat(haxeflags);

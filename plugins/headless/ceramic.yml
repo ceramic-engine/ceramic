@@ -1,2 +1,7 @@
 plugin:
     name: Headless
+
+    runtime:
+        if headless:
+            +assets:
+                - {plugin:cwd}/assets

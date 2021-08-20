@@ -56,9 +56,46 @@ interface Draw {
 
 #if !ceramic_render_no_indice
 
-    // TODO?
+    function getNumPos():Int;
+
+    function putPos(x:Float, y:Float, z:Float):Void;
+
+    function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void;
+
+    function putIndice(i:Int):Void;
+
+    function putUVs(uvX:Float, uvY:Float):Void;
+
+    function putColor(r:Float, g:Float, b:Float, a:Float):Void;
+
+    function beginFloatAttributes():Void;
+
+    function putFloatAttribute(index:Int, value:Float):Void;
+
+    function endFloatAttributes():Void;
+
+    function clearAndApplyBackground():Void;
+
+    function getTextureWidth(texture:backend.Texture):Int;
+
+    function getTextureHeight(texture:backend.Texture):Int;
+
+    function getTextureWidthActual(texture:backend.Texture):Int;
+
+    function getTextureHeightActual(texture:backend.Texture):Int;
+
+    function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool;
+
+    function remainingVertices():Int;
+
+    function remainingIndices():Int;
+
+    function hasAnythingToFlush():Bool;
+
+    function flush():Void;
 
 #else
+
     function maxPosFloats():Int;
 
     function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void;
@@ -74,6 +111,7 @@ interface Draw {
     function getColorList():backend.ArrayBuffer;
 
     function putInColorList(colorList:backend.ArrayBuffer, index:Int, value:Float):Void;
+
 #end
 
 }
