@@ -1,12 +1,12 @@
 package tools.tasks.spine;
 
-import tools.Helpers.*;
-import tools.Project;
-import haxe.io.Path;
 import haxe.Json;
 import haxe.crypto.Md5;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -49,13 +49,40 @@ class ExportSpine extends tools.Task {
             FileSystem.createDirectory(tmpPath);
         }
 
-        var spineAppPath:String = null;
+        var hasExplicitSpineCmd = (project.app.spine.command != null && project.app.spine.command is String);
+
+        var spineCmdPath:String = null;
         if (Sys.systemName() == 'Mac') {
-            spineAppPath = '/Applications/Spine.app/Contents/MacOS/Spine';
+            spineCmdPath = '/Applications/Spine.app/Contents/MacOS/Spine';
         } else if (Sys.systemName() == 'Windows') {
-            spineAppPath = 'C:\\Program Files (x86)\\Spine\\Spine.com';
+            for (drive in getWindowsDrives()) {
+                for (programFiles in ['Program Files', 'Program Files (x86)']) {
+                    var tryPath = '$drive:\\$programFiles\\Spine\\Spine.com';
+                    if (FileSystem.exists(tryPath)) {
+                        spineCmdPath = tryPath;
+                        break;
+                    }
+                }
+            }
+            if (spineCmdPath == null && !hasExplicitSpineCmd) {
+                fail('Failed to resolve spine export command. You might need to explicitly specify it in ceramic.yml.');
+            }
         } else {
-            fail('Spine export is not yet supported on ' + Sys.systemName() + ' system.');
+            if (hasExplicitSpineCmd) {
+                // Will use explicit command path
+            }
+            else {
+                fail('Spine export command must be specified explicitly in ceramic.yml on ' + Sys.systemName() + ' system.');
+            }
+        }
+
+        // Explicit spine path
+        if (hasExplicitSpineCmd) {
+            spineCmdPath = project.app.spine.command;
+        }
+
+        if (!FileSystem.exists(spineCmdPath)) {
+            fail('Invalid spine export command path: $spineCmdPath');
         }
 
         var exportList:Array<Dynamic> = project.app.spine.export;
@@ -135,7 +162,7 @@ class ExportSpine extends tools.Task {
             FileSystem.createDirectory(exportPath);
 
             // Export
-            command(spineAppPath, ['--export', tmpConfigPath]);
+            command(spineCmdPath, ['--export', tmpConfigPath]);
 
             // Move files to assets directory
             //
@@ -144,7 +171,7 @@ class ExportSpine extends tools.Task {
             for (item in Files.getFlatDirectory(exportPath)) {
                 var name = Path.withoutDirectory(Path.withoutExtension(item));
                 if (name.indexOf('@') != -1) name = name.substring(0, name.indexOf('@'));
-                
+
                 var entries = skeletons.get(name);
                 if (entries == null) {
                     entries = [];
@@ -163,7 +190,7 @@ class ExportSpine extends tools.Task {
                 for (name in skeletons.get(groupName)) {
                     var outName = convertName(name);
                     var ext = Path.extension(outName);
-                    
+
                     if (ext == 'atlas') {
                         var atlases = skeletonAtlases.get(groupName);
                         if (atlases == null) {
@@ -222,7 +249,7 @@ class ExportSpine extends tools.Task {
                                         fail('Duplicate skin name: ${skin.name} (skeleton: $name)');
                                     }
                                     usedSkinNames.set(skin.name, true);
-                                        
+
                                     // Attachments
                                     if (skin.attachments != null) {
                                         for (k1 in Reflect.fields(skin.attachments)) {
@@ -244,7 +271,7 @@ class ExportSpine extends tools.Task {
                                 if (parsed.animations != null) {
                                     for (key in Reflect.fields(parsed.animations)) {
                                         var animation = Reflect.field(parsed.animations, key);
-                                        
+
                                         // Deform
                                         if (animation.deform != null) {
                                             for (k in Reflect.fields(animation.deform)) {
