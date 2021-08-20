@@ -1,14 +1,13 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
-import ceramic.Entity;
 import ceramic.Assets;
-
+import ceramic.Entity;
+import ceramic.Shortcuts.*;
 import haxe.DynamicAccess;
 import haxe.Json;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 /**
  * A fragment is a group of visuals rendered from data (.fragment file)
@@ -157,7 +156,7 @@ class Fragment extends Layer {
      * A static helper to get a fragment data object from fragment id.
      * Fragments need to be cached first with `cacheFragmentData()`,
      * unless an editor instance is being active.
-     * @param fragmentId 
+     * @param fragmentId
      * @return Null<FragmentData>
      */
     public static function getData(fragmentId:String):Null<FragmentData> {
@@ -211,7 +210,7 @@ class Fragment extends Layer {
             log.success('READY fragment ${fragmentData.id}');
         });
         #end
-        
+
         pendingLoads++;
 
         this.fragmentData = fragmentData;
@@ -280,7 +279,7 @@ class Fragment extends Layer {
                     onceReady(this, function() {
                         this.fragmentComponents = value;
                     });
-                    
+
                     if (pendingLoads == 0) emitReady();
                 }
             );
@@ -368,7 +367,7 @@ class Fragment extends Layer {
 
         var existing = get(item.id);
         var existingWasVisual = false;
-        
+
         // Remove previous object if entity class is different
         if (existing != null) {
             existingWasVisual = Std.isOfType(existing, Visual);
@@ -438,7 +437,7 @@ class Fragment extends Layer {
                 return nA - nB;
 
             });
-            
+
             for (field in orderedProps) {
                 var fieldType = FieldInfo.typeOf(item.entity, field);
                 var value:Dynamic = Reflect.field(item.props, field);
@@ -627,7 +626,7 @@ class Fragment extends Layer {
 
         for (entity in entities) {
             if (entity.id == itemId) {
-                
+
                 return entity;
             }
         }
@@ -641,7 +640,7 @@ class Fragment extends Layer {
 
         for (entity in entities) {
             if (entity.data.name == name) {
-                
+
                 return entity;
             }
         }
@@ -654,7 +653,7 @@ class Fragment extends Layer {
 
         for (item in items) {
             if (item.id == itemId) {
-                
+
                 return item;
             }
         }
@@ -667,7 +666,7 @@ class Fragment extends Layer {
 
         for (item in items) {
             if (item.name == name) {
-                
+
                 return item;
             }
         }
@@ -693,7 +692,7 @@ class Fragment extends Layer {
 
         for (entity in entities) {
             if (entity.id == itemId) {
-                
+
                 entities.remove(entity);
                 entity.destroy();
 
@@ -715,14 +714,14 @@ class Fragment extends Layer {
     public function removeAllItems():Void {
 
         for (entity in [].concat(entities)) {
-                
+
             entities.remove(entity);
             entity.destroy();
 
         }
 
         for (item in [].concat(items)) {
-            
+
             items.remove(item);
 
         }
@@ -799,7 +798,7 @@ class Fragment extends Layer {
             var converter = fieldType != null ? app.converters.get(fieldType) : null;
             var value:Dynamic = null;
             if (converter != null) {
-                value = converter.fieldToBasic(instance.getProperty(field));
+                value = converter.fieldToBasic(instance, field, instance.getProperty(field));
             } else {
                 value = instance.getProperty(field);
                 switch (Type.typeof(value)) {
@@ -1090,7 +1089,7 @@ class Fragment extends Layer {
                 else {
                     log.warning('Failed to create or update keyframe #$frame of track $trackId for field $field of entity type $entityType');
                     return;
-                }  
+                }
             }
 
             // Check if some keyframes should be removed
@@ -1139,7 +1138,7 @@ class Fragment extends Layer {
                 }
                 toRemove = null;
             }
-        
+
             // Cleanup used keyframes array
             if (_usedKeyframes.length > 0) {
                 for (i in 0..._usedKeyframes.length) {
@@ -1161,7 +1160,7 @@ class Fragment extends Layer {
         #end
 
     }
-    
+
     function putTracksForItem(itemId:String):Void {
 
         if (tracks != null) {
@@ -1217,9 +1216,9 @@ class Fragment extends Layer {
         }
 
     }
-    
+
     public function createTimelineIfNeeded() {
-        
+
         if (timeline == null) {
             timeline = new Timeline();
             timeline.fps = fps;
@@ -1245,7 +1244,7 @@ class Fragment extends Layer {
 
     /**
      * Return the index (position) of the given label name or -1 if no such label exists.
-     * @param name 
+     * @param name
      * @return Int
      */
     public function indexOfLabel(name:String):Int {
@@ -1260,7 +1259,7 @@ class Fragment extends Layer {
 
     /**
      * Return the label at the given index (position), if any exists.
-     * @param index 
+     * @param index
      * @return Int
      */
     public function labelAtIndex(index:Int):String {
