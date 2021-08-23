@@ -195,6 +195,14 @@ class View extends Layer {
         return borderDepth;
     }
 
+    public var borderAlpha(default,set):Float = 1;
+    inline function set_borderAlpha(borderAlpha:Float):Float {
+        if (this.borderAlpha == borderAlpha) return borderAlpha;
+        this.borderAlpha = borderAlpha;
+        if (border != null) border.alpha = borderAlpha;
+        return borderAlpha;
+    }
+
     public var borderPosition(default,set):BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
@@ -303,6 +311,7 @@ class View extends Layer {
                 initBorder();
             }
             border.depth = borderDepth;
+            border.alpha = borderAlpha;
             border.autoComputeVertices = false;
             border.autoComputeColors = false;
             border.borderColor = borderColor;
