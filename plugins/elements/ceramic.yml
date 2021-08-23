@@ -1,0 +1,9 @@
+plugin:
+    name: Elements
+
+    runtime:
+        if plugin_elements:
+            +paths:
+                - {plugin:cwd}/runtime/src
+            +assets:
+                - {plugin:cwd}/assets
