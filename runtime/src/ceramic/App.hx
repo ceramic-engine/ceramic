@@ -576,6 +576,18 @@ class App extends Entity {
 
     }
 
+    /**
+     * Quit the application.
+     * Works on desktop (windows, mac, linux), unity.
+     * Can also work on web by closing the window if **electron** plugin is enabled
+     * and the app is running via electron instead of a regular browser.
+     */
+    public function quit() {
+
+        PlatformSpecific.quit();
+
+    }
+
     function backendReady():Void {
 
         backend.onUpdate(this, updatePreReady);

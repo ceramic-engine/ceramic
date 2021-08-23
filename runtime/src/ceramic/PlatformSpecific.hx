@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
@@ -11,6 +12,7 @@ import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
 #end
+
 
 /**
  * An internal class that encapsulate platform-specific code.
@@ -79,7 +81,7 @@ class PlatformSpecific {
         #end
 
     }
-    
+
     /**
      * Read bytes from an asset file, synchronously.
      * Warning: not available on every targets
@@ -115,7 +117,7 @@ class PlatformSpecific {
         if (assetsPrefix != null) {
             assetPath = assetsPrefix + assetPath;
         }
-        
+
         var filePath = ceramic.Path.join([root, assetPath]);
         var handle = @:privateAccess snow.Snow.app.io.module._data_load(filePath);
         if (handle != null)
@@ -161,7 +163,7 @@ class PlatformSpecific {
         if (assetsPrefix != null) {
             root += assetsPrefix;
         }
-        
+
         var filePath = ceramic.Path.join([sdl.SDL.getBasePath(), root]);
 
         return filePath;
@@ -223,9 +225,9 @@ class PlatformSpecific {
     public static function nodeRequire(module:String):Null<Dynamic> {
 
         resolveElectron();
-    
+
         if (electron != null) {
-    
+
             var required:Dynamic = js.Syntax.code("{0}.remote.require({1})", electron, module);
             return required;
 
@@ -233,13 +235,13 @@ class PlatformSpecific {
         else {
             return null;
         }
-            
+
     }
 
     public static function electronRemote():Null<Dynamic> {
 
         resolveElectron();
-    
+
         if (electron != null) {
             return electron.remote;
         }
@@ -258,5 +260,41 @@ class PlatformSpecific {
         #end
     }
     #end
+
+    public static function quit():Void {
+
+        #if clay
+
+        #if (ios || tvos || android)
+
+        log.warning('On mobile platforms, quitting must be triggered from the user or operating system.');
+
+        #else
+
+        clay.Clay.app.shutdown();
+
+        #if (web && ceramic_use_electron)
+        var remote = electronRemote();
+        if (remote != null) {
+            var window = remote.getCurrentWindow();
+            if (window != null) {
+                window.close();
+            }
+        }
+        #end
+
+        #end
+
+        #elseif unity
+
+        untyped __cs__('UnityEngine.Application.Quit()');
+
+        #elseif (node || nodejs || hxnodejs)
+
+        js.Syntax.code('process.exit(0)');
+
+        #end
+
+    }
 
 }
