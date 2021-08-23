@@ -1,0 +1,7 @@
+plugin:
+    name: Electron
+
+    runtime:
+        if web && plugin_electron:
+            +defines:
+                - ceramic_use_electron
