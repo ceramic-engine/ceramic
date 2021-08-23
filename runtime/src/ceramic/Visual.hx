@@ -2765,14 +2765,46 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 /// Screen size helpers
 
     /**
+     * Will set this visual size to native screen size.
+     * This is different than `bindToScreenSize()` because it will ignore
+     * logical screen scaling. Use that if you want to provide visuals
+     * that should keep the same pixel size when the window changes size and scales its content.
+     * If needed, a `Transform` instance will be created and assigned to `transform` property.
+     */
+    public function bindToNativeScreenSize():Void {
+
+        // Bind to screen transform
+        ceramic.App.app.screen.reverseMatrix.onChange(this, _bindToNativeScreenSizeCallback);
+        _bindToNativeScreenSizeCallback();
+
+    }
+
+    private function _bindToNativeScreenSizeCallback():Void {
+
+        if (transform == null)
+            transform = new Transform();
+
+        transform.identity();
+        transform.scale(ceramic.App.app.screen.nativeDensity, ceramic.App.app.screen.nativeDensity);
+        transform.concat(ceramic.App.app.screen.reverseMatrix);
+
+        size(ceramic.App.app.screen.nativeWidth, ceramic.App.app.screen.nativeHeight);
+
+    }
+
+    /**
      * Will set this visual size to screen size
      */
     public function bindToScreenSize():Void {
 
         // Bind to screen size
-        ceramic.App.app.screen.onResize(this, function() {
-            size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
-        });
+        ceramic.App.app.screen.onResize(this, _bindToScreenSizeCallback);
+        _bindToScreenSizeCallback();
+
+    }
+
+    private function _bindToScreenSizeCallback():Void {
+
         size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
 
     }
@@ -2782,11 +2814,15 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public function bindToTargetSize():Void {
 
-        // Bind to screen size
-        ceramic.App.app.screen.onResize(this, function() {
-            size(ceramic.App.app.settings.targetWidth, ceramic.App.app.settings.targetHeight);
-        });
-        size(ceramic.App.app.settings.targetWidth, ceramic.App.app.settings.targetHeight);
+        // Bind to target size
+        ceramic.App.app.screen.onResize(this, _bindToTargetSizeCallback);
+        _bindToTargetSizeCallback();
+
+    }
+
+    private function _bindToTargetSizeCallback():Void {
+
+        size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
 
     }
 
