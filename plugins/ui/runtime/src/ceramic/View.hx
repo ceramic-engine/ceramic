@@ -191,7 +191,7 @@ class View extends Layer {
     inline function set_borderDepth(borderDepth:Float):Float {
         if (this.borderDepth == borderDepth) return borderDepth;
         this.borderDepth = borderDepth;
-        if (border != null) border.depth = depth;
+        if (border != null) border.depth = borderDepth;
         return borderDepth;
     }
 
