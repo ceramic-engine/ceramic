@@ -6,8 +6,8 @@ class Equal {
 
     /**
      * Equality check (deep equality only working on arrays for now)
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return Bool
      */
     public static function equal(a:Dynamic, b:Dynamic):Bool {
@@ -17,7 +17,7 @@ class Equal {
 
         if (Std.isOfType(a, Array)) {
             if (Std.isOfType(b, Array)) {
-                return arrayEqual(a, b);
+                return _arrayEqual(a, b);
             }
             return false;
         }
@@ -26,7 +26,19 @@ class Equal {
 
     }
 
-    public static function arrayEqual(a:Array<Any>, b:Array<Any>):Bool {
+    #if cs
+    public extern inline static overload function arrayEqual(a:Array<String>, b:Array<String>):Bool {
+        var aDyn:Any = a;
+        var bDyn:Any = b;
+        return _arrayEqual(cast aDyn, cast bDyn);
+    }
+    #end
+
+    public extern inline static overload function arrayEqual(a:Array<Any>, b:Array<Any>):Bool {
+        return _arrayEqual(a, b);
+    }
+
+    public static function _arrayEqual(a:Array<Any>, b:Array<Any>):Bool {
 
         var lenA = a.length;
         var lenB = b.length;
