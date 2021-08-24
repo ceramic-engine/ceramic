@@ -1,9 +1,9 @@
 package tools.tasks.plugin;
 
-import tools.Helpers.*;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
+import tools.Helpers.*;
 
 using tools.Colors;
 
@@ -78,10 +78,7 @@ class BuildPlugin extends tools.Task {
             var content = File.getContent(targetFile);
             var lines = content.split("\n");
             var firstLine = lines[0];
-            lines[0] = 'require=m=>rReq(m);';
-            while (lines[0].length < firstLine.length) {
-                lines[0] += '/';
-            }
+            lines[0] = 'require=m=>rReq(m);' + firstLine;
             content = lines.join("\n");
             File.saveContent(targetFile, content);
 
