@@ -60,10 +60,10 @@ function postInstall() {
     fs.copySync(overrideHaxeStdDir, haxeStdDir);*/
 
     console.log("Build tools");
-    
+
     // Build tools
     spawnSync(haxe, ['build.hxml'], { stdio: "inherit", cwd: __dirname });
-        
+
     // Build tools plugins
     var ceramic = process.platform == 'win32' ? 'ceramic.cmd' : './ceramic';
     spawnSync(ceramic, ['plugin', 'build', '--tools', '--all'], { stdio: "inherit", cwd: __dirname });
