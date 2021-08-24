@@ -13,6 +13,7 @@ At the moment, it lacks a lot of documentation, but you can already read a few a
 - Find some more info on the [Wiki Page](https://github.com/ceramic-engine/ceramic/wiki).
 - Check the [Ceramic API docs](https://ceramic-engine.com/api/) (still rough, will be improved).
 - Take a look at the [Samples repository](https://github.com/ceramic-engine/ceramic-samples/) to see small example projects that demonstrate ceramic features (new samples will be added on a regular basis).
+- Join the **#ceramic** channel on the [Haxe Discord](https://discordapp.com/invite/0uEuWH3spjck73Lo) server.
 
 ## Why ceramic?
 
