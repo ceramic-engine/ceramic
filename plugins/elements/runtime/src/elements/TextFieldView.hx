@@ -1,9 +1,25 @@
 package elements;
 
+#if plugin_dialogs
 import ceramic.Dialogs;
+#end
+
+import ceramic.Color;
+import ceramic.EditText;
+import ceramic.KeyBinding;
+import ceramic.KeyBindings;
+import ceramic.KeyCode;
+import ceramic.LayersLayout;
+import ceramic.SelectText;
+import ceramic.Shortcuts.*;
+import ceramic.TextAlign;
+import ceramic.TextView;
+import elements.Context.context;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
+import tracker.Observable;
 
 using StringTools;
-using unifill.Unifill;
 
 class TextFieldView extends FieldView implements Observable {
 
@@ -108,11 +124,13 @@ class TextFieldView extends FieldView implements Observable {
 
         switch kind {
             case TEXT | NUMERIC:
+                var theme = context.theme;
                 editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
                 editText.container = this;
                 textView.text.component('editText', editText);
                 editText.onUpdate(this, updateFromEditText);
                 editText.onStop(this, handleStopEditText);
+            #if plugin_dialogs
             case PATH(title):
                 editText = null;
                 onPointerDown(this, _ -> {
@@ -143,6 +161,7 @@ class TextFieldView extends FieldView implements Observable {
                         });
                     });
                 });
+            #end
         }
 
         autorun(updateStyle);
@@ -256,6 +275,8 @@ class TextFieldView extends FieldView implements Observable {
 
     function updateStyle() {
 
+        var theme = context.theme;
+
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;
             editText.textCursorColor = theme.lightTextColor;
@@ -335,8 +356,12 @@ enum TextFieldKind {
 
     NUMERIC;
 
+    #if plugin_dialogs
+
     PATH(?title:String);
 
     FILE(?title:String, ?filters:Array<DialogsFileFilter>);
+
+    #end
 
 }

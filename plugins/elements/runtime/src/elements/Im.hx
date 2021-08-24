@@ -19,6 +19,14 @@ import haxe.macro.Expr;
  */
 class Im {
 
+    inline static final DEFAULT_LABEL_WIDTH:Float = -49965.0; // ViewSize.percent(35);
+
+    inline static final DEFAULT_LABEL_POSITION:LabelPosition = RIGHT;
+
+    static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
+
+    static var _labelPosition:LabelPosition = DEFAULT_LABEL_POSITION;
+
     #if !macro
 
     public static function extractId(key:String):String {
@@ -107,7 +115,19 @@ class Im {
 
     }
 
-    public inline extern static overload function select(title:String, value:StringPointer, list:Array<String>, ?nullValueText:String):Bool {
+    public static function labelPosition(labelPosition:LabelPosition = DEFAULT_LABEL_POSITION):Void {
+
+        _labelPosition = labelPosition;
+
+    }
+
+    public static function labelWidth(labelWidth:Float = DEFAULT_LABEL_WIDTH):Void {
+
+        _labelWidth = labelWidth;
+
+    }
+
+    public inline extern static overload function select(?title:String, value:StringPointer, list:Array<String>, labelPosition:LabelPosition = RIGHT, labelWidth:Float = DEFAULT_LABEL_WIDTH, ?nullValueText:String):Bool {
 
         var index:Int = list.indexOf(Im.readString(value));
         var changed = false;
@@ -119,13 +139,13 @@ class Im {
 
     }
 
-    public inline extern static overload function select(title:String, value:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
+    public inline extern static overload function select(?title:String, value:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
 
         return _select(title, value, list, nullValueText);
 
     }
 
-    static function _select(title:String, index:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
+    static function _select(?title:String, index:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
 
         var windowData = context.currentWindowData;
 
@@ -136,7 +156,9 @@ class Im {
         item.kind = SELECT;
         item.int0 = Im.readInt(index);
         item.int1 = item.int0;
-        item.string0 = title;
+        item.int2 = _labelPosition;
+        item.float2 = _labelWidth;
+        item.string2 = title;
         item.stringArray0 = list;
         item.string1 = nullValueText;
 
@@ -147,12 +169,46 @@ class Im {
             var prevValue = item.previous.int0;
             var newValue = item.previous.int1;
             if (newValue != prevValue) {
+                item.int0 = newValue;
+                item.int1 = newValue;
                 Im.writeInt(index, newValue);
                 return true;
             }
-            // Did value changed from outside?
-            prevValue = item.previous.int1;
-            newValue = item.int0;
+        }
+
+        return false;
+
+    }
+
+    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String):Bool {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return false;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_TEXT;
+        item.string0 = Im.readString(value);
+        item.string1 = item.string0;
+        item.int2 = _labelPosition;
+        item.float2 = _labelWidth;
+        item.bool0 = multiline;
+        item.string2 = title;
+        item.string3 = placeholder;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.string0;
+            var newValue = item.previous.string1;
+            if (newValue != prevValue) {
+                item.string0 = newValue;
+                item.string1 = newValue;
+                Im.writeString(value, newValue);
+                return true;
+            }
         }
 
         return false;

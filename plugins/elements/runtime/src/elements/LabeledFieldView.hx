@@ -35,6 +35,35 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
         return field;
     }
 
+    public var labelPosition(default,set):LabelPosition = RIGHT;
+    function set_labelPosition(labelPosition:LabelPosition):LabelPosition {
+        if (this.labelPosition != labelPosition) {
+            this.labelPosition = labelPosition;
+            switch labelPosition {
+                case LEFT:
+                    remove(labelText);
+                    remove(field);
+                    add(labelText);
+                    add(field);
+                    labelText.align = RIGHT;
+                case RIGHT:
+                    remove(labelText);
+                    add(labelText);
+                    labelText.align = LEFT;
+            }
+        }
+        return labelPosition;
+    }
+
+    public var labelWidth(default,set):Float = 70;
+    function set_labelWidth(labelWidth:Float):Float {
+        if (this.labelWidth != labelWidth) {
+            this.labelWidth = labelWidth;
+            labelText.viewWidth = labelWidth;
+        }
+        return labelWidth;
+    }
+
     public var labelViewWidth(get, set):Float;
     function get_labelViewWidth():Float {
         return labelText.viewWidth;
@@ -56,7 +85,7 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
         itemSpacing = 6;
 
         labelText = new TextView();
-        labelText.viewSize(75, auto());
+        labelText.viewSize(labelWidth, auto());
         labelText.align = LEFT;
         labelText.verticalAlign = CENTER;
         labelText.pointSize = 12;

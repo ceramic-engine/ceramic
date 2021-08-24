@@ -6,4 +6,6 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var SELECT;
 
+    var EDIT_TEXT;
+
 }
