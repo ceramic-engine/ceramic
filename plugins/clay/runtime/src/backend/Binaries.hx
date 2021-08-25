@@ -1,17 +1,17 @@
 package backend;
 
-import haxe.io.Bytes;
+import ceramic.Path;
+import clay.Clay;
 import clay.Immediate;
 import clay.buffers.Uint8Array;
-import clay.Clay;
-import ceramic.Path;
+import haxe.io.Bytes;
 
+using StringTools;
 #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 import sys.FileSystem;
 import sys.io.File;
 #end
 
-using StringTools;
 
 class Binaries implements spec.Binaries {
 
@@ -19,7 +19,9 @@ class Binaries implements spec.Binaries {
 
     public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
-        var done = function(binary:Bytes) {
+        var synchronous:Bool = options != null && options.synchronous;
+
+        var done = synchronous ? _done : function(binary:Bytes) {
             ceramic.App.app.onceImmediate(function() {
                 _done(binary);
                 _done = null;
@@ -52,9 +54,9 @@ class Binaries implements spec.Binaries {
         }
 
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
-        
+
         Clay.app.io.loadData(fullPath, true, function(res:Uint8Array) {
-            
+
             if (res == null) {
 
                 var callbacks = loadingBinaryCallbacks.get(path);
@@ -88,14 +90,19 @@ class Binaries implements spec.Binaries {
         });
 
         // Needed to ensure a synchronous load will be done before the end of the frame
-        ceramic.App.app.onceImmediate(function() {
+        if (synchronous) {
             Immediate.flush();
-        });
+        }
+        else {
+            ceramic.App.app.onceImmediate(function() {
+                Immediate.flush();
+            });
+        }
 
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return true;
 
     }
