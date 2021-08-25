@@ -5,3 +5,7 @@ plugin:
         if web && plugin_electron:
             +defines:
                 - ceramic_use_electron
+        if clay && plugin_electron:
+            +defines:
+                - clay_web_use_electron_fs
+                - clay_web_use_electron_pngjs
