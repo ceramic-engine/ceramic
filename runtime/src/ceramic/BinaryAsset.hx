@@ -1,7 +1,7 @@
 package ceramic;
 
-import haxe.io.Bytes;
 import ceramic.Shortcuts.*;
+import haxe.io.Bytes;
 
 class BinaryAsset extends Asset {
 
@@ -24,6 +24,16 @@ class BinaryAsset extends Asset {
             return;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+        }
+        if (options != null) {
+            for (key in Reflect.fields(options)) {
+                Reflect.setField(loadOptions, key, Reflect.field(options, key));
+            }
+        }
+
         // Add reload count if any
         var backendPath = path;
         var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
@@ -34,7 +44,7 @@ class BinaryAsset extends Asset {
         }
 
         log.info('Load binary $backendPath');
-        app.backend.binaries.load(realPath, function(bytes) {
+        app.backend.binaries.load(realPath, loadOptions, function(bytes) {
 
             if (bytes != null) {
                 this.bytes = bytes;

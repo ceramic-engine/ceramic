@@ -11,6 +11,8 @@ using ceramic.Extensions;
 @:allow(ceramic.Asset)
 class Assets extends Entity {
 
+    public static var instances:ReadOnlyArray<Assets> = [];
+
     public static var all:Array<String> = [];
 
     public static var allDirs:Array<String> = [];
@@ -35,6 +37,8 @@ class Assets extends Entity {
 
     var assetsByKindAndName:Map<String,Map<String,Asset>> = new Map();
 
+    public var immediate(default,null) = new Immediate();
+
     /**
      * If set, will be provided to each added asset in this `Assets` instance.
      */
@@ -47,6 +51,13 @@ class Assets extends Entity {
      * This is useful when we need to update screen during asset loading
      */
     public var nonBlocking:Bool = false;
+
+    /**
+     * If set to `true`, will try to load assets synchronously (if supported on the current target).
+     * This means calling `assets.load()` will trigger `complete` event synchronously if possible.
+     * This property has no effect is `nonBlocking` is `true`
+     */
+    public var synchronous:Bool = false;
 
     /**
      * If provided, when requesting an asset, it will also check if the parent `Assets`
@@ -68,11 +79,33 @@ class Assets extends Entity {
 
         super();
 
+        instances.original.push(this);
+
+    }
+
+    static var _instances:Array<Assets> = [];
+
+    public static function flushAllInstancesImmediate():Void {
+
+        var len = instances.length;
+        for (i in 0...len) {
+            _instances[i] = instances[i];
+        }
+        for (i in 0...len) {
+            var assets = _instances[i];
+            _instances[i] = null;
+            if (!assets.destroyed) {
+                assets.immediate.flush();
+            }
+        }
+
     }
 
     override function destroy() {
 
         super.destroy();
+
+        instances.original.remove(this);
 
         for (asset in [].concat(addedAssets)) {
             asset.offDestroy(assetDestroyed);
@@ -519,6 +552,8 @@ class Assets extends Entity {
                     }
                 }
                 loadNext();
+
+                app.onceImmediate(immediate.flush);
             }
             else {
                 for (asset in addedAssets) {
@@ -527,6 +562,13 @@ class Assets extends Entity {
                         asset.load();
                     }
 
+                }
+
+                if (synchronous) {
+                    immediate.flush();
+                }
+                else {
+                    app.onceImmediate(immediate.flush);
                 }
             }
 

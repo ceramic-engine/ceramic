@@ -45,6 +45,9 @@ class ImageAsset extends Asset {
         }
 
         var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+        }
         if (defaultImageOptions != null) {
             for (key in Reflect.fields(defaultImageOptions)) {
                 Reflect.setField(loadOptions, key, Reflect.field(defaultImageOptions, key));
@@ -74,7 +77,7 @@ class ImageAsset extends Asset {
                 var newTexture = new Texture(image, density);
                 newTexture.id = 'texture:' + backendPath;
                 this.texture = newTexture;
-                
+
                 // Link the texture to this asset so that
                 // destroying one will destroy the other
                 this.texture.asset = this;
@@ -93,16 +96,16 @@ class ImageAsset extends Asset {
                             if (visual.asQuad != null) {
                                 var quad = visual.asQuad;
                                 if (quad.texture == prevTexture) {
-    
+
                                     // Update texture but keep same frame
                                     //
                                     var frameX = quad.frameX;
                                     var frameY = quad.frameY;
                                     var frameWidth = quad.frameWidth;
                                     var frameHeight = quad.frameHeight;
-    
+
                                     quad.texture = this.texture;
-    
+
                                     // We keep the frame, unless image
                                     // is being hot-reloaded and its frame is all texture area
                                     if (reloadBecauseOfDensityChange

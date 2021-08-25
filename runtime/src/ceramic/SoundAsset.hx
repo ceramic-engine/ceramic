@@ -6,7 +6,7 @@ import ceramic.Shortcuts.*;
 class SoundAsset extends Asset {
 
     /// Events
-    
+
     @event function replaceSound(newSound:Sound, prevSound:Sound);
 
     public var stream:Bool = false;
@@ -30,6 +30,16 @@ class SoundAsset extends Asset {
             return;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+        }
+        if (options != null) {
+            for (key in Reflect.fields(options)) {
+                Reflect.setField(loadOptions, key, Reflect.field(options, key));
+            }
+        }
+
         // Add reload count if any
         var backendPath = path;
         var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
@@ -46,7 +56,7 @@ class SoundAsset extends Asset {
             if (audio != null) {
 
                 var prevSound = this.sound;
-                
+
                 var newSound = new Sound(audio);
                 newSound.asset = this;
                 this.sound = newSound;
@@ -59,7 +69,7 @@ class SoundAsset extends Asset {
                     prevSound.asset = null;
                     prevSound.destroy();
                 }
-                
+
                 status = READY;
                 emitComplete(true);
             }
@@ -70,12 +80,12 @@ class SoundAsset extends Asset {
             }
 
         }
-        
+
         var ext = ceramic.Path.extension(realPath);
         if (ext != null)
             ext = ext.toLowerCase();
 
-        app.backend.audio.load(realPath, { stream: options.stream }, function(audio) {
+        app.backend.audio.load(realPath, loadOptions, function(audio) {
 
             if (audio != null || ext == 'wav') {
                 handleBackendResponse(audio);

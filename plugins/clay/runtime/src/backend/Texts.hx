@@ -1,16 +1,16 @@
 package backend;
 
+import ceramic.Path;
+import clay.Clay;
 import clay.Immediate;
 import clay.buffers.Uint8Array;
-import clay.Clay;
-import ceramic.Path;
 
+using StringTools;
 #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 import sys.FileSystem;
 import sys.io.File;
 #end
 
-using StringTools;
 
 class Texts implements spec.Texts {
 
@@ -18,11 +18,16 @@ class Texts implements spec.Texts {
 
     public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
+        var immediate = options != null ? options.immediate : null;
         var done = function(text:String) {
-            ceramic.App.app.onceImmediate(function() {
+            final fn = function() {
                 _done(text);
                 _done = null;
-            });
+            };
+            if (immediate != null)
+                immediate.push(fn);
+            else
+                ceramic.App.app.onceImmediate(fn);
         };
 
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
@@ -51,9 +56,9 @@ class Texts implements spec.Texts {
         }
 
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
-        
+
         Clay.app.io.loadData(fullPath, true, function(res:Uint8Array) {
-            
+
             if (res == null) {
 
                 var callbacks = loadingTextCallbacks.get(path);
@@ -87,14 +92,17 @@ class Texts implements spec.Texts {
         });
 
         // Needed to ensure a synchronous load will be done before the end of the frame
-        ceramic.App.app.onceImmediate(function() {
-            Immediate.flush();
-        });
+        if (immediate != null) {
+            immediate.push(Immediate.flush);
+        }
+        else {
+            ceramic.App.app.onceImmediate(Immediate.flush);
+        }
 
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return true;
 
     }

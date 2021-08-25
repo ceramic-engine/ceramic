@@ -78,7 +78,7 @@ class Im {
 
     public static function begin(key:String, width:Float):Window {
 
-        assert(context.currentWindow == null, 'Duplicate begin() calls!');
+        assert(context.currentWindowData == null, 'Duplicate begin() calls!');
 
         // Create view if needed
         if (context.view == null) {

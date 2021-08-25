@@ -23,6 +23,16 @@ class TextAsset extends Asset {
             return;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+        }
+        if (options != null) {
+            for (key in Reflect.fields(options)) {
+                Reflect.setField(loadOptions, key, Reflect.field(options, key));
+            }
+        }
+
         // Add reload count if any
         var backendPath = path;
         var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
@@ -33,7 +43,7 @@ class TextAsset extends Asset {
         }
 
         log.info('Load text $backendPath');
-        app.backend.texts.load(realPath, function(text) {
+        app.backend.texts.load(realPath, loadOptions, function(text) {
 
             if (text != null) {
                 this.text = text;

@@ -18,11 +18,16 @@ class Textures implements spec.Textures {
 
     public function load(path:String, ?options:backend.LoadTextureOptions, _done:Texture->Void):Void {
 
+        var immediate = options != null ? options.immediate : null;
         var done = function(texture:Texture) {
-            ceramic.App.app.onceImmediate(function() {
+            final fn = function() {
                 _done(texture);
                 _done = null;
-            });
+            };
+            if (immediate != null)
+                immediate.push(fn);
+            else
+                ceramic.App.app.onceImmediate(fn);
         };
 
         // Create empty texture
@@ -30,7 +35,7 @@ class Textures implements spec.Textures {
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
-        
+
         // Is texture already loaded?
         if (loadedTextures.exists(path)) {
             loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) + 1);
@@ -75,7 +80,7 @@ class Textures implements spec.Textures {
         }
 
         function doFail() {
-            
+
             var callbacks = loadingTextureCallbacks.get(path);
             loadingTextureCallbacks.remove(path);
             for (callback in callbacks) {
@@ -134,14 +139,17 @@ class Textures implements spec.Textures {
         });
 
         // Needed to ensure a synchronous load will be done before the end of the frame
-        ceramic.App.app.onceImmediate(function() {
-            Immediate.flush();
-        });
+        if (immediate != null) {
+            immediate.push(Immediate.flush);
+        }
+        else {
+            ceramic.App.app.onceImmediate(Immediate.flush);
+        }
 
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return true;
 
     }

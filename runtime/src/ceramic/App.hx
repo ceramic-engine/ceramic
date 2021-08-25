@@ -422,7 +422,7 @@ class App extends Entity {
      * App level assets. Used to load default assets (font, texture, shader)
      * required to make ceramic work properly.
      */
-    public var assets(default,null):Assets = new Assets();
+    public var assets(default,null):Assets;
 
     /**
      * Default textured shader.
@@ -535,7 +535,7 @@ class App extends Entity {
         AllAssets.bind();
 #end
 
-        app = new App();
+        new App();
         var initSettings = new InitSettings(app.settings);
 #if ceramic_cppia_host
         app.initSettings = initSettings;
@@ -549,6 +549,8 @@ class App extends Entity {
     function new() {
 
         super();
+
+        app = this;
 
 #if hxtelemetry
         var cfg = new hxtelemetry.HxTelemetry.Config();
@@ -569,6 +571,7 @@ class App extends Entity {
         audio = new Audio();
         input = new Input();
         systems = new Systems();
+        assets = new Assets();
 
         backend = new Backend();
         backend.onceReady(this, backendReady);
@@ -673,11 +676,13 @@ class App extends Entity {
             emitDefaultAssetsLoad(assets);
 
             assets.load();
+            assets.immediate.flush();
             flushImmediate();
 
         });
 
         assets.load();
+        assets.immediate.flush();
         flushImmediate();
 
     }
@@ -860,6 +865,7 @@ class App extends Entity {
 
     function updatePreReady(delta:Float):Void {
 
+        Assets.flushAllInstancesImmediate();
         flushImmediate();
 
     }
@@ -925,6 +931,9 @@ class App extends Entity {
 
             // Run systems early update
             systems.earlyUpdate(delta);
+
+            // Flush assets immediate callbacks
+            Assets.flushAllInstancesImmediate();
 
             // Flush immediate callbacks
             flushImmediate();
