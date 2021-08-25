@@ -1,12 +1,13 @@
 package spec;
 
+import backend.LoadShaderOptions;
 import backend.Shader;
 import backend.Texture;
 
 interface Shaders {
-
+    
     function destroy(shader:Shader):Void;
-
+    
 #if ceramic_shader_vert_frag
     function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader;
 #else
@@ -34,7 +35,7 @@ interface Shaders {
     function setTexture(shader:Shader, name:String, slot:Int, texture:Texture):Void;
 
     function customFloatAttributesSize(shader:Shader):Int;
-
+    
     function maxIfStatementsByFragmentShader():Int;
 
     function canBatchWithMultipleTextures(shader:Shader):Bool;

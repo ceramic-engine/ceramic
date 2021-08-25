@@ -2,8 +2,9 @@ package backend;
 
 import ceramic.Path;
 import ceramic.Shortcuts.*;
-import clay.Clay;
+
 import clay.Immediate;
+import clay.Clay;
 
 using StringTools;
 
@@ -22,9 +23,7 @@ class Audio implements spec.Audio {
 
     public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
 
-        var synchronous:Bool = options != null && options.synchronous;
-
-        var done = synchronous ? _done : function(resource:AudioResource) {
+        var done = function(resource:AudioResource) {
             ceramic.App.app.onceImmediate(function() {
                 _done(resource);
                 _done = null;
@@ -37,7 +36,7 @@ class Audio implements spec.Audio {
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
-
+        
         // Is resource already loaded?
         if (loadedAudioResources.exists(path)) {
             loadedAudioRetainCount.set(path, loadedAudioRetainCount.get(path) + 1);
@@ -78,7 +77,7 @@ class Audio implements spec.Audio {
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
 
         function doFail() {
-
+            
             var callbacks = loadingAudioCallbacks.get(path);
             loadingAudioCallbacks.remove(path);
             for (callback in callbacks) {
@@ -115,21 +114,16 @@ class Audio implements spec.Audio {
         });
 
         // Needed to ensure a synchronous load will be done before the end of the frame
-        if (synchronous) {
+        ceramic.App.app.onceImmediate(function() {
             Immediate.flush();
-        }
-        else {
-            ceramic.App.app.onceImmediate(function() {
-                Immediate.flush();
-            });
-        }
+        });
 
     }
 
     inline public function getDuration(resource:AudioResource):Float {
 
         return (resource:clay.audio.AudioSource).getDuration();
-
+        
     }
 
     #if web
@@ -158,7 +152,7 @@ class Audio implements spec.Audio {
     #end
 
     inline public function supportsHotReloadPath():Bool {
-
+        
         return true;
 
     }
@@ -288,10 +282,10 @@ class Audio implements spec.Audio {
     }
 
     public function pause(handle:AudioHandle):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return;
@@ -306,10 +300,10 @@ class Audio implements spec.Audio {
     }
 
     public function resume(handle:AudioHandle):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return;
@@ -324,10 +318,10 @@ class Audio implements spec.Audio {
     }
 
     public function stop(handle:AudioHandle):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             var prevHandle = handle;
             handle = loopHandles.get(handle);
@@ -342,10 +336,10 @@ class Audio implements spec.Audio {
     }
 
     public function getVolume(handle:AudioHandle):Float {
-
+                    
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return 0;
@@ -356,10 +350,10 @@ class Audio implements spec.Audio {
     }
 
     public function setVolume(handle:AudioHandle, volume:Float):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
         }
@@ -369,10 +363,10 @@ class Audio implements spec.Audio {
     }
 
     public function getPan(handle:AudioHandle):Float {
-
+                    
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
         }
@@ -385,7 +379,7 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
         }
@@ -395,10 +389,10 @@ class Audio implements spec.Audio {
     }
 
     public function getPitch(handle:AudioHandle):Float {
-
+                    
         if (!Clay.app.audio.active) return 1;
         if (handle == null || (handle:Int) == -1) return 1;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return 1;
@@ -409,10 +403,10 @@ class Audio implements spec.Audio {
     }
 
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return;
@@ -423,10 +417,10 @@ class Audio implements spec.Audio {
     }
 
     public function getPosition(handle:AudioHandle):Float {
-
+                    
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return 0;
@@ -437,10 +431,10 @@ class Audio implements spec.Audio {
     }
 
     public function setPosition(handle:AudioHandle, position:Float):Void {
-
+                    
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
+        
         if (loopHandles.exists(handle)) {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return;
