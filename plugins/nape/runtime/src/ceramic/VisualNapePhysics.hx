@@ -10,7 +10,7 @@ class VisualNapePhysics extends Entity {
     public var body:nape.phys.Body = null;
 
     public function new(
-        bodyType:NapePhysicsBodyType, ?shape:nape.shape.Polygon, ?material:nape.phys.Material,
+        bodyType:NapePhysicsBodyType, ?shape:nape.shape.Shape, ?material:nape.phys.Material,
         x:Float, y:Float, width:Float, height:Float, rotation:Float
         ) {
 

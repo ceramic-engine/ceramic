@@ -883,7 +883,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     public function initNapePhysics(
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,
-        ?shape:nape.shape.Polygon,
+        ?shape:nape.shape.Shape,
         ?material:nape.phys.Material
     ):VisualNapePhysics {
 
