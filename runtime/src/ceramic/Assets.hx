@@ -129,7 +129,7 @@ class Assets extends Entity {
 
     /**
      * Add all assets matching given path pattern (if provided)
-     * @param pathPattern 
+     * @param pathPattern
      */
     public function addAll(?pathPattern:EReg):Void {
 
@@ -153,7 +153,7 @@ class Assets extends Entity {
         if (runtimeAssets != null) {
             allByName = runtimeAssets.getLists().allByName;
         }
-        
+
         for (name => paths in allByName) {
 
             // Check pattern, if any
@@ -267,49 +267,49 @@ class Assets extends Entity {
     }
 
     public function addFont(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('font:')) name = name.substr(5);
         addAsset(new FontAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addText(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('text:')) name = name.substr(5);
         addAsset(new TextAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addBinary(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('binary:')) name = name.substr(7);
         addAsset(new BinaryAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addSound(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('sound:')) name = name.substr(6);
         addAsset(new SoundAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addDatabase(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('database:')) name = name.substr(9);
         addAsset(new DatabaseAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addFragments(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('fragments:')) name = name.substr(10);
         addAsset(new FragmentsAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
     public function addShader(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
-        
+
         if (name.startsWith('shader:')) name = name.substr(7);
         addAsset(new ShaderAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
@@ -402,7 +402,7 @@ class Assets extends Entity {
     public function shaderAsset(name:Either<String,AssetId<String>>):ShaderAsset {
         return cast asset(name, 'shader');
     }
-    
+
     public function asset(idOrName:Dynamic, ?kind:String):Asset {
 
         var value:String = Std.isOfType(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
@@ -522,11 +522,11 @@ class Assets extends Entity {
             }
             else {
                 for (asset in addedAssets) {
-    
+
                     if (asset.status == NONE) {
                         asset.load();
                     }
-    
+
                 }
             }
 
@@ -677,7 +677,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('font:')) realName = realName.substr(5);
-        
+
         if (!assetsByKindAndName.exists('font')) return parent != null ? parent.font(name) : null;
         var asset:FontAsset = cast assetsByKindAndName.get('font').get(realName);
         if (asset == null) return parent != null ? parent.font(name) : null;
@@ -690,7 +690,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('sound:')) realName = realName.substr(6);
-        
+
         if (!assetsByKindAndName.exists('sound')) return parent != null ? parent.sound(name) : null;
         var asset:SoundAsset = cast assetsByKindAndName.get('sound').get(realName);
         if (asset == null) return parent != null ? parent.sound(name) : null;
@@ -703,7 +703,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('text:')) realName = realName.substr(5);
-        
+
         if (!assetsByKindAndName.exists('text')) return parent != null ? parent.text(name) : null;
         var asset:TextAsset = cast assetsByKindAndName.get('text').get(realName);
         if (asset == null) return parent != null ? parent.text(name) : null;
@@ -716,7 +716,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('binary:')) realName = realName.substr(7);
-        
+
         if (!assetsByKindAndName.exists('binary')) return parent != null ? parent.bytes(name) : null;
         var asset:BinaryAsset = cast assetsByKindAndName.get('binary').get(realName);
         if (asset == null) return parent != null ? parent.bytes(name) : null;
@@ -729,7 +729,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('shader:')) realName = realName.substr(7);
-        
+
         if (!assetsByKindAndName.exists('shader')) return parent != null ? parent.shader(name) : null;
         var asset:ShaderAsset = cast assetsByKindAndName.get('shader').get(realName);
         if (asset == null) return parent != null ? parent.shader(name) : null;
@@ -742,7 +742,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('database:')) realName = realName.substr(9);
-        
+
         if (!assetsByKindAndName.exists('database')) return parent != null ? parent.database(name) : null;
         var asset:DatabaseAsset = cast assetsByKindAndName.get('database').get(realName);
         if (asset == null) return parent != null ? parent.database(name) : null;
@@ -755,7 +755,7 @@ class Assets extends Entity {
 
         var realName:String = cast name;
         if (realName.startsWith('fragments:')) realName = realName.substr(10);
-        
+
         if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragments(name) : null;
         var asset:FragmentsAsset = cast assetsByKindAndName.get('fragments').get(realName);
         if (asset == null) return parent != null ? parent.fragments(name) : null;
@@ -806,12 +806,12 @@ class Assets extends Entity {
      * @param path
      *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getDefine('assets_path')`
      *     to watch default asset path in project. It's the path that will be used if none is provided
-     * @param hotReload 
+     * @param hotReload
      *     `true` by default. Will enable hot reload of assets when related file changes on disk
      * @return WatchDirectory instance used internally
      */
     public function watchDirectory(?path:String, hotReload:Bool = true):WatchDirectory {
-        
+
         if (runtimeAssets != null) {
             throw 'There is already an instance of RuntimeAssets assigned. Cannot watch a directory, which also need its own instance';
         }
@@ -821,7 +821,7 @@ class Assets extends Entity {
             throw 'Cannot watch directory when using web target! (unless using electron runner and `ceramic_use_electron` define)';
             #else
             path = ceramic.macros.DefinesMacro.getDefine('assets_path');
-            
+
             // Pre-multiply images alpha on the fly because we are reading from source assets
             if (defaultImageOptions == null) {
                 defaultImageOptions = {};
@@ -833,7 +833,7 @@ class Assets extends Entity {
         if (hotReload) {
             this.hotReload = hotReload;
         }
-        
+
         // Needed to find new assets
         runtimeAssets = RuntimeAssets.fromPath(path);
 
@@ -885,7 +885,7 @@ class Assets extends Entity {
     /**
      * Inherit runtime asset settings from parent assets instance.
      * Used internally to make sure sub-instances of `Assets` take owner live reload settings and related
-     * @param assets 
+     * @param assets
      */
     @:noCompletion public function inheritRuntimeAssetsFromAssets(assets:Assets):Void {
 
