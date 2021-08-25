@@ -41,11 +41,6 @@ class WindowData extends Model {
         var len = itemIndex;
         itemIndex = 0;
 
-        for (i in 0...len) {
-            var item = items.unsafeGet(i);
-            item.flushPendingCallbacks();
-        }
-
     }
 
     public function endFrame():Void {

@@ -2,7 +2,7 @@ package elements;
 
 import tracker.Observable;
 
-class ColorFieldView extends FieldView implements Observable {
+class ColorFieldView extends FieldView {
 
     static var _point = new Point();
 

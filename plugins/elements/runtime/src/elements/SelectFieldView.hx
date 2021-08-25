@@ -17,7 +17,7 @@ import tracker.Observable;
 
 using StringTools;
 
-class SelectFieldView extends FieldView implements Observable {
+class SelectFieldView extends FieldView {
 
     static var _point = new Point();
 

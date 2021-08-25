@@ -1,9 +1,9 @@
 package elements;
 
-import tracker.Model;
-import ceramic.Color;
 import ceramic.BitmapFont;
+import ceramic.Color;
 import ceramic.Shortcuts.*;
+import tracker.Model;
 
 class Theme extends Model {
 
@@ -62,6 +62,12 @@ class Theme extends Model {
     @observe public var highlightColor:Color = 0x4392E0;
 
     @observe public var highlightPendingColor:Color = 0xFE5134;
+
+/// Form
+
+    @observe public var formItemSpacing:Float = 6;
+
+    @observe public var formPadding:Float = 6;
 
 /// Field
 

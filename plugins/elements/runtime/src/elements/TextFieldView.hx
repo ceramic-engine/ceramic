@@ -21,7 +21,7 @@ import tracker.Observable;
 
 using StringTools;
 
-class TextFieldView extends FieldView implements Observable {
+class TextFieldView extends FieldView {
 
 /// Hooks
 
@@ -206,10 +206,14 @@ class TextFieldView extends FieldView implements Observable {
 
         var displayedText = textValue;
 
+        unobserve();
+
         if (editText != null)
             editText.updateText(displayedText);
 
         textView.content = displayedText;
+
+        reobserve();
 
     }
 

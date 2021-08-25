@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.TextAlign;
 #if !macro
 import ceramic.Assert.assert;
 import ceramic.ColumnLayout;
@@ -12,6 +13,8 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
 
+typedef IntPointer = (?val:Int)->Int;
+
 /**
  * API inspired by Dear ImGui,
  * but using ceramic elements UI,
@@ -23,9 +26,13 @@ class Im {
 
     inline static final DEFAULT_LABEL_POSITION:LabelPosition = RIGHT;
 
+    inline static final DEFAULT_TEXT_ALIGN:TextAlign = LEFT;
+
     static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
 
     static var _labelPosition:LabelPosition = DEFAULT_LABEL_POSITION;
+
+    static var _textAlign:TextAlign = DEFAULT_TEXT_ALIGN;
 
     #if !macro
 
@@ -127,6 +134,12 @@ class Im {
 
     }
 
+    public static function textAlign(textAlign:TextAlign = DEFAULT_TEXT_ALIGN):Void {
+
+        _textAlign = textAlign;
+
+    }
+
     public inline extern static overload function select(?title:String, value:StringPointer, list:Array<String>, labelPosition:LabelPosition = RIGHT, labelWidth:Float = DEFAULT_LABEL_WIDTH, ?nullValueText:String):Bool {
 
         var index:Int = list.indexOf(Im.readString(value));
@@ -215,6 +228,73 @@ class Im {
 
     }
 
+    public static function editFloat(
+        #if completion
+        ?title:String, value:FloatPointer, ?minValue:Float, ?maxValue:Float
+        #else
+        ?title:String, value:FloatPointer, minValue:Float = -999999999, maxValue:Float = 999999999
+        #end
+    ):Bool {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return false;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_FLOAT;
+        item.float0 = Im.readFloat(value);
+        item.float1 = item.float0;
+        item.float3 = minValue;
+        item.float4 = maxValue;
+        item.int2 = _labelPosition;
+        item.float2 = _labelWidth;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.float0;
+            var newValue = item.previous.float1;
+            if (newValue != prevValue) {
+                item.float0 = newValue;
+                item.float1 = newValue;
+                Im.writeFloat(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    public static function text(value:String, ?align:TextAlign):Void {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return;
+
+        var item = WindowItem.get();
+        item.kind = TEXT;
+        item.string0 = value;
+        item.string1 = item.string0;
+        item.int0 = switch align {
+            case null: switch _textAlign {
+                case LEFT: 0;
+                case RIGHT: 1;
+                case CENTER: 2;
+            };
+            case LEFT: 0;
+            case RIGHT: 1;
+            case CENTER: 2;
+        };
+
+        windowData.addItem(item);
+
+    }
+
     public static function end():Void {
 
         assert(context.currentWindowData != null, 'Called end() without calling begin() before!');
@@ -294,12 +374,28 @@ class Im {
                     view = item.updateView(view);
                     form.add(view);
                 }
+
+                // Remove any unused view
+                while (windowData.numItems < views.length) {
+                    views.pop().destroy();
+                }
             }
             else {
                 var views = form.subviews;
                 for (i in 0...windowData.numItems) {
                     var item = windowItems.unsafeGet(i);
                     item.updateView(views[i]);
+                }
+
+                // Remove any unused view
+                if (views != null && windowData.numItems < views.length) {
+                    var toRemove = [];
+                    for (i in windowData.numItems...views.length) {
+                        toRemove.push(views[i]);
+                    }
+                    for (view in toRemove) {
+                        view.destroy();
+                    }
                 }
             }
         }
@@ -322,6 +418,18 @@ class Im {
     inline public static function writeInt(intPointer:IntPointer, value:Int):Void {
 
         intPointer(value);
+
+    }
+
+    inline public static function readFloat(floatPointer:FloatPointer):Float {
+
+        return floatPointer();
+
+    }
+
+    inline public static function writeFloat(floatPointer:FloatPointer, value:Float):Void {
+
+        floatPointer(value);
 
     }
 

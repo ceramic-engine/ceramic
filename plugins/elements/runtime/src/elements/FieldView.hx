@@ -5,17 +5,19 @@ import ceramic.Point;
 import ceramic.Shortcuts.*;
 import ceramic.View;
 import elements.FieldSystem;
+import tracker.Observable;
 
-class FieldView extends LinearLayout {
+class FieldView extends LinearLayout implements Observable {
 
     static var _point = new Point();
 
 /// Public properties
 
-    public var focused(get,never):Bool;
-    inline function get_focused():Bool {
+    @compute public function focused():Bool {
+
         FieldSystem.shared.updateFocusedField();
         return FieldSystem.shared.focusedField == this;
+
     }
 
 /// Lifecycle

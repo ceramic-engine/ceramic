@@ -2,7 +2,7 @@ package elements;
 
 import tracker.Observable;
 
-class BooleanFieldView extends FieldView implements Observable {
+class BooleanFieldView extends FieldView {
 
     var switchContainer:View;
 

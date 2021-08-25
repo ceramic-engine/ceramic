@@ -2,7 +2,7 @@ package elements;
 
 using StringTools;
 
-class SliderFieldView extends FieldView implements Observable {
+class SliderFieldView extends FieldView {
 
     static var _point = new Point();
 

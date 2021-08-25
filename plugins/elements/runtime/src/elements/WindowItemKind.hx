@@ -8,4 +8,8 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var EDIT_TEXT;
 
+    var EDIT_FLOAT;
+
+    var TEXT;
+
 }

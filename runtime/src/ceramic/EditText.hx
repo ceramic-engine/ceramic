@@ -1,10 +1,10 @@
 package ceramic;
 
-import tracker.Component;
 import ceramic.Shortcuts.*;
+import tracker.Component;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 class EditText extends Entity implements Component implements TextInputDelegate {
 
@@ -150,7 +150,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         bindKeyBindings();
 
         app.onUpdate(this, handleAppUpdate);
-        
+
     }
 
 /// Public API
@@ -436,7 +436,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         });
 
     }
-    
+
     override function destroy() {
 
         if (inputActive)

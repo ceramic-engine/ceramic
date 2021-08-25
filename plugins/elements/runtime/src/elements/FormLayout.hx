@@ -1,8 +1,8 @@
 package elements;
 
 import ceramic.ColumnLayout;
-import elements.FieldsTabFocus;
 import elements.Context.context;
+import elements.FieldsTabFocus;
 
 class FormLayout extends ColumnLayout {
 
@@ -12,12 +12,9 @@ class FormLayout extends ColumnLayout {
 
         super();
 
-        itemSpacing = 4;
         transparent = false;
 
         component(new FieldsTabFocus());
-
-        padding(10, 10);
 
         autorun(updateStyle);
 
@@ -30,6 +27,8 @@ class FormLayout extends ColumnLayout {
         var theme = context.theme;
 
         color = theme.mediumBackgroundColor;
+        itemSpacing = theme.formItemSpacing;
+        padding(theme.formPadding);
 
     }
 

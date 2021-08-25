@@ -3,6 +3,11 @@ package elements;
 import ceramic.Equal;
 import ceramic.Pool;
 import ceramic.View;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
+
+using StringTools;
+using elements.WindowItem.WindowItemExtensions;
 
 /**
  * A simple class to hold window item data.
@@ -40,6 +45,10 @@ class WindowItem {
 
     public var float2:Float = 0;
 
+    public var float3:Float = 0;
+
+    public var float4:Float = 0;
+
     public var bool0:Bool = false;
 
     public var string0:String = null;
@@ -51,8 +60,6 @@ class WindowItem {
     public var string3:String = null;
 
     public var stringArray0:Array<String> = null;
-
-    public var pendingCallbacks:Array<Void->Void> = [];
 
     public function new() {}
 
@@ -70,7 +77,7 @@ class WindowItem {
                 return false;
 
             case SELECT:
-                if (((item.string2 != null && string2 != null) || (item.string2 == null && string2 == null)) &&
+                if (isSimilarLabel(item) &&
                     (item.stringArray0 == stringArray0 || Equal.arrayEqual(item.stringArray0, stringArray0))) {
                     return true;
                 }
@@ -79,15 +86,21 @@ class WindowItem {
                 }
 
             case EDIT_TEXT:
-                if (((item.string2 != null && string2 != null) || (item.string2 == null && string2 == null)) &&
-                    item.bool0 == bool0) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return isSimilarLabel(item);
+
+            case EDIT_FLOAT:
+                return isSimilarLabel(item);
+
+            case TEXT:
+                return true;
 
         }
+
+    }
+
+    inline function isSimilarLabel(item:WindowItem):Bool {
+
+        return ((item.string2 != null && string2 != null) || (item.string2 == null && string2 == null));
 
     }
 
@@ -101,8 +114,11 @@ class WindowItem {
             case SELECT:
                 return createOrUpdateSelectField(view);
 
-            case EDIT_TEXT:
-                return createOrUpdateTextField(view);
+            case EDIT_TEXT | EDIT_FLOAT:
+                return createOrUpdateEditTextField(view);
+
+            case TEXT:
+                return createOrUpdateText(view);
 
         }
 
@@ -118,6 +134,8 @@ class WindowItem {
         float0 = 0;
         float1 = 0;
         float2 = 0;
+        float3 = 0;
+        float4 = 0;
         bool0 = false;
         string0 = null;
         string1 = null;
@@ -133,9 +151,11 @@ class WindowItem {
 
         var field:SelectFieldView = null;
         var labeled:LabeledFieldView<SelectFieldView> = null;
+        var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
+                justCreated = true;
                 field = new SelectFieldView();
                 labeled = new LabeledFieldView(field);
             }
@@ -149,13 +169,15 @@ class WindowItem {
         else {
             field = (view != null ? cast view : null);
             if (field == null) {
+                justCreated = true;
                 field = new SelectFieldView();
             }
         }
+        field.data = this;
         field.list = stringArray0;
-        field.setValue = function(field, value) {
-            scheduleSetInt1Value(field.list.indexOf(value));
-        };
+        if (justCreated) {
+            field.setValue = _selectSetIntValue;
+        }
         var newValue = stringArray0[int0];
         if (newValue != field.value) {
             field.value = newValue;
@@ -164,13 +186,23 @@ class WindowItem {
 
     }
 
-    function createOrUpdateTextField(view:View):View {
+    static function _selectSetIntValue(field:SelectFieldView, value:String):Void {
+
+        final item = field.windowItem();
+        final index = field.list.indexOf(value);
+        item.int1 = index;
+
+    }
+
+    function createOrUpdateEditTextField(view:View):View {
 
         var field:TextFieldView = null;
         var labeled:LabeledFieldView<TextFieldView> = null;
+        var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
+                justCreated = true;
                 field = new TextFieldView();
                 labeled = new LabeledFieldView(field);
             }
@@ -184,46 +216,213 @@ class WindowItem {
         else {
             field = (view != null ? cast view : null);
             if (field == null) {
+                justCreated = true;
                 field = new TextFieldView();
             }
         }
-        if (string0 != field.textValue) {
-            field.textValue = string0;
+
+        var previous = field.windowItem();
+        field.data = this;
+
+        if (kind == EDIT_TEXT) {
+            if (justCreated) {
+                field.setValue = _editTextSetValue;
+            }
+            if (string0 != field.textValue) {
+                field.textValue = string0;
+            }
+            field.multiline = bool0;
+            field.placeholder = string3;
         }
-        field.multiline = bool0;
-        field.placeholder = string3;
-        field.setValue = function(field, value) {
-            scheduleSetString1Value(value);
-        };
+        else if (kind == EDIT_FLOAT) {
+            if (justCreated) {
+                field.setTextValue = _editFloatSetTextValue;
+                field.setEmptyValue = _editFloatSetEmptyValue;
+                field.setValue = _editFloatSetValue;
+                field.onFocusedChange(null, (focused, _) -> {
+                    if (!focused)
+                        _editFloatFinishEditing(field);
+                });
+            }
+            if (justCreated || previous.float1 != float0) {
+                field.textValue = '' + float0;
+            }
+        }
+
         return labeled != null ? labeled : field;
 
     }
 
-    public function flushPendingCallbacks():Void {
+    static function _editTextSetValue(field:TextFieldView, value:String):Void {
 
-        if (pendingCallbacks != null) {
-            while (pendingCallbacks.length > 0) {
-                var cb = pendingCallbacks.shift();
-                cb();
-            }
+        field.windowItem().string1 = value;
+
+    }
+
+    static function _editFloatSetTextValue(field:TextFieldView, textValue:String):Void {
+
+        if (!_editFloatOrIntOperations(field, textValue)) {
+            var item = field.windowItem();
+            var minValue = -999999999; // Allow lower value at this stage because we are typing
+            var maxValue = item.float4;
+            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue);
         }
 
     }
 
-    function scheduleSetInt1Value(value:Int):Void {
+    static function _editFloatSetEmptyValue(field:TextFieldView):Void {
 
-        pendingCallbacks.push(function() {
-            int1 = value;
-        });
+        final item = field.windowItem();
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        item.float1 = SanitizeTextField.setEmptyToFloat(field, minValue, maxValue);
 
     }
 
-    function scheduleSetString1Value(value:String):Void {
+    static function _editFloatSetValue(field:TextFieldView, value:Dynamic):Void {
 
-        pendingCallbacks.push(function() {
-            string1 = value;
-        });
+        final item = field.windowItem();
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        var floatValue:Float = value;
+        if (value >= minValue && value <= maxValue) {
+            item.float1 = floatValue;
+        }
 
+    }
+
+    static function _editFloatFinishEditing(field:TextFieldView):Void {
+
+        var item = field.windowItem();
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue)) {
+            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue);
+        }
+
+    }
+
+    static function _editFloatOrIntOperations(field:TextFieldView, textValue:String):Bool {
+
+        // TODO move this somewhere else?
+
+        var addIndex = textValue.indexOf('+');
+        var subtractIndex = textValue.indexOf('-');
+        var multiplyIndex = textValue.indexOf('*');
+        var divideIndex = textValue.indexOf('/');
+        if (addIndex > 0 && !(subtractIndex > 0 || multiplyIndex > 0 || divideIndex > 0)) {
+            field.textValue = textValue.trim();
+            if (textValue != field.textValue)
+                field.invalidateTextValue();
+            return true;
+        }
+        if (subtractIndex > 0 && !(addIndex > 0 || multiplyIndex > 0 || divideIndex > 0)) {
+            field.textValue = textValue.trim();
+            if (textValue != field.textValue)
+                field.invalidateTextValue();
+            return true;
+        }
+        if (multiplyIndex > 0 && !(addIndex > 0 || subtractIndex > 0 || divideIndex > 0)) {
+            field.textValue = textValue.trim();
+            if (textValue != field.textValue)
+                field.invalidateTextValue();
+            return true;
+        }
+        if (divideIndex > 0 && !(addIndex > 0 || multiplyIndex > 0 || subtractIndex > 0)) {
+            field.textValue = textValue.trim();
+            if (textValue != field.textValue)
+                field.invalidateTextValue();
+            return true;
+        }
+
+        return false;
+
+    }
+
+    static function _applyFloatOrIntOperationsIfNeeded(field:TextFieldView, textValue:String, minValue:Float, maxValue:Float):Bool {
+
+        var addIndex = textValue.indexOf('+');
+        var subtractIndex = textValue.indexOf('-');
+        var multiplyIndex = textValue.indexOf('*');
+        var divideIndex = textValue.indexOf('/');
+        if (addIndex > 0) {
+            var before = textValue.substr(0, addIndex).trim();
+            var after = textValue.substr(addIndex + 1).trim();
+            var result = Std.parseFloat(before) + Std.parseFloat(after);
+            if (!Math.isNaN(result)) {
+                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+            }
+            else {
+                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+            }
+            return true;
+        }
+        else if (subtractIndex > 0) {
+            var before = textValue.substr(0, subtractIndex).trim();
+            var after = textValue.substr(subtractIndex + 1).trim();
+            var result = Std.parseFloat(before) - Std.parseFloat(after);
+            if (!Math.isNaN(result)) {
+                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+            }
+            else {
+                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+            }
+            return true;
+        }
+        else if (multiplyIndex > 0) {
+            var before = textValue.substr(0, multiplyIndex).trim();
+            var after = textValue.substr(multiplyIndex + 1).trim();
+            var result = Std.parseFloat(before) * Std.parseFloat(after);
+            if (!Math.isNaN(result)) {
+                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+            }
+            else {
+                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+            }
+            return true;
+        }
+        else if (divideIndex > 0) {
+            var before = textValue.substr(0, divideIndex).trim();
+            var after = textValue.substr(divideIndex + 1).trim();
+            var result = Std.parseFloat(before) / Std.parseFloat(after);
+            if (!Math.isNaN(result)) {
+                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+            }
+            else {
+                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+            }
+            return true;
+        }
+        else {
+            return false;
+        }
+
+    }
+
+    function createOrUpdateText(view:View):View {
+
+        var text:LabelView = (view != null ? cast view : null);
+        if (text == null) {
+            text = new LabelView();
+        }
+        if (text.content != string0) {
+            text.content = string0;
+        }
+        text.align = switch int0 {
+            default: LEFT;
+            case 1: RIGHT;
+            case 2: CENTER;
+        };
+        return text;
+
+    }
+
+}
+
+private class WindowItemExtensions {
+
+    inline public static function windowItem(field:FieldView):WindowItem {
+        return field.data;
     }
 
 }
