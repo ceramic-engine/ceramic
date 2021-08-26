@@ -59,7 +59,7 @@ class Tween extends Entity {
         _computedCustomEasing = null;
 
         _tweens.push(this);
-        
+
         remaining = duration;
 
         App.app.onceImmediate(immediateStart);
@@ -67,7 +67,7 @@ class Tween extends Entity {
     }
 
     inline function updateFromTick(delta:Float):Void {
-        
+
         if (owner != null && owner.destroyed) {
             destroy();
         }
@@ -126,8 +126,9 @@ class Tween extends Entity {
     public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
-        
-        instance.onUpdate(owner, handleValueTime);
+
+        if (handleValueTime != null)
+            instance.onUpdate(owner, handleValueTime);
 
         return instance;
 
@@ -242,7 +243,7 @@ class Tween extends Entity {
     public static function ease(easing:Easing, value:Float):Float {
 
         TweenEasingFunction.k = value;
-        
+
         switch (easing) {
 
             case NONE:
@@ -469,7 +470,7 @@ private class TweenEasingFunction {
         if (k < .5) {
             k = _bounceEaseIn(k * 2, 0, 1, 1) * 0.5;
         } else {
-            k = _bounceEaseOut(k * 2 - 1, 0, 1, 1) * 0.5 + 1 * 0.5; 
+            k = _bounceEaseOut(k * 2 - 1, 0, 1, 1) * 0.5 + 1 * 0.5;
         }
     }
 
@@ -522,10 +523,10 @@ private class TweenEasingFunction {
             k = 1;
             return;
         }
-        
+
         var p:Float = (0.3 * 1.5);
         var s:Float = p / 4;
-        
+
         if (k < 1) {
             k = -0.5 * (Math.exp(6.931471805599453 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
         }

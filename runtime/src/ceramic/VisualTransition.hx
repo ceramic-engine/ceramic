@@ -549,6 +549,11 @@ class VisualTransition extends Entity implements Component {
             }
             #end
         }
+        else {
+
+            propsTween = entity.tween(easing, duration, 0, 1, null);
+
+        }
 
         return propsTween;
 
