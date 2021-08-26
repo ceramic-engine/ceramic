@@ -221,6 +221,7 @@ class WindowItem {
             }
         }
 
+
         var previous = field.windowItem();
         field.data = this;
 
@@ -422,7 +423,7 @@ class WindowItem {
 private class WindowItemExtensions {
 
     inline public static function windowItem(field:FieldView):WindowItem {
-        return field.data;
+        return field.hasData ? field.data : null;
     }
 
 }
