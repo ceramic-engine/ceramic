@@ -3,6 +3,8 @@ package backend;
 // Import needed to make reflection work as expected
 import backend.FieldLookup;
 
+using ceramic.Extensions;
+
 @:allow(Main)
 @:allow(backend.Textures)
 class Backend implements tracker.Events implements spec.Backend {
@@ -55,12 +57,37 @@ class Backend implements tracker.Events implements spec.Backend {
 
         screen.update();
         input.update();
+        flushNextUpdateCallbacks();
 
     }
 
     inline function didEmitUpdate(delta:Float) {
 
         //
+
+    }
+
+    var _nextUpdateCallbacks:Array<Void->Void> = [];
+    var _nextUpdateCallbacksIterate:Array<Void->Void> = [];
+
+    function onceNextUpdate(cb:Void->Void):Void {
+
+        _nextUpdateCallbacks.push(cb);
+
+    }
+
+    function flushNextUpdateCallbacks():Void {
+
+        var len = _nextUpdateCallbacks.length;
+        for (i in 0...len) {
+            _nextUpdateCallbacksIterate[i] = _nextUpdateCallbacks.unsafeGet(i);
+        }
+        _nextUpdateCallbacks.setArrayLength(0);
+        for (i in 0...len) {
+            var cb = _nextUpdateCallbacksIterate.unsafeGet(i);
+            _nextUpdateCallbacksIterate.unsafeSet(i, null);
+            cb();
+        }
 
     }
 

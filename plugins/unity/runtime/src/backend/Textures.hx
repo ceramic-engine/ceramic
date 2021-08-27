@@ -1,7 +1,7 @@
 package backend;
 
 import ceramic.Path;
-
+import unityengine.ResourceRequest;
 import unityengine.Texture2D;
 
 using StringTools;
@@ -11,6 +11,8 @@ class Textures implements spec.Textures {
     public function new() {}
 
     public function load(path:String, ?options:backend.LoadTextureOptions, _done:Texture->Void):Void {
+
+        var synchronous = options != null && options.loadMethod == SYNC;
 
         var done = function(texture:Texture) {
             ceramic.App.app.onceImmediate(function() {
@@ -29,7 +31,7 @@ class Textures implements spec.Textures {
             done(null);
             return;
         }
-        
+
         // Is texture already loaded?
         if (loadedTextures.exists(path)) {
             loadedTexturesRetainCount.set(path, loadedTexturesRetainCount.get(path) + 1);
@@ -71,35 +73,60 @@ class Textures implements spec.Textures {
             if (extension != null && imageExtensions.indexOf(extension.toLowerCase()) != -1) {
                 unityPath = unityPath.substr(0, unityPath.length - extension.length - 1);
             }
-            var unityTexture:Texture2D = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.Texture2D>({0})', unityPath);
 
-            if (unityTexture != null) {
+            var unityTexture:Texture2D = null;
 
-                function doCreate() {
-                    var texture = new TextureImpl(path, unityTexture, null);
+            inline function handleUnityTexture() {
+                if (unityTexture != null) {
 
-                    loadedTextures.set(path, texture);
-                    var callbacks = loadingTextureCallbacks.get(path);
-                    loadingTextureCallbacks.remove(path);
-                    for (callback in callbacks) {
-                        callback(texture);
+                    inline function doCreate() {
+                        var texture = new TextureImpl(path, unityTexture, null);
+
+                        loadedTextures.set(path, texture);
+                        var callbacks = loadingTextureCallbacks.get(path);
+                        loadingTextureCallbacks.remove(path);
+                        for (callback in callbacks) {
+                            callback(texture);
+                        }
                     }
-                }
 
-                doCreate();
+                    doCreate();
+                }
+                else {
+
+                    inline function doFail() {
+                        var callbacks = loadingTextureCallbacks.get(path);
+                        loadingTextureCallbacks.remove(path);
+                        for (callback in callbacks) {
+                            callback(null);
+                        }
+                    }
+
+                    doFail();
+                }
+            }
+
+            var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
+            var loadAsync:Bool = isEditor || !synchronous; // We force async loading in editor to prevent editor using textures that are not ready
+            if (loadAsync) {
+                var request:ResourceRequest = untyped __cs__('UnityEngine.Resources.LoadAsync<UnityEngine.Texture2D>({0})', unityPath);
+                var checkRequest:Void->Void = null;
+                checkRequest = function() {
+                    if (request.isDone) {
+                        unityTexture = cast request.asset;
+                        handleUnityTexture();
+                    }
+                    else {
+                        ceramic.App.app.backend.onceNextUpdate(checkRequest);
+                    }
+                };
+                checkRequest();
             }
             else {
-
-                function doFail() {
-                    var callbacks = loadingTextureCallbacks.get(path);
-                    loadingTextureCallbacks.remove(path);
-                    for (callback in callbacks) {
-                        callback(null);
-                    }
-                }
-
-                doFail();
+                unityTexture = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.Texture2D>({0})', unityPath);
+                handleUnityTexture();
             }
+
         }
 
         doLoad();
@@ -241,7 +268,7 @@ class Textures implements spec.Textures {
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return false;
 
     }

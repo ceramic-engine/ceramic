@@ -8,7 +8,7 @@ class Shaders implements spec.Shaders {
 
     public function new() {}
 
-    public function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, _done:(shader:backend.Shader)->Void):Void {
+    public function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, ?options:LoadShaderOptions, _done:(shader:backend.Shader)->Void):Void {
 
         var done = function(shader:Shader) {
             ceramic.App.app.onceImmediate(function() {
@@ -77,55 +77,55 @@ class Shaders implements spec.Shaders {
 /// Public API
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {
-        
+
         (shader:ShaderImpl).setInt(name, value);
 
     }
 
     inline public function setFloat(shader:Shader, name:String, value:Float):Void {
-        
+
         (shader:ShaderImpl).setFloat(name, value);
 
     }
 
     inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
-        
+
         (shader:ShaderImpl).setColor(name, r, g, b, a);
 
     }
 
     inline public function setVec2(shader:Shader, name:String, x:Float, y:Float):Void {
-        
+
         (shader:ShaderImpl).setVec2(name, x, y);
 
     }
 
     inline public function setVec3(shader:Shader, name:String, x:Float, y:Float, z:Float):Void {
-        
+
         (shader:ShaderImpl).setVec3(name, x, y, z);
 
     }
 
     inline public function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void {
-        
+
         (shader:ShaderImpl).setVec4(name, x, y, z, w);
 
     }
 
     inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
-        
+
         (shader:ShaderImpl).setFloatArray(name, array);
 
     }
 
     inline public function setTexture(shader:Shader, name:String, slot:Int, texture:backend.Texture):Void {
-        
+
         (shader:ShaderImpl).setTexture(name, texture);
 
     }
 
     inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
-        
+
         (shader:ShaderImpl).setMat4FromTransform(name, transform);
 
     }
@@ -137,9 +137,9 @@ class Shaders implements spec.Shaders {
     }
 
     inline public function canBatchWithMultipleTextures(shader:Shader):Bool {
-        
+
         return (shader:ShaderImpl).isBatchingMultiTexture;
-        
+
     }
 
 }
