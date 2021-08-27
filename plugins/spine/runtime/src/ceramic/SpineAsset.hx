@@ -1,17 +1,17 @@
 package ceramic;
 
+import ceramic.Asset;
+import ceramic.AssetOptions;
+import ceramic.Assets;
+import ceramic.ImageAsset;
+import ceramic.Mesh;
+import ceramic.Path;
+import ceramic.Quad;
+import ceramic.Shortcuts.*;
+import ceramic.TextAsset;
+import haxe.Json;
 import spine.support.graphics.TextureAtlas;
 import spine.support.utils.JsonValue;
-import haxe.Json;
-import ceramic.Path;
-import ceramic.Asset;
-import ceramic.ImageAsset;
-import ceramic.TextAsset;
-import ceramic.Assets;
-import ceramic.AssetOptions;
-import ceramic.Quad;
-import ceramic.Mesh;
-import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -58,7 +58,12 @@ class SpineAsset extends Asset {
 
     override public function load() {
 
-        assets.inheritRuntimeAssetsFromAssets(owner);
+        if (owner != null) {
+            assets.inheritRuntimeAssetsFromAssets(owner);
+            assets.loadMethod = owner.loadMethod;
+            assets.scheduleMethod = owner.scheduleMethod;
+            assets.delayBetweenXAssets = owner.delayBetweenXAssets;
+        }
 
         // Load spine data
         status = LOADING;
@@ -77,7 +82,7 @@ class SpineAsset extends Asset {
                 break;
             }
         }
-        
+
         if (jsonPath == null) {
             status = BROKEN;
             ceramic.App.app.logger.error('Failed to retrieve json path for spine: $path');
@@ -221,7 +226,7 @@ class SpineAsset extends Asset {
                 });
 
                 assets.load();
-                
+
             }
             else {
                 status = BROKEN;
@@ -237,7 +242,7 @@ class SpineAsset extends Asset {
     }
 
     function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
-        
+
         log.info('Load atlas page ${page.name} / $path / $basePath');
 
         path = Path.join([(basePath != null ? basePath : this.path), path]);

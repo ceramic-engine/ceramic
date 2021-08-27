@@ -44,7 +44,12 @@ class TilemapAsset extends Asset {
 
     override public function load() {
 
-        assets.inheritRuntimeAssetsFromAssets(owner);
+        if (owner != null) {
+            assets.inheritRuntimeAssetsFromAssets(owner);
+            assets.loadMethod = owner.loadMethod;
+            assets.scheduleMethod = owner.scheduleMethod;
+            assets.delayBetweenXAssets = owner.delayBetweenXAssets;
+        }
 
         // Load tilemap data
         status = LOADING;
@@ -87,7 +92,7 @@ class TilemapAsset extends Asset {
 
                 // Load external tileset raw data (if any)
                 loadExternalTsxTilesetData(rawTmxData, function(isSuccess) {
-                        
+
                     if (isSuccess) {
 
                         var tilemapParser = owner.getTilemapParser();
@@ -99,10 +104,10 @@ class TilemapAsset extends Asset {
                             // Link the tilemap data to this asset so that
                             // destroying one will destroy the other
                             tilemapData.asset = this;
-                            
+
                             // Run load of assets again to load textures
                             assets.onceComplete(this, function(isSuccess) {
-                                
+
                                 if (isSuccess) {
 
                                     // Success
@@ -128,7 +133,7 @@ class TilemapAsset extends Asset {
                             ceramic.App.app.logger.error('Failed to load tilemap data at path: $path');
                             emitComplete(false);
                         }
-                        
+
                     }
                     else {
                         status = BROKEN;
@@ -241,10 +246,10 @@ class TilemapAsset extends Asset {
 
         if (tmxImage.source != null) {
             var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), tmxImage.source]));
-            
+
             // Check if asset is already available
             var texture = owner.texture(pathInfo.name);
-            
+
             if (texture == null) {
 
                 // Texture not already loaded, load it!
@@ -258,7 +263,7 @@ class TilemapAsset extends Asset {
                 assets.onceComplete(this, function(isSuccess) {
                     if (isSuccess) {
                         var texture = assets.texture(asset.name);
-    
+
                         // NEAREST is usually preferred for tilemaps so use that by default,
                         // although it is still possible to set it to LINEAR manually after
                         texture.filter = NEAREST;
@@ -266,7 +271,7 @@ class TilemapAsset extends Asset {
                         // Share this texture with owner `Assets` instance
                         // so that it can be reused later
                         owner.addAsset(asset);
-    
+
                         done(texture);
                     }
                 });

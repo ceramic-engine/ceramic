@@ -18,6 +18,7 @@ class Textures implements spec.Textures {
 
     public function load(path:String, ?options:backend.LoadTextureOptions, _done:Texture->Void):Void {
 
+        var synchronous = options != null && options.loadMethod == SYNC;
         var immediate = options != null ? options.immediate : null;
         var done = function(texture:Texture) {
             final fn = function() {
@@ -97,7 +98,7 @@ class Textures implements spec.Textures {
         }
 
         // Load image
-        Clay.app.assets.loadImage(fullPath, function(image:clay.Image) {
+        Clay.app.assets.loadImage(fullPath, !synchronous, function(image:clay.Image) {
 
             if (image == null) {
                 doFail();

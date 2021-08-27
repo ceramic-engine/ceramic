@@ -571,6 +571,7 @@ class App extends Entity {
         audio = new Audio();
         input = new Input();
         systems = new Systems();
+
         assets = new Assets();
 
         backend = new Backend();

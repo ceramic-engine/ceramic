@@ -1,9 +1,8 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
-
-import haxe.Json;
 import haxe.DynamicAccess;
+import haxe.Json;
 
 class FragmentsAsset extends Asset {
 
@@ -35,8 +34,14 @@ class FragmentsAsset extends Asset {
             backendPath += '?hot=' + assetReloadedCount;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+            loadOptions.loadMethod = owner.loadMethod;
+        }
+
         log.info('Load fragments $backendPath');
-        app.backend.texts.load(realPath, function(text) {
+        app.backend.texts.load(realPath, loadOptions, function(text) {
 
             if (text != null) {
                 try {

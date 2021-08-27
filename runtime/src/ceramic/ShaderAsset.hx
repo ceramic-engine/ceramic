@@ -1,7 +1,7 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
 import ceramic.Path;
+import ceramic.Shortcuts.*;
 
 using StringTools;
 using ceramic.Extensions;
@@ -39,7 +39,13 @@ class ShaderAsset extends Asset {
                 });
             }
         }
-        
+
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+            loadOptions.loadMethod = owner.loadMethod;
+        }
+
 #if ceramic_shader_vert_frag
         // Compute vertex and fragment shader paths
         if (path != null && (path.toLowerCase().endsWith('.frag') || path.toLowerCase().endsWith('.vert'))) {
@@ -80,8 +86,8 @@ class ShaderAsset extends Asset {
             return;
         }
 
-        app.backend.texts.load(Assets.realAssetPath(options.vertId, runtimeAssets), function(vertSource) {
-            app.backend.texts.load(Assets.realAssetPath(options.fragId, runtimeAssets), function(fragSource) {
+        app.backend.texts.load(Assets.realAssetPath(options.vertId, runtimeAssets), loadOptions, function(vertSource) {
+            app.backend.texts.load(Assets.realAssetPath(options.fragId, runtimeAssets), loadOptions, function(fragSource) {
 
                 if (vertSource == null) {
                     status = BROKEN;

@@ -1,7 +1,6 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
-
 import haxe.DynamicAccess;
 
 class DatabaseAsset extends Asset {
@@ -25,6 +24,12 @@ class DatabaseAsset extends Asset {
             return;
         }
 
+        var loadOptions:AssetOptions = {};
+        if (owner != null) {
+            loadOptions.immediate = owner.immediate;
+            loadOptions.loadMethod = owner.loadMethod;
+        }
+
         // Add reload count if any
         var backendPath = path;
         var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
@@ -35,7 +40,7 @@ class DatabaseAsset extends Asset {
         }
 
         log.info('Load database $backendPath');
-        app.backend.texts.load(realPath, function(text) {
+        app.backend.texts.load(realPath, loadOptions, function(text) {
 
             if (text != null) {
                 try {

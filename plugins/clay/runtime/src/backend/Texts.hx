@@ -18,6 +18,7 @@ class Texts implements spec.Texts {
 
     public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
+        var synchronous = options != null && options.loadMethod == SYNC;
         var immediate = options != null ? options.immediate : null;
         var done = function(text:String) {
             final fn = function() {
@@ -57,7 +58,7 @@ class Texts implements spec.Texts {
 
         var fullPath = Clay.app.assets.fullPath(cleanedPath);
 
-        Clay.app.io.loadData(fullPath, true, function(res:Uint8Array) {
+        Clay.app.io.loadData(fullPath, true, !synchronous, function(res:Uint8Array) {
 
             if (res == null) {
 

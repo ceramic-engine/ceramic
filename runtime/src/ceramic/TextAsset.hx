@@ -26,6 +26,7 @@ class TextAsset extends Asset {
         var loadOptions:AssetOptions = {};
         if (owner != null) {
             loadOptions.immediate = owner.immediate;
+            loadOptions.loadMethod = owner.loadMethod;
         }
         if (options != null) {
             for (key in Reflect.fields(options)) {

@@ -22,6 +22,7 @@ class Audio implements spec.Audio {
 
     public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
 
+        var synchronous = options != null && options.loadMethod == SYNC;
         var immediate = options != null ? options.immediate : null;
         var done = function(resource:AudioResource) {
             final fn = function() {
@@ -98,7 +99,7 @@ class Audio implements spec.Audio {
         }
 
         // Load audio
-        Clay.app.audio.loadData(fullPath, isStream, null, function(audioData) {
+        Clay.app.audio.loadData(fullPath, isStream, null, !synchronous, function(audioData) {
 
             if (audioData == null) {
                 doFail();

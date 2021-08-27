@@ -29,7 +29,12 @@ class FontAsset extends Asset {
 
     override public function load() {
 
-        assets.inheritRuntimeAssetsFromAssets(owner);
+        if (owner != null) {
+            assets.inheritRuntimeAssetsFromAssets(owner);
+            assets.loadMethod = owner.loadMethod;
+            assets.scheduleMethod = owner.scheduleMethod;
+            assets.delayBetweenXAssets = owner.delayBetweenXAssets;
+        }
 
         // Create array of assets to destroy after load
         var toDestroy:Array<Asset> = [];
@@ -51,7 +56,7 @@ class FontAsset extends Asset {
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
-        
+
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
         asset.path = path;
@@ -80,7 +85,7 @@ class FontAsset extends Asset {
                         asset.path = pathInfo.path;
                         assets.addAsset(asset);
                         assetList.push(asset);
-                        
+
                     }
 
                     assets.onceComplete(this, function(success) {

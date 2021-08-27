@@ -46,18 +46,11 @@ class Assets extends Entity {
 
     public var defaultImageOptions:AssetOptions = null;
 
-    /**
-     * If set to `true`, will ensure asset loading is non blocking, at least between each asset.
-     * This is useful when we need to update screen during asset loading
-     */
-    public var nonBlocking:Bool = false;
+    public var loadMethod:AssetsLoadMethod = SYNC;
 
-    /**
-     * If set to `true`, will try to load assets synchronously (if supported on the current target).
-     * This means calling `assets.load()` will trigger `complete` event synchronously if possible.
-     * This property has no effect is `nonBlocking` is `true`
-     */
-    public var synchronous:Bool = false;
+    public var scheduleMethod:AssetsScheduleMethod = PARALLEL;
+
+    public var delayBetweenXAssets:Int = -1;
 
     /**
      * If provided, when requesting an asset, it will also check if the parent `Assets`
@@ -89,11 +82,11 @@ class Assets extends Entity {
 
         var len = instances.length;
         for (i in 0...len) {
-            _instances[i] = instances[i];
+            _instances[i] = instances.unsafeGet(i);
         }
         for (i in 0...len) {
-            var assets = _instances[i];
-            _instances[i] = null;
+            var assets = _instances.unsafeGet(i);
+            _instances.unsafeSet(i, null);
             if (!assets.destroyed) {
                 assets.immediate.flush();
             }
@@ -528,7 +521,8 @@ class Assets extends Entity {
         // Load
         if (pending > 0) {
 
-            if (nonBlocking) {
+            if (scheduleMethod == SERIAL) {
+                var numComplete = 0;
                 var toLoad = [].concat(addedAssets);
                 var loadNext:Void->Void = null;
                 loadNext = function() {
@@ -536,12 +530,18 @@ class Assets extends Entity {
                     if (asset.status == NONE) {
                         asset.load();
                         asset.onceComplete(this, function(success) {
+                            numComplete++;
                             if (toLoad.length > 0) {
-                                app.onceUpdate(this, function(delta) {
+                                if (delayBetweenXAssets > 0 && numComplete > 0 && (numComplete % delayBetweenXAssets) == 0) {
                                     app.onceUpdate(this, function(delta) {
-                                        loadNext();
+                                        app.onceUpdate(this, function(delta) {
+                                            loadNext();
+                                        });
                                     });
-                                });
+                                }
+                                else {
+                                    loadNext();
+                                }
                             }
                         });
                     }
@@ -553,23 +553,56 @@ class Assets extends Entity {
                 }
                 loadNext();
 
-                app.onceImmediate(immediate.flush);
+                immediate.flush();
             }
+            // ScheduleMethod == PARALLEL
             else {
-                for (asset in addedAssets) {
 
-                    if (asset.status == NONE) {
-                        asset.load();
+                if (delayBetweenXAssets > 0) {
+
+                    var numStarted = 0;
+                    var toLoad = [];
+                    for (asset in addedAssets) {
+                        if (asset.status == NONE) {
+                            toLoad.push(asset);
+                        }
                     }
 
-                }
+                    var loadNext:Void->Void = null;
+                    loadNext = function() {
+                        if (toLoad.length > 0) {
+                            numStarted++;
+                            if (numStarted > 1 && (numStarted % delayBetweenXAssets) == 0) {
+                                app.onceUpdate(this, function(delta) {
+                                    app.onceUpdate(this, function(delta) {
+                                        var asset = toLoad.shift();
+                                        asset.load();
+                                        loadNext();
+                                    });
+                                });
+                            }
+                            else {
+                                var asset = toLoad.shift();
+                                asset.load();
+                                loadNext();
+                            }
+                        }
+                    };
+                    loadNext();
 
-                if (synchronous) {
-                    immediate.flush();
                 }
                 else {
-                    app.onceImmediate(immediate.flush);
+
+                    for (asset in addedAssets) {
+
+                        if (asset.status == NONE) {
+                            asset.load();
+                        }
+
+                    }
                 }
+
+                immediate.flush();
             }
 
         } else {
