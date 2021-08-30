@@ -24,6 +24,10 @@ class RenderTexture extends Texture {
 
     public var priority(default, null):Float = 0;
 
+    #if ceramic_texture_first_stamp_prerender
+    var _didStampOnce:Bool = false;
+    #end
+
 /// Lifecycle
 
     public function new(width:Int, height:Int, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -61,6 +65,30 @@ class RenderTexture extends Texture {
      * This is expected to be used with a texture `autoRender` set to `false`.
      */
     public function stamp(visual:Visual, done:Void->Void) {
+
+        #if ceramic_texture_first_stamp_prerender
+        if (_didStampOnce) {
+            _stamp(visual, done);
+        }
+        else {
+            var q = new Quad();
+            q.size(1, 1);
+            q.alpha = 0.001;
+            q.pos(-2, -2);
+            _stamp(q, function() {
+                q.destroy();
+                q = null;
+                _didStampOnce = true;
+                _stamp(visual, done);
+            });
+        }
+        #else
+        _stamp(visual, done);
+        #end
+
+    }
+
+    function _stamp(visual:Visual, done:Void->Void) {
 
         // Keep original values as needed
         var visualParent = visual.parent;
