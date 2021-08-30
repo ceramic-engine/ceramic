@@ -24,7 +24,7 @@ class BackgroundQueue extends Entity {
 
     var stop:Bool = false;
 
-    var pending:Array<Void->Void> = []; 
+    var pending:Array<Void->Void> = [];
 
     #if (cpp || cs)
     var mutex:Mutex;
@@ -35,13 +35,13 @@ class BackgroundQueue extends Entity {
         super();
 
         this.checkInterval = 0.1;
-        
+
         #if (cpp || cs)
         mutex = new Mutex();
         runsInBackground = true;
         Runner.runInBackground(internalRunInBackground);
         #end
-        
+
     }
 
     public function schedule(fn:Void->Void):Void {
@@ -65,6 +65,10 @@ class BackgroundQueue extends Entity {
     #if (cpp || cs)
 
     private function internalRunInBackground():Void {
+
+        #if cs
+        untyped __cs__('global::System.Threading.Thread.CurrentThread.CurrentCulture = global::System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")');
+        #end
 
         while (!stop) {
             var shouldSleep = true;

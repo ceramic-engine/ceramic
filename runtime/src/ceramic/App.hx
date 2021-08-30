@@ -909,6 +909,10 @@ class App extends Entity {
         hxt.advance_frame();
 #end
 
+#if cs
+        untyped __cs__('global::System.Threading.Thread.CurrentThread.CurrentCulture = global::System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")');
+#end
+
         Timer.update(delta, realDelta);
 
         Runner.tick();
