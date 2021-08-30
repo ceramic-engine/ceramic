@@ -10,7 +10,7 @@ interface Shaders {
 #if ceramic_shader_vert_frag
     function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader;
 #else
-    function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, done:(shader:backend.Shader)->Void):Void;
+    function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, ?options:backend.LoadShaderOptions, done:(shader:backend.Shader)->Void):Void;
 #end
 
     function clone(shader:Shader):Shader;
