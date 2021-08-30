@@ -100,39 +100,43 @@ class RenderTexture extends Texture {
         visual.renderTarget = this;
         visual.visible = true;
 
+        #if ceramic_texture_stamp_request_update
         // Request full update in current frame
         app.requestFullUpdateAndDrawInFrame();
+        #end
 
         // Running post-update code allows to ensure this is executed after visuals
         // have been prepared for update, but before this is applied
-        app.onceUpdate(this, function(_) {
+        app.oncePreUpdate(this, function(_) {
 
         // On some backends, we need to wait one more frame to get stamp result
         #if ceramic_texture_stamp_delayed
-        app.onceUpdate(this, function(_) {
+        app.oncePreUpdate(this, function(_) {
         #end
 
-            renderDirty = true;
+        renderDirty = true;
 
-            app.onceFinishDraw(this, function() {
+        app.onceFinishDraw(this, function() {
 
-                // Restore visual state
-                visual.visible = visualVisible;
-                visual.renderTarget = visualRenderTarget;
-                if (visualParent != null) {
-                    visualParent.add(visual);
-                    visualParent = null;
-                }
-                visual = null;
-                visualRenderTarget = null;
+            // Restore visual state
+            visual.visible = visualVisible;
+            visual.renderTarget = visualRenderTarget;
+            if (visualParent != null) {
+                visualParent.add(visual);
+                visualParent = null;
+            }
+            visual = null;
+            visualRenderTarget = null;
 
-                done();
-                done = null;
+            done();
+            done = null;
 
-            });
+        });
+
         #if ceramic_texture_stamp_delayed
         });
         #end
+
         });
 
     }
