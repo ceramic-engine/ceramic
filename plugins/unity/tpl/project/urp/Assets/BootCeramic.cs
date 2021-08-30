@@ -7,14 +7,14 @@ public class BootCeramic : MonoBehaviour {
 	void Start () {
 
 		haxe.root.Main.sync(this);
-	
+
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
-		
+
 		haxe.root.Main.sync(this);
-		haxe.root.Main.update();
+		haxe.root.Main.regularUpdate();
 
 	}
 }

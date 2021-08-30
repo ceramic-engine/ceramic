@@ -1,7 +1,7 @@
 package;
 
-import unityengine.MonoBehaviour;
 import ceramic.Path;
+import unityengine.MonoBehaviour;
 
 class Main {
 
@@ -40,6 +40,29 @@ class Main {
 
     }
 
+    #if unity_urp
+
+    @:keep public static function regularUpdate() {
+
+        if (_hasCriticalError)
+            return;
+
+        ceramic.App.app.backend.screen.update();
+        ceramic.App.app.backend.input.update();
+
+    }
+
+    @:keep public static function renderPassUpdate() {
+
+        if (_hasCriticalError)
+            return;
+
+        update();
+
+    }
+
+    #end
+
     @:keep public static function update() {
 
         if (_hasCriticalError)
@@ -52,7 +75,12 @@ class Main {
             var time:Float = Sys.cpuTime();
             var delta = (time - _lastUpdateTime);
             _lastUpdateTime = time;
-    
+
+            #if !unity_urp
+            ceramic.App.app.backend.screen.update();
+            ceramic.App.app.backend.input.update();
+            #end
+
             // Update
             ceramic.App.app.backend.emitUpdate(delta);
 
@@ -60,11 +88,23 @@ class Main {
         }
         catch (e:Dynamic) {
 
-            _hasCriticalError = true;
+            markCriticalError();
             untyped __cs__('throw');
 
         }
         #end
+
+    }
+
+    @:noCompletion public static function hasCriticalError():Bool {
+
+        return _hasCriticalError;
+
+    }
+
+    @:noCompletion public static function markCriticalError():Void {
+
+        _hasCriticalError = true;
 
     }
 

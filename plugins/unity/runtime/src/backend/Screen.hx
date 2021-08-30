@@ -1,18 +1,19 @@
 package backend;
 
 import ceramic.IntIntMap;
-import unityengine.inputsystem.controls.TouchControl;
-import unityengine.inputsystem.Touchscreen;
-import unityengine.inputsystem.TouchPhase;
 import unityengine.inputsystem.Mouse;
+import unityengine.inputsystem.TouchPhase;
+import unityengine.inputsystem.Touchscreen;
+import unityengine.inputsystem.controls.TouchControl;
 
 using ceramic.Extensions;
 
 @:keep
+@:allow(Main)
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     public function new() {
-        
+
         width = untyped __cs__('UnityEngine.Screen.width');
         height = untyped __cs__('UnityEngine.Screen.height');
 
@@ -114,21 +115,21 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
             var newMouseX = mouse.position.x.ReadValue();
             var newMouseY = height - mouse.position.y.ReadValue();
-    
+
             // Use a factor to try to get a consistent value with other targets
             var mouseScrollX = Math.floor(mouse.scroll.x.ReadValue());
             var mouseScrollY = Math.floor(mouse.scroll.y.ReadValue());
-    
+
             if (mouseScrollX != 0 || mouseScrollY != 0) {
                 emitMouseWheel(mouseScrollX, mouseScrollY);
             }
-    
+
             if (newMouseX != mouseX || newMouseY != mouseY) {
                 mouseX = newMouseX;
                 mouseY = newMouseY;
                 emitMouseMove(mouseX, mouseY);
             }
-    
+
             if (mouse.leftButton.isPressed) {
                 if (!mouseLeftPressed) {
                     mouseLeftPressed = true;
@@ -141,7 +142,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     emitMouseUp(0, mouseX, mouseY);
                 }
             }
-    
+
             if (mouse.middleButton.isPressed) {
                 if (!mouseMiddlePressed) {
                     mouseMiddlePressed = true;
@@ -154,7 +155,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     emitMouseUp(1, mouseX, mouseY);
                 }
             }
-    
+
             if (mouse.rightButton.isPressed) {
                 if (!mouseRightPressed) {
                     mouseRightPressed = true;
@@ -207,7 +208,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
             if (phase != TouchPhase.None) {
                 var touchId = touch.touchId.ReadValue();
-                
+
                 if (touchId > 0) {
                     var index = touchIdToIndex.get(touchId);
                     var positionX = touch.position.x.ReadValue();
@@ -218,7 +219,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                         // Anything else is not supposed to be handled
                         if (phase != TouchPhase.Began)
                             continue;
-        
+
                         index++;
                         while (usedTouchIndexes.get(index) != 0) {
                             index++;

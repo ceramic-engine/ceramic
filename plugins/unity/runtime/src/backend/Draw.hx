@@ -70,6 +70,12 @@ class Draw #if !completion implements spec.Draw #end {
 
         renderer.render(true, visuals);
 
+        #if unity_urp
+        if (urpRenderer != null) {
+            addRenderPasses(urpRenderer, urpRenderingData);
+        }
+        #end
+
     }
 
     public function swap():Void {
@@ -809,6 +815,10 @@ class Draw #if !completion implements spec.Draw #end {
 
 #if unity_urp
 
+    var urpRenderer:ScriptableRenderer = null;
+
+    var urpRenderingData:RenderingData;
+
     var mainCameraRenderPasses:Array<CeramicRenderPass> = [];
 
     var customTargetRenderPasses:Array<CeramicRenderPass> = [];
@@ -884,17 +894,20 @@ class Draw #if !completion implements spec.Draw #end {
         clearPendingCommandBuffers();
 
     }
-    
+
     @:keep
     public static function unityUrpAddRenderPasses(renderer:ScriptableRenderer, renderingData:RenderingData):Void {
 
-        if (ceramic.App.app != null && ceramic.App.app.backend != null && ceramic.App.app.backend.draw != null) {
-
-            ceramic.App.app.backend.draw.addRenderPasses(renderer, renderingData);
+        if (!Main.hasCriticalError() && ceramic.App.app != null && ceramic.App.app.backend != null) {
+            if (ceramic.App.app.backend.draw != null) {
+                ceramic.App.app.backend.draw.urpRenderer = renderer;
+                ceramic.App.app.backend.draw.urpRenderingData = renderingData;
+            }
+            Main.renderPassUpdate();
         }
 
     }
-    
+
 #end
 
 /// Internal

@@ -55,8 +55,6 @@ class Backend implements tracker.Events implements spec.Backend {
 
     inline function willEmitUpdate(delta:Float) {
 
-        screen.update();
-        input.update();
         flushNextUpdateCallbacks();
 
     }

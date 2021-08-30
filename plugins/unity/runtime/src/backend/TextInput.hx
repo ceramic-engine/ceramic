@@ -20,10 +20,18 @@ class TextInput implements spec.TextInput {
         if (Keyboard.current != null) {
             untyped __cs__('UnityEngine.InputSystem.Keyboard.current.onTextInput += handleTextInput');
         }
-        
+
     }
 
     @:keep function handleTextInput(csChar:Char16):Void {
+
+        ceramic.App.app.onceImmediate(function() {
+            _handleTextInput(csChar);
+        });
+
+    }
+
+    @:keep function _handleTextInput(csChar:Char16):Void {
 
         if (textInputActive) {
             var char:String = Std.string(csChar);
@@ -111,7 +119,7 @@ class TextInput implements spec.TextInput {
     }
 
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
-        
+
         textInputActive = true;
 
         // TODO show keyboard on mobile devices

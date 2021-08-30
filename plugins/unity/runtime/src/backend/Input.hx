@@ -5,14 +5,14 @@ import ceramic.IntMap;
 import ceramic.Key;
 import ceramic.KeyCode;
 import ceramic.ScanCode;
+import ceramic.Shortcuts.*;
 import unityengine.inputsystem.Gamepad;
 import unityengine.inputsystem.Keyboard;
 import unityengine.inputsystem.controls.KeyControl;
 
-import ceramic.Shortcuts.*;
-
 using ceramic.Extensions;
 
+@:allow(Main)
 class Input implements tracker.Events implements spec.Input {
 
     /**
@@ -32,7 +32,7 @@ class Input implements tracker.Events implements spec.Input {
     public function new() {
 
         initKeyCodesMapping();
-        
+
     }
 
     @:allow(backend.Backend)
@@ -50,7 +50,7 @@ class Input implements tracker.Events implements spec.Input {
     function initKeyCodesMapping() {
 
         keyCodeByName = new Map();
-        
+
         keyCodeByName.set("a", KeyCode.KEY_A);
         keyCodeByName.set("b", KeyCode.KEY_B);
         keyCodeByName.set("c", KeyCode.KEY_C);
@@ -96,9 +96,9 @@ class Input implements tracker.Events implements spec.Input {
 
         var keyboard = Keyboard.current;
         if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame)) {
-            
+
             testKey(keyboard, 1, ScanCode.SPACE, KeyCode.SPACE);
-            
+
             testKey(keyboard, 2, ScanCode.ENTER, KeyCode.ENTER);
             testKey(keyboard, 3, ScanCode.TAB, KeyCode.TAB);
 
@@ -384,7 +384,7 @@ class Input implements tracker.Events implements spec.Input {
                 unusedGamepads.unsafeSet(i, null);
             }
         }
-        
+
     }
 
     function updateGamepadButton(index:Int, button:Int, pressed:Bool) {
