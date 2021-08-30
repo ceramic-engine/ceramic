@@ -3,15 +3,19 @@ Shader "stencil"
 	Properties
 	{
 		_StencilRef ("Stencil Reference", Float) = 1
+		_SrcBlendRgb ("Src Rgb", Float) = 0
+	 	_DstBlendRgb ("Dst Rgb", Float) = 0
+		_SrcBlendAlpha ("Src Alpha", Float) = 0
+	 	_DstBlendAlpha ("Dst Alpha", Float) = 0
 	}
 
 	SubShader
 	{
 		Tags
-		{ 
-			"Queue"="Transparent" 
-			"IgnoreProjector"="True" 
-			"RenderType"="Transparent" 
+		{
+			"Queue"="Transparent"
+			"IgnoreProjector"="True"
+			"RenderType"="Transparent"
 			"PreviewType"="Plane"
 			"CanUseSpriteAtlas"="True"
 		}
@@ -34,7 +38,7 @@ Shader "stencil"
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "UnityCG.cginc"
-			
+
 			struct appdata_t
 			{
 				float4 vertex   : POSITION;
