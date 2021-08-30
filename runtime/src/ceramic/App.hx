@@ -871,7 +871,18 @@ class App extends Entity {
 
     }
 
+    #if ceramic_pending_finish_draw
+    var _pendingFinishDraw:Bool = false;
+    #end
+
     function update(realDelta:Float):Void {
+
+        #if ceramic_pending_finish_draw
+        if (_pendingFinishDraw) {
+            _pendingFinishDraw = false;
+            emitFinishDraw();
+        }
+        #end
 
         if (++frame > 999999999)
             frame -= 999999999;
@@ -997,7 +1008,12 @@ class App extends Entity {
             backend.draw.draw(visuals);
 
             // End draw
+            #if ceramic_pending_finish_draw
+            _pendingFinishDraw = true;
+            break;
+            #else
             emitFinishDraw();
+            #end
 
             // Will update again if requested
             // or continue with drawing

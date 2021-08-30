@@ -1,11 +1,11 @@
 package backend.tools.tasks;
 
-import tools.UnityEditor;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Helpers.*;
 import tools.Files;
+import tools.Helpers.*;
+import tools.UnityEditor;
 
 using StringTools;
 
@@ -160,7 +160,7 @@ class Setup extends tools.Task {
                 classPaths.push('-cp ' + relativePath);
             }
         }
-    
+
         var finalHxml = [];
 
         finalHxml.push('-main Main');
@@ -175,19 +175,19 @@ class Setup extends tools.Task {
             finalHxml.push('-cs bin');
             finalHxml.push('-D dll');
             finalHxml.push('-D no-root');
-            finalHxml.push('-D ceramic_texture_stamp_delayed');
-            
+            finalHxml.push('-D ceramic_pending_finish_draw');
+
             var unityVersion:String = null;
             if (project.app.unity != null &&
                 project.app.unity.version != null) {
                 unityVersion = '' + project.app.unity.version;
             }
-            
+
             if (Sys.systemName() == 'Mac') {
                 var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project, true);
 
                 //finalHxml.push('-D csharp-compiler=$unityAppPath/Contents/Mono/bin/gmcs'); // Was used for legacy unity
-                
+
                 // Not needed if not building a DLL
                 //finalHxml.push('-D csharp-compiler=$unityEditorPath/Contents/MonoBleedingEdge/bin/mcs');
 
