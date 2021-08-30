@@ -1,29 +1,30 @@
 package backend;
 
-import unityengine.rendering.SubMeshDescriptor;
+import ceramic.Transform;
+import cs.NativeArray;
+import cs.StdTypes.Int16;
 import cs.types.UInt16;
-import unityengine.Mesh;
 import unityengine.Color;
+import unityengine.Mesh;
+import unityengine.MeshTopology;
 import unityengine.Vector2;
 import unityengine.Vector3;
-import unityengine.MeshTopology;
-import unityengine.rendering.IndexFormat;
-import unityengine.rendering.MeshUpdateFlags;
-import unityengine.rendering.VertexAttributeDescriptor;
-import unityengine.rendering.VertexAttribute;
-import unityengine.rendering.VertexAttributeFormat;
 import unityengine.rendering.CommandBuffer;
 import unityengine.rendering.CommandBufferPool;
-#if unity_urp
-import unityengine.rendering.universal.ScriptableRenderPass;
-import unityengine.rendering.universal.ScriptableRenderer;
-import unityengine.rendering.universal.RenderingData;
-#end
-import ceramic.Transform;
-import cs.StdTypes.Int16;
-import cs.NativeArray;
+import unityengine.rendering.IndexFormat;
+import unityengine.rendering.MeshUpdateFlags;
+import unityengine.rendering.SubMeshDescriptor;
+import unityengine.rendering.VertexAttribute;
+import unityengine.rendering.VertexAttributeDescriptor;
+import unityengine.rendering.VertexAttributeFormat;
 
 using ceramic.Extensions;
+
+#if unity_urp
+import unityengine.rendering.universal.RenderingData;
+import unityengine.rendering.universal.ScriptableRenderPass;
+import unityengine.rendering.universal.ScriptableRenderer;
+#end
 
 @:allow(backend.Backend)
 class Draw #if !completion implements spec.Draw #end {
@@ -116,7 +117,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _materialStencilTest:Bool = false;
     static var _materialStencilWrite:Int = 0;
 
-    static var _stencilShader:backend.Shader;
+    static var _stencilShader:backend.Shader = null;
 
     //static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
@@ -128,7 +129,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _modelViewMatrix:Dynamic = null;
 
     static var _modelViewTransform = new ceramic.Transform();
-    
+
     static var _renderTargetTransform = new ceramic.Transform();
 
     static var _vertexSize:Int = 0;
@@ -279,7 +280,7 @@ class Draw #if !completion implements spec.Draw #end {
         if (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(_materialCurrentShader)) {
             _numColors = 0;
             _colorIndex = 4;
-    
+
             _numUVs = 0;
             _uvIndex = 8;
 
@@ -288,7 +289,7 @@ class Draw #if !completion implements spec.Draw #end {
         else {
             _numColors = 0;
             _colorIndex = 3;
-    
+
             _numUVs = 0;
             _uvIndex = 7;
 
@@ -332,7 +333,6 @@ class Draw #if !completion implements spec.Draw #end {
         var bg = ceramic.App.app.settings.background;
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color((float){0}, (float){1}, (float){2}, 1f), 1f)', bg.redFloat, bg.greenFloat, bg.blueFloat);
-        //untyped __cs__('cmd.ClearRenderTarget(true, true, UnityEngine.Color.yellow)');
 
     }
 
@@ -342,9 +342,6 @@ class Draw #if !completion implements spec.Draw #end {
             _currentRenderTarget = renderTarget;
             if (renderTarget != null) {
 
-                // TODO update unity render target
-                //var renderTexture:backend.impl.CeramicRenderTexture = cast renderTarget.backendItem;
-                //luxeRenderer.target = renderTexture;
                 var backendItem:TextureImpl = renderTarget.backendItem;
                 var unityRenderTexture = backendItem.unityRenderTexture;
 
@@ -393,22 +390,16 @@ class Draw #if !completion implements spec.Draw #end {
 
                 updateCurrentMatrix();
 
-                // TODO Update unity camera matrix
-                // GL.viewport(
-                //     0, 0,
-                //     Std.int(renderTarget.width * renderTarget.density),
-                //     Std.int(renderTarget.height * renderTarget.density)
-                // );
-                // TODO clear
-                //if (renderTarget.clearOnRender) Luxe.renderer.clear(blackTransparentColor);
-                if (renderTarget.clearOnRender) {
+                if (renderTarget.clearOnRender || !backendItem.usedAsRenderTarget) {
+                    // We force clearing render target if it's the first time we use it.
+                    // This is to prevent a but experienced on iOS (but not necessary exclusive to iOS)
+                    // where first draw is messed up if we don't clear before.
+                    backendItem.usedAsRenderTarget = true;
                     untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(0f, 0f, 0f, 0f), 1f)');
                 }
-                
+
             } else {
-                // TODO update unity render target
-                //luxeRenderer.target = null;
-          
+
                 #if unity_urp
                 configureNextCommandBuffer(null);
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
@@ -429,13 +420,6 @@ class Draw #if !completion implements spec.Draw #end {
                 );
 
                 updateCurrentMatrix();
-
-                // TODO Update unity camera matrix
-                // GL.viewport(
-                //     0, 0,
-                //     Std.int(ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity()),
-                //     Std.int(ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity())
-                // );
             }
         }
 
@@ -518,7 +502,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end function updateCurrentMatrix():Void {
 
         untyped __cs__('UnityEngine.Matrix4x4 matrix = ((UnityEngine.Matrix4x4){0}) * ((UnityEngine.Matrix4x4){1})', _projectionMatrix, _modelViewMatrix);
-        
+
         _currentMatrix = untyped __cs__('matrix');
 
     }
@@ -640,7 +624,7 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
-        
+
         _materialCurrentTextures[_activeTextureSlot] = null;
 
     }
@@ -710,7 +694,7 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
-        
+
         _materialStencilWrite = 0;
 
     }
@@ -728,19 +712,19 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
-        
+
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
-        
+
         return _maxVerts - _numPos;
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
-        
+
         return MAX_INDICES - _numIndices;
 
     }
@@ -854,6 +838,13 @@ class Draw #if !completion implements spec.Draw #end {
         for (i in 0...pendingCommandBuffers.length) {
             var cmd = pendingCommandBuffers.unsafeGet(i);
             var renderTarget = pendingRenderTargets.unsafeGet(i);
+
+            if (renderTarget != null && renderTarget.destroyed) {
+                // Skipping rendering these commands because
+                // the related render target is already destroyed
+                ceramic.Shortcuts.log.warning('Trying to render destroyed render texture: $renderTarget');
+                continue;
+            }
 
             // Get or create render pass
             var renderPass:CeramicRenderPass = null;

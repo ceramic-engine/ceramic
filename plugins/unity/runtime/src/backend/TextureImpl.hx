@@ -9,6 +9,9 @@ class TextureImpl {
     @:noCompletion
     public var index:Int = _nextIndex++;
 
+    @:noCompletion
+    public var usedAsRenderTarget:Bool = false;
+
     public var unityTexture:Texture2D;
 
     public var unityRenderTexture:Dynamic;
