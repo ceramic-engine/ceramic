@@ -409,11 +409,11 @@ class Draw #if !completion implements spec.Draw #end {
                 #end
 
                 updateProjectionMatrix(
-                    ceramic.App.app.backend.screen.getWidth(),
-                    ceramic.App.app.backend.screen.getHeight()
+                    ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity(),
+                    ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity()
                 );
                 updateViewMatrix(
-                    ceramic.App.app.backend.screen.getDensity(),
+                    1,//ceramic.App.app.backend.screen.getDensity(),
                     ceramic.App.app.backend.screen.getWidth(),
                     ceramic.App.app.backend.screen.getHeight(),
                     @:privateAccess ceramic.App.app.screen.matrix

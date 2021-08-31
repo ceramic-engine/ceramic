@@ -14,14 +14,33 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function new() {
 
+        isEditor = untyped __cs__('UnityEngine.Application.isEditor');
+
         width = untyped __cs__('UnityEngine.Screen.width');
         height = untyped __cs__('UnityEngine.Screen.height');
+
+        if (!isEditor) {
+            var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
+            density = Math.round(dpi / 160);
+            if (density < 1) {
+                density = 1;
+            }
+        }
+        else {
+            density = 1;
+        }
+        width = Math.round(width / density);
+        height = Math.round(height / density);
 
     }
 
     var width:Int = 0;
 
     var height:Int = 0;
+
+    var density:Float = 1;
+
+    var isEditor:Bool = false;
 
 /// Events
 
@@ -52,7 +71,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     inline public function getDensity():Float {
 
-        return 1.0; // TODO retrieve native screen density
+        return density;
 
     }
 
@@ -82,10 +101,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var newWidth = untyped __cs__('UnityEngine.Screen.width');
         var newHeight = untyped __cs__('UnityEngine.Screen.height');
 
-        var didResize = (width != newWidth) || (height != newHeight);
+        var newDensity:Float = 1;
+        if (!isEditor) {
+            var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
+            newDensity = Math.round(dpi / 160);
+            if (newDensity < 1) {
+                newDensity = 1;
+            }
+            newWidth = Math.round(newWidth / newDensity);
+            newHeight = Math.round(newHeight / newDensity);
+        }
+
+        var didResize = (width != newWidth) || (height != newHeight) || (density != newDensity);
 
         width = newWidth;
         height = newHeight;
+        density = newDensity;
 
         if (didResize) {
             emitResize();
@@ -113,8 +144,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var mouse = Mouse.current;
         if (mouse != null) {
 
-            var newMouseX = mouse.position.x.ReadValue();
-            var newMouseY = height - mouse.position.y.ReadValue();
+            var newMouseX = mouse.position.x.ReadValue() / density;
+            var newMouseY = height - mouse.position.y.ReadValue() / density;
 
             // Use a factor to try to get a consistent value with other targets
             var mouseScrollX = Math.floor(mouse.scroll.x.ReadValue());
@@ -211,8 +242,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
                 if (touchId > 0) {
                     var index = touchIdToIndex.get(touchId);
-                    var positionX = touch.position.x.ReadValue();
-                    var positionY = touch.position.y.ReadValue();
+                    var positionX = touch.position.x.ReadValue() / density;
+                    var positionY = touch.position.y.ReadValue() / density;
 
                     if (index == 0) {
                         // We only accept touches that are starting.
