@@ -8,9 +8,9 @@ using ceramic.Extensions;
 
 class WindowData extends Model {
 
-    @serialize public var x:Float = 20;
+    @serialize public var x:Float = 50;
 
-    @serialize public var y:Float = 40;
+    @serialize public var y:Float = 50;
 
     @serialize public var expanded:Bool = true;
 
