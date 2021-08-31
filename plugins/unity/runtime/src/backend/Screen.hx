@@ -220,6 +220,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     var prevProcessedTouchPositions:Array<Float> = [];
 
+    var touchHighestStartTime:Float = -1;
+
     function updateTouchInput() {
 
         var touchScreen = Touchscreen.current;
@@ -229,6 +231,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             return;
 
         var numTouches = touchScreen.touches.Count;
+        var prevTouchHighestStartTime = touchHighestStartTime;
 
         for (i in 0...numTouches) {
             processedTouchIndexes[i] = 0;
@@ -244,12 +247,16 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     var index = touchIdToIndex.get(touchId);
                     var positionX = touch.position.x.ReadValue() / density;
                     var positionY = touch.position.y.ReadValue() / density;
+                    var startTime:Float = touch.startTime.ReadValue();
 
                     if (index == 0) {
                         // We only accept touches that are starting.
-                        // Anything else is not supposed to be handled
-                        if (phase != TouchPhase.Began)
+                        // Or new touches with an id higher than previously processed touches
+                        if (phase == TouchPhase.Ended && startTime <= prevTouchHighestStartTime)
                             continue;
+
+                        if (startTime > touchHighestStartTime)
+                            touchHighestStartTime = startTime;
 
                         index++;
                         while (usedTouchIndexes.get(index) != 0) {
