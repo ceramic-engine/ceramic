@@ -53,7 +53,7 @@ class Renderer extends Entity {
 
     #if ceramic_debug_draw
     var lastDebugTime:Float = -1;
-    var debugDraw:Bool = false;
+    public static var debugDraw:Bool = false;
     var drawnQuads:Int = 0;
     var drawnMeshes:Int = 0;
     var flushedQuads:Int = 0;
@@ -79,12 +79,12 @@ class Renderer extends Entity {
         //defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
         defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
         defaultWhiteTexture = ceramic.App.app.defaultWhiteTexture;
-        
+
         maxUsableTexturesInBatch = Std.int(Math.min(
             backendTextures.maxTexturesByBatch(),
             backendShaders.maxIfStatementsByFragmentShader()
         ));
-        
+
         while (usedTextureIndexes.length < maxUsableTexturesInBatch) {
             usedTextureIndexes.push(0);
         }
@@ -232,7 +232,7 @@ class Renderer extends Entity {
 
                             if (lastClip != null) {
                                 // Update stencil buffer
-                                
+
                                 lastRenderTarget = lastClip.computedRenderTarget;
                                 useRenderTarget(draw, lastRenderTarget);
 
@@ -916,7 +916,7 @@ class Renderer extends Entity {
             // That is why it is inside a `while` block
             // Exit condition is at the end.
             while (true) {
-            
+
                 //var colorFloats = this.colorFloats;
 
                 var a:Float = 0;
@@ -1042,7 +1042,7 @@ class Renderer extends Entity {
                     break;
                 }
                 else {
-                    
+
                     // There is still data left that needs to be submitted.
                     // Flush pending buffers and iterate once more.
 
@@ -1171,12 +1171,12 @@ class Renderer extends Entity {
         //defaultPlainShader = ceramic.App.app.defaultColorShader.backendItem;
         defaultTexturedShader = ceramic.App.app.defaultTexturedShader.backendItem;
         defaultWhiteTexture = ceramic.App.app.defaultWhiteTexture;
-        
+
         maxUsableTexturesInBatch = Std.int(Math.min(
             backendTextures.maxTexturesByBatch(),
             backendShaders.maxIfStatementsByFragmentShader()
         ));
-        
+
         while (usedTextureIndexes.length < maxUsableTexturesInBatch) {
             usedTextureIndexes.push(0);
         }
@@ -1324,7 +1324,7 @@ class Renderer extends Entity {
 
                             if (lastClip != null) {
                                 // Update stencil buffer
-                                
+
                                 lastRenderTarget = lastClip.computedRenderTarget;
                                 useRenderTarget(draw, lastRenderTarget);
 
@@ -1804,7 +1804,7 @@ class Renderer extends Entity {
             if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
         }
 
-        var colorFloats = this.colorFloats; 
+        var colorFloats = this.colorFloats;
         var colorList = draw.getColorList();
 
         var i = 0;
@@ -2060,7 +2060,7 @@ class Renderer extends Entity {
             // That is why it is inside a `while` block
             // Exit condition is at the end.
             while (true) {
-            
+
                 var colorFloats = this.colorFloats;
 
                 var i = startVertices;
@@ -2229,7 +2229,7 @@ class Renderer extends Entity {
                     break;
                 }
                 else {
-                    
+
                     // There is still data left that needs to be submitted.
                     // Flush pending buffers and iterate once more.
 
@@ -2572,5 +2572,5 @@ class Renderer extends Entity {
         useTexture(draw, null, false);
 
     }
-    
+
 }
