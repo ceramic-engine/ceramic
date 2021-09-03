@@ -91,6 +91,9 @@ class WindowItem {
             case EDIT_FLOAT:
                 return isSimilarLabel(item);
 
+            case EDIT_INT:
+                return isSimilarLabel(item);
+
             case TEXT:
                 return true;
 
@@ -114,7 +117,7 @@ class WindowItem {
             case SELECT:
                 return createOrUpdateSelectField(view);
 
-            case EDIT_TEXT | EDIT_FLOAT:
+            case EDIT_TEXT | EDIT_FLOAT | EDIT_INT:
                 return createOrUpdateEditTextField(view);
 
             case TEXT:
@@ -249,6 +252,20 @@ class WindowItem {
                 field.textValue = '' + float0;
             }
         }
+        else if (kind == EDIT_INT) {
+            if (justCreated) {
+                field.setTextValue = _editIntSetTextValue;
+                field.setEmptyValue = _editIntSetEmptyValue;
+                field.setValue = _editIntSetValue;
+                field.onFocusedChange(null, (focused, _) -> {
+                    if (!focused)
+                        _editIntFinishEditing(field);
+                });
+            }
+            if (justCreated || previous.int1 != int0) {
+                field.textValue = '' + int0;
+            }
+        }
 
         return labeled != null ? labeled : field;
 
@@ -297,8 +314,55 @@ class WindowItem {
         var item = field.windowItem();
         var minValue = item.float3;
         var maxValue = item.float4;
-        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue)) {
+        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false)) {
             SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue);
+            if (field.textValue.endsWith('.')) {
+                field.textValue = field.textValue.substring(0, field.textValue.length - 1);
+                field.invalidateTextValue();
+            }
+        }
+
+    }
+
+    static function _editIntSetTextValue(field:TextFieldView, textValue:String):Void {
+
+        if (!_editFloatOrIntOperations(field, textValue)) {
+            var item = field.windowItem();
+            var minValue = -999999999; // Allow lower value at this stage because we are typing
+            var maxValue = Std.int(item.float4);
+            SanitizeTextField.setTextValueToInt(field, textValue, minValue, maxValue);
+        }
+
+    }
+
+    static function _editIntSetEmptyValue(field:TextFieldView):Void {
+
+        final item = field.windowItem();
+        var minValue = Std.int(item.float3);
+        var maxValue = Std.int(item.float4);
+        item.int1 = SanitizeTextField.setEmptyToInt(field, minValue, maxValue);
+
+    }
+
+    static function _editIntSetValue(field:TextFieldView, value:Dynamic):Void {
+
+        final item = field.windowItem();
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        var intValue:Int = value;
+        if (value >= minValue && value <= maxValue) {
+            item.int1 = intValue;
+        }
+
+    }
+
+    static function _editIntFinishEditing(field:TextFieldView):Void {
+
+        var item = field.windowItem();
+        var minValue = Std.int(item.float3);
+        var maxValue = Std.int(item.float4);
+        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, true)) {
+            SanitizeTextField.setTextValueToInt(field, field.textValue, minValue, maxValue);
         }
 
     }
@@ -340,7 +404,7 @@ class WindowItem {
 
     }
 
-    static function _applyFloatOrIntOperationsIfNeeded(field:TextFieldView, textValue:String, minValue:Float, maxValue:Float):Bool {
+    static function _applyFloatOrIntOperationsIfNeeded(field:TextFieldView, textValue:String, minValue:Float, maxValue:Float, castToInt:Bool):Bool {
 
         var addIndex = textValue.indexOf('+');
         var subtractIndex = textValue.indexOf('-');
@@ -351,10 +415,16 @@ class WindowItem {
             var after = textValue.substr(addIndex + 1).trim();
             var result = Std.parseFloat(before) + Std.parseFloat(after);
             if (!Math.isNaN(result)) {
-                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
             }
             else {
-                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
             }
             return true;
         }
@@ -363,10 +433,16 @@ class WindowItem {
             var after = textValue.substr(subtractIndex + 1).trim();
             var result = Std.parseFloat(before) - Std.parseFloat(after);
             if (!Math.isNaN(result)) {
-                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
             }
             else {
-                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
             }
             return true;
         }
@@ -375,10 +451,16 @@ class WindowItem {
             var after = textValue.substr(multiplyIndex + 1).trim();
             var result = Std.parseFloat(before) * Std.parseFloat(after);
             if (!Math.isNaN(result)) {
-                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
             }
             else {
-                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
             }
             return true;
         }
@@ -387,10 +469,16 @@ class WindowItem {
             var after = textValue.substr(divideIndex + 1).trim();
             var result = Std.parseFloat(before) / Std.parseFloat(after);
             if (!Math.isNaN(result)) {
-                SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
             }
             else {
-                SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+                if (castToInt)
+                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
+                else
+                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
             }
             return true;
         }

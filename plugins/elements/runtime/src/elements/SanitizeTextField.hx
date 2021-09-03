@@ -13,37 +13,40 @@ class SanitizeTextField {
 
     static final RE_SPACES = TextUtils.RE_SPACES;
 
-    public static function setTextValueToInt(minValue:Int, maxValue:Int) {
+    public static function setTextValueToInt(field:TextFieldView, textValue:String, minValue:Int, maxValue:Int) {
 
-        return function(field:TextFieldView, textValue:String):Void {
-
-            var trimmedValue = textValue.trim();
-            if (trimmedValue != '' && trimmedValue != '-') {
-                var intValue:Null<Int> = Std.parseInt(textValue);
-                if (intValue != null && !Math.isNaN(intValue) && Math.isFinite(intValue)) {
-                    if (intValue < minValue) {
-                        intValue = minValue;
-                    }
-                    if (intValue > maxValue) {
-                        intValue = maxValue;
-                    }
-                    field.setValue(field, intValue);
-                    field.textValue = '' + intValue;
+        var trimmedValue = textValue.trim();
+        if (trimmedValue != '' && trimmedValue != '-') {
+            var intValue:Null<Int> = Std.parseInt(textValue);
+            if (intValue != null && !Math.isNaN(intValue) && Math.isFinite(intValue)) {
+                if (intValue < minValue) {
+                    intValue = minValue;
                 }
+                if (intValue > maxValue) {
+                    intValue = maxValue;
+                }
+                field.setValue(field, intValue);
+                field.textValue = '' + intValue;
             }
-            else {
-                field.textValue = trimmedValue;
-            }
-            field.invalidateTextValue();
-
-        };
+        }
+        else {
+            field.textValue = trimmedValue;
+        }
+        field.invalidateTextValue();
 
     }
 
-    public static function setTextValueToEmptyInt(field:TextFieldView):Void {
+    public static function setEmptyToInt(field:TextFieldView, minValue:Int, maxValue:Int):Int {
 
-        field.textValue = '0';
-        field.invalidateTextValue();
+        var value:Int = 0;
+        if (value < minValue) {
+            value = minValue;
+        }
+        if (value > maxValue) {
+            value = maxValue;
+        }
+        field.textValue = '' + value;
+        return value;
 
     }
 
@@ -53,8 +56,13 @@ class SanitizeTextField {
         if (trimmedValue != '' && trimmedValue != '-') {
             var textValue = textValue.replace(',', '.');
             var endsWithDot = false;
+            var hasMultipleDots = false;
             if (textValue.endsWith('.')) {
                 endsWithDot = true;
+                var firstDotIndex = textValue.indexOf('.');
+                if (firstDotIndex < textValue.length - 1) {
+                    hasMultipleDots = true;
+                }
                 textValue = textValue.substring(0, textValue.length - 1);
             }
             var floatValue:Null<Float> = Std.parseFloat(textValue);
@@ -66,7 +74,7 @@ class SanitizeTextField {
                     floatValue = maxValue;
                 }
                 field.setValue(field, floatValue);
-                field.textValue = '' + floatValue + (endsWithDot ? '.' : '');
+                field.textValue = '' + floatValue + (endsWithDot && !hasMultipleDots ? '.' : '');
             }
         }
         else {

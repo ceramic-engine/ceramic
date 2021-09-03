@@ -228,6 +228,47 @@ class Im {
 
     }
 
+    public static function editInt(
+        #if completion
+        ?title:String, value:IntPointer, ?minValue:Int, ?maxValue:Int
+        #else
+        ?title:String, value:IntPointer, minValue:Int = -999999999, maxValue:Int = 999999999
+        #end
+    ):Bool {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return false;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_INT;
+        item.int0 = Im.readInt(value);
+        item.int1 = item.int0;
+        item.float3 = minValue;
+        item.float4 = maxValue;
+        item.int2 = _labelPosition;
+        item.float2 = _labelWidth;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.int0;
+            var newValue = item.previous.int1;
+            if (newValue != prevValue) {
+                item.int0 = newValue;
+                item.int1 = newValue;
+                Im.writeInt(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     public static function editFloat(
         #if completion
         ?title:String, value:FloatPointer, ?minValue:Float, ?maxValue:Float
