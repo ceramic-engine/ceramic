@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.ReadOnlyArray;
 import ceramic.Shortcuts.*;
 import tracker.Observable;
 
@@ -139,7 +140,7 @@ class Screen extends Entity implements Observable {
     /**
      * Touches x and y coordinates by touch index.
      */
-    public var touches(default,null):Touches = new Touches(8, 0.5, false);
+    public var touches(default,null):Touches = new Touches();
 
     /**
      * Focused visual
@@ -475,13 +476,8 @@ class Screen extends Entity implements Observable {
 #end
 
         // Update touch over state
-        var numTouches = touches.values.length;
-        if (numTouches > 0) {
-            for (i in 0...numTouches) {
-                var touch = touches.get(i);
-                if (touch == null) continue;
-                updateTouchOver(touch.index, touch.x, touch.y);
-            }
+        for (touch in touches) {
+            updateTouchOver(touch.index, touch.x, touch.y);
         }
 
     }
@@ -905,9 +901,7 @@ class Screen extends Entity implements Observable {
         var numTouchPointers = 0;
         var pX = 0.0;
         var pY = 0.0;
-        for (i in 0...touches.values.length) {
-            var pointer:Touch = touches.values.get(i);
-            if (pointer == null) continue;
+        for (pointer in touches) {
             numTouchPointers++;
             pX += pointer.x;
             pY += pointer.y;
@@ -1280,10 +1274,19 @@ class Screen extends Entity implements Observable {
 
     function willEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
 
-        pressedTouches.set(touchIndex, -1);
+        var state = pressedTouches.get(touchIndex);
+        if (state == 1) {
+            // Just pressed and just released, all at the same frame
+            pressedTouches.set(touchIndex, -2);
+        }
+        else {
+            // Just released, was pressed before
+            pressedTouches.set(touchIndex, -1);
+        }
         // Used to differenciate "released" and "just released" states
         ceramic.App.app.beginUpdateCallbacks.push(function() {
-            if (pressedTouches.get(touchIndex) == -1) {
+            var state = pressedTouches.get(touchIndex);
+            if (state == -1 || state == -2) {
                 pressedTouches.set(touchIndex, 0);
             }
         });
@@ -1298,13 +1301,15 @@ class Screen extends Entity implements Observable {
 
     public function touchJustPressed(touchIndex:Int):Bool {
 
-        return pressedTouches.get(touchIndex) == 1;
+        var state = pressedTouches.get(touchIndex);
+        return state == 1 || state == -2;
 
     }
 
     public function touchJustReleased(touchIndex:Int):Bool {
 
-        return pressedTouches.get(touchIndex) == -1;
+        var state = pressedTouches.get(touchIndex);
+        return state == -1 || state == -2;
 
     }
 
