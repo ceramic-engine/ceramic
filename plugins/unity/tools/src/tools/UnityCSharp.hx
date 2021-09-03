@@ -1,13 +1,11 @@
 package tools;
 
 import haxe.crypto.Md5;
+import haxe.io.Path;
+import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
 import tools.Project;
-
-import sys.FileSystem;
-
-import haxe.io.Path;
 
 using StringTools;
 
@@ -57,6 +55,9 @@ class UnityCSharp {
                 }
                 else if (normalizedPath == 'cs/internal/Runtime.cs') {
                     processedContent = patchRuntime(processedContent, dstResourcesPath);
+                }
+                else if (normalizedPath == 'Array.cs') {
+                    processedContent = patchGenericCast(processedContent);
                 }
 
                 var sanitizedName = sanitizeName(normalizedPath);
@@ -123,6 +124,11 @@ class UnityCSharp {
 
         // Disable stripping
         //content = '[assembly: Preserve] ' + content;
+
+        // content = 'using Unity.IL2CPP.CompilerServices;\n' + content;
+
+        // content = content.replace('\tpublic class ', '\t[Il2CppSetOption(Option.NullChecks, false)]\n\t[Il2CppSetOption(Option.ArrayBoundsChecks, false)]\n\tpublic class ');
+        // content = content.replace('\tpublic sealed class ', '\t[Il2CppSetOption(Option.NullChecks, false)]\n\t[Il2CppSetOption(Option.ArrayBoundsChecks, false)]\n\tpublic class ');
 
         // Somehow, there are cases where System is not marked with global:: and that conflicts with ceramic's System class
         content = content.replace('\tSystem.Type', '\tglobal::System.Type');
@@ -201,6 +207,15 @@ class UnityCSharp {
 
     }
 
+    static function patchGenericCast(content:String):String {
+
+        content = content.replace('global::haxe.lang.Runtime.genericCast<T>(this.__a[', '(this.__a[');
+        content = content.replace('global::haxe.lang.Runtime.genericCast<T>(x', '(x');
+
+        return content;
+
+    }
+
     static function patchRuntime(content:String, dstResourcesPath:String):String {
 
         var indexOfConstructor = content.indexOf('public Runtime() {');
@@ -212,6 +227,10 @@ class UnityCSharp {
             overloads.push('public static int toInt(int val) { return val; }');
             overloads.push('public static int toInt(float val) { return (int)val; }');
             overloads.push('public static int toInt(double val) { return (int)val; }');
+
+            overloads.push('public static double toDouble(int val) { return (double)val; }');
+            overloads.push('public static double toDouble(float val) { return (double)val; }');
+            overloads.push('public static double toDouble(double val) { return val; }');
 
             content = content.substring(0, indexOfConstructor) + overloads.join('\n') + '\n' + content.substring(indexOfConstructor);
 
