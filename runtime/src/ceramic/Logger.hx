@@ -28,12 +28,14 @@ class Logger extends Entity {
     public function new() {
 
         super();
-        
+
         if (!didInitOnce) {
             didInitOnce = true;
 #if unity
             haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
+                #if !ceramic_unity_no_log
                 untyped __cs__('UnityEngine.Debug.Log({0}+{1}+{2}+":"+{3})', v, '\n', pos.fileName, pos.lineNumber);
+                #end
             };
 #end
         }
@@ -55,7 +57,9 @@ class Logger extends Entity {
         }
 
 #if unity
+#if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=magenta>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#end
 #else
         haxe.Log.trace(prefixLines('[debug] ', value), pos);
 #end
@@ -63,7 +67,7 @@ class Logger extends Entity {
     }
 
     public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {
-        
+
         if (!Runner.currentIsMainThread()) {
             if (listensInfo()) {
                 Runner.runInMain(function() {
@@ -76,7 +80,9 @@ class Logger extends Entity {
         }
 
 #if unity
+#if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=cyan>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#end
 #else
         haxe.Log.trace(prefixLines('[info] ', value), pos);
 #end
@@ -84,7 +90,7 @@ class Logger extends Entity {
     }
 
     public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {
-        
+
         if (!Runner.currentIsMainThread()) {
             if (listensSuccess()) {
                 Runner.runInMain(function() {
@@ -97,7 +103,9 @@ class Logger extends Entity {
         }
 
 #if unity
+#if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=lime>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#end
 #else
         haxe.Log.trace(prefixLines('[success] ', value), pos);
 #end
@@ -105,7 +113,7 @@ class Logger extends Entity {
     }
 
     public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {
-        
+
         if (!Runner.currentIsMainThread()) {
             if (listensWarning()) {
                 Runner.runInMain(function() {
@@ -118,7 +126,9 @@ class Logger extends Entity {
         }
 
 #if unity
+#if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#end
 #elseif web
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[warning] ', value), pos);
@@ -132,7 +142,7 @@ class Logger extends Entity {
     }
 
     public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {
-        
+
         if (!Runner.currentIsMainThread()) {
             if (listensError()) {
                 Runner.runInMain(function() {
@@ -145,7 +155,9 @@ class Logger extends Entity {
         }
 
 #if unity
+#if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
+#end
 #elseif web
         if (_hasElectronRunner) {
             haxe.Log.trace(prefixLines('[error] ', value), pos);
