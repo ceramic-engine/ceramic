@@ -45,6 +45,12 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function setTargetFps(fps:Int):Void {
+
+        unityengine.Application.targetFrameRate = fps > 0 ? fps : -1;
+
+    }
+
 /// Events
 
     @event function ready();

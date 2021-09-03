@@ -606,6 +606,9 @@ class App extends Entity {
         // Init text input manager
         textInput = new TextInput();
 
+        // Bind settings
+        bindSettings();
+
         // Notify screen
         screen.backendReady();
 
@@ -685,6 +688,17 @@ class App extends Entity {
         assets.load();
         assets.immediate.flush();
         flushImmediate();
+
+    }
+
+    function bindSettings():Void {
+
+        settings.onTargetFpsChange(this, function(targetFps, prevTargetFps) {
+            #if debug log.info('Setting targetFps=$targetFps'); #end
+            app.backend.setTargetFps(targetFps);
+        });
+
+        app.backend.setTargetFps(settings.targetFps);
 
     }
 

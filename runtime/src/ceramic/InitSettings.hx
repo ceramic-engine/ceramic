@@ -128,6 +128,17 @@ class InitSettings {
     }
 
     /**
+     * Target FPS. Using default FPS if value < 1 or try to match the given value if >= 1.
+     */
+    public var targetFps(get,set):Int;
+    inline function get_targetFps():Int {
+        return settings.targetFps;
+    }
+    inline function set_targetFps(targetFps:Int):Int {
+        return settings.targetFps = targetFps;
+    }
+
+    /**
      * Maximum app update delta time.
      * During app update (at each frame), `app.delta` will be capped to `maxDelta`
      * if its value is above `maxDelta`.

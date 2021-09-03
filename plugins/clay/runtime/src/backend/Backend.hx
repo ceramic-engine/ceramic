@@ -48,7 +48,13 @@ class Backend implements tracker.Events implements spec.Backend {
         #if android
         NativeAndroid.init();
         #end
-        
+
+    }
+
+    public function setTargetFps(fps:Int):Void {
+
+        clay.Clay.app.config.updateRate = fps > 0 ? 1.0 / fps : 0;
+
     }
 
 /// Events

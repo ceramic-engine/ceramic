@@ -62,6 +62,11 @@ class Settings implements Observable {
     @observe public var fullscreen:Bool = false;
 
     /**
+     * Target FPS. Using default FPS if value < 1 or try to match the given value if >= 1.
+     */
+    @observe public var targetFps:Int = -1;
+
+    /**
      * Maximum app update delta time.
      * During app update (at each frame), `app.delta` will be capped to `maxDelta`
      * if its value is above `maxDelta`.

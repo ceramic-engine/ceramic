@@ -4,6 +4,8 @@ interface Backend {
 
     function init(app:ceramic.App):Void;
 
+    function setTargetFps(fps:Int):Void;
+
     var io(default,null):backend.IO;
 
     var info(default,null):backend.Info;
@@ -25,5 +27,5 @@ interface Backend {
     var textInput(default,null):backend.TextInput;
 
     var clipboard(default,null):backend.Clipboard;
-    
+
 } //Backend

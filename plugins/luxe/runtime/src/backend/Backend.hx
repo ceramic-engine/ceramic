@@ -51,6 +51,12 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function setTargetFps(fps:Int):Void {
+
+        Luxe.core.update_rate = fps > 0 ? 1.0 / fps : 0;
+
+    }
+
 /// Events
 
     @event function ready();

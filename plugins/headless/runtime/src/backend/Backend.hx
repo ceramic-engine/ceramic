@@ -38,6 +38,12 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function setTargetFps(fps:Int):Void {
+
+        // Nothing to do in headless
+
+    }
+
 /// Events
 
     @event function ready();
