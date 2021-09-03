@@ -233,12 +233,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var numTouches = touchScreen.touches.Count;
         var prevTouchHighestStartTime = touchHighestStartTime;
 
+        #if ceramic_debug_unity_touch
+        trace('DEBUGTOUCH -------');
+        #end
+
         for (i in 0...numTouches) {
             processedTouchIndexes[i] = 0;
 
             var touch:TouchControl = untyped __cs__('{0}[{1}]', touchScreen.touches, i);
 
             var phase = touch.phase.ReadValue();
+
+            #if ceramic_debug_unity_touch
+            trace('DEBUGTOUCH ${touch.touchId.ReadValue()}-${phase}-${touch.startTime.ReadValue()}-[${touch.position.x.ReadValue()/density},${touch.position.y.ReadValue()/density}]');
+            #end
 
             if (phase != TouchPhase.None) {
                 var touchId = touch.touchId.ReadValue();
@@ -252,8 +260,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     if (index == 0) {
                         // We only accept touches that are starting.
                         // Or new touches with an id higher than previously processed touches
-                        if (phase == TouchPhase.Ended && startTime <= prevTouchHighestStartTime)
+                        if (phase == TouchPhase.Ended) {
+                            if (startTime <= prevTouchHighestStartTime)
+                                continue;
+                        }
+                        else if (phase == TouchPhase.Canceled) {
                             continue;
+                        }
 
                         if (startTime > touchHighestStartTime)
                             touchHighestStartTime = startTime;
