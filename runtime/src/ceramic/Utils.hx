@@ -1,9 +1,9 @@
 package ceramic;
 
 import ceramic.PlatformSpecific;
-import haxe.rtti.CType;
-import haxe.CallStack;
 import ceramic.Shortcuts.*;
+import haxe.CallStack;
+import haxe.rtti.CType;
 
 using StringTools;
 using ceramic.Extensions;
@@ -201,11 +201,15 @@ class Utils {
         var line = 0;
         var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
 
-        #if (luxe && !completion)
+        #if !completion
+        #if luxe
         var mainClazz = Type.resolveClass('Main');
         electronRunner = Reflect.field(mainClazz, 'electronRunner');
+        #elseif clay
+        electronRunner = backend.ElectronRunner.electronRunner;
         #end
-        
+        #end
+
         while (i >= 2) { // Skip first two entries because they point to the thrown error and printStackTrace() call
             var str = stack[i];
             str = str.ltrim();
@@ -517,10 +521,10 @@ class Utils {
 
     /**
      * Returns the angle between (x0, y0) and (x1, y1) in degrees.
-     * @param x0 
-     * @param y0 
-     * @param x1 
-     * @param y1 
+     * @param x0
+     * @param y0
+     * @param x1
+     * @param y1
      * @return Float
      */
     inline public static function angleTo(x0:Float, y0:Float, x1:Float, y1:Float):Float {
