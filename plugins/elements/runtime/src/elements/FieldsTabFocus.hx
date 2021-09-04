@@ -74,6 +74,7 @@ class FieldsTabFocus extends Entity implements Component {
         // Look after currently focused field
         findingWithFocused = screen.focusedVisual;
         var field:FieldView = findNextField(entity);
+
         if (field != null) {
             field.focus();
         }

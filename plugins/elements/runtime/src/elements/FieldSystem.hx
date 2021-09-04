@@ -2,13 +2,14 @@ package elements;
 
 import ceramic.Entity;
 import ceramic.Shortcuts.*;
+import ceramic.System;
 import ceramic.Visual;
 import elements.FieldView;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 import tracker.Observable;
 
-class FieldSystem extends Entity implements Observable {
+class FieldSystem extends System implements Observable {
 
 /// Statics
 
@@ -24,17 +25,22 @@ class FieldSystem extends Entity implements Observable {
 
         super();
 
-        app.onUpdate(this, function(_) {
-            updateFocusedField();
-        });
+        earlyUpdateOrder = 50;
+
+    }
+
+    override function earlyUpdate(delta:Float):Void {
+
+        updateFocusedField();
 
     }
 
     public function updateFocusedField():Void {
 
+        var focusedVisual = screen.focusedVisual;
+
         unobserve();
 
-        var focusedVisual = screen.focusedVisual;
         var focusedField:FieldView = null;
 
         var testedVisual:Visual = focusedVisual;

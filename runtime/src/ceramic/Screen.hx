@@ -145,7 +145,7 @@ class Screen extends Entity implements Observable {
     /**
      * Focused visual
      */
-    public var focusedVisual(default,set):Visual = null;
+    @observe public var focusedVisual(default,set):Visual = null;
     function set_focusedVisual(focusedVisual:Visual):Visual {
         if (this.focusedVisual == focusedVisual) return focusedVisual;
 
