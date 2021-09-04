@@ -193,6 +193,39 @@ class Im {
 
     }
 
+    public static function checkbox(?title:String, value:BoolPointer):Bool {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return false;
+
+        var item = WindowItem.get();
+        item.kind = CHECKBOX;
+        item.int0 = Im.readBool(value) ? 1 : 0;
+        item.int1 = item.int0;
+        item.int2 = _labelPosition;
+        item.float2 = ViewSize.fill();
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.int0;
+            var newValue = item.previous.int1;
+            if (newValue != prevValue) {
+                item.int0 = newValue;
+                item.int1 = newValue;
+                Im.writeBool(value, newValue != 0 ? true : false);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String):Bool {
 
         var windowData = context.currentWindowData;
@@ -523,6 +556,18 @@ class Im {
     inline public static function writeString(stringPointer:StringPointer, value:String):Void {
 
         stringPointer(value);
+
+    }
+
+    inline public static function readBool(boolPointer:BoolPointer):Bool {
+
+        return boolPointer();
+
+    }
+
+    inline public static function writeBool(boolPointer:BoolPointer, value:Bool):Void {
+
+        boolPointer(value);
 
     }
 

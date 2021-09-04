@@ -100,6 +100,9 @@ class WindowItem {
             case BUTTON:
                 return true;
 
+            case CHECKBOX:
+                return isSimilarLabel(item);
+
         }
 
     }
@@ -128,6 +131,9 @@ class WindowItem {
 
             case BUTTON:
                 return createOrUpdateButton(view);
+
+            case CHECKBOX:
+                return createOrUpdateBooleanField(view);
 
         }
 
@@ -174,6 +180,10 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = int2;
             labeled.labelWidth = float2;
+            switch labeled.labelPosition {
+                case LEFT: field.align = LEFT;
+                case RIGHT: field.align = RIGHT;
+            }
         }
         else {
             field = (view != null ? cast view : null);
@@ -190,6 +200,47 @@ class WindowItem {
         var newValue = stringArray0[int0];
         if (newValue != field.value) {
             field.value = newValue;
+        }
+        return labeled != null ? labeled : field;
+
+    }
+
+    function createOrUpdateBooleanField(view:View):View {
+
+        var field:BooleanFieldView = null;
+        var labeled:LabeledFieldView<BooleanFieldView> = null;
+        var justCreated = false;
+        if (string2 != null) {
+            labeled = (view != null ? cast view : null);
+            if (labeled == null) {
+                justCreated = true;
+                field = new BooleanFieldView();
+                labeled = new LabeledFieldView(field);
+            }
+            else {
+                field = labeled.field;
+            }
+            field.viewWidth = ceramic.ViewSize.auto();
+            labeled.label = string2;
+            labeled.labelPosition = int2;
+            labeled.labelWidth = float2;
+        }
+        else {
+            field = (view != null ? cast view : null);
+            if (field == null) {
+                justCreated = true;
+                field = new BooleanFieldView();
+            }
+        }
+        field.data = this;
+        var intValue = field.value ? 1 : 0;
+        if (intValue != int0) {
+            field.value = int0 != 0 ? true : false;
+        }
+        if (justCreated) {
+            field.onValueChange(null, function(value, prevValue) {
+                field.windowItem().int1 = value ? 1 : 0;
+            });
         }
         return labeled != null ? labeled : field;
 

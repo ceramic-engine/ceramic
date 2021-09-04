@@ -1,5 +1,9 @@
 package elements;
 
+import ceramic.Key;
+import ceramic.Shortcuts.*;
+import ceramic.View;
+import elements.Context.context;
 import tracker.Observable;
 
 class BooleanFieldView extends FieldView {
@@ -29,7 +33,7 @@ class BooleanFieldView extends FieldView {
         super();
 
         direction = HORIZONTAL;
-        align = LEFT;
+        align = RIGHT;
 
         var pad = 7;
         var w = 25;
@@ -74,6 +78,9 @@ class BooleanFieldView extends FieldView {
 
     function layoutSwitchContainer() {
 
+        if (destroyed)
+            return;
+
         if (value) {
             switchSquare.pos(
                 switchContainer.width - switchSquare.width - switchContainer.paddingRight,
@@ -93,18 +100,18 @@ class BooleanFieldView extends FieldView {
 
     function handleKeyDown(key:Key) {
 
-        if (FieldManager.manager.focusedField != this) return;
+        if (FieldSystem.shared.focusedField != this) return;
 
-        if (key.scanCode == ScanCode.SPACE) {
+        if (key.scanCode == SPACE) {
             toggleValue();
         }
-        else if (key.scanCode == ScanCode.ENTER) {
+        else if (key.scanCode == ENTER) {
             if (!this.value) {
                 this.value = true;
                 setValue(this, true);
             }
         }
-        else if (key.scanCode == ScanCode.BACKSPACE || key.scanCode == ScanCode.DELETE) {
+        else if (key.scanCode == BACKSPACE || key.scanCode == DELETE) {
             if (this.value) {
                 this.value = false;
                 setValue(this, false);
@@ -121,6 +128,8 @@ class BooleanFieldView extends FieldView {
     }
 
     function updateStyle() {
+
+        var theme = context.theme;
 
         if (inputStyle == OVERLAY || inputStyle == MINIMAL) {
             switchContainer.transparent = true;

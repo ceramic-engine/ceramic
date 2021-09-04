@@ -14,6 +14,8 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var BUTTON;
 
+    var CHECKBOX;
+
     var TEXT;
 
 }
