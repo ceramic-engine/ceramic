@@ -97,6 +97,9 @@ class WindowItem {
             case TEXT:
                 return true;
 
+            case BUTTON:
+                return true;
+
         }
 
     }
@@ -122,6 +125,9 @@ class WindowItem {
 
             case TEXT:
                 return createOrUpdateText(view);
+
+            case BUTTON:
+                return createOrUpdateButton(view);
 
         }
 
@@ -223,7 +229,6 @@ class WindowItem {
                 field = new TextFieldView();
             }
         }
-
 
         var previous = field.windowItem();
         field.data = this;
@@ -503,6 +508,39 @@ class WindowItem {
             case 2: CENTER;
         };
         return text;
+
+    }
+
+    function createOrUpdateButton(view:View):View {
+
+        var button:Button = (view != null ? cast view : null);
+        var justCreated = false;
+        if (button == null) {
+            justCreated = true;
+            button = new Button();
+        }
+        if (button.content != string0) {
+            button.content = string0;
+        }
+        if (button.enabled != bool0) {
+            button.enabled = bool0;
+        }
+        button.data = this;
+        if (justCreated) {
+            button.onClick(null, function() {
+                var windowItem:WindowItem = button.hasData ? button.data : null;
+                if (windowItem != null) {
+                    windowItem._buttonClick();
+                }
+            });
+        }
+        return button;
+
+    }
+
+    function _buttonClick():Void {
+
+        int1 = 1;
 
     }
 

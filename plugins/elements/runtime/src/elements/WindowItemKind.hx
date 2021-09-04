@@ -12,6 +12,8 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var EDIT_INT;
 
+    var BUTTON;
+
     var TEXT;
 
 }

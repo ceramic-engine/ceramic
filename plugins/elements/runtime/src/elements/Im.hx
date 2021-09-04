@@ -310,6 +310,46 @@ class Im {
 
     }
 
+    inline extern overload public static function button(title:String, enabled:Bool):Bool {
+
+        return _button(title, enabled);
+
+    }
+
+    inline extern overload public static function button(title:String):Bool {
+
+        return _button(title, true);
+
+    }
+
+    public static function _button(title:String, enabled:Bool):Bool {
+
+        var windowData = context.currentWindowData;
+
+        if (!windowData.expanded)
+            return false;
+
+        var item = WindowItem.get();
+        item.kind = BUTTON;
+        item.int0 = 0;
+        item.int1 = 0;
+        item.float2 = _labelWidth;
+        item.string0 = title;
+        item.bool0 = enabled;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            var justClicked = (item.previous.int1 == 1);
+            if (justClicked) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     public static function text(value:String, ?align:TextAlign):Void {
 
         var windowData = context.currentWindowData;
