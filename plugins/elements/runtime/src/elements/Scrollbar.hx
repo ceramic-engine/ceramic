@@ -1,8 +1,8 @@
 package elements;
 
-import ceramic.Visual;
-import ceramic.Quad;
 import ceramic.Color;
+import ceramic.Quad;
+import ceramic.Visual;
 import elements.Context.context;
 import tracker.Observable;
 
@@ -12,18 +12,35 @@ class Scrollbar extends Visual implements Observable {
 
     @observe var pressed:Bool = false;
 
+    var insetLeft:Float = 1;
+
+    var insetRight:Float = 1;
+
+    var insetTop:Float = 1;
+
+    var insetBottom:Float = 1;
+
     var quad:Quad;
 
     override function set_width(width:Float):Float {
         super.set_width(width);
-        quad.width = width - 2;
+        quad.width = width - insetLeft - insetRight;
         return width;
     }
 
     override function set_height(height:Float):Float {
         super.set_height(height);
-        quad.height = height - 1;
+        quad.height = height - insetTop - insetBottom;
         return height;
+    }
+
+    public function inset(insetTop:Float, insetRight:Float, insetBottom:Float, insetLeft:Float):Void {
+        this.insetTop = insetTop;
+        this.insetRight = insetRight;
+        this.insetBottom = insetBottom;
+        this.insetLeft = insetLeft;
+        quad.width = width - insetLeft - insetRight;
+        quad.height = height - insetTop - insetBottom;
     }
 
     public function new() {
@@ -31,7 +48,7 @@ class Scrollbar extends Visual implements Observable {
         super();
 
         quad = new Quad();
-        quad.pos(1, 0);
+        quad.pos(insetLeft, insetTop);
         add(quad);
 
         onPointerDown(this, _ -> {

@@ -1,10 +1,10 @@
 package elements;
 
-import ceramic.ScrollView;
-import ceramic.View;
 import ceramic.Filter;
-import ceramic.ViewLayoutMask;
+import ceramic.ScrollView;
 import ceramic.Shortcuts.*;
+import ceramic.View;
+import ceramic.ViewLayoutMask;
 
 class ScrollingLayout<T:View> extends ScrollView {
 
