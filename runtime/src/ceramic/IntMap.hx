@@ -13,6 +13,8 @@ class IntMap<V> {
 
     inline static var RESERVED_GAP = 2;
 
+    static final RET_NULL:V = null;
+
     var keys:IntIntMap;
 
     var nextFreeIndex:Int = 0;
@@ -37,7 +39,7 @@ class IntMap<V> {
 
         keys = new IntIntMap(size, fillFactor);
         values = new Vector(size);
-        
+
         if (iterable) {
             iterableKeys = [];
         }
@@ -53,7 +55,7 @@ class IntMap<V> {
     inline public function getInline(key:Int):V {
 
         var index = keys.getInline(key);
-        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : null;
+        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : RET_NULL;
 
     }
 
@@ -140,7 +142,7 @@ class IntMap<V> {
 
             // Remove key
             keys.remove(key);
-            
+
             // Update iterable keys
             if (iterableKeys != null) {
                 iterableKeys.splice(iterableKeys.indexOf(key), 1);
@@ -150,14 +152,14 @@ class IntMap<V> {
     }
 
     public function copy():IntMap<V> {
-        
+
         var map = new IntMap<V>();
 
         map.keys = keys.copy();
         map.nextFreeIndex = nextFreeIndex;
         map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
         map.values = values.copy();
-        
+
         return map;
 
     }
