@@ -1,3 +1,3 @@
 package elements;
 
-typedef StringPointer = (?val:String)->String;
+typedef StringPointer = (?val:String,?erase:Bool)->String;

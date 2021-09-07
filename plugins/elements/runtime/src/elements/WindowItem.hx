@@ -100,7 +100,7 @@ class WindowItem {
             case BUTTON:
                 return true;
 
-            case CHECKBOX:
+            case CHECK:
                 return isSimilarLabel(item);
 
         }
@@ -132,7 +132,7 @@ class WindowItem {
             case BUTTON:
                 return createOrUpdateButton(view);
 
-            case CHECKBOX:
+            case CHECK:
                 return createOrUpdateBooleanField(view);
 
         }

@@ -1,6 +1,7 @@
 package elements;
 
 import ceramic.ReadOnlyArray;
+import ceramic.ViewSize;
 import elements.Context.context;
 import tracker.Model;
 
@@ -8,9 +9,17 @@ using ceramic.Extensions;
 
 class WindowData extends Model {
 
+    public inline static final DEFAULT_WIDTH:Float = 200;
+
+    public inline static final DEFAULT_HEIGHT:Float = ViewSize.auto();
+
     @serialize public var x:Float = 50;
 
     @serialize public var y:Float = 50;
+
+    @serialize public var width:Float = 50;
+
+    @serialize public var height:Float = 50;
 
     @serialize public var expanded:Bool = true;
 

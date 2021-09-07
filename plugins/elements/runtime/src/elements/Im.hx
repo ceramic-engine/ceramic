@@ -1,6 +1,14 @@
 package elements;
 
+import ceramic.Flags;
+import ceramic.IntBoolMap;
+import ceramic.IntFloatMap;
+import ceramic.IntIntMap;
+import ceramic.IntMap;
 import ceramic.TextAlign;
+
+using ceramic.Extensions;
+
 #if !macro
 import ceramic.Assert.assert;
 import ceramic.ColumnLayout;
@@ -12,6 +20,7 @@ import elements.Context.context;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
+
 
 typedef IntPointer = (?val:Int)->Int;
 
@@ -34,6 +43,22 @@ class Im {
 
     static var _textAlign:TextAlign = DEFAULT_TEXT_ALIGN;
 
+    static var _pointerBaseHandles:Map<String,Int> = new Map();
+
+    static var _pointerHandles:Map<String,Int> = new Map();
+
+    static var _pointerBaseHandleOccurences:Array<Int> = [];
+
+    static var _nextPointerHandle:Int = 0;
+
+    static var _boolPointerValues:IntBoolMap = new IntBoolMap();
+
+    static var _intPointerValues:IntIntMap = new IntIntMap();
+
+    static var _floatPointerValues:IntFloatMap = new IntFloatMap();
+
+    static var _stringPointerValues:IntMap<String> = new IntMap<String>();
+
     #if !macro
 
     public static function extractId(key:String):String {
@@ -49,6 +74,10 @@ class Im {
     }
 
     @:noCompletion public static function beginFrame():Void {
+
+        for (i in 0..._pointerBaseHandleOccurences.length) {
+            _pointerBaseHandleOccurences.unsafeSet(i, 0);
+        }
 
         for (id => windowData in context.windowsData) {
             windowData.beginFrame();
@@ -76,7 +105,7 @@ class Im {
 
     }
 
-    public static function begin(key:String, width:Float):Window {
+    public static function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
 
         assert(context.currentWindowData == null, 'Duplicate begin() calls!');
 
@@ -110,10 +139,13 @@ class Im {
             windowData.window = window;
         }
         window.viewWidth = width;
+        window.viewHeight = ViewSize.auto();
         window.title = title;
 
         // Mark window as used this frame
         windowData.used = true;
+        windowData.width = width;
+        windowData.height = height;
 
         // Make the window current
         context.currentWindowData = windowData;
@@ -162,9 +194,6 @@ class Im {
 
         var windowData = context.currentWindowData;
 
-        if (!windowData.expanded)
-            return false;
-
         var item = WindowItem.get();
         item.kind = SELECT;
         item.int0 = Im.readInt(index);
@@ -193,15 +222,18 @@ class Im {
 
     }
 
-    public static function checkbox(?title:String, value:BoolPointer):Bool {
+    public inline extern static overload function check(?title:String, value:BoolPointer):CheckStatus {
+
+        return _check(title, value);
+
+    }
+
+    public static function _check(?title:String, value:BoolPointer):CheckStatus {
 
         var windowData = context.currentWindowData;
 
-        if (!windowData.expanded)
-            return false;
-
         var item = WindowItem.get();
-        item.kind = CHECKBOX;
+        item.kind = CHECK;
         item.int0 = Im.readBool(value) ? 1 : 0;
         item.int1 = item.int0;
         item.int2 = _labelPosition;
@@ -210,28 +242,28 @@ class Im {
 
         windowData.addItem(item);
 
+        var checked = (item.int0 != 0);
+        var changed = false;
+
         if (item.isSameItem(item.previous)) {
             // Did value changed from field last frame?
             var prevValue = item.previous.int0;
             var newValue = item.previous.int1;
             if (newValue != prevValue) {
+                changed = true;
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeBool(value, newValue != 0 ? true : false);
-                return true;
             }
         }
 
-        return false;
+        return Flags.fromValues(checked, changed).toInt();
 
     }
 
     public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String):Bool {
 
         var windowData = context.currentWindowData;
-
-        if (!windowData.expanded)
-            return false;
 
         var item = WindowItem.get();
         item.kind = EDIT_TEXT;
@@ -271,9 +303,6 @@ class Im {
 
         var windowData = context.currentWindowData;
 
-        if (!windowData.expanded)
-            return false;
-
         var item = WindowItem.get();
         item.kind = EDIT_INT;
         item.int0 = Im.readInt(value);
@@ -311,9 +340,6 @@ class Im {
     ):Bool {
 
         var windowData = context.currentWindowData;
-
-        if (!windowData.expanded)
-            return false;
 
         var item = WindowItem.get();
         item.kind = EDIT_FLOAT;
@@ -359,9 +385,6 @@ class Im {
 
         var windowData = context.currentWindowData;
 
-        if (!windowData.expanded)
-            return false;
-
         var item = WindowItem.get();
         item.kind = BUTTON;
         item.int0 = 0;
@@ -386,9 +409,6 @@ class Im {
     public static function text(value:String, ?align:TextAlign):Void {
 
         var windowData = context.currentWindowData;
-
-        if (!windowData.expanded)
-            return;
 
         var item = WindowItem.get();
         item.kind = TEXT;
@@ -445,19 +465,21 @@ class Im {
                 container.viewSize(ViewSize.auto(), ViewSize.auto());
                 container.add(form);
 
-                /*var overflowScroll = false;
+                var overflowScroll = windowData.height != ViewSize.auto();
                 if (overflowScroll) {
                     container.paddingRight = 12;
                     var scroll = new ScrollingLayout(container, true);
                     scroll.checkChildrenOfView = form;
-                    scroll.scroller.scrollbar = new Scrollbar();
+                    var scrollbar = new Scrollbar();
+                    scrollbar.inset(2, 1, 1, 2);
+                    scroll.scroller.scrollbar = scrollbar;
                     scroll.transparent = true;
                     scroll.viewSize(ViewSize.fill(), 200);
                     window.contentView = scroll;
                 }
-                else {*/
+                else {
                     window.contentView = container;
-                //}
+                }
             }
 
             var windowItems = windowData.items;
@@ -523,6 +545,99 @@ class Im {
 
 /// Helpers
 
+    public static function handle(#if !completion ?pos:haxe.PosInfos #end):Handle {
+
+        #if !completion
+        if (pos != null) {
+
+            // Retrieve base handle
+            var baseKey = pos.fileName + ':' + pos.lineNumber;
+            var baseHandle:Int;
+            var occurence:Int;
+            if (_pointerBaseHandles.exists(baseKey)) {
+                baseHandle = _pointerBaseHandles.get(baseKey);
+                occurence = _pointerBaseHandleOccurences.unsafeGet(baseHandle);
+                var occurencePlus1 = occurence + 1;
+                _pointerBaseHandleOccurences.unsafeSet(baseHandle, occurencePlus1);
+            }
+            else {
+                baseHandle = _pointerBaseHandleOccurences.length;
+                occurence = 1;
+                _pointerBaseHandleOccurences.push(occurence);
+                _pointerBaseHandles.set(baseKey, baseHandle);
+            }
+
+            var key = baseKey + ':' + occurence;
+            var handle:Int;
+            var baseHandle:Int;
+            if (_pointerHandles.exists(key)) {
+                handle = _pointerHandles.get(key);
+            }
+            else {
+                handle = _nextPointerHandle++;
+                _pointerHandles.set(key, handle);
+            }
+
+            return handle;
+
+        }
+        #end
+        return -1;
+
+    }
+
+    @:noCompletion public static function setIntAtHandle(handle:Handle, value:Int):Int {
+
+        _intPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function intAtHandle(handle:Handle):Int {
+
+        return _intPointerValues.get(handle);
+
+    }
+
+    @:noCompletion public static function setFloatAtHandle(handle:Handle, value:Float):Float {
+
+        _floatPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function floatAtHandle(handle:Handle):Float {
+
+        return _floatPointerValues.get(handle);
+
+    }
+
+    @:noCompletion public static function setBoolAtHandle(handle:Handle, value:Bool):Bool {
+
+        _boolPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function boolAtHandle(handle:Handle):Bool {
+
+        return _boolPointerValues.get(handle);
+
+    }
+
+    @:noCompletion public static function setStringAtHandle(handle:Handle, value:String):String {
+
+        _stringPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function stringAtHandle(handle:Handle):String {
+
+        return _stringPointerValues.get(handle);
+
+    }
+
     inline public static function readInt(intPointer:IntPointer):Int {
 
         return intPointer();
@@ -555,7 +670,7 @@ class Im {
 
     inline public static function writeString(stringPointer:StringPointer, value:String):Void {
 
-        stringPointer(value);
+        stringPointer(value, value == null);
 
     }
 
@@ -571,53 +686,75 @@ class Im {
 
     }
 
-    macro public static function bool(value:ExprOf<Bool>):Expr {
+    macro public static function bool(?value:ExprOf<Bool>):Expr {
 
-        return macro function(?_val:Bool):Bool {
-            return _val != null ? $value = _val : $value;
-        };
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:Bool):Bool {
+                        return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:Bool):Bool {
+                    return _val != null ? $value = _val : $value;
+                };
+        }
 
     }
 
-    macro public static function boolArray(value:ExprOf<Array<Bool>>):Expr {
+    macro public static function int(?value:ExprOf<Int>):Expr {
 
-        return macro $value;
-
-    }
-
-    macro public static function int(value:ExprOf<Int>):Expr {
-
-        return macro function(?_val:Int):Int {
-            return _val != null ? $value = _val : $value;
-        };
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:Int):Int {
+                        return _val != null ? elements.Im.setIntAtHandle(handle, _val) : elements.Im.intAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:Int):Int {
+                    return _val != null ? $value = _val : $value;
+                };
+        }
 
     }
 
     macro public static function string(value:ExprOf<String>):Expr {
 
-        return macro function(?_val:String):String {
-            return _val != null ? $value = _val : $value;
-        };
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:String, ?erase:Bool):String {
+                        return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:String, ?erase:Bool):String {
+                    return _val != null || erase ? $value = _val : $value;
+                };
+        }
 
     }
 
-    macro public static function intArray(value:ExprOf<Array<Int>>):Expr {
+    macro public static function float(?value:ExprOf<Float>):Expr {
 
-        return macro $value;
-
-    }
-
-    macro public static function float(value:ExprOf<Float>):Expr {
-
-        return macro function(?_val:Float):Float {
-            return _val != null ? $value = _val : $value;
-        };
-
-    }
-
-    macro public static function floatArray(value:ExprOf<Array<Float>>):Expr {
-
-        return macro $value;
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:Float):Float {
+                        return _val != null ? elements.Im.setFloatAtHandle(handle, _val) : elements.Im.floatAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:Float):Float {
+                    return _val != null ? $value = _val : $value;
+                };
+        }
 
     }
 
