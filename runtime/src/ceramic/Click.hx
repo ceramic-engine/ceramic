@@ -1,8 +1,7 @@
 package ceramic;
 
-import tracker.Observable;
-
 import ceramic.Shortcuts.*;
+import tracker.Observable;
 
 class Click extends Entity implements Component implements Observable {
 
@@ -12,7 +11,7 @@ class Click extends Entity implements Component implements Observable {
 
 /// Public properties
 
-    public var threshold:Float = -1; // 4
+    public var threshold:Float = -1;
 
     public var entity:Visual;
 
@@ -77,7 +76,7 @@ class Click extends Entity implements Component implements Observable {
     }
 
     function handleBlur() {
-        
+
         pressed = false;
 
     }
