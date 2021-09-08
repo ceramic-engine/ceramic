@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.Color;
 import ceramic.Equal;
 import ceramic.Pool;
 import ceramic.View;
@@ -94,6 +95,9 @@ class WindowItem {
             case EDIT_INT:
                 return isSimilarLabel(item);
 
+            case EDIT_COLOR:
+                return isSimilarLabel(item);
+
             case TEXT:
                 return true;
 
@@ -125,6 +129,9 @@ class WindowItem {
 
             case EDIT_TEXT | EDIT_FLOAT | EDIT_INT:
                 return createOrUpdateEditTextField(view);
+
+            case EDIT_COLOR:
+                return createOrUpdateColorField(view);
 
             case TEXT:
                 return createOrUpdateText(view);
@@ -251,6 +258,54 @@ class WindowItem {
         final item = field.windowItem();
         final index = field.list.indexOf(value);
         item.int1 = index;
+
+    }
+
+    function createOrUpdateColorField(view:View):View {
+
+        var field:ColorFieldView = null;
+        var labeled:LabeledFieldView<ColorFieldView> = null;
+        var justCreated = false;
+        if (string2 != null) {
+            labeled = (view != null ? cast view : null);
+            if (labeled == null) {
+                justCreated = true;
+                field = new ColorFieldView();
+                labeled = new LabeledFieldView(field);
+            }
+            else {
+                field = labeled.field;
+            }
+            labeled.label = string2;
+            labeled.labelPosition = int2;
+            labeled.labelWidth = float2;
+        }
+        else {
+            field = (view != null ? cast view : null);
+            if (field == null) {
+                justCreated = true;
+                field = new ColorFieldView();
+            }
+        }
+
+        var previous = field.windowItem();
+        field.data = this;
+
+        if (justCreated) {
+            field.setValue = _editColorSetValue;
+        }
+        if (justCreated || previous.int1 != int0) {
+            field.value = int0;
+        }
+
+        return labeled != null ? labeled : field;
+
+    }
+
+    static function _editColorSetValue(field:ColorFieldView, value:Color):Void {
+
+        field.value = value;
+        field.windowItem().int1 = value;
 
     }
 

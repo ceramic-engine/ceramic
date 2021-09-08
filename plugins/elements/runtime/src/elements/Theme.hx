@@ -45,8 +45,6 @@ class Theme extends Model {
 
 /// Backgrounds colors
 
-    @observe public var windowBackgroundColor:Color = 0x282828;
-
     @observe public var lightBackgroundColor:Color = 0x4F4F4F;
 
     @observe public var mediumBackgroundColor:Color = 0x4A4A4A;
@@ -77,7 +75,7 @@ class Theme extends Model {
 
 /// Bubble
 
-    @observe public var overlayBackgroundColor:Color = 0x111111;
+    @observe public var overlayBackgroundColor:Color = 0x1C1C1C;
 
     @observe public var overlayBackgroundAlpha:Float = 0.9;
 
@@ -90,6 +88,10 @@ class Theme extends Model {
     @observe public var buttonPressedBackgroundColor:Color = 0x4798EB;
 
 /// Window
+
+    @observe public var windowBackgroundColor:Color = 0x1C1C1C;
+
+    @observe public var windowBackgroundAlpha:Float = 0.9;
 
     @observe public var windowBorderColor:Color = 0x636363;
 

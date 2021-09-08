@@ -13,6 +13,8 @@ class Context extends Entity implements Observable {
 
     @observe public var theme = new Theme();
 
+    @observe public var user = new UserData();
+
     public var view(default, null):View = null;
 
     public var windowsData(default, null):ReadOnlyMap<String,WindowData> = new Map();

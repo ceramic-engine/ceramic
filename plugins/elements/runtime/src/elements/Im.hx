@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.Color;
 import ceramic.Flags;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
@@ -237,7 +238,7 @@ class Im {
         item.int0 = Im.readBool(value) ? 1 : 0;
         item.int1 = item.int0;
         item.int2 = _labelPosition;
-        item.float2 = ViewSize.fill();
+        item.float2 = _labelWidth;
         item.string2 = title;
 
         windowData.addItem(item);
@@ -258,6 +259,36 @@ class Im {
         }
 
         return Flags.fromValues(checked, changed).toInt();
+
+    }
+
+    public static function editColor(?title:String, value:IntPointer):Bool {
+
+        var windowData = context.currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_COLOR;
+        item.int0 = Im.readInt(value);
+        item.int1 = item.int0;
+        item.int2 = _labelPosition;
+        item.float2 = _labelWidth;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.int0;
+            var newValue = item.previous.int1;
+            if (newValue != prevValue) {
+                item.int0 = newValue;
+                item.int1 = newValue;
+                Im.writeInt(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
 
     }
 
@@ -459,9 +490,7 @@ class Im {
                 windowData.form = form;
 
                 var container = new ColumnLayout();
-                container.color = Context.context.theme.darkerBackgroundColor;
-                container.alpha = 0.7;
-                container.transparent = false;
+                container.transparent = true;
                 container.viewSize(ViewSize.auto(), ViewSize.auto());
                 container.add(form);
 
@@ -599,6 +628,19 @@ class Im {
 
     }
 
+    @:noCompletion public static function setColorAtHandle(handle:Handle, value:Color):Color {
+
+        _intPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function colorAtHandle(handle:Handle):Color {
+
+        return _intPointerValues.exists(handle) ? _intPointerValues.get(handle) : Color.WHITE;
+
+    }
+
     @:noCompletion public static function setFloatAtHandle(handle:Handle, value:Float):Float {
 
         _floatPointerValues.set(handle, value);
@@ -712,6 +754,24 @@ class Im {
                     var handle = elements.Im.handle();
                     function(?_val:Int):Int {
                         return _val != null ? elements.Im.setIntAtHandle(handle, _val) : elements.Im.intAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:Int):Int {
+                    return _val != null ? $value = _val : $value;
+                };
+        }
+
+    }
+
+    macro public static function color(?value:ExprOf<ceramic.Color>):Expr {
+
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:Int):Int {
+                        return _val != null ? elements.Im.setColorAtHandle(handle, _val) : elements.Im.colorAtHandle(handle);
                     };
                 }
             case _:

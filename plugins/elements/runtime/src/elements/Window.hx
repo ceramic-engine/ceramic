@@ -89,7 +89,7 @@ class Window extends ColumnLayout implements Observable {
         headerView.add(titleView);
 
         bodyView = new ColumnLayout();
-        bodyView.transparent = true;
+        bodyView.transparent = false;
         bodyView.viewSize(percent(100), 0);
         add(bodyView);
 
@@ -186,6 +186,9 @@ class Window extends ColumnLayout implements Observable {
         var theme = context.theme;
 
         headerView.color = theme.mediumBackgroundColor;
+
+        bodyView.color = theme.windowBackgroundColor;
+        bodyView.alpha = theme.windowBackgroundAlpha;
 
         expandTriangle.color = theme.lightTextColor;
         titleView.textColor = theme.lightTextColor;

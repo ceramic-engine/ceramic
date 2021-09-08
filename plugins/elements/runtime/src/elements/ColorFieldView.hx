@@ -1,6 +1,21 @@
 package elements;
 
+import ceramic.Color;
+import ceramic.EditText;
+import ceramic.LayersLayout;
+import ceramic.Point;
+import ceramic.RowLayout;
+import ceramic.ScanCode;
+import ceramic.Shortcuts.*;
+import ceramic.TextView;
+import ceramic.Triangle;
+import ceramic.View;
+import elements.Context.context;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
 import tracker.Observable;
+
+using StringTools;
 
 class ColorFieldView extends FieldView {
 
@@ -14,7 +29,7 @@ class ColorFieldView extends FieldView {
 
     public dynamic function setValue(field:ColorFieldView, value:Color):Void {
 
-        // Default implementation does nothing
+        this.value = value;
 
     }
 
@@ -65,7 +80,7 @@ class ColorFieldView extends FieldView {
         pickerContainer.viewSize(0, 0);
         pickerContainer.active = false;
         pickerContainer.depth = 25;
-        editor.view.add(pickerContainer);
+        context.view.add(pickerContainer);
 
         var filler = new View();
         filler.transparent = true;
@@ -90,6 +105,8 @@ class ColorFieldView extends FieldView {
         textView.pointSize = 12;
         textView.preRenderedSize = 20;
         container.add(textView);
+
+        var theme = context.theme;
 
         editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
         editText.container = textView;
@@ -182,7 +199,7 @@ class ColorFieldView extends FieldView {
         if (pickerView == null || !pickerVisible)
             return;
 
-        if (FieldManager.manager.focusedField == this)
+        if (FieldSystem.shared.focusedField == this)
             return;
 
         var parent = screen.focusedVisual;
@@ -223,7 +240,7 @@ class ColorFieldView extends FieldView {
         //     y += _point.y;
         // }
 
-        editor.view.screenToVisual(x, y, _point);
+        context.view.screenToVisual(x, y, _point);
         x = _point.x;
         y = _point.y;
 
@@ -231,7 +248,7 @@ class ColorFieldView extends FieldView {
         if (pickerView != null) {
             if (scrollingLayout != null) {
                 scrollingLayout.screenToVisual(0, 0, _point);
-                editor.view.screenToVisual(_point.x, _point.y, _point);
+                context.view.screenToVisual(_point.x, _point.y, _point);
                 if (y + _point.y < 0) {
                     pickerContainer.clip = scrollingLayout;
                 }
@@ -266,14 +283,17 @@ class ColorFieldView extends FieldView {
             pickerView.autoComputeSizeIfNeeded(true);
 
             pickerView.visualToScreen(pickerView.width, pickerView.height, _point);
-            editor.view.screenToVisual(_point.x, _point.y, _point);
+            context.view.screenToVisual(_point.x, _point.y, _point);
 
-            pickerView.x = Math.min(
-                editor.view.width - pickerView.width - editorMargin - pickerContainer.x,
-                colorPreview.width * 0.5
+            pickerView.x = Math.max(
+                Math.min(
+                    context.view.width - pickerView.width - editorMargin - pickerContainer.x,
+                    pickerView.width * -0.5
+                ),
+                -pickerContainer.x + editorMargin
             );
 
-            var availableHeightAfter = editor.view.height - pickerContainer.y - colorPreview.height * 0.5 - editorMargin - previewMargin;
+            var availableHeightAfter = context.view.height - pickerContainer.y - colorPreview.height * 0.5 - editorMargin - previewMargin;
 
             bubbleTriangle.size(14, 7);
 
@@ -317,7 +337,7 @@ class ColorFieldView extends FieldView {
             text = text.substr(0, 6);
 
         if (RE_HEX_COLOR.match(text)) {
-            setValue(this, Sanitize.stringToColor('0x' + text));
+            setValue(this, Color.fromString('0x' + text));
         }
 
         if (!RE_HEX_COLOR_ANY_LENGTH.match(text) || text.length > 6) {
@@ -350,6 +370,8 @@ class ColorFieldView extends FieldView {
     }
 
     function updateStyle() {
+
+        var theme = context.theme;
 
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;
@@ -405,6 +427,7 @@ class ColorFieldView extends FieldView {
                 bubbleTriangle = new Triangle();
                 bubbleTriangle.anchor(0.5, 1);
                 bubbleTriangle.autorun(() -> {
+                    var theme = context.theme;
                     bubbleTriangle.color = theme.overlayBackgroundColor;
                     bubbleTriangle.alpha = theme.overlayBackgroundAlpha;
                 });
