@@ -33,6 +33,7 @@ class ExportSpine extends tools.Task {
         var stripAnimFolders = extractArgFlag(args, 'strip-animation-folders');
         var stripSkinFolders = extractArgFlag(args, 'strip-skin-folders');
         var prettyPrint = extractArgFlag(args, 'pretty');
+        var spineVersion = extractArgValue(args, 'version');
         project.loadAppFile(projectPath);
 
         if (project.app.spine == null || !Std.isOfType(project.app.spine.export, Array)) {
@@ -43,6 +44,12 @@ class ExportSpine extends tools.Task {
             - path/to/Project.spine
 
 ');
+        }
+
+        if (spineVersion == null) {
+            if (project.app.spine.version != null) {
+                spineVersion = ''+project.app.spine.version;
+            }
         }
 
         if (!FileSystem.exists(tmpPath)) {
@@ -161,8 +168,15 @@ class ExportSpine extends tools.Task {
 
             FileSystem.createDirectory(exportPath);
 
+            // Configure cli args
+            var cmdArgs = ['--export', tmpConfigPath];
+
+            if (spineVersion != null) {
+                cmdArgs = ['--update', spineVersion].concat(cmdArgs);
+            }
+
             // Export
-            command(spineCmdPath, ['--export', tmpConfigPath]);
+            command(spineCmdPath, cmdArgs);
 
             // Move files to assets directory
             //
