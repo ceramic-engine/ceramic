@@ -38,13 +38,13 @@ class WindowItem {
 
     public var int1:Int = 0;
 
-    public var int2:Int = 0;
+    public var labelPosition:Int = 0;
 
     public var float0:Float = 0;
 
     public var float1:Float = 0;
 
-    public var float2:Float = 0;
+    public var labelWidth:Float = 0;
 
     public var float3:Float = 0;
 
@@ -152,10 +152,10 @@ class WindowItem {
         previous = null;
         int0 = 0;
         int1 = 0;
-        int2 = 0;
+        labelPosition = 0;
         float0 = 0;
         float1 = 0;
-        float2 = 0;
+        labelWidth = 0;
         float3 = 0;
         float4 = 0;
         bool0 = false;
@@ -185,8 +185,8 @@ class WindowItem {
                 field = labeled.field;
             }
             labeled.label = string2;
-            labeled.labelPosition = int2;
-            labeled.labelWidth = float2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
             switch labeled.labelPosition {
                 case LEFT: field.align = LEFT;
                 case RIGHT: field.align = RIGHT;
@@ -229,8 +229,8 @@ class WindowItem {
             }
             field.viewWidth = ceramic.ViewSize.auto();
             labeled.label = string2;
-            labeled.labelPosition = int2;
-            labeled.labelWidth = float2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
         }
         else {
             field = (view != null ? cast view : null);
@@ -277,8 +277,8 @@ class WindowItem {
                 field = labeled.field;
             }
             labeled.label = string2;
-            labeled.labelPosition = int2;
-            labeled.labelWidth = float2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
         }
         else {
             field = (view != null ? cast view : null);
@@ -325,8 +325,8 @@ class WindowItem {
                 field = labeled.field;
             }
             labeled.label = string2;
-            labeled.labelPosition = int2;
-            labeled.labelWidth = float2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
         }
         else {
             field = (view != null ? cast view : null);

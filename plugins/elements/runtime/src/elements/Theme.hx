@@ -73,11 +73,15 @@ class Theme extends Model {
 
     @observe public var focusedFieldBorderColor:Color = 0x4392E0;
 
-/// Bubble
+/// Overlay
 
     @observe public var overlayBackgroundColor:Color = 0x1C1C1C;
 
-    @observe public var overlayBackgroundAlpha:Float = 0.9;
+    @observe public var overlayBackgroundAlpha:Float = 0.925;
+
+    @observe public var overlayBorderColor:Color = 0x636363;
+
+    @observe public var overlayBorderAlpha:Float = 1;
 
 /// Button
 
@@ -91,7 +95,7 @@ class Theme extends Model {
 
     @observe public var windowBackgroundColor:Color = 0x1C1C1C;
 
-    @observe public var windowBackgroundAlpha:Float = 0.9;
+    @observe public var windowBackgroundAlpha:Float = 0.925;
 
     @observe public var windowBorderColor:Color = 0x636363;
 

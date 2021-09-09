@@ -4,11 +4,11 @@ import ceramic.Color;
 import ceramic.EditText;
 import ceramic.LayersLayout;
 import ceramic.Point;
+import ceramic.Quad;
 import ceramic.RowLayout;
 import ceramic.ScanCode;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
-import ceramic.Triangle;
 import ceramic.View;
 import elements.Context.context;
 import tracker.Autorun.reobserve;
@@ -55,20 +55,25 @@ class ColorFieldView extends FieldView {
 
     var pickerView:ColorPickerView;
 
-    var bubbleTriangle:Triangle;
+    var bubbleTriangle:BiBorderedTriangle;
+
+    var bubbleTopBorderLeft:Quad;
+
+    var bubbleTopBorderRight:Quad;
 
     var updatingFromPicker:Int = 0;
 
     public function new() {
 
         super();
-        transparent = true;
+        transparent = false;
+        color = Color.YELLOW;
 
         direction = HORIZONTAL;
         align = LEFT;
 
         container = new RowLayout();
-        container.viewSize(90, auto());
+        container.viewSize(fill(), auto());
         container.padding(6, 6, 6, 6);
         container.borderSize = 1;
         container.borderPosition = INSIDE;
@@ -82,10 +87,10 @@ class ColorFieldView extends FieldView {
         pickerContainer.depth = 25;
         context.view.add(pickerContainer);
 
-        var filler = new View();
-        filler.transparent = true;
-        filler.viewSize(fill(), fill());
-        add(filler);
+        // var filler = new View();
+        // filler.transparent = true;
+        // filler.viewSize(fill(), fill());
+        // add(filler);
 
         textPrefixView = new TextView();
         textPrefixView.viewSize(auto(), auto());
@@ -99,7 +104,7 @@ class ColorFieldView extends FieldView {
         container.add(textPrefixView);
 
         textView = new TextView();
-        textView.viewSize(fill(), auto());
+        textView.viewSize(54, auto());
         textView.align = LEFT;
         textView.verticalAlign = CENTER;
         textView.pointSize = 12;
@@ -115,8 +120,9 @@ class ColorFieldView extends FieldView {
         editText.onStop(this, handleStopEditText);
 
         colorPreview = new View();
-        colorPreview.viewSize(15, 15);
+        colorPreview.viewSize(fill(), 15);
         colorPreview.transparent = false;
+        colorPreview.padding(0, 0, 3, 0);
         container.add(colorPreview);
 
         autorun(updateStyle);
@@ -301,11 +307,25 @@ class ColorFieldView extends FieldView {
                 pickerView.y = colorPreview.height * 0.5 + previewMargin;
                 bubbleTriangle.pos(0, pickerView.y);
                 bubbleTriangle.rotation = 0;
+                pickerView.borderTopSize = 0;
+                pickerView.borderBottomSize = 1;
+
+                bubbleTopBorderLeft.pos(-1, -1);
+                bubbleTopBorderLeft.size(0.5 - pickerView.x - bubbleTriangle.width * 0.5, 1);
+                bubbleTopBorderRight.pos(-pickerView.x + bubbleTriangle.width * 0.5, -1);
+                bubbleTopBorderRight.size(1 + pickerView.width - bubbleTriangle.width * 0.5 + pickerView.x, 1);
             }
             else {
                 pickerView.y = -pickerView.height - colorPreview.height * 0.5 - previewMargin;
                 bubbleTriangle.pos(0, pickerView.y + pickerView.height);
                 bubbleTriangle.rotation = 180;
+                pickerView.borderTopSize = 1;
+                pickerView.borderBottomSize = 0;
+
+                bubbleTopBorderLeft.pos(-1, pickerView.height);
+                bubbleTopBorderLeft.size(0.5 - pickerView.x - bubbleTriangle.width * 0.5, 1);
+                bubbleTopBorderRight.pos(-pickerView.x + bubbleTriangle.width * 0.5, pickerView.height);
+                bubbleTopBorderRight.size(1 + pickerView.width - bubbleTriangle.width * 0.5 + pickerView.x, 1);
             }
         }
 
@@ -424,12 +444,27 @@ class ColorFieldView extends FieldView {
                 });
                 pickerContainer.add(pickerView);
 
-                bubbleTriangle = new Triangle();
+                bubbleTopBorderLeft = new Quad();
+                pickerView.add(bubbleTopBorderLeft);
+
+                bubbleTopBorderRight = new Quad();
+                pickerView.add(bubbleTopBorderRight);
+
+                bubbleTriangle = new BiBorderedTriangle();
                 bubbleTriangle.anchor(0.5, 1);
+                bubbleTriangle.borderSize = 1.5;
                 bubbleTriangle.autorun(() -> {
                     var theme = context.theme;
-                    bubbleTriangle.color = theme.overlayBackgroundColor;
-                    bubbleTriangle.alpha = theme.overlayBackgroundAlpha;
+                    var overlayBorderColor = theme.overlayBorderColor;
+                    var overlayBorderAlpha = theme.overlayBorderAlpha;
+                    bubbleTriangle.innerColor = theme.overlayBackgroundColor;
+                    bubbleTriangle.innerAlpha = theme.overlayBackgroundAlpha;
+                    bubbleTriangle.borderColor = overlayBorderColor;
+                    bubbleTriangle.borderAlpha = overlayBorderAlpha;
+                    bubbleTopBorderLeft.color = overlayBorderColor;
+                    bubbleTopBorderLeft.alpha = overlayBorderAlpha;
+                    bubbleTopBorderRight.color = overlayBorderColor;
+                    bubbleTopBorderRight.alpha = overlayBorderAlpha;
                 });
                 pickerContainer.add(bubbleTriangle);
 

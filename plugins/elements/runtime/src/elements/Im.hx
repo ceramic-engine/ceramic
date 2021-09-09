@@ -199,8 +199,8 @@ class Im {
         item.kind = SELECT;
         item.int0 = Im.readInt(index);
         item.int1 = item.int0;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.string2 = title;
         item.stringArray0 = list;
         item.string1 = nullValueText;
@@ -237,8 +237,8 @@ class Im {
         item.kind = CHECK;
         item.int0 = Im.readBool(value) ? 1 : 0;
         item.int1 = item.int0;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.string2 = title;
 
         windowData.addItem(item);
@@ -270,8 +270,8 @@ class Im {
         item.kind = EDIT_COLOR;
         item.int0 = Im.readInt(value);
         item.int1 = item.int0;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.string2 = title;
 
         windowData.addItem(item);
@@ -300,8 +300,8 @@ class Im {
         item.kind = EDIT_TEXT;
         item.string0 = Im.readString(value);
         item.string1 = item.string0;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.bool0 = multiline;
         item.string2 = title;
         item.string3 = placeholder;
@@ -340,8 +340,8 @@ class Im {
         item.int1 = item.int0;
         item.float3 = minValue;
         item.float4 = maxValue;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.string2 = title;
 
         windowData.addItem(item);
@@ -378,8 +378,8 @@ class Im {
         item.float1 = item.float0;
         item.float3 = minValue;
         item.float4 = maxValue;
-        item.int2 = _labelPosition;
-        item.float2 = _labelWidth;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.string2 = title;
 
         windowData.addItem(item);
@@ -420,7 +420,7 @@ class Im {
         item.kind = BUTTON;
         item.int0 = 0;
         item.int1 = 0;
-        item.float2 = _labelWidth;
+        item.labelWidth = _labelWidth;
         item.string0 = title;
         item.bool0 = enabled;
 

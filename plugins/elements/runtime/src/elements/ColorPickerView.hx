@@ -171,6 +171,14 @@ class ColorPickerView extends LayersLayout implements Observable {
         padding(PADDING);
         transparent = false;
 
+        borderTopSize = 1;
+        borderRightSize = 1;
+        borderBottomSize = 1;
+        borderLeftSize = 1;
+        borderPosition = OUTSIDE;
+
+        roundTranslation = 1;
+
         onPointerDown(this, _ -> {});
 
         component(new FieldsTabFocus());
@@ -787,6 +795,9 @@ class ColorPickerView extends LayersLayout implements Observable {
     function updateStyle() {
 
         var theme = context.theme;
+
+        borderColor = theme.overlayBorderColor;
+        borderAlpha = theme.overlayBorderAlpha;
 
         color = theme.overlayBackgroundColor;
         alpha = theme.overlayBackgroundAlpha;

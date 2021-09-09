@@ -90,26 +90,26 @@ class Button extends TextView implements Observable {
         if (inputStyle == OVERLAY) {
             borderColor = theme.lightTextColor;
             if (enabled) {
-                border.alpha = 0.2;
+                borderAlpha = 0.2;
                 text.alpha = 1;
                 if (pressed) {
                     transparent = false;
                     color = Color.WHITE;
                     alpha = 0.05;
-                    border.alpha = 0.33;
+                    borderAlpha = 0.33;
                 }
                 else if (hover) {
                     transparent = false;
                     color = Color.WHITE;
                     alpha = 0.025;
-                    border.alpha = 0.25;
+                    borderAlpha = 0.25;
                 }
                 else {
                     transparent = true;
                 }
             }
             else {
-                border.alpha = 0.1;
+                borderAlpha = 0.1;
                 text.alpha = 0.5;
                 transparent = true;
             }
