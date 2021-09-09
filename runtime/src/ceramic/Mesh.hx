@@ -1,7 +1,7 @@
 package ceramic;
 
-import ceramic.GeometryUtils;
 import ceramic.Assert.*;
+import ceramic.GeometryUtils;
 
 using ceramic.Extensions;
 
@@ -214,7 +214,7 @@ class Mesh extends Visual {
             var cx:Float;
             var cy:Float;
             while (i < numTriangles) {
-                
+
                 na = indices.unsafeGet(j);
                 j++;
                 nb = indices.unsafeGet(j);
@@ -236,7 +236,7 @@ class Mesh extends Visual {
                 cx = vertices.unsafeGet(k);
                 k++;
                 cy = vertices.unsafeGet(k);
-                
+
                 if (GeometryUtils.pointInTriangle(
                     testX, testY,
                     ax, ay, bx, by, cx, cy
@@ -329,7 +329,7 @@ class Mesh extends Visual {
 
         var stepX:Float = width / cols;
         var stepY:Float = height / rows;
-        
+
         var v:Int = 0;
         var i:Int = 0;
 
@@ -347,14 +347,14 @@ class Mesh extends Visual {
                 if (r > 0 && c > 0) {
 
                     var n = (r - 1) * (cols + 1) + c - 1;
-    
+
                     indices[i] = n;
                     i++;
                     indices[i] = n + 1;
                     i++;
                     indices[i] = n + (cols + 1);
                     i++;
-    
+
                     indices[i] = n + 1;
                     i++;
                     indices[i] = n + (cols + 1);
@@ -390,7 +390,7 @@ class Mesh extends Visual {
             texture = this.texture;
 
         grid(cols, rows, texture.width, texture.height);
-        
+
         var u:Int = 0;
         var stepX:Float = 1.0 / cols;
         var stepY:Float = 1.0 / rows;
@@ -398,7 +398,7 @@ class Mesh extends Visual {
         for (r in 0...rows+1) {
 
             var y = r * stepY;
-            
+
             uvs[u] = 0;
             u++;
             uvs[u] = y;

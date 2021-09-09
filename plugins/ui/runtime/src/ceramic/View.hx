@@ -163,7 +163,7 @@ class View extends Layer {
      * A hint to tell how much space this view should take,
      *     relative to the space taken by a whole group of views.
      *     Example:
-     * 
+     *
      *         view1.flex = 1; // Fills 1/3 of available space
      *         view2.flex = 2; // Fills 2/3 of available space
      */
@@ -384,7 +384,7 @@ class View extends Layer {
     }
 
     inline public function resetComputedSize():Void {
-        
+
         computedWidth = -1;
         persistedComputedWidth = -1;
 
@@ -674,7 +674,7 @@ class View extends Layer {
 
             if (!hasExplicitWidth && !hasExplicitHeight) {
                 // Width and heigh are both implicit
-                
+
                 var newWidth = computedHeight * intrinsicWidth / intrinsicHeight;
                 if (newWidth > computedWidth && layoutMask.canIncreaseWidth()) {
                     computedWidth = newWidth;
@@ -682,7 +682,7 @@ class View extends Layer {
                 else if (newWidth < computedWidth && layoutMask.canDecreaseWidth()) {
                     computedWidth = newWidth;
                 }
-            
+
                 var newHeight = computedWidth * intrinsicHeight / intrinsicWidth;
                 if (newHeight > computedHeight && layoutMask.canIncreaseHeight()) {
                     computedHeight = newHeight;
