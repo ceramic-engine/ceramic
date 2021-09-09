@@ -53,7 +53,7 @@ class VisualNapePhysics extends Entity {
         if (visual != null) {
             if (visual.nape == this) {
                 visual.nape = null;
-            } 
+            }
             visual = null;
         }
 

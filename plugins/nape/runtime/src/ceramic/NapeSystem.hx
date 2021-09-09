@@ -83,7 +83,7 @@ class NapeSystem extends System {
         if (!spaces.remove(space)) {
             log.warning('Space not removed from NapeSystem because it was not added at the first place');
         }
-        
+
     }
 
     inline function updateSpaces(delta:Float):Void {
@@ -196,7 +196,7 @@ class NapeSystem extends System {
             var body = _destroyedItems.pop();
             items.remove(cast body);
         }
-        
+
     }
 
     inline function flushCreatedItems():Void {
@@ -205,7 +205,7 @@ class NapeSystem extends System {
             var body = _createdItems.pop();
             items.push(cast body);
         }
-        
+
     }
 
 }
