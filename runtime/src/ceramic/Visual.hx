@@ -892,6 +892,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             nape = null;
         }
 
+        if (contentDirty) {
+            computeContent();
+        }
+
         var w = width * scaleX;
         var h = height * scaleY;
 
