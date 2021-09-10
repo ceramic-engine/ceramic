@@ -35,7 +35,7 @@ class IntFloatMap {
 
         keys = new IntIntMap(size, fillFactor, false);
         values = new Vector(size);
-        
+
         if (iterable) {
             iterableKeys = [];
         }
@@ -112,7 +112,7 @@ class IntFloatMap {
 
             // Remove key
             keys.remove(key);
-            
+
             // Update iterable keys
             if (iterableKeys != null) {
                 iterableKeys.splice(iterableKeys.indexOf(key), 1);
@@ -122,14 +122,14 @@ class IntFloatMap {
     }
 
     public function copy():IntFloatMap {
-        
+
         var map = new IntFloatMap();
 
         map.keys = keys.copy();
         map.nextFreeIndex = nextFreeIndex;
         map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
         map.values = values.copy();
-        
+
         return map;
 
     }
@@ -171,7 +171,7 @@ abstract IntFloatMap(Map<Int,Float>) {
     }
 
     inline public function exists(key:Int):Bool {
-        return this.exists(Std.int(key));
+        return existsInline(key);
     }
 
     inline public function set(key:Int, value:Float):Float {
@@ -180,7 +180,7 @@ abstract IntFloatMap(Map<Int,Float>) {
     }
 
     inline public function get(key:Int):Float {
-        return this.get(Std.int(key));
+        return getInline(key);
     }
 
     inline public function remove(key:Int):Void {
@@ -188,11 +188,12 @@ abstract IntFloatMap(Map<Int,Float>) {
     }
 
     inline public function getInline(key:Int):Float {
-        return this.get(key);
+        var value = this.get(Std.int(key));
+        return value != null ? value : 0.0;
     }
 
     inline public function existsInline(key:Int):Bool {
-        return this.exists(key);
+        return this.exists(Std.int(key));
     }
 
     inline public function copy():IntFloatMap {
