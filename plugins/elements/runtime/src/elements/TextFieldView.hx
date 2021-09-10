@@ -21,28 +21,7 @@ import tracker.Observable;
 
 using StringTools;
 
-class TextFieldView extends FieldView {
-
-/// Hooks
-
-    public dynamic function setTextValue(field:TextFieldView, textValue:String):Void {
-
-        this.textValue = textValue;
-        setValue(field, textValue);
-
-    }
-
-    public dynamic function setValue(field:TextFieldView, value:Dynamic):Void {
-
-        // Default implementation does nothing
-
-    }
-
-    public dynamic function setEmptyValue(field:TextFieldView):Void {
-
-        // Default implementation does nothing
-
-    }
+class TextFieldView extends BaseTextFieldView {
 
 /// Overrides
 
@@ -64,8 +43,6 @@ class TextFieldView extends FieldView {
         return multiline;
     }
 
-    @observe public var textValue:String = '';
-
     @observe public var placeholder:String = '';
 
     @observe public var inputStyle:InputStyle = DEFAULT;
@@ -77,10 +54,6 @@ class TextFieldView extends FieldView {
 /// Internal properties
 
     var layers:LayersLayout;
-
-    var textView:TextView;
-
-    var editText:EditText;
 
     var placeholderView:TextView;
 
@@ -101,6 +74,7 @@ class TextFieldView extends FieldView {
         textView = new TextView();
         textView.viewSize(fill(), auto());
         textView.verticalAlign = CENTER;
+        textView.onResize(this, clipText);
         autorun(() -> {
             textView.align = textAlign;
         });
@@ -200,20 +174,24 @@ class TextFieldView extends FieldView {
 
     }
 
+    function clipText(width:Float, height:Float) {
+
+        var text = textView.text;
+        text.clipTextX = 0;
+        text.clipTextY = 0;
+        text.clipTextWidth = width + 2;
+        text.clipTextHeight = this.height;
+
+    }
+
 /// Internal
 
-    function updateFromTextValue() {
+    function handleStopEditText() {
 
-        var displayedText = textValue;
-
-        unobserve();
-
-        if (editText != null)
-            editText.updateText(displayedText);
-
-        textView.content = displayedText;
-
-        reobserve();
+        // Release focus when stopping edition
+        if (focused) {
+            screen.focusedVisual = null;
+        }
 
     }
 
@@ -229,51 +207,6 @@ class TextFieldView extends FieldView {
         placeholderView.visible = (displayedText == '' && !focused);
 
         reobserve();
-
-    }
-
-    function updateFromEditText(text:String) {
-
-        var selectText:SelectText = cast textView.text.component('selectText');
-        var prevText = this.textValue;
-        var prevSelectionStart = selectText.selectionStart;
-        var prevSelectionEnd = selectText.selectionEnd;
-
-        setTextValue(this, text);
-
-        var sanitizedText = this.textValue;
-
-        var prevBefore = prevText.substring(0, prevSelectionStart - 1);
-        var sanitizedBefore = sanitizedText.substring(0, prevSelectionStart - 1);
-
-        if (prevSelectionStart == prevSelectionEnd
-            && text.length == prevText.length + 1
-            && sanitizedText.length > text.length
-            && prevBefore == sanitizedBefore) {
-            // Last character typed has been replaced by something longer
-            // Update selection accordingly
-            app.oncePostFlushImmediate(function() {
-                if (destroyed)
-                    return;
-                var selectionStart = selectText.selectionStart;
-                var diff = sanitizedText.length - prevText.length;
-                var prevAfter = prevText.substring(selectionStart, prevText.length);
-                var sanitizedAfter = sanitizedText.substring(selectionStart + diff, sanitizedText.length);
-                if (prevAfter == sanitizedAfter) {
-                    selectText.selectionStart = prevSelectionStart + diff;
-                    selectText.selectionEnd = selectText.selectionStart;
-                }
-            });
-        }
-
-    }
-
-    function handleStopEditText() {
-
-        // Release focus when stopping edition
-        if (focused) {
-            screen.focusedVisual = null;
-        }
 
     }
 

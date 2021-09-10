@@ -38,6 +38,14 @@ class Im {
 
     inline static final DEFAULT_TEXT_ALIGN:TextAlign = LEFT;
 
+    inline static final INT_MIN_VALUE:Int = -2147483647;
+
+    inline static final INT_MAX_VALUE:Int = 2147483647;
+
+    inline static final FLOAT_MIN_VALUE:Float = -2147483647;
+
+    inline static final FLOAT_MAX_VALUE:Float = 2147483647;
+
     static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
 
     static var _labelPosition:LabelPosition = DEFAULT_LABEL_POSITION;
@@ -299,6 +307,8 @@ class Im {
         var item = WindowItem.get();
         item.kind = EDIT_TEXT;
         item.string0 = Im.readString(value);
+        if (item.string0 == null)
+            item.string0 = '';
         item.string1 = item.string0;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
@@ -328,7 +338,7 @@ class Im {
         #if completion
         ?title:String, value:IntPointer, ?minValue:Int, ?maxValue:Int
         #else
-        ?title:String, value:IntPointer, minValue:Int = -999999999, maxValue:Int = 999999999
+        ?title:String, value:IntPointer, minValue:Int = INT_MIN_VALUE, maxValue:Int = INT_MAX_VALUE
         #end
     ):Bool {
 
@@ -364,9 +374,9 @@ class Im {
 
     public static function editFloat(
         #if completion
-        ?title:String, value:FloatPointer, ?minValue:Float, ?maxValue:Float
+        ?title:String, value:FloatPointer, ?minValue:Float, ?maxValue:Float, ?decimals:Int
         #else
-        ?title:String, value:FloatPointer, minValue:Float = -999999999, maxValue:Float = 999999999
+        ?title:String, value:FloatPointer, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, decimals:Int = -1
         #end
     ):Bool {
 
@@ -378,6 +388,76 @@ class Im {
         item.float1 = item.float0;
         item.float3 = minValue;
         item.float4 = maxValue;
+        item.int0 = decimals;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.float0;
+            var newValue = item.previous.float1;
+            if (newValue != prevValue) {
+                item.float0 = newValue;
+                item.float1 = newValue;
+                Im.writeFloat(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    public static function slideInt(
+        ?title:String, value:IntPointer, minValue:Int, maxValue:Int
+    ):Bool {
+
+        var windowData = context.currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = SLIDE_INT;
+        item.int0 = Im.readInt(value);
+        item.int1 = item.int0;
+        item.float3 = minValue;
+        item.float4 = maxValue;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.int0;
+            var newValue = item.previous.int1;
+            if (newValue != prevValue) {
+                item.int0 = newValue;
+                item.int1 = newValue;
+                Im.writeInt(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    public static function slideFloat(
+        ?title:String, value:FloatPointer, minValue:Float, maxValue:Float, decimals:Int = 3
+    ):Bool {
+
+        var windowData = context.currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = SLIDE_FLOAT;
+        item.float0 = Im.readFloat(value);
+        item.float1 = item.float0;
+        item.float3 = minValue;
+        item.float4 = maxValue;
+        item.int0 = decimals;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
@@ -782,7 +862,7 @@ class Im {
 
     }
 
-    macro public static function string(value:ExprOf<String>):Expr {
+    macro public static function string(?value:ExprOf<String>):Expr {
 
         return switch value.expr {
             case EConst(CIdent('null')):

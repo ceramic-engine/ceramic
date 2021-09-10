@@ -1,18 +1,20 @@
 package elements;
 
+import ceramic.EditText;
+import ceramic.Point;
+import ceramic.Shortcuts.*;
+import ceramic.TextView;
+import ceramic.TouchInfo;
+import ceramic.View;
+import elements.Context.context;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
+
 using StringTools;
 
-class SliderFieldView extends FieldView {
+class SliderFieldView extends BaseTextFieldView {
 
     static var _point = new Point();
-
-/// Hooks
-
-    public dynamic function setValue(field:SliderFieldView, value:Float):Void {
-
-        // Default implementation does nothing
-
-    }
 
 /// Public properties
 
@@ -26,11 +28,9 @@ class SliderFieldView extends FieldView {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    public var decimals:Int = -1;
+
 /// Internal properties
-
-    var textView:TextView;
-
-    var editText:EditText;
 
     var sliderContainer:View;
 
@@ -55,10 +55,13 @@ class SliderFieldView extends FieldView {
         textView.align = LEFT;
         textView.pointSize = 12;
         textView.preRenderedSize = 20;
+        textView.onResize(this, clipText);
         autorun(() -> {
             textView.active = enabledTextInput;
         });
         add(textView);
+
+        var theme = context.theme;
 
         editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
         editText.container = textView;
@@ -81,6 +84,7 @@ class SliderFieldView extends FieldView {
         sliderContainer.onLayout(this, layoutSliderContainer);
 
         autorun(updateStyle);
+        autorun(updateFromTextValue);
         autorun(updateFromValue);
 
     }
@@ -105,6 +109,9 @@ class SliderFieldView extends FieldView {
                 emptyValue = minValue;
             if (emptyValue > maxValue)
                 emptyValue = maxValue;
+
+            emptyValue = applyDecimals(emptyValue);
+
             setValue(this, emptyValue);
             updateFromValue();
         }
@@ -114,6 +121,16 @@ class SliderFieldView extends FieldView {
 
         screen.offPointerMove(handleSliderMove);
         screen.offPointerUp(handleSliderUp);
+
+    }
+
+    function clipText(width:Float, height:Float) {
+
+        var text = textView.text;
+        text.clipTextX = 0;
+        text.clipTextY = 0;
+        text.clipTextWidth = width - 6;
+        text.clipTextHeight = this.height;
 
     }
 
@@ -147,26 +164,16 @@ class SliderFieldView extends FieldView {
 
 /// Internal
 
-    function updateFromEditText(text:String) {
-
-        if (text != '' && text != '-') {
-            var textValue = text.replace(',', '.');
-            var endsWithDot = textValue.endsWith('.');
-            if (!endsWithDot) {
-                setValue(this, Sanitize.stringToFloat(textValue));
-                updateFromValue();
-            }
-            else {
-                textView.content = textValue;
-                editText.updateText(textValue);
-            }
-        }
-
-    }
-
     function handleStopEditText() {
 
-        //
+        // Release focus when stopping edition
+        if (focused) {
+            if (screen.focusedVisual != null) {
+                if (!screen.focusedVisual.hasIndirectParent(this) || screen.focusedVisual.hasIndirectParent(textView)) {
+                    screen.focusedVisual = null;
+                }
+            }
+        }
 
     }
 
@@ -177,7 +184,10 @@ class SliderFieldView extends FieldView {
         unobserve();
 
         var displayedText = '' + value;
-        editText.updateText(displayedText);
+        if (editText != null)
+            editText.updateText(displayedText);
+        if (textValue != displayedText)
+            textValue = displayedText;
         textView.content = displayedText;
 
         sliderContainer.layoutDirty = true;
@@ -187,6 +197,8 @@ class SliderFieldView extends FieldView {
     }
 
     function updateStyle() {
+
+        var theme = context.theme;
 
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;
@@ -226,6 +238,20 @@ class SliderFieldView extends FieldView {
             borderColor = theme.lightBorderColor;
             sliderContainer.borderSize = 0;
         }
+
+    }
+
+    function applyDecimals(value:Float):Float {
+
+        if (decimals == 0) {
+            value = Math.round(value);
+        }
+        else if (decimals >= 1) {
+            var power = Math.pow(10, decimals);
+            value = Math.round(value * power) / power;
+        }
+
+        return value;
 
     }
 
@@ -278,6 +304,8 @@ class SliderFieldView extends FieldView {
             newValue = minValue;
         if (newValue > maxValue)
             newValue = maxValue;
+
+        newValue = applyDecimals(newValue);
 
         setValue(this, newValue);
         updateFromValue();

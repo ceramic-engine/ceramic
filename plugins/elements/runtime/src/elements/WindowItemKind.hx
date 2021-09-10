@@ -14,6 +14,10 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var EDIT_COLOR;
 
+    var SLIDE_FLOAT;
+
+    var SLIDE_INT;
+
     var BUTTON;
 
     var CHECK;

@@ -98,6 +98,12 @@ class WindowItem {
             case EDIT_COLOR:
                 return isSimilarLabel(item);
 
+            case SLIDE_FLOAT:
+                return isSimilarLabel(item);
+
+            case SLIDE_INT:
+                return isSimilarLabel(item);
+
             case TEXT:
                 return true;
 
@@ -132,6 +138,9 @@ class WindowItem {
 
             case EDIT_COLOR:
                 return createOrUpdateColorField(view);
+
+            case SLIDE_FLOAT | SLIDE_INT:
+                return createOrUpdateSliderField(view);
 
             case TEXT:
                 return createOrUpdateText(view);
@@ -382,33 +391,35 @@ class WindowItem {
 
     }
 
-    static function _editTextSetValue(field:TextFieldView, value:String):Void {
+    static function _editTextSetValue(field:BaseTextFieldView, value:String):Void {
 
         field.windowItem().string1 = value;
 
     }
 
-    static function _editFloatSetTextValue(field:TextFieldView, textValue:String):Void {
+    static function _editFloatSetTextValue(field:BaseTextFieldView, textValue:String):Void {
 
         if (!_editFloatOrIntOperations(field, textValue)) {
             var item = field.windowItem();
             var minValue = -999999999; // Allow lower value at this stage because we are typing
             var maxValue = item.float4;
-            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue);
+            var decimals = item.int0;
+            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue, decimals);
         }
 
     }
 
-    static function _editFloatSetEmptyValue(field:TextFieldView):Void {
+    static function _editFloatSetEmptyValue(field:BaseTextFieldView):Void {
 
         final item = field.windowItem();
         var minValue = item.float3;
         var maxValue = item.float4;
-        item.float1 = SanitizeTextField.setEmptyToFloat(field, minValue, maxValue);
+        var decimals = item.int0;
+        item.float1 = SanitizeTextField.setEmptyToFloat(field, minValue, maxValue, decimals);
 
     }
 
-    static function _editFloatSetValue(field:TextFieldView, value:Dynamic):Void {
+    static function _editFloatSetValue(field:BaseTextFieldView, value:Dynamic):Void {
 
         final item = field.windowItem();
         var minValue = item.float3;
@@ -420,13 +431,14 @@ class WindowItem {
 
     }
 
-    static function _editFloatFinishEditing(field:TextFieldView):Void {
+    static function _editFloatFinishEditing(field:BaseTextFieldView):Void {
 
         var item = field.windowItem();
         var minValue = item.float3;
         var maxValue = item.float4;
-        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false)) {
-            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue);
+        var decimals = item.int0;
+        if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false, decimals)) {
+            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue, decimals);
             if (field.textValue.endsWith('.')) {
                 field.textValue = field.textValue.substring(0, field.textValue.length - 1);
                 field.invalidateTextValue();
@@ -435,7 +447,7 @@ class WindowItem {
 
     }
 
-    static function _editIntSetTextValue(field:TextFieldView, textValue:String):Void {
+    static function _editIntSetTextValue(field:BaseTextFieldView, textValue:String):Void {
 
         if (!_editFloatOrIntOperations(field, textValue)) {
             var item = field.windowItem();
@@ -446,7 +458,7 @@ class WindowItem {
 
     }
 
-    static function _editIntSetEmptyValue(field:TextFieldView):Void {
+    static function _editIntSetEmptyValue(field:BaseTextFieldView):Void {
 
         final item = field.windowItem();
         var minValue = Std.int(item.float3);
@@ -455,7 +467,7 @@ class WindowItem {
 
     }
 
-    static function _editIntSetValue(field:TextFieldView, value:Dynamic):Void {
+    static function _editIntSetValue(field:BaseTextFieldView, value:Dynamic):Void {
 
         final item = field.windowItem();
         var minValue = item.float3;
@@ -467,18 +479,18 @@ class WindowItem {
 
     }
 
-    static function _editIntFinishEditing(field:TextFieldView):Void {
+    static function _editIntFinishEditing(field:BaseTextFieldView):Void {
 
         var item = field.windowItem();
         var minValue = Std.int(item.float3);
         var maxValue = Std.int(item.float4);
-        if (!_applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, true)) {
+        if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, true, 0)) {
             SanitizeTextField.setTextValueToInt(field, field.textValue, minValue, maxValue);
         }
 
     }
 
-    static function _editFloatOrIntOperations(field:TextFieldView, textValue:String):Bool {
+    static function _editFloatOrIntOperations(field:BaseTextFieldView, textValue:String):Bool {
 
         // TODO move this somewhere else?
 
@@ -515,86 +527,105 @@ class WindowItem {
 
     }
 
-    static function _applyFloatOrIntOperationsIfNeeded(field:TextFieldView, textValue:String, minValue:Float, maxValue:Float, castToInt:Bool):Bool {
+    function createOrUpdateSliderField(view:View):View {
 
-        var addIndex = textValue.indexOf('+');
-        var subtractIndex = textValue.indexOf('-');
-        var multiplyIndex = textValue.indexOf('*');
-        var divideIndex = textValue.indexOf('/');
-        if (addIndex > 0) {
-            var before = textValue.substr(0, addIndex).trim();
-            var after = textValue.substr(addIndex + 1).trim();
-            var result = Std.parseFloat(before) + Std.parseFloat(after);
-            if (!Math.isNaN(result)) {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
+        var field:SliderFieldView = null;
+        var labeled:LabeledFieldView<SliderFieldView> = null;
+        var justCreated = false;
+        if (string2 != null) {
+            labeled = (view != null ? cast view : null);
+            if (labeled == null) {
+                justCreated = true;
+                field = new SliderFieldView();
+                labeled = new LabeledFieldView(field);
             }
             else {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
+                field = labeled.field;
             }
-            return true;
-        }
-        else if (subtractIndex > 0) {
-            var before = textValue.substr(0, subtractIndex).trim();
-            var after = textValue.substr(subtractIndex + 1).trim();
-            var result = Std.parseFloat(before) - Std.parseFloat(after);
-            if (!Math.isNaN(result)) {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
-            }
-            else {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
-            }
-            return true;
-        }
-        else if (multiplyIndex > 0) {
-            var before = textValue.substr(0, multiplyIndex).trim();
-            var after = textValue.substr(multiplyIndex + 1).trim();
-            var result = Std.parseFloat(before) * Std.parseFloat(after);
-            if (!Math.isNaN(result)) {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
-            }
-            else {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
-            }
-            return true;
-        }
-        else if (divideIndex > 0) {
-            var before = textValue.substr(0, divideIndex).trim();
-            var after = textValue.substr(divideIndex + 1).trim();
-            var result = Std.parseFloat(before) / Std.parseFloat(after);
-            if (!Math.isNaN(result)) {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, ''+result, minValue, maxValue);
-            }
-            else {
-                if (castToInt)
-                    SanitizeTextField.setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
-                else
-                    SanitizeTextField.setTextValueToFloat(field, before, minValue, maxValue);
-            }
-            return true;
+            labeled.label = string2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
         }
         else {
-            return false;
+            field = (view != null ? cast view : null);
+            if (field == null) {
+                justCreated = true;
+                field = new SliderFieldView();
+            }
+        }
+
+        var previous = field.windowItem();
+        field.data = this;
+
+        if (kind == SLIDE_FLOAT) {
+
+            field.minValue = float3;
+            field.maxValue = float4;
+            field.decimals = int0;
+
+            if (justCreated) {
+                field.setTextValue = _editFloatSetTextValue;
+                field.setEmptyValue = _editFloatSetEmptyValue;
+                field.setValue = _slideFloatSetValue;
+                field.onFocusedChange(null, (focused, _) -> {
+                    if (!focused)
+                        _editFloatFinishEditing(field);
+                });
+            }
+            if (justCreated || previous.float1 != float0) {
+                field.value = float0;
+            }
+        }
+        else if (kind == SLIDE_INT) {
+
+            field.minValue = float3;
+            field.maxValue = float4;
+            field.decimals = 0;
+
+            if (justCreated) {
+                field.setTextValue = _editIntSetTextValue;
+                field.setEmptyValue = _editIntSetEmptyValue;
+                field.setValue = _slideIntSetValue;
+                field.onFocusedChange(null, (focused, _) -> {
+                    if (!focused)
+                        _editIntFinishEditing(field);
+                });
+            }
+            if (justCreated || previous.int1 != int0) {
+                field.value = int0;
+            }
+        }
+
+        return labeled != null ? labeled : field;
+
+    }
+
+    static function _slideFloatSetValue(field:BaseTextFieldView, value:Float):Void {
+
+        final item = field.windowItem();
+        var sliderField:SliderFieldView = cast field;
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        var floatValue:Float = value;
+        if (value >= minValue && value <= maxValue) {
+            item.float1 = floatValue;
+            var valueDidChange = (sliderField.value != value);
+            sliderField.value = value;
+        }
+
+    }
+
+    static function _slideIntSetValue(field:BaseTextFieldView, value:Float):Void {
+
+        final item = field.windowItem();
+        var sliderField:SliderFieldView = cast field;
+        var minValue = item.float3;
+        var maxValue = item.float4;
+        var floatValue:Float = Math.round(value);
+        if (value >= minValue && value <= maxValue) {
+            item.int1 = Std.int(floatValue);
+            var valueDidChange = (sliderField.value != value);
+            sliderField.value = value;
         }
 
     }
