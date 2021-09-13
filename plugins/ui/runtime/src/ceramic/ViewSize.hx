@@ -3,7 +3,15 @@ package ceramic;
 /**
  * View size helpers
  */
-class ViewSize {
+abstract ViewSize(Float) from Float to Float {
+
+    inline public function new(value:Float) {
+        this = value;
+    }
+
+    inline public function toFloat():Float {
+        return this;
+    }
 
     inline public static function isStandard(encoded:Float):Bool {
 
@@ -13,7 +21,7 @@ class ViewSize {
 
 /// Percent
 
-    inline public static function percent(value:Float):Float {
+    inline public static function percent(value:Float):ViewSize {
 
         return -50000.0 + (value < -10000.0 ? -10000.0 : (value > 10000.0 ? 10000.0 : value));
 
@@ -34,7 +42,7 @@ class ViewSize {
 
 /// Auto
 
-    inline public static function fill():Float {
+    inline public static function fill():ViewSize {
 
         return -60002.0;
 
@@ -49,7 +57,7 @@ class ViewSize {
 
 /// None
 
-    inline public static function auto():Float {
+    inline public static function auto():ViewSize {
 
         return -60001.0;
 
@@ -67,7 +75,7 @@ class ViewSize {
     inline public static function computeWithParentSize(encoded:Float, parent:Float):Float {
 
         return encoded == 0
-                ? 0
+                ? 0.0
                 : (isPercent(encoded)
                     ? percentToFloat(encoded) * parent
                     : (isFill(encoded)
@@ -80,12 +88,12 @@ class ViewSize {
 
 /// Print
 
-    public static function toString(encodedSize:Float) {
+    public function toString() {
 
-        if (ViewSize.isPercent(encodedSize)) return Math.round(ViewSize.percentToFloat(encodedSize) * 100) + '%';
-        if (ViewSize.isAuto(encodedSize)) return 'auto';
-        if (ViewSize.isFill(encodedSize)) return 'fill';
-        return '' + encodedSize;
+        if (ViewSize.isPercent(this)) return Math.round(ViewSize.percentToFloat(this) * 100) + '%';
+        if (ViewSize.isAuto(this)) return 'auto';
+        if (ViewSize.isFill(this)) return 'fill';
+        return '' + this;
 
     }
 

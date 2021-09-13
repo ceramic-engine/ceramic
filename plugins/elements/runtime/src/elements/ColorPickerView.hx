@@ -241,12 +241,12 @@ class ColorPickerView extends LayersLayout implements Observable {
         });
         add(hsluvSpectrumView);
 
-        var offsetX = hsbGradientView.viewWidth + hsbSpectrumView.viewWidth + PADDING * 2;
+        var offsetX = hsbGradientView.viewWidth.toFloat() + hsbSpectrumView.viewWidth.toFloat() + PADDING * 2;
         initRGBFields(offsetX);
         offsetX += FIELD_ROW_WIDTH + PADDING;
         var offsetY = initHSLFields(offsetX);
 
-        offsetX = hsbGradientView.viewWidth + hsbSpectrumView.viewWidth + PADDING * 2;
+        offsetX = hsbGradientView.viewWidth.toFloat() + hsbSpectrumView.viewWidth.toFloat() + PADDING * 2;
         initPaletteUI(offsetX, offsetY);
 
         autorun(updateStyle);

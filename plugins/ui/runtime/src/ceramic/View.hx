@@ -31,8 +31,8 @@ class View extends Layer {
     /**
      * Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
      */
-    public var viewWidth(default,set):Float = ViewSize.auto();
-    function set_viewWidth(viewWidth:Float):Float {
+    public var viewWidth(default,set):ViewSize = ViewSize.auto();
+    function set_viewWidth(viewWidth:ViewSize):ViewSize {
         if (this.viewWidth == viewWidth) return viewWidth;
         this.viewWidth = viewWidth;
         layoutDirty = true;
@@ -42,8 +42,8 @@ class View extends Layer {
     /**
      * Height that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
      */
-    public var viewHeight(default,set):Float = ViewSize.auto();
-    function set_viewHeight(viewHeight:Float):Float {
+    public var viewHeight(default,set):ViewSize = ViewSize.auto();
+    function set_viewHeight(viewHeight:ViewSize):ViewSize {
         if (this.viewHeight == viewHeight) return viewHeight;
         this.viewHeight = viewHeight;
         layoutDirty = true;
@@ -53,7 +53,7 @@ class View extends Layer {
     /**
      * Set `viewWidth` and `viewHeight`
      */
-    inline public function viewSize(width:Float, height:Float) {
+    inline public function viewSize(width:ViewSize, height:ViewSize) {
         viewWidth = width;
         viewHeight = height;
     }
