@@ -4,6 +4,7 @@ import ceramic.Color;
 import ceramic.Equal;
 import ceramic.Pool;
 import ceramic.View;
+import ceramic.Visual;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 
@@ -60,6 +61,8 @@ class WindowItem {
 
     public var string3:String = null;
 
+    public var visual:Visual = null;
+
     public var stringArray0:Array<String> = null;
 
     public function new() {}
@@ -107,6 +110,9 @@ class WindowItem {
             case TEXT:
                 return true;
 
+            case VISUAL:
+                return true;
+
             case BUTTON:
                 return true;
 
@@ -148,6 +154,9 @@ class WindowItem {
             case BUTTON:
                 return createOrUpdateButton(view);
 
+            case VISUAL:
+                return null; // TODO
+
             case CHECK:
                 return createOrUpdateBooleanField(view);
 
@@ -173,6 +182,7 @@ class WindowItem {
         string2 = null;
         string3 = null;
         stringArray0 = null;
+        visual = null;
 
         pool.recycle(this);
 

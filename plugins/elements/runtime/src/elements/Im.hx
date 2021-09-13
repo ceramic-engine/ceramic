@@ -1,20 +1,20 @@
 package elements;
 
+#if !macro
+import ceramic.Assert.assert;
 import ceramic.Color;
+import ceramic.ColumnLayout;
 import ceramic.Flags;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.TextAlign;
+import ceramic.ViewSize;
+import ceramic.Visual;
+import elements.Context.context;
 
 using ceramic.Extensions;
-
-#if !macro
-import ceramic.Assert.assert;
-import ceramic.ColumnLayout;
-import ceramic.ViewSize;
-import elements.Context.context;
 #end
 
 #if macro
@@ -31,6 +31,8 @@ typedef IntPointer = (?val:Int)->Int;
  * making it work with any ceramic target
  */
 class Im {
+
+    #if !macro
 
     inline static final DEFAULT_LABEL_WIDTH:Float = -49965.0; // ViewSize.percent(35);
 
@@ -67,8 +69,6 @@ class Im {
     static var _floatPointerValues:IntFloatMap = new IntFloatMap();
 
     static var _stringPointerValues:IntMap<String> = new IntMap<String>();
-
-    #if !macro
 
     public static function extractId(key:String):String {
 
@@ -480,6 +480,20 @@ class Im {
 
     }
 
+    public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false):Void {
+
+        var windowData = context.currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = VISUAL;
+        item.bool0 = scaleToFit;
+        item.visual = visual;
+        item.string2 = title;
+
+        windowData.addItem(item);
+
+    }
+
     inline extern overload public static function button(title:String, enabled:Bool):Bool {
 
         return _button(title, enabled);
@@ -650,8 +664,6 @@ class Im {
 
     }
 
-    #end
-
 /// Helpers
 
     public static function handle(#if !completion ?pos:haxe.PosInfos #end):Handle {
@@ -807,6 +819,8 @@ class Im {
         boolPointer(value);
 
     }
+
+    #end
 
     macro public static function bool(?value:ExprOf<Bool>):Expr {
 
