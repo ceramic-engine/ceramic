@@ -3,6 +3,7 @@ package elements;
 import ceramic.Click;
 import ceramic.RowLayout;
 import ceramic.TextView;
+import ceramic.View;
 import elements.Context.context;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
@@ -10,7 +11,7 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
-class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
+class LabeledView<T:View> extends RowLayout implements Observable {
 
 /// Public properties
 
@@ -18,22 +19,22 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
 
     @observe public var disabled:Bool = false;
 
-    public var field(default,set):T;
-    function set_field(field:T):T {
-        if (this.field == field)
-            return field;
-        if (this.field != null) {
-            this.field.destroy();
+    public var view(default,set):T;
+    function set_view(view:T):T {
+        if (this.view == view)
+            return view;
+        if (this.view != null) {
+            this.view.destroy();
         }
-        this.field = field;
-        if (field != null) {
-            field.viewSize(fill(), auto());
-            add(field);
+        this.view = view;
+        if (view != null) {
+            view.viewSize(fill(), auto());
+            add(view);
             invalidateDisabled();
         }
         remove(labelText);
         add(labelText);
-        return field;
+        return view;
     }
 
     public var labelPosition(default,set):LabelPosition = RIGHT;
@@ -43,9 +44,9 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
             switch labelPosition {
                 case LEFT:
                     remove(labelText);
-                    remove(field);
+                    remove(view);
                     add(labelText);
-                    add(field);
+                    add(view);
                     labelText.align = RIGHT;
                 case RIGHT:
                     remove(labelText);
@@ -79,7 +80,7 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
 
 /// Lifecycle
 
-    public function new(field:T) {
+    public function new(view:T) {
 
         super();
 
@@ -93,13 +94,13 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
         labelText.preRenderedSize = 20;
         add(labelText);
 
-        this.field = field;
+        this.view = view;
 
         autorun(updateDisabled);
         autorun(updateLabel);
         autorun(updateStyle);
 
-        // Focus field on label click
+        // Focus view on label click
         #if !(ios || android)
         labelText.onPointerDown(this, _ -> handleLabelClick());
         #else
@@ -114,7 +115,10 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
 
     function handleLabelClick() {
 
-        field.focus();
+        if (view is FieldView) {
+            var field:FieldView = cast view;
+            field.focus();
+        }
 
     }
 
@@ -126,13 +130,13 @@ class LabeledFieldView<T:FieldView> extends RowLayout implements Observable {
 
     function updateDisabled() {
 
-        var field = this.field;
+        var view = this.view;
         unobserve();
 
-        if (field != null) {
+        if (view != null) {
             var disabled = false;
             reobserve();
-            if (field.getProperty('disabled')) {
+            if (view.getProperty('disabled')) {
                 disabled = true;
             }
             unobserve();

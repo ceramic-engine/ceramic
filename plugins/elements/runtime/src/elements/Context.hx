@@ -17,10 +17,6 @@ class Context extends Entity implements Observable {
 
     public var view(default, null):View = null;
 
-    public var windowsData(default, null):ReadOnlyMap<String,WindowData> = new Map();
-
-    public var currentWindowData(default, null):WindowData = null;
-
     private function new() {
 
         super();

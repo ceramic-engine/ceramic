@@ -9,6 +9,7 @@ import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
+import ceramic.ReadOnlyMap;
 import ceramic.TextAlign;
 import ceramic.ViewSize;
 import ceramic.Visual;
@@ -34,6 +35,8 @@ class Im {
 
     #if !macro
 
+    inline static final DEFAULT_SPACE_HEIGHT:Float = -60001.0; // ViewSize.auto();
+
     inline static final DEFAULT_LABEL_WIDTH:Float = -49965.0; // ViewSize.percent(35);
 
     inline static final DEFAULT_LABEL_POSITION:LabelPosition = RIGHT;
@@ -47,6 +50,14 @@ class Im {
     inline static final FLOAT_MIN_VALUE:Float = -2147483647;
 
     inline static final FLOAT_MAX_VALUE:Float = 2147483647;
+
+    static var _windowsData:ReadOnlyMap<String,WindowData> = new Map();
+
+    static var _currentWindowData:WindowData = null;
+
+    static var _inRow:Bool = false;
+
+    static var _currentRowIndex:Int = -1;
 
     static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
 
@@ -88,7 +99,7 @@ class Im {
             _pointerBaseHandleOccurences.unsafeSet(i, 0);
         }
 
-        for (id => windowData in context.windowsData) {
+        for (id => windowData in _windowsData) {
             windowData.beginFrame();
         }
 
@@ -96,7 +107,7 @@ class Im {
 
     @:noCompletion public static function endFrame():Void {
 
-        for (id => windowData in context.windowsData) {
+        for (id => windowData in _windowsData) {
             windowData.endFrame();
         }
 
@@ -116,7 +127,7 @@ class Im {
 
     public static function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
 
-        assert(context.currentWindowData == null, 'Duplicate begin() calls!');
+        assert(_currentWindowData == null, 'Duplicate begin() calls!');
 
         // Create view if needed
         if (context.view == null) {
@@ -126,14 +137,14 @@ class Im {
         // Get or create window
         var id = extractId(key);
         var title = extractTitle(key);
-        var windowData = context.windowsData.get(id);
+        var windowData = _windowsData.get(id);
         var window = windowData != null ? windowData.window : null;
 
         if (windowData == null) {
             windowData = new WindowData();
             windowData.id = id;
             windowData.beginFrame();
-            context.windowsData.original.set(id, windowData);
+            _windowsData.original.set(id, windowData);
         }
 
         if (window == null) {
@@ -157,9 +168,24 @@ class Im {
         windowData.height = height;
 
         // Make the window current
-        context.currentWindowData = windowData;
+        _currentWindowData = windowData;
 
         return window;
+
+    }
+
+    public static function beginRow():Void {
+
+        assert(_inRow == false, 'Called beginRow() multiple times! (nested rows are not supported)');
+
+        _currentRowIndex++;
+        _inRow = true;
+
+    }
+
+    public static function endRow():Void {
+
+        _inRow = false;
 
     }
 
@@ -201,7 +227,7 @@ class Im {
 
     static function _select(?title:String, index:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = SELECT;
@@ -212,6 +238,7 @@ class Im {
         item.string2 = title;
         item.stringArray0 = list;
         item.string1 = nullValueText;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -239,7 +266,7 @@ class Im {
 
     public static function _check(?title:String, value:BoolPointer):CheckStatus {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = CHECK;
@@ -248,6 +275,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -272,7 +300,7 @@ class Im {
 
     public static function editColor(?title:String, value:IntPointer):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = EDIT_COLOR;
@@ -281,6 +309,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -302,7 +331,7 @@ class Im {
 
     public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = EDIT_TEXT;
@@ -315,6 +344,7 @@ class Im {
         item.bool0 = multiline;
         item.string2 = title;
         item.string3 = placeholder;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -342,7 +372,7 @@ class Im {
         #end
     ):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = EDIT_INT;
@@ -353,6 +383,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -380,7 +411,7 @@ class Im {
         #end
     ):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = EDIT_FLOAT;
@@ -392,6 +423,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -415,7 +447,7 @@ class Im {
         ?title:String, value:IntPointer, minValue:Int, maxValue:Int
     ):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = SLIDE_INT;
@@ -426,6 +458,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -449,7 +482,7 @@ class Im {
         ?title:String, value:FloatPointer, minValue:Float, maxValue:Float, decimals:Int = 3
     ):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = SLIDE_FLOAT;
@@ -461,6 +494,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -482,13 +516,27 @@ class Im {
 
     public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false):Void {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
         item.visual = visual;
         item.string2 = title;
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+    }
+
+    public static function space(height:Float = DEFAULT_SPACE_HEIGHT):Void {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = SPACE;
+        item.float0 = height;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -508,7 +556,7 @@ class Im {
 
     public static function _button(title:String, enabled:Bool):Bool {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = BUTTON;
@@ -517,6 +565,7 @@ class Im {
         item.labelWidth = _labelWidth;
         item.string0 = title;
         item.bool0 = enabled;
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -533,7 +582,7 @@ class Im {
 
     public static function text(value:String, ?align:TextAlign):Void {
 
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = TEXT;
@@ -549,6 +598,7 @@ class Im {
             case RIGHT: 1;
             case CENTER: 2;
         };
+        item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
 
@@ -556,10 +606,10 @@ class Im {
 
     public static function end():Void {
 
-        assert(context.currentWindowData != null, 'Called end() without calling begin() before!');
+        assert(_currentWindowData != null, 'Called end() without calling begin() before!');
 
         // Sync window items
-        var windowData = context.currentWindowData;
+        var windowData = _currentWindowData;
         var window = windowData != null ? windowData.window : null;
 
         if (!windowData.expanded) {
@@ -609,15 +659,58 @@ class Im {
             if (!needsContentRebuild) {
                 for (i in 0...windowData.numItems) {
                     var item = windowItems.unsafeGet(i);
-                    if (item.previous == null) {
+                    if (item.previous == null || !item.isSameItem(item.previous)) {
                         needsContentRebuild = true;
                         break;
                     }
                 }
             }
 
+            if (!needsContentRebuild) {
+                var prevNumItems = 0;
+                var subviews = form.subviews;
+                for (i in 0...subviews.length) {
+                    var view = subviews.unsafeGet(i);
+                    if (view is ImRowLayout) {
+                        var rowLayout:ImRowLayout = cast view;
+                        var subviews = rowLayout.subviews;
+                        if (subviews != null) {
+                            for (j in 0...subviews.length) {
+                                prevNumItems++;
+                            }
+                        }
+                    }
+                    else {
+                        prevNumItems++;
+                    }
+                }
+                if (prevNumItems != windowData.numItems) {
+                    needsContentRebuild = true;
+                }
+            }
+
             if (needsContentRebuild) {
-                var views = form.subviews != null ? [].concat(form.subviews.original) : [];
+                var viewsWithRows = form.subviews != null ? [].concat(form.subviews.original) : [];
+                var views = [];
+                var rowLayouts = [];
+                var lastRowIndex = -1;
+                for (i in 0...viewsWithRows.length) {
+                    var view = viewsWithRows.unsafeGet(i);
+                    if (view is ImRowLayout) {
+                        var rowLayout:ImRowLayout = cast view;
+                        var subviews = rowLayout.subviews;
+                        if (subviews != null) {
+                            for (j in 0...subviews.length) {
+                                views.push(subviews.unsafeGet(j));
+                            }
+                        }
+                        rowLayout.removeAllViews();
+                        rowLayouts.push(rowLayout);
+                    }
+                    else {
+                        views.push(view);
+                    }
+                }
                 form.removeAllViews();
 
                 for (i in 0...windowData.numItems) {
@@ -631,36 +724,76 @@ class Im {
                         }
                     }
                     view = item.updateView(view);
-                    form.add(view);
+
+                    var rowLayout:ImRowLayout = null;
+                    if (item.row >= 0) {
+                        if (lastRowIndex < item.row) {
+                            lastRowIndex++;
+                            rowLayout = rowLayouts[lastRowIndex];
+                            if (rowLayout == null) {
+                                rowLayout = new ImRowLayout();
+                                rowLayouts[lastRowIndex] = rowLayout;
+                                rowLayout.viewSize(ViewSize.fill(), ViewSize.auto());
+                            }
+                            form.add(rowLayout);
+                        }
+                        else {
+                            rowLayout = rowLayouts[item.row];
+                        }
+                    }
+
+                    view.viewWidth = ViewSize.fill();
+
+                    if (rowLayout != null) {
+                        rowLayout.add(view);
+                    }
+                    else {
+                        form.add(view);
+                    }
                 }
 
                 // Remove any unused view
                 while (windowData.numItems < views.length) {
                     views.pop().destroy();
                 }
+
+                // Remove any unused row layout
+                while (lastRowIndex + 1 < rowLayouts.length) {
+                    rowLayouts.pop().destroy();
+                }
             }
             else {
                 var views = form.subviews;
-                for (i in 0...windowData.numItems) {
-                    var item = windowItems.unsafeGet(i);
-                    item.updateView(views[i]);
-                }
-
-                // Remove any unused view
-                if (views != null && windowData.numItems < views.length) {
-                    var toRemove = [];
-                    for (i in windowData.numItems...views.length) {
-                        toRemove.push(views[i]);
+                var n = 0;
+                var i = 0;
+                while (i < windowData.numItems) {
+                    var view = views[n];
+                    if (view is ImRowLayout) {
+                        var rowLayout:ImRowLayout = cast view;
+                        var subviews = rowLayout.subviews;
+                        if (subviews != null) {
+                            for (j in 0...subviews.length) {
+                                var view = subviews.unsafeGet(j);
+                                var item = windowItems.unsafeGet(i);
+                                item.updateView(view);
+                                i++;
+                            }
+                        }
                     }
-                    for (view in toRemove) {
-                        view.destroy();
+                    else {
+                        var item = windowItems.unsafeGet(i);
+                        item.updateView(view);
+                        i++;
                     }
+                    n++;
                 }
             }
         }
 
         // Done with this window
-        context.currentWindowData = null;
+        _currentWindowData = null;
+        _currentRowIndex = -1;
+        _inRow = false;
 
     }
 

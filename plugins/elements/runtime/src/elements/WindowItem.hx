@@ -65,6 +65,8 @@ class WindowItem {
 
     public var stringArray0:Array<String> = null;
 
+    public var row:Int = -1;
+
     public function new() {}
 
     public function isSameItem(item:WindowItem):Bool {
@@ -73,6 +75,9 @@ class WindowItem {
             return false;
 
         if (item.kind != kind)
+            return false;
+
+        if (item.row != row)
             return false;
 
         switch kind {
@@ -116,6 +121,9 @@ class WindowItem {
             case BUTTON:
                 return true;
 
+            case SPACE:
+                return true;
+
             case CHECK:
                 return isSimilarLabel(item);
 
@@ -154,6 +162,9 @@ class WindowItem {
             case BUTTON:
                 return createOrUpdateButton(view);
 
+            case SPACE:
+                return createOrUpdateSpace(view);
+
             case VISUAL:
                 return null; // TODO
 
@@ -183,25 +194,39 @@ class WindowItem {
         string3 = null;
         stringArray0 = null;
         visual = null;
+        row = -1;
 
         pool.recycle(this);
+
+    }
+
+    function createOrUpdateSpace(view:View):View {
+
+        if (view == null) {
+            view = new View();
+            view.transparent = true;
+        }
+
+        view.viewHeight = float0;
+
+        return view;
 
     }
 
     function createOrUpdateSelectField(view:View):View {
 
         var field:SelectFieldView = null;
-        var labeled:LabeledFieldView<SelectFieldView> = null;
+        var labeled:LabeledView<SelectFieldView> = null;
         var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
                 field = new SelectFieldView();
-                labeled = new LabeledFieldView(field);
+                labeled = new LabeledView(field);
             }
             else {
-                field = labeled.field;
+                field = labeled.view;
             }
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
@@ -234,17 +259,17 @@ class WindowItem {
     function createOrUpdateBooleanField(view:View):View {
 
         var field:BooleanFieldView = null;
-        var labeled:LabeledFieldView<BooleanFieldView> = null;
+        var labeled:LabeledView<BooleanFieldView> = null;
         var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
                 field = new BooleanFieldView();
-                labeled = new LabeledFieldView(field);
+                labeled = new LabeledView(field);
             }
             else {
-                field = labeled.field;
+                field = labeled.view;
             }
             field.viewWidth = ceramic.ViewSize.auto();
             labeled.label = string2;
@@ -283,17 +308,17 @@ class WindowItem {
     function createOrUpdateColorField(view:View):View {
 
         var field:ColorFieldView = null;
-        var labeled:LabeledFieldView<ColorFieldView> = null;
+        var labeled:LabeledView<ColorFieldView> = null;
         var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
                 field = new ColorFieldView();
-                labeled = new LabeledFieldView(field);
+                labeled = new LabeledView(field);
             }
             else {
-                field = labeled.field;
+                field = labeled.view;
             }
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
@@ -331,17 +356,17 @@ class WindowItem {
     function createOrUpdateEditTextField(view:View):View {
 
         var field:TextFieldView = null;
-        var labeled:LabeledFieldView<TextFieldView> = null;
+        var labeled:LabeledView<TextFieldView> = null;
         var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
                 field = new TextFieldView();
-                labeled = new LabeledFieldView(field);
+                labeled = new LabeledView(field);
             }
             else {
-                field = labeled.field;
+                field = labeled.view;
             }
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
@@ -540,17 +565,17 @@ class WindowItem {
     function createOrUpdateSliderField(view:View):View {
 
         var field:SliderFieldView = null;
-        var labeled:LabeledFieldView<SliderFieldView> = null;
+        var labeled:LabeledView<SliderFieldView> = null;
         var justCreated = false;
         if (string2 != null) {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
                 field = new SliderFieldView();
-                labeled = new LabeledFieldView(field);
+                labeled = new LabeledView(field);
             }
             else {
-                field = labeled.field;
+                field = labeled.view;
             }
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
