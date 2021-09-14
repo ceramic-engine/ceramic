@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.Click;
 import ceramic.ColumnLayout;
+import ceramic.DoubleClick;
 import ceramic.Point;
 import ceramic.RowLayout;
 import ceramic.Shortcuts.*;
@@ -32,11 +33,15 @@ class Window extends ColumnLayout implements Observable {
 
     @observe public var title:String = null;
 
-    @event function headerClick();
+    @event function expandCollapseClick();
+
+    @event function headerDoubleClick();
 
     var headerView:RowLayout;
 
-    var headerViewClick:Click;
+    var expandCollapseClick:Click;
+
+    var headerViewDoubleClick:DoubleClick;
 
     var bodyView:ColumnLayout;
 
@@ -60,9 +65,9 @@ class Window extends ColumnLayout implements Observable {
         headerView.transparent = false;
         headerView.viewSize(percent(100), HEADER_HEIGHT);
         headerView.onPointerDown(this, headerDown);
-        headerViewClick = new Click();
-        headerViewClick.onClick(this, emitHeaderClick);
-        headerView.component('click', headerViewClick);
+        headerViewDoubleClick = new DoubleClick();
+        headerViewDoubleClick.onDoubleClick(this, emitHeaderDoubleClick);
+        headerView.component('doubleClick', headerViewDoubleClick);
         add(headerView);
 
         expandView = new View();
@@ -78,6 +83,9 @@ class Window extends ColumnLayout implements Observable {
             expandView.add(expandTriangle);
         }
         expandView.viewSize(HEADER_HEIGHT, HEADER_HEIGHT);
+        expandCollapseClick = new Click();
+        expandCollapseClick.onClick(this, emitExpandCollapseClick);
+        expandView.component('click', expandCollapseClick);
         headerView.add(expandView);
 
         titleView = new TextView();
@@ -97,6 +105,9 @@ class Window extends ColumnLayout implements Observable {
         onTitleChange(this, titleChange);
 
         autorun(updateStyle);
+
+        onPointerDown(this, _ -> {});
+        onPointerOver(this, _ -> {});
 
     }
 
@@ -129,7 +140,8 @@ class Window extends ColumnLayout implements Observable {
         if (!dragging) {
             if (diffX > DRAG_THRESHOLD || -diffX > DRAG_THRESHOLD || diffY > DRAG_THRESHOLD || -diffY > DRAG_THRESHOLD) {
                 dragging = true;
-                headerViewClick.cancel();
+                headerViewDoubleClick.cancel();
+                expandCollapseClick.cancel();
             }
         }
 

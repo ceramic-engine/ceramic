@@ -198,7 +198,10 @@ class Im {
             window.id = id;
             window.pos(windowData.x, windowData.y);
             window.viewHeight = ViewSize.auto();
-            window.onHeaderClick(window, function() {
+            window.onHeaderDoubleClick(window, function() {
+                windowData.expanded = !windowData.expanded;
+            });
+            window.onExpandCollapseClick(window, function() {
                 windowData.expanded = !windowData.expanded;
             });
             context.view.add(window);
