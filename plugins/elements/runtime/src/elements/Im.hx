@@ -10,6 +10,7 @@ import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.ReadOnlyMap;
+import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.ViewSize;
 import ceramic.Visual;
@@ -52,6 +53,10 @@ class Im {
     inline static final FLOAT_MAX_VALUE:Float = 2147483647;
 
     static var _windowsData:ReadOnlyMap<String,WindowData> = new Map();
+
+    static var _orderedWindows:Array<Window> = [];
+
+    static var _orderedWindowsIterated:Array<Window> = [];
 
     static var _currentWindowData:WindowData = null;
 
@@ -105,7 +110,31 @@ class Im {
 
     }
 
+    static function updateWindowsDepth():Void {
+
+        var len = _orderedWindows.length;
+        for (i in 0...len) {
+            _orderedWindowsIterated[i] = _orderedWindows.unsafeGet(i);
+        }
+        for (i in 0...len-1) {
+            var window = _orderedWindowsIterated.unsafeGet(i);
+            _orderedWindowsIterated.unsafeSet(i, null);
+            if (screen.focusedVisual != null && (screen.focusedVisual == window || screen.focusedVisual.hasIndirectParent(window))) {
+                _orderedWindows.remove(window);
+                _orderedWindows.push(window);
+            }
+        }
+        var d = 1;
+        for (i in 0...len) {
+            var window = _orderedWindows.unsafeGet(i);
+            window.depth = d++;
+        }
+
+    }
+
     @:noCompletion public static function endFrame():Void {
+
+        updateWindowsDepth();
 
         for (id => windowData in _windowsData) {
             windowData.endFrame();
@@ -143,12 +172,29 @@ class Im {
         if (windowData == null) {
             windowData = new WindowData();
             windowData.id = id;
+            var anyWindowOverlap:Bool;
+            do {
+                anyWindowOverlap = false;
+                for (otherWindowData in _windowsData) {
+                    if (windowData.y == otherWindowData.y) {
+                        anyWindowOverlap = true;
+                        windowData.y += 50;
+                        windowData.x += 10;
+                    }
+                }
+            }
+            while (anyWindowOverlap);
             windowData.beginFrame();
             _windowsData.original.set(id, windowData);
         }
 
         if (window == null) {
             window = new Window();
+            _orderedWindows.push(window);
+            window.onDestroy(null, entity -> {
+                var window:Window = cast entity;
+                _orderedWindows.remove(window);
+            });
             window.id = id;
             window.pos(windowData.x, windowData.y);
             window.viewHeight = ViewSize.auto();
