@@ -43,6 +43,34 @@ class Input extends Entity {
 
     }
 
+    #if plugin_elements
+
+    inline function canEmitKeyDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitKeyUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitGamepadDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitGamepadUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    #end
+
 /// Keyboard
 
     function willEmitKeyDown(key:Key):Void {

@@ -1,7 +1,10 @@
 package elements;
 
+import ceramic.Shortcuts.*;
 import ceramic.System;
+import ceramic.TouchInfo;
 import ceramic.View;
+import ceramic.Visual;
 
 class ImSystem extends System {
 
@@ -24,7 +27,27 @@ class ImSystem extends System {
         view.bindToNativeScreenSize();
         view.depth = 1000;
         view.onLayout(this, _layoutWindows);
+        view.onPointerDown(this, _rootViewPointerDown);
         Context.context.view = view;
+        screen.onFocusedVisualChange(this, handleFocusedVisualChange);
+
+    }
+
+    function handleFocusedVisualChange(focusedVisual:Visual, prevFocusedVisual:Visual) {
+
+        var focusedWindow:Window = null;
+        if (focusedVisual != null) {
+            if (focusedVisual is Window) {
+                focusedWindow = cast focusedVisual;
+            }
+            else {
+                var parentWindow = focusedVisual.firstParentWithClass(Window);
+                if (parentWindow != null) {
+                    focusedWindow = parentWindow;
+                }
+            }
+        }
+        Context.context.focusedWindow = focusedWindow;
 
     }
 
@@ -41,6 +64,12 @@ class ImSystem extends System {
     }
 
 /// Internal
+
+    function _rootViewPointerDown(info:TouchInfo):Void {
+
+        screen.focusedVisual = null;
+
+    }
 
     function _layoutWindows():Void {
 

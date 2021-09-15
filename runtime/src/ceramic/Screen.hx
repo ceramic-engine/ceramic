@@ -923,6 +923,82 @@ class Screen extends Entity implements Observable {
 
     }
 
+    #if plugin_elements
+
+    inline function canEmitMultiTouchPointerDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitMultiTouchPointerMove(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitMultiTouchPointerUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitMouseDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitMouseMove(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitMouseUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitTouchDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitTouchMove(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitTouchUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitPointerDown(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitPointerMove(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    inline function canEmitPointerUp(owner:Entity):Bool {
+
+        return elements.Im.filterEventOwner(owner);
+
+    }
+
+    #end
+
     var matchedDownListeners:Map<Int,Visual> = new Map();
 
     var matchedOverListeners:Map<Int,Visual> = new Map();

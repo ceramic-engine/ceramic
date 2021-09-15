@@ -4,18 +4,21 @@ package elements;
 import ceramic.Assert.assert;
 import ceramic.Color;
 import ceramic.ColumnLayout;
+import ceramic.Entity;
 import ceramic.Flags;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.ReadOnlyMap;
+import ceramic.Scroller;
 import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.ViewSize;
 import ceramic.Visual;
 import elements.Context.context;
 
+using StringTools;
 using ceramic.Extensions;
 #end
 
@@ -843,6 +846,51 @@ class Im {
         _currentWindowData = null;
         _currentRowIndex = -1;
         _inRow = false;
+
+    }
+
+/// Filter event owners
+
+    @:noCompletion inline public static function filterEventOwner(owner:Entity):Bool {
+
+        var allow = false;
+        var window = Context.context.focusedWindow;
+        if (window != null) {
+            if (owner != null) {
+                allow = _filterEventOwner(owner);
+            }
+        }
+        else {
+            allow = true;
+        }
+        return allow;
+
+    }
+
+    static function _filterEventOwner(owner:Entity):Bool {
+
+        var view = Context.context.view;
+        if (view == owner) {
+            return true;
+        }
+        else if (owner is Visual) {
+            var visual:Visual = cast owner;
+            return visual.hasIndirectParent(view);
+        }
+        else if (owner is Scroller) {
+            var scroller:Scroller = cast owner;
+            if (scroller.content != null && (scroller.content == view || scroller.content.hasIndirectParent(view))) {
+                return true;
+            }
+        }
+        else {
+            var className = Type.getClassName(Type.getClass(owner));
+            if (className.startsWith('elements.')) {
+                return true;
+            }
+        }
+
+        return false;
 
     }
 

@@ -17,6 +17,8 @@ class Context extends Entity implements Observable {
 
     public var view(default, null):View = null;
 
+    public var focusedWindow(default, null):Window = null;
+
     private function new() {
 
         super();
