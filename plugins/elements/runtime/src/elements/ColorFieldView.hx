@@ -433,7 +433,7 @@ class ColorFieldView extends FieldView {
         if (pickerVisible) {
 
             if (pickerView == null) {
-                pickerView = new ColorPickerView();
+                pickerView = new ColorPickerView(this);
                 pickerView.depth = 10;
                 pickerView.onColorValueChange(pickerView, (color, _) -> {
                     updatingFromPicker++;

@@ -44,6 +44,22 @@ class ImSystem extends System {
                 if (parentWindow != null) {
                     focusedWindow = parentWindow;
                 }
+                else {
+                    // Handle color picker popover case
+                    var parentPickerView:ColorPickerView = null;
+                    if (focusedVisual is ColorPickerView) {
+                        parentPickerView = cast focusedVisual;
+                    }
+                    else {
+                        parentPickerView = focusedVisual.firstParentWithClass(ColorPickerView);
+                    }
+                    if (parentPickerView != null && parentPickerView.colorFieldView != null) {
+                        parentWindow = parentPickerView.colorFieldView.firstParentWithClass(Window);
+                        if (parentWindow != null) {
+                            focusedWindow = parentWindow;
+                        }
+                    }
+                }
             }
         }
         Context.context.focusedWindow = focusedWindow;

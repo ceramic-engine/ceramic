@@ -162,11 +162,15 @@ class ColorPickerView extends LayersLayout implements Observable {
 
     @observe var paletteColorPreviews:Array<ColorPickerPaletteColorView> = [];
 
+    public var colorFieldView(default, null):ColorFieldView;
+
 /// Lifecycle
 
-    public function new() {
+    public function new(?colorFieldView:ColorFieldView) {
 
         super();
+
+        this.colorFieldView = colorFieldView;
 
         padding(PADDING);
         transparent = false;
