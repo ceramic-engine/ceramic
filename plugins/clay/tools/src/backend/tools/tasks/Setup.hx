@@ -1,12 +1,12 @@
 package backend.tools.tasks;
 
+import haxe.Json;
 import haxe.ds.ReadOnlyArray;
 import haxe.io.Path;
-import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Helpers.*;
 import tools.Files;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -238,14 +238,23 @@ ${haxeflagsHxml.join('\n')}
             return; // Project seems ready
         }
 
+        var extraArgs = [];
+        if (context.debug) {
+            extraArgs.push('--debug');
+        }
+        if (context.variant != null) {
+            extraArgs.push('--variant');
+            extraArgs.push(context.variant);
+        }
+
         // Default to web target
         runCeramic(cwd, ['clay', 'libs', 'web']);
-        runCeramic(cwd, ['clay', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml']);
+        runCeramic(cwd, ['clay', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml'].concat(extraArgs));
 
     }
 
     function checkFrameworkSetup(forceSetup:Bool = false):Void {
-        
+
         // Almost the same thing as backend.runUpdate()
 
         var output = ''+haxelib(['list'], { mute: true }).stdout;
@@ -267,7 +276,7 @@ ${haxeflagsHxml.join('\n')}
                 return;
             }
         }
-        
+
         for (lib in requiredLibs) {
             haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
             libs.set(lib, true);

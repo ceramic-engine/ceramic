@@ -1,16 +1,16 @@
 package backend.tools.tasks;
 
-import haxe.io.Path;
-import haxe.Json;
 import haxe.DynamicAccess;
+import haxe.Json;
+import haxe.io.Path;
+import js.node.ChildProcess;
+import npm.Fiber;
+import npm.StreamSplitter;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Files;
 import tools.Helpers.*;
 import tools.Sync;
-import tools.Files;
-import js.node.ChildProcess;
-import npm.StreamSplitter;
-import npm.Fiber;
 
 using StringTools;
 using tools.Colors;
@@ -46,7 +46,7 @@ class Build extends tools.Task {
 
         // Ensure flow project exist
         if (!FileSystem.exists(outTargetPath)) {
-            fail('Missing clay project file. Did you setup this target?');
+            fail('Missing clay project file. Did you setup this target? (missing path $outTargetPath / ${context.debug})');
         }
 
         var ceramicPath = context.ceramicToolsPath;
@@ -153,7 +153,7 @@ class Build extends tools.Task {
                 cmdArgs.push('-D');
                 cmdArgs.push('haxe_server=$haxeServerPort');
             }
-            
+
             // Disable c++ compilation from haxe compiler when targetting these platforms,
             // because we will do it with hxcpp directly
             if (target.name == 'ios' || target.name == 'android' || target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {

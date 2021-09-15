@@ -1,10 +1,10 @@
 package tools.tasks;
 
-import sys.FileSystem;
 import haxe.crypto.Md5;
-import tools.Helpers.*;
 import haxe.io.Path;
+import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
 
 class Build extends tools.Task {
 
@@ -79,7 +79,7 @@ class Build extends tools.Task {
             fail('Invalid configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
         }
         else {
-            print('Will build with configuration ' + kind + ' for target ' + target.name + ' (' + target.displayName + ').');
+            print('Will build with configuration ' + kind + ' for target ' + target.name + (context.debug ? ' debug' : '') + ' (' + target.displayName + ').');
         }
 
         // Update setup, if needed
