@@ -27,7 +27,6 @@ class ImSystem extends System {
         view.bindToNativeScreenSize();
         view.depth = 1000;
         view.onLayout(this, _layoutWindows);
-        view.onPointerDown(this, _rootViewPointerDown);
         Context.context.view = view;
         screen.onFocusedVisualChange(this, handleFocusedVisualChange);
 
@@ -64,12 +63,6 @@ class ImSystem extends System {
     }
 
 /// Internal
-
-    function _rootViewPointerDown(info:TouchInfo):Void {
-
-        screen.focusedVisual = null;
-
-    }
 
     function _layoutWindows():Void {
 

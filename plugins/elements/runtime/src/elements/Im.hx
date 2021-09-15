@@ -2,14 +2,18 @@ package elements;
 
 #if !macro
 import ceramic.Assert.assert;
+import ceramic.Click;
 import ceramic.Color;
 import ceramic.ColumnLayout;
+import ceramic.Component;
+import ceramic.DoubleClick;
 import ceramic.Entity;
 import ceramic.Flags;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
+import ceramic.LongPress;
 import ceramic.ReadOnlyMap;
 import ceramic.Scroller;
 import ceramic.Shortcuts.*;
@@ -57,6 +61,8 @@ class Im {
 
     static var _windowsData:ReadOnlyMap<String,WindowData> = new Map();
 
+    static var _beginFrameCallbacks:Array<Void->Void> = [];
+
     static var _orderedWindows:Array<Window> = [];
 
     static var _orderedWindowsIterated:Array<Window> = [];
@@ -102,6 +108,11 @@ class Im {
     }
 
     @:noCompletion public static function beginFrame():Void {
+
+        while (_beginFrameCallbacks.length > 0) {
+            var cb = _beginFrameCallbacks.pop();
+            cb();
+        }
 
         for (i in 0..._pointerBaseHandleOccurences.length) {
             _pointerBaseHandleOccurences.unsafeSet(i, 0);
@@ -181,13 +192,12 @@ class Im {
                 for (otherWindowData in _windowsData) {
                     if (windowData.y == otherWindowData.y) {
                         anyWindowOverlap = true;
-                        windowData.y += 50;
-                        windowData.x += 10;
+                        windowData.y += 21;
+                        windowData.x += 4;
                     }
                 }
             }
             while (anyWindowOverlap);
-            windowData.beginFrame();
             _windowsData.original.set(id, windowData);
         }
 
@@ -199,6 +209,7 @@ class Im {
                 _orderedWindows.remove(window);
             });
             window.id = id;
+            window.active = false;
             window.pos(windowData.x, windowData.y);
             window.viewHeight = ViewSize.auto();
             window.onHeaderDoubleClick(window, function() {
@@ -209,6 +220,11 @@ class Im {
             });
             context.view.add(window);
             windowData.window = window;
+            _beginFrameCallbacks.push(function() {
+                if (window != null && !window.destroyed) {
+                    window.active = true;
+                }
+            });
         }
         window.viewWidth = width;
         window.viewHeight = ViewSize.auto();
@@ -664,7 +680,10 @@ class Im {
         var windowData = _currentWindowData;
         var window = windowData != null ? windowData.window : null;
 
-        if (!windowData.expanded) {
+        if (window == null || !window.active) {
+            // Nothing to do
+        }
+        else if (!windowData.expanded) {
             var prevContentView = window.contentView;
             if (prevContentView != null) {
                 window.contentView = null;
@@ -853,6 +872,8 @@ class Im {
 
     @:noCompletion inline public static function filterEventOwner(owner:Entity):Bool {
 
+        // When a window is focused, block any event emit that are not related to elements UI
+
         var allow = false;
         var window = Context.context.focusedWindow;
         if (window != null) {
@@ -883,11 +904,27 @@ class Im {
                 return true;
             }
         }
-        else {
-            var className = Type.getClassName(Type.getClass(owner));
-            if (className.startsWith('elements.')) {
-                return true;
+        else if (owner is Component) {
+            if (owner is DoubleClick) {
+                var doubleClick:DoubleClick = cast owner;
+                var visual = doubleClick.entity;
+                return visual.hasIndirectParent(view);
             }
+            else if (owner is Click) {
+                var click:Click = cast owner;
+                var visual = click.entity;
+                return visual.hasIndirectParent(view);
+            }
+            else if (owner is LongPress) {
+                var longPress:LongPress = cast owner;
+                var visual = longPress.entity;
+                return visual.hasIndirectParent(view);
+            }
+        }
+
+        var className = Type.getClassName(Type.getClass(owner));
+        if (className.startsWith('elements.')) {
+            return true;
         }
 
         return false;

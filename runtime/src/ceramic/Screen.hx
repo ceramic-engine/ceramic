@@ -1264,6 +1264,20 @@ class Screen extends Entity implements Observable {
             });
         }
 
+        #if plugin_elements
+
+        // When an elements UI window is focused, check if we are clicking outside
+        // and remove focus in that case so that regular visuals & entities can resume catching events
+        var context = elements.Context.context;
+        if (context != null && context.focusedWindow != null) {
+            var matched = matchFirstDownListener(x, y, -1, buttonId);
+            if (matched == null || !elements.Im.filterEventOwner(matched)) {
+                focusedVisual = null;
+            }
+        }
+
+        #end
+
     }
 
     function willEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
@@ -1345,6 +1359,20 @@ class Screen extends Entity implements Observable {
                 }
             });
         }
+
+        #if plugin_elements
+
+        // When an elements UI window is focused, check if we are touching outside
+        // and remove focus in that case so that regular visuals & entities can resume catching events
+        var context = elements.Context.context;
+        if (context != null && context.focusedWindow != null) {
+            var matched = matchFirstDownListener(x, y, touchIndex, -1);
+            if (matched == null || !elements.Im.filterEventOwner(matched)) {
+                focusedVisual = null;
+            }
+        }
+
+        #end
 
     }
 

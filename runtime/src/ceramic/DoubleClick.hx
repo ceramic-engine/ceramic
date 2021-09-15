@@ -40,7 +40,7 @@ class DoubleClick extends Entity implements Component {
 /// Public API
 
     public function cancel():Void {
-        
+
         screen.offPointerMove(handlePointerMove);
         pressed = false;
         firstClickTime = -1;
@@ -78,7 +78,7 @@ class DoubleClick extends Entity implements Component {
                 return;
             }
         }
-        
+
         if (firstClickTime >= 0) {
             firstClickTime = -1;
         }
@@ -96,7 +96,7 @@ class DoubleClick extends Entity implements Component {
     }
 
     function handleBlur() {
-        
+
         pressed = false;
 
     }
