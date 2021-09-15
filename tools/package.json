@@ -1,6 +1,6 @@
 {
   "name": "ceramic-tools",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Cross-platform 2D multimedia framework",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
