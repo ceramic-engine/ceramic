@@ -1,7 +1,7 @@
 package ceramic;
 
-import tracker.Observable;
 import tracker.Autorun;
+import tracker.Observable;
 
 /**
  * A view to display and layout images.
@@ -53,7 +53,7 @@ class ImageView extends View implements Observable {
 
     function updateImageScale() {
 
-        var isAutoScaling = (this.scaling != ImageViewScaling.CUSTOM);
+        var scaling = this.scaling;
         var imageScale = this.imageScale;
 
         var scale = switch (this.scaling) {
@@ -62,7 +62,11 @@ class ImageView extends View implements Observable {
             case FILL: 1.0;
         }
 
+        Autorun.unobserve();
+
         imageQuad.scale(scale);
+
+        Autorun.reobserve();
 
     }
 
@@ -75,9 +79,9 @@ class ImageView extends View implements Observable {
         if (image != null) {
             var assets = new Assets();
             assets.addImage(image);
-            
+
             assets.onceComplete(this, function(isSuccess:Bool) {
-                
+
                 if (!isSuccess || image != this.image) {
                     assets.destroy();
                     assets = null;

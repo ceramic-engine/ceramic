@@ -166,7 +166,7 @@ class WindowItem {
                 return createOrUpdateSpace(view);
 
             case VISUAL:
-                return null; // TODO
+                return createOrUpdateVisualContainer(view);
 
             case CHECK:
                 return createOrUpdateBooleanField(view);
@@ -193,6 +193,9 @@ class WindowItem {
         string2 = null;
         string3 = null;
         stringArray0 = null;
+        if (visual != null && visual.parent == null) {
+            visual.active = false;
+        }
         visual = null;
         row = -1;
 
@@ -210,6 +213,49 @@ class WindowItem {
         view.viewHeight = float0;
 
         return view;
+
+    }
+
+    function createOrUpdateVisualContainer(view:View):View {
+
+        var container:VisualContainerView = null;
+        var labeled:LabeledView<VisualContainerView> = null;
+        var justCreated = false;
+        if (string2 != null) {
+            labeled = (view != null ? cast view : null);
+            if (labeled == null) {
+                justCreated = true;
+                container = new VisualContainerView();
+                labeled = new LabeledView(container);
+            }
+            else {
+                container = labeled.view;
+            }
+            labeled.label = string2;
+            labeled.labelPosition = labelPosition;
+            labeled.labelWidth = labelWidth;
+            switch labeled.labelPosition {
+                case LEFT: container.contentAlign = LEFT;
+                case RIGHT: container.contentAlign = RIGHT;
+            }
+        }
+        else {
+            container = view != null ? cast view : null;
+            if (container == null) {
+                container = new VisualContainerView();
+            }
+            container.contentAlign = CENTER;
+        }
+
+        if (justCreated) {
+            container.transparent = true;
+            container.destroyVisualOnRemove = false;
+        }
+
+        visual.active = true;
+        container.visual = visual;
+
+        return labeled != null ? labeled : container;
 
     }
 

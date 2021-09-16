@@ -591,6 +591,8 @@ class Im {
         item.bool0 = scaleToFit;
         item.visual = visual;
         item.string2 = title;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -679,9 +681,19 @@ class Im {
         // Sync window items
         var windowData = _currentWindowData;
         var window = windowData != null ? windowData.window : null;
+        var windowItems = windowData != null ? windowData.items : null;
 
         if (window == null || !window.active) {
-            // Nothing to do
+            if (windowItems != null) {
+                for (i in 0...windowData.numItems) {
+                    var item = windowItems.unsafeGet(i);
+                    if (item.visual != null) {
+                        if (item.visual.parent != null)
+                            item.visual.parent.remove(item.visual);
+                        item.visual.active = false;
+                    }
+                }
+            }
         }
         else if (!windowData.expanded) {
             var prevContentView = window.contentView;
@@ -689,6 +701,16 @@ class Im {
                 window.contentView = null;
                 prevContentView.destroy();
                 windowData.form = null;
+            }
+            if (windowItems != null) {
+                for (i in 0...windowData.numItems) {
+                    var item = windowItems.unsafeGet(i);
+                    if (item.visual != null) {
+                        if (item.visual.parent != null)
+                            item.visual.parent.remove(item.visual);
+                        item.visual.active = false;
+                    }
+                }
             }
         }
         else {
@@ -790,6 +812,10 @@ class Im {
                     var reuseView = (item.previous != null && item.isSameItem(item.previous));
                     if (view == null || !reuseView) {
                         if (view != null) {
+                            if (view is VisualContainerView) {
+                                var containerView:VisualContainerView = cast view;
+                                containerView.visual = null;
+                            }
                             view.destroy();
                             view = null;
                         }
