@@ -59,8 +59,6 @@ class Im {
 
     inline static final FLOAT_MAX_VALUE:Float = 2147483647;
 
-    static var _windowsData:ReadOnlyMap<String,WindowData> = new Map();
-
     static var _beginFrameCallbacks:Array<Void->Void> = [];
 
     static var _orderedWindows:Array<Window> = [];
@@ -118,7 +116,7 @@ class Im {
             _pointerBaseHandleOccurences.unsafeSet(i, 0);
         }
 
-        for (id => windowData in _windowsData) {
+        for (id => windowData in context.windowsData) {
             windowData.beginFrame();
         }
 
@@ -150,7 +148,7 @@ class Im {
 
         updateWindowsDepth();
 
-        for (id => windowData in _windowsData) {
+        for (id => windowData in context.windowsData) {
             windowData.endFrame();
         }
 
@@ -173,23 +171,29 @@ class Im {
         assert(_currentWindowData == null, 'Duplicate begin() calls!');
 
         // Create view if needed
+        var firstIteration = false;
         if (context.view == null) {
+            firstIteration = true;
             ImSystem.shared.createView();
         }
 
         // Get or create window
         var id = extractId(key);
         var title = extractTitle(key);
-        var windowData = _windowsData.get(id);
+        var windowData = context.windowsData.get(id);
         var window = windowData != null ? windowData.window : null;
 
         if (windowData == null) {
             windowData = new WindowData();
             windowData.id = id;
+            if (window != null) {
+                windowData.x = window.x;
+                windowData.y = window.y;
+            }
             var anyWindowOverlap:Bool;
             do {
                 anyWindowOverlap = false;
-                for (otherWindowData in _windowsData) {
+                for (otherWindowData in context.windowsData) {
                     if (windowData.y == otherWindowData.y) {
                         anyWindowOverlap = true;
                         windowData.y += 21;
@@ -198,7 +202,7 @@ class Im {
                 }
             }
             while (anyWindowOverlap);
-            _windowsData.original.set(id, windowData);
+            context.addWindowData(windowData);
         }
 
         if (window == null) {
@@ -226,6 +230,11 @@ class Im {
                 }
             });
         }
+        else {
+            windowData.x = window.x;
+            windowData.y = window.y;
+        }
+
         window.viewWidth = width;
         window.viewHeight = ViewSize.auto();
         window.title = title;

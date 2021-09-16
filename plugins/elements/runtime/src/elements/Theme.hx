@@ -9,21 +9,21 @@ class Theme extends Model {
 
 /// Text colors
 
-    @observe public var fieldTextColor:Color = 0xFFFFFF;
+    @serialize public var fieldTextColor:Color = 0xFFFFFF;
 
-    @observe public var fieldPlaceholderColor:Color = 0x888888;
+    @serialize public var fieldPlaceholderColor:Color = 0x888888;
 
-    @observe public var lightTextColor:Color = 0xF3F3F3;
+    @serialize public var lightTextColor:Color = 0xF3F3F3;
 
-    @observe public var mediumTextColor:Color = 0xCCCCCC;
+    @serialize public var mediumTextColor:Color = 0xCCCCCC;
 
-    @observe public var darkTextColor:Color = 0x888888;
+    @serialize public var darkTextColor:Color = 0x888888;
 
-    @observe public var darkerTextColor:Color = 0x555555;
+    @serialize public var darkerTextColor:Color = 0x555555;
 
 /// Icon colors
 
-    @observe public var iconColor:Color = 0xFFFFFF;
+    @serialize public var iconColor:Color = 0xFFFFFF;
 
 /// Text fonts
 
@@ -35,71 +35,71 @@ class Theme extends Model {
 
 /// Borders colors
 
-    @observe public var lighterBorderColor:Color = 0x999999;
+    @serialize public var lighterBorderColor:Color = 0x999999;
 
-    @observe public var lightBorderColor:Color = 0x636363;
+    @serialize public var lightBorderColor:Color = 0x636363;
 
-    @observe public var mediumBorderColor:Color = 0x464646;
+    @serialize public var mediumBorderColor:Color = 0x464646;
 
-    @observe public var darkBorderColor:Color = 0x383838;
+    @serialize public var darkBorderColor:Color = 0x383838;
 
 /// Backgrounds colors
 
-    @observe public var lightBackgroundColor:Color = 0x4F4F4F;
+    @serialize public var lightBackgroundColor:Color = 0x4F4F4F;
 
-    @observe public var mediumBackgroundColor:Color = 0x4A4A4A;
+    @serialize public var mediumBackgroundColor:Color = 0x4A4A4A;
 
-    @observe public var darkBackgroundColor:Color = 0x424242;
+    @serialize public var darkBackgroundColor:Color = 0x424242;
 
-    @observe public var darkerBackgroundColor:Color = 0x282828;
+    @serialize public var darkerBackgroundColor:Color = 0x282828;
 
 /// Selection
 
-    @observe public var selectionBorderColor:Color = 0x4392E0;
+    @serialize public var selectionBorderColor:Color = 0x4392E0;
 
-    @observe public var highlightColor:Color = 0x4392E0;
+    @serialize public var highlightColor:Color = 0x4392E0;
 
-    @observe public var highlightPendingColor:Color = 0xFE5134;
+    @serialize public var highlightPendingColor:Color = 0xFE5134;
 
 /// Form
 
-    @observe public var formItemSpacing:Float = 6;
+    @serialize public var formItemSpacing:Float = 6;
 
-    @observe public var formPadding:Float = 6;
+    @serialize public var formPadding:Float = 6;
 
 /// Field
 
-    @observe public var focusedFieldSelectionColor:Color = 0x3073C6;
+    @serialize public var focusedFieldSelectionColor:Color = 0x3073C6;
 
-    @observe public var focusedFieldBorderColor:Color = 0x4392E0;
+    @serialize public var focusedFieldBorderColor:Color = 0x4392E0;
 
 /// Overlay
 
-    @observe public var overlayBackgroundColor:Color = 0x1C1C1C;
+    @serialize public var overlayBackgroundColor:Color = 0x1C1C1C;
 
-    @observe public var overlayBackgroundAlpha:Float = 0.925;
+    @serialize public var overlayBackgroundAlpha:Float = 0.925;
 
-    @observe public var overlayBorderColor:Color = 0x636363;
+    @serialize public var overlayBorderColor:Color = 0x636363;
 
-    @observe public var overlayBorderAlpha:Float = 1;
+    @serialize public var overlayBorderAlpha:Float = 1;
 
 /// Button
 
-    @observe public var buttonBackgroundColor:Color = 0x515151;
+    @serialize public var buttonBackgroundColor:Color = 0x515151;
 
-    @observe public var buttonOverBackgroundColor:Color = 0x5A5A5A;
+    @serialize public var buttonOverBackgroundColor:Color = 0x5A5A5A;
 
-    @observe public var buttonPressedBackgroundColor:Color = 0x4798EB;
+    @serialize public var buttonPressedBackgroundColor:Color = 0x4798EB;
 
 /// Window
 
-    @observe public var windowBackgroundColor:Color = 0x1C1C1C;
+    @serialize public var windowBackgroundColor:Color = 0x1C1C1C;
 
-    @observe public var windowBackgroundAlpha:Float = 0.925;
+    @serialize public var windowBackgroundAlpha:Float = 0.925;
 
-    @observe public var windowBorderColor:Color = 0x636363;
+    @serialize public var windowBorderColor:Color = 0x636363;
 
-    @observe public var windowBorderAlpha:Float = 1;
+    @serialize public var windowBorderAlpha:Float = 1;
 
     public function new() {
 

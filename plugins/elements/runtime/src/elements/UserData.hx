@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.Color;
 import ceramic.ReadOnlyArray;
+import ceramic.ReadOnlyMap;
 import ceramic.Shortcuts.*;
 import tracker.Model;
 
@@ -12,6 +13,10 @@ class UserData extends Model {
         super();
 
     }
+
+/// Windows data
+
+    @serialize public var windowsData:ReadOnlyMap<String,WindowData> = new Map();
 
 /// Colors
 
