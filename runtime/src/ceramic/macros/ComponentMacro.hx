@@ -45,12 +45,16 @@ class ComponentMacro {
             // just check if there are new fields that can be used as entity
             var entityFields:Array<Field> = [];
             var setEntityField:Field = null;
+            var getEntityField:Field = null;
             for (field in fields) {
                 if (field.name == 'entity') {
                     entityFields.push(field);
                 }
                 else if (field.name == 'setEntity') {
                     setEntityField = field;
+                }
+                else if (field.name == 'getEntity') {
+                    getEntityField = field;
                 }
                 else {
                     var hasEntityMeta = false;
@@ -106,6 +110,9 @@ class ComponentMacro {
                 if (setEntityField == null) {
                     computeSetEntityField(fields, entityFields, true);
                 }
+                if (getEntityField == null) {
+                    computeGetEntityField(fields, entityFields, true);
+                }
             }
 
             return fields;
@@ -136,6 +143,7 @@ class ComponentMacro {
         var entityNamedField:Field = null;
         var entityFields:Array<Field> = [];
         var setEntityField:Field = null;
+        var getEntityField:Field = null;
         for (field in fields) {
 
             if (entityNamedField == null) {
@@ -148,6 +156,11 @@ class ComponentMacro {
             if (setEntityField == null) {
                 if (field.name == 'setEntity') {
                     setEntityField = field;
+                }
+            }
+            if (getEntityField == null) {
+                if (field.name == 'getEntity') {
+                    getEntityField = field;
                 }
             }
 
@@ -170,7 +183,7 @@ class ComponentMacro {
         }
 
         for (entityField in entityFields) {
-            
+
             switch(entityField.kind) {
                 case FVar(type, expr) | FProp(_, _, type, expr):
                     if (entityField.access.indexOf(AStatic) != -1) {
@@ -223,6 +236,9 @@ class ComponentMacro {
 
         if (setEntityField == null) {
             computeSetEntityField(fields, entityFields, false);
+        }
+        if (getEntityField == null) {
+            computeGetEntityField(fields, entityFields, false);
         }
 
         if (!hasInitializerNameField) {
@@ -297,6 +313,44 @@ class ComponentMacro {
                 }],
                 ret: macro :Void,
                 expr: Context.parse(setEntityExprs.join('\n'), Context.currentPos())
+            }),
+            access: callSuper ? [APrivate, AOverride] : [APrivate],
+            doc: '',
+            meta: [{
+                name: ':keep',
+                params: [],
+                pos: Context.currentPos()
+            }]
+        });
+
+    }
+
+    static function computeGetEntityField(fields:Array<Field>, entityFields:Array<Field>, callSuper:Bool):Void {
+
+        #if (!display && !completion)
+        var entityFieldName:String = null;
+        for (entityField in entityFields) {
+            var entityFieldName = entityField.name;
+            break;
+        }
+        if (entityFieldName == null)
+            entityFieldName = 'entity';
+        #end
+        var getEntityExprs = [];
+        getEntityExprs.push('{');
+        #if (!display && !completion)
+        getEntityExprs.push('return this.$entityFieldName;');
+        #else
+        getEntityExprs.push('return this.entity;');
+        #end
+        getEntityExprs.push('}');
+        fields.push({
+            pos: Context.currentPos(),
+            name: 'getEntity',
+            kind: FFun({
+                args: [],
+                ret: macro :ceramic.Entity,
+                expr: Context.parse(getEntityExprs.join('\n'), Context.currentPos())
             }),
             access: callSuper ? [APrivate, AOverride] : [APrivate],
             doc: '',

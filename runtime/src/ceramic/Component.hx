@@ -25,9 +25,14 @@ interface Component /* extends Entity (enforced by ComponentMacro) */ {
 
     /**
      * Called by target entity to assign itself to the component
-     * @param entity 
+     * @param entity
      */
     private function setEntity(entity:Entity):Void;
+
+    /**
+     * Called to retrieve entity in a generic way that works with all components
+     */
+    private function getEntity():Entity;
 
     /**
      * Called when the component is bound to an entity. At this stage, the `entity` property
