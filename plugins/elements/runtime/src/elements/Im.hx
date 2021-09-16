@@ -7,6 +7,7 @@ import ceramic.Color;
 import ceramic.ColumnLayout;
 import ceramic.Component;
 import ceramic.DoubleClick;
+import ceramic.EditText;
 import ceramic.Entity;
 import ceramic.Flags;
 import ceramic.IntBoolMap;
@@ -14,8 +15,10 @@ import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.LongPress;
+import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
 import ceramic.Scroller;
+import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.ViewSize;
@@ -940,19 +943,10 @@ class Im {
             }
         }
         else if (owner is Component) {
-            if (owner is DoubleClick) {
-                var doubleClick:DoubleClick = cast owner;
-                var visual = doubleClick.entity;
-                return visual.hasIndirectParent(view);
-            }
-            else if (owner is Click) {
-                var click:Click = cast owner;
-                var visual = click.entity;
-                return visual.hasIndirectParent(view);
-            }
-            else if (owner is LongPress) {
-                var longPress:LongPress = cast owner;
-                var visual = longPress.entity;
+            var component:Component = cast owner;
+            var entity = @:privateAccess component.getEntity();
+            if (entity is Visual) {
+                var visual:Visual = cast entity;
                 return visual.hasIndirectParent(view);
             }
         }
