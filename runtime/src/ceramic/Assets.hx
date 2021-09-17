@@ -523,35 +523,13 @@ class Assets extends Entity {
 
             if (scheduleMethod == SERIAL) {
                 var numComplete = 0;
-                var toLoad = [].concat(addedAssets);
-                var loadNext:Void->Void = null;
-                loadNext = function() {
-                    var asset = toLoad.shift();
+                var toLoad = [];
+                for (asset in addedAssets) {
                     if (asset.status == NONE) {
-                        asset.load();
-                        asset.onceComplete(this, function(success) {
-                            numComplete++;
-                            if (toLoad.length > 0) {
-                                if (delayBetweenXAssets > 0 && numComplete > 0 && (numComplete % delayBetweenXAssets) == 0) {
-                                    app.onceUpdate(this, function(delta) {
-                                        app.onceUpdate(this, function(delta) {
-                                            loadNext();
-                                        });
-                                    });
-                                }
-                                else {
-                                    loadNext();
-                                }
-                            }
-                        });
-                    }
-                    else {
-                        if (toLoad.length > 0) {
-                            loadNext();
-                        }
+                        toLoad.push(asset);
                     }
                 }
-                loadNext();
+                _loadNextSerial(toLoad, numComplete);
 
                 immediate.flush();
             }
@@ -567,28 +545,7 @@ class Assets extends Entity {
                             toLoad.push(asset);
                         }
                     }
-
-                    var loadNext:Void->Void = null;
-                    loadNext = function() {
-                        if (toLoad.length > 0) {
-                            numStarted++;
-                            if (numStarted > 1 && (numStarted % delayBetweenXAssets) == 0) {
-                                app.onceUpdate(this, function(delta) {
-                                    app.onceUpdate(this, function(delta) {
-                                        var asset = toLoad.shift();
-                                        asset.load();
-                                        loadNext();
-                                    });
-                                });
-                            }
-                            else {
-                                var asset = toLoad.shift();
-                                asset.load();
-                                loadNext();
-                            }
-                        }
-                    };
-                    loadNext();
+                    _loadNextParallel(toLoad, numStarted);
 
                 }
                 else {
@@ -614,6 +571,59 @@ class Assets extends Entity {
 
         }
 
+    }
+
+    private function _loadNextSerial(toLoad:Array<Asset>, numComplete:Int):Void {
+
+        var asset = toLoad.shift();
+        if (asset.status == NONE) {
+            asset.load();
+            asset.onceComplete(this, function(success) {
+                _assetCompleteSerial(success, toLoad, numComplete);
+            });
+        }
+        else {
+            if (toLoad.length > 0) {
+                _loadNextSerial(toLoad, numComplete);
+            }
+        }
+
+    }
+
+    private function _assetCompleteSerial(success:Bool, toLoad:Array<Asset>, numComplete:Int):Void {
+
+        numComplete++;
+        if (toLoad.length > 0) {
+            if (delayBetweenXAssets > 0 && numComplete > 0 && (numComplete % delayBetweenXAssets) == 0) {
+                app.onceXUpdates(this, 2, () -> {
+                    _loadNextSerial(toLoad, numComplete);
+                });
+            }
+            else {
+                _loadNextSerial(toLoad, numComplete);
+            }
+        }
+
+    }
+
+    private function _loadNextParallel(toLoad:Array<Asset>, numStarted:Int):Void {
+
+        if (toLoad.length > 0) {
+            numStarted++;
+            if (numStarted > 1 && (numStarted % delayBetweenXAssets) == 0) {
+                app.onceXUpdates(this, 2, () -> {
+                    trace('IS IT CALLED?');
+                    var asset = toLoad.shift();
+                    asset.load();
+                    _loadNextParallel(toLoad, numStarted);
+                });
+            }
+            else {
+                var asset = toLoad.shift();
+                asset.load();
+                _loadNextParallel(toLoad, numStarted);
+            }
+        }
     }
 
 /// Ensure
