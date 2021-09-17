@@ -157,6 +157,39 @@ class Extensions<T> {
 
     }
 
+    public static function removeNullElements<T>(arr:Array<T>):Void {
+
+        var i = 0;
+        var gap = 0;
+        var len = arr.length;
+        while (i < len) {
+
+            do {
+
+                var item = unsafeGet(arr, i);
+                if (item == null) {
+                    i++;
+                    gap++;
+                }
+                else {
+                    break;
+                }
+
+            }
+            while (i < len);
+
+            if (gap != 0 && i < len) {
+                var key = i - gap;
+                unsafeSet(arr, key, unsafeGet(arr, i));
+            }
+
+            i++;
+        }
+
+        setArrayLength(arr, len - gap);
+
+    }
+
 /// Generic extensions
 
     @:noCompletion
