@@ -296,6 +296,122 @@ class App extends Entity {
 
     }
 
+    var _xUpdatesHandlersPool:Pool<AppXUpdatesHandler> = new Pool<AppXUpdatesHandler>();
+
+    var _xUpdatesHandlers:Array<AppXUpdatesHandler> = [];
+
+    var _xUpdatesToCallNow:Array<Void->Void> = [];
+
+    public function onceXUpdates(owner:Entity, numUpdates:Int, callback:Void->Void):Void {
+
+        var handler = _xUpdatesHandlersPool.get();
+        if (handler == null)
+            handler = new AppXUpdatesHandler();
+        handler.owner = owner;
+        handler.numUpdates = numUpdates;
+        handler.callback = callback;
+        var didAdd = false;
+        for (i in 0..._xUpdatesHandlers.length) {
+            var existing = _xUpdatesHandlers.unsafeGet(i);
+            if (existing == null) {
+                _xUpdatesHandlers.unsafeSet(i, handler);
+                didAdd = true;
+                break;
+            }
+        }
+        if (!didAdd) {
+            _xUpdatesHandlers.push(handler);
+        }
+
+    }
+
+    public function offXUpdates(callback:Void->Void):Void {
+
+        var needsClean = false;
+        for (i in 0..._xUpdatesHandlers.length) {
+            var handler = _xUpdatesHandlers.unsafeGet(i);
+            if (Utils.functionEquals(handler.callback, callback)) {
+                handler.reset();
+                _xUpdatesHandlersPool.recycle(handler);
+                _xUpdatesHandlers.unsafeSet(i, null);
+                needsClean = true;
+            }
+        }
+
+        if (needsClean) {
+            cleanXUpdatesNullValues();
+        }
+
+    }
+
+    function tickOnceXUpdates():Void {
+
+        var numToCall = 0;
+        var needsClean = false;
+        for (i in 0..._xUpdatesHandlers.length) {
+            var handler = _xUpdatesHandlers.unsafeGet(i);
+            if (handler != null) {
+                handler.numUpdates--;
+                if (handler.numUpdates <= 0) {
+                    var owner = handler.owner;
+                    if (owner == null || !owner.destroyed) {
+                        _xUpdatesToCallNow[numToCall] = handler.callback;
+                        numToCall++;
+                    }
+                    _xUpdatesHandlers.unsafeSet(i, null);
+                    needsClean = true;
+                }
+            }
+        }
+
+        if (numToCall > 0) {
+            for (i in 0...numToCall) {
+                var callback = _xUpdatesToCallNow.unsafeGet(i);
+                _xUpdatesToCallNow.unsafeSet(i, null);
+                callback();
+            }
+        }
+
+        if (needsClean) {
+            cleanXUpdatesNullValues();
+        }
+
+    }
+
+    function cleanXUpdatesNullValues():Void {
+
+        var i = 0;
+        var gap = 0;
+        var len = _xUpdatesHandlers.length;
+        while (i < len) {
+
+            do {
+
+                var handler = _xUpdatesHandlers.unsafeGet(i);
+                if (handler == null) {
+                    i++;
+                    gap++;
+                }
+                else {
+                    break;
+                }
+
+            }
+            while (i < len);
+
+            if (gap != 0 && i < len) {
+                var key = i - gap;
+                _xUpdatesHandlers.unsafeSet(key, _xUpdatesHandlers.unsafeGet(i));
+            }
+
+            i++;
+        }
+
+        // Reduce array size
+        _xUpdatesHandlers.setArrayLength(len - gap);
+
+    }
+
     /**
      * `true` if the app is currently running its update phase.
      */
@@ -979,6 +1095,9 @@ class App extends Entity {
 
             // Then update
             emitUpdate(_delta);
+
+            // Flush after x udpates
+            tickOnceXUpdates();
 
             // Flush immediate callbacks
             flushImmediate();
