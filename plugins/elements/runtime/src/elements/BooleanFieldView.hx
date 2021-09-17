@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.Click;
 import ceramic.Key;
 import ceramic.Shortcuts.*;
 import ceramic.View;
