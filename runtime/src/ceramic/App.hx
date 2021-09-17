@@ -177,12 +177,34 @@ class App extends Entity {
 
     @:noCompletion public var loaders:Array<(done:()->Void)->Void> = [];
 
+    extern inline overload public function onceImmediate(owner:Entity, handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
+
+        _onceImmediateWithOwner(owner, handleImmediate #if ceramic_debug_immediate , pos #end);
+
+    }
+
+    extern inline overload public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
+
+        _onceImmediate(handleImmediate #if ceramic_debug_immediate , pos #end);
+
+    }
+
+    function _onceImmediateWithOwner(owner:Entity, handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
+
+        _onceImmediate(function() {
+            if (owner == null || !owner.destroyed) {
+                handleImmediate();
+            }
+        } #if ceramic_debug_immediate , pos #end);
+
+    }
+
     /**
      * Schedule immediate callback that is garanteed to be executed before the next time frame
      * (before elements are drawn onto screen)
      * @param handleImmediate The callback to execute
      */
-    public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
+    function _onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
         if (handleImmediate == null) {
             throw 'Immediate callback should not be null!';
