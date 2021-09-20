@@ -11,7 +11,7 @@ class WindowData extends Model {
 
     public inline static final DEFAULT_WIDTH:Float = 200;
 
-    public inline static final DEFAULT_HEIGHT:Float = ViewSize.auto();
+    public inline static final DEFAULT_HEIGHT:Float = -60001.0; // ViewSize.auto();
 
     @serialize public var x:Float = 50;
 
