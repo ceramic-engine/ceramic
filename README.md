@@ -3,6 +3,8 @@
 | ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Cross-platform 2D multimedia framework. |
 | - | - |
 
+![demo-video](https://user-images.githubusercontent.com/164094/134378094-401c519d-bdd0-4d89-b9a2-c7f9d5893c02.gif)
+
 ## ℹ️ More updates about ceramic soon
 
 Ceramic is _almost_ ready to be used by more developers.
