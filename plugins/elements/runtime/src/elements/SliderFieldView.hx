@@ -146,17 +146,15 @@ class SliderFieldView extends BaseTextFieldView {
 
         var minX = sliderContainer.paddingLeft;
         var maxX = (sliderContainer.width - sliderSquare.width - sliderContainer.paddingRight);
-
         var usedValue = value;
-        if (maxValue < 0) {
-            usedValue -= maxValue;
-        }
-        else if (minValue < 0) {
-            usedValue -= minValue;
-        }
+
+        if (usedValue < minValue)
+            usedValue = minValue;
+        if (usedValue > maxValue)
+            usedValue = maxValue;
 
         sliderSquare.pos(
-            minX + (maxX - minX) * (usedValue - (minValue > 0 ? minValue : 0)) / (maxValue - minValue),
+            minX + (maxX - minX) * (usedValue - minValue) / (maxValue - minValue),
             sliderContainer.paddingTop
         );
 
@@ -287,18 +285,13 @@ class SliderFieldView extends BaseTextFieldView {
         var rightMargin = sliderContainer.paddingRight + sliderSquare.width * 0.5;
 
         var newValue =
+            minValue
+            +
             (maxValue - minValue)
             *
             (sliderX - leftMargin)
             /
             (sliderContainer.width - leftMargin - rightMargin);
-
-        if (maxValue < 0) {
-            newValue += maxValue;
-        }
-        else if (minValue < 0) {
-            newValue += minValue;
-        }
 
         if (newValue < minValue)
             newValue = minValue;
