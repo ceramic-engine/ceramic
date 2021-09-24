@@ -233,10 +233,18 @@ class Im {
                 }
             });
         }
-        else {
-            windowData.x = window.x;
-            windowData.y = window.y;
-        }
+
+        if (window.x < 0)
+            window.x = 0;
+        if (window.x + window.width > context.view.width)
+            window.x = context.view.width - window.width;
+        if (window.y < 0)
+            window.y = 0;
+        if (window.y + Window.HEADER_HEIGHT > context.view.height)
+            window.y = context.view.height - Window.HEADER_HEIGHT;
+
+        windowData.x = window.x;
+        windowData.y = window.y;
 
         window.viewWidth = width;
         window.viewHeight = ViewSize.auto();
