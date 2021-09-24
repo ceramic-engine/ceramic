@@ -19,6 +19,10 @@ class LabeledView<T:View> extends RowLayout implements Observable {
 
     @observe public var disabled:Bool = false;
 
+    var containerView:RowLayout;
+
+    var useContainer:Bool = false;
+
     public var view(default,set):T;
     function set_view(view:T):T {
         if (this.view == view)
@@ -28,8 +32,12 @@ class LabeledView<T:View> extends RowLayout implements Observable {
         }
         this.view = view;
         if (view != null) {
-            view.viewSize(fill(), auto());
-            add(view);
+            if (useContainer) {
+                containerView.add(view);
+            }
+            else {
+                add(view);
+            }
             invalidateDisabled();
         }
         remove(labelText);
@@ -44,13 +52,15 @@ class LabeledView<T:View> extends RowLayout implements Observable {
             switch labelPosition {
                 case LEFT:
                     remove(labelText);
-                    remove(view);
+                    remove(useContainer ? containerView : view);
                     add(labelText);
-                    add(view);
+                    add(useContainer ? containerView : view);
+                    containerView.align = LEFT;
                     labelText.align = RIGHT;
                 case RIGHT:
                     remove(labelText);
                     add(labelText);
+                    containerView.align = RIGHT;
                     labelText.align = LEFT;
             }
         }
@@ -80,7 +90,7 @@ class LabeledView<T:View> extends RowLayout implements Observable {
 
 /// Lifecycle
 
-    public function new(view:T) {
+    public function new(view:T, useContainer:Bool = false) {
 
         super();
 
@@ -93,6 +103,15 @@ class LabeledView<T:View> extends RowLayout implements Observable {
         labelText.pointSize = 12;
         labelText.preRenderedSize = 20;
         add(labelText);
+
+        this.useContainer = useContainer;
+        if (useContainer) {
+            containerView = new RowLayout();
+            containerView.transparent = true;
+            containerView.viewSize(fill(), auto());
+            containerView.align = RIGHT;
+            add(containerView);
+        }
 
         this.view = view;
 

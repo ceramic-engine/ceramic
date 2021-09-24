@@ -369,13 +369,13 @@ class Im {
 
     }
 
-    public inline extern static overload function check(?title:String, value:BoolPointer):CheckStatus {
+    public inline extern static overload function check(?title:String, value:BoolPointer, alignLabel:Bool = false):CheckStatus {
 
-        return _check(title, value);
+        return _check(title, value, alignLabel);
 
     }
 
-    public static function _check(?title:String, value:BoolPointer):CheckStatus {
+    public static function _check(?title:String, value:BoolPointer, alignLabel:Bool):CheckStatus {
 
         var windowData = _currentWindowData;
 
@@ -384,7 +384,7 @@ class Im {
         item.int0 = Im.readBool(value) ? 1 : 0;
         item.int1 = item.int0;
         item.labelPosition = _labelPosition;
-        item.labelWidth = _labelWidth;
+        item.labelWidth = alignLabel ? _labelWidth : ViewSize.fill();
         item.string2 = title;
         item.row = _inRow ? _currentRowIndex : -1;
 
@@ -625,7 +625,7 @@ class Im {
 
     }
 
-    public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false):Void {
+    public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false, alignLabel:Bool = false):Void {
 
         var windowData = _currentWindowData;
 
@@ -635,7 +635,7 @@ class Im {
         item.visual = visual;
         item.string2 = title;
         item.labelPosition = _labelPosition;
-        item.labelWidth = _labelWidth;
+        item.labelWidth = alignLabel ? _labelWidth : ViewSize.fill();
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -884,8 +884,6 @@ class Im {
                                 rowLayout = rowLayouts[item.row];
                             }
                         }
-
-                        view.viewWidth = ViewSize.fill();
 
                         if (rowLayout != null) {
                             rowLayout.add(view);

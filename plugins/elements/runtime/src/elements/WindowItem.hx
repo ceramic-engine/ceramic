@@ -4,6 +4,7 @@ import ceramic.Color;
 import ceramic.Equal;
 import ceramic.Pool;
 import ceramic.View;
+import ceramic.ViewSize;
 import ceramic.Visual;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
@@ -116,7 +117,7 @@ class WindowItem {
                 return true;
 
             case VISUAL:
-                return true;
+                return isSimilarLabel(item);
 
             case BUTTON:
                 return true;
@@ -211,6 +212,7 @@ class WindowItem {
         }
 
         view.viewHeight = float0;
+        view.viewWidth = ViewSize.fill();
 
         return view;
 
@@ -242,6 +244,7 @@ class WindowItem {
         else {
             container = view != null ? cast view : null;
             if (container == null) {
+                justCreated = true;
                 container = new VisualContainerView();
             }
             container.contentAlign = CENTER;
@@ -254,6 +257,25 @@ class WindowItem {
 
         visual.active = true;
         container.visual = visual;
+
+        var scaleToFit = bool0;
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+            if (scaleToFit) {
+                container.viewWidth = ViewSize.fill();
+            }
+            else {
+                container.viewWidth = visual.width;
+            }
+        }
+        else {
+            if (scaleToFit) {
+                container.viewWidth = ViewSize.fill();
+            }
+            else {
+                container.viewWidth = visual.width;
+            }
+        }
 
         return labeled != null ? labeled : container;
 
@@ -298,6 +320,12 @@ class WindowItem {
         if (newValue != field.value) {
             field.value = newValue;
         }
+
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+        }
+        field.viewWidth = ViewSize.fill();
+
         return labeled != null ? labeled : field;
 
     }
@@ -339,6 +367,14 @@ class WindowItem {
                 field.windowItem().int1 = value ? 1 : 0;
             });
         }
+
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+        }
+        else {
+            field.viewWidth = ViewSize.fill();
+        }
+
         return labeled != null ? labeled : field;
 
     }
@@ -387,6 +423,11 @@ class WindowItem {
         if (justCreated || previous.int1 != int0) {
             field.value = int0;
         }
+
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+        }
+        field.viewWidth = ViewSize.fill();
 
         return labeled != null ? labeled : field;
 
@@ -467,6 +508,11 @@ class WindowItem {
                 field.textValue = '' + int0;
             }
         }
+
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+        }
+        field.viewWidth = ViewSize.fill();
 
         return labeled != null ? labeled : field;
 
@@ -677,6 +723,11 @@ class WindowItem {
             }
         }
 
+        if (labeled != null) {
+            labeled.viewWidth = ViewSize.fill();
+        }
+        field.viewWidth = ViewSize.fill();
+
         return labeled != null ? labeled : field;
 
     }
@@ -725,6 +776,7 @@ class WindowItem {
             case 1: RIGHT;
             case 2: CENTER;
         };
+        text.viewWidth = ViewSize.fill();
         return text;
 
     }
@@ -752,6 +804,7 @@ class WindowItem {
                 }
             });
         }
+        button.viewWidth = ViewSize.fill();
         return button;
 
     }
