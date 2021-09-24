@@ -225,8 +225,12 @@ class Im {
             window.onExpandCollapseClick(window, function() {
                 windowData.expanded = !windowData.expanded;
             });
+            window.onClose(window, function() {
+                windowData.justClosed = true;
+            });
             context.view.add(window);
             windowData.window = window;
+            windowData.justClosed = false;
             _beginFrameCallbacks.push(function() {
                 if (window != null && !window.destroyed) {
                     window.active = true;
@@ -252,6 +256,9 @@ class Im {
 
         // Mark window as used this frame
         windowData.used = true;
+        // Mark as non closable but value can be changed
+        // until Im.end() is called
+        windowData.closable = false;
         windowData.width = width;
         windowData.height = height;
 
@@ -292,6 +299,22 @@ class Im {
     public static function textAlign(textAlign:TextAlign = DEFAULT_TEXT_ALIGN):Void {
 
         _textAlign = textAlign;
+
+    }
+
+    public static function closable(isOpen:BoolPointer):Bool {
+
+        var windowData = _currentWindowData;
+
+        windowData.closable = true;
+
+        if (windowData.justClosed) {
+            windowData.justClosed = false;
+            Im.writeBool(isOpen, false);
+            return true;
+        }
+
+        return false;
 
     }
 
@@ -715,194 +738,198 @@ class Im {
                 }
             }
         }
-        else if (!windowData.expanded) {
-            var prevContentView = window.contentView;
-            if (prevContentView != null) {
-                window.contentView = null;
-                prevContentView.destroy();
-                windowData.form = null;
-            }
-            if (windowItems != null) {
-                for (i in 0...windowData.numItems) {
-                    var item = windowItems.unsafeGet(i);
-                    if (item.visual != null) {
-                        if (item.visual.parent != null)
-                            item.visual.parent.remove(item.visual);
-                        item.visual.active = false;
-                    }
-                }
-            }
-        }
         else {
-            var form = windowData.form;
-            var needsContentRebuild = false;
-            if (window.contentView == null) {
+            window.closable = windowData.closable;
 
-                needsContentRebuild = true;
-
-                form = new FormLayout();
-                form.viewSize(ViewSize.auto(), ViewSize.auto());
-                form.transparent = true;
-
-                windowData.form = form;
-
-                var container = new ColumnLayout();
-                container.transparent = true;
-                container.viewSize(ViewSize.auto(), ViewSize.auto());
-                container.add(form);
-
-                var overflowScroll = windowData.height != ViewSize.auto();
-                if (overflowScroll) {
-                    container.paddingRight = 12;
-                    var scroll = new ScrollingLayout(container, true);
-                    scroll.checkChildrenOfView = form;
-                    var scrollbar = new Scrollbar();
-                    scrollbar.inset(2, 1, 1, 2);
-                    scroll.scroller.scrollbar = scrollbar;
-                    scroll.transparent = true;
-                    scroll.viewSize(ViewSize.fill(), 200);
-                    window.contentView = scroll;
+            if (!windowData.expanded) {
+                var prevContentView = window.contentView;
+                if (prevContentView != null) {
+                    window.contentView = null;
+                    prevContentView.destroy();
+                    windowData.form = null;
                 }
-                else {
-                    window.contentView = container;
-                }
-            }
-
-            var windowItems = windowData.items;
-            if (!needsContentRebuild) {
-                for (i in 0...windowData.numItems) {
-                    var item = windowItems.unsafeGet(i);
-                    if (item.previous == null || !item.isSameItem(item.previous)) {
-                        needsContentRebuild = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!needsContentRebuild) {
-                var prevNumItems = 0;
-                var subviews = form.subviews;
-                for (i in 0...subviews.length) {
-                    var view = subviews.unsafeGet(i);
-                    if (view is ImRowLayout) {
-                        var rowLayout:ImRowLayout = cast view;
-                        var subviews = rowLayout.subviews;
-                        if (subviews != null) {
-                            for (j in 0...subviews.length) {
-                                prevNumItems++;
-                            }
+                if (windowItems != null) {
+                    for (i in 0...windowData.numItems) {
+                        var item = windowItems.unsafeGet(i);
+                        if (item.visual != null) {
+                            if (item.visual.parent != null)
+                                item.visual.parent.remove(item.visual);
+                            item.visual.active = false;
                         }
                     }
-                    else {
-                        prevNumItems++;
-                    }
-                }
-                if (prevNumItems != windowData.numItems) {
-                    needsContentRebuild = true;
-                }
-            }
-
-            if (needsContentRebuild) {
-                var viewsWithRows = form.subviews != null ? [].concat(form.subviews.original) : [];
-                var views = [];
-                var rowLayouts = [];
-                var lastRowIndex = -1;
-                for (i in 0...viewsWithRows.length) {
-                    var view = viewsWithRows.unsafeGet(i);
-                    if (view is ImRowLayout) {
-                        var rowLayout:ImRowLayout = cast view;
-                        var subviews = rowLayout.subviews;
-                        if (subviews != null) {
-                            for (j in 0...subviews.length) {
-                                views.push(subviews.unsafeGet(j));
-                            }
-                        }
-                        rowLayout.removeAllViews();
-                        rowLayouts.push(rowLayout);
-                    }
-                    else {
-                        views.push(view);
-                    }
-                }
-                form.removeAllViews();
-
-                for (i in 0...windowData.numItems) {
-                    var item = windowItems.unsafeGet(i);
-                    var view = views[i];
-                    var reuseView = (item.previous != null && item.isSameItem(item.previous));
-                    if (view == null || !reuseView) {
-                        if (view != null) {
-                            if (view is VisualContainerView) {
-                                var containerView:VisualContainerView = cast view;
-                                containerView.visual = null;
-                            }
-                            view.destroy();
-                            view = null;
-                        }
-                    }
-                    view = item.updateView(view);
-
-                    var rowLayout:ImRowLayout = null;
-                    if (item.row >= 0) {
-                        if (lastRowIndex < item.row) {
-                            lastRowIndex++;
-                            rowLayout = rowLayouts[lastRowIndex];
-                            if (rowLayout == null) {
-                                rowLayout = new ImRowLayout();
-                                rowLayouts[lastRowIndex] = rowLayout;
-                                rowLayout.viewSize(ViewSize.fill(), ViewSize.auto());
-                            }
-                            form.add(rowLayout);
-                        }
-                        else {
-                            rowLayout = rowLayouts[item.row];
-                        }
-                    }
-
-                    view.viewWidth = ViewSize.fill();
-
-                    if (rowLayout != null) {
-                        rowLayout.add(view);
-                    }
-                    else {
-                        form.add(view);
-                    }
-                }
-
-                // Remove any unused view
-                while (windowData.numItems < views.length) {
-                    views.pop().destroy();
-                }
-
-                // Remove any unused row layout
-                while (lastRowIndex + 1 < rowLayouts.length) {
-                    rowLayouts.pop().destroy();
                 }
             }
             else {
-                var views = form.subviews;
-                var n = 0;
-                var i = 0;
-                while (i < windowData.numItems) {
-                    var view = views[n];
-                    if (view is ImRowLayout) {
-                        var rowLayout:ImRowLayout = cast view;
-                        var subviews = rowLayout.subviews;
-                        if (subviews != null) {
-                            for (j in 0...subviews.length) {
-                                var view = subviews.unsafeGet(j);
-                                var item = windowItems.unsafeGet(i);
-                                item.updateView(view);
-                                i++;
-                            }
-                        }
+                var form = windowData.form;
+                var needsContentRebuild = false;
+                if (window.contentView == null) {
+
+                    needsContentRebuild = true;
+
+                    form = new FormLayout();
+                    form.viewSize(ViewSize.auto(), ViewSize.auto());
+                    form.transparent = true;
+
+                    windowData.form = form;
+
+                    var container = new ColumnLayout();
+                    container.transparent = true;
+                    container.viewSize(ViewSize.auto(), ViewSize.auto());
+                    container.add(form);
+
+                    var overflowScroll = windowData.height != ViewSize.auto();
+                    if (overflowScroll) {
+                        container.paddingRight = 12;
+                        var scroll = new ScrollingLayout(container, true);
+                        scroll.checkChildrenOfView = form;
+                        var scrollbar = new Scrollbar();
+                        scrollbar.inset(2, 1, 1, 2);
+                        scroll.scroller.scrollbar = scrollbar;
+                        scroll.transparent = true;
+                        scroll.viewSize(ViewSize.fill(), 200);
+                        window.contentView = scroll;
                     }
                     else {
-                        var item = windowItems.unsafeGet(i);
-                        item.updateView(view);
-                        i++;
+                        window.contentView = container;
                     }
-                    n++;
+                }
+
+                var windowItems = windowData.items;
+                if (!needsContentRebuild) {
+                    for (i in 0...windowData.numItems) {
+                        var item = windowItems.unsafeGet(i);
+                        if (item.previous == null || !item.isSameItem(item.previous)) {
+                            needsContentRebuild = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!needsContentRebuild) {
+                    var prevNumItems = 0;
+                    var subviews = form.subviews;
+                    for (i in 0...subviews.length) {
+                        var view = subviews.unsafeGet(i);
+                        if (view is ImRowLayout) {
+                            var rowLayout:ImRowLayout = cast view;
+                            var subviews = rowLayout.subviews;
+                            if (subviews != null) {
+                                for (j in 0...subviews.length) {
+                                    prevNumItems++;
+                                }
+                            }
+                        }
+                        else {
+                            prevNumItems++;
+                        }
+                    }
+                    if (prevNumItems != windowData.numItems) {
+                        needsContentRebuild = true;
+                    }
+                }
+
+                if (needsContentRebuild) {
+                    var viewsWithRows = form.subviews != null ? [].concat(form.subviews.original) : [];
+                    var views = [];
+                    var rowLayouts = [];
+                    var lastRowIndex = -1;
+                    for (i in 0...viewsWithRows.length) {
+                        var view = viewsWithRows.unsafeGet(i);
+                        if (view is ImRowLayout) {
+                            var rowLayout:ImRowLayout = cast view;
+                            var subviews = rowLayout.subviews;
+                            if (subviews != null) {
+                                for (j in 0...subviews.length) {
+                                    views.push(subviews.unsafeGet(j));
+                                }
+                            }
+                            rowLayout.removeAllViews();
+                            rowLayouts.push(rowLayout);
+                        }
+                        else {
+                            views.push(view);
+                        }
+                    }
+                    form.removeAllViews();
+
+                    for (i in 0...windowData.numItems) {
+                        var item = windowItems.unsafeGet(i);
+                        var view = views[i];
+                        var reuseView = (item.previous != null && item.isSameItem(item.previous));
+                        if (view == null || !reuseView) {
+                            if (view != null) {
+                                if (view is VisualContainerView) {
+                                    var containerView:VisualContainerView = cast view;
+                                    containerView.visual = null;
+                                }
+                                view.destroy();
+                                view = null;
+                            }
+                        }
+                        view = item.updateView(view);
+
+                        var rowLayout:ImRowLayout = null;
+                        if (item.row >= 0) {
+                            if (lastRowIndex < item.row) {
+                                lastRowIndex++;
+                                rowLayout = rowLayouts[lastRowIndex];
+                                if (rowLayout == null) {
+                                    rowLayout = new ImRowLayout();
+                                    rowLayouts[lastRowIndex] = rowLayout;
+                                    rowLayout.viewSize(ViewSize.fill(), ViewSize.auto());
+                                }
+                                form.add(rowLayout);
+                            }
+                            else {
+                                rowLayout = rowLayouts[item.row];
+                            }
+                        }
+
+                        view.viewWidth = ViewSize.fill();
+
+                        if (rowLayout != null) {
+                            rowLayout.add(view);
+                        }
+                        else {
+                            form.add(view);
+                        }
+                    }
+
+                    // Remove any unused view
+                    while (windowData.numItems < views.length) {
+                        views.pop().destroy();
+                    }
+
+                    // Remove any unused row layout
+                    while (lastRowIndex + 1 < rowLayouts.length) {
+                        rowLayouts.pop().destroy();
+                    }
+                }
+                else {
+                    var views = form.subviews;
+                    var n = 0;
+                    var i = 0;
+                    while (i < windowData.numItems) {
+                        var view = views[n];
+                        if (view is ImRowLayout) {
+                            var rowLayout:ImRowLayout = cast view;
+                            var subviews = rowLayout.subviews;
+                            if (subviews != null) {
+                                for (j in 0...subviews.length) {
+                                    var view = subviews.unsafeGet(j);
+                                    var item = windowItems.unsafeGet(i);
+                                    item.updateView(view);
+                                    i++;
+                                }
+                            }
+                        }
+                        else {
+                            var item = windowItems.unsafeGet(i);
+                            item.updateView(view);
+                            i++;
+                        }
+                        n++;
+                    }
                 }
             }
         }

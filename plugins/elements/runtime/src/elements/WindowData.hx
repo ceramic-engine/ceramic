@@ -34,6 +34,10 @@ class WindowData extends Model {
 
     public var used:Bool = true;
 
+    public var justClosed:Bool = false;
+
+    public var closable:Bool = false;
+
     public var window:Window = null;
 
     public function new() {

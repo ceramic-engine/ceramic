@@ -15,9 +15,9 @@ import tracker.Observable;
 
 class Window extends ColumnLayout implements Observable {
 
-    static final FONT_PRE_RENDERED_SIZE:Int = 20;
+    public static final HEADER_HEIGHT:Int = 18;
 
-    static final HEADER_HEIGHT:Int = 18;
+    static final FONT_PRE_RENDERED_SIZE:Int = 20;
 
     static final TITLE_TEXT_SIZE:Int = 12;
 
@@ -33,15 +33,21 @@ class Window extends ColumnLayout implements Observable {
 
     @observe public var title:String = null;
 
+    @observe public var closable:Bool = false;
+
     @event function expandCollapseClick();
 
     @event function headerDoubleClick();
+
+    @event function close();
 
     var headerView:RowLayout;
 
     var expandCollapseClick:Click;
 
     var headerViewDoubleClick:DoubleClick;
+
+    var closeClick:Click;
 
     var bodyView:ColumnLayout;
 
@@ -50,6 +56,10 @@ class Window extends ColumnLayout implements Observable {
     var expandView:View;
 
     var expandTriangle:Triangle;
+
+    var closeView:View;
+
+    var closeCross:CrossX;
 
     public function new() {
 
@@ -96,6 +106,24 @@ class Window extends ColumnLayout implements Observable {
         titleView.content = '';
         headerView.add(titleView);
 
+        closeView = new View();
+        closeView.transparent = true;
+        {
+            var crossW = 14;
+            var crossH = 14;
+            closeCross = new CrossX();
+            closeCross.anchor(0.5, 0.5);
+            closeCross.size(crossW, crossH);
+            closeCross.pos(HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.5);
+            closeView.add(closeCross);
+        }
+        closeView.viewSize(HEADER_HEIGHT, HEADER_HEIGHT);
+        closeClick = new Click();
+        closeClick.onClick(this, emitClose);
+        closeView.component('click', closeClick);
+        closeView.active = closable;
+        headerView.add(closeView);
+
         bodyView = new ColumnLayout();
         bodyView.transparent = false;
         bodyView.viewSize(percent(100), 0);
@@ -103,6 +131,7 @@ class Window extends ColumnLayout implements Observable {
 
         onContentViewChange(this, contentViewChange);
         onTitleChange(this, titleChange);
+        onClosableChange(this, closableChange);
 
         autorun(updateStyle);
 
@@ -190,6 +219,12 @@ class Window extends ColumnLayout implements Observable {
                 titleView.content = '';
             }
         }
+
+    }
+
+    function closableChange(closable:Bool, prevClosable:Bool):Void {
+
+        closeView.active = closable;
 
     }
 
