@@ -70,13 +70,21 @@ class Icons extends tools.Task {
 
         var appIconFlat = project.app.iconFlat;
         if (!Path.isAbsolute(appIconFlat)) {
+            var projectAppIcon = Path.join([context.cwd, appIcon]);
             var projectAppIconFlat = Path.join([context.cwd, appIconFlat]);
             var ceramicAppIconFlat = Path.join([context.ceramicToolsPath, appIconFlat]);
             if (FileSystem.exists(projectAppIconFlat)) {
                 appIconFlat = projectAppIconFlat;
-            } else if (FileSystem.exists(ceramicAppIconFlat)) {
+            }
+            else if (FileSystem.exists(projectAppIcon)) {
+                // In case project provided an app icon but no flat variant, we use
+                // the original project icon as flat icon too
+                appIconFlat = projectAppIcon;
+            }
+            else if (FileSystem.exists(ceramicAppIconFlat)) {
                 appIconFlat = ceramicAppIconFlat;
-            } else {
+            }
+            else {
                 fail('Invalid flat icon: $appIconFlat');
             }
         } else if (!FileSystem.exists(appIconFlat)) {

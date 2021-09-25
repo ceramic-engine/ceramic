@@ -319,8 +319,9 @@ class BackendTools implements tools.spec.BackendTools {
                 // Icon needs to be generated manually for now
             
             case 'windows':
+                outIconsPath = Path.join([cwd, 'project/windows']);
                 toTransform.push({
-                    path: 'windows/app.ico',
+                    path: 'app.ico',
                     width: 256,
                     height: 256
                 });

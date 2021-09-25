@@ -30,7 +30,10 @@ class Windows extends tools.Task {
         var windowsProjectPath = Path.join([cwd, 'project/windows']);
         var windowsAppExe = Path.join([windowsProjectPath, project.app.name + '.exe']);
 
+        var appIconPath = Path.join([windowsProjectPath, 'app.ico']);
+
         var doRun = extractArgFlag(args, 'run');
+        var pluginPath = context.plugins.get('Windows').path;
 
         // Create mac app package if needed
         WindowsApp.createWindowsAppIfNeeded(cwd, project);
@@ -41,8 +44,17 @@ class Windows extends tools.Task {
         // Copy binary file
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
 
+        // Update app icon
+        if (FileSystem.exists(appIconPath)) {
+            command(Path.join([pluginPath, 'resources', 'rcedit.exe']), [
+                windowsAppExe, '--set-icon', appIconPath
+            ], {
+                cwd: windowsProjectPath
+            });
+            FileSystem.deleteFile(appIconPath);
+        }
+
         // Copy openal32.dll for correct architecture
-        var pluginPath = context.plugins.get('Windows').path;
         if (context.defines.exists('HXCPP_M32')) {
             Files.copyIfNeeded(
                 Path.join([pluginPath, 'resources', 'libs', 'x86', 'openal32.dll']),
