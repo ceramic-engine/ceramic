@@ -330,18 +330,16 @@ class ComponentMacro {
         #if (!display && !completion)
         var entityFieldName:String = null;
         for (entityField in entityFields) {
-            var entityFieldName = entityField.name;
+            entityFieldName = entityField.name;
             break;
         }
-        if (entityFieldName == null)
-            entityFieldName = 'entity';
         #end
         var getEntityExprs = [];
         getEntityExprs.push('{');
         #if (!display && !completion)
         getEntityExprs.push('return this.$entityFieldName;');
         #else
-        getEntityExprs.push('return this.entity;');
+        getEntityExprs.push('return null;');
         #end
         getEntityExprs.push('}');
         fields.push({
