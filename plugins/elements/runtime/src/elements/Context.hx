@@ -1,6 +1,7 @@
 package elements;
 
 import ceramic.Assert.assert;
+import ceramic.Assets;
 import ceramic.Entity;
 import ceramic.ReadOnlyMap;
 import ceramic.View;
@@ -27,6 +28,14 @@ class Context extends Entity implements Observable {
     public var view(default, null):View = null;
 
     public var focusedWindow(default, null):Window = null;
+
+    public var assets(get, default):Assets = null;
+    function get_assets():Assets {
+        if (this.assets == null) {
+            this.assets = new Assets();
+        }
+        return this.assets;
+    }
 
     private function new() {
 

@@ -2,6 +2,7 @@ package elements;
 
 #if !macro
 import ceramic.Assert.assert;
+import ceramic.AssetId;
 import ceramic.Click;
 import ceramic.Color;
 import ceramic.ColumnLayout;
@@ -10,6 +11,7 @@ import ceramic.DoubleClick;
 import ceramic.EditText;
 import ceramic.Entity;
 import ceramic.Flags;
+import ceramic.ImageAsset;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
@@ -23,6 +25,8 @@ import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.Texture;
+import ceramic.TextureFilter;
+import ceramic.TextureTile;
 import ceramic.ViewSize;
 import ceramic.Visual;
 import elements.Context.context;
@@ -47,6 +51,8 @@ typedef IntPointer = (?val:Int)->Int;
 class Im {
 
     #if !macro
+
+    inline static final DESTROY_ASSET_AFTER_X_FRAMES:Int = 60;
 
     inline static final DEFAULT_SPACE_HEIGHT:Float = -60001.0; // ViewSize.auto();
 
@@ -98,6 +104,8 @@ class Im {
 
     static var _stringPointerValues:IntMap<String> = new IntMap<String>();
 
+    static var _assetUses:Map<String,Int> = new Map();
+
     public static function extractId(key:String):String {
 
         return key; // TODO smarter
@@ -119,6 +127,26 @@ class Im {
 
         for (i in 0..._pointerBaseHandleOccurences.length) {
             _pointerBaseHandleOccurences.unsafeSet(i, 0);
+        }
+
+        for (assetId => count in _assetUses) {
+            if (count > 0) {
+                _assetUses.set(assetId, 0);
+            }
+            else {
+                count--;
+                if (count < -DESTROY_ASSET_AFTER_X_FRAMES) {
+                    _assetUses.remove(assetId);
+                    var assets = context.assets;
+                    var asset = assets.asset(assetId);
+                    if (asset != null) {
+                        asset.destroy();
+                    }
+                }
+                else {
+                    _assetUses.set(assetId, count);
+                }
+            }
         }
 
         for (id => windowData in context.windowsData) {
@@ -645,7 +673,66 @@ class Im {
 
     }
 
-    public static function image(?title:String, texture:Texture, scaleToFit:Bool = false, alignLabel:Bool = false):Void {
+    inline extern overload public static function image(?title:String, tile:TextureTile, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
+
+        return _imageWithTile(title, tile, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    static function _imageWithTile(title:String, tile:TextureTile, scaleToFit:Bool, alignLabel:Bool, textureFilter:TextureFilter):Quad {
+
+        return _image(title, null, tile, -1, -1, -1, -1, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    inline extern overload public static function image(title:String, assetId:String, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
+
+        return _imageWithAsset(title, assetId, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    inline extern overload public static function image(assetId:String, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
+
+        return _imageWithAsset(null, assetId, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    static function _imageWithAsset(title:String, assetId:String, frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float, scaleToFit:Bool, alignLabel:Bool, textureFilter:TextureFilter):Quad {
+
+        assert(assetId != null, 'assedId should not be null');
+
+        if (!assetId.startsWith('image:')) {
+            assetId = 'image:' + assetId;
+        }
+
+        var count:Int = 0;
+        if (_assetUses.exists(assetId)) {
+            count = _assetUses.get(assetId);
+            if (count < 0)
+                count = 0;
+        }
+        _assetUses.set(assetId, count + 1);
+
+        var assets = context.assets;
+        var texture = assets.texture(assetId);
+        if (texture == null) {
+            var imageAsset = assets.asset(assetId);
+            if (imageAsset == null) {
+                assets.addImage(assetId);
+                assets.load();
+            }
+        }
+        return _image(null, texture, null, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    inline extern overload public static function image(?title:String, texture:Texture, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
+
+        return _image(title, texture, null, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
+
+    }
+
+    static function _image(title:String, texture:Texture, tile:TextureTile, frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float, scaleToFit:Bool, alignLabel:Bool, textureFilter:TextureFilter):Quad {
 
         var windowData = _currentWindowData;
 
@@ -670,9 +757,35 @@ class Im {
             visual.active = false;
         }
         if (visual != null) {
-            visual.texture = texture;
+            if (tile != null) {
+                visual.tile = tile;
+                if (textureFilter != null) {
+                    tile.texture.filter = textureFilter;
+                }
+            }
+            else {
+                visual.texture = texture;
+                if (texture != null && textureFilter != null) {
+                    texture.filter = textureFilter;
+                }
+                if (texture == null) {
+                    visual.size(0, 0);
+                }
+                else if (frameX >= 0 && frameY >= 0 && frameWidth >= 0 && frameHeight >= 0) {
+                    var textureW = texture.width;
+                    var textureH = texture.height;
+                    visual.frame(
+                        Math.round(frameX * textureW),
+                        Math.round(frameY * textureH),
+                        Math.round(frameWidth * textureW),
+                        Math.round(frameHeight * textureH)
+                    );
+                }
+            }
         }
         item.visual = visual;
+
+        return visual;
 
     }
 
