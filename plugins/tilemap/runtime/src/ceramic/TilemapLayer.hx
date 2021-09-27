@@ -3,7 +3,7 @@ package ceramic;
 using ceramic.Extensions;
 
 class TilemapLayer extends Visual {
-    
+
     @event function tileQuadsChange();
 
     #if plugin_arcade
@@ -136,14 +136,18 @@ class TilemapLayer extends Visual {
         }
         this.tilesFilter = tilesFilter;
         if (tilesFilter != null) {
+            // TODO use smaller tiles filter if coupled with clip tiles
             var tilesFilterContent = tilesFilter.content;
             for (i in 0...tileQuads.length) {
                 var tileQuad = tileQuads.unsafeGet(i);
                 tilesFilterContent.add(tileQuad);
             }
+
+            // TODO update these when recomputing tiles
             tilesFilter.pos(0, 0);
             if (autoSizeTilesFilter)
                 tilesFilter.size(width, height);
+
             add(tilesFilter);
         }
         else {
@@ -152,6 +156,7 @@ class TilemapLayer extends Visual {
                 add(tileQuad);
             }
         }
+        contentDirty = true;
         return tilesFilter;
     }
 
@@ -198,7 +203,7 @@ class TilemapLayer extends Visual {
         computeTileQuads(tilemap, tilemapData);
 
         contentDirty = false;
-        
+
     }
 
     function computePosAndSize(tilemap:Tilemap, tilemapData:TilemapData) {
@@ -234,7 +239,7 @@ class TilemapLayer extends Visual {
         if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
             hasClipping = true;
         }
-        
+
         // Computing depth from render order
         var startDepthX = 0;
         var startDepthY = 0;
@@ -270,12 +275,12 @@ class TilemapLayer extends Visual {
                         continue;
 
                     var gid = tile.gid;
-                    
+
                     var tileset = tilemapData.tilesetForGid(gid);
-    
+
                     if (tileset != null && tileset.image != null && tileset.columns > 0) {
                         var index = gid - tileset.firstGid;
-    
+
                         var column = (t % layerData.width);
                         var row = Math.floor(t / layerData.width);
                         var depthExtra = 0.0;
@@ -292,23 +297,23 @@ class TilemapLayer extends Visual {
                             row -= layerData.height;
                             depthExtra += 0.1;
                         }
-    
+
                         var tileLeft = column * tileset.tileWidth;
                         var tileTop = row * tileset.tileWidth;
                         var tileWidth = tileset.tileWidth;
                         var tileHeight = tileset.tileHeight;
                         var tileRight = tileLeft + tileWidth;
                         var tileBottom = tileTop + tileHeight;
-    
+
                         var doesClip = false;
                         if (hasClipping) {
                             if (tileRight + offsetX < clipTilesX || tileBottom + offsetY < clipTilesY || tileLeft + offsetX >= clipTilesX + clipTilesWidth || tileTop + offsetY >= clipTilesY + clipTilesHeight) {
                                 doesClip = true;
-                            } 
+                            }
                         }
-    
+
                         if (!doesClip) {
-    
+
                             var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
                             if (quad == null) {
                                 quad = new TilemapQuad();
@@ -324,7 +329,7 @@ class TilemapLayer extends Visual {
                             }
                             usedQuads++;
                             tileQuadMapping.set(t, usedQuads);
-    
+
                             quad.tilemapTile = tile;
                             quad.color = color;
                             quad.index = t;
@@ -341,42 +346,42 @@ class TilemapLayer extends Visual {
                             quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
                             quad.x = tileWidth * 0.5 + tileLeft;
                             quad.y = tileHeight * 0.5 + tileTop;
-    
+
                             if (tile.diagonalFlip) {
-                                
+
                                 if (tile.verticalFlip)
                                     quad.scaleX = -1.0 * tileScale;
                                 else
                                     quad.scaleX = tileScale;
-    
+
                                 if (tile.horizontalFlip)
                                     quad.scaleY = tileScale;
                                 else
                                     quad.scaleY = -1.0 * tileScale;
-    
+
                                 quad.rotation = 90;
                             }
                             else {
-    
+
                                 if (tile.horizontalFlip)
                                     quad.scaleX = -1.0 * tileScale;
                                 else
                                     quad.scaleX = tileScale;
-    
+
                                 if (tile.verticalFlip)
                                     quad.scaleY = -1.0 * tileScale;
                                 else
                                     quad.scaleY = tileScale;
-    
+
                                 quad.rotation = 0;
                             }
                         }
                         else {
                             tileQuadMapping.set(t, 0);
                         }
-    
+
                     }
-    
+
                 }
             }
         }
@@ -405,17 +410,17 @@ class TilemapLayer extends Visual {
 
         var arrayIndex = tileQuadMapping.get(index);
         return arrayIndex != -1 ? tileQuads[arrayIndex - 1] : null;
-        
+
     }
 
     /**
      * Retrieve surrounding tile quads (that could collide within the given area).
      * The area is relative to this layer and does not take into account any offset or layer position.
-     * @param left 
-     * @param top 
-     * @param right 
-     * @param bottom 
-     * @param result 
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     * @param result
      * @return Array<TilemapQuad>
      */
     public function surroundingTileQuads(left:Float, top:Float, right:Float, bottom:Float, ?result:Array<TilemapQuad>):Array<TilemapQuad> {
@@ -437,7 +442,7 @@ class TilemapLayer extends Visual {
             var maxRow = Math.ceil(bottom / tileHeight);
 
             //trace('surrounding minColumn=$minColumn maxColumn=$maxColumn minRow=$minRow maxRow=$maxRow');
-    
+
             var column = minColumn;
             while (column <= maxColumn) {
                 var row = minRow;
