@@ -79,6 +79,10 @@ class WindowData extends Model {
         for (i in itemIndex...items.length) {
             var item = items[i];
             if (item != null) {
+                if (item.hasManagedVisual()) {
+                    item.visual.destroy();
+                    item.visual = null;
+                }
                 items.original[i] = null;
                 item.recycle();
             }

@@ -70,6 +70,12 @@ class WindowItem {
 
     public function new() {}
 
+    inline public function hasManagedVisual():Bool {
+
+        return kind == VISUAL && int0 > 0 && visual != null;
+
+    }
+
     public function isSameItem(item:WindowItem):Bool {
 
         if (item == null)
@@ -117,7 +123,7 @@ class WindowItem {
                 return true;
 
             case VISUAL:
-                return isSimilarLabel(item);
+                return isSimilarLabel(item) && item.visual == visual;
 
             case BUTTON:
                 return true;

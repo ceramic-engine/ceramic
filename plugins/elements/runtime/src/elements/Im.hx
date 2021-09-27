@@ -15,12 +15,14 @@ import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.LongPress;
+import ceramic.Quad;
 import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
 import ceramic.Scroller;
 import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
+import ceramic.Texture;
 import ceramic.ViewSize;
 import ceramic.Visual;
 import elements.Context.context;
@@ -632,6 +634,7 @@ class Im {
         var item = WindowItem.get();
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
+        item.int0 = 0; // 0 == unmanaged/custom visual
         item.visual = visual;
         item.string2 = title;
         item.labelPosition = _labelPosition;
@@ -639,6 +642,37 @@ class Im {
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
+
+    }
+
+    public static function image(?title:String, texture:Texture, scaleToFit:Bool = false, alignLabel:Bool = false):Void {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = VISUAL;
+        item.bool0 = scaleToFit;
+        item.int0 = 1; // 1 == image
+        item.string2 = title;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = alignLabel ? _labelWidth : ViewSize.fill();
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        var visual:Quad = null;
+        if (item.previous != null && item.int0 == item.previous.int0) {
+            // Can reuse visual
+            visual = cast item.previous.visual;
+        }
+        if (visual == null && @:privateAccess windowData.unobservedExpanded) {
+            visual = new Quad();
+            visual.active = false;
+        }
+        if (visual != null) {
+            visual.texture = texture;
+        }
+        item.visual = visual;
 
     }
 
@@ -733,7 +767,14 @@ class Im {
                     if (item.visual != null) {
                         if (item.visual.parent != null)
                             item.visual.parent.remove(item.visual);
-                        item.visual.active = false;
+                        if (window == null && item.hasManagedVisual()) {
+                            // Managed visual, destroy it
+                            item.visual.destroy();
+                            item.visual = null;
+                        }
+                        else {
+                            item.visual.active = false;
+                        }
                     }
                 }
             }
@@ -754,7 +795,14 @@ class Im {
                         if (item.visual != null) {
                             if (item.visual.parent != null)
                                 item.visual.parent.remove(item.visual);
-                            item.visual.active = false;
+                            if (item.hasManagedVisual()) {
+                                // Managed visual, destroy it
+                                item.visual.destroy();
+                                item.visual = null;
+                            }
+                            else {
+                                item.visual.active = false;
+                            }
                         }
                     }
                 }
@@ -786,7 +834,7 @@ class Im {
                         scrollbar.inset(2, 1, 1, 2);
                         scroll.scroller.scrollbar = scrollbar;
                         scroll.transparent = true;
-                        scroll.viewSize(ViewSize.fill(), 200);
+                        scroll.viewSize(ViewSize.fill(), windowData.height);
                         window.contentView = scroll;
                     }
                     else {
