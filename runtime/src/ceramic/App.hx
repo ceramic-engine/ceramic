@@ -1200,7 +1200,7 @@ class App extends Entity {
 
     }
 
-    function syncPendingVisuals():Void {
+    function syncPendingVisuals():Bool {
 
         if (pendingVisuals.length > 0) {
 
@@ -1211,7 +1211,11 @@ class App extends Entity {
 
             hierarchyDirty = true;
 
+            return true;
+
         }
+
+        return false;
 
     }
 
@@ -1262,6 +1266,7 @@ class App extends Entity {
 
         var numIterations = 0;
         var didFlush = false;
+        var didSyncVisuals = false;
 
         do {
             visualsContentDirty = false;
@@ -1296,8 +1301,6 @@ class App extends Entity {
                         }
                     }
                 }
-
-
             }
 
             // Dispatch visual transforms changes
@@ -1331,8 +1334,10 @@ class App extends Entity {
             }
 
             didFlush = flushImmediate();
+
+            didSyncVisuals = syncPendingVisuals();
         }
-        while (didFlush || visualsContentDirty);
+        while (didFlush || visualsContentDirty || didSyncVisuals);
 
         // Reset render texture dependencies to recompute them
         for (i in 0...renderTextures.length) {
