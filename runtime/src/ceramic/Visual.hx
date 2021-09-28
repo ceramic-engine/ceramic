@@ -2655,7 +2655,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * This overwrites width, height, anchorX and anchorY properties accordingly.
      * Warning: this may be an expensive operation.
      */
-    function computeBounds():Void {
+    public function computeBounds():Void {
 
         if (children == null) {
             _width = 0;
