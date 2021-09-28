@@ -50,7 +50,6 @@ class VisualNapePhysics extends Entity {
 
         super.destroy();
             
-        body.constraints.foreach(c -> c.active = false);
         body.space = null;
 
         if (visual != null) {
