@@ -1,29 +1,27 @@
 package ceramic;
 
-import spine.utils.SkeletonClipping;
-import spine.support.graphics.TextureAtlas;
-import spine.AnimationState;
-import spine.attachments.*;
-import spine.*;
-
-import ceramic.Visual;
-import ceramic.Mesh;
-import ceramic.MeshColorMapping;
-import ceramic.Texture;
-import ceramic.Transform;
-import ceramic.Color;
 import ceramic.AlphaColor;
 import ceramic.Blending;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
+import ceramic.Color;
+import ceramic.Mesh;
+import ceramic.MeshColorMapping;
 import ceramic.Shader;
-import ceramic.Triangulate;
 import ceramic.Shortcuts.*;
-
-using ceramic.SpinePlugin;
-using ceramic.Extensions;
+import ceramic.Texture;
+import ceramic.Transform;
+import ceramic.Triangulate;
+import ceramic.Visual;
+import spine.*;
+import spine.AnimationState;
+import spine.attachments.*;
+import spine.support.graphics.TextureAtlas;
+import spine.utils.SkeletonClipping;
 
 using StringTools;
+using ceramic.Extensions;
+using ceramic.SpinePlugin;
 
 @editable
 class Spine extends Visual {
@@ -388,7 +386,7 @@ class Spine extends Visual {
 
         // Render will be updated from skeleton change anyway
         renderDirtyAgressive = false;
-        
+
         // Save animation info
         var prevSpineData = this.spineData;
 
@@ -701,7 +699,7 @@ class Spine extends Visual {
         };
 
         listener.onComplete = function(track) {
-            
+
             if (!muteEvents) {
                 if (deferEvents) {
                     app.onceImmediate(emitCompleteIfNotDestroyed);
@@ -714,11 +712,11 @@ class Spine extends Visual {
         };
 
         listener.onEnd = function(track) {
-            
+
         };
 
         listener.onEvent = function(track, event) {
-            
+
             if (!muteEvents) {
                 if (deferEvents) {
                     app.onceImmediate(() -> {
@@ -733,7 +731,7 @@ class Spine extends Visual {
             }
 
         };
-        
+
         state.addListener(listener);
 
         // Check if some slots use tint black
@@ -800,7 +798,7 @@ class Spine extends Visual {
         renderDirty = true;
         return height;
     }
-    
+
     override function computeBounds():Void {
         super.computeBounds();
         skeletonOriginX = anchorX;
@@ -878,7 +876,7 @@ class Spine extends Visual {
             if (aTrack == null) break;
             _trackTimes[i] = aTrack.trackTime;
         }
-        
+
         var i = tracks.length;
         update(0.1);
         while (i-- > 0) {
@@ -895,7 +893,7 @@ class Spine extends Visual {
             if (aTrack == null) continue;
             aTrack.delay = 0;
         }
-        
+
         updateSkeleton(0);
         render(0, 0, false);
 
@@ -929,7 +927,7 @@ class Spine extends Visual {
         if (state != null && listener != null) {
             state.removeListener(listener);
         }
-        
+
         if (updateSlotWithNameDispatchersAsList != null) {
             for (i in 0...updateSlotWithNameDispatchersAsList.length) {
                 var dispatch = updateSlotWithNameDispatchersAsList.unsafeGet(i);
@@ -938,7 +936,7 @@ class Spine extends Visual {
             updateSlotWithNameDispatchers = null;
             updateSlotWithNameDispatchersAsList = null;
         }
-        
+
         if (updateVisibleSlotWithNameDispatchersAsList != null) {
             for (i in 0...updateVisibleSlotWithNameDispatchersAsList.length) {
                 var dispatch = updateVisibleSlotWithNameDispatchersAsList.unsafeGet(i);
@@ -947,7 +945,7 @@ class Spine extends Visual {
             updateVisibleSlotWithNameDispatchers = null;
             updateVisibleSlotWithNameDispatchersAsList = null;
         }
-        
+
         skeletonData = null;
         stateData = null;
         state = null;
@@ -1178,7 +1176,7 @@ class Spine extends Visual {
 
                     tx = skeleton.x + bone.worldX;
                     ty = skeleton.y - bone.worldY;
-                    
+
                     slotInfo.transform.setTo(
                         bone.a,
                         bone.c * flip * -1,
@@ -1195,7 +1193,7 @@ class Spine extends Visual {
                     }
 
                     if (regularRender) {
-                        
+
                         emitUpdateSlot(slotInfo);
                         if (slotInfo.drawDefault) {
                             emitUpdateVisibleSlot(slotInfo);
@@ -1208,7 +1206,7 @@ class Spine extends Visual {
                         if (boundSlot == null || boundSlot.parentVisible) {
 
                             emptySlotMesh = false;
-                            
+
                             if (boundingBoxAttachment != null) {
                                 if (firstBoundingBoxSlotIndex == -1) {
                                     firstBoundingBoxSlotIndex = slot.data.index;
@@ -1237,7 +1235,7 @@ class Spine extends Visual {
                                 add(mesh);
                                 slotMeshes.set(slot.data.index, mesh);
                             }
-                            
+
                             mesh.texture = texture;
 
                             if (boundingBoxAttachment != null) {
@@ -1251,7 +1249,7 @@ class Spine extends Visual {
                                 count = 4;
                                 verticesLength = vertexSize << 2;
                             }
-                            
+
                             if (verticesLength == 0) {
                                 mesh.visible = false;
                             }
@@ -1574,7 +1572,7 @@ class Spine extends Visual {
                                 var bindList = sub.boundParentSlots.getInline(slotGlobalIndex);
                                 for (bi in 0...bindList.length) {
                                     var bindInfo = bindList.unsafeGet(bi);
-                                    
+
                                     // Keep parent info
                                     if (slot.attachment == null) {
                                         bindInfo.parentVisible = false;
@@ -1650,7 +1648,7 @@ class Spine extends Visual {
         if (!setup && subSpines != null) {
             for (s in 0...subSpines.length) {
                 var sub = subSpines.unsafeGet(s);
-                
+
                 // Skip rendering of sub spines if they are not visible, by default
                 if (!sub.renderWhenInvisible && sub.visibilityDirty) {
                     sub.spineComputeVisibility();
@@ -1716,7 +1714,7 @@ class Spine extends Visual {
             var slot = skeletonSlots.unsafeGet(i);
             var slotName = slot.name;
             var slotIndex = slot.index;
-            
+
             var globalIndex = globalSlotIndexForName(slotName);
             globalSlotIndexFromSkeletonSlotIndex[slotIndex] = globalIndex;
         }
@@ -1879,7 +1877,7 @@ class Spine extends Visual {
     public function bindParentSlot(parentSlot:String, ?options:BindSlotOptions) {
 
         var parentSlotGlobalIndex = globalSlotIndexForName(parentSlot);
-        
+
         if (options != null) {
 
             var info = new BindSlot();
@@ -1911,6 +1909,17 @@ class Spine extends Visual {
             globalBoundParentSlotGlobalIndex = parentSlotGlobalIndex;
             if (transform == null) transform = new Transform();
 
+        }
+
+    }
+
+    public function unbindParentSlot(parentSlot:String) {
+
+        var parentSlotGlobalIndex = globalSlotIndexForName(parentSlot);
+        var bindList = boundParentSlots.get(parentSlotGlobalIndex);
+        if (bindList != null) {
+            boundChildSlotsDirty = true;
+            boundParentSlots.remove(parentSlotGlobalIndex);
         }
 
     }
@@ -2040,7 +2049,7 @@ class Spine extends Visual {
 class SpineListener implements AnimationStateListener {
 
     public function new() {}
-    
+
     /**
      * Invoked when this entry has been set as the current entry.
      */
