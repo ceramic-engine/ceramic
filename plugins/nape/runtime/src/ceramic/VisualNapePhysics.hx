@@ -49,6 +49,8 @@ class VisualNapePhysics extends Entity {
     override function destroy() {
 
         super.destroy();
+            
+        body.space = null;
 
         if (visual != null) {
             if (visual.nape == this) {
