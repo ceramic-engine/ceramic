@@ -27,12 +27,19 @@ import ceramic.TextAlign;
 import ceramic.Texture;
 import ceramic.TextureFilter;
 import ceramic.TextureTile;
+import ceramic.View;
 import ceramic.ViewSize;
 import ceramic.Visual;
 import elements.Context.context;
 
 using StringTools;
 using ceramic.Extensions;
+
+#if plugin_spine
+import ceramic.Spine;
+import ceramic.SpineData;
+#end
+
 #end
 
 #if macro
@@ -722,7 +729,7 @@ class Im {
                 assets.load();
             }
         }
-        return _image(null, texture, null, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
+        return _image(title, texture, null, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
 
     }
 
@@ -788,6 +795,62 @@ class Im {
         return visual;
 
     }
+
+    #if plugin_spine
+
+    inline extern overload public static function spine(?title:String, spineData:SpineData, ?animation:String, ?skin:String, progress:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false):Spine {
+
+        return _spine(title, spineData, animation, skin, progress, scaleToFit, alignLabel);
+
+    }
+
+    static function _spine(title:String, spineData:SpineData, animation:String, skin:String, progress:Float, scaleToFit:Bool, alignLabel:Bool):Spine {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = VISUAL;
+        item.bool0 = scaleToFit;
+        item.int0 = 100; // 100 == spine
+        item.string2 = title;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = alignLabel ? _labelWidth : ViewSize.fill();
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        var visual:Spine = null;
+        if (item.previous != null && item.int0 == item.previous.int0) {
+            // Can reuse visual
+            visual = cast item.previous.visual;
+        }
+        if (visual == null && @:privateAccess windowData.unobservedExpanded) {
+            visual = new Spine();
+            visual.skeletonScale = 0.1;
+            visual.active = false;
+        }
+        if (visual != null) {
+            visual.paused = true;
+            if (visual.spineData != spineData || visual.skin != skin || visual.animation != animation) {
+                if (visual.parent != null && visual.parent is View) {
+                    var parentView:View = cast visual.parent;
+                    parentView.layoutDirty = true;
+                }
+                visual.spineData = spineData;
+                visual.skin = skin;
+                visual.animation = animation;
+                visual.forceRender();
+                visual.computeBounds();
+                trace('spine SIZE=${visual.width},${visual.height} ANCHOR=${visual.anchorX},${visual.anchorY}');
+            }
+        }
+        item.visual = visual;
+
+        return visual;
+
+    }
+
+    #end
 
     public static function space(height:Float = DEFAULT_SPACE_HEIGHT):Void {
 
