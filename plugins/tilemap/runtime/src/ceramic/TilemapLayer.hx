@@ -132,6 +132,9 @@ class TilemapLayer extends Visual {
             if (destroyTilesFilterOnRemove) {
                 this.tilesFilter.destroy();
             }
+            else if (this.tilesFilter.parent == this) {
+                remove(this.tilesFilter);
+            }
             this.tilesFilter = null;
         }
         this.tilesFilter = tilesFilter;
