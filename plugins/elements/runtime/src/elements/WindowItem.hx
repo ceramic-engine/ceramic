@@ -54,6 +54,8 @@ class WindowItem {
 
     public var bool0:Bool = false;
 
+    public var bool1:Bool = false;
+
     public var string0:String = null;
 
     public var string1:String = null;
@@ -195,6 +197,7 @@ class WindowItem {
         float3 = 0;
         float4 = 0;
         bool0 = false;
+        bool1 = false;
         string0 = null;
         string1 = null;
         string2 = null;
