@@ -214,6 +214,11 @@ class Spine extends Visual {
 
 /// Properties
 
+    inline public function skeletonOrigin(skeletonOriginX:Float, skeletonOriginY:Float):Void {
+        this.skeletonOriginX = skeletonOriginX;
+        this.skeletonOriginY = skeletonOriginY;
+    }
+
     /**
      * Skeleton origin X
      */
