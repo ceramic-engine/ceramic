@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.Filter;
 import ceramic.LayoutAlign;
 import ceramic.View;
 import ceramic.ViewLayoutMask;
@@ -13,6 +14,45 @@ class VisualContainerView extends View implements Observable {
 /// Public properties
 
     public var destroyVisualOnRemove:Bool = true;
+
+    public var destroyFilterOnRemove:Bool = true;
+
+    public var filter(default, set):Filter = null;
+    function set_filter(filter:Filter):Filter {
+        if (this.filter != filter) {
+            var visual = this.visual;
+            if (this.filter != null) {
+                var filterContent = filter.content;
+                if (visual != null && visual.parent == filterContent) {
+                    filterContent.remove(visual);
+                }
+                if (destroyFilterOnRemove) {
+                    this.filter.destroy();
+                }
+                else if (this.filter.parent == this) {
+                    remove(this.filter);
+                }
+                this.filter = null;
+            }
+            this.filter = filter;
+            if (filter != null) {
+
+                var filterContent = filter.content;
+                if (visual != null && visual.parent != filterContent) {
+                    filterContent.add(visual);
+                }
+
+                add(filter);
+            }
+            else {
+                if (visual != null && visual.parent != this) {
+                    add(visual);
+                }
+            }
+            layoutDirty = true;
+        }
+        return filter;
+    }
 
     /**
      * Content alignment
@@ -51,9 +91,12 @@ class VisualContainerView extends View implements Observable {
             this.visual = visual;
         }
         if (visual != null) {
-            if (visual.parent != this)
-                add(visual);
+            var visualParent:Visual = filter != null ? filter.content : this;
+            if (visual.parent != visualParent) {
+                visualParent.add(visual);
+            }
             visual.active = true;
+            layoutDirty = true;
         }
         return visual;
     }
@@ -126,6 +169,11 @@ class VisualContainerView extends View implements Observable {
 
         var availableWidth = width - paddingLeft - paddingRight;
         var availableHeight = height - paddingTop - paddingBottom;
+
+        if (filter != null) {
+            filter.pos(0, 0);
+            filter.size(width, height);
+        }
 
         if (visual != null) {
 

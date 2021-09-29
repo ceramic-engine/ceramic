@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.Color;
 import ceramic.Equal;
+import ceramic.Filter;
 import ceramic.Pool;
 import ceramic.View;
 import ceramic.ViewSize;
@@ -266,6 +267,17 @@ class WindowItem {
 
         visual.active = true;
         container.visual = visual;
+
+        if (bool1) {
+            if (container.filter == null) {
+                container.filter = new Filter();
+            }
+        }
+        else {
+            if (container.filter != null) {
+                container.filter = null;
+            }
+        }
 
         var scaleToFit = bool0;
         if (labeled != null) {

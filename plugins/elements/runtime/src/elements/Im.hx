@@ -662,13 +662,14 @@ class Im {
 
     }
 
-    public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false, alignLabel:Bool = false):Void {
+    public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false, alignLabel:Bool = false, useFilter:Bool = true):Void {
 
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
+        item.bool1 = useFilter;
         item.int0 = 0; // 0 == unmanaged/custom visual
         item.visual = visual;
         item.string2 = title;
