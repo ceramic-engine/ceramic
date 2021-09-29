@@ -837,21 +837,23 @@ class Im {
         return visual;
 
     }
+
     #if plugin_spine
 
-    inline extern overload public static function spine(?title:String, spineData:SpineData, ?animation:String, ?skin:String, progress:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false):Spine {
+    inline extern overload public static function spine(?title:String, spineData:SpineData, ?animation:String, ?skin:String, time:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false):Spine {
 
-        return _spine(title, spineData, animation, skin, progress, scaleToFit, alignLabel);
+        return _spine(title, spineData, animation, skin, time, scaleToFit, alignLabel);
 
     }
 
-    static function _spine(title:String, spineData:SpineData, animation:String, skin:String, progress:Float, scaleToFit:Bool, alignLabel:Bool):Spine {
+    static function _spine(title:String, spineData:SpineData, animation:String, skin:String, time:Float, scaleToFit:Bool, alignLabel:Bool):Spine {
 
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
+        item.bool1 = true; // use filter (render to texture)
         item.int0 = 100; // 100 == spine
         item.string2 = title;
         item.labelPosition = _labelPosition;
@@ -865,24 +867,57 @@ class Im {
             // Can reuse visual
             visual = cast item.previous.visual;
         }
-        if (visual == null && @:privateAccess windowData.unobservedExpanded) {
+        if ((visual == null && @:privateAccess windowData.unobservedExpanded)) {
             visual = new Spine();
             visual.skeletonScale = 0.1;
             visual.active = false;
+            visual.anchor(0.5, 0.5);
         }
         if (visual != null) {
-            visual.paused = true;
-            if (visual.spineData != spineData || visual.skin != skin || visual.animation != animation) {
-                if (visual.parent != null && visual.parent is View) {
-                    var parentView:View = cast visual.parent;
-                    parentView.layoutDirty = true;
+            if (time >= 0) {
+                visual.paused = true;
+            }
+            var state = visual.state;
+            var track = state != null ? visual.state.tracks[0] : null;
+            var trackAnim = track != null ? track.animation : null;
+            var currentAnimationName = trackAnim != null ? trackAnim.name : null;
+            if (visual.spineData != spineData || visual.skin != skin || currentAnimationName != animation) {
+                if (visual.parent != null) {
+                    visual.parent.remove(visual);
                 }
+                var spine:Spine = visual;
                 visual.spineData = spineData;
                 visual.skin = skin;
-                visual.animation = animation;
+                visual.scale(1, 1);
+                visual.skew(0, 0);
+                visual.anchor(0, 0);
+                visual.size(0, 0);
+                visual.pos(0, 0);
+                visual.rotation = 0;
+                visual.skeletonScale = 1;
+                visual.skeletonOriginX = 0.5;
+                visual.skeletonOriginY = 0.5;
+                if (spineData != null) {
+                    visual.animate(animation, true, 0, 0);
+                }
                 visual.forceRender();
                 visual.computeBounds();
-                trace('spine SIZE=${visual.width},${visual.height} ANCHOR=${visual.anchorX},${visual.anchorY}');
+                if (spineData != null) {
+                    visual.animate(animation, true, 0, Math.max(time, 0));
+                }
+                visual.forceRender();
+                visual.anchor(0.5, 0.5);
+            }
+            else {
+                if (time >= 0) {
+                    var prevTime:Float = -1;
+                    if (track != null) {
+                        prevTime = track.trackTime;
+                    }
+                    if (spineData != null && time != prevTime) {
+                        visual.animate(animation, true, 0, time);
+                    }
+                }
             }
         }
         item.visual = visual;
