@@ -136,17 +136,12 @@ class TilemapLayer extends Visual {
         }
         this.tilesFilter = tilesFilter;
         if (tilesFilter != null) {
-            // TODO use smaller tiles filter if coupled with clip tiles
+
             var tilesFilterContent = tilesFilter.content;
             for (i in 0...tileQuads.length) {
                 var tileQuad = tileQuads.unsafeGet(i);
                 tilesFilterContent.add(tileQuad);
             }
-
-            // TODO update these when recomputing tiles
-            tilesFilter.pos(0, 0);
-            if (autoSizeTilesFilter)
-                tilesFilter.size(width, height);
 
             add(tilesFilter);
         }
@@ -231,6 +226,9 @@ class TilemapLayer extends Visual {
 
         var usedQuads = 0;
 
+        var width = _width;
+        var height = _height;
+
         var hasClipping = false;
         var clipTilesX = tilemap.clipTilesX;
         var clipTilesY = tilemap.clipTilesY;
@@ -262,6 +260,29 @@ class TilemapLayer extends Visual {
 
         var offsetX = layerData.offsetX + layerData.x * tilemapData.tileWidth;
         var offsetY = layerData.offsetY + layerData.y * tilemapData.tileHeight;
+
+        var filterX:Float = 0.0;
+        var filterY:Float = 0.0;
+        if (tilesFilter != null) {
+            var filterWidth = width;
+            var filterHeight = height;
+            if (hasClipping) {
+                filterX = Math.floor(clipTilesX / tilemapData.tileWidth) * tilemapData.tileWidth - offsetX;// - tilemapData.tileWidth;
+                filterY = Math.floor(clipTilesY / tilemapData.tileHeight) * tilemapData.tileHeight - offsetY;// - tilemapData.tileHeight;
+                tilesFilter.pos(
+                    filterX,
+                    filterY
+                );
+                filterWidth = Math.ceil(clipTilesWidth / tilemapData.tileWidth) * tilemapData.tileWidth + tilemapData.tileWidth;
+                filterHeight = Math.ceil(clipTilesHeight / tilemapData.tileHeight) * tilemapData.tileHeight + tilemapData.tileHeight;
+            }
+            else {
+                tilesFilter.pos(0, 0);
+            }
+            if (autoSizeTilesFilter && filterWidth > 0 && filterHeight > 0) {
+                tilesFilter.size(filterWidth, filterHeight);
+            }
+        }
 
         if (layerData.visible) {
             var tiles = layerData.computedTiles;
@@ -344,8 +365,8 @@ class TilemapLayer extends Visual {
                             quad.frameWidth = tileset.tileWidth;
                             quad.frameHeight = tileset.tileHeight;
                             quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
-                            quad.x = tileWidth * 0.5 + tileLeft;
-                            quad.y = tileHeight * 0.5 + tileTop;
+                            quad.x = tileWidth * 0.5 + tileLeft - filterX;
+                            quad.y = tileHeight * 0.5 + tileTop - filterY;
 
                             if (tile.diagonalFlip) {
 
