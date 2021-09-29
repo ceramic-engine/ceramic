@@ -35,7 +35,7 @@ class VisualContainerView extends View implements Observable {
      */
     @observe public var visual(default,set):Visual = null;
     function set_visual(visual:Visual):Visual {
-        if (this.visual != visual || visual.parent != this) {
+        if (this.visual != visual || (visual != null && visual.parent != this)) {
             var prevVisual = this.visual;
             if (prevVisual != null && prevVisual != visual) {
                 if (prevVisual.parent == this) {
