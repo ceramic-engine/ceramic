@@ -796,6 +796,47 @@ class Im {
 
     }
 
+    @:noCompletion public static function debugVisual(?title:String, scaleToFit:Bool = false, alignLabel:Bool = false):Quad {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = VISUAL;
+        item.bool0 = scaleToFit;
+        item.int0 = 1000; // 1000 == debugVisual
+        item.string2 = title;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = alignLabel ? _labelWidth : ViewSize.fill();
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        var visual:Quad = null;
+        if (item.previous != null && item.int0 == item.previous.int0) {
+            // Can reuse visual
+            visual = cast item.previous.visual;
+        }
+        if (visual == null && @:privateAccess windowData.unobservedExpanded) {
+            visual = new Quad();
+            visual.color = Color.LIME;
+            visual.size(
+                20 + Math.round(Math.random() * 600),
+                20 + Math.round(Math.random() * 600)
+            );
+        }
+        if (visual != null) {
+            if (app.frame % 60 == 0) {
+                visual.size(
+                    20 + Math.round(Math.random() * 600),
+                    20 + Math.round(Math.random() * 600)
+                );
+            }
+        }
+        item.visual = visual;
+
+        return visual;
+
+    }
     #if plugin_spine
 
     inline extern overload public static function spine(?title:String, spineData:SpineData, ?animation:String, ?skin:String, progress:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false):Spine {
