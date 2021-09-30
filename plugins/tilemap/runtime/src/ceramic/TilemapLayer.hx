@@ -216,13 +216,6 @@ class TilemapLayer extends Visual {
             layerData.height * tilemapData.tileHeight
         );
 
-        if (autoSizeTilesFilter && tilesFilter != null) {
-            tilesFilter.size(
-                layerData.width * tilemapData.tileWidth,
-                layerData.height * tilemapData.tileHeight
-            );
-        }
-
     }
 
     function computeTileQuads(tilemap:Tilemap, tilemapData:TilemapData) {

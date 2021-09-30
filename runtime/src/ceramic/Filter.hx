@@ -1,11 +1,10 @@
 package ceramic;
 
-import tracker.Observable;
-import ceramic.RenderTexture;
 import ceramic.Quad;
-import ceramic.Visual;
-
+import ceramic.RenderTexture;
 import ceramic.Shortcuts.*;
+import ceramic.Visual;
+import tracker.Observable;
 
 /**
  * A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
@@ -178,7 +177,7 @@ class Filter extends Layer implements Observable {
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
                 ) {
-                
+
                 // Destroy any invalid texture managed by this filter
                 if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
                     texture = null;
@@ -256,7 +255,7 @@ class Filter extends Layer implements Observable {
                 done = null;
             }
             return;
-        } 
+        }
         else if (explicitRenderState == 2) {
             if (done != null) {
                 if (explicitRenderPendingResultCallbacks == null) {
@@ -437,7 +436,7 @@ class Filter extends Layer implements Observable {
             return visual.hitTest(x, y, _matrix);
 
         }
-        
+
         Screen.matchedHitVisual = matchedHitVisual;
 
         return false;
@@ -467,7 +466,7 @@ class Filter extends Layer implements Observable {
 
         // Will unbind touch if needed
         hitVisual = null;
-        
+
         texture = null;
         if (renderTexture != null && (textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture))) {
             renderTexture.destroy();
