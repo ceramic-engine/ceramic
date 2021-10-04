@@ -1,10 +1,10 @@
 package tools.tasks;
 
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 import tools.Files;
 import tools.Helpers.*;
-import haxe.io.Path;
-import sys.io.File;
-import sys.FileSystem;
 
 using StringTools;
 
@@ -68,7 +68,7 @@ class Init extends tools.Task {
         //
         var tplProjectPath = Path.join([context.ceramicToolsPath, 'tpl/project/empty']);
         Files.copyDirectory(tplProjectPath, projectPath);
-        
+
         // Save ceramic.yml content
         //
         var content = '
@@ -79,11 +79,17 @@ app:
     author: My Company
     version: \'1.0\'
 
+    plugins:
+        #- arcade
+        #- nape
+        #- ui
+        #- elements
+
     libs:
         #- somelib
         #- somelib: someversion
         #- somelib: git:https://github.com/somelibauthor/somelib.git
-    
+
     defines:
         #- some_define
         #- some_define: \'some value\'
