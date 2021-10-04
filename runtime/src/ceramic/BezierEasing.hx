@@ -33,7 +33,7 @@ class BezierEasing {
     var mQuadraticX2:Float;
 
     var mX1:Float;
-    
+
     var mY1:Float;
 
     var mX2:Float;
@@ -122,7 +122,7 @@ class BezierEasing {
         var dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
         var guessForT:Float = intervalStart + dist * SAMPLE_STEP_SIZE;
 
-        var initialSlope = getSlope(guessForT, mX1, mX2); 
+        var initialSlope = getSlope(guessForT, mX1, mX2);
         if (initialSlope >= NEWTON_MIN_SLOPE) {
             return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
         } else if (initialSlope == 0.0) {
@@ -146,9 +146,9 @@ class BezierEasing {
      * Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2
      */
     inline function getSlope(aT:Float, aA1:Float, aA2:Float) {
-        
+
         return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
-        
+
     }
 
     inline function binarySubdivide(aX:Float, aA:Float, aB:Float, mX1:Float, mX2:Float) {
@@ -193,13 +193,13 @@ class BezierEasing {
     inline static function quadraticToCubicCP1(p:Float):Float {
 
         return TWO_THIRD * p;
-        
+
     }
 
     inline static function quadraticToCubicCP2(p:Float):Float {
 
         return 1.0 + TWO_THIRD * (p - 1.0);
-        
+
     }
 
     /// Cache
