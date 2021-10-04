@@ -10,7 +10,10 @@ class VisualNapePhysics extends Entity {
     public var body:nape.phys.Body = null;
 
     public function new(
-        bodyType:NapePhysicsBodyType, ?shape:nape.shape.Shape, ?material:nape.phys.Material,
+        bodyType:NapePhysicsBodyType,
+        ?shape:nape.shape.Shape,
+        ?shapes:Array<nape.shape.Shape>,
+        ?material:nape.phys.Material,
         x:Float, y:Float, width:Float, height:Float, rotation:Float
         ) {
 
@@ -26,7 +29,7 @@ class VisualNapePhysics extends Entity {
             napeBodyType,
             nape.geom.Vec2.weak(x, y)
         );
-        if (shape == null) {
+        if (shape == null && (shapes == null || shapes.length == 0)) {
             shape = new nape.shape.Polygon(
                 nape.shape.Polygon.box(width, height)
             );
@@ -34,7 +37,14 @@ class VisualNapePhysics extends Entity {
 
         body.rotation = Utils.degToRad(rotation);
 
-        body.shapes.add(shape);
+        if (shape != null) {
+            body.shapes.add(shape);
+        }
+        if (shapes != null) {
+            for (i in 0...shapes.length) {
+                body.shapes.add(shapes[i]);
+            }
+        }
         if (material != null) body.setShapeMaterials(material);
 
         if (ceramic.App.app.nape._freezeItems) {
@@ -49,7 +59,7 @@ class VisualNapePhysics extends Entity {
     override function destroy() {
 
         super.destroy();
-            
+
         body.space = null;
 
         if (visual != null) {

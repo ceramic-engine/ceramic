@@ -877,6 +877,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param type Physics body type (`STATIC`, `KINEMATIC` or `DYNAMIC`)
      * @param space (optional) Related nape spaces. Will use default space if not provided.
      * @param shape (optional) Shape used for this body. Default is a box matching visual bounds.
+     * @param shapes (optional) Array of shapes used for this body.
      * @param material (optional) A custom material to use with this body.
      * @return A `VisualNapePhysics` instance
      */
@@ -884,6 +885,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,
         ?shape:nape.shape.Shape,
+        ?shapes:Array<nape.shape.Shape>,
         ?material:nape.phys.Material
     ):VisualNapePhysics {
 
@@ -902,6 +904,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         nape = new VisualNapePhysics(
             type,
             shape,
+            shapes,
             material,
             x - w * (anchorX - 0.5),
             y - h * (anchorY - 0.5),

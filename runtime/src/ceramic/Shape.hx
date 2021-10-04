@@ -77,6 +77,20 @@ class Shape extends Mesh {
         return autoComputeSize;
     }
 
+    override function get_width():Float {
+        if (autoComputeSize && contentDirty) {
+            computeContent();
+        }
+        return super.get_width();
+    }
+
+    override function get_height():Float {
+        if (autoComputeSize && contentDirty) {
+            computeContent();
+        }
+        return super.get_height();
+    }
+
     override function computeContent() {
 
         if (vertices != null && vertices.length >= 6 #if editor && !editor.components.Editable.canSkipRender #end) {
@@ -106,6 +120,7 @@ class Shape extends Mesh {
      * @param type Physics body type (`STATIC`, `KINEMATIC` or `DYNAMIC`)
      * @param space (optional) Related nape spaces. Will use default space if not provided.
      * @param shape (optional) Shape used for this body. Default is a polygon matching shape points.
+     * @param shapes (optional) Array of shapes used for this body.
      * @param material (optional) A custom material to use with this body.
      * @return A `VisualNapePhysics` instance
      */
@@ -113,6 +128,7 @@ class Shape extends Mesh {
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,
         ?shape:nape.shape.Shape,
+        ?shapes:Array<nape.shape.Shape>,
         ?material:nape.phys.Material
     ):VisualNapePhysics {
 
@@ -125,7 +141,7 @@ class Shape extends Mesh {
             computeContent();
         }
 
-        if (shape == null) {
+        if (shape == null && (shapes == null || shapes.length == 0)) {
             var shapePoints = new Vec2List();
             var len = points.length;
             var i = 0;
@@ -142,7 +158,7 @@ class Shape extends Mesh {
             shape = new Polygon(shapePoints);
         }
 
-        return super.initNapePhysics(type, space, shape, material);
+        return super.initNapePhysics(type, space, shape, shapes, material);
 
     }
 
