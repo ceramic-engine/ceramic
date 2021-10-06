@@ -66,6 +66,12 @@ class BackgroundQueue extends Entity {
 
     private function internalRunInBackground():Void {
 
+        #if (android && linc_sdl)
+        // This lets us attach thread to JNI.
+        // Required because some JNI calls could be done in background
+        sdl.SDL.androidGetJNIEnv();
+        #end
+
         #if cs
         untyped __cs__('global::System.Threading.Thread.CurrentThread.CurrentCulture = global::System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")');
         #end
