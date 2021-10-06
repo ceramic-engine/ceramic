@@ -70,7 +70,7 @@ class Spine extends Visual {
 
     var firstBoundingBoxSlotIndex:Int = -1;
 
-    var clipper:SkeletonClipping = new SkeletonClipping();
+    //var clipper:SkeletonClipping = new SkeletonClipping();
 
     var muteEvents:Bool = false;
 
@@ -1152,7 +1152,7 @@ class Spine extends Visual {
             boundSlot = null;
             tintBlack = slot.data.darkColor != null || useTintBlack;
             // /!\ TODO clipping
-            vertexSize = clipper != null && clipper.isClipping() ? 5 : 2;
+            vertexSize = 2;//clipper != null && clipper.isClipping() ? 5 : 2;
             if (tintBlack) vertexSize += 4;
 
             // Emit event and allow to override drawing of this slot
@@ -1417,7 +1417,7 @@ class Spine extends Visual {
                                     if (mesh.colors == null) mesh.colors = [alphaColor];
                                     else mesh.colors[0] = alphaColor;
 
-                                    if (clipper.isClipping()) {
+                                    /*if (clipper.isClipping()) {
                                         clipper.clipTriangles(mesh.vertices, verticesLength, mesh.indices, mesh.indices.length, mesh.uvs, alphaColor, 0, false);
                                         var clippedVertices = clipper.getClippedVertices();
                                         var clippedTriangles = clipper.getClippedTriangles();
@@ -1435,7 +1435,7 @@ class Spine extends Visual {
                                         }
 
                                         mesh.indices = clippedTriangles.items;
-                                    }
+                                    }*/
 
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.AUTO;
                                     mesh.depth = slotInfo.depth;
@@ -1542,13 +1542,13 @@ class Spine extends Visual {
                         }
                     }
                 }
-                else if (Std.isOfType(slot.attachment, ClippingAttachment)) {
+                // else if (Std.isOfType(slot.attachment, ClippingAttachment)) {
 
-                    clipAttachment = cast slot.attachment;
-                    clipper.clipStart(slot, clipAttachment);
-                    continue;
+                //     clipAttachment = cast slot.attachment;
+                //     clipper.clipStart(slot, clipAttachment);
+                //     continue;
 
-                }
+                // }
 
                 z++;
             }
@@ -1634,10 +1634,10 @@ class Spine extends Visual {
                 }
             }
 
-            clipper.clipEndWithSlot(slot);
+            //clipper.clipEndWithSlot(slot);
 
         }
-        clipper.clipEnd();
+        //clipper.clipEnd();
 
         this.firstBoundingBoxSlotIndex = firstBoundingBoxSlotIndex;
 
