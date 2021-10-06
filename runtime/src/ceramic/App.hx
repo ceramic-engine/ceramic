@@ -1388,7 +1388,7 @@ class App extends Entity {
     }
 
     @:noCompletion
-    #if (!debug && !ceramic_debug_perf) inline #end public function computeHierarchy() {
+    public function computeHierarchy() {
 
         if (hierarchyDirty) {
 
@@ -1402,7 +1402,7 @@ class App extends Entity {
                         visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
 
                         if (visual.children != null) {
-                            visual.computeChildrenDepth();
+                            Visual.computeChildrenDepth(visual);
                         }
                     }
                 }

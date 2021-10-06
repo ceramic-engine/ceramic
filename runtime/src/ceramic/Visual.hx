@@ -2468,68 +2468,211 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Compute children depth. The result depends on whether
      * a parent defines a custom `depthRange` value or not.
      */
-    function computeChildrenDepth():Void {
+    #if ceramic_soft_inline inline #end static function computeChildrenDepth(visual:Visual):Void {
 
+        _computeChildrenDepth0(visual #if !ceramic_soft_inline , 0 #end);
+
+    }
+
+    #if !ceramic_soft_inline inline #end static function _computeChildrenDepth0(visual:Visual #if !ceramic_soft_inline , step:Int #end):Void {
+
+        var children = visual.children.original;
         if (children != null) {
 
             // Compute deepest in hierarchy first
             for (i in 0...children.length) {
                 var child = children.unsafeGet(i);
                 child.computedDepth = child.depth * DEPTH_FACTOR;
-                child.computeChildrenDepth();
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _computeChildrenDepth0(child, 1);
+                }
+                else {
+                    _computeChildrenDepth1(child, 0);
+                #else
+                    computeChildrenDepth(child);
+                #end
+                #if !ceramic_soft_inline
+                }
+                #end
             }
 
-            // Apply depth range if any
-            if (depthRange != -1) {
+            _computeChildrenDepthApplyDepthRange(visual, children);
+        }
 
-                _minDepth = 9999999999;
-                _maxDepth = -9999999999;
+    }
 
-                // Compute min/max depth
-                for (i in 0...children.length) {
-                    var child = children.unsafeGet(i);
-                    child.computeMinMaxDepths();
+    #if !ceramic_soft_inline inline #end static function _computeChildrenDepth1(visual:Visual #if !ceramic_soft_inline , step:Int #end):Void {
+
+        var children = visual.children.original;
+        if (children != null) {
+
+            // Compute deepest in hierarchy first
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                child.computedDepth = child.depth * DEPTH_FACTOR;
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _computeChildrenDepth1(child, 1);
                 }
-
-                // Multiply depth
-                for (i in 0...children.length) {
-                    var child = children.unsafeGet(i);
-                    child.multiplyDepths(computedDepth + Math.min(DEPTH_MARGIN, depthRange * DEPTH_FACTOR), Math.max(0, depthRange * DEPTH_FACTOR - DEPTH_MARGIN));
+                else {
+                #end
+                    computeChildrenDepth(child);
+                #if !ceramic_soft_inline
                 }
+                #end
+            }
+
+            _computeChildrenDepthApplyDepthRange(visual, children);
+        }
+
+    }
+
+    inline static function _computeChildrenDepthApplyDepthRange(visual:Visual, children:Array<Visual>) {
+
+        // Apply depth range if any
+        var depthRange = visual.depthRange;
+        if (depthRange != -1) {
+
+            _minDepth = 9999999999;
+            _maxDepth = -9999999999;
+
+            // Compute min/max depth
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                inline computeMinMaxDepths(child);
+            }
+
+            // Multiply depth
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                inline multiplyDepths(child, visual.computedDepth + Math.min(DEPTH_MARGIN, depthRange * DEPTH_FACTOR), Math.max(0, depthRange * DEPTH_FACTOR - DEPTH_MARGIN));
             }
         }
 
     }
 
-    function computeMinMaxDepths():Void {
+    #if ceramic_soft_inline inline #end static function computeMinMaxDepths(visual:Visual):Void {
 
+        _computeMinMaxDepths0(visual #if !ceramic_soft_inline , 0 #end);
+
+    }
+
+    #if !ceramic_soft_inline inline #end static function _computeMinMaxDepths0(visual:Visual #if !ceramic_soft_inline , step:Int #end):Void {
+
+        var computedDepth = visual.computedDepth;
         if (_minDepth > computedDepth) _minDepth = computedDepth;
         if (_maxDepth < computedDepth + 1) _maxDepth = computedDepth + 1;
 
+        var children = visual.children.original;
         if (children != null) {
 
             for (i in 0...children.length) {
                 var child = children.unsafeGet(i);
-                child.computeMinMaxDepths();
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _computeMinMaxDepths0(child, 1);
+                }
+                else {
+                    _computeMinMaxDepths1(child, 0);
+                #else
+                    computeMinMaxDepths1(child);
+                #end
+                #if !ceramic_soft_inline
+                }
+                #end
             }
         }
 
     }
 
-    function multiplyDepths(startDepth:Float, targetRange:Float):Void {
+    #if !ceramic_soft_inline inline #end static function _computeMinMaxDepths1(visual:Visual #if !ceramic_soft_inline , step:Int #end):Void {
 
-        if (_maxDepth == _minDepth) {
-            computedDepth = startDepth + 0.5 * targetRange;
-        } else {
-            computedDepth = startDepth + ((computedDepth - _minDepth) / (_maxDepth - _minDepth)) * targetRange;
-        }
+        var computedDepth = visual.computedDepth;
+        if (_minDepth > computedDepth) _minDepth = computedDepth;
+        if (_maxDepth < computedDepth + 1) _maxDepth = computedDepth + 1;
 
-        // Multiply recursively
+        var children = visual.children.original;
         if (children != null) {
 
             for (i in 0...children.length) {
                 var child = children.unsafeGet(i);
-                child.multiplyDepths(startDepth, targetRange);
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _computeMinMaxDepths1(child, 1);
+                }
+                else {
+                #end
+                    computeMinMaxDepths(child);
+                #if !ceramic_soft_inline
+                }
+                #end
+            }
+        }
+
+    }
+
+    #if ceramic_soft_inline inline #end static function multiplyDepths(visual:Visual, startDepth:Float, targetRange:Float):Void {
+
+        _multiplyDepths0(visual, startDepth, targetRange #if !ceramic_soft_inline , 0 #end);
+
+    }
+
+    #if !ceramic_soft_inline inline #end static function _multiplyDepths0(visual:Visual, startDepth:Float, targetRange:Float #if !ceramic_soft_inline , step:Int #end):Void {
+
+        if (_maxDepth == _minDepth) {
+            visual.computedDepth = startDepth + 0.5 * targetRange;
+        } else {
+            visual.computedDepth = startDepth + ((visual.computedDepth - _minDepth) / (_maxDepth - _minDepth)) * targetRange;
+        }
+
+        // Multiply recursively
+        var children = visual.children.original;
+        if (children != null) {
+
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _multiplyDepths0(child, startDepth, targetRange, 1);
+                }
+                else {
+                    _multiplyDepths1(child, startDepth, targetRange, 0);
+                #else
+                    multiplyDepths(child, startDepth, targetRange);
+                #end
+                #if !ceramic_soft_inline
+                }
+                #end
+            }
+        }
+
+    }
+
+    #if !ceramic_soft_inline inline #end static function _multiplyDepths1(visual:Visual, startDepth:Float, targetRange:Float #if !ceramic_soft_inline , step:Int #end):Void {
+
+        if (_maxDepth == _minDepth) {
+            visual.computedDepth = startDepth + 0.5 * targetRange;
+        } else {
+            visual.computedDepth = startDepth + ((visual.computedDepth - _minDepth) / (_maxDepth - _minDepth)) * targetRange;
+        }
+
+        // Multiply recursively
+        var children = visual.children.original;
+        if (children != null) {
+
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                #if !ceramic_soft_inline
+                if (step == 0) {
+                    _multiplyDepths1(child, startDepth, targetRange, 1);
+                }
+                else {
+                #end
+                    multiplyDepths(child, startDepth, targetRange);
+                #if !ceramic_soft_inline
+                }
+                #end
             }
         }
 
