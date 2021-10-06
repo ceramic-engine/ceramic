@@ -2,14 +2,13 @@ package tools;
 
 import haxe.Json;
 import haxe.io.Path;
+import js.node.ChildProcess;
+import npm.StreamSplitter;
+import npm.StripAnsi;
+import npm.Yaml;
 import sys.FileSystem;
 import sys.io.File;
-import js.node.ChildProcess;
 import tools.Project;
-
-import npm.Yaml;
-import npm.StripAnsi;
-import npm.StreamSplitter;
 
 using StringTools;
 using tools.Colors;
@@ -171,7 +170,7 @@ class Helpers {
             var runtime:Dynamic = info.runtime;
             try {
                 if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
-                
+
                 var pluginIndexPath = Path.join([path, 'index.js']);
                 if (FileSystem.exists(pluginIndexPath)) {
                     var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
@@ -326,14 +325,14 @@ class Helpers {
     }
 
     public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
-        
+
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
     }
 
     public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }) {
-        
+
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return commandWithChecksAndLogs(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
@@ -373,7 +372,7 @@ class Helpers {
 
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
-        
+
         var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,2,1']);
         if (!FileSystem.exists(hxcppPath)) {
             haxelib(['install', 'hxcpp', '4.2.1', '--always'], {cwd: cwd});
@@ -397,18 +396,18 @@ class Helpers {
                 androidClangToolchain = androidClangToolchain.replace('<set name="PLATFORM_NUMBER" value="16" />', '<set name="PLATFORM_NUMBER" value="21" />');
         }
         File.saveContent(androidClangToolchainPath, androidClangToolchain);
-        
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
             haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
-        
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
             haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always'], {cwd: cwd});
-        
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,4,0'])))
             haxelib(['install', 'hscript', '2.4.0', '--always'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,10'])))
-            haxelib(['install', 'bind', '0.4.10', '--always'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,11'])))
+            haxelib(['install', 'bind', '0.4.11', '--always'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
             haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
@@ -532,7 +531,7 @@ class Helpers {
     }
 
     public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
-        
+
         if (options == null) {
             options = { cwd: null, mute: false, detached: false };
         }
@@ -577,7 +576,7 @@ class Helpers {
             if (originalPATH != null) {
                 spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
             }*/
-    
+
             Sync.run(function(done) {
                 var proc = null;
                 if (args == null) {
@@ -585,31 +584,31 @@ class Helpers {
                 } else {
                     proc = ChildProcess.spawn(name, args, spawnOptions);
                 }
-    
+
                 proc.stdout.on('data', function(input) {
                     result.stdout += input.toString();
                     if (!options.mute) {
                         stdoutWrite(input.toString());
                     }
                 });
-    
+
                 proc.stderr.on('data', function(input) {
                     result.stderr += input.toString();
                     if (!options.mute) {
                         stderrWrite(input.toString());
                     }
                 });
-    
+
                 proc.on('error', function(err) {
                     error(err + ' (' + options.cwd + ')');
                     fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
                 });
-    
+
                 proc.on('close', function(code) {
                     result.status = code;
                     done();
                 });
-    
+
             });
         }
 
@@ -674,7 +673,7 @@ class Helpers {
     }
 
     public static function extractArgFlag(args:Array<String>, name:String, remove:Bool = false):Bool {
-        
+
         var index = args.indexOf('--$name');
 
         if (index == -1) {
