@@ -48,11 +48,15 @@ function postInstall() {
 
     // Patch hxcpp toolchain on iOS
     // See: https://github.com/HaxeFoundation/hxcpp/issues/764
-    /*var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
+    // And more recently some odd bug with iOS 15 + iphone 12 or above that needs more investigation
     var iphoneToolchainPath = path.join(hxcppPath, 'toolchain/iphoneos-toolchain.xml');
     var iphoneToolchain = '' + fs.readFileSync(iphoneToolchainPath);
-    iphoneToolchain = iphoneToolchain.split('<flag value="-O2" unless="debug"/>').join('<flag value="-O1" unless="debug"/>');
-    fs.writeFileSync(iphoneToolchainPath, iphoneToolchain);*/
+    var indexOfO2 = iphoneToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+    if (indexOfO2 != -1) {
+        console.log("Patch hxcpp iphoneos toolchain");
+        iphoneToolchain = iphoneToolchain.split('<flag value="-O2" unless="debug"/>').join('<flag value="-O2" unless="debug || HXCPP_OPTIM_O1"/><flag value="-O1" if="HXCPP_OPTIM_O1" unless="debug"/>');
+        fs.writeFileSync(iphoneToolchainPath, iphoneToolchain);
+    }
 
     // Patch haxe std with ceramic's overrides
     /*var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');

@@ -394,8 +394,17 @@ class Helpers {
                 androidClangToolchain = androidClangToolchain.replace('</linker>', '  <lib name="-latomic" if="HXCPP_LIB_ATOMIC" />\n</linker>');
             if (indexOfPlatform16 != -1)
                 androidClangToolchain = androidClangToolchain.replace('<set name="PLATFORM_NUMBER" value="16" />', '<set name="PLATFORM_NUMBER" value="21" />');
+            File.saveContent(androidClangToolchainPath, androidClangToolchain);
         }
-        File.saveContent(androidClangToolchainPath, androidClangToolchain);
+
+        var iphoneToolchainPath = Path.join([hxcppPath, 'toolchain/iphoneos-toolchain.xml']);
+        var iphoneToolchain = File.getContent(iphoneToolchainPath);
+        var indexOfO2 = iphoneToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+        if (indexOfO2 != -1) {
+            print("Patch hxcpp iphoneos toolchain");
+            iphoneToolchain = iphoneToolchain.replace('<flag value="-O2" unless="debug"/>', '<flag value="-O2" unless="debug || HXCPP_OPTIM_O1"/><flag value="-O1" if="HXCPP_OPTIM_O1" unless="debug"/>');
+            File.saveContent(iphoneToolchainPath, iphoneToolchain);
+        }
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
             haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
