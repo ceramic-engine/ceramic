@@ -2576,7 +2576,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                 else {
                     _computeMinMaxDepths1(child, 0);
                 #else
-                    computeMinMaxDepths1(child);
+                    computeMinMaxDepths(child);
                 #end
                 #if !ceramic_soft_inline
                 }
