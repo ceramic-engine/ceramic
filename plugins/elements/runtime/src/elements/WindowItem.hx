@@ -552,7 +552,7 @@ class WindowItem {
             var minValue = -999999999; // Allow lower value at this stage because we are typing
             var maxValue = item.float4;
             var decimals = item.int0;
-            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue, decimals);
+            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue, decimals, false);
         }
 
     }
@@ -586,11 +586,7 @@ class WindowItem {
         var maxValue = item.float4;
         var decimals = item.int0;
         if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false, decimals)) {
-            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue, decimals);
-            if (field.textValue.endsWith('.')) {
-                field.textValue = field.textValue.substring(0, field.textValue.length - 1);
-                field.invalidateTextValue();
-            }
+            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue, decimals, true);
         }
 
     }

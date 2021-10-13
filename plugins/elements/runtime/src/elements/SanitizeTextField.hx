@@ -11,6 +11,8 @@ class SanitizeTextField {
 
     static final RE_NUMERIC_PREFIX = ~/^[0-9]+/;
 
+    static final RE_NON_DIGIT_OR_DOT = ~/[^0-9\.]+/;
+
     static final RE_SPACES = TextUtils.RE_SPACES;
 
     public static function setTextValueToInt(field:BaseTextFieldView, textValue:String, minValue:Int, maxValue:Int) {
@@ -50,20 +52,22 @@ class SanitizeTextField {
 
     }
 
-    public static function setTextValueToFloat(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, decimals:Int):Void {
+    public static function setTextValueToFloat(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, decimals:Int, finishing:Bool):Void {
 
         var trimmedValue = textValue.trim();
         if (trimmedValue != '' && trimmedValue != '-') {
             var textValue = textValue.replace(',', '.');
-            var endsWithDot = false;
-            var hasMultipleDots = false;
-            if (textValue.endsWith('.')) {
-                endsWithDot = true;
-                var firstDotIndex = textValue.indexOf('.');
-                if (firstDotIndex < textValue.length - 1) {
-                    hasMultipleDots = true;
-                }
-                textValue = textValue.substring(0, textValue.length - 1);
+            var firstChar = textValue.charAt(0);
+            var hasSign = firstChar == '-' || firstChar == '+';
+            var toReplace = hasSign ? textValue.substring(1) : textValue;
+            toReplace = RE_NON_DIGIT_OR_DOT.replace(toReplace, '0');
+            textValue = hasSign ? firstChar + toReplace : toReplace;
+            var beforeDot = textValue;
+            var dotAndAfter:String = null;
+            var dotIndex = textValue.indexOf('.');
+            if (dotIndex != -1) {
+                beforeDot = textValue.substring(0, dotIndex);
+                dotAndAfter = '.' + textValue.substring(dotIndex + 1).replace('.', '0');
             }
             var floatValue:Null<Float> = Std.parseFloat(textValue);
             if (floatValue != null && !Math.isNaN(floatValue) && Math.isFinite(floatValue)) {
@@ -81,7 +85,12 @@ class SanitizeTextField {
                     floatValue = Math.round(floatValue * power) / power;
                 }
                 field.setValue(field, floatValue);
-                field.textValue = '' + floatValue + (endsWithDot && !hasMultipleDots ? '.' : '');
+                if (finishing) {
+                    field.textValue = '' + floatValue;
+                }
+                else {
+                    field.textValue = beforeDot + (dotAndAfter != null ? dotAndAfter : '');
+                }
             }
         }
         else {
@@ -133,13 +142,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
             }
             return true;
         }
@@ -151,13 +160,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
             }
             return true;
         }
@@ -169,13 +178,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
             }
             return true;
         }
@@ -187,13 +196,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals);
+                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
             }
             return true;
         }
