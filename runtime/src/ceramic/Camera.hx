@@ -19,8 +19,8 @@ class Camera extends Entity {
 
     /**
      * Set camera x & y position
-     * @param x 
-     * @param y 
+     * @param x
+     * @param y
      */
     inline public function pos(x:Float, y:Float):Void {
         this.x = x;
@@ -49,8 +49,8 @@ class Camera extends Entity {
 
     /**
      * Set `brakeNearBoundsX`& `brakeNearBoundsY`
-     * @param brakeNearBoundsX 
-     * @param brakeNearBoundsY 
+     * @param brakeNearBoundsX
+     * @param brakeNearBoundsY
      */
     inline public function brakeNearBounds(brakeNearBoundsX:Float, brakeNearBoundsY:Float):Void {
         this.brakeNearBoundsX = brakeNearBoundsX;
@@ -69,8 +69,8 @@ class Camera extends Entity {
 
     /**
      * Set `targetX` & `targetY`, which define the position the camera may follow if `followTarget` is `true`
-     * @param targetX 
-     * @param targetY 
+     * @param targetX
+     * @param targetY
      */
     inline public function target(targetX:Float, targetY:Float):Void {
         this.targetX = targetX;
@@ -96,6 +96,16 @@ class Camera extends Entity {
      * Zoom scaling factor
      */
     public var zoom:Float = 1.0;
+
+    /**
+     * Translation X
+     */
+    public var translateX:Float = 0.0;
+
+    /**
+     * Translation Y
+     */
+    public var translateY:Float = 0.0;
 
     /**
      * Horizontal idle area (percentage between 0 and 1 relative to viewport width)
@@ -147,11 +157,6 @@ class Camera extends Entity {
      */
     public var viewportHeight:Float = 0;
 
-    /**
-     * The resulting camera transform
-     */
-    public var transform:Transform = new Transform();
-
     var hasPrevTransform:Bool = false;
 
     var dx:Float = 0;
@@ -172,21 +177,23 @@ class Camera extends Entity {
             return;
         }
 
+        var invertedZoom = 1.0 / zoom;
+
         var speedX = delta * trackSpeedX * zoom;
         var speedY = delta * trackSpeedY * zoom;
-        
+
         // Follow target (if any)
         if (followTarget) {
             var angle = angleTo(x, y, targetX, targetY);
             var distanceX = Math.abs(targetX - x);
-            if (distanceX >= idleAreaX * viewportWidth) {
-                dx += Math.cos(angle) * (trackCurve * (distanceX - idleAreaX * viewportWidth)) * speedX;
+            if (distanceX >= idleAreaX * viewportWidth * invertedZoom) {
+                dx += Math.cos(angle) * (trackCurve * (distanceX - idleAreaX * viewportWidth * invertedZoom)) * speedX;
                 if (dx > distanceX)
                     dx = distanceX;
             }
             var distanceY = Math.abs(targetY - y);
-            if (distanceY >= idleAreaY * viewportHeight) {
-                dy += Math.sin(angle) * (trackCurve * (distanceY - idleAreaY * viewportHeight)) * speedY;
+            if (distanceY >= idleAreaY * viewportHeight * invertedZoom) {
+                dy += Math.sin(angle) * (trackCurve * (distanceY - idleAreaY * viewportHeight * invertedZoom)) * speedY;
                 if (dy > distanceY)
                     dy = distanceY;
             }
@@ -198,9 +205,9 @@ class Camera extends Entity {
 
             // "brake" when approaching bounds
 
-            var brakeDistanceX = brakeNearBoundsX * viewportWidth;
+            var brakeDistanceX = brakeNearBoundsX * viewportWidth * invertedZoom;
             if (dx < 0) {
-                var brakeRatio = (x - viewportWidth * 0.5) / brakeDistanceX;
+                var brakeRatio = (x - viewportWidth * invertedZoom * 0.5) / brakeDistanceX;
                 if (brakeRatio < 0)
                     brakeRatio = 0;
                 if (brakeRatio > 1)
@@ -208,16 +215,16 @@ class Camera extends Entity {
                 frictionX *= brakeRatio;
             }
             else if (dx > 0) {
-                var brakeRatio = ((contentWidth - viewportWidth * 0.5) - x) / brakeDistanceX;
+                var brakeRatio = ((contentWidth - viewportWidth * invertedZoom * 0.5) - x) / brakeDistanceX;
                 if (brakeRatio < 0)
                     brakeRatio = 0;
                 if (brakeRatio > 1)
                     brakeRatio = 1;
                 frictionX *= brakeRatio;
             }
-            var brakeDistanceY = brakeNearBoundsY * viewportHeight;
+            var brakeDistanceY = brakeNearBoundsY * viewportHeight * invertedZoom;
             if (dy < 0) {
-                var brakeRatio = (y - viewportHeight * 0.5) / brakeDistanceY;
+                var brakeRatio = (y - viewportHeight * invertedZoom * 0.5) / brakeDistanceY;
                 if (brakeRatio < 0)
                     brakeRatio = 0;
                 if (brakeRatio > 1)
@@ -225,7 +232,7 @@ class Camera extends Entity {
                 frictionY *= brakeRatio;
             }
             else if (dy > 0) {
-                var brakeRatio = ((contentHeight - viewportHeight * 0.5) - y) / brakeDistanceY;
+                var brakeRatio = ((contentHeight - viewportHeight * invertedZoom * 0.5) - y) / brakeDistanceY;
                 if (brakeRatio < 0)
                     brakeRatio = 0;
                 if (brakeRatio > 1)
@@ -247,32 +254,29 @@ class Camera extends Entity {
 
         if (clampToContentBounds) {
 
-            if (contentWidth < viewportWidth) {
+            if (contentWidth < viewportWidth * invertedZoom) {
                 x = contentWidth * 0.5;
             }
-            else if (x < viewportWidth * 0.5) {
-                x = viewportWidth * 0.5;
+            else if (x < viewportWidth * invertedZoom * 0.5) {
+                x = viewportWidth * invertedZoom * 0.5;
             }
-            else if (x > contentWidth - viewportWidth * 0.5) {
-                x = contentWidth - viewportWidth * 0.5;
+            else if (x > contentWidth - viewportWidth * invertedZoom * 0.5) {
+                x = contentWidth - viewportWidth * invertedZoom * 0.5;
             }
 
-            if (contentHeight < viewportHeight) {
+            if (contentHeight < viewportHeight * invertedZoom) {
                 y = contentHeight * 0.5;
             }
-            else if (y < viewportHeight * 0.5) {
-                y = viewportHeight * 0.5;
+            else if (y < viewportHeight * invertedZoom * 0.5) {
+                y = viewportHeight * invertedZoom * 0.5;
             }
-            else if (y > contentHeight - viewportHeight * 0.5) {
-                y = contentHeight - viewportHeight * 0.5;
+            else if (y > contentHeight - viewportHeight * invertedZoom * 0.5) {
+                y = contentHeight - viewportHeight * invertedZoom * 0.5;
             }
         }
 
-        transform.identity();
-        transform.translate(
-            (contentX - x) + viewportWidth * 0.5,
-            (contentY - y) + viewportHeight * 0.5
-        );
+        translateX = (contentX - x) + viewportWidth * 0.5;
+        translateY = (contentY - y) + viewportHeight * 0.5;
 
     }
 
