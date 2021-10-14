@@ -50,9 +50,31 @@ class Timer {
             var callback = prevCallbacks.unsafeGet(i);
 
             if (!callback.cleared) {
-                if (callback.time <= now) {
-                    if (callback.interval >= 0) {
-                        while (callback.time <= now && !callback.cleared) {
+                #if !ceramic_legacy_timer
+                if (callback.owner == null || !callback.owner.destroyed) {
+                #end
+                    if (callback.time <= now) {
+                        if (callback.interval >= 0) {
+                            while (callback.time <= now && !callback.cleared) {
+                                #if ceramic_check_handlers
+                                try {
+                                #end
+                                    callback.callback();
+                                #if ceramic_check_handlers
+                                }
+                                catch (e:Dynamic) {
+                                    log.error('Error in timer callback: ' + e);
+                                }
+                                #end
+                                if (callback.interval == 0) break;
+                                callback.time += callback.interval;
+                            }
+                            if (!callback.cleared) {
+                                callbacks.push(callback);
+                                next = Math.min(callback.time, next);
+                            }
+                        }
+                        else {
                             #if ceramic_check_handlers
                             try {
                             #end
@@ -63,31 +85,19 @@ class Timer {
                                 log.error('Error in timer callback: ' + e);
                             }
                             #end
-                            if (callback.interval == 0) break;
-                            callback.time += callback.interval;
-                        }
-                        if (!callback.cleared) {
-                            callbacks.push(callback);
-                            next = Math.min(callback.time, next);
                         }
                     }
                     else {
-                        #if ceramic_check_handlers
-                        try {
-                        #end
-                            callback.callback();
-                        #if ceramic_check_handlers
-                        }
-                        catch (e:Dynamic) {
-                            log.error('Error in timer callback: ' + e);
-                        }
-                        #end
+                        callbacks.push(callback);
+                        next = Math.min(callback.time, next);
                     }
+                #if !ceramic_legacy_timer
                 }
                 else {
-                    callbacks.push(callback);
-                    next = Math.min(callback.time, next);
+
+                    callback.cleared = true;
                 }
+                #end
             }
         }
 
@@ -110,7 +120,7 @@ class Timer {
      * @return a function to cancel this timer interval
      */
     inline public static function interval(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, seconds:Float, callback:Void->Void):Void->Void {
-        
+
         return schedule(owner, seconds, callback, seconds);
 
     }
@@ -128,6 +138,8 @@ class Timer {
         next = Math.min(time, next);
 
         var timerCallback = new TimerCallback();
+
+        #if ceramic_legacy_timer
 
         var clearScheduled:Void->Void = null;
         clearScheduled = function() {
@@ -154,17 +166,35 @@ class Timer {
 
         return clearScheduled;
 
+        #else
+
+        timerCallback.owner = owner;
+        timerCallback.callback = callback;
+        timerCallback.time = time;
+        timerCallback.interval = interval;
+
+        callbacks.push(timerCallback);
+
+        return timerCallback.clear;
+
+        #end
+
     }
 
 }
 
 class TimerCallback {
 
+    public var owner:Entity = null;
     public var callback:Void->Void = null;
     public var time:Float = 0;
     public var interval:Float = -1;
     public var cleared:Bool = false;
 
     public function new() {}
+
+    public function clear():Void {
+        cleared = true;
+    }
 
 }
