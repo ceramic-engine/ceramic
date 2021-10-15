@@ -3,7 +3,7 @@
 | ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Cross-platform 2D framework written in Haxe. |
 | - | - |
 
-Ceramic is a ross-platform 2D framework written in Haxe that can export natively to desktop (windows, mac, linux), mobile (ios, android), web (js + webgl) and to unity projects.
+Ceramic is a cross-platform 2D framework written in Haxe that can export natively to desktop (windows, mac, linux), mobile (ios, android), web (js + webgl) and to unity projects.
 
 ![demo-video](https://user-images.githubusercontent.com/164094/134378094-401c519d-bdd0-4d89-b9a2-c7f9d5893c02.gif)
 
