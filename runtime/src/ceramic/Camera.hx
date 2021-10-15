@@ -1,7 +1,5 @@
 package ceramic;
 
-import imgui.ImGui;
-
 // Some ideas and snippets directly extracted from:
 // https://github.com/deepnight/ld48-NuclearBlaze/blob/master/src/game/gm/Camera.hx
 
