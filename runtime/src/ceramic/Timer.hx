@@ -134,6 +134,8 @@ class Timer {
         }
         #end
 
+        Assert.assert(callback != null, "Callback must not be null!");
+
         var time = now + seconds;
         next = Math.min(time, next);
 
