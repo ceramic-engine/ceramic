@@ -612,7 +612,6 @@ class Assets extends Entity {
             numStarted++;
             if (numStarted > 1 && (numStarted % delayBetweenXAssets) == 0) {
                 app.onceXUpdates(this, 2, () -> {
-                    trace('IS IT CALLED?');
                     var asset = toLoad.shift();
                     asset.load();
                     _loadNextParallel(toLoad, numStarted);
