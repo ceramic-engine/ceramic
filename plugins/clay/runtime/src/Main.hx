@@ -1,11 +1,11 @@
 package;
 
-import ceramic.ScreenOrientation;
-import haxe.ValueException;
 import backend.ClayEvents;
 import backend.ElectronRunner;
-import clay.Clay;
 import ceramic.Path;
+import ceramic.ScreenOrientation;
+import clay.Clay;
+import haxe.ValueException;
 
 using StringTools;
 
@@ -28,11 +28,11 @@ class Main {
     static var readyToDisplay:Bool = false;
 
     static var resizing:Int = 0;
-    
+
     #end
 
     public static function main() {
-        
+
         events = @:privateAccess new ClayEvents(ready);
 
         @:privateAccess new Clay(configure, events);
@@ -100,7 +100,7 @@ class Main {
                 var file = '';
                 var line = 0;
                 var isWin:Bool = untyped navigator.platform.indexOf('Win') != -1;
-                
+
                 while (i >= 0) {
                     var str = stack[i];
                     str = str.ltrim();
@@ -193,7 +193,7 @@ class Main {
                 didForceResizeOnce = true;
             });
             */
-            
+
             app.onUpdate(null, function(delta) {
                 var containerEl = js.Browser.document.getElementById(containerElId);
                 if (containerEl != null) {
@@ -350,7 +350,7 @@ class Main {
 
         #if (linc_sdl && cpp)
         var app = ceramic.App.app;
-        
+
         if (app.settings.orientation != NONE) {
 
             // Tell SDL which orientation(s) to use, if any is provided

@@ -1,19 +1,20 @@
 package ceramic;
 
+import ceramic.Path;
+import ceramic.PlatformSpecific;
+import ceramic.Shortcuts.*;
+import haxe.io.Bytes;
+
+using StringTools;
 #if (cs || sys || node || nodejs || hxnodejs)
 import sys.FileSystem;
 #end
 
 #if (node || nodejs || hxnodejs)
-import js.node.Fs;
 import js.node.ChildProcess;
+import js.node.Fs;
 #end
 
-import ceramic.Path;
-import ceramic.PlatformSpecific;
-import ceramic.Shortcuts.*;
-
-using StringTools;
 
 /**
  * Filesystem-related utilities. Only work on sys targets and/or nodejs depending on the methods
@@ -104,7 +105,7 @@ class Files {
         #end
 
     }
-    
+
     #if (cs || sys || node || nodejs)
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
@@ -140,7 +141,7 @@ class Files {
 
         var fs = PlatformSpecific.nodeRequire('fs');
         var result:Array<String> = [];
-        
+
         if (fs == null) {
             return result;
         }
@@ -184,7 +185,7 @@ class Files {
 
     /**
      * Get file last modified time (in seconds) or `-1` if not available
-     * @param path 
+     * @param path
      * @return Float
      */
     public static function getLastModified(path:String):Float {
@@ -259,7 +260,7 @@ class Files {
     public static function deleteRecursive(toDelete:String):Void {
 
         #if (cs || sys || node || nodejs || hxnodejs)
-        
+
         if (!FileSystem.exists(toDelete)) return;
 
         // Use shell if available
@@ -378,12 +379,38 @@ class Files {
             else {
                 sys.io.File.copy(srcPath, dstPath);
             }
-            
+
         }
 
         #else
 
         log.warning('copyDirectory() is not supported on this target');
+
+        #end
+
+    }
+
+    public static function deleteFile(path:String):Void {
+
+        #if (cs || sys || node || nodejs || hxnodejs)
+
+        return sys.FileSystem.deleteFile(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+
+        if (fs == null) {
+            log.warning('deleteFile() is not supported on this target without fs module');
+            return null;
+        }
+        else {
+            return fs.unlinkSync(path);
+        }
+
+        #else
+
+        log.warning('deleteFile() is not supported on this target');
 
         #end
 
@@ -398,7 +425,7 @@ class Files {
         #elseif (web && ceramic_use_electron)
 
         var fs = PlatformSpecific.nodeRequire('fs');
-        
+
         if (fs == null) {
             log.warning('getContent() is not supported on this target without fs module');
             return null;
@@ -416,6 +443,34 @@ class Files {
 
     }
 
+    public static function getBytes(path:String):Null<Bytes> {
+
+        #if (cs || sys || node || nodejs || hxnodejs)
+
+        return sys.io.File.getBytes(path);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+
+        if (fs == null) {
+            log.warning('getBytes() is not supported on this target without fs module');
+            return null;
+        }
+        else {
+            var data:UInt8Array = fs.readFileSync(path, 'binary');
+            return data != null ? data.toBytes() : null;
+        }
+
+        #else
+
+        log.warning('getBytes() is not supported on this target');
+        return null;
+
+        #end
+
+    }
+
     public static function saveContent(path:String, content:String):Void {
 
         #if (cs || sys || node || nodejs || hxnodejs)
@@ -425,7 +480,7 @@ class Files {
         #elseif (web && ceramic_use_electron)
 
         var fs = PlatformSpecific.nodeRequire('fs');
-        
+
         if (fs == null) {
             log.warning('saveContent() is not supported on this target without fs module');
         }
@@ -441,6 +496,31 @@ class Files {
 
     }
 
+    public static function saveBytes(path:String, bytes:Bytes):Void {
+
+        #if (cs || sys || node || nodejs || hxnodejs)
+
+        sys.io.File.saveBytes(path, bytes);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = PlatformSpecific.nodeRequire('fs');
+
+        if (fs == null) {
+            log.warning('saveBytes() is not supported on this target without fs module');
+        }
+        else {
+            fs.writeFileSync(path, bytes.getData());
+        }
+
+        #else
+
+        log.warning('saveBytes() is not supported on this target');
+
+        #end
+
+    }
+
     public static function createDirectory(path:String):Void {
 
         #if (cs || sys || node || nodejs || hxnodejs)
@@ -450,7 +530,7 @@ class Files {
         #elseif (web && ceramic_use_electron)
 
         var fs = PlatformSpecific.nodeRequire('fs');
-        
+
         if (fs == null) {
             log.warning('createDirectory() is not supported on this target without fs module');
         }
@@ -495,7 +575,7 @@ class Files {
         #elseif (web && ceramic_use_electron)
 
         var fs = PlatformSpecific.nodeRequire('fs');
-        
+
         if (fs == null) {
             log.warning('exists() is not supported on this target without fs module');
             return false;
@@ -528,7 +608,7 @@ class Files {
         #elseif (web && ceramic_use_electron)
 
         var fs = PlatformSpecific.nodeRequire('fs');
-        
+
         if (fs == null) {
             log.warning('isDirectory() is not supported on this target without fs module');
             return false;

@@ -1,8 +1,8 @@
 package spec;
 
-import backend.UInt8Array;
-import backend.Texture;
 import backend.LoadTextureOptions;
+import backend.Texture;
+import haxe.io.Bytes;
 
 interface Textures {
 
@@ -17,7 +17,7 @@ interface Textures {
     function supportsHotReloadPath():Bool;
 
     function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture;
-    
+
     function destroyTexture(texture:Texture):Void;
 
     function getTextureId(texture:Texture):backend.TextureId;
@@ -44,5 +44,11 @@ interface Textures {
     function maxTexturesByBatch():Int;
 
     function getTextureIndex(texture:Texture):Int;
+
+    // function screenshotToTexture(done:(texture:Texture)->Void):Void;
+
+    // function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void;
+
+    // function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void;
 
 }
