@@ -88,6 +88,7 @@ class BezierEasing {
             linearEasing = true;
         }
         else {
+            linearEasing = false;
             // Precompute samples table
             if (sampleValues == null)
                 sampleValues = [];
@@ -100,6 +101,7 @@ class BezierEasing {
 
     public function ease(x:Float):Float {
 
+        if (linearEasing) return x;
         if (x == 0) return 0;
         if (x == 1) return 1;
         return calcBezier(getTForX(x), mY1, mY2);
