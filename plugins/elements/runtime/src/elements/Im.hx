@@ -1454,18 +1454,36 @@ class Im {
 
     macro public static function bool(?value:ExprOf<Bool>):Expr {
 
-        return switch value.expr {
-            case EConst(CIdent('null')):
-                macro {
-                    var handle = elements.Im.handle();
-                    function(?_val:Bool):Bool {
-                        return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
+        if (Context.defined('cs')) {
+            // C# target and its quirks...
+            return switch value.expr {
+                case EConst(CIdent('null')):
+                    macro {
+                        var handle = elements.Im.handle();
+                        function(?_val:Dynamic):Bool {
+                            return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
+                        };
+                    }
+                case _:
+                    macro function(?_val:Dynamic):Bool {
+                        return _val != null ? $value = _val : $value;
                     };
-                }
-            case _:
-                macro function(?_val:Bool):Bool {
-                    return _val != null ? $value = _val : $value;
-                };
+            }
+        }
+        else {
+            return switch value.expr {
+                case EConst(CIdent('null')):
+                    macro {
+                        var handle = elements.Im.handle();
+                        function(?_val:Bool):Bool {
+                            return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
+                        };
+                    }
+                case _:
+                    macro function(?_val:Bool):Bool {
+                        return _val != null ? $value = _val : $value;
+                    };
+            }
         }
 
     }
