@@ -1,10 +1,17 @@
 package backend;
 
 import ceramic.Path;
+import haxe.io.Bytes;
 import unityengine.ResourceRequest;
+import unityengine.ScreenCapture;
 import unityengine.Texture2D;
 
 using StringTools;
+
+#if unity_image_conversion
+import unityengine.ImageConversion;
+#end
+
 
 class Textures implements spec.Textures {
 
@@ -137,6 +144,8 @@ class Textures implements spec.Textures {
 
     var nextPixelsIndex:Int = 0;
 
+    var nextScreenshotIndex:Int = 0;
+
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', width, height);
@@ -170,7 +179,7 @@ class Textures implements spec.Textures {
         else {
             loadedTextures.remove(id);
             loadedTexturesRetainCount.remove(id);
-            if (id.startsWith('pixels:')) {
+            if (id.startsWith('pixels:') || id.startsWith('screenshot:')) {
                 untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityTexture);
             }
             else if (id.startsWith('render:')) {
@@ -286,6 +295,63 @@ class Textures implements spec.Textures {
     inline public function getTextureIndex(texture:Texture):Int {
 
         return (texture:TextureImpl).index;
+
+    }
+
+    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+
+        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        if (unityTexture != null) {
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            done(texture);
+        }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+            done(null);
+        }
+
+    }
+
+    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        if (path != null) {
+            ScreenCapture.CaptureScreenshot(path, 1);
+            done();
+        }
+        else {
+            #if unity_image_conversion
+            var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+            if (unityTexture != null) {
+                var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+                done(Bytes.ofData(pngBytesData));
+            }
+            else {
+                ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+                done(null);
+            }
+            #else
+            ceramic.Shortcuts.log.warning('Getting PNG bytes in memory from screen is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
+            done(null);
+            #end
+        }
+
+    }
+
+    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
+
+        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        if (unityTexture != null) {
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            var pixels = fetchTexturePixels(texture);
+            var width = texture.width;
+            var height = texture.height;
+            destroyTexture(texture);
+            done(pixels, width, height);
+        }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+            done(null, 0, 0);
+        }
 
     }
 

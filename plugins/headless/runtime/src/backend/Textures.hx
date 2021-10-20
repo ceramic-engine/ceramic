@@ -1,5 +1,7 @@
 package backend;
 
+import haxe.io.Bytes;
+
 class Textures implements spec.Textures {
 
     public function new() {}
@@ -18,7 +20,7 @@ class Textures implements spec.Textures {
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return false;
 
     }
@@ -100,6 +102,24 @@ class Textures implements spec.Textures {
     inline public function getTextureIndex(texture:Texture):Int {
 
         return -1;
+
+    }
+
+    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+
+        done(null);
+
+    }
+
+    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        done(null);
+
+    }
+
+    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
+
+        done(null, 0, 0);
 
     }
 

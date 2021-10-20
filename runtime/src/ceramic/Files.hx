@@ -402,10 +402,10 @@ class Files {
 
         if (fs == null) {
             log.warning('deleteFile() is not supported on this target without fs module');
-            return null;
+            return;
         }
         else {
-            return fs.unlinkSync(path);
+            fs.unlinkSync(path);
         }
 
         #else

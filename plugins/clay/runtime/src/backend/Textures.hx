@@ -164,6 +164,8 @@ class Textures implements spec.Textures {
 
     var nextPixelsIndex:Int = 0;
 
+    var nextScreenshotIndex:Int = 0;
+
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         var id = 'pixels:' + (nextPixelsIndex++);
@@ -366,7 +368,10 @@ class Textures implements spec.Textures {
                 var pngBytes = ceramic.UInt8Array.fromBuffer(buffer, 0, buffer.byteLength);
                 clay.Clay.app.assets.imageFromBytes(pngBytes, 'png', 4, true, function(image) {
                     if (image != null) {
+                        var id = 'screenshot:' + (nextScreenshotIndex++);
                         var texture = clay.graphics.Texture.fromImage(image);
+                        texture.id = id;
+                        texture.init();
                         done(texture);
                     }
                     else {
@@ -505,7 +510,7 @@ class Textures implements spec.Textures {
         var bytes = pixels.toBytes();
 
         if (path != null) {
-            stb.ImageWrite.write_png(path, 0, 0, 4, bytes.getData(), 0, bytes.length, Std.int(_point.x) * 4);
+            stb.ImageWrite.write_png(path, Std.int(_point.x), Std.int(_point.y), 4, bytes.getData(), 0, bytes.length, Std.int(_point.x * 4));
             done();
         }
         else {
@@ -514,7 +519,7 @@ class Textures implements spec.Textures {
             var tmpFile = Utils.uniqueId() + '_screenshot.png';
             var storageDir = ceramic.App.app.backend.info.storageDirectory();
             var tmpPath = ceramic.Path.join([storageDir, tmpFile]);
-            stb.ImageWrite.write_png(tmpPath, 0, 0, 4, bytes.getData(), 0, bytes.length, Std.int(_point.x) * 4);
+            stb.ImageWrite.write_png(tmpPath, Std.int(_point.x), Std.int(_point.y), 4, bytes.getData(), 0, bytes.length, Std.int(_point.x * 4));
             var data = Files.getBytes(tmpPath);
             Files.deleteFile(tmpPath);
             done(data);
