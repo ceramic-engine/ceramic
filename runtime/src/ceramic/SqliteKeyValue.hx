@@ -2,16 +2,14 @@ package ceramic;
 
 #if (sys && ceramic_sqlite)
 
-import haxe.io.Bytes;
+import ceramic.Shortcuts.*;
 import haxe.crypto.Base64;
-
-import sys.db.Sqlite;
+import haxe.io.Bytes;
+import sys.FileSystem;
 import sys.db.Connection;
+import sys.db.Sqlite;
 import sys.thread.Mutex;
 import sys.thread.Tls;
-import sys.FileSystem;
-
-import ceramic.Shortcuts.*;
 
 /**
  * A string-based key value store using Sqlite as backend.
@@ -91,7 +89,7 @@ class SqliteKeyValue extends Entity {
 
         var valueBytes = Bytes.ofString(value, UTF8);
         var escapedValue = "'" + Base64.encode(valueBytes) + "'";
-        
+
         if (!mutexAcquiredInParent) {
             mutex.acquire();
         }
@@ -109,6 +107,9 @@ class SqliteKeyValue extends Entity {
         }
         catch (e:Dynamic) {
             log.error('Failed to set value for key $key: $e');
+            if (!mutexAcquiredInParent) {
+                mutex.release();
+            }
             return false;
         }
 
@@ -134,6 +135,9 @@ class SqliteKeyValue extends Entity {
         }
         catch (e:Dynamic) {
             log.error('Failed to remove value for key $key: $e');
+            if (!mutexAcquiredInParent) {
+                mutex.release();
+            }
             return false;
         }
 
@@ -160,6 +164,7 @@ class SqliteKeyValue extends Entity {
         }
         catch (e:Dynamic) {
             log.error('Failed to append value for key $key: $e');
+            mutex.release();
             return false;
         }
 
@@ -174,7 +179,7 @@ class SqliteKeyValue extends Entity {
         var escapedKey = escape(key);
 
         mutex.acquire();
-        
+
         var value:StringBuf = null;
         var numEntries:Int = 0;
 
@@ -194,6 +199,7 @@ class SqliteKeyValue extends Entity {
         }
         catch (e:Dynamic) {
             log.error('Failed to get value for key $key: $e');
+            mutex.release();
             return null;
         }
 
@@ -204,7 +210,7 @@ class SqliteKeyValue extends Entity {
             set(key, value.toString());
             mutexAcquiredInParent = false;
         }
-        
+
         mutex.release();
 
         return value != null ? value.toString() : null;
@@ -222,7 +228,7 @@ class SqliteKeyValue extends Entity {
     function createDb():Void {
 
         mutex.acquire();
-        
+
         var connection = getConnection();
 
         connection.request('BEGIN TRANSACTION');
