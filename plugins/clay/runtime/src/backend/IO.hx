@@ -9,14 +9,23 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-import haxe.crypto.Md5;
-import ceramic.Path;
 import ceramic.HashedString;
+import ceramic.Path;
 import ceramic.Shortcuts.*;
+import haxe.crypto.Md5;
 
 class IO implements spec.IO {
 
     public function new() {}
+
+    @:allow(backend.Backend)
+    function init() {
+
+        #if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string && !ceramic_no_sqlite_key_value_init)
+        initKeyValue();
+        #end
+
+    }
 
 #if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string)
 
