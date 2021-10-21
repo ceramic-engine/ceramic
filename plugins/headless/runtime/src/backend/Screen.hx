@@ -1,5 +1,7 @@
 package backend;
 
+import haxe.io.Bytes;
+
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     public function new() {}
