@@ -1,7 +1,11 @@
 package backend;
 
 import ceramic.IntMap;
+import ceramic.Path;
 import ceramic.Runner;
+import ceramic.Shortcuts.*;
+
+using StringTools;
 #if android
 import android.Http as AndroidHttp;
 #elseif ios
@@ -9,19 +13,15 @@ import ios.Http as IosHttp;
 #elseif js
 import js.html.XMLHttpRequest;
 #elseif (cs && unity)
-import unityengine.networking.UnityWebRequest;
 import unityengine.networking.DownloadHandler;
+import unityengine.networking.UnityWebRequest;
 #end
-
-import ceramic.Shortcuts.*;
-import ceramic.Path;
 
 #if sys
 import sys.FileSystem;
 import sys.io.File;
 #end
 
-using StringTools;
 
 #if (cs && unity)
 @:classCode('
@@ -36,7 +36,7 @@ class Http implements spec.Http {
     #if (cs && unity)
     var nextRequestId:Int = 1;
     var requestCallbacks:Map<Int, DownloadHandler->Void> = new Map();
-    
+
     @:keep function unityHandleWebRequestResponse(requestId:Int, downloadHandler:DownloadHandler):Void {
 
         var callback:DownloadHandler->Void = requestCallbacks.get(requestId);
@@ -66,12 +66,12 @@ class Http implements spec.Http {
 
         var isSSL = options.url.startsWith('https');
         var http = isSSL ? js.Node.require('https') : js.Node.require('http');
-        var url = js.node.Url.parse(options.url);
+        var url = new js.node.url.URL(options.url);
 
         var requestOptions:Dynamic = {};
         requestOptions.host = url.hostname;
         requestOptions.port = url.port != null ? url.port : (isSSL ? 443 : 80);
-        requestOptions.path = url.path;
+        requestOptions.path = url.pathname;
         requestOptions.method = options.method != null ? options.method : 'GET';
 
         if (options.timeout != null && options.timeout > 0) {
@@ -127,7 +127,7 @@ class Http implements spec.Http {
         if (options.content != null) {
             req.write(options.content);
         }
-        
+
         req.end();
 
 #elseif android
@@ -380,7 +380,7 @@ class Http implements spec.Http {
                     }
                 }
             }
-    
+
             requestCallbacks.set(requestId, function(downloadHandler) {
 
                 var resStatus = Std.int(webRequest.responseCode);
@@ -415,10 +415,10 @@ class Http implements spec.Http {
                 webRequest.Dispose();
 
             });
-    
+
             var monoBehaviour = Main.monoBehaviour;
             untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
-    
+
         } catch (e:Dynamic) {
             if (webRequest != null) {
                 try {
@@ -593,7 +593,7 @@ class Http implements spec.Http {
         }
 
         function finishDownload() {
-            
+
             if (FileSystem.exists(tmpTargetPath)) {
                 if (FileSystem.exists(targetPath)) {
                     if (FileSystem.isDirectory(targetPath)) {
@@ -637,7 +637,7 @@ class Http implements spec.Http {
             for (arg in ['-sS', '-L' , url, '--output', tmpTargetPath]) {
                 escapedArgs.push(haxe.SysTools.quoteWinArg(arg, true));
             }
-            
+
             Sys.command('powershell', ['-command', escapedArgs.join(' ')]);
             Runner.runInMain(finishDownload);
         });
