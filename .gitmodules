@@ -92,3 +92,8 @@
 [submodule "git/imgui-hx"]
 	path = git/imgui-hx
 	url = https://github.com/jeremyfa/imgui-hx.git
+	branch = master
+[submodule "git/gif"]
+	path = git/gif
+	url = https://github.com/ceramic-engine/gif.git
+	branch = master
