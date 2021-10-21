@@ -1456,9 +1456,27 @@ class Screen extends Entity implements Observable {
 
     }
 
-    public function toPng(?path:String, done:(?data:Bytes)->Void):Void {
+    public extern inline overload function toPng(done:(data:Bytes)->Void):Void {
 
-        app.backend.screen.screenshotToPng(path, done);
+        _toPng(null, function(?data) {
+            done(data);
+        });
+
+    }
+
+    public extern inline overload function toPng(path:String, done:()->Void):Void {
+
+        _toPng(path, function(?data) {
+            done();
+        });
+
+    }
+
+    public function _toPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        app.onceFinishDraw(this, function() {
+            app.backend.screen.screenshotToPng(path, done);
+        });
 
     }
 
