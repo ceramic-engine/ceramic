@@ -4,6 +4,9 @@ plugin:
         - generate
 
     runtime:
+        if plugin_spine:
+            +libs:
+                - spine-hx
         # Haxe inlining is counter-productive when targeting js
         if web:
             +defines:
