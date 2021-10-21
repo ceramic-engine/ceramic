@@ -2,6 +2,7 @@ package ceramic;
 
 import ceramic.ReadOnlyArray;
 import ceramic.Shortcuts.*;
+import haxe.io.Bytes;
 import tracker.Observable;
 
 using ceramic.Extensions;
@@ -1428,6 +1429,36 @@ class Screen extends Entity implements Observable {
 
         var touch:Touch = touches.get(touchIndex);
         return touch != null ? touch.deltaY : 0.0;
+
+    }
+
+/// Screenshot
+
+    public function toTexture(done:(texture:Texture)->Void):Void {
+
+        app.backend.screen.screenshotToTexture(function(backendItem:backend.Texture) {
+
+            if (backendItem != null) {
+                var texture = @:privateAccess new Texture(backendItem, nativeDensity);
+                done(texture);
+            }
+            else {
+                done(null);
+            }
+
+        });
+
+    }
+
+    public function toPixels(done:(pixels:UInt8Array, width:Int, height:Int)->Void):Void {
+
+        app.backend.screen.screenshotToPixels(done);
+
+    }
+
+    public function toPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        app.backend.screen.screenshotToPng(path, done);
 
     }
 

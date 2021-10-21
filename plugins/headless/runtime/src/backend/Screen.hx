@@ -55,4 +55,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+
+        done(null);
+
+    }
+
+    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        done(null);
+
+    }
+
+    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
+
+        done(null, 0, 0);
+
+    }
+
 }

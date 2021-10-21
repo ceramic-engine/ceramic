@@ -105,22 +105,16 @@ class Textures implements spec.Textures {
 
     }
 
-    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 
     }
 
-    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+    public function pixelsToPng(width:Int, height:Int, pixels:ceramic.UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 
     }
 
-    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
-
-        done(null, 0, 0);
-
-    }
-
-} //Textures
+}

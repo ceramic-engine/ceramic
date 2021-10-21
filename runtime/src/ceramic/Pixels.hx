@@ -1,5 +1,7 @@
 package ceramic;
 
+import haxe.io.Bytes;
+
 /**
  * Utilities to manipulate RGBA pixels.
  */
@@ -135,7 +137,6 @@ class Pixels {
      * @param bufferWidth Image width
      * @param x Pixel x position
      * @param y Pixel y position
-     * @return AlphaColor
      */
     public static inline function set(
         buffer:UInt8Array, bufferWidth:Int,
@@ -147,6 +148,40 @@ class Pixels {
         buffer[index + 1] = color.green;
         buffer[index + 2] = color.blue;
         buffer[index + 3] = color.alpha;
+
+    }
+
+    /**
+     * Export the given pixels pixels as PNG data and save it to the given file path
+     * @param width Image width
+     * @param height Image height
+     * @param pixels The pixels buffer
+     * @param path The png file path where to save the image (`'/path/to/image.png'`)
+     * @param done Called when the png has been exported
+     */
+    static inline extern overload public function pixelsToPng(width:Int, height:Int, pixels:UInt8Array, path:String, done:()->Void):Void {
+        _pixelsToPng(width, height, pixels, path, (?data) -> {
+            done();
+        });
+    }
+
+    /**
+     * Export the given pixels to PNG data/bytes
+     * @param width Image width
+     * @param height Image height
+     * @param pixels The pixels buffer
+     * @param done Called when the png has been exported, with `data` containing PNG bytes
+     * @return ->Void):Void
+     */
+    static inline extern overload public function pixelsToPng(width:Int, height:Int, pixels:UInt8Array, done:(data:Bytes)->Void):Void {
+        _pixelsToPng(width, height, pixels, null, (?data) -> {
+            done(data);
+        });
+    }
+
+    static function _pixelsToPng(width:Int, height:Int, pixels:UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
+
+        ceramic.App.app.backend.textures.pixelsToPng(width, height, pixels, path, done);
 
     }
 

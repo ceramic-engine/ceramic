@@ -1,12 +1,19 @@
 package backend;
 
 import ceramic.IntIntMap;
+import haxe.io.Bytes;
+import unityengine.ScreenCapture;
+import unityengine.Texture2D;
 import unityengine.inputsystem.Mouse;
 import unityengine.inputsystem.TouchPhase;
 import unityengine.inputsystem.Touchscreen;
 import unityengine.inputsystem.controls.TouchControl;
 
 using ceramic.Extensions;
+
+#if unity_image_conversion
+import unityengine.ImageConversion;
+#end
 
 @:keep
 @:allow(Main)
@@ -353,5 +360,67 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         processedTouchPositions = tmpProcessedPosition;
 
     }
+
+/// Screenshot
+
+    var nextScreenshotIndex:Int = 0;
+
+    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+
+        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        if (unityTexture != null) {
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            done(texture);
+        }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+            done(null);
+        }
+
+    }
+
+    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        if (path != null) {
+            ScreenCapture.CaptureScreenshot(path, 1);
+            done();
+        }
+        else {
+            #if unity_image_conversion
+            var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+            if (unityTexture != null) {
+                var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+                done(Bytes.ofData(pngBytesData));
+            }
+            else {
+                ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+                done(null);
+            }
+            #else
+            ceramic.Shortcuts.log.warning('Getting PNG bytes in memory from screen is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
+            done(null);
+            #end
+        }
+
+    }
+
+    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
+
+        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        if (unityTexture != null) {
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            var pixels = ceramic.App.app.backend.textures.fetchTexturePixels(texture);
+            var width = texture.width;
+            var height = texture.height;
+            ceramic.App.app.backend.textures.destroyTexture(texture);
+            done(pixels, width, height);
+        }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+            done(null, 0, 0);
+        }
+
+    }
+
 
 }

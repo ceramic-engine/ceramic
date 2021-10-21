@@ -2,9 +2,10 @@ package ceramic;
 
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
+import haxe.io.Bytes;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 /**
  * A texture is an image ready to be drawn.
@@ -139,6 +140,35 @@ class Texture extends Entity {
     public function submitPixels(pixels:ceramic.UInt8Array):Void {
 
         app.backend.textures.submitTexturePixels(backendItem, pixels);
+
+    }
+
+/// PNG
+
+    /**
+     * Export texture as PNG data and save it to the given file path
+     * @param path The png file path where to save the image (`'/path/to/image.png'`)
+     * @param done Called when the png has been exported
+     */
+    inline extern overload public function toPng(path:String, done:()->Void):Void {
+        _toPng(path, (?data) -> {
+            done();
+        });
+    }
+
+    /**
+     * Export texture to PNG data/bytes
+     * @param done Called when the png has been exported, with `data` containing PNG bytes
+     */
+    inline extern overload public function toPng(done:(data:Bytes)->Void):Void {
+        _toPng(null, (?data) -> {
+            done(data);
+        });
+    }
+
+    function _toPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        app.backend.textures.textureToPng(backendItem, path, done);
 
     }
 

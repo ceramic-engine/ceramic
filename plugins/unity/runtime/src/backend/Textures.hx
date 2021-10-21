@@ -1,9 +1,9 @@
 package backend;
 
+import ceramic.Files;
 import ceramic.Path;
 import haxe.io.Bytes;
 import unityengine.ResourceRequest;
-import unityengine.ScreenCapture;
 import unityengine.Texture2D;
 
 using StringTools;
@@ -11,7 +11,6 @@ using StringTools;
 #if unity_image_conversion
 import unityengine.ImageConversion;
 #end
-
 
 class Textures implements spec.Textures {
 
@@ -143,8 +142,6 @@ class Textures implements spec.Textures {
     var nextRenderIndex:Int = 0;
 
     var nextPixelsIndex:Int = 0;
-
-    var nextScreenshotIndex:Int = 0;
 
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
@@ -298,60 +295,72 @@ class Textures implements spec.Textures {
 
     }
 
-    public function screenshotToTexture(done:(texture:Texture)->Void):Void {
+    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
 
-        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        #if unity_image_conversion
+        var unityTexture:Texture2D = (texture:TextureImpl).unityTexture;
+        var id = (texture:TextureImpl).path;
+        var shouldDestroyTexture = false;
+
+        // If exporting a texture loaded from assets, reverse premultiplied alpha
+        if (!id.startsWith('pixels:') && !id.startsWith('screenshot:') && !id.startsWith('render:')) {
+            var pixels = fetchTexturePixels(texture);
+            ceramic.PremultiplyAlpha.reversePremultiplyAlpha(pixels);
+            texture = createTexture((texture:TextureImpl).width, (texture:TextureImpl).height, pixels);
+            unityTexture = (texture:TextureImpl).unityTexture;
+            shouldDestroyTexture = true;
+        }
+
         if (unityTexture != null) {
-            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
-            done(texture);
-        }
-        else {
-            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
-            done(null);
-        }
-
-    }
-
-    public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
-
-        if (path != null) {
-            ScreenCapture.CaptureScreenshot(path, 1);
-            done();
-        }
-        else {
-            #if unity_image_conversion
-            var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
-            if (unityTexture != null) {
-                var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
-                done(Bytes.ofData(pngBytesData));
+            var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+            if (path != null) {
+                Files.saveBytes(path, Bytes.ofData(pngBytesData));
+                done();
             }
             else {
-                ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
-                done(null);
+                done(Bytes.ofData(pngBytesData));
             }
-            #else
-            ceramic.Shortcuts.log.warning('Getting PNG bytes in memory from screen is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
-            done(null);
-            #end
         }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to read unity texture data');
+            done(null);
+        }
+        if (shouldDestroyTexture) {
+            destroyTexture(texture);
+        }
+        #else
+        ceramic.Shortcuts.log.warning('Getting PNG bytes from a texture is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
+        done(null);
+        #end
 
     }
 
-    public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
+    public function pixelsToPng(width:Int, height:Int, pixels:ceramic.UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
 
-        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        #if unity_image_conversion
+        var texture = createTexture(width, height, pixels);
+        var unityTexture:Texture2D = texture != null ? (texture:TextureImpl).unityTexture : null;
         if (unityTexture != null) {
-            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
-            var pixels = fetchTexturePixels(texture);
-            var width = texture.width;
-            var height = texture.height;
-            destroyTexture(texture);
-            done(pixels, width, height);
+            var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+            if (path != null) {
+                Files.saveBytes(path, Bytes.ofData(pngBytesData));
+                done();
+            }
+            else {
+                done(Bytes.ofData(pngBytesData));
+            }
         }
         else {
-            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
-            done(null, 0, 0);
+            ceramic.Shortcuts.log.warning('Failed to read unity texture data');
+            done(null);
         }
+        if (texture != null) {
+            destroyTexture(texture);
+        }
+        #else
+        ceramic.Shortcuts.log.warning('Getting PNG bytes from pixels is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
+        done(null);
+        #end
 
     }
 
