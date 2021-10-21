@@ -1046,6 +1046,11 @@ class App extends Entity {
             delta = settings.maxDelta;
         }
 
+        // Override delta?
+        if (settings.overrideDelta >= 0) {
+            delta = settings.overrideDelta;
+        }
+
         // Update computed fps
         _computeFps.addFrame(delta);
 

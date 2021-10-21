@@ -75,6 +75,15 @@ class Settings implements Observable {
     @observe public var maxDelta:Float = 0.1;
 
     /**
+     * Override app update delta time.
+     * This can be used to ignore completely the actual elapsed time between frames
+     * and replaced it with an explicit delta time of your choice.
+     * This will affect timers, tween, systems update etc...
+     * Use with caution.
+     */
+    @observe public var overrideDelta:Float = -1;
+
+    /**
      * Setup screen orientation. Default is `NONE`,
      * meaning nothing is enforced and project defaults will be used.
      */

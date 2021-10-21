@@ -153,6 +153,21 @@ class InitSettings {
     }
 
     /**
+     * Override app update delta time.
+     * This can be used to ignore completely the actual elapsed time between frames
+     * and replaced it with an explicit delta time of your choice.
+     * This will affect timers, tween, systems update etc...
+     * Use with caution.
+     */
+    public var overrideDelta(get,set):Float;
+    inline function get_overrideDelta():Float {
+        return settings.overrideDelta;
+    }
+    inline function set_overrideDelta(overrideDelta:Float):Float {
+        return settings.overrideDelta = overrideDelta;
+    }
+
+    /**
      * Setup screen orientation. Default is `NONE`,
      * meaning nothing is enforced and project defaults will be used.
      */
