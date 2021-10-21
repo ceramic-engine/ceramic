@@ -49,8 +49,6 @@ class Backend implements tracker.Events implements spec.Backend {
         NativeAndroid.init();
         #end
 
-        io.init();
-
     }
 
     public function setTargetFps(fps:Int):Void {

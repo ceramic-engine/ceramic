@@ -314,6 +314,8 @@ class Main {
     @:allow(backend.ClayEvents)
     static function ready():Void {
 
+        app.backend.io.initKeyValueIfNeeded();
+
         #if web
 
         var ext;
