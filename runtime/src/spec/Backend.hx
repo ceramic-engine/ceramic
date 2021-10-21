@@ -22,7 +22,9 @@ interface Backend {
 
     var screen(default,null):backend.Screen;
 
+    #if plugin_http
     var http(default,null):backend.Http;
+    #end
 
     var textInput(default,null):backend.TextInput;
 

@@ -29,7 +29,9 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public var screen(default,null) = new backend.Screen();
 
+    #if plugin_http
     public var http(default,null) = new backend.Http();
+    #end
 
     public var input(default,null) = new backend.Input();
 
