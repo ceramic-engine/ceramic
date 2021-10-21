@@ -1,0 +1,9 @@
+plugin:
+    name: Gif
+
+    runtime:
+        if plugin_nape:
+            +libs:
+                - gif
+            +paths:
+                - {plugin:cwd}/runtime/src

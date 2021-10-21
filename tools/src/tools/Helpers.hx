@@ -463,6 +463,9 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'imgui-hx'])))
             haxelib(['dev', 'imgui-hx', Path.join([context.ceramicGitDepsPath, 'imgui-hx']), '--always'], {cwd: cwd});
 
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'gif'])))
+            haxelib(['dev', 'gif', Path.join([context.ceramicGitDepsPath, 'gif']), '--always'], {cwd: cwd});
+
 
     }
 
