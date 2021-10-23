@@ -40,6 +40,8 @@ class GifCapture extends Entity {
 
     var mixedPixels:Uint8Array = null;
 
+    var middleFactor:Float = 1;
+
     var imagesPerFrame:Int = 1;
 
     public function new() {
@@ -48,7 +50,7 @@ class GifCapture extends Entity {
 
     }
 
-    public function captureScreen(imagesPerFrame:Int = 1, gifFps:Int = 50, duration:Float = -1, ?path:String):Void {
+    public function captureScreen(imagesPerFrame:Int = 1, middleFactor:Float = 1, gifFps:Int = 50, duration:Float = -1, ?path:String):Void {
 
         assert(capturing == false, 'Already capturing!');
 
@@ -59,6 +61,7 @@ class GifCapture extends Entity {
         this.gifFps = gifFps;
         this.duration = duration;
         this.pendingPath = path;
+        this.middleFactor = middleFactor;
 
         frameNumber = 0;
 
@@ -102,7 +105,7 @@ class GifCapture extends Entity {
 
                     if (pendingPixelsList.length >= imagesPerFrame) {
 
-                        var mixedPixels = Pixels.mixPixelsBuffers(pendingPixelsList);
+                        var mixedPixels = Pixels.mixPixelsBuffers(pendingPixelsList, middleFactor);
                         pendingPixelsList = [];
 
                         #if cs
