@@ -189,11 +189,10 @@ class FieldsTabFocus extends Entity implements Component {
     function hasIndirectParent(visual:Visual, targetParent:Visual):Bool {
 
         var parent = visual.parent;
-        do {
+        while (parent != null) {
             if (parent == targetParent) return true;
             parent = parent.parent;
         }
-        while (parent != null);
 
         return false;
 
