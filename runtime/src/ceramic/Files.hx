@@ -510,7 +510,8 @@ class Files {
             log.warning('saveBytes() is not supported on this target without fs module');
         }
         else {
-            fs.writeFileSync(path, bytes.getData());
+            var buffer = ceramic.UInt8Array.fromBytes(bytes);
+            fs.writeFileSync(path, buffer, 'binary');
         }
 
         #else
