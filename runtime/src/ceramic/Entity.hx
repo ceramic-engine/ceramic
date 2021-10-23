@@ -607,8 +607,8 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
             var componentAsEntity:Entity = cast component;
             componentAsEntity.onceDestroy(this, function(_) {
                 // Remove entity reference from component
-                if (component.getProperty('entity') == this) {
-                    component.setProperty('entity', null);
+                if (@:privateAccess component.getEntity() == this) {
+                    @:privateAccess component.setEntity(null);
                 }
                 // Remove component reference from entity
                 if (!destroyed) {
