@@ -341,7 +341,7 @@ class Main {
                 js.Browser.document.body.classList.remove('ceramic-invisible');
             }
         }
-        intervalId = js.Browser.window.setInterval(checkSizeReady, 100);
+        intervalId = js.Browser.window.setInterval(checkSizeReady, 500);
         #end
 
     }
