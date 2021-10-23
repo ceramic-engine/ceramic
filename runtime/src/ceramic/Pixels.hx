@@ -266,7 +266,7 @@ class Pixels {
      * @param outPixels (optional) The destination pixels buffer
      * @return The final mixed pixels buffer
      */
-    public static function mixPixelsBuffers(inPixelsList:Array<UInt8Array>, middleFactor:Int = 1, ?outPixels:UInt8Array):UInt8Array {
+    public static function mixPixelsBuffers(inPixelsList:Array<UInt8Array>, middleFactor:Float = 1, ?outPixels:UInt8Array):UInt8Array {
 
         assert(inPixelsList.length > 0, 'There should be at least one pixels buffer to mix');
 
@@ -277,20 +277,32 @@ class Pixels {
             outPixels = new UInt8Array(length);
         }
 
-        var weight:Int = 0;
-        var factors:Array<Int> = [];
-        var factor:Int = 1;
-        for (i in 0...Math.ceil(numBuffers*0.5)) {
-            factors.push(factor);
+        var weight:Float = 0;
+        var factors:Array<Float> = [];
+        var factor:Float = 1;
+        var i:Int = 0;
+        var half:Int = Math.ceil(numBuffers*0.5);
+        while (i < half) {
+            factors[i] = factor;
+            weight += factor;
             factor *= middleFactor;
+            i++;
+        }
+        i = numBuffers - 1;
+        factor = 1;
+        while (i >= half) {
+            factors[i] = factor;
+            weight += factor;
+            factor *= middleFactor;
+            i--;
         }
 
         for (i in 0...length) {
-            var total:Int = 0;
+            var total:Float = 0;
             for (n in 0...numBuffers) {
-                total += inPixelsList.unsafeGet(n)[i];
+                total += inPixelsList.unsafeGet(n)[i] * factors.unsafeGet(n);
             }
-            outPixels[i] = Math.round(total / numBuffers);
+            outPixels[i] = Math.round(total / weight);
         }
 
         return outPixels;
