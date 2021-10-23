@@ -206,7 +206,19 @@ class Im {
 
     }
 
-    public static function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
+    public extern inline static overload function begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
+
+        return _begin(key, title, width, height);
+
+    }
+
+    public extern inline static overload function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
+
+        return _begin(key, null, width, height);
+
+    }
+
+    static function _begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
 
         assert(_currentWindowData == null, 'Duplicate begin() calls!');
 
@@ -219,7 +231,7 @@ class Im {
 
         // Get or create window
         var id = extractId(key);
-        var title = extractTitle(key);
+        var title = title != null ? title : extractTitle(key);
         var windowData = context.windowsData.get(id);
         var window = windowData != null ? windowData.window : null;
 
