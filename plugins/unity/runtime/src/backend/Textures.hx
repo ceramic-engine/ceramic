@@ -228,7 +228,7 @@ class Textures implements spec.Textures {
         var height = (texture:TextureImpl).height;
 
         if (result == null) {
-            result = new backend.UInt8Array(width * height);
+            result = new backend.UInt8Array(width * height * 4);
         }
 
         var i = 0;
