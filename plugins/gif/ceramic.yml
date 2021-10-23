@@ -2,7 +2,7 @@ plugin:
     name: Gif
 
     runtime:
-        if plugin_nape:
+        if plugin_gif:
             +libs:
                 - gif
             +paths:
