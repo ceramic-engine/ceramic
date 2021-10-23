@@ -1,6 +1,9 @@
 package ceramic;
 
+import ceramic.Assert.assert;
 import haxe.io.Bytes;
+
+using ceramic.Extensions;
 
 /**
  * Utilities to manipulate RGBA pixels.
@@ -182,6 +185,115 @@ class Pixels {
     static function _pixelsToPng(width:Int, height:Int, pixels:UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
 
         ceramic.App.app.backend.textures.pixelsToPng(width, height, pixels, path, done);
+
+    }
+
+    /**
+     * Converts a RGBA pixels buffer into RGB pixels buffer
+     * @param width Image width
+     * @param height Image height
+     * @param inPixels The source RGBA pixels buffer
+     * @param outPixels (optional) The destination RGB pixels buffer
+     * @return The final RGB pixels buffer
+     */
+    public static function rgbaPixelsToRgbPixels(width:Int, height:Int, inPixels:UInt8Array, ?outPixels:UInt8Array):UInt8Array {
+
+        var rgbLength = width * height * 3;
+        if (outPixels == null) {
+            outPixels = new UInt8Array(rgbLength);
+        }
+        else if (outPixels.length != rgbLength) {
+            ceramic.Shortcuts.log.warning('Not reusing outPixels because its length (${outPixels.length}) does not match the required one: $rgbLength. Creating a new buffer.');
+            outPixels = new UInt8Array(rgbLength);
+        }
+
+        for (i in 0...width * height) {
+            var nRgb = i * 3;
+            var nRgba = i * 4;
+            outPixels[nRgb] = inPixels[nRgba];
+            nRgb++;
+            nRgba++;
+            outPixels[nRgb] = inPixels[nRgba];
+            nRgb++;
+            nRgba++;
+            outPixels[nRgb] = inPixels[nRgba];
+        }
+        return outPixels;
+
+    }
+
+    /**
+     * Converts a RGB pixels buffer into RGBA pixels buffer
+     * @param width Image width
+     * @param height Image height
+     * @param alpha Alpha value (0-255) to use (default to 255)
+     * @param inPixels The source RGBA pixels buffer
+     * @param outPixels (optional) The destination RGB pixels buffer
+     * @return The final RGBA pixels buffer
+     */
+    public static function rgbPixelsToRgbaPixels(width:Int, height:Int, alpha:Int = 255, inPixels:UInt8Array, ?outPixels:UInt8Array):UInt8Array {
+
+        var rgbaLength = width * height * 4;
+        if (outPixels == null) {
+            outPixels = new UInt8Array(rgbaLength);
+        }
+        else if (outPixels.length != rgbaLength) {
+            ceramic.Shortcuts.log.warning('Not reusing outPixels because its length (${outPixels.length}) does not match the required one: $rgbaLength. Creating a new buffer.');
+            outPixels = new UInt8Array(rgbaLength);
+        }
+
+        for (i in 0...width * height) {
+            var nRgb = i * 3;
+            var nRgba = i * 4;
+            outPixels[nRgba] = inPixels[nRgb];
+            nRgb++;
+            nRgba++;
+            outPixels[nRgba] = inPixels[nRgb];
+            nRgb++;
+            nRgba++;
+            outPixels[nRgba] = inPixels[nRgb];
+            nRgba++;
+            outPixels[nRgba] = alpha;
+        }
+        return outPixels;
+
+    }
+
+    /**
+     * Mix the given list of pixels buffers into a single one.
+     * @param inPixelsList An array of pixels buffers
+     * @param middleFactor A multiplicator that makes the middle buffers more important than the rest if above 1
+     * @param outPixels (optional) The destination pixels buffer
+     * @return The final mixed pixels buffer
+     */
+    public static function mixPixelsBuffers(inPixelsList:Array<UInt8Array>, middleFactor:Int = 1, ?outPixels:UInt8Array):UInt8Array {
+
+        assert(inPixelsList.length > 0, 'There should be at least one pixels buffer to mix');
+
+        var numBuffers = inPixelsList.length;
+        var length = inPixelsList.unsafeGet(0).length;
+
+        if (outPixels == null) {
+            outPixels = new UInt8Array(length);
+        }
+
+        var weight:Int = 0;
+        var factors:Array<Int> = [];
+        var factor:Int = 1;
+        for (i in 0...Math.ceil(numBuffers*0.5)) {
+            factors.push(factor);
+            factor *= middleFactor;
+        }
+
+        for (i in 0...length) {
+            var total:Int = 0;
+            for (n in 0...numBuffers) {
+                total += inPixelsList.unsafeGet(n)[i];
+            }
+            outPixels[i] = Math.round(total / numBuffers);
+        }
+
+        return outPixels;
 
     }
 
