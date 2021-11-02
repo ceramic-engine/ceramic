@@ -22,14 +22,26 @@ class Settings implements Observable {
     @observe public var targetHeight:Int = 0;
 
     /**
+     * Target width and height. Affects window size at startup
+     * and affects screen scaling at any time.
+     * Ignored if set to 0 (default)
+     * @param targetWidth Target width
+     * @param targetHeight Target height
+     */
+    inline public function targetSize(targetWidth:Int, targetHeight:Int):Void {
+        this.targetWidth = targetWidth;
+        this.targetHeight = targetHeight;
+    }
+
+    /**
      * Target window width at startup
-     * Use `targetWidth` as fallback if set to 0 (default)
+     * Uses `targetWidth` as fallback if set to 0 (default)
      */
     @observe public var windowWidth(default,null):Int = 0;
 
     /**
      * Target window height at startup
-     * Use `targetHeight` as fallback if set to 0 (default)
+     * Uses `targetHeight` as fallback if set to 0 (default)
      */
     @observe public var windowHeight(default,null):Int = 0;
 

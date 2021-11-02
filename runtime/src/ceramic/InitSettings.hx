@@ -46,8 +46,20 @@ class InitSettings {
     }
 
     /**
+     * Target width and height. Affects window size at startup
+     * and affects screen scaling at any time.
+     * Ignored if set to 0 (default)
+     * @param targetWidth Target width
+     * @param targetHeight Target height
+     */
+    inline public function targetSize(targetWidth:Int, targetHeight:Int):Void {
+        settings.targetWidth = targetWidth;
+        settings.targetHeight = targetHeight;
+    }
+
+    /**
      * Target window width at startup
-     * Use `targetWidth` as fallback if set to 0 (default)
+     * Uses `targetWidth` as fallback if set to 0 (default)
      */
     public var windowWidth(get,set):Int;
     inline function get_windowWidth():Int {
@@ -59,7 +71,7 @@ class InitSettings {
 
     /**
      * Target window height at startup
-     * Use `targetHeight` as fallback if set to 0 (default)
+     * Uses `targetHeight` as fallback if set to 0 (default)
      */
     public var windowHeight(get,set):Int;
     inline function get_windowHeight():Int {
@@ -67,6 +79,17 @@ class InitSettings {
     }
     inline function set_windowHeight(windowHeight:Int):Int {
         return @:privateAccess settings.windowHeight = windowHeight;
+    }
+
+    /**
+     * Target window width and height at startup
+     * Uses `targetWidth` and `targetHeight` as fallback if set to 0 (default)
+     * @param windowWidth Window width
+     * @param windowHeight Window height
+     */
+    inline public function windowSize(windowWidth:Int, windowHeight:Int):Void {
+        settings.windowWidth = windowWidth;
+        settings.windowHeight = windowHeight;
     }
 
     /**
