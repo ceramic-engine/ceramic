@@ -25,4 +25,15 @@ class GeometryUtils {
 
     }
 
+    /**
+     * Returns the distance between point (x1, y1) and point (x2, y2)
+     */
+    public static inline function distance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
+
+        var dx:Float = x2 - x1;
+        var dy:Float = y2 - y1;
+
+        return Math.sqrt(dx * dx + dy * dy);
+
+    }
 }

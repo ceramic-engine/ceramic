@@ -1,12 +1,12 @@
 package elements;
 
 import ceramic.Color;
+import ceramic.GeometryUtils;
 import ceramic.LayersLayout;
 import ceramic.ReadOnlyArray;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
 import ceramic.TouchInfo;
-import ceramic.Utils;
 import elements.Context.context;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
@@ -86,7 +86,7 @@ class ColorPickerView extends LayersLayout implements Observable {
                 y += PALETTE_COLOR_SIZE + PALETTE_COLOR_GAP;
             }
 
-            var distance = Utils.distance(
+            var distance = GeometryUtils.distance(
                 dragX + PALETTE_COLOR_SIZE * 0.5, dragY + PALETTE_COLOR_SIZE * 0.5,
                 x + PALETTE_COLOR_SIZE * 0.5, y + PALETTE_COLOR_SIZE * 0.5
             );

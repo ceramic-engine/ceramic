@@ -318,15 +318,6 @@ class Utils {
 
     }
 
-    inline public static function distance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
-
-        var dx:Float = x2 - x1;
-        var dy:Float = y2 - y1;
-
-        return Math.sqrt(dx * dx + dy * dy);
-
-    }
-
     /**
      * Java's String.hashCode() method implemented in Haxe.
      * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
