@@ -237,7 +237,7 @@ class Mesh extends Visual {
                 k++;
                 cy = vertices.unsafeGet(k);
 
-                if (GeometryUtils.pointInTriangle(
+                if (inline GeometryUtils.pointInTriangle(
                     testX, testY,
                     ax, ay, bx, by, cx, cy
                 )) {
