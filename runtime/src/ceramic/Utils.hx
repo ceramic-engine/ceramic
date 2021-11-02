@@ -78,7 +78,7 @@ class Utils {
      * Provides a random identifier which should be fairly unpredictable and
      * should have an extremely low chance to provide the same identifier twice.
      */
-    public static function randomId(?size:Int = 32):String {
+    public static function randomId(size:Int = 32):String {
 
         var chars = [];
         while (chars.length < size) {
