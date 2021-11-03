@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Assert.assert;
 import ceramic.PlatformSpecific;
 import ceramic.Shortcuts.*;
 import haxe.CallStack;
@@ -507,6 +508,44 @@ class Utils {
         if (value >= 1.0)
             value = value % 1.0;
         return (Math.cos(value * Math.PI * 2) + 1.0) * 0.5;
+
+    }
+
+    /**
+     * Given an array of keys and an array of matching values, interpolate a new value from interpolatedKey
+     * @param keys A list of keys
+     * @param values A list of values
+     * @param interpolatedKey The interpolated key, used to find a matching interpolated value
+     * @return Interpolated value
+     */
+    public static function valueFromInterpolatedKey(keys:Array<Float>, values:Array<Float>, interpolatedKey:Float):Float {
+
+        final len = keys.length;
+        final lenMinus1 = len - 1;
+
+        assert(len > 0, 'Keys array must not be empty');
+        assert(values.length >= len, 'Values array must be of equal or higher size of keys array');
+
+        var value:Float = 0.0;
+
+        if (interpolatedKey < keys.unsafeGet(0)) {
+            value = values.unsafeGet(0);
+        }
+        else if (interpolatedKey >= keys.unsafeGet(lenMinus1)) {
+            value = values.unsafeGet(lenMinus1);
+        }
+        else {
+            var i = 0;
+            var iPlus1 = 1;
+            while (interpolatedKey > keys.unsafeGet(iPlus1)) {
+                i++;
+                iPlus1++;
+            }
+            final ratio = (interpolatedKey - keys.unsafeGet(i)) / (keys.unsafeGet(iPlus1) - keys.unsafeGet(i));
+            value = values.unsafeGet(i) + (values.unsafeGet(iPlus1) - values.unsafeGet(i)) * ratio;
+        }
+
+        return value;
 
     }
 
