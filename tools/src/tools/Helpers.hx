@@ -466,6 +466,58 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'gif'])))
             haxelib(['dev', 'gif', Path.join([context.ceramicGitDepsPath, 'gif']), '--always'], {cwd: cwd});
 
+    }
+
+    public static function installMissingLibsIfNeeded(cwd:String, args:Array<String>, ?project:Project) {
+
+        if (project == null) {
+            project = ensureCeramicProject(cwd, args, App);
+        }
+
+        var haxelibRepoPath = Path.join([cwd, '.haxelib']);
+
+        var hasMissingLibs = false;
+
+        var appLibs:Array<Dynamic> = project.app.libs;
+        for (lib in appLibs) {
+            var libName:String = null;
+            var libVersion:String = "*";
+            if (Std.isOfType(lib, String)) {
+                libName = lib;
+            } else {
+                for (k in Reflect.fields(lib)) {
+                    libName = k;
+                    libVersion = Reflect.field(lib, k);
+                    break;
+                }
+            }
+            if (libVersion.trim() == '' || libVersion == '*') {
+                // Any version
+                if (!FileSystem.exists(Path.join([haxelibRepoPath, libName]))) {
+                    hasMissingLibs = true;
+                }
+            }
+            else if (libVersion.startsWith('git:')) {
+                // Git
+                if (!FileSystem.exists(Path.join([haxelibRepoPath, libName, 'git']))) {
+                    hasMissingLibs = true;
+                }
+            }
+            else {
+                // Specific version
+                if (!FileSystem.exists(Path.join([haxelibRepoPath, libName, libVersion.trim().replace('.',',')]))) {
+                    hasMissingLibs = true;
+                }
+            }
+        }
+
+        if (hasMissingLibs) {
+            var taskName = 'libs';
+            if (context.backend != null) {
+                taskName = context.backend.name + ' ' + taskName;
+            }
+            runTask('libs');
+        }
 
     }
 

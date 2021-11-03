@@ -1,8 +1,8 @@
 package tools.tasks;
 
-import tools.Helpers.*;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Helpers.*;
 
 using StringTools;
 using tools.Colors;
@@ -31,7 +31,7 @@ class Libs extends tools.Task {
 
         if (context.backend != null) {
 
-            var availableTargets = backend.getBuildTargets();
+            var availableTargets = context.backend.getBuildTargets();
             var targetName = getTargetName(args, availableTargets);
 
             if (targetName == null) {
@@ -88,7 +88,7 @@ class Libs extends tools.Task {
 
         for (libName in libs.keys()) {
             var libVersion = libs.get(libName);
-            
+
             var isGit = false;
             var isPath = false;
             if (libVersion != null) {
@@ -128,7 +128,7 @@ class Libs extends tools.Task {
                     if (libVersion != null) installArgs.push(libVersion);
                     res = haxelib(['install'].concat(installArgs), { cwd: cwd });
                 }
-    
+
                 // Check again
                 query = libName;
                 if (libVersion != null && !isGit && !isPath) query += ':' + libVersion;
@@ -151,7 +151,7 @@ class Libs extends tools.Task {
                     }
                 }
             }
-            
+
         }
 
     }
