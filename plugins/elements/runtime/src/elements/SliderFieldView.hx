@@ -103,6 +103,8 @@ class SliderFieldView extends BaseTextFieldView {
 
     override function didLostFocus() {
 
+        super.didLostFocus();
+
         if (textView.content == '' || textView.content == '-') {
             var emptyValue:Float = 0;
             if (emptyValue < minValue)

@@ -43,6 +43,8 @@ class SelectFieldView extends FieldView {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    public var clipList:Bool = false;
+
 /// Internal properties
 
     @observe var listVisible:Bool = false;
@@ -215,7 +217,7 @@ class SelectFieldView extends FieldView {
 
     override function didLostFocus() {
 
-        //
+        super.didLostFocus();
 
     }
 
@@ -414,7 +416,7 @@ class SelectFieldView extends FieldView {
 
         // Clip if needed
         if (listVisible) {
-            if (scrollingLayout != null) {
+            if (clipList && scrollingLayout != null) {
                 scrollingLayout.screenToVisual(0, 0, _point);
                 context.view.screenToVisual(_point.x, _point.y, _point);
                 if (y + _point.y < 0) {

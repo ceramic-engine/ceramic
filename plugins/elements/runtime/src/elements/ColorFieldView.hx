@@ -175,6 +175,8 @@ class ColorFieldView extends FieldView {
 
     override function didLostFocus() {
 
+        super.didLostFocus();
+
         if (textView.content == '') {
             var emptyValue:Color = Color.WHITE;
             setValue(this, emptyValue);

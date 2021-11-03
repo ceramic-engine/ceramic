@@ -115,6 +115,7 @@ class CellView extends LayersLayout implements Observable {
         titleTextView.pointSize = 12;
         titleTextView.preRenderedSize = 20;
         titleTextView.viewSize(fill(), auto());
+        titleTextView.onLayout(this, layoutTitle);
         columnLayout.add(titleTextView);
 
         subTitleTextView = new TextView();
@@ -124,6 +125,7 @@ class CellView extends LayersLayout implements Observable {
         subTitleTextView.paddingLeft = 1;
         subTitleTextView.viewSize(fill(), auto());
         subTitleTextView.text.component('italicText', new ItalicText());
+        subTitleTextView.onLayout(this, layoutSubTitle);
         columnLayout.add(subTitleTextView);
 
         autorun(updateTitle);
@@ -140,10 +142,6 @@ class CellView extends LayersLayout implements Observable {
 
         var title = this.title;
         if (title != null) {
-            title = title.trim().replace("\n", ' ');
-            if (title.length > 20) {
-                title = title.substr(0, 20) + '...'; // TODO at textview level
-            }
             titleTextView.content = title;
             titleTextView.active = true;
         }
@@ -165,6 +163,26 @@ class CellView extends LayersLayout implements Observable {
             subTitleTextView.content = '';
             subTitleTextView.active = false;
         }
+
+    }
+
+    function layoutTitle() {
+
+        titleTextView.text.clipText(
+            0, 0,
+            width - titleTextView.text.x - titleTextView.x,
+            999999999
+        );
+
+    }
+
+    function layoutSubTitle() {
+
+        subTitleTextView.text.clipText(
+            0, 0,
+            width - subTitleTextView.text.x - subTitleTextView.x,
+            999999999
+        );
 
     }
 

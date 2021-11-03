@@ -16,6 +16,7 @@ import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
+import ceramic.KeyBinding;
 import ceramic.LongPress;
 import ceramic.Quad;
 import ceramic.ReadOnlyArray;
@@ -489,7 +490,7 @@ class Im {
 
     }
 
-    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String):Bool {
+    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>):Bool {
 
         var windowData = _currentWindowData;
 
@@ -504,6 +505,7 @@ class Im {
         item.bool0 = multiline;
         item.string2 = title;
         item.string3 = placeholder;
+        item.stringArray0 = autocompleteCandidates;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -1249,6 +1251,14 @@ class Im {
         _currentWindowData = null;
         _currentRowIndex = -1;
         _inRow = false;
+
+    }
+
+/// Focused?
+
+    inline public static function focusedWindow():Window {
+
+        return Context.context.focusedWindow;
 
     }
 

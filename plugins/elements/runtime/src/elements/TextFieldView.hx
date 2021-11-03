@@ -27,6 +27,8 @@ class TextFieldView extends BaseTextFieldView {
 
     override function didLostFocus() {
 
+        super.didLostFocus();
+
         if (textValue == '' || (kind == NUMERIC && textValue == '-')) {
             setEmptyValue(this);
         }
@@ -42,6 +44,8 @@ class TextFieldView extends BaseTextFieldView {
             editText.multiline = multiline;
         return multiline;
     }
+
+    @component var keyBindings:KeyBindings;
 
     @observe public var placeholder:String = '';
 
@@ -268,7 +272,7 @@ class TextFieldView extends BaseTextFieldView {
 
     function bindKeyBindings() {
 
-        var keyBindings = new KeyBindings();
+        keyBindings = new KeyBindings();
 
         keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
             if (focused) {
@@ -276,11 +280,6 @@ class TextFieldView extends BaseTextFieldView {
                 selectText.selectionStart = 0;
                 selectText.selectionEnd = textView.text.content.length;
             }
-        });
-
-        onDestroy(keyBindings, function(_) {
-            keyBindings.destroy();
-            keyBindings = null;
         });
 
     }
