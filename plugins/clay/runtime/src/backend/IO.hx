@@ -194,13 +194,13 @@ class IO implements spec.IO {
 
     public function saveString(key:String, str:String):Bool {
 
-        var storage = js.Browser.window.localStorage;
-        if (storage == null) {
-            log.error('Cannot save string: localStorage not supported on this browser');
-            return false;
-        }
-
         try {
+            var storage = js.Browser.window.localStorage;
+            if (storage == null) {
+                log.error('Cannot save string: localStorage not supported on this browser');
+                return false;
+            }
+
             storage.setItem(key, HashedString.encode(str));
         }
         catch (e:Dynamic) {
@@ -214,13 +214,13 @@ class IO implements spec.IO {
 
     public function appendString(key:String, str:String):Bool {
 
-        var storage = js.Browser.window.localStorage;
-        if (storage == null) {
-            log.error('Cannot append string: localStorage not supported on this browser');
-            return false;
-        }
-
         try {
+            var storage = js.Browser.window.localStorage;
+            if (storage == null) {
+                log.error('Cannot append string: localStorage not supported on this browser');
+                return false;
+            }
+
             var existing = storage.getItem(key);
             if (existing == null) {
                 storage.setItem(key, HashedString.encode(str));
@@ -240,13 +240,13 @@ class IO implements spec.IO {
 
     public function readString(key:String):String {
 
-        var storage = js.Browser.window.localStorage;
-        if (storage == null) {
-            log.error('Cannot read string: localStorage not supported on this browser');
-            return null;
-        }
-
         try {
+            var storage = js.Browser.window.localStorage;
+            if (storage == null) {
+                log.error('Cannot read string: localStorage not supported on this browser');
+                return null;
+            }
+
             var str = storage.getItem(key);
             return str != null ? HashedString.decode(str) : null;
         }
