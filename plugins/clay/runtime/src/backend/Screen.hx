@@ -29,6 +29,36 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
+#if (web && !no_resume_audio_context)
+
+/// Resume audio context after first click/touch on web
+
+    var didTryResumeAudioContext:Bool = false;
+
+    inline function willEmitMouseDown(buttonId:Int, x:Float, y:Float):Void {
+        tryResumeAudioContextIfNeeded();
+    }
+
+    inline function willEmitTouchDown(buttonId:Int, x:Float, y:Float):Void {
+        tryResumeAudioContextIfNeeded();
+    }
+
+    function tryResumeAudioContextIfNeeded():Void {
+        if (!didTryResumeAudioContext) {
+            didTryResumeAudioContext = true;
+            ceramic.App.app.backend.audio.resumeAudioContext(function(resumed:Bool) {
+                if (resumed) {
+                    ceramic.Shortcuts.log.success('Did resume audio context');
+                }
+                else {
+                    ceramic.Shortcuts.log.error('Failed to resume audio context');
+                }
+            });
+        }
+    }
+
+#end
+
 /// Public API
 
     inline public function getWidth():Int {
