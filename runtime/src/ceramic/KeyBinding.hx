@@ -11,14 +11,16 @@ class KeyBinding extends Entity {
 
 /// Internal properties
 
-    var accelerator:ReadOnlyArray<KeyAcceleratorItem>;
+    public var accelerator(default, null):ReadOnlyArray<KeyAcceleratorItem>;
+
+    public var bindings(default, null):KeyBindings = null;
 
     var pressedItems:Array<Int> = [];
 
     var matches:Bool = false;
 
     var leftShiftPressed:Bool = false;
-    
+
     var rightShiftPressed:Bool = false;
 
     var disableIfShiftPressed:Bool = false;
@@ -30,11 +32,12 @@ class KeyBinding extends Entity {
 
 /// Lifecycle
 
-    private function new(accelerator:Array<KeyAcceleratorItem>) {
+    private function new(accelerator:Array<KeyAcceleratorItem>, ?bindings:KeyBindings) {
 
         super();
-        
+
         this.accelerator = cast [].concat(accelerator);
+        this.bindings = bindings;
 
         bindKeyboardEvents();
 
@@ -59,7 +62,7 @@ class KeyBinding extends Entity {
     function bindKeyboardEvents():Void {
 
         var hasShift = false;
-        
+
         for (i in 0...accelerator.length) {
             pressedItems.push(0);
             var item = accelerator.unsafeGet(i);
@@ -119,7 +122,7 @@ class KeyBinding extends Entity {
                         app.onceUpdate(this, _ -> {
                             if (pressedItems[itemIndex] > 0)
                                 pressedItems[itemIndex]--;
-                            
+
                             checkStatus();
                         });
                     }
@@ -184,7 +187,7 @@ class KeyBinding extends Entity {
                         app.onceUpdate(this, _ -> {
                             if (pressedItems[itemIndex] > 0)
                                 pressedItems[itemIndex]--;
-                            
+
                             checkStatus();
                         });
                     }

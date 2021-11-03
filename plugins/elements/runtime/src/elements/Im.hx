@@ -1296,6 +1296,17 @@ class Im {
                 return visual.hasIndirectParent(view);
             }
         }
+        else if (owner is KeyBinding) {
+            var keyBinding:KeyBinding = cast owner;
+            var bindings = keyBinding.bindings;
+            if (bindings != null) {
+                var entity = @:privateAccess bindings.getEntity();
+                if (entity is Visual) {
+                    var visual:Visual = cast entity;
+                    return visual.hasIndirectParent(view);
+                }
+            }
+        }
 
         var className = Type.getClassName(Type.getClass(owner));
         if (className.startsWith('elements.')) {

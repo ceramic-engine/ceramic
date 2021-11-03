@@ -4,7 +4,7 @@ import ceramic.Assert.assert;
 
 using ceramic.Extensions;
 
-class KeyBindings extends Entity {
+class KeyBindings extends Entity implements Component {
 
     static var instances:Array<KeyBindings> = [];
 
@@ -13,6 +13,12 @@ class KeyBindings extends Entity {
     var bindings:Array<KeyBinding> = [];
 
 /// Lifecycle
+
+    function bindAsComponent() {
+
+        // Nothing to do
+
+    }
 
     public function new() {
 
@@ -37,7 +43,7 @@ class KeyBindings extends Entity {
         assert(accelerator != null, 'accelerator should not be null');
         assert(accelerator.length > 0, 'accelerator should have at least one item');
 
-        var binding = new KeyBinding(accelerator);
+        var binding = new KeyBinding(accelerator, this);
         bindings.push(binding);
 
         if (callback != null) {

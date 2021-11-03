@@ -1,12 +1,12 @@
 package ceramic;
 
-import tracker.Observable;
-import tracker.Autorun.unobserve;
-import tracker.Autorun.reobserve;
 import ceramic.Shortcuts.*;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
+import tracker.Observable;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 class SelectText extends Entity implements Component implements Observable {
 
@@ -93,13 +93,13 @@ class SelectText extends Entity implements Component implements Observable {
         onSelectionEndChange(this, function(_, _) { updateSelectionGraphics(); });
 
         bindKeyBindings();
-        
+
     }
 
 /// Internal
 
     function updateFromSelection() {
-        
+
         var selectionStart = this.selectionStart;
         var selectionEnd = this.selectionEnd;
         var invertedSelection = this.invertedSelection;
@@ -169,7 +169,7 @@ class SelectText extends Entity implements Component implements Observable {
             if (backgroundLeft == 0) {
                 bg.pos(backgroundLeft - backgroundPad + textCursorOffsetX, backgroundTop - backgroundPad + textCursorOffsetY);
                 bg.size(backgroundRight + backgroundPad - backgroundLeft + selectionRightPadding, backgroundBottom + backgroundPad * 2 - backgroundTop);
-            } 
+            }
             else {
                 bg.pos(backgroundLeft + textCursorOffsetX, backgroundTop - backgroundPad + textCursorOffsetY);
                 bg.size(backgroundRight - backgroundLeft + selectionRightPadding, backgroundBottom + backgroundPad * 2 - backgroundTop);
@@ -443,9 +443,9 @@ class SelectText extends Entity implements Component implements Observable {
 
         var x = screen.pointerX;
         var y = screen.pointerY;
-        
+
         var cursorPosition = indexFromScreenPosition(x, y);
-        
+
         selectionStart = cursorPosition;
         selectionEnd = cursorPosition;
         invertedSelection = false;
@@ -566,6 +566,8 @@ class SelectText extends Entity implements Component implements Observable {
             keyBindings.destroy();
             keyBindings = null;
         });
+
+        entity.component('selectText.keyBindings', keyBindings);
 
     }
 

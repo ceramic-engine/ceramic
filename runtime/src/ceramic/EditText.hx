@@ -400,21 +400,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         var keyBindings = new KeyBindings();
 
-        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_V)], function() {
-            // CMD/CTRL + C
-            if (screen.focusedVisual != entity) return;
-            var pasteText = app.backend.clipboard.getText();
-            if (pasteText == null) pasteText = '';
-            if (!multiline) pasteText = pasteText.replace("\n", ' ');
-            pasteText.replace("\r", '');
-            var newText = entity.content.substring(0, selectText.selectionStart) + pasteText + entity.content.substring(selectText.selectionEnd);
-            selectText.selectionStart += pasteText.length;
-            selectText.selectionEnd = selectText.selectionStart;
-
-            // Update text content
-            entity.content = newText;
-            emitUpdate(newText);
-        });
+        // CMD/CTRL + C is handled in SelectText component
 
         keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_X)], function() {
             // CMD/CTRL + X
@@ -430,10 +416,28 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             emitUpdate(newText);
         });
 
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_V)], function() {
+            // CMD/CTRL + V
+            if (screen.focusedVisual != entity) return;
+            var pasteText = app.backend.clipboard.getText();
+            if (pasteText == null) pasteText = '';
+            if (!multiline) pasteText = pasteText.replace("\n", ' ');
+            pasteText.replace("\r", '');
+            var newText = entity.content.substring(0, selectText.selectionStart) + pasteText + entity.content.substring(selectText.selectionEnd);
+            selectText.selectionStart += pasteText.length;
+            selectText.selectionEnd = selectText.selectionStart;
+
+            // Update text content
+            entity.content = newText;
+            emitUpdate(newText);
+        });
+
         onDestroy(keyBindings, function(_) {
             keyBindings.destroy();
             keyBindings = null;
         });
+
+        entity.component('editText.keyBindings', keyBindings);
 
     }
 
