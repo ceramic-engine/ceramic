@@ -276,6 +276,22 @@ class Input implements tracker.Events implements spec.Input {
             // Right Shift
             ceramic.App.app.textInput.rshiftDown();
         }
+        else if (scanCode == ScanCode.LCTRL) {
+            // Left CTRL
+            ceramic.App.app.textInput.lctrlDown();
+        }
+        else if (scanCode == ScanCode.RCTRL) {
+            // Right CTRL
+            ceramic.App.app.textInput.rctrlDown();
+        }
+        else if (scanCode == ScanCode.LMETA) {
+            // Left META
+            ceramic.App.app.textInput.lmetaDown();
+        }
+        else if (scanCode == ScanCode.RMETA) {
+            // Right META
+            ceramic.App.app.textInput.rmetaDown();
+        }
 
     }
 
@@ -290,6 +306,22 @@ class Input implements tracker.Events implements spec.Input {
         else if (scanCode == ScanCode.RSHIFT) {
             // Right Shift
             ceramic.App.app.textInput.rshiftUp();
+        }
+        else if (scanCode == ScanCode.LCTRL) {
+            // Left CTRL
+            ceramic.App.app.textInput.lctrlUp();
+        }
+        else if (scanCode == ScanCode.RCTRL) {
+            // Right CTRL
+            ceramic.App.app.textInput.rctrlUp();
+        }
+        else if (scanCode == ScanCode.LMETA) {
+            // Left META
+            ceramic.App.app.textInput.lmetaUp();
+        }
+        else if (scanCode == ScanCode.RMETA) {
+            // Right META
+            ceramic.App.app.textInput.rmetaUp();
         }
 
     }

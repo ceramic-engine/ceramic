@@ -32,6 +32,14 @@ class TextInput implements Events {
 
     var rshiftPressed:Bool = false;
 
+    var lctrlPressed:Bool = false;
+
+    var rctrlPressed:Bool = false;
+
+    var lmetaPressed:Bool = false;
+
+    var rmetaPressed:Bool = false;
+
     var invertedSelection:Bool = false;
 
     public var allowMovingCursor(default,null):Bool = false;
@@ -76,7 +84,7 @@ class TextInput implements Events {
         explicitPosInLine = 0;
         explicitPosLine = 0;
         invertedSelection = false;
-        
+
         if (selectionStart < 0) selectionStart = text.length;
         if (selectionEnd < selectionStart) selectionEnd = selectionStart;
         this.selectionStart = selectionStart;
@@ -116,6 +124,10 @@ class TextInput implements Events {
 
     public function appendText(text:String):Void {
 
+        // Ignore text input if CTRL is pressed
+        if (lctrlPressed || rctrlPressed)
+            return;
+
         // Clear selection and add text in place
 
         var newText = '';
@@ -132,7 +144,7 @@ class TextInput implements Events {
 
         emitUpdate(this.text);
         emitSelection(selectionStart, selectionEnd);
-        
+
         explicitPosInLine = posInCurrentLine(selectionStart);
         explicitPosLine = lineForPos(selectionStart);
 
@@ -141,7 +153,7 @@ class TextInput implements Events {
     public function space():Void {
 
         appendText(' ');
-        
+
     }
 
     public function backspace():Void {
@@ -162,7 +174,7 @@ class TextInput implements Events {
 
         emitUpdate(text);
         emitSelection(selectionStart, selectionEnd);
-        
+
         explicitPosInLine = posInCurrentLine(selectionStart);
         explicitPosLine = lineForPos(selectionStart);
 
@@ -231,7 +243,7 @@ class TextInput implements Events {
 
             if (selectionStart == selectionEnd) {
                 invertedSelection = false;
-                
+
                 if (selectionEnd < textLength) {
                     selectionEnd++;
                     emitSelection(selectionStart, selectionEnd);
@@ -436,7 +448,7 @@ class TextInput implements Events {
 
         // In case input was stopped at `enter` event
         if (!inputActive) return;
-        
+
         if (multiline) {
             appendText("\n");
         }
@@ -471,6 +483,54 @@ class TextInput implements Events {
     public function rshiftUp():Void {
 
         rshiftPressed = false;
+
+    }
+
+    public function lctrlDown():Void {
+
+        lctrlPressed = true;
+
+    }
+
+    public function lctrlUp():Void {
+
+        lctrlPressed = false;
+
+    }
+
+    public function rctrlDown():Void {
+
+        rctrlPressed = true;
+
+    }
+
+    public function rctrlUp():Void {
+
+        rctrlPressed = false;
+
+    }
+
+    public function lmetaDown():Void {
+
+        lmetaPressed = true;
+
+    }
+
+    public function lmetaUp():Void {
+
+        lmetaPressed = false;
+
+    }
+
+    public function rmetaDown():Void {
+
+        rmetaPressed = true;
+
+    }
+
+    public function rmetaUp():Void {
+
+        rmetaPressed = false;
 
     }
 
