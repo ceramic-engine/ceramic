@@ -45,8 +45,6 @@ class TextFieldView extends BaseTextFieldView {
         return multiline;
     }
 
-    @component var keyBindings:KeyBindings;
-
     @observe public var placeholder:String = '';
 
     @observe public var inputStyle:InputStyle = DEFAULT;
@@ -193,7 +191,7 @@ class TextFieldView extends BaseTextFieldView {
     function handleStopEditText() {
 
         // Release focus when stopping edition
-        if (focused) {
+        if (focused && (suggestions == null || suggestions.length == 0)) {
             screen.focusedVisual = null;
         }
 
@@ -265,22 +263,6 @@ class TextFieldView extends BaseTextFieldView {
                 }
             }
         }
-
-    }
-
-/// Key bindings
-
-    function bindKeyBindings() {
-
-        keyBindings = new KeyBindings();
-
-        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
-            if (focused) {
-                var selectText:SelectText = cast textView.text.component('selectText');
-                selectText.selectionStart = 0;
-                selectText.selectionEnd = textView.text.content.length;
-            }
-        });
 
     }
 

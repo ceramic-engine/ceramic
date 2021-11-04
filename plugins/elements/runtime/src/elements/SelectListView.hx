@@ -10,12 +10,17 @@ import ceramic.ReadOnlyArray;
 import ceramic.View;
 import elements.CellView;
 import elements.Context.context;
+import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 import tracker.Observable;
 
 class SelectListView extends View implements CollectionViewDataSource implements Observable {
 
+    @event function valueClick(value:String);
+
     public static final ITEM_HEIGHT = 26;
+
+    public var autoScrollToValue:Bool = false;
 
     @observe public var value:String = null;
 
@@ -50,7 +55,23 @@ class SelectListView extends View implements CollectionViewDataSource implements
             collectionView.reloadData();
         });
 
+        autorun(updateScrollFromValueIfNeeded);
+
         autorun(updateStyle);
+
+    }
+
+    function updateScrollFromValueIfNeeded() {
+
+        var value = this.value;
+
+        unobserve();
+
+        if (autoScrollToValue && value != null) {
+            scrollToValue(ENSURE_VISIBLE);
+        }
+
+        reobserve();
 
     }
 
@@ -133,9 +154,11 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
             var value = index >= 0 ? list[index] : null;
 
+            var selected = (value == this.value);
+
             cell.title = value != null ? value : nullValueText;
-            cell.displaysEmptyValue = value == null;
-            cell.selected = (value == this.value);
+            cell.displaysEmptyValue = (value == null);
+            cell.selected = selected;
 
         });
 
@@ -148,7 +171,10 @@ class SelectListView extends View implements CollectionViewDataSource implements
                 index--;
             }
 
-            this.value = index >= 0 ? list[index] : null;
+            var newValue = index >= 0 ? list[index] : null;
+            this.value = newValue;
+
+            emitValueClick(newValue);
 
             invalidateValue();
 

@@ -87,6 +87,8 @@ class SliderFieldView extends BaseTextFieldView {
         autorun(updateFromTextValue);
         autorun(updateFromValue);
 
+        bindKeyBindings();
+
     }
 
 /// Layout

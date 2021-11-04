@@ -2,7 +2,11 @@ package elements;
 
 import ceramic.EditText;
 import ceramic.Equal;
+import ceramic.Key;
+import ceramic.KeyBindings;
+import ceramic.KeyCode;
 import ceramic.Point;
+import ceramic.ScanCode;
 import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
@@ -114,6 +118,8 @@ class BaseTextFieldView extends FieldView {
 
 /// Internal properties
 
+    @component var keyBindings:KeyBindings;
+
     var textView:TextView;
 
     var editText:EditText;
@@ -170,7 +176,9 @@ class BaseTextFieldView extends FieldView {
         }
 
         if (prevText != text && autocompleteCandidates != null && autocompleteCandidates.length > 0) {
-            cancelAutoComplete = Timer.delay(this, autocompleteDelay, updateAutocompleteSuggestions);
+            cancelAutoComplete = Timer.delay(this, autocompleteDelay, () -> {
+                updateAutocompleteSuggestions();
+            });
         }
 
     }
@@ -192,7 +200,7 @@ class BaseTextFieldView extends FieldView {
 
 /// Auto-completion
 
-    function updateAutocompleteSuggestions() {
+    function updateAutocompleteSuggestions(force:Bool = false) {
 
         var textValue = textView.content;
 
@@ -207,6 +215,12 @@ class BaseTextFieldView extends FieldView {
             suggestions = [];
             for (i in 0...rawSuggestions.length) {
                 suggestions.push(rawSuggestions.unsafeGet(i).original);
+            }
+        }
+        else if (force) {
+            suggestions = [];
+            for (i in 0...processedAutocompleteCandidates.length) {
+                suggestions.push(processedAutocompleteCandidates.unsafeGet(i).original);
             }
         }
         else {
@@ -229,8 +243,13 @@ class BaseTextFieldView extends FieldView {
             if (suggestionsView == null) {
                 suggestionsView = new SelectListView();
 
+                suggestionsView.autoScrollToValue = true;
+
                 // Update value from suggestions if a new value is selected
-                suggestionsView.onValueChange(this, handleSuggestionsValueChange);
+                suggestionsView.onValueChange(this, suggestionsValueChange);
+                suggestionsView.onValueClick(this, suggestionsValueClick);
+
+                input.onKeyDown(suggestionsView, suggestionsKeyDown);
 
                 suggestionsContainer.add(suggestionsView);
             }
@@ -242,12 +261,65 @@ class BaseTextFieldView extends FieldView {
 
     }
 
-    function handleSuggestionsValueChange(value:String, prevValue:String):Void {
+    function suggestionsKeyDown(key:Key) {
 
-        if (editText != null)
+        if (suggestionsView == null || suggestions == null || suggestions.length == 0)
+            return;
+
+        if (key.scanCode == ScanCode.ESCAPE) {
+            clearSuggestions();
+            focus();
+        }
+        else if (focused && key.scanCode == ScanCode.DOWN) {
+            var list = suggestionsView.list;
+            if (list != null) {
+                if (suggestionsView.value == null) {
+                    if (list.length > 0) {
+                        suggestionsView.value = list[0];
+                    }
+                }
+                else if (list.indexOf(suggestionsView.value) < list.length - 1) {
+                    suggestionsView.value = list[list.indexOf(suggestionsView.value) + 1];
+                }
+            }
+        }
+        else if (focused && key.scanCode == ScanCode.UP) {
+            var list = suggestionsView.list;
+            if (list != null) {
+                if (suggestionsView.value != null && list.indexOf(suggestionsView.value) > 0) {
+                    suggestionsView.value = list[list.indexOf(suggestionsView.value) - 1];
+                }
+            }
+        }
+        else if (focused && key.scanCode == ScanCode.ENTER) {
+            if (suggestionsView.value == null) {
+                suggestionsView.value = suggestions[0];
+            }
+            app.oncePostFlushImmediate(function() {
+                clearSuggestions();
+                app.oncePostFlushImmediate(function() {
+                    focus();
+                });
+            });
+        }
+
+    }
+
+    function suggestionsValueChange(value:String, prevValue:String):Void {
+
+        if (editText != null) {
             editText.updateText(value);
+            editText.selectText.selectionStart = value.length;
+            editText.selectText.selectionEnd = value.length;
+        }
         textView.content = value;
         setTextValue(this, value);
+        focus();
+
+    }
+
+    function suggestionsValueClick(value:String):Void {
+
         clearSuggestions();
         focus();
 
@@ -380,6 +452,29 @@ class BaseTextFieldView extends FieldView {
     inline static function transformTextForCompletion(text:String):String {
 
         return text.replace(' ', '_');
+
+    }
+
+/// Key bindings
+
+    function bindKeyBindings() {
+
+        keyBindings = new KeyBindings();
+
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
+            if (focused) {
+                var selectText:SelectText = cast textView.text.component('selectText');
+                selectText.selectionStart = 0;
+                selectText.selectionEnd = textView.text.content.length;
+            }
+        });
+
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.SPACE)], function() {
+            if (focused && autocompleteCandidates != null && autocompleteCandidates.length > 0) {
+                trace('autocomplete');
+                updateAutocompleteSuggestions(true);
+            }
+        });
 
     }
 
