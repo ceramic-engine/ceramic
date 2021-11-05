@@ -509,6 +509,14 @@ class SelectText extends Entity implements Component implements Observable {
 
     }
 
+    inline function isSelectionBoundChararacter(c:String):Bool {
+
+        // TODO Make this configurable?
+
+        return c.trim() == '' || '/\\<>()[]{}-'.indexOf(c) != -1;
+
+    }
+
     function handleDoubleClick():Void {
 
         didDoubleClick = true;
@@ -523,7 +531,7 @@ class SelectText extends Entity implements Component implements Observable {
         var didSelectBefore = false;
         while (start > 0) {
             c = text.charAt(start - 1);
-            if (c.trim() == '') break;
+            if (isSelectionBoundChararacter(c)) break;
             didSelectBefore = true;
             start--;
         }
@@ -536,7 +544,7 @@ class SelectText extends Entity implements Component implements Observable {
         else {
             while (end < len) {
                 c = text.charAt(end);
-                if (c.trim() == '') break;
+                if (isSelectionBoundChararacter(c)) break;
                 end++;
             }
         }
