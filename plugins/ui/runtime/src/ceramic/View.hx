@@ -537,7 +537,7 @@ class View extends Layer {
         // Register view in global list
         if (_allViews == null) {
             _allViews = [];
-            app.onPostUpdate(null, _updateViewsLayout);
+            ViewSystem.shared.bind();
         }
         _allViews.push(this);
 
@@ -853,12 +853,15 @@ class View extends Layer {
 
 /// Internal
 
+    // This code could be moved into ViewSystem at some point, but not critical
+
     static var _layoutRequested:Bool = false;
 
     static var _layouting:Bool = false;
 
     static var _allViews:Array<View> = null;
 
+    @:allow(ceramic.ViewSystem)
     static function _updateViewsLayout(_):Void {
 
         _layoutRequested = false;
