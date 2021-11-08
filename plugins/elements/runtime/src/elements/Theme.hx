@@ -91,6 +91,8 @@ class Theme extends Model {
 
     @serialize public var buttonPressedBackgroundColor:Color = 0x4798EB;
 
+    @serialize public var buttonFocusedBorderColor:Color = 0x4798EB;
+
 /// Window
 
     @serialize public var windowBackgroundColor:Color = 0x1C1C1C;

@@ -2,12 +2,17 @@ package elements;
 
 import ceramic.Click;
 import ceramic.Color;
+import ceramic.Key;
+import ceramic.Shortcuts.*;
 import ceramic.TextView;
+import ceramic.Timer;
 import ceramic.Transform;
 import elements.Context.context;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
 import tracker.Observable;
 
-class Button extends TextView implements Observable {
+class Button extends TextView implements Observable implements TabFocusable {
 
 /// Components
 
@@ -28,9 +33,29 @@ class Button extends TextView implements Observable {
 
     @observe public var enabled:Bool = true;
 
+    @:noCompletion public var disabled(get, set):Bool;
+    function get_disabled():Bool return !enabled;
+    function set_disabled(disabled:Bool):Bool return enabled = !disabled;
+
+    @compute public function focused():Bool {
+
+        var focusedVisual = screen.focusedVisual;
+
+        unobserve();
+
+        var focused = focusedVisual == this || (focusedVisual != null && focusedVisual.hasIndirectParent(this));
+
+        reobserve();
+
+        return focused;
+
+    }
+
 /// Internal
 
     @observe var hover:Bool = false;
+
+    @observe var enterPressed:Bool = false;
 
 /// Lifecycle
 
@@ -52,17 +77,38 @@ class Button extends TextView implements Observable {
         onPointerOver(this, function(_) hover = true);
         onPointerOut(this, function(_) hover = false);
 
+        input.onKeyDown(this, handleKeyDown);
+        input.onKeyUp(this, handleKeyUp);
+
         autorun(updateStyle);
 
     }
 
 /// Internal
 
+    function handleKeyDown(key:Key) {
+
+        if (key.scanCode == ENTER && focused && !enterPressed) {
+            enterPressed = true;
+            emitClick();
+        }
+
+    }
+
+    function handleKeyUp(key:Key) {
+
+        if (key.scanCode == ENTER) {
+            enterPressed = false;
+        }
+
+    }
+
     function updateStyle() {
 
         var theme = context.theme;
-
         var enabled = this.enabled;
+        var focused = this.focused;
+        var pressed = (this.pressed || this.enterPressed);
 
         if (pressed && enabled) {
             transform.ty = 1;
@@ -117,16 +163,27 @@ class Button extends TextView implements Observable {
         else {
             if (enabled) {
                 alpha = 1;
+
                 if (pressed) {
                     color = theme.buttonPressedBackgroundColor;
-                    borderColor = theme.buttonPressedBackgroundColor;
                 }
                 else if (hover) {
                     color = theme.buttonOverBackgroundColor;
-                    borderColor = theme.lightBorderColor;
                 }
                 else {
                     color = theme.buttonBackgroundColor;
+                }
+
+                if (pressed) {
+                    borderColor = theme.buttonPressedBackgroundColor;
+                }
+                else if (focused) {
+                    borderColor = theme.buttonFocusedBorderColor;
+                }
+                else if (hover) {
+                    borderColor = theme.lightBorderColor;
+                }
+                else {
                     borderColor = theme.lightBorderColor;
                 }
             }
@@ -136,6 +193,32 @@ class Button extends TextView implements Observable {
                 borderColor = theme.lightBorderColor;
             }
         }
+
+    }
+
+    public function focus():Void {
+
+        screen.focusedVisual = this;
+
+    }
+
+/// Tab focusable
+
+    public function allowsTabFocus():Bool {
+
+        return enabled;
+
+    }
+
+    public function tabFocus():Void {
+
+        focus();
+
+    }
+
+    public function escapeTabFocus():Void {
+
+        screen.focusedVisual = null;
 
     }
 

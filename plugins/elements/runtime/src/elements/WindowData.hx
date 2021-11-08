@@ -1,6 +1,7 @@
 package elements;
 
 import ceramic.ReadOnlyArray;
+import ceramic.TextAlign;
 import ceramic.ViewSize;
 import elements.Context.context;
 import tracker.Model;
@@ -37,6 +38,24 @@ class WindowData extends Model {
     public var justClosed:Bool = false;
 
     public var closable:Bool = false;
+
+    public var movable:Bool = false;
+
+    public var collapsible:Bool = true;
+
+    public var overlay:Bool = false;
+
+    public var overlayClicked:Bool = false;
+
+    public var titleAlign:TextAlign = LEFT;
+
+    public var targetX:Float = -999999999;
+
+    public var targetY:Float = -999999999;
+
+    public var targetAnchorX:Float = -999999999;
+
+    public var targetAnchorY:Float = -999999999;
 
     public var window:Window = null;
 

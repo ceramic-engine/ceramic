@@ -185,7 +185,7 @@ class ColorPickerView extends LayersLayout implements Observable {
 
         onPointerDown(this, _ -> {});
 
-        component(new FieldsTabFocus());
+        component(new TabFocus());
 
         hsbGradientView = new ColorPickerHSBGradientView();
         hsbGradientView.viewSize(GRADIENT_SIZE, GRADIENT_SIZE);

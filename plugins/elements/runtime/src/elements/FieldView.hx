@@ -7,7 +7,9 @@ import ceramic.View;
 import elements.FieldSystem;
 import tracker.Observable;
 
-class FieldView extends LinearLayout implements Observable {
+using ceramic.Extensions;
+
+class FieldView extends LinearLayout implements Observable implements TabFocusable {
 
     static var _point = new Point();
 
@@ -105,6 +107,28 @@ class FieldView extends LinearLayout implements Observable {
 
         // To make it focusable
         onPointerDown(this, function(_) {});
+
+    }
+
+/// Tab focusable
+
+    public function allowsTabFocus():Bool {
+
+        return !this.getProperty('disabled');
+
+    }
+
+    public function tabFocus():Void {
+
+        focus();
+
+    }
+
+    public function escapeTabFocus():Void {
+
+        if (focused) {
+            screen.focusedVisual = null;
+        }
 
     }
 

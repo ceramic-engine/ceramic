@@ -2,9 +2,11 @@ package elements;
 
 import ceramic.ColumnLayout;
 import elements.Context.context;
-import elements.FieldsTabFocus;
+import elements.TabFocus;
 
 class FormLayout extends ColumnLayout {
+
+    @component public var tabFocus:TabFocus;
 
 /// Lifecycle
 
@@ -14,7 +16,7 @@ class FormLayout extends ColumnLayout {
 
         transparent = false;
 
-        component(new FieldsTabFocus());
+        tabFocus = new TabFocus();
 
         autorun(updateStyle);
 

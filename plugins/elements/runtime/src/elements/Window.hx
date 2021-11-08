@@ -4,8 +4,10 @@ import ceramic.Click;
 import ceramic.ColumnLayout;
 import ceramic.DoubleClick;
 import ceramic.Point;
+import ceramic.Quad;
 import ceramic.RowLayout;
 import ceramic.Shortcuts.*;
+import ceramic.TextAlign;
 import ceramic.TextView;
 import ceramic.TouchInfo;
 import ceramic.Triangle;
@@ -34,6 +36,14 @@ class Window extends ColumnLayout implements Observable {
     @observe public var title:String = null;
 
     @observe public var closable:Bool = false;
+
+    @observe public var collapsible:Bool = true;
+
+    @observe public var titleAlign:TextAlign = LEFT;
+
+    public var movable:Bool = true;
+
+    public var overlay:Quad = null;
 
     @event function expandCollapseClick();
 
@@ -103,7 +113,9 @@ class Window extends ColumnLayout implements Observable {
         titleView.pointSize = TITLE_TEXT_SIZE;
         titleView.preRenderedSize = FONT_PRE_RENDERED_SIZE;
         titleView.viewSize(fill(), fill());
+        titleView.align = titleAlign;
         titleView.content = '';
+        titleView.paddingLeft = 5;
         headerView.add(titleView);
 
         closeView = new View();
@@ -131,12 +143,25 @@ class Window extends ColumnLayout implements Observable {
 
         onContentViewChange(this, contentViewChange);
         onTitleChange(this, titleChange);
+        onTitleAlignChange(this, titleAlignChange);
         onClosableChange(this, closableChange);
+        onCollapsibleChange(this, collapsibleChange);
 
         autorun(updateStyle);
 
         onPointerDown(this, _ -> {});
         onPointerOver(this, _ -> {});
+
+    }
+
+    override function destroy() {
+
+        if (overlay != null) {
+            overlay.destroy();
+            overlay = null;
+        }
+
+        super.destroy();
 
     }
 
@@ -147,6 +172,9 @@ class Window extends ColumnLayout implements Observable {
     var dragging:Bool = false;
 
     function headerDown(info:TouchInfo):Void {
+
+        if (!movable)
+            return;
 
         windowPosStartX = this.x;
         windowPosStartY = this.y;
@@ -161,6 +189,12 @@ class Window extends ColumnLayout implements Observable {
     }
 
     function headerMove(info:TouchInfo):Void {
+
+        if (!movable) {
+            if (dragging)
+                dragging = false;
+            return;
+        }
 
         context.view.screenToVisual(info.x, info.y, _point);
         var diffX = _point.x - dragPointerStartX;
@@ -222,9 +256,49 @@ class Window extends ColumnLayout implements Observable {
 
     }
 
+    function titleAlignChange(titleAlign:TextAlign, prevTitleAlign:TextAlign):Void {
+
+        titleView.align = titleAlign;
+
+        if (closable) {
+            titleView.paddingRight = titleAlign == CENTER ? -closeView.viewWidth.toFloat() * 0.5 : 0;
+        }
+        else {
+            titleView.paddingRight = titleAlign == RIGHT ? 5 : 0;
+        }
+
+        if (collapsible) {
+            titleView.paddingLeft = titleAlign == CENTER ? -expandView.viewWidth.toFloat() * 0.5 : 0;
+        }
+        else {
+            titleView.paddingLeft = titleAlign == LEFT ? 5 : 0;
+        }
+
+    }
+
     function closableChange(closable:Bool, prevClosable:Bool):Void {
 
-        closeView.active = closable;
+        if (closable) {
+            closeView.active = true;
+            titleView.paddingRight = titleAlign == CENTER ? -closeView.viewWidth.toFloat() * 0.5 : 0;
+        }
+        else {
+            closeView.active = false;
+            titleView.paddingRight = titleAlign == RIGHT ? 5 : 0;
+        }
+
+    }
+
+    function collapsibleChange(collapsible:Bool, prevCollapsible:Bool):Void {
+
+        if (collapsible) {
+            expandView.active = true;
+            titleView.paddingLeft = titleAlign == CENTER ? -expandView.viewWidth.toFloat() * 0.5 : 0;
+        }
+        else {
+            expandView.active = false;
+            titleView.paddingLeft = titleAlign == LEFT ? 5 : 0;
+        }
 
     }
 

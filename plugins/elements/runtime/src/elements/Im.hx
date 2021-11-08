@@ -30,6 +30,7 @@ import ceramic.TextureFilter;
 import ceramic.TextureTile;
 import ceramic.View;
 import ceramic.ViewSize;
+import ceramic.ViewSystem;
 import ceramic.Visual;
 import elements.Context.context;
 
@@ -78,6 +79,16 @@ class Im {
 
     inline static final FLOAT_MAX_VALUE:Float = 2147483647;
 
+    inline static final DIALOG_WIDTH:Float = 300;
+
+    inline static final DIALOG_OVERFLOW_HEIGHT:Float = 400;
+
+    public static var YES:String = 'Yes';
+
+    public static var NO:String = 'No';
+
+    public static var OK:String = 'OK';
+
     static var _beginFrameCallbacks:Array<Void->Void> = [];
 
     static var _orderedWindows:Array<Window> = [];
@@ -113,6 +124,8 @@ class Im {
     static var _stringPointerValues:IntMap<String> = new IntMap<String>();
 
     static var _assetUses:Map<String,Int> = new Map();
+
+    static var _pendingChoices:Array<PendingChoice> = [];
 
     public static function extractId(key:String):String {
 
@@ -169,23 +182,112 @@ class Im {
         for (i in 0...len) {
             _orderedWindowsIterated[i] = _orderedWindows.unsafeGet(i);
         }
-        for (i in 0...len-1) {
+
+        var hasWindowWithOverlay = false;
+        for (i in 0...len) {
             var window = _orderedWindowsIterated.unsafeGet(i);
-            _orderedWindowsIterated.unsafeSet(i, null);
-            if (screen.focusedVisual != null && (screen.focusedVisual == window || screen.focusedVisual.hasIndirectParent(window))) {
-                _orderedWindows.remove(window);
-                _orderedWindows.push(window);
+            if (window.overlay != null) {
+                hasWindowWithOverlay = true;
+                break;
             }
         }
+
+        if (hasWindowWithOverlay) {
+            for (i in 0...len-1) {
+                var window = _orderedWindowsIterated.unsafeGet(i);
+                _orderedWindowsIterated.unsafeSet(i, null);
+                if (window.overlay != null && _orderedWindows[len-1].overlay == null) {
+                    _orderedWindows.remove(window);
+                    _orderedWindows.push(window);
+                }
+            }
+        }
+        else {
+            for (i in 0...len-1) {
+                var window = _orderedWindowsIterated.unsafeGet(i);
+                _orderedWindowsIterated.unsafeSet(i, null);
+                if (screen.focusedVisual != null && (screen.focusedVisual == window || screen.focusedVisual.hasIndirectParent(window))) {
+                    _orderedWindows.remove(window);
+                    _orderedWindows.push(window);
+                }
+            }
+        }
+
         var d = 1;
         for (i in 0...len) {
             var window = _orderedWindows.unsafeGet(i);
+            if (window.overlay != null) {
+                window.overlay.depth = d++;
+            }
             window.depth = d++;
         }
 
     }
 
+    static function displayPendingChoiceIfNeeded():Void {
+
+        if (_pendingChoices.length > 0) {
+
+            var choice = _pendingChoices[_pendingChoices.length - 1];
+            var clickedIndex = -1;
+            var closed = false;
+
+            var window = Im.begin(
+                'Im.pendingChoice',
+                choice.title, choice.width
+            );
+            Im.position(screen.nativeWidth * 0.5, screen.nativeHeight * 0.5, 0.5, 0.5);
+            if (Im.overlay() && choice.cancelable) {
+                closed = true;
+            }
+            Im.expanded();
+            Im.titleAlign(CENTER);
+
+            if (choice.cancelable && Im.closable()) {
+                closed = true;
+            }
+
+            Im.textAlign(CENTER);
+            Im.text(choice.message);
+
+            if (choice.choices.length == 2) {
+                Im.beginRow();
+            }
+
+            for (i in 0...choice.choices.length) {
+                var item = choice.choices.unsafeGet(i);
+
+                if (Im.button(item)) {
+                    clickedIndex = i;
+                }
+            }
+
+            if (choice.choices.length == 2) {
+                Im.endRow();
+            }
+
+            Im.end();
+
+            if (clickedIndex != -1) {
+                _pendingChoices.pop();
+                choice.callback(clickedIndex, choice.choices[clickedIndex]);
+                choice.destroy();
+            }
+            else if (closed) {
+                _pendingChoices.pop();
+                choice.destroy();
+            }
+            else if (context.focusedWindow != window) {
+                screen.focusedVisual = window;
+            }
+
+        }
+
+    }
+
     @:noCompletion public static function endFrame():Void {
+
+        displayPendingChoiceIfNeeded();
 
         updateWindowsDepth();
 
@@ -270,13 +372,16 @@ class Im {
             window.pos(windowData.x, windowData.y);
             window.viewHeight = ViewSize.auto();
             window.onHeaderDoubleClick(window, function() {
-                windowData.expanded = !windowData.expanded;
+                if (windowData.collapsible)
+                    windowData.expanded = !windowData.expanded;
             });
             window.onExpandCollapseClick(window, function() {
-                windowData.expanded = !windowData.expanded;
+                if (windowData.collapsible)
+                    windowData.expanded = !windowData.expanded;
             });
             window.onClose(window, function() {
-                windowData.justClosed = true;
+                if (windowData.closable)
+                    windowData.justClosed = true;
             });
             context.view.add(window);
             windowData.window = window;
@@ -306,11 +411,35 @@ class Im {
 
         // Mark window as used this frame
         windowData.used = true;
+
         // Mark as non closable but value can be changed
         // until Im.end() is called
         windowData.closable = false;
+
+        // Mark as movable but value can be changed
+        // until Im.end() is called
+        windowData.movable = true;
+
+        // Mark as collapsible but value can be changed
+        // until Im.end() is called
+        windowData.collapsible = true;
+
+        // Mark as titleAlign LEFT but value can be changed
+        // until Im.end() is called
+        windowData.titleAlign = LEFT;
+
+        // Mark as no overlay but value can be changed
+        // until Im.end() is called
+        windowData.overlay = false;
+
         windowData.width = width;
         windowData.height = height;
+
+        // No explicit target position (unless we call position() at this frame)
+        windowData.targetX = -999999999;
+        windowData.targetY = -999999999;
+        windowData.targetAnchorX = -999999999;
+        windowData.targetAnchorY = -999999999;
 
         // Make the window current
         _currentWindowData = windowData;
@@ -352,7 +481,52 @@ class Im {
 
     }
 
-    public static function closable(isOpen:BoolPointer):Bool {
+    public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0):Void {
+
+        var windowData = _currentWindowData;
+
+        windowData.targetX = x;
+        windowData.targetY = y;
+        windowData.targetAnchorX = anchorX;
+        windowData.targetAnchorY = anchorY;
+
+        windowData.movable = false;
+
+    }
+
+    public static function expanded():Void {
+
+        var windowData = _currentWindowData;
+
+        windowData.collapsible = false;
+        windowData.expanded = true;
+
+    }
+
+    public static function overlay():Bool {
+
+        var windowData = _currentWindowData;
+
+        windowData.overlay = true;
+
+        if (windowData.overlayClicked) {
+            windowData.overlayClicked = false;
+            return true;
+        }
+
+        return false;
+
+    }
+
+    public static function titleAlign(titleAlign:TextAlign):Void {
+
+        var windowData = _currentWindowData;
+
+        windowData.titleAlign = titleAlign;
+
+    }
+
+    public static function closable(?isOpen:BoolPointer):Bool {
 
         var windowData = _currentWindowData;
 
@@ -360,7 +534,9 @@ class Im {
 
         if (windowData.justClosed) {
             windowData.justClosed = false;
-            Im.writeBool(isOpen, false);
+            if (isOpen != null) {
+                Im.writeBool(isOpen, false);
+            }
             return true;
         }
 
@@ -1048,6 +1224,9 @@ class Im {
         }
         else {
             window.closable = windowData.closable;
+            window.movable = windowData.movable;
+            window.collapsible = windowData.collapsible;
+            window.titleAlign = windowData.titleAlign;
 
             if (!windowData.expanded) {
                 var prevContentView = window.contentView;
@@ -1107,6 +1286,10 @@ class Im {
                     else {
                         window.contentView = container;
                     }
+                }
+
+                if (form != null) {
+                    form.tabFocus.focusRoot = window;
                 }
 
                 var windowItems = windowData.items;
@@ -1245,6 +1428,38 @@ class Im {
                     }
                 }
             }
+
+            // Overlay
+            if (windowData.overlay) {
+                if (window.overlay == null) {
+                    window.overlay = new Quad();
+                    window.overlay.onPointerDown(null, _ -> {
+                        windowData.overlayClicked = true;
+                    });
+                    context.view.add(window.overlay);
+                }
+                window.overlay.color = context.theme.overlayBackgroundColor;
+                window.overlay.alpha = context.theme.overlayBackgroundAlpha;
+                window.overlay.pos(0, 0);
+                window.overlay.size(screen.nativeWidth, screen.nativeHeight);
+            }
+            else {
+                windowData.overlayClicked = false;
+                if (window.overlay != null) {
+                    window.overlay.destroy();
+                    window.overlay = null;
+                }
+            }
+
+            if (windowData.targetX != -999999999) {
+                // We update window after we are sure its content layout is done
+                ViewSystem.shared.onceEndLateUpdate(window, function(delta) {
+                    windowData.x = windowData.targetX - windowData.targetAnchorX * window.width;
+                    windowData.y = windowData.targetY - windowData.targetAnchorY * window.height;
+                    window.x = windowData.x;
+                    window.y = windowData.y;
+                });
+            }
         }
 
         // Done with this window
@@ -1324,6 +1539,143 @@ class Im {
         }
 
         return false;
+
+    }
+
+/// Confirm / Alert / Choice dialogs
+
+    public extern inline static overload function confirm(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        ?yes:String, ?no:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:(confirmed:Bool)->Void) {
+
+        _confirm(
+            title,
+            message,
+            cancelable,
+            yes, no,
+            width, height,
+            callback
+        );
+
+    }
+
+    public extern inline static overload function confirm(
+        title:String,
+        message:String,
+        cancelable:Bool = true,
+        ?yes:String, ?no:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:()->Void) {
+
+        _confirm(
+            title,
+            message,
+            cancelable,
+            yes, no,
+            width, height,
+            confirmed -> {
+                if (confirmed) {
+                    callback();
+                }
+            }
+        );
+
+    }
+
+    public static function _confirm(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        ?yes:String, ?no:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:(confirmed:Bool)->Void) {
+
+        if (yes == null)
+            yes = YES;
+
+        if (no == null)
+            no = NO;
+
+        var choice = new PendingChoice(
+            title, message, [yes, no], cancelable, width, function(index, text) {
+                if (callback != null) {
+                    var cb = callback;
+                    callback = null;
+                    cb(index == 0);
+                }
+            }
+        );
+
+        if (cancelable) {
+            input.onKeyDown(choice, key -> {
+                if (callback != null && key.scanCode == ESCAPE) {
+                    var cb = callback;
+                    callback = null;
+                    cb(false);
+
+                    _pendingChoices.remove(choice);
+                    choice.destroy();
+                }
+            });
+        }
+
+        _pendingChoices.push(choice);
+
+    }
+
+    public static function info(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        ?ok:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:()->Void) {
+
+        if (ok == null)
+            ok = OK;
+
+        var choice = new PendingChoice(
+            title, message, [ok], cancelable, width, height, function(index, text) {
+                if (callback != null) {
+                    callback();
+                }
+            }
+        );
+
+        _pendingChoices.push(choice);
+
+    }
+
+    public static function choice(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        choices:Array<String>,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:()->Void) {
+
+        if (height == WindowData.DEFAULT_HEIGHT && choices.length >= 8) {
+            height = DIALOG_OVERFLOW_HEIGHT;
+        }
+
+        var choice = new PendingChoice(
+            title, message, [].concat(choices), cancelable, width, height, function(index, text) {
+                if (callback != null) {
+                    callback();
+                }
+            }
+        );
+
+        _pendingChoices.push(choice);
 
     }
 

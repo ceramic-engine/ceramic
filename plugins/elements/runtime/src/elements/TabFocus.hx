@@ -11,9 +11,11 @@ import elements.FieldView;
 using ceramic.Extensions;
 
 /** Update field focus from tab key events */
-class FieldsTabFocus extends Entity implements Component {
+class TabFocus extends Entity implements Component {
 
     var entity:Visual;
+
+    public var focusRoot:Visual = null;
 
 /// Internal properties
 
@@ -36,13 +38,30 @@ class FieldsTabFocus extends Entity implements Component {
     function handleKeyDown(key:Key) {
 
         // Handle tab key to switch focus to next field
-        if (screen.focusedVisual != null && hasIndirectParent(screen.focusedVisual, entity)) {
+        if (screen.focusedVisual != null
+            && (
+                screen.focusedVisual == entity
+                || screen.focusedVisual.hasIndirectParent(entity)
+                || (
+                    focusRoot != null
+                    && (screen.focusedVisual == focusRoot || screen.focusedVisual.hasIndirectParent(focusRoot))
+                )
+            )) {
             if (key.scanCode == ScanCode.TAB) {
                 if (leftShiftPressed || rightShiftPressed) {
                     focusPrevField();
                 }
                 else {
                     focusNextField();
+                }
+            }
+            else if (key.scanCode == ScanCode.ESCAPE) {
+                var currentFocusable = findCurrentFocusable();
+                if (currentFocusable != null) {
+                    currentFocusable.escapeTabFocus();
+                    if (focusRoot != null && currentFocusable != findCurrentFocusable()) {
+                        screen.focusedVisual = focusRoot;
+                    }
                 }
             }
         }
@@ -73,17 +92,17 @@ class FieldsTabFocus extends Entity implements Component {
 
         // Look after currently focused field
         findingWithFocused = screen.focusedVisual;
-        var field:FieldView = findNextField(entity);
+        var focusable = findNextFocusable(entity);
 
-        if (field != null) {
-            field.focus();
+        if (focusable != null) {
+            focusable.tabFocus();
         }
         else if (screen.focusedVisual != null) {
             // Nothing found, walk from beginning
             findingWithFocused = null;
-            field = findNextField(entity);
-            if (field != null) {
-                field.focus();
+            focusable = findNextFocusable(entity);
+            if (focusable != null) {
+                focusable.tabFocus();
             }
         }
         findingWithFocused = null;
@@ -94,23 +113,23 @@ class FieldsTabFocus extends Entity implements Component {
 
         // Look before currently focused field
         findingWithFocused = screen.focusedVisual;
-        var field:FieldView = findPrevField(entity);
-        if (field != null) {
-            field.focus();
+        var focusable = findPrevFocusable(entity);
+        if (focusable != null) {
+            focusable.tabFocus();
         }
         else if (screen.focusedVisual != null) {
             // Nothing found, walk from end
             findingWithFocused = null;
-            field = findPrevField(entity);
-            if (field != null) {
-                field.focus();
+            focusable = findPrevFocusable(entity);
+            if (focusable != null) {
+                focusable.tabFocus();
             }
         }
         findingWithFocused = null;
 
     }
 
-    function findNextField(walkVisual:Visual):FieldView {
+    function findNextFocusable(walkVisual:Visual):TabFocusable {
 
         if (walkVisual == null) return null;
         if (walkVisual.children == null) return null;
@@ -122,21 +141,21 @@ class FieldsTabFocus extends Entity implements Component {
                     findingWithFocused = null;
                 }
                 else {
-                    var inside = findNextField(child);
+                    var inside = findNextFocusable(child);
                     if (inside != null) {
-                        if (!inside.getProperty('disabled'))
+                        if (inside.allowsTabFocus())
                             return inside;
                     }
                 }
             }
             else {
-                if (Std.isOfType(child, FieldView)) {
+                if (child is TabFocusable) {
                     return cast child;
                 }
                 else {
-                    var inside = findNextField(child);
+                    var inside = findNextFocusable(child);
                     if (inside != null) {
-                        if (!inside.getProperty('disabled'))
+                        if (inside.allowsTabFocus())
                             return inside;
                     }
                 }
@@ -147,7 +166,7 @@ class FieldsTabFocus extends Entity implements Component {
 
     }
 
-    function findPrevField(walkVisual:Visual):FieldView {
+    function findPrevFocusable(walkVisual:Visual):TabFocusable {
 
         if (walkVisual == null) return null;
         if (walkVisual.children == null) return null;
@@ -160,21 +179,21 @@ class FieldsTabFocus extends Entity implements Component {
                     findingWithFocused = null;
                 }
                 else {
-                    var inside = findPrevField(child);
+                    var inside = findPrevFocusable(child);
                     if (inside != null) {
-                        if (!inside.getProperty('disabled'))
+                        if (inside.allowsTabFocus())
                             return inside;
                     }
                 }
             }
             else {
-                if (Std.isOfType(child, FieldView)) {
+                if (child is TabFocusable) {
                     return cast child;
                 }
                 else {
-                    var inside = findPrevField(child);
+                    var inside = findPrevFocusable(child);
                     if (inside != null) {
-                        if (!inside.getProperty('disabled'))
+                        if (inside.allowsTabFocus())
                             return inside;
                     }
                 }
@@ -186,15 +205,18 @@ class FieldsTabFocus extends Entity implements Component {
 
     }
 
-    function hasIndirectParent(visual:Visual, targetParent:Visual):Bool {
+    function findCurrentFocusable():TabFocusable {
 
-        var parent = visual.parent;
-        while (parent != null) {
-            if (parent == targetParent) return true;
-            parent = parent.parent;
+        var focusedVisual = screen.focusedVisual;
+        if (focusedVisual != null) {
+            var visual = focusedVisual;
+            if (visual is TabFocusable) {
+                return cast visual;
+            }
+            return visual.firstParentWithClass(TabFocusable);
         }
 
-        return false;
+        return null;
 
     }
 
