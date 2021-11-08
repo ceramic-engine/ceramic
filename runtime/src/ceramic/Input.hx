@@ -75,6 +75,12 @@ class Input extends Entity {
 
     function willEmitKeyDown(key:Key):Void {
 
+        #if plugin_elements
+        // When an elements UI window is focused, do not update pressed scan/key code states
+        var context = elements.Context.context;
+        if (context == null || context.focusedWindow == null) {
+        #end
+
         var prevScan = pressedScanCodes.get(key.scanCode);
         var prevKey = pressedKeyCodes.get(key.keyCode);
 
@@ -98,21 +104,29 @@ class Input extends Entity {
             });
         }
 
+        #if plugin_elements
+        }
+        #end
+
     }
 
     function willEmitKeyUp(key:Key):Void {
 
-        pressedScanCodes.set(key.scanCode, -1);
-        pressedKeyCodes.set(key.keyCode, -1);
-        // Used to differenciate "released" and "just released" states
-        ceramic.App.app.beginUpdateCallbacks.push(function() {
-            if (pressedScanCodes.get(key.scanCode) == -1) {
-                pressedScanCodes.set(key.scanCode, 0);
-            }
-            if (pressedKeyCodes.get(key.keyCode) == -1) {
-                pressedKeyCodes.set(key.keyCode, 0);
-            }
-        });
+        var prevScan = pressedScanCodes.get(key.scanCode);
+
+        if (prevScan != 0) {
+            pressedScanCodes.set(key.scanCode, -1);
+            pressedKeyCodes.set(key.keyCode, -1);
+            // Used to differenciate "released" and "just released" states
+            ceramic.App.app.beginUpdateCallbacks.push(function() {
+                if (pressedScanCodes.get(key.scanCode) == -1) {
+                    pressedScanCodes.set(key.scanCode, 0);
+                }
+                if (pressedKeyCodes.get(key.keyCode) == -1) {
+                    pressedKeyCodes.set(key.keyCode, 0);
+                }
+            });
+        }
 
     }
 
