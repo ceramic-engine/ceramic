@@ -45,6 +45,13 @@ class Input extends Entity {
 
     #if plugin_elements
 
+    static function _elementsImFocused():Bool {
+
+        var context = elements.Context.context;
+        return (context != null && context.focusedWindow != null);
+
+    }
+
     inline function canEmitKeyDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
@@ -75,12 +82,6 @@ class Input extends Entity {
 
     function willEmitKeyDown(key:Key):Void {
 
-        #if plugin_elements
-        // When an elements UI window is focused, do not update pressed scan/key code states
-        var context = elements.Context.context;
-        if (context == null || context.focusedWindow == null) {
-        #end
-
         var prevScan = pressedScanCodes.get(key.scanCode);
         var prevKey = pressedKeyCodes.get(key.keyCode);
 
@@ -104,10 +105,6 @@ class Input extends Entity {
             });
         }
 
-        #if plugin_elements
-        }
-        #end
-
     }
 
     function willEmitKeyUp(key:Key):Void {
@@ -130,37 +127,109 @@ class Input extends Entity {
 
     }
 
-    public function keyPressed(keyCode:KeyCode):Bool {
+    public extern inline overload function keyPressed(keyCode:KeyCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _keyPressed(keyCode);
+
+    }
+
+    public extern inline overload function keyJustPressed(keyCode:KeyCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _keyJustPressed(keyCode);
+
+    }
+
+    public extern inline overload function keyJustReleased(keyCode:KeyCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _keyJustReleased(keyCode);
+
+    }
+
+    public extern inline overload function scanPressed(scanCode:ScanCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _scanPressed(scanCode);
+
+    }
+
+    public extern inline overload function scanJustPressed(scanCode:ScanCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _scanJustPressed(scanCode);
+
+    }
+
+    public extern inline overload function scanJustReleased(scanCode:ScanCode):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _scanJustReleased(scanCode);
+
+    }
+
+    public extern inline overload function keyPressed(owner:Entity, keyCode:KeyCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyPressed(keyCode);
+
+    }
+
+    public extern inline overload function keyJustPressed(owner:Entity, keyCode:KeyCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyJustPressed(keyCode);
+
+    }
+
+    public extern inline overload function keyJustReleased(owner:Entity, keyCode:KeyCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyJustReleased(keyCode);
+
+    }
+
+    public extern inline overload function scanPressed(owner:Entity, scanCode:ScanCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanPressed(scanCode);
+
+    }
+
+    public extern inline overload function scanJustPressed(owner:Entity, scanCode:ScanCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanJustPressed(scanCode);
+
+    }
+
+    public extern inline overload function scanJustReleased(owner:Entity, scanCode:ScanCode):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanJustReleased(scanCode);
+
+    }
+
+    function _keyPressed(keyCode:KeyCode):Bool {
 
         return pressedKeyCodes.get(keyCode) > 0;
 
     }
 
-    public function keyJustPressed(keyCode:KeyCode):Bool {
+    function _keyJustPressed(keyCode:KeyCode):Bool {
 
         return pressedKeyCodes.get(keyCode) == 1;
 
     }
 
-    public function keyJustReleased(keyCode:KeyCode):Bool {
+    function _keyJustReleased(keyCode:KeyCode):Bool {
 
         return pressedKeyCodes.get(keyCode) == -1;
 
     }
 
-    public function scanPressed(scanCode:ScanCode):Bool {
+    function _scanPressed(scanCode:ScanCode):Bool {
 
         return pressedScanCodes.get(scanCode) > 0;
 
     }
 
-    public function scanJustPressed(scanCode:ScanCode):Bool {
+    function _scanJustPressed(scanCode:ScanCode):Bool {
 
         return pressedScanCodes.get(scanCode) == 1;
 
     }
 
-    public function scanJustReleased(scanCode:ScanCode):Bool {
+    function _scanJustReleased(scanCode:ScanCode):Bool {
 
         return pressedScanCodes.get(scanCode) == -1;
 
@@ -230,21 +299,57 @@ class Input extends Entity {
 
     }
 
-    public function gamepadPressed(gamepadId:Int, button:GamepadButton):Bool {
+    public extern inline overload function gamepadPressed(gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _gamepadPressed(gamepadId, button);
+
+    }
+
+    public extern inline overload function gamepadJustPressed(gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _gamepadJustPressed(gamepadId, button);
+
+    }
+
+    public extern inline overload function gamepadJustReleased(gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _gamepadJustReleased(gamepadId, button);
+
+    }
+
+    public extern inline overload function gamepadPressed(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadPressed(gamepadId, button);
+
+    }
+
+    public extern inline overload function gamepadJustPressed(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadJustPressed(gamepadId, button);
+
+    }
+
+    public extern inline overload function gamepadJustReleased(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadJustReleased(gamepadId, button);
+
+    }
+
+    function _gamepadPressed(gamepadId:Int, button:GamepadButton):Bool {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         return pressedGamepadButtons.get(key) > 0;
 
     }
 
-    public function gamepadJustPressed(gamepadId:Int, button:GamepadButton):Bool {
+    function _gamepadJustPressed(gamepadId:Int, button:GamepadButton):Bool {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         return pressedGamepadButtons.get(key) == 1;
 
     }
 
-    public function gamepadJustReleased(gamepadId:Int, button:GamepadButton):Bool {
+    function _gamepadJustReleased(gamepadId:Int, button:GamepadButton):Bool {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         return pressedGamepadButtons.get(key) == -1;
