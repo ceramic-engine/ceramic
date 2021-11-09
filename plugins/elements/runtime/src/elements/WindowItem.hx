@@ -7,6 +7,7 @@ import ceramic.Pool;
 import ceramic.View;
 import ceramic.ViewSize;
 import ceramic.Visual;
+import elements.TextFieldView;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 
@@ -65,6 +66,10 @@ class WindowItem {
 
     public var string3:String = null;
 
+    public var string4:String = null;
+
+    public var any0:Any = null;
+
     public var visual:Visual = null;
 
     public var stringArray0:Array<String> = null;
@@ -116,6 +121,16 @@ class WindowItem {
             case EDIT_COLOR:
                 return isSimilarLabel(item);
 
+            #if plugin_dialogs
+
+            case EDIT_DIR:
+                return isSimilarLabel(item);
+
+            case EDIT_FILE:
+                return isSimilarLabel(item);
+
+            #end
+
             case SLIDE_FLOAT:
                 return isSimilarLabel(item);
 
@@ -160,6 +175,13 @@ class WindowItem {
             case EDIT_TEXT | EDIT_FLOAT | EDIT_INT:
                 return createOrUpdateEditTextField(view);
 
+            #if plugin_dialogs
+
+            case EDIT_DIR | EDIT_FILE:
+                return createOrUpdateEditTextField(view);
+
+            #end
+
             case EDIT_COLOR:
                 return createOrUpdateColorField(view);
 
@@ -203,6 +225,8 @@ class WindowItem {
         string1 = null;
         string2 = null;
         string3 = null;
+        string4 = null;
+        any0 = null;
         stringArray0 = null;
         if (visual != null && visual.parent == null) {
             visual.active = false;
@@ -463,6 +487,15 @@ class WindowItem {
 
     function createOrUpdateEditTextField(view:View):View {
 
+        var textFieldKind:TextFieldKind = switch kind {
+            default: TEXT;
+            case EDIT_INT | EDIT_FLOAT: TEXT;
+            #if plugin_dialogs
+            case EDIT_DIR: DIR(string3 != null ? string3 : string2);
+            case EDIT_FILE: FILE(string3 != null ? string3 : string2, any0);
+            #end
+        }
+
         var field:TextFieldView = null;
         var labeled:LabeledView<TextFieldView> = null;
         var justCreated = false;
@@ -470,7 +503,7 @@ class WindowItem {
             labeled = (view != null ? cast view : null);
             if (labeled == null) {
                 justCreated = true;
-                field = new TextFieldView();
+                field = new TextFieldView(textFieldKind);
                 labeled = new LabeledView(field);
             }
             else {
@@ -484,7 +517,7 @@ class WindowItem {
             field = (view != null ? cast view : null);
             if (field == null) {
                 justCreated = true;
-                field = new TextFieldView();
+                field = new TextFieldView(textFieldKind);
             }
         }
 
@@ -515,6 +548,7 @@ class WindowItem {
             if (justCreated || previous.float1 != float0) {
                 field.textValue = '' + float0;
             }
+            field.placeholder = string3;
         }
         else if (kind == EDIT_INT) {
             if (justCreated) {
@@ -529,7 +563,20 @@ class WindowItem {
             if (justCreated || previous.int1 != int0) {
                 field.textValue = '' + int0;
             }
+            field.placeholder = string3;
         }
+        #if plugin_dialogs
+        else if (kind == EDIT_DIR || kind == EDIT_FILE) {
+            if (justCreated) {
+                field.setValue = _editTextSetValue;
+            }
+            if (string0 != field.textValue) {
+                field.textValue = string0;
+            }
+            field.multiline = bool0;
+            field.placeholder = string3;
+        }
+        #end
 
         if (labeled != null) {
             labeled.viewWidth = ViewSize.fill();

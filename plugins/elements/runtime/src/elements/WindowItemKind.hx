@@ -14,6 +14,14 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var EDIT_COLOR;
 
+    #if plugin_dialogs
+
+    var EDIT_DIR;
+
+    var EDIT_FILE;
+
+    #end
+
     var SLIDE_FLOAT;
 
     var SLIDE_INT;

@@ -2,6 +2,7 @@ package elements;
 
 #if plugin_dialogs
 import ceramic.Dialogs;
+import ceramic.DialogsFileFilter;
 #end
 
 import ceramic.Color;
@@ -107,14 +108,14 @@ class TextFieldView extends BaseTextFieldView {
                 editText.onUpdate(this, updateFromEditText);
                 editText.onStop(this, handleStopEditText);
             #if plugin_dialogs
-            case PATH(title):
+            case DIR(title):
                 editText = null;
                 onPointerDown(this, _ -> {
                     focus();
                     app.onceUpdate(this, _ -> {
                         app.onceUpdate(this, _ -> {
                             Dialogs.openDirectory(title != null ? title : 'Select directory', path -> {
-                                trace('PATH: $path');
+                                trace('Selected directory: $path');
                                 if (path != null) {
                                     setTextValue(this, path);
                                 }
@@ -129,7 +130,7 @@ class TextFieldView extends BaseTextFieldView {
                     app.onceUpdate(this, _ -> {
                         app.onceUpdate(this, _ -> {
                             Dialogs.openFile(title != null ? title : 'Select file', filters, path -> {
-                                trace('FILE: $path');
+                                trace('Selected file: $path');
                                 if (path != null) {
                                     setTextValue(this, path);
                                 }
@@ -276,7 +277,7 @@ enum TextFieldKind {
 
     #if plugin_dialogs
 
-    PATH(?title:String);
+    DIR(?title:String);
 
     FILE(?title:String, ?filters:Array<DialogsFileFilter>);
 

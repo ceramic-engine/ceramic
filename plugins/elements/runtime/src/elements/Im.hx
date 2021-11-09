@@ -37,6 +37,10 @@ import elements.Context.context;
 using StringTools;
 using ceramic.Extensions;
 
+#if plugin_dialogs
+import ceramic.DialogsFileFilter;
+#end
+
 #if plugin_spine
 import ceramic.Spine;
 import ceramic.SpineData;
@@ -127,15 +131,17 @@ class Im {
 
     static var _pendingChoices:Array<PendingChoice> = [];
 
+    static var _displayedPendingChoice:PendingChoice = null;
+
     public static function extractId(key:String):String {
 
-        return key; // TODO smarter
+        return key;
 
     }
 
     public static function extractTitle(key:String):String {
 
-        return key; // TODO smarter
+        return key;
 
     }
 
@@ -228,57 +234,77 @@ class Im {
 
         if (_pendingChoices.length > 0) {
 
-            var choice = _pendingChoices[_pendingChoices.length - 1];
-            var clickedIndex = -1;
-            var closed = false;
-
-            var window = Im.begin(
-                'Im.pendingChoice',
-                choice.title, choice.width
-            );
-            Im.position(screen.nativeWidth * 0.5, screen.nativeHeight * 0.5, 0.5, 0.5);
-            if (Im.overlay() && choice.cancelable) {
-                closed = true;
-            }
-            Im.expanded();
-            Im.titleAlign(CENTER);
-
-            if (choice.cancelable && Im.closable()) {
-                closed = true;
-            }
-
-            Im.textAlign(CENTER);
-            Im.text(choice.message);
-
-            if (choice.choices.length == 2) {
-                Im.beginRow();
-            }
-
-            for (i in 0...choice.choices.length) {
-                var item = choice.choices.unsafeGet(i);
-
-                if (Im.button(item)) {
-                    clickedIndex = i;
+            var choice = null;
+            for (i in 0..._pendingChoices.length) {
+                var aChoice = _pendingChoices.unsafeGet(i);
+                if (!aChoice.canceled && aChoice.chosenIndex == -1) {
+                    choice = aChoice;
+                    break;
                 }
             }
 
-            if (choice.choices.length == 2) {
-                Im.endRow();
-            }
+            if (choice != null) {
 
-            Im.end();
+                var needsFocusReset = (_displayedPendingChoice != choice);
+                _displayedPendingChoice = choice;
 
-            if (clickedIndex != -1) {
-                _pendingChoices.pop();
-                choice.callback(clickedIndex, choice.choices[clickedIndex]);
-                choice.destroy();
-            }
-            else if (closed) {
-                _pendingChoices.pop();
-                choice.destroy();
-            }
-            else if (context.focusedWindow != window) {
-                screen.focusedVisual = window;
+                var clickedIndex = -1;
+                var closed = false;
+
+                var window = Im.begin(
+                    'Im.pendingChoice',
+                    choice.title, choice.width
+                );
+                Im.position(screen.nativeWidth * 0.5, screen.nativeHeight * 0.5, 0.5, 0.5);
+                if (Im.overlay() && choice.cancelable) {
+                    closed = true;
+                }
+                Im.expanded();
+                Im.titleAlign(CENTER);
+
+                if (choice.cancelable && Im.closable()) {
+                    closed = true;
+                }
+
+                Im.textAlign(CENTER);
+                Im.text(choice.message);
+
+                if (choice.choices.length == 2) {
+                    Im.beginRow();
+                }
+
+                for (i in 0...choice.choices.length) {
+                    var item = choice.choices.unsafeGet(i);
+
+                    if (Im.button(item)) {
+                        clickedIndex = i;
+                    }
+                }
+
+                if (choice.choices.length == 2) {
+                    Im.endRow();
+                }
+
+                Im.end();
+
+                if (clickedIndex != -1) {
+                    choice.callback(clickedIndex, choice.choices[clickedIndex]);
+                    choice.chosenIndex = clickedIndex;
+                    if (choice.async) {
+                        _pendingChoices.remove(choice);
+                        choice.destroy();
+                    }
+                }
+                else if (closed) {
+                    choice.canceled = true;
+                    if (choice.async) {
+                        _pendingChoices.remove(choice);
+                        choice.destroy();
+                    }
+                }
+                else if (context.focusedWindow != window || needsFocusReset) {
+                    screen.focusedVisual = window;
+                }
             }
 
         }
@@ -702,11 +728,84 @@ class Im {
 
     }
 
+    #if plugin_dialogs
+
+    public static function editDir(?title:String, value:StringPointer, ?placeholder:String):Bool {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_DIR;
+        item.string0 = Im.readString(value);
+        if (item.string0 == null)
+            item.string0 = '';
+        item.string1 = item.string0;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
+        item.string2 = title;
+        item.string3 = placeholder;
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.string0;
+            var newValue = item.previous.string1;
+            if (newValue != prevValue) {
+                item.string0 = newValue;
+                item.string1 = newValue;
+                Im.writeString(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    public static function editFile(?title:String, value:StringPointer, ?placeholder:String, ?filters:DialogsFileFilter):Bool {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = EDIT_FILE;
+        item.string0 = Im.readString(value);
+        if (item.string0 == null)
+            item.string0 = '';
+        item.string1 = item.string0;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
+        item.string2 = title;
+        item.string3 = placeholder;
+        item.any0 = filters;
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        if (item.isSameItem(item.previous)) {
+            // Did value changed from field last frame?
+            var prevValue = item.previous.string0;
+            var newValue = item.previous.string1;
+            if (newValue != prevValue) {
+                item.string0 = newValue;
+                item.string1 = newValue;
+                Im.writeString(value, newValue);
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    #end
+
     public static function editInt(
         #if completion
-        ?title:String, value:IntPointer, ?minValue:Int, ?maxValue:Int
+        ?title:String, value:IntPointer, ?placeholder:String, ?minValue:Int, ?maxValue:Int
         #else
-        ?title:String, value:IntPointer, minValue:Int = INT_MIN_VALUE, maxValue:Int = INT_MAX_VALUE
+        ?title:String, value:IntPointer, ?placeholder:String, minValue:Int = INT_MIN_VALUE, maxValue:Int = INT_MAX_VALUE
         #end
     ):Bool {
 
@@ -721,6 +820,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.string3 = placeholder;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -743,9 +843,9 @@ class Im {
 
     public static function editFloat(
         #if completion
-        ?title:String, value:FloatPointer, ?minValue:Float, ?maxValue:Float, ?decimals:Int
+        ?title:String, value:FloatPointer, ?placeholder:String, ?minValue:Float, ?maxValue:Float, ?decimals:Int
         #else
-        ?title:String, value:FloatPointer, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, decimals:Int = -1
+        ?title:String, value:FloatPointer, ?placeholder:String, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, decimals:Int = -1
         #end
     ):Bool {
 
@@ -761,6 +861,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
+        item.string3 = placeholder;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -1547,6 +1648,27 @@ class Im {
     public extern inline static overload function confirm(
         title:String,
         message:String,
+        cancelable:Bool = true,
+        ?yes:String, ?no:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        ?key:String):ConfirmStatus {
+
+        return _confirm(
+            key != null ? key : title,
+            title,
+            message,
+            cancelable,
+            yes, no,
+            width, height,
+            false, null
+        );
+
+    }
+
+    public extern inline static overload function confirm(
+        title:String,
+        message:String,
         cancelable:Bool = false,
         ?yes:String, ?no:String,
         width:Float = DIALOG_WIDTH,
@@ -1554,12 +1676,13 @@ class Im {
         callback:(confirmed:Bool)->Void) {
 
         _confirm(
+            null,
             title,
             message,
             cancelable,
             yes, no,
             width, height,
-            callback
+            true, callback
         );
 
     }
@@ -1574,12 +1697,13 @@ class Im {
         callback:()->Void) {
 
         _confirm(
+            null,
             title,
             message,
             cancelable,
             yes, no,
             width, height,
-            confirmed -> {
+            true, confirmed -> {
                 if (confirmed) {
                     callback();
                 }
@@ -1589,13 +1713,14 @@ class Im {
     }
 
     public static function _confirm(
+        key:String,
         title:String,
         message:String,
         cancelable:Bool = false,
         ?yes:String, ?no:String,
         width:Float = DIALOG_WIDTH,
         height:Float = WindowData.DEFAULT_HEIGHT,
-        callback:(confirmed:Bool)->Void) {
+        async:Bool, callback:(confirmed:Bool)->Void):ConfirmStatus {
 
         if (yes == null)
             yes = YES;
@@ -1603,34 +1728,103 @@ class Im {
         if (no == null)
             no = NO;
 
-        var choice = new PendingChoice(
-            title, message, [yes, no], cancelable, width, function(index, text) {
-                if (callback != null) {
-                    var cb = callback;
-                    callback = null;
-                    cb(index == 0);
+        var choice:PendingChoice = null;
+
+        if (key != null) {
+            key = extractId(key);
+            for (i in 0..._pendingChoices.length) {
+                var existing = _pendingChoices.unsafeGet(i);
+                if (existing.key == key) {
+                    choice = existing;
+                    break;
                 }
             }
-        );
-
-        if (cancelable) {
-            input.onKeyDown(choice, key -> {
-                if (callback != null && key.scanCode == ESCAPE) {
-                    var cb = callback;
-                    callback = null;
-                    cb(false);
-
-                    _pendingChoices.remove(choice);
-                    choice.destroy();
-                }
-            });
         }
 
-        _pendingChoices.push(choice);
+        if (choice == null) {
+            choice = new PendingChoice(
+                key, title, message, [yes, no], cancelable, width, height, async, function(index, text) {
+                    if (choice.chosenIndex != -1 || choice.canceled)
+                        return;
+
+                    choice.chosenIndex = index;
+                    if (callback != null) {
+                        var cb = callback;
+                        callback = null;
+                        cb(index == 0);
+                    }
+                }
+            );
+
+            input.onKeyDown(choice, function(key) {
+                if (choice.chosenIndex != -1 || choice.canceled)
+                    return;
+
+                if (choice.cancelable && key.scanCode == ESCAPE) {
+
+                    choice.canceled = true;
+                    if (callback != null) {
+                        var cb = callback;
+                        callback = null;
+                        cb(false);
+                    }
+
+                    if (choice.async) {
+                        _pendingChoices.remove(choice);
+                        choice.destroy();
+                    }
+                }
+            });
+
+            _pendingChoices.push(choice);
+        }
+        else {
+            choice.title = title;
+            choice.message = message;
+            choice.choices[0] = yes;
+            choice.choices[1] = no;
+            choice.cancelable = cancelable;
+            choice.width = width;
+            choice.height = height;
+        }
+
+        var status = new ConfirmStatus(
+            choice.canceled ? -2 : choice.chosenIndex
+        );
+
+        if (!choice.async && status.complete) {
+            _pendingChoices.remove(choice);
+            choice.destroy();
+        }
+
+        return status;
 
     }
 
-    public static function info(
+    public extern inline static overload function info(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        ?ok:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        ?key:String):InfoStatus {
+
+        return _info(
+            key != null ? key : title,
+            title,
+            message,
+            cancelable,
+            ok,
+            width,
+            height,
+            false,
+            null
+        );
+
+    }
+
+    public extern inline static overload function info(
         title:String,
         message:String,
         cancelable:Bool = false,
@@ -1639,43 +1833,226 @@ class Im {
         height:Float = WindowData.DEFAULT_HEIGHT,
         callback:()->Void) {
 
-        if (ok == null)
-            ok = OK;
-
-        var choice = new PendingChoice(
-            title, message, [ok], cancelable, width, height, function(index, text) {
-                if (callback != null) {
-                    callback();
-                }
-            }
+        _info(
+            null,
+            title,
+            message,
+            cancelable,
+            ok,
+            width,
+            height,
+            true,
+            callback
         );
-
-        _pendingChoices.push(choice);
 
     }
 
-    public static function choice(
+    static function _info(
+        key:String,
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        ?ok:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        async:Bool, callback:()->Void):InfoStatus {
+
+        if (ok == null)
+            ok = OK;
+
+        var choice:PendingChoice = null;
+
+        if (key != null) {
+            key = extractId(key);
+            for (i in 0..._pendingChoices.length) {
+                var existing = _pendingChoices.unsafeGet(i);
+                if (existing.key == key) {
+                    choice = existing;
+                    break;
+                }
+            }
+        }
+
+        if (choice == null) {
+            choice = new PendingChoice(
+                key, title, message, [ok], cancelable, width, height, async, function(index, text) {
+                    if (choice.chosenIndex != -1 || choice.canceled)
+                        return;
+
+                    choice.chosenIndex = index;
+                    if (callback != null) {
+                        var cb = callback;
+                        callback = null;
+                        cb();
+                    }
+                }
+            );
+
+            input.onKeyDown(choice, function(key) {
+                if (choice.chosenIndex != -1 || choice.canceled)
+                    return;
+
+                if (choice.cancelable && key.scanCode == ESCAPE) {
+
+                    choice.canceled = true;
+                    callback = null;
+
+                    if (choice.async) {
+                        _pendingChoices.remove(choice);
+                        choice.destroy();
+                    }
+                }
+            });
+
+            _pendingChoices.push(choice);
+        }
+        else {
+            choice.title = title;
+            choice.message = message;
+            choice.choices[0] = ok;
+            choice.cancelable = cancelable;
+            choice.width = width;
+            choice.height = height;
+        }
+
+        var status = new InfoStatus(
+            choice.canceled ? -2 : choice.chosenIndex
+        );
+
+        if (!choice.async && status.complete) {
+            _pendingChoices.remove(choice);
+            choice.destroy();
+        }
+
+        return status;
+
+    }
+
+    public extern inline static overload function choice(
         title:String,
         message:String,
         cancelable:Bool = false,
         choices:Array<String>,
         width:Float = DIALOG_WIDTH,
         height:Float = WindowData.DEFAULT_HEIGHT,
-        callback:()->Void) {
+        ?key:String):ChoiceStatus {
+
+        return _choice(
+            key != null ? key : title,
+            title,
+            message,
+            cancelable,
+            choices,
+            width,
+            height,
+            false,
+            null
+        );
+
+    }
+
+    public extern inline static overload function choice(
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        choices:Array<String>,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:(index:Int, text:String)->Void) {
+
+        _choice(
+            null,
+            title,
+            message,
+            cancelable,
+            choices,
+            width,
+            height,
+            true,
+            callback
+        );
+
+    }
+
+    static function _choice(
+        key:String,
+        title:String,
+        message:String,
+        cancelable:Bool = false,
+        choices:Array<String>,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        async:Bool, callback:(index:Int, text:String)->Void):ChoiceStatus {
 
         if (height == WindowData.DEFAULT_HEIGHT && choices.length >= 8) {
             height = DIALOG_OVERFLOW_HEIGHT;
         }
 
-        var choice = new PendingChoice(
-            title, message, [].concat(choices), cancelable, width, height, function(index, text) {
-                if (callback != null) {
-                    callback();
+        var choice:PendingChoice = null;
+
+        if (key != null) {
+            key = extractId(key);
+            for (i in 0..._pendingChoices.length) {
+                var existing = _pendingChoices.unsafeGet(i);
+                if (existing.key == key) {
+                    choice = existing;
+                    break;
                 }
             }
+        }
+
+        if (choice == null) {
+            choice = new PendingChoice(
+                key, title, message, async ? [].concat(choices) : choices, cancelable, width, height, async, function(index, text) {
+                    if (choice.chosenIndex != -1 || choice.canceled)
+                        return;
+
+                    choice.chosenIndex = index;
+                    if (callback != null) {
+                        var cb = callback;
+                        callback = null;
+                        cb(index, text);
+                    }
+                }
+            );
+
+            input.onKeyDown(choice, function(key) {
+                if (choice.chosenIndex != -1 || choice.canceled)
+                    return;
+
+                if (choice.cancelable && key.scanCode == ESCAPE) {
+
+                    choice.canceled = true;
+                    callback = null;
+
+                    if (choice.async) {
+                        _pendingChoices.remove(choice);
+                        choice.destroy();
+                    }
+                }
+            });
+
+            _pendingChoices.push(choice);
+        }
+        else {
+            choice.title = title;
+            choice.message = message;
+            choice.choices = choices;
+            choice.cancelable = cancelable;
+            choice.width = width;
+            choice.height = height;
+        }
+
+        var status = new ChoiceStatus(
+            choice.canceled ? -2 : choice.chosenIndex
         );
 
-        _pendingChoices.push(choice);
+        if (!choice.async && status.complete) {
+            _pendingChoices.remove(choice);
+            choice.destroy();
+        }
+
+        return status;
 
     }
 
