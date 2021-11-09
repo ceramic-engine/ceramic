@@ -503,6 +503,12 @@ class Helpers {
                     hasMissingLibs = true;
                 }
             }
+            else if (libVersion.startsWith('path:')) {
+                // Path/Dev
+                if (!FileSystem.exists(Path.join([haxelibRepoPath, libName, '.dev']))) {
+                    hasMissingLibs = true;
+                }
+            }
             else {
                 // Specific version
                 if (!FileSystem.exists(Path.join([haxelibRepoPath, libName, libVersion.trim().replace('.',',')]))) {
