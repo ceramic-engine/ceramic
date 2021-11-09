@@ -15,7 +15,7 @@ class ImSystem extends System {
         super();
 
         earlyUpdateOrder = 100;
-        lateUpdateOrder = 10000;
+        lateUpdateOrder = 6000;
 
     }
 

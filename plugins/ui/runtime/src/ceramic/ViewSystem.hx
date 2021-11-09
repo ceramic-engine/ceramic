@@ -12,7 +12,7 @@ class ViewSystem extends System {
 
         super();
 
-        lateUpdateOrder = 6000;
+        lateUpdateOrder = 7000;
 
     }
 
