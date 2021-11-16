@@ -11,7 +11,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "armeabi-v7a", "arm64-v8a" /*, "x86", "x86_64"*/
         }
     }
 
@@ -34,10 +34,10 @@ task haxeBuildRelease(type: Exec) {
     workingDir '..'
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        commandLine './build-haxe.cmd', '--archs', 'armv7,arm64,x86,x86_64'
+        commandLine './build-haxe.cmd', '--archs', 'armv7,arm64' //,x86,x86_64'
     }
     else {
-        commandLine './build-haxe.sh', '--archs', 'armv7,arm64,x86,x86_64'
+        commandLine './build-haxe.sh', '--archs', 'armv7,arm64' //,x86,x86_64'
     }
 }
 
@@ -45,10 +45,10 @@ task haxeBuildDebug(type: Exec) {
     workingDir '..'
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        commandLine './build-haxe.cmd', '--debug', '--archs', 'armv7,arm64,x86,x86_64'
+        commandLine './build-haxe.cmd', '--debug', '--archs', 'armv7,arm64' //,x86,x86_64'
     }
     else {
-        commandLine './build-haxe.sh', '--debug', '--archs', 'armv7,arm64,x86,x86_64'
+        commandLine './build-haxe.sh', '--debug', '--archs', 'armv7,arm64' //,x86,x86_64'
     }
 }
 
