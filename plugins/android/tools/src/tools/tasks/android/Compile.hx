@@ -111,10 +111,10 @@ class Compile extends tools.Task {
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
         // If not using GCC, we copy libc++_shared.so, which is recommended practice
-        if (!context.defines.exists('ceramic_android_use_gcc')) {
+        //if (!context.defines.exists('ceramic_android_use_gcc')) {
             // Copy Shared libc++ binaries if needed
             AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
-        }
+        //}
 
         // Copy OpenAL binaries if needed
         AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
