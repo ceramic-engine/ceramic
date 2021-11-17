@@ -482,6 +482,17 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                                 if (tileBelow > 0) {
                                     tileBody.forceX = true;
                                 }
+                                else if (!body.isCircle && intersects(tileBody, body)) {
+                                    var diffX = Math.max(
+                                        Math.abs(tileBody.right - body.left),
+                                        Math.abs(tileBody.left - body.right)
+                                    );
+                                    var diffY = Math.max(
+                                        Math.abs(tileBody.bottom - body.top),
+                                        Math.abs(tileBody.top - body.bottom)
+                                    );
+                                    tileBody.forceX = diffX > diffY;
+                                }
                                 else {
                                     tileBody.forceX = false;
                                 }
