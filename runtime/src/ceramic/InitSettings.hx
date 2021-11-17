@@ -88,8 +88,8 @@ class InitSettings {
      * @param windowHeight Window height
      */
     inline public function windowSize(windowWidth:Int, windowHeight:Int):Void {
-        settings.windowWidth = windowWidth;
-        settings.windowHeight = windowHeight;
+        @:privateAccess settings.windowWidth = windowWidth;
+        @:privateAccess settings.windowHeight = windowHeight;
     }
 
     /**
