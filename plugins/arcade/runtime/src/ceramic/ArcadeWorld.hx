@@ -45,7 +45,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                     return Visual;
                 if (Std.isOfType(element, Group))
                     return Group;
-                if (Std.isOfType(element, Body)) 
+                if (Std.isOfType(element, Body))
                     return Body;
                 if (Std.isOfType(element, arcade.Group))
                     return arcade.Group;
@@ -131,7 +131,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                     {
                         overlapCallback(body1, body2);
                     }
-        
+
                     _total++;
                 }
             }
@@ -162,7 +162,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         {
                             overlapCallback(body1, body2);
                         }
-            
+
                         _total++;
                     }
                 }
@@ -191,7 +191,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 {
                     overlapCallback(body, body2);
                 }
-    
+
                 _total++;
             }
         }
@@ -199,7 +199,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         return (_total > 0);
 
     }
-    
+
     override function collide(
         element1:Collidable, ?element2:Collidable,
         ?collideCallback:Body->Body->Void,
@@ -309,7 +309,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                     {
                         collideCallback(body1, body2);
                     }
-        
+
                     _total++;
                 }
             }
@@ -340,7 +340,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         {
                             collideCallback(body1, body2);
                         }
-            
+
                         _total++;
                     }
                 }
@@ -369,7 +369,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 {
                     collideCallback(body, body2);
                 }
-    
+
                 _total++;
             }
         }
@@ -462,12 +462,40 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                                 tileHeight
                             );
                             tileBody.index = index;
+
+                            // When being blocked by a wall, prioritize X over Y separation
+                            if (body.velocityY < 0 && !body.blockedDown) {
+                                var hasTileBelow = false;
+                                var indexBelow = index + layerData.width;
+                                var tileBelow = 0;
+                                for (n in 0...layers.length) {
+                                    var layer = layers.unsafeGet(i);
+                                    var layerData = layer.layerData;
+                                    if (layerData != null) {
+                                        tileBelow = indexBelow < layerData.tiles.length ? layerData.tiles.unsafeGet(indexBelow).gid : 0;
+                                        if (tileBelow > 0) {
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (tileBelow > 0) {
+                                    tileBody.forceX = true;
+                                }
+                                else {
+                                    tileBody.forceX = false;
+                                }
+                            }
+                            else {
+                                tileBody.forceX = false;
+                            }
+
                             if (separate(body, tileBody, processCallback, overlapOnly)) {
-                
+
                                 if (collideCallback != null) {
                                     collideCallback(body, tileBody);
                                 }
-                    
+
                                 _total++;
                             }
                         }
@@ -477,7 +505,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 }
                 //*/
 
-                
+
                 /*
                 var tileQuads = layer.surroundingTileQuads(body.left, body.top, body.right, body.bottom);
 
@@ -486,7 +514,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
                     // Only collide with tiles gid > 0
                     if (tileQuad.tilemapTile.gid > 0) {
-                        
+
                         // Init tile physics if needed
                         if (tileQuad.arcade == null) {
                             tileQuad.initArcadePhysics();
@@ -495,21 +523,21 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
                         var tileBody = tileQuad.arcade.body;
                         if (separate(body, tileBody, processCallback, overlapOnly)) {
-            
+
                             if (collideCallback != null) {
                                 collideCallback(body, tileBody);
                             }
-                
+
                             _total++;
                         }
-    
+
                         // var tileBody = tileQuad.arcade.body;
                         // quadTree.insert(tileBody);
                         // numInserted++;
                     }
                 }
                 //*/
-                
+
             }
 
             //var items = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
@@ -518,13 +546,13 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             // for (i in 0...items.length)
             // {
             //     var item = items.unsafeGet(i);
-    
+
             //     if (separate(body, item, processCallback, overlapOnly)) {
-    
+
             //         if (collideCallback != null) {
             //             collideCallback(body, item);
             //         }
-        
+
             //         _total++;
             //     }
             // }
@@ -542,7 +570,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         _total = 0;
 
         // TODO
-        
+
         return (_total > 0);
 
     }
