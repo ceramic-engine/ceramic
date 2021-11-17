@@ -163,37 +163,37 @@ class Input extends Entity {
 
     }
 
-    public extern inline overload function keyPressed(owner:Entity, keyCode:KeyCode):Bool {
+    public extern inline overload function keyPressed(keyCode:KeyCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyPressed(keyCode);
 
     }
 
-    public extern inline overload function keyJustPressed(owner:Entity, keyCode:KeyCode):Bool {
+    public extern inline overload function keyJustPressed(keyCode:KeyCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyJustPressed(keyCode);
 
     }
 
-    public extern inline overload function keyJustReleased(owner:Entity, keyCode:KeyCode):Bool {
+    public extern inline overload function keyJustReleased(keyCode:KeyCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _keyJustReleased(keyCode);
 
     }
 
-    public extern inline overload function scanPressed(owner:Entity, scanCode:ScanCode):Bool {
+    public extern inline overload function scanPressed(scanCode:ScanCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanPressed(scanCode);
 
     }
 
-    public extern inline overload function scanJustPressed(owner:Entity, scanCode:ScanCode):Bool {
+    public extern inline overload function scanJustPressed(scanCode:ScanCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanJustPressed(scanCode);
 
     }
 
-    public extern inline overload function scanJustReleased(owner:Entity, scanCode:ScanCode):Bool {
+    public extern inline overload function scanJustReleased(scanCode:ScanCode, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _scanJustReleased(scanCode);
 
@@ -317,19 +317,19 @@ class Input extends Entity {
 
     }
 
-    public extern inline overload function gamepadPressed(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+    public extern inline overload function gamepadPressed(gamepadId:Int, button:GamepadButton, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadPressed(gamepadId, button);
 
     }
 
-    public extern inline overload function gamepadJustPressed(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+    public extern inline overload function gamepadJustPressed(gamepadId:Int, button:GamepadButton, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadJustPressed(gamepadId, button);
 
     }
 
-    public extern inline overload function gamepadJustReleased(owner:Entity, gamepadId:Int, button:GamepadButton):Bool {
+    public extern inline overload function gamepadJustReleased(gamepadId:Int, button:GamepadButton, owner:Entity):Bool {
 
         return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _gamepadJustReleased(gamepadId, button);
 
