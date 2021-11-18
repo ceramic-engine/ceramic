@@ -177,12 +177,23 @@ class App extends Entity {
 
     @:noCompletion public var loaders:Array<(done:()->Void)->Void> = [];
 
+    /**
+     * Schedule immediate callback that is garanteed to be executed before the next time frame
+     * (before elements are drawn onto screen)
+     * @param owner Owner of this callback, allowing to cancel callback if owner is destroyed
+     * @param handleImmediate The callback to execute
+     */
     extern inline overload public function onceImmediate(owner:Entity, handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
         _onceImmediateWithOwner(owner, handleImmediate #if ceramic_debug_immediate , pos #end);
 
     }
 
+    /**
+     * Schedule immediate callback that is garanteed to be executed before the next time frame
+     * (before elements are drawn onto screen)
+     * @param handleImmediate The callback to execute
+     */
     extern inline overload public function onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
         _onceImmediate(handleImmediate #if ceramic_debug_immediate , pos #end);
@@ -199,11 +210,6 @@ class App extends Entity {
 
     }
 
-    /**
-     * Schedule immediate callback that is garanteed to be executed before the next time frame
-     * (before elements are drawn onto screen)
-     * @param handleImmediate The callback to execute
-     */
     function _onceImmediate(handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
         if (handleImmediate == null) {
@@ -230,10 +236,43 @@ class App extends Entity {
 
     /**
      * Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
+     * @param owner Owner of this callback, allowing to cancel callback if owner is destroyed
      * @param handlePostFlushImmediate The callback to execute
      * @param defer if `true` (default), will box this call into an immediate callback
      */
-    public function oncePostFlushImmediate(handlePostFlushImmediate:Void->Void, defer:Bool = true):Void {
+    extern inline overload public function oncePostFlushImmediate(owner:Entity, handlePostFlushImmediate:Void->Void, defer:Bool = true):Void {
+
+        _oncePostFlushImmediateWithOwner(owner, handlePostFlushImmediate, defer);
+
+    }
+
+    /**
+     * Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
+     * @param handlePostFlushImmediate The callback to execute
+     * @param defer if `true` (default), will box this call into an immediate callback
+     */
+    extern inline overload public function oncePostFlushImmediate(handlePostFlushImmediate:Void->Void, defer:Bool = true):Void {
+
+        _oncePostFlushImmediate(handlePostFlushImmediate, defer);
+
+    }
+
+    function _oncePostFlushImmediateWithOwner(owner:Entity, handlePostFlushImmediate:Void->Void, defer:Bool):Void {
+
+        _oncePostFlushImmediate(function() {
+            if (owner == null || !owner.destroyed) {
+                handlePostFlushImmediate();
+            }
+        }, defer);
+
+    }
+
+    /**
+     * Schedule callback that is garanteed to be executed when no immediate callback are pending anymore.
+     * @param handlePostFlushImmediate The callback to execute
+     * @param defer if `true` (default), will box this call into an immediate callback
+     */
+    function _oncePostFlushImmediate(handlePostFlushImmediate:Void->Void, defer:Bool):Void {
 
         if (!defer) {
             if (immediateCallbacksLen == 0) {
