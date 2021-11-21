@@ -3,8 +3,8 @@ package ceramic;
 import ceramic.BitmapFont;
 import ceramic.Shortcuts.*;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 /**
  * A visual to layout and display text.
@@ -12,7 +12,7 @@ using StringTools;
  */
 @editable({ implicitSize: true })
 class Text extends Visual {
-    
+
     @event function glyphQuadsChange();
 
     public var glyphQuads(default,null):Array<GlyphQuad> = [];
@@ -80,7 +80,7 @@ class Text extends Visual {
     @editable
     public var font(default, set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
-        
+
         if (font == null) {
             font = app.defaultFont;
         }
@@ -291,7 +291,7 @@ class Text extends Visual {
                 contentDirty = true;
             });
         }
-        
+
         emitGlyphQuadsChange();
 
     }
@@ -339,13 +339,13 @@ class Text extends Visual {
             content += ' ';
         }
         var len = content.length;
-        
+
         while (i < len && usedQuads < len * 2) {
 
             prevChar = char;
             prevCode = code;
-            
-            char = content.charAt(i);   
+
+            char = content.charAt(i);
             code = char.charCodeAt(0);
 
             isLineBreak = (char == "\n");
@@ -357,7 +357,7 @@ class Text extends Visual {
                 if (!justDidBreakToFit && fitWidth >= 0 && xVisible > 1 && xVisible > fitWidth - 1 && hasSpaceInLine > 0) {
                     justDidBreakToFit = true;
                     hasSpaceInLine--;
-                    
+
                     // Rewind last word because it doesn't fit
                     while (i > 0) {
                         i--;
@@ -489,7 +489,7 @@ class Text extends Visual {
                 var clippedQuadY = Math.max(clipTextY, quadY);
                 var clippedQuadWidth = Math.min(clipTextX + clipTextWidth, quadX + quadWidth) - clippedQuadX;
                 var clippedQuadHeight = Math.min(clipTextY + clipTextHeight, quadY + quadHeight) - clippedQuadY;
-                
+
                 var clippedFrameX:Float;
                 var clippedFrameY:Float;
                 var clippedFrameWidth:Float;
@@ -511,7 +511,7 @@ class Text extends Visual {
                 var clippedFrameXOffset = (clippedQuadX - quadX) * clippedFrameWidth / quadWidth;
                 clippedFrameX += clippedFrameXOffset;
                 clippedFrameWidth -= clippedFrameXOffset + (quadX + quadWidth - clippedQuadX - clippedQuadWidth) * clippedFrameWidth / quadWidth;
-                
+
                 var clippedFrameYOffset = (clippedQuadY - quadY) * clippedFrameHeight / quadHeight;
                 clippedFrameY += clippedFrameYOffset;
                 clippedFrameHeight -= clippedFrameYOffset + (quadY + quadHeight - clippedQuadY - clippedQuadHeight) * clippedFrameHeight / quadHeight;
@@ -553,7 +553,7 @@ class Text extends Visual {
                 (glyph.xOffset + glyph.width) * sizeFactor,
                 glyph.xAdvance * sizeFactor
             );
-            
+
             x += glyph.xAdvance * sizeFactor + letterSpacing;
 
             i++;
@@ -566,13 +566,13 @@ class Text extends Visual {
 
         // If we added a trailing space, ensure it doesn't add any width
         if (addTrailingSpace && usedQuads > 0) {
-            
+
             var lastQuad = glyphQuads[usedQuads-1];
             var lastLineWidth = lineWidths[lineWidths.length-1];
 
             lastLineWidth -= lastQuad.glyphAdvance;
             lineWidths[lineWidths.length-1] = lastLineWidth;
-            
+
             lastQuad.glyphAdvance = 0;
             lastQuad.visible = false;
         }
@@ -808,7 +808,7 @@ class Text extends Visual {
 
         var glyphQuads = this.glyphQuads;
         if (glyphQuads.length == 0) return 0;
-        
+
         var computedTargetLine = false;
         var targetLine = -1;
 
