@@ -22,14 +22,6 @@
 	path = git/linc_opengl
 	url = https://github.com/ceramic-engine/linc_opengl.git
 	branch = master
-[submodule "git/snow"]
-	path = git/snow
-	url = https://github.com/ceramic-engine/snow.git
-	branch = master
-[submodule "git/luxe"]
-	path = git/luxe
-	url = https://github.com/ceramic-engine/luxe.git
-	branch = master
 [submodule "git/spine-hx"]
 	path = git/spine-hx
 	url = https://github.com/jeremyfa/spine-hx.git

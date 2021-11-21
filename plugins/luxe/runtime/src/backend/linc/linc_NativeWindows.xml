@@ -1,8 +1,0 @@
-<xml>
-    <files id="haxe">
-        <compilerflag value="-I${LINC_NATIVEWINDOWS_PATH}linc/" />
-        <file name="${LINC_NATIVEWINDOWS_PATH}linc/linc_NativeWindows.cpp" />
-    </files>
-    <target id="haxe">
-    </target>
-</xml>

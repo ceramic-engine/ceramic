@@ -1,8 +1,0 @@
-<xml>
-    <files id="haxe">
-        <compilerflag value="-I${LINC_NATIVEMAC_PATH}linc/" />
-        <file name="${LINC_NATIVEMAC_PATH}linc/linc_NativeMac.mm" />
-    </files>
-    <target id="haxe">
-    </target>
-</xml>
