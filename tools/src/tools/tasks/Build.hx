@@ -85,6 +85,7 @@ class Build extends tools.Task {
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
             checkProjectHaxelibSetup(cwd, args);
+            installMissingLibsIfNeeded(cwd, args, project);
             context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
         }
 
