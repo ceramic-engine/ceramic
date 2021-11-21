@@ -2,6 +2,6 @@ plugin:
     name: Dialogs
 
     runtime:
-        if plugin_dialogs:
+        if plugin_dialogs && cpp:
             +libs:
                 - linc_dialogs: path:{plugin:cwd}/../../git/linc_dialogs
