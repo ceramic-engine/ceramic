@@ -1,20 +1,20 @@
 package tools;
 
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
+import tools.Files;
 import tools.Helpers.*;
 import tools.Project;
-import tools.Files;
-import tools.Templates;
 import tools.Sync;
-import haxe.io.Path;
-import sys.io.File;
-import sys.FileSystem;
+import tools.Templates;
 
 using StringTools;
 
 class AndroidProject {
 
     public static function createAndroidProjectIfNeeded(cwd:String, project:Project):Void {
-        
+
         var androidProjectPath = Path.join([cwd, 'project/android']);
         var androidProjectFile = Path.join([androidProjectPath, 'app/build.gradle']);
         var androidProjectAssetsPath = Path.join([androidProjectPath, 'app', 'src', 'main', 'assets', 'assets']);
@@ -112,7 +112,8 @@ class AndroidProject {
         }
         else {
             // Compute target build number from current time
-            var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M').substr(2));
+            var rawBuildNumber = DateTools.format(Date.now(), '%Y%m%d%H');
+            var targetBuildNumber = Std.parseInt(rawBuildNumber);
             // Extract current build number
             var manifestContent = File.getContent(androidManifestFile);
             var re = ~/android:versionCode="([^"]+)"/;
