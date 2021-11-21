@@ -2301,11 +2301,15 @@ class Renderer extends Entity {
         /*if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
             // Keep explicit blending
         }*/
-        /*else if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
-            blending = ceramic.Blending.ALPHA;
+        if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
+            if (quad.computedRenderTarget != null) {
+                blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
+            }
+            else {
+                blending = ceramic.Blending.ALPHA;
+            }
         }
-        else */
-        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+        else if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
             if (quad.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
@@ -2333,7 +2337,15 @@ class Renderer extends Entity {
             blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
         }
         */
-        if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+        if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
+            if (mesh.computedRenderTarget != null) {
+                blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
+            }
+            else {
+                blending = ceramic.Blending.ALPHA;
+            }
+        }
+        else if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
             if (mesh.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
@@ -2409,6 +2421,13 @@ class Renderer extends Entity {
             case RENDER_TO_TEXTURE:
                 draw.setBlendFuncSeparate(
                     backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE_MINUS_DST_ALPHA,
+                    backend.BlendMode.ONE
+                );
+            case RENDER_TO_TEXTURE_ALPHA:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.SRC_ALPHA,
                     backend.BlendMode.ONE_MINUS_SRC_ALPHA,
                     backend.BlendMode.ONE_MINUS_DST_ALPHA,
                     backend.BlendMode.ONE
