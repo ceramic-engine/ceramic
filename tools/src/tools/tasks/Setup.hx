@@ -1,9 +1,9 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import sys.FileSystem;
 import haxe.io.Path;
 import js.node.Os;
+import sys.FileSystem;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -24,6 +24,7 @@ class Setup extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
 
         checkProjectHaxelibSetup(cwd, args);
+        installMissingLibsIfNeeded(cwd, args, project);
 
         if (context.backend != null) {
 
@@ -63,13 +64,13 @@ class Setup extends tools.Task {
 
             // Update tasks?
             if (extractArgFlag(args, 'vscode')) {
-    
+
                 var task = new Vscode();
-    
+
                 var taskArgs = ['--backend', context.backend.name, '--update-tasks'];
-    
+
                 task.run(cwd, taskArgs);
-    
+
             }
 
         }
