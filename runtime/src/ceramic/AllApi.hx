@@ -39,19 +39,22 @@ import ceramic.scriptable.ScriptableAlphaColor;
 #if (ceramic_cppia_host || documentation) import ceramic.AlphaColor; #end
 import ceramic.App;
 import ceramic.Arc;
-#if plugin_arcade
-import ceramic.ArcadeSystem;
-#end
+import ceramic.ArrayPool;
+import ceramic.Assert;
 import ceramic.Asset;
 import ceramic.AssetId;
 import ceramic.AssetOptions;
 import ceramic.AssetPathInfo;
 import ceramic.Assets;
+import ceramic.AssetsLoadMethod;
+import ceramic.AssetsScheduleMethod;
 import ceramic.AssetStatus;
 import ceramic.Audio;
 import ceramic.AudioMixer;
+import ceramic.AutoCollections;
 import ceramic.BackgroundQueue;
 import ceramic.BezierEasing;
+import ceramic.BinaryAsset;
 import ceramic.BitmapFont;
 import ceramic.BitmapFontCharacter;
 import ceramic.BitmapFontData;
@@ -63,13 +66,18 @@ import ceramic.scriptable.ScriptableBlending;
 #if (ceramic_cppia_host || documentation) import ceramic.Blending; #end
 import ceramic.Border;
 import ceramic.BorderPosition;
+import ceramic.Camera;
 import ceramic.Click;
+import ceramic.Closure;
 import ceramic.Collection;
 import ceramic.CollectionEntry;
+import ceramic.CollectionUtils;
 import ceramic.scriptable.ScriptableColor;
 #if (ceramic_cppia_host || documentation) import ceramic.Color; #end
 import ceramic.Component;
 import ceramic.ComputeFps;
+import ceramic.ConvertArray;
+import ceramic.ConvertIntBoolMap;
 import ceramic.ConvertComponentMap;
 import ceramic.ConvertField;
 import ceramic.ConvertFont;
@@ -84,9 +92,11 @@ import ceramic.scriptable.ScriptableDebugRendering;
 import ceramic.DecomposedTransform;
 import ceramic.DoubleClick;
 import ceramic.Easing;
+import ceramic.EasingUtils;
 import ceramic.EditText;
 import ceramic.Entity;
 import ceramic.Enums;
+import ceramic.Equal;
 import ceramic.Errors;
 import ceramic.Extensions;
 import ceramic.FieldInfo;
@@ -102,12 +112,15 @@ import ceramic.FragmentData;
 import ceramic.FragmentItem;
 import ceramic.Fragments;
 import ceramic.FragmentsAsset;
+import ceramic.GamepadAxis;
+import ceramic.GamepadButton;
 import ceramic.GeometryUtils;
 import ceramic.GlyphQuad;
 import ceramic.Group;
 import ceramic.HashedString;
 import ceramic.ImageAsset;
 import ceramic.InitSettings;
+import ceramic.Input;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntMap;
@@ -124,37 +137,51 @@ import ceramic.Line;
 import ceramic.LineCap;
 import ceramic.LineJoin;
 import ceramic.Logger;
+import ceramic.LongPress;
+import ceramic.LowRes;
 import ceramic.Mesh;
 import ceramic.scriptable.ScriptableMeshColorMapping;
 #if (ceramic_cppia_host || documentation) import ceramic.MeshColorMapping; #end
+import ceramic.MeshExtensions;
 import ceramic.MeshPool;
+import ceramic.MouseButton;
 import ceramic.Ngon;
 #if plugin_script
 import ceramic.scriptable.ScriptableMouseButton;
 #end
 #if (ceramic_cppia_host || documentation) import ceramic.MouseButton; #end
-#if plugin_nape
-import ceramic.NapeSystem;
-#end
 import ceramic.ParticleItem;
 import ceramic.Particles;
 import ceramic.ParticlesLaunchMode;
 import ceramic.ParticlesStatus;
 import ceramic.Path;
 import ceramic.PersistentData;
+import ceramic.PixelArt;
+import ceramic.Pixels;
+import ceramic.PlatformSpecific;
 import ceramic.Point;
+import ceramic.Pool;
+import ceramic.PremultiplyAlpha;
 import ceramic.Quad;
+import ceramic.ReadOnlyArray;
+import ceramic.ReadOnlyMap;
+import ceramic.ReadOnlyPoint;
+import ceramic.Rect;
 import ceramic.Renderer;
 import ceramic.RenderTexture;
 import ceramic.ReusableArray;
 import ceramic.Runner;
 import ceramic.RuntimeAssets;
 import ceramic.ScanCode;
+import ceramic.Scene;
+import ceramic.SceneStatus;
 import ceramic.Screen;
+import ceramic.ScreenOrientation;
 import ceramic.ScreenScaling;
 import ceramic.Script;
 import ceramic.ScriptContent;
 import ceramic.ScriptModule;
+import ceramic.ScriptUtils;
 import ceramic.ScrollDirection;
 import ceramic.Scroller;
 import ceramic.ScrollerStatus;
@@ -166,15 +193,22 @@ import ceramic.ShaderAsset;
 import ceramic.ShaderAttribute;
 import ceramic.Shape;
 import ceramic.Shortcuts;
-import ceramic.SortRenderTextures;
+import ceramic.Slug;
 import ceramic.SortVisuals;
+import ceramic.SortVisualsByDepth;
 import ceramic.Sound;
 import ceramic.SoundAsset;
 import ceramic.SoundPlayer;
-// import ceramic.SqliteKeyValue;
-// import ceramic.State;
-// import ceramic.StateMachine;
-// import ceramic.StateMachineImpl;
+#if (sys && ceramic_sqlite) import ceramic.SqliteKeyValue; #end
+import ceramic.State;
+import ceramic.StateMachine;
+import ceramic.StateMachineBase;
+import ceramic.StateMachineComponent;
+import ceramic.StateMachineSystem;
+import ceramic.System;
+import ceramic.Systems;
+import ceramic.Task;
+import ceramic.Tasks;
 import ceramic.Text;
 import ceramic.TextAlign;
 import ceramic.TextAsset;
@@ -191,12 +225,15 @@ import ceramic.TimelineDegreesTrack;
 import ceramic.TimelineFloatKeyframe;
 import ceramic.TimelineFloatTrack;
 import ceramic.TimelineKeyframe;
+import ceramic.TimelineKeyframeData;
 import ceramic.TimelineTrack;
+import ceramic.TimelineTrackData;
+import ceramic.Timelines;
 import ceramic.Timer;
 import ceramic.Touch;
 import ceramic.Touches;
+import ceramic.TouchesIterator;
 import ceramic.TouchInfo;
-import ceramic.TrackEntities;
 import ceramic.TrackerBackend;
 import ceramic.Transform;
 import ceramic.TransformPool;
@@ -206,30 +243,132 @@ import ceramic.TriangulateMethod;
 import ceramic.Tween;
 import ceramic.UInt8Array;
 import ceramic.Utils;
+import ceramic.Value;
 import ceramic.ValueEntry;
 import ceramic.Velocity;
+import ceramic.VisibleBounds;
 import ceramic.Visual;
-#if plugin_arcade
-import ceramic.VisualArcadePhysics;
-#end
-#if plugin_nape
-import ceramic.VisualNapePhysics;
-#end
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 
+#if plugin_http
 import ceramic.Http;
 import ceramic.HttpMethod;
 import ceramic.HttpRequestOptions;
 import ceramic.HttpResponse;
+#end
 
 #if plugin_arcade
 import ceramic.ArcadeSystem;
 import ceramic.ArcadeWorld;
+import ceramic.ArcadeSortGroup;
+import ceramic.VisualArcadePhysics;
 import arcade.Body;
 import arcade.World;
 import arcade.SortDirection;
 import arcade.Collidable;
+#end
+
+#if plugin_nape
+import ceramic.NapeSystem;
+import ceramic.NapePhysicsBodyType;
+import ceramic.VisualNapePhysics;
+#end
+
+#if plugin_tilemap
+import ceramic.AutoTileKind;
+import ceramic.AutoTiler;
+import ceramic.ConvertTilemapData;
+import ceramic.Tilemap;
+import ceramic.TilemapAsset;
+import ceramic.TilemapData;
+import ceramic.TilemapEditor;
+import ceramic.TilemapLayer;
+import ceramic.TilemapLayerData;
+import ceramic.TilemapOrientation;
+import ceramic.TilemapParser;
+import ceramic.TilemapPlugin;
+import ceramic.TilemapQuad;
+import ceramic.TilemapRenderOrder;
+import ceramic.Tilemaps;
+import ceramic.TilemapStaggerAxis;
+import ceramic.TilemapStaggerIndex;
+import ceramic.TilemapTile;
+import ceramic.Tileset;
+import ceramic.TilesetGridOrientation;
+import ceramic.TilesetImage;
+#end
+
+#if plugin_sprite
+import ceramic.Sprite;
+import ceramic.SpriteSheet;
+import ceramic.SpriteSheetAnimation;
+import ceramic.SpriteSheetFrame;
+import ceramic.SpriteSheetImage;
+import ceramic.SpriteSystem;
+#end
+
+#if plugin_spine
+import ceramic.ConvertSpineData;
+import ceramic.Spine;
+import ceramic.SpineAsset;
+import ceramic.SpineBindVisual;
+import ceramic.SpineBindVisualOptions;
+import ceramic.SpineBounds;
+import ceramic.SpineColors;
+import ceramic.SpineData;
+import ceramic.SpineFile;
+import ceramic.SpineMontage;
+import ceramic.SpineMontageAnimation;
+import ceramic.SpineMontageDefaults;
+import ceramic.SpineMontageSettings;
+import ceramic.SpineMontageSpineSettings;
+import ceramic.SpinePlugin;
+import ceramic.SpineSystem;
+import ceramic.SpineTextureLoader;
+#end
+
+#if plugin_ui
+import ceramic.ChildrenDepth;
+import ceramic.CollectionView;
+import ceramic.CollectionViewDataSource;
+import ceramic.CollectionViewFlowLayout;
+import ceramic.CollectionViewItemFrame;
+import ceramic.CollectionViewItemPosition;
+import ceramic.CollectionViewItemsBehavior;
+import ceramic.CollectionViewLayout;
+import ceramic.ColumnLayout;
+import ceramic.ImageView;
+import ceramic.ImageViewScaling;
+import ceramic.LayersLayout;
+import ceramic.LayoutAlign;
+import ceramic.LayoutDirection;
+import ceramic.LayoutHorizontalAlign;
+import ceramic.LayoutVerticalAlign;
+import ceramic.LinearLayout;
+import ceramic.RowLayout;
+import ceramic.ScrollView;
+import ceramic.TextView;
+import ceramic.View;
+import ceramic.ViewLayoutMask;
+import ceramic.ViewSize;
+import ceramic.ViewSystem;
+#end
+
+#if (plugin_imgui && (web || cpp))
+import imgui.ImGui;
+import imgui.Helpers;
+#end
+
+#if plugin_gif
+import ceramic.GifCapture;
+#end
+
+#if plugin_elements
+import elements.Im;
+import elements.Context;
+import elements.Theme;
+import elements.Window;
 #end
 
 @:keep
@@ -253,12 +392,12 @@ class AllApi {
         interp.variables.set('settings', ceramic.Shortcuts.settings);
         //interp.variables.set('collections', ceramic.Shortcuts.collections);
         interp.variables.set('log', ceramic.Shortcuts.log);
-        
+
         interp.variables.set('Std', ceramic.scriptable.ScriptableStd);
         interp.variables.set('StringTools', StringTools);
         interp.variables.set('Math', Math);
         interp.variables.set('StringMap', haxe.ds.StringMap);
-        
+
         interp.variables.set('Autorun', tracker.Autorun);
         interp.variables.set('DynamicEvents', tracker.DynamicEvents);
         interp.variables.set('EventDispatcher', tracker.EventDispatcher);
@@ -271,7 +410,7 @@ class AllApi {
         interp.variables.set('SerializeChangeset', tracker.SerializeChangeset);
         interp.variables.set('SerializeModel', tracker.SerializeModel);
         interp.variables.set('Tracker', tracker.Tracker);
-        
+
         interp.variables.set('AlphaColor', ceramic.scriptable.ScriptableAlphaColor);
         interp.variables.set('App', ceramic.App);
         #if plugin_arcade
@@ -381,7 +520,6 @@ class AllApi {
         //interp.variables.set('Shaders', assets.Shaders);
         interp.variables.set('Shape', ceramic.Shape);
         interp.variables.set('Shortcuts', ceramic.Shortcuts);
-        interp.variables.set('SortRenderTextures', ceramic.SortRenderTextures);
         interp.variables.set('SortVisuals', ceramic.SortVisuals);
         interp.variables.set('Sound', ceramic.Sound);
         interp.variables.set('SoundAsset', ceramic.SoundAsset);
@@ -411,9 +549,7 @@ class AllApi {
         interp.variables.set('TimelineTrack', ceramic.TimelineTrack);
         interp.variables.set('Timer', ceramic.Timer);
         interp.variables.set('Touch', ceramic.Touch);
-        interp.variables.set('Touches', ceramic.Touches);
         interp.variables.set('TouchInfo', ceramic.TouchInfo);
-        interp.variables.set('TrackEntities', ceramic.TrackEntities);
         interp.variables.set('TrackerBackend', ceramic.TrackerBackend);
         interp.variables.set('Transform', ceramic.Transform);
         interp.variables.set('TransformPool', ceramic.TransformPool);
