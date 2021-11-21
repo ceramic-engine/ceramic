@@ -133,6 +133,8 @@ class Im {
 
     static var _displayedPendingChoice:PendingChoice = null;
 
+    static var _allowedOwners:Array<Entity> = [];
+
     public static function extractId(key:String):String {
 
         return key;
@@ -332,6 +334,34 @@ class Im {
 
         // Set depth
         context.view.depth = depth;
+
+    }
+
+    public static function get(key:String):Window {
+
+        var id = extractId(key);
+        var windowData = context.windowsData.get(id);
+        var window = windowData != null ? windowData.window : null;
+        return window;
+
+    }
+
+    /**
+     * Return `true` if any window is hitten given point.
+     * @param x X position (logical screen metric)
+     * @param y Y position (logical screen metric)
+     * @return Bool
+     */
+    public static function hits(x:Float, y:Float):Bool {
+
+        for (id => windowData in context.windowsData) {
+            var window = windowData.window;
+            if (window != null && window.hits(x, y)) {
+                return true;
+            }
+        }
+
+        return false;
 
     }
 
@@ -1260,7 +1290,7 @@ class Im {
 
         windowData.addItem(item);
 
-        if (item.isSameItem(item.previous)) {
+        if (enabled && item.isSameItem(item.previous)) {
             var justClicked = (item.previous.int1 == 1);
             if (justClicked) {
                 return true;
@@ -1580,6 +1610,32 @@ class Im {
 
 /// Filter event owners
 
+    public static function allow(owner:Entity):Void {
+
+        if (_allowedOwners.indexOf(owner) == -1) {
+            _allowedOwners.push(owner);
+            owner.onDestroy(null, _allowedOwnerDestroyed);
+        }
+
+    }
+
+    public static function filter(owner:Entity):Void {
+
+        if (_allowedOwners.indexOf(owner) != -1) {
+            _allowedOwners.remove(owner);
+            if (!owner.destroyed) {
+                owner.offDestroy(_allowedOwnerDestroyed);
+            }
+        }
+
+    }
+
+    static function _allowedOwnerDestroyed(owner:Entity) {
+
+        _allowedOwners.remove(owner);
+
+    }
+
     @:noCompletion inline public static function filterEventOwner(owner:Entity):Bool {
 
         // When a window is focused, block any event emit that are not related to elements UI
@@ -1604,34 +1660,48 @@ class Im {
         if (view == owner) {
             return true;
         }
-        else if (owner is Visual) {
+
+        if (owner is Visual) {
             var visual:Visual = cast owner;
-            return visual.hasIndirectParent(view);
+            if (visual.hasIndirectParent(view)) {
+                return true;
+            }
         }
-        else if (owner is Scroller) {
+
+        if (owner is Scroller) {
             var scroller:Scroller = cast owner;
             if (scroller.content != null && (scroller.content == view || scroller.content.hasIndirectParent(view))) {
                 return true;
             }
         }
-        else if (owner is Component) {
+
+        if (owner is Component) {
             var component:Component = cast owner;
             var entity = @:privateAccess component.getEntity();
             if (entity is Visual) {
                 var visual:Visual = cast entity;
-                return visual.hasIndirectParent(view);
+                if (visual.hasIndirectParent(view)) {
+                    return true;
+                }
             }
         }
-        else if (owner is KeyBinding) {
+
+        if (owner is KeyBinding) {
             var keyBinding:KeyBinding = cast owner;
             var bindings = keyBinding.bindings;
             if (bindings != null) {
                 var entity = @:privateAccess bindings.getEntity();
                 if (entity is Visual) {
                     var visual:Visual = cast entity;
-                    return visual.hasIndirectParent(view);
+                    if (visual.hasIndirectParent(view)) {
+                        return true;
+                    }
                 }
             }
+        }
+
+        if (_allowedOwners.indexOf(owner) != -1) {
+            return true;
         }
 
         var className = Type.getClassName(Type.getClass(owner));
