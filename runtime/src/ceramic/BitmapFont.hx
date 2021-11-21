@@ -82,7 +82,7 @@ class BitmapFont extends Entity {
      * Useful in some situations to reduce draw calls.
      */
     public var preRenderedPages:Map<Int,Map<Int,Texture>> = null;
-    
+
     public var asset:Asset;
 
 /// Lifecycle
@@ -126,7 +126,7 @@ class BitmapFont extends Entity {
         super.destroy();
 
         if (asset != null) asset.destroy();
-        
+
         if (pages != null) {
             for (texture in pages) {
                 texture.destroy();
@@ -226,6 +226,13 @@ class BitmapFont extends Entity {
                 renderedForSize = new Map();
                 preRenderedPages.set(pixelsSize, renderedForSize);
             }
+
+            // var pixels = renderTexture.fetchPixels();
+            // var finalTexture = Texture.fromPixels(
+            //     renderTexture.width, renderTexture.height,
+            //     pixels, renderTexture.density
+            // );
+            // renderTexture.destroy();
 
             renderedForSize.set(id, renderTexture);
 
