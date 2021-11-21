@@ -1,6 +1,6 @@
 package ceramic;
 
-#if (!completion && !display && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
+#if (!completion && !display && !documentation && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
 class StateMachineImpl<T> extends StateMachineBase {
 
     /**
@@ -119,7 +119,7 @@ class StateMachineImpl<T> extends StateMachineBase {
         if (currentStateInstance != null) {
             currentStateInstance.enter();
         }
-        
+
     }
 
     function _updateState(delta:Float):Void {
@@ -139,7 +139,7 @@ class StateMachineImpl<T> extends StateMachineBase {
             currentStateInstance.exit();
             currentStateInstance = null;
         }
-        
+
     }
 
 }

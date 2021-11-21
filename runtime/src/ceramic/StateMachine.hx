@@ -1,6 +1,6 @@
 package ceramic;
 
-#if (completion || display)
+#if (completion || display || documentation)
 
 // We avoid relying on generic build stuff when simply doing code completion
 // because haxe compiler doesn't seem to like it
