@@ -100,9 +100,9 @@ class Texture extends Entity {
      * @param density (optional) density of the texture
      * @return Texture
      */
-    public static function fromPixels(width:Int, height:Int, pixels:ceramic.UInt8Array, density:Float = -1):Texture {
+    public static function fromPixels(width:Float, height:Float, pixels:ceramic.UInt8Array, density:Float = 1):Texture {
 
-        var backendItem = app.backend.textures.createTexture(width, height, pixels);
+        var backendItem = app.backend.textures.createTexture(Math.round(width * density), Math.round(height * density), pixels);
         return new Texture(backendItem, density);
 
     }
