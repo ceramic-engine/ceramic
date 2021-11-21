@@ -163,6 +163,7 @@ class Button extends TextView implements Observable implements TabFocusable {
         else {
             if (enabled) {
                 alpha = 1;
+                text.alpha = 1;
 
                 if (pressed) {
                     color = theme.buttonPressedBackgroundColor;
@@ -189,6 +190,7 @@ class Button extends TextView implements Observable implements TabFocusable {
             }
             else {
                 alpha = 0.6;
+                text.alpha = 0.5;
                 color = theme.buttonBackgroundColor;
                 borderColor = theme.lightBorderColor;
             }
