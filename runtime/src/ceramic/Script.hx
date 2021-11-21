@@ -1,10 +1,9 @@
 package ceramic;
 
-import hscript.Parser;
-import hscript.Expr;
-
 import ceramic.AllApi;
 import ceramic.Shortcuts.*;
+import hscript.Expr;
+import hscript.Parser;
 
 class Script extends Entity implements Component {
 
@@ -52,7 +51,7 @@ class Script extends Entity implements Component {
             content = ScriptUtils.toHscript(content);
             program = parser.parseString(content);
             interp = new Interp(this);
-    
+
             AllApi.configureHscript(interp);
 
             interp.variables.set('this', this);
@@ -86,13 +85,13 @@ class Script extends Entity implements Component {
     override function destroy() {
 
         super.destroy();
-        
+
     }
 
     function bindAsComponent():Void {
 
         if (ready && !running) {
-            
+
             interp.variables.set('entity', entity);
             if (Std.isOfType(entity, Visual)) {
                 interp.variables.set('visual', entity);
@@ -145,7 +144,7 @@ class Script extends Entity implements Component {
 
     }
 
-    public function getEntity(itemId:String):Entity {
+    public function getEntityById(itemId:String):Entity {
 
         if (Std.isOfType(entity, Visual)) {
             // Try to get fragment from visual
@@ -172,13 +171,13 @@ class Script extends Entity implements Component {
         }
 
         return null;
-        
+
     }
 
     public function getModule(itemId:String):ScriptModule {
 
         #if plugin_script
-        var entity = getEntity(itemId);
+        var entity = getEntityById(itemId);
 
         if (entity != null) {
             var script = entity.script;
@@ -187,13 +186,13 @@ class Script extends Entity implements Component {
             }
         }
         #end
-        
+
         return null;
-        
+
     }
 
     public function get(name:String):Dynamic {
-        
+
         return interp != null && interp.variables.get(name);
 
     }
