@@ -184,6 +184,8 @@ class ColorPickerView extends LayersLayout implements Observable {
         roundTranslation = 1;
 
         onPointerDown(this, _ -> {});
+        onPointerOver(this, _ -> {});
+        onPointerOut(this, _ -> {});
 
         component(new TabFocus());
 

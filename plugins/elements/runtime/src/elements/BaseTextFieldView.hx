@@ -478,4 +478,35 @@ class BaseTextFieldView extends FieldView {
 
     }
 
+    override function hitsSelfOrDerived(x:Float, y:Float):Bool {
+
+        return hits(x, y) || (suggestionsView != null && suggestionsView.computedVisible && suggestionsView.hits(x, y));
+
+    }
+
+    override function usesScanCode(scanCode:ScanCode):Bool {
+
+        if (super.usesScanCode(scanCode))
+            return true;
+
+        if (suggestionsView == null || suggestions == null || suggestions.length == 0)
+            return false;
+
+        if (scanCode == ScanCode.ESCAPE) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.DOWN) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.UP) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.ENTER) {
+            return true;
+        }
+
+        return false;
+
+    }
+
 }

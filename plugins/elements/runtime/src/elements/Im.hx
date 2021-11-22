@@ -21,6 +21,7 @@ import ceramic.LongPress;
 import ceramic.Quad;
 import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
+import ceramic.ScanCode;
 import ceramic.Scroller;
 import ceramic.SelectText;
 import ceramic.Shortcuts.*;
@@ -359,6 +360,27 @@ class Im {
             if (window != null && window.hits(x, y)) {
                 return true;
             }
+        }
+
+        var field = FieldSystem.shared.focusedField;
+        if (field != null) {
+            return field.hitsSelfOrDerived(x, y);
+        }
+
+        return false;
+
+    }
+
+    /**
+     * Returns `true` if there is a currently focused field that uses the given scan code
+     * @param scanCode The scan code to test
+     * @return `true` if this scan code is used
+     */
+    public static function usesScanCode(scanCode:ScanCode):Bool {
+
+        var field = FieldSystem.shared.focusedField;
+        if (field != null) {
+            return field.usesScanCode(scanCode);
         }
 
         return false;
@@ -1207,7 +1229,6 @@ class Im {
                 if (visual.parent != null) {
                     visual.parent.remove(visual);
                 }
-                var spine:Spine = visual;
                 visual.spineData = spineData;
                 visual.skin = skin;
                 visual.scale(1, 1);

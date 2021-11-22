@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.LinearLayout;
 import ceramic.Point;
+import ceramic.ScanCode;
 import ceramic.Shortcuts.*;
 import ceramic.View;
 import elements.FieldSystem;
@@ -129,6 +130,18 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
         if (focused) {
             screen.focusedVisual = null;
         }
+
+    }
+
+    public function hitsSelfOrDerived(x:Float, y:Float):Bool {
+
+        return hits(x, y);
+
+    }
+
+    public function usesScanCode(scanCode:ScanCode):Bool {
+
+        return focused && (scanCode == ESCAPE || scanCode == ENTER);
 
     }
 

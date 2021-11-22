@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.Color;
 import ceramic.EditText;
+import ceramic.GeometryUtils;
 import ceramic.LayersLayout;
 import ceramic.Point;
 import ceramic.Quad;
@@ -493,6 +494,28 @@ class ColorFieldView extends FieldView {
         }
 
         reobserve();
+
+    }
+
+    override function hitsSelfOrDerived(x:Float, y:Float):Bool {
+
+        return hits(x, y) || (pickerVisible && pickerView != null && pickerView.hits(x, y));
+
+    }
+
+    override function usesScanCode(scanCode:ScanCode):Bool {
+
+        if (super.usesScanCode(scanCode))
+            return true;
+
+        if (!pickerVisible || pickerView == null)
+            return false;
+
+        if (scanCode == ScanCode.ESCAPE || scanCode == ScanCode.ENTER) {
+            return true;
+        }
+
+        return false;
 
     }
 

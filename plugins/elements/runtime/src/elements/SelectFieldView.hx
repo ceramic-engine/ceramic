@@ -498,4 +498,41 @@ class SelectFieldView extends FieldView {
 
     }
 
+    override function hitsSelfOrDerived(x:Float, y:Float):Bool {
+
+        return hits(x, y) || (listView != null && listView.computedVisible && listView.hits(x, y));
+
+    }
+
+    override function usesScanCode(scanCode:ScanCode):Bool {
+
+        if (super.usesScanCode(scanCode))
+            return true;
+
+        if (listView == null || !listView.computedVisible)
+            return false;
+
+        if (scanCode == ScanCode.ESCAPE) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.DOWN) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.UP) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.ENTER) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.SPACE) {
+            return true;
+        }
+        else if (focused && scanCode == ScanCode.BACKSPACE) {
+            return true;
+        }
+
+        return false;
+
+    }
+
 }
