@@ -26,6 +26,24 @@ class GeometryUtils {
     }
 
     /**
+     * Returns `true` if the point `(x,y)` is inside the given (rectX, rectY, rectWidth, rectHeight) rectangle
+     */
+    public static function pointInRectangle(x:Float, y:Float, rectX:Float, rectY:Float, rectWidth:Float, rectHeight:Float):Bool {
+
+        if (x < rectX)
+            return false;
+        if (y < rectY)
+            return false;
+        if (x >= rectX + rectWidth)
+            return false;
+        if (y >= rectY + rectHeight)
+            return false;
+
+        return true;
+
+    }
+
+    /**
      * Returns `true` if the point `(x,y)` is inside the given (cx, cy, radius) circle
      */
     public static inline function pointInCircle(x:Float, y:Float, cx:Float, cy:Float, radius:Float):Bool {
