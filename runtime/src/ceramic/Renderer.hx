@@ -620,7 +620,7 @@ class Renderer extends Entity {
             g = 0;
             b = 0;
         }
-        else if (quadDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+        else if (/*quadDrawsRenderTexture || */ lastComputedBlending == ceramic.Blending.ALPHA) {
             a = quad.computedAlpha;
             r = quad.color.redFloat;
             g = quad.color.greenFloat;
@@ -934,7 +934,7 @@ class Renderer extends Entity {
                         g = 0;
                         b = 0;
                     }
-                    else if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                    else if (/*meshDrawsRenderTexture ||*/ lastComputedBlending == ceramic.Blending.ALPHA) {
                         var meshAlphaColor = meshColors.unsafeGet(0);
                         a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
                         r = meshAlphaColor.redFloat;
@@ -2301,7 +2301,7 @@ class Renderer extends Entity {
         /*if (blending == ceramic.Blending.PREMULTIPLIED_ALPHA) {
             // Keep explicit blending
         }*/
-        if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
+        /*if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
             if (quad.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
             }
@@ -2309,7 +2309,7 @@ class Renderer extends Entity {
                 blending = ceramic.Blending.ALPHA;
             }
         }
-        else if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+        else*/ if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
             if (quad.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
@@ -2337,7 +2337,7 @@ class Renderer extends Entity {
             blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
         }
         */
-        if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
+        /*if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
             if (mesh.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
             }
@@ -2345,7 +2345,7 @@ class Renderer extends Entity {
                 blending = ceramic.Blending.ALPHA;
             }
         }
-        else if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
+        else*/ if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
             if (mesh.computedRenderTarget != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
