@@ -227,6 +227,7 @@ class BitmapFont extends Entity {
                 preRenderedPages.set(pixelsSize, renderedForSize);
             }
 
+            // Not used, but we keep that snippet around
             // var pixels = renderTexture.fetchPixels();
             // var finalTexture = Texture.fromPixels(
             //     renderTexture.width, renderTexture.height,
