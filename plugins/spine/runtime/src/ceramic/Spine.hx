@@ -459,11 +459,6 @@ class Spine extends Visual {
 
         }
 
-        // Restore explicit animation name
-        if (!destroyed && animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
-            animate(animation, loop, 0);
-        }
-
         // Restore explicit skin name
         if (!destroyed && skin != null && skeleton != null) {
             var spineSkin:Skin = skeletonData.findSkin(skin == null ? 'default' : skin);
@@ -471,7 +466,13 @@ class Spine extends Visual {
                 log.warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
             } else {
                 skeleton.setSkin(spineSkin);
+                skeleton.setSlotsToSetupPose();
             }
+        }
+
+        // Restore explicit animation name
+        if (!destroyed && animation != null && skeletonData != null && skeletonData.findAnimation(animation) != null) {
+            animate(animation, loop, 0);
         }
 
         return spineData;
@@ -487,6 +488,7 @@ class Spine extends Visual {
                 log.warning('Skin not found: ' + (skin == null ? 'default' : skin) + ' (skeleton: ' + skeletonData.name + ')');
             } else {
                 skeleton.setSkin(spineSkin);
+                skeleton.setSlotsToSetupPose();
             }
         }
         if (animation != null) {
