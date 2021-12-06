@@ -1,7 +1,7 @@
 {
   "name": "ceramic-tools",
-  "version": "0.9.2",
-  "description": "Cross-platform 2D multimedia framework",
+  "version": "0.9.3",
+  "description": "Cross-platform 2D framework written in Haxe",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "node_modules/.bin/node post-install.js",
