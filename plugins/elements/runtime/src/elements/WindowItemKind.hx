@@ -36,4 +36,6 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var SPACE;
 
+    var LIST;
+
 }

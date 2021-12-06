@@ -70,6 +70,8 @@ class WindowItem {
 
     public var any0:Any = null;
 
+    public var any1:Any = null;
+
     public var visual:Visual = null;
 
     public var stringArray0:Array<String> = null;
@@ -152,6 +154,9 @@ class WindowItem {
             case CHECK:
                 return isSimilarLabel(item);
 
+            case LIST:
+                return isSimilarLabel(item);
+
         }
 
     }
@@ -203,6 +208,9 @@ class WindowItem {
             case CHECK:
                 return createOrUpdateBooleanField(view);
 
+            case LIST:
+                return createOrUpdateList(view);
+
         }
 
     }
@@ -227,6 +235,7 @@ class WindowItem {
         string3 = null;
         string4 = null;
         any0 = null;
+        any1 = null;
         stringArray0 = null;
         if (visual != null && visual.parent == null) {
             visual.active = false;
@@ -877,6 +886,34 @@ class WindowItem {
     function _buttonClick():Void {
 
         int1 = 1;
+
+    }
+
+    function createOrUpdateList(view:View):View {
+
+        var button:Button = (view != null ? cast view : null);
+        var justCreated = false;
+        if (button == null) {
+            justCreated = true;
+            button = new Button();
+        }
+        if (button.content != string0) {
+            button.content = string0;
+        }
+        if (button.enabled != bool0) {
+            button.enabled = bool0;
+        }
+        button.data = this;
+        if (justCreated) {
+            button.onClick(null, function() {
+                var windowItem:WindowItem = button.hasData ? button.data : null;
+                if (windowItem != null) {
+                    windowItem._buttonClick();
+                }
+            });
+        }
+        button.viewWidth = ViewSize.fill();
+        return button;
 
     }
 

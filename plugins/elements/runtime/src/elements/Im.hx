@@ -622,6 +622,26 @@ class Im {
 
     }
 
+    public static function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false):Bool {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = LIST;
+        item.int0 = Im.readInt(selected);
+        item.int1 = item.int0;
+        item.labelPosition = _labelPosition;
+        item.labelWidth = _labelWidth;
+        item.any0 = Im.readArray(items);
+        item.any1 = item.any0;
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+        return false;
+
+    }
+
     public inline extern static overload function select(?title:String, value:StringPointer, list:Array<String>, labelPosition:LabelPosition = RIGHT, labelWidth:Float = DEFAULT_LABEL_WIDTH, ?nullValueText:String):Bool {
 
         var index:Int = list.indexOf(Im.readString(value));
@@ -2291,6 +2311,18 @@ class Im {
 
     }
 
+    inline public static function readArray(arrayPointer:ArrayPointer):Array<Dynamic> {
+
+        return arrayPointer();
+
+    }
+
+    inline public static function writeArray(arrayPointer:ArrayPointer, value:Array<Dynamic>):Void {
+
+        arrayPointer(value, value == null);
+
+    }
+
     inline public static function readBool(boolPointer:BoolPointer):Bool {
 
         return boolPointer();
@@ -2408,6 +2440,24 @@ class Im {
             case _:
                 macro function(?_val:Float):Float {
                     return _val != null ? $value = _val : $value;
+                };
+        }
+
+    }
+
+    macro public static function array(?value:Expr):Expr {
+
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                macro {
+                    var handle = elements.Im.handle();
+                    function(?_val:Array<Dynamic>, ?erase:Bool):String {
+                        return _val != null || erase ? elements.Im.setArrayAtHandle(handle, _val) : elements.Im.arrayAtHandle(handle);
+                    };
+                }
+            case _:
+                macro function(?_val:Array<Dynamic>, ?erase:Bool):String {
+                    return _val != null || erase ? $value = _val : $value;
                 };
         }
 
