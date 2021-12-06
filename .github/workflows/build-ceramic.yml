@@ -38,10 +38,11 @@ jobs:
           submodules: true
       - name: Checkout submodules
         run: git submodule update --init --recursive
-      - uses: actions/setup-node@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup haxe
+      - name: Setup Haxe
         working-directory: .
         run: |
           $NEKOPATH = $(Convert-Path .)+'/git/haxe-binary/windows/neko'
@@ -126,10 +127,11 @@ jobs:
           submodules: true
       - name: Checkout submodules
         run: git submodule update --init --recursive
-      - uses: actions/setup-node@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup haxe
+      - name: Setup Haxe
         working-directory: .
         run: |
           set -ex
@@ -222,10 +224,11 @@ jobs:
           submodules: true
       - name: Checkout submodules
         run: git submodule update --init --recursive
-      - uses: actions/setup-node@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
         with:
           node-version: '10.16.3'
-      - name: Setup haxe
+      - name: Setup Haxe
         working-directory: .
         run: |
           export NEKOPATH=$PWD'/git/haxe-binary/linux/neko'
