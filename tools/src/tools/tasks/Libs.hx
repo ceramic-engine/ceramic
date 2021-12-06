@@ -29,32 +29,6 @@ class Libs extends tools.Task {
             return context.colors ? str.gray() : str;
         }
 
-        if (context.backend != null) {
-
-            var availableTargets = context.backend.getBuildTargets();
-            var targetName = getTargetName(args, availableTargets);
-
-            if (targetName == null) {
-                fail('You must specify a target.');
-            }
-
-            // Find target from name
-            //
-            var target = null;
-            for (aTarget in availableTargets) {
-
-                if (aTarget.name == targetName) {
-                    target = aTarget;
-                    break;
-                }
-
-            }
-
-            if (target == null) {
-                fail('Unknown target: $targetName');
-            }
-        }
-
         var project = new tools.Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
         project.loadAppFile(projectPath);
