@@ -1,6 +1,5 @@
 package;
 
-import ceramic.Text;
 import ceramic.Quad;
 import ceramic.Scene;
 
@@ -8,12 +7,10 @@ class MainScene extends Scene {
 
     var logo:Quad;
 
-    var text:Text;
-    
     override function preload() {
 
         // Add any asset you want to load here
-        
+
         assets.add(Images.CERAMIC);
 
     }
@@ -21,7 +18,7 @@ class MainScene extends Scene {
     override function create() {
 
         // Called when scene has finished preloading
-        
+
         // Display logo
         logo = new Quad();
         logo.texture = assets.texture(Images.CERAMIC);
@@ -43,7 +40,7 @@ class MainScene extends Scene {
     }
 
     override function update(delta:Float) {
-        
+
         // Here, you can add code that will be executed at every frame
 
     }
@@ -61,5 +58,5 @@ class MainScene extends Scene {
         super.destroy();
 
     }
-    
+
 }
