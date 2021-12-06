@@ -311,3 +311,15 @@ jobs:
           asset_path: ./ceramic-linux.zip
           asset_name: ceramic-linux.zip
           asset_content_type: application/zip
+
+  generate-api-docs:
+    needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Dispatch event
+        uses: ceramic-engine/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_PUBLIC }}
+          repository: ceramic-engine/api-docs
+          event-type: deploy-api-docs
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
