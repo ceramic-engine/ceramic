@@ -56,6 +56,7 @@ class Build extends tools.Task {
         var debug = context.debug;
         var noSkip = extractArgFlag(args, 'no-skip') || context.defines.exists('ceramic_no_skip');
         var archs = extractArgValue(args, 'archs');
+        var didSkipCompilation = false;
 
         switch (config) {
             case Build(displayName):
@@ -128,6 +129,7 @@ class Build extends tools.Task {
                 };
             } else {
                 print('Skip haxe compilation');
+                didSkipCompilation = true;
             }
         }
 
@@ -308,6 +310,9 @@ class Build extends tools.Task {
                     taskArgs.push('--debug');
                 if (electronErrors) {
                     taskArgs.push('--electron-errors');
+                }
+                if (didSkipCompilation) {
+                    taskArgs.push('--did-skip-compilation');
                 }
                 if (context.defines.exists('ceramic_web_minify')) {
                     taskArgs.push('--minify');

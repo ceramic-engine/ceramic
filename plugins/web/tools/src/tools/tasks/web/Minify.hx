@@ -1,9 +1,9 @@
 package tools.tasks.web;
 
-import sys.io.File;
-import sys.FileSystem;
-import tools.Helpers.*;
 import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -29,6 +29,8 @@ class Minify extends tools.Task {
         var cmdArgs = [terserCmd];
 
         cmdArgs.push('$jsName.js');
+
+        print('Minify javascript');
 
         if (context.debug || context.defines.exists('js-source-map')) {
             if (FileSystem.exists(Path.join([webProjectPath, '$jsName.js.map']))) {

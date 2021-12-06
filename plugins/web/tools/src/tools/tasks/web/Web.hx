@@ -1,20 +1,18 @@
 package tools.tasks.web;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Colors;
-import tools.Files;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
+import js.node.ChildProcess;
+import js.node.Os;
+import npm.Chokidar;
+import npm.Fiber;
+import npm.StreamSplitter;
 import sys.FileSystem;
 import sys.io.File;
-
-import js.node.Os;
-import js.node.ChildProcess;
-
-import npm.StreamSplitter;
-import npm.Fiber;
-import npm.Chokidar;
+import tools.Colors;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -41,6 +39,7 @@ class Web extends tools.Task {
         var doMinify = extractArgFlag(args, 'minify');
         var doHotReload = extractArgFlag(args, 'hot-reload');
         var electronErrors = extractArgFlag(args, 'electron-errors');
+        var didSkipCompilation = extractArgFlag(args, 'did-skip-compilation');
 
         // Create web project if needed
         WebProject.createWebProjectIfNeeded(cwd, project);
@@ -92,7 +91,7 @@ class Web extends tools.Task {
         }
 
         // Minify?
-        if (doMinify) {
+        if (doMinify && !didSkipCompilation) {
             runTask('web minify');
         }
 
@@ -134,7 +133,7 @@ class Web extends tools.Task {
         if (htmlContentChanged) {
             File.saveContent(webProjectFilePath, htmlContent);
         }
-    
+
         // Stop if not running
         if (!doRun) return;
 
@@ -160,7 +159,7 @@ class Web extends tools.Task {
             cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
 
             var proc = null;
-            
+
             if (Sys.systemName() == 'Windows') {
                 proc = ChildProcess.spawn(
                     Path.join([context.ceramicRunnerPath, 'electron.cmd']),
@@ -220,19 +219,19 @@ class Web extends tools.Task {
 
             // if (doHotReload) {
             //     // JS hot reload server
-    
+
             //     var argPort = extractArgValue(args, 'hot-reload-port');
             //     var port = argPort != null ? Std.parseInt(argPort) : 3220;
             //     if (port < 1024) {
             //         fail('Invalid port $argPort');
             //     }
-    
+
             //     var server = new HotReloadServer(
             //         webProjectPath,
             //         project.app.name + '.js',
             //         port
             //     );
-    
+
             //     var watcher = Chokidar.watch([
             //         Path.join([cwd, 'src/**/*.hx']),
             //         Path.join([webProjectPath, project.app.name + '.js'])
@@ -240,19 +239,19 @@ class Web extends tools.Task {
             //         ignoreInitial: true,
             //         cwd: cwd
             //     });
-    
+
             //     var scheduledDelay:Dynamic = null;
             //     var building = false;
-    
+
             //     function doBuild() {
 
             //         if (building) {
             //             js.Node.setTimeout(doBuild, 500);
             //             return;
             //         }
-    
+
             //         scheduledDelay = null;
-    
+
             //         var buildArgs = ['build', 'web', '--variant', context.variant];
             //         if (context.debug)
             //             buildArgs.push('--debug');
@@ -261,18 +260,18 @@ class Web extends tools.Task {
             //             runTask('luxe build', buildArgs);
             //             building = false;
             //         }).run();
-    
+
             //     }
-    
+
             //     function scheduleBuild() {
-    
+
             //         if (scheduledDelay != null)
             //             js.Node.clearTimeout(scheduledDelay);
-                    
+
             //         scheduledDelay = js.Node.setTimeout(doBuild, 500);
-    
+
             //     }
-    
+
             //     watcher.on('add', (path, stats) -> {
             //         print('Added: $path');
             //         if (path.endsWith('.hx')) {
