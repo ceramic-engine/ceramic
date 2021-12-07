@@ -1,13 +1,12 @@
 package ceramic.macros;
 
+import ceramic.Csv;
+import haxe.Json;
+import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.io.Path;
-import haxe.Json;
-import sys.io.File;
 import sys.FileSystem;
-
-import ceramic.Csv;
+import sys.io.File;
 
 using StringTools;
 
@@ -26,19 +25,19 @@ class CollectionsMacro {
         #else
         var useDynamic = Context.defined('cpp');
         #end
-        
+
         var data = ceramic.macros.AppMacro.getComputedInfo(Context.definedValue('app_info'));
         var pos = Context.currentPos();
 
         var assetsPath = Context.definedValue('assets_path');
         var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
         var pluginsAssetsPaths:Array<String> = [];
-        var pluginsAssetsPathsRaw = Context.definedValue('ceramic_plugins_assets_paths');
+        var pluginsAssetsPathsRaw = Context.definedValue('ceramic_extra_assets_paths');
         if (pluginsAssetsPathsRaw != null) {
             pluginsAssetsPaths = Json.parse(Json.parse(pluginsAssetsPathsRaw));
         }
         var allAssetsPaths = [assetsPath].concat(pluginsAssetsPaths).concat([ceramicAssetsPath]);
-        
+
         for (key in Reflect.fields(data.collections)) {
             for (collectionName in Reflect.fields(Reflect.field(data.collections, key))) {
                 var collectionInfo:Dynamic = Reflect.field(Reflect.field(data.collections, key), collectionName);
@@ -135,7 +134,7 @@ class CollectionsMacro {
                                 }
 
                                 var kind;
-                                
+
                                 if (useDynamic) {
                                     // On some targets, we need to compile the mapping as Dynamic
                                     // because they don't play well with static ones.

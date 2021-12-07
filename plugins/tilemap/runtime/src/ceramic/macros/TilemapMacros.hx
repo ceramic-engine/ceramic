@@ -1,14 +1,13 @@
 package ceramic.macros;
 
+import ceramic.Path;
 import ceramic.macros.AssetsMacro;
 import ceramic.macros.MacroCache;
-
+import haxe.Json;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import ceramic.Path;
-import haxe.Json;
-import sys.io.File;
 import sys.FileSystem;
+import sys.io.File;
 
 using StringTools;
 
@@ -19,7 +18,7 @@ class TilemapMacros {
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
         var assetsPath = Context.definedValue('assets_path');
-        var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_plugins_assets_paths');
+        var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_extra_assets_paths');
         var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
 
         AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);

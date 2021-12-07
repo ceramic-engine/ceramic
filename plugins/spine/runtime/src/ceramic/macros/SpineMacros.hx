@@ -1,14 +1,13 @@
 package ceramic.macros;
 
+import ceramic.Path;
 import ceramic.macros.AssetsMacro;
 import ceramic.macros.MacroCache;
-
+import haxe.Json;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import ceramic.Path;
-import haxe.Json;
-import sys.io.File;
 import sys.FileSystem;
+import sys.io.File;
 
 using StringTools;
 
@@ -22,7 +21,7 @@ class SpineMacros {
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
         var assetsPath = Context.definedValue('assets_path');
-        var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_plugins_assets_paths');
+        var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_extra_assets_paths');
         var ceramicPluginsAssetsPaths:Array<String> = [];
         if (ceramicPluginsAssetsPathsRaw != null) {
             ceramicPluginsAssetsPaths = Json.parse(Json.parse(ceramicPluginsAssetsPathsRaw));
@@ -36,7 +35,7 @@ class SpineMacros {
         if (cacheData == null) {
             cacheData = new Map();
             for (field in nameFields) {
-            
+
                 var spineDir = field.doc;
                 var hasFile = false;
                 if (FileSystem.exists(Path.join([assetsPath, spineDir]))) {

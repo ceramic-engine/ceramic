@@ -1,9 +1,9 @@
 package ceramic.macros;
 
+import haxe.Json;
+import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.io.Path;
-import haxe.Json;
 import sys.FileSystem;
 
 using StringTools;
@@ -29,8 +29,8 @@ class AssetsMacro {
         #if ceramic_debug_macro
         trace(Context.getLocalClass() + ' -> BEGIN AssetsMacro.buildNames($kind, $extensions, $dir)');
         #end
-        
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_plugins_assets_paths'), Context.definedValue('ceramic_assets_path'));
+
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -88,7 +88,7 @@ class AssetsMacro {
 
                         baseName = name.substr(0, Std.int(Math.min(baseAtIndex, dotIndex)));
                         fieldName = toAssetConstName(baseName);
-                    
+
                         if (fieldName != null && !used.exists(fieldName) && fileExt != null) {
                             used.set(fieldName, baseName);
                         }
@@ -103,7 +103,7 @@ class AssetsMacro {
             var value = kind + ':' + used.get(fieldName);
 
             var expr = { expr: ECast({ expr: EConst(CString(value)), pos: pos }, null), pos: pos };
-            
+
             var fieldDoc = [];
             var files = byBaseName.get(used.get(fieldName));
             for (file in files) {
@@ -132,8 +132,8 @@ class AssetsMacro {
     }
 
     macro static public function buildLists():Array<Field> {
-        
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_plugins_assets_paths'), Context.definedValue('ceramic_assets_path'));
+
+        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), Context.definedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -141,7 +141,7 @@ class AssetsMacro {
         // All assets
         //
         var exprEntries = [];
-        
+
         for (name in allAssets) {
             exprEntries.push({expr: EConst(CString(name)), pos: pos});
         }
@@ -162,7 +162,7 @@ class AssetsMacro {
         // All asset dirs
         //
         var exprEntries = [];
-        
+
         for (name in allAssetDirs) {
             exprEntries.push({expr: EConst(CString(name)), pos: pos});
         }
@@ -391,7 +391,7 @@ class AssetsMacro {
         return str;
 
     }
-    
+
     static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
         var result:Array<String> = [];
