@@ -25,7 +25,18 @@ class CollectionView extends ScrollView {
 
     public var frames:ReadOnlyArray<CollectionViewItemFrame> = [];
 
-    public var itemsBehavior:CollectionViewItemsBehavior = RECYCLE;
+    public var itemsBehavior(default, set):CollectionViewItemsBehavior = RECYCLE;
+    function set_itemsBehavior(itemsBehavior:CollectionViewItemsBehavior):CollectionViewItemsBehavior {
+        if (this.itemsBehavior != itemsBehavior) {
+            this.itemsBehavior = itemsBehavior;
+
+            // Mark layout dirty so that invisible items are recycled
+            if (itemsBehavior == RECYCLE) {
+                layoutDirty = true;
+            }
+        }
+        return itemsBehavior;
+    }
 
     var reusableViews:Array<View> = [];
 
@@ -42,10 +53,6 @@ class CollectionView extends ScrollView {
     }
 
     override function destroy() {
-
-        if (id == 'ROOM_COLLECTION') {
-            log.error('DESTROY COLLECTION VIEW INSIDE');
-        }
 
         super.destroy();
 
@@ -125,7 +132,7 @@ class CollectionView extends ScrollView {
             }
         } else {
             contentView.width = Math.max(width, contentSize);
-            
+
             if (didResize && contentView.width - scroller.scrollX < width) {
                 scroller.scrollX = contentView.width - width;
             }
@@ -302,6 +309,12 @@ class CollectionView extends ScrollView {
             for (i in 0...frames.length) {
                 var frame = frames[i];
                 handleVisible(i, frame);
+            }
+        }
+
+        if (autoDestroyItems) {
+            while (reusableViews.length > 0) {
+                reusableViews.pop().destroy();
             }
         }
 
