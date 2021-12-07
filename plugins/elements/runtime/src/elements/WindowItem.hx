@@ -891,29 +891,35 @@ class WindowItem {
 
     function createOrUpdateList(view:View):View {
 
-        var button:Button = (view != null ? cast view : null);
+        var list:ListView = (view != null ? cast view : null);
         var justCreated = false;
-        if (button == null) {
+        if (list == null) {
             justCreated = true;
-            button = new Button();
+            list = new ListView(any0);
+            list.sortable = true;
+            list.lockable = true;
+            list.trashable = true;
+            list.duplicable = true;
         }
-        if (button.content != string0) {
-            button.content = string0;
-        }
-        if (button.enabled != bool0) {
-            button.enabled = bool0;
-        }
-        button.data = this;
-        if (justCreated) {
-            button.onClick(null, function() {
-                var windowItem:WindowItem = button.hasData ? button.data : null;
-                if (windowItem != null) {
-                    windowItem._buttonClick();
-                }
-            });
-        }
-        button.viewWidth = ViewSize.fill();
-        return button;
+        // TODO
+        // if (button.content != string0) {
+        //     button.content = string0;
+        // }
+        // if (button.enabled != bool0) {
+        //     button.enabled = bool0;
+        // }
+        // button.data = this;
+        // if (justCreated) {
+        //     button.onClick(null, function() {
+        //         var windowItem:WindowItem = button.hasData ? button.data : null;
+        //         if (windowItem != null) {
+        //             windowItem._buttonClick();
+        //         }
+        //     });
+        // }
+        list.viewWidth = ViewSize.fill();
+        list.viewHeight = float0;
+        return list;
 
     }
 

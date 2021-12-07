@@ -9,6 +9,8 @@ import ceramic.Scroller;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
 import ceramic.Transform;
+import ceramic.Transform;
+import ceramic.View;
 import ceramic.ViewLayoutMask;
 import ceramic.Visual;
 import elements.Context.context;
@@ -58,11 +60,7 @@ class CellView extends LayersLayout implements Observable {
 
     @observe public var handleDuplicate:Void->Void = null;
 
-    /*
-    @observe public var handleUp:Void->Void = null;
-
-    @observe public var handleDown:Void->Void = null;
-    */
+    @observe public var dragging(default, null):Bool = false;
 
 /// Internal
 
@@ -131,7 +129,7 @@ class CellView extends LayersLayout implements Observable {
         autorun(updateTitle);
         autorun(updateSubTitle);
         autorun(updateStyle);
-        //autorun(updateIcons);
+        autorun(updateIcons);
 
         onPointerOver(this, function(_) hover = true);
         onPointerOut(this, function(_) hover = false);
@@ -186,132 +184,93 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
-    // function updateIcons() {
+    function updateIcons() {
 
-    //     var displayTrash = handleTrash != null;
-    //     var displayLock = handleLock != null;
-    //     var displayDuplicate = handleDuplicate != null;
-    //     var displayKindIcon = kindIcon != null;
-    //     var displayAnyIcon = displayTrash || displayLock || displayKindIcon;
+        var displayTrash = handleTrash != null;
+        var displayLock = handleLock != null;
+        var displayDuplicate = handleDuplicate != null;
+        var displayKindIcon = kindIcon != null;
+        var displayAnyIcon = displayTrash || displayLock || displayKindIcon;
 
-    //     unobserve();
+        unobserve();
 
-    //     if (iconsView != null) {
-    //         iconsView.destroy();
-    //     }
+        if (iconsView != null) {
+            iconsView.destroy();
+        }
 
-    //     if (displayAnyIcon) {
-    //         iconsView = new RowLayout();
-    //         iconsView.paddingRight = 8;
-    //         iconsView.viewSize(fill(), fill());
-    //         iconsView.align = RIGHT;
-    //         add(iconsView);
+        if (displayAnyIcon) {
+            iconsView = new RowLayout();
+            iconsView.paddingRight = 8;
+            iconsView.viewSize(fill(), fill());
+            iconsView.align = RIGHT;
+            add(iconsView);
 
-    //         var w = 21;
-    //         var s = 14;
+            var w = 21;
+            var s = 14;
 
-    //         if (displayKindIcon) {
-    //             titleTextView.paddingLeft = 22;
-    //             subTitleTextView.paddingLeft = 22;
+            if (displayKindIcon) {
+                titleTextView.paddingLeft = 22;
+                subTitleTextView.paddingLeft = 22;
 
-    //             var iconView = new EntypoIconView();
-    //             iconView.icon = kindIcon;
-    //             iconView.viewSize(25, fill());
-    //             iconView.pointSize = 20;
-    //             iconView.paddingLeft = 2;
-    //             columnLayout.add(iconView);
+                var iconView = new EntypoIconView();
+                iconView.icon = kindIcon;
+                iconView.viewSize(25, fill());
+                iconView.pointSize = 20;
+                iconView.paddingLeft = 2;
+                columnLayout.add(iconView);
 
-    //             iconsView.add(iconView);
+                iconsView.add(iconView);
 
-    //             var filler = new View();
-    //             filler.transparent = true;
-    //             filler.viewSize(fill(), fill());
-    //             iconsView.add(filler);
-    //         }
-    //         else {
-    //             titleTextView.paddingLeft = 0;
-    //             subTitleTextView.paddingLeft = 0;
-    //         }
-    //         /*
-    //         if (displayUp || displayDown) {
-    //             titleTextView.paddingLeft = 16;
-    //             subTitleTextView.paddingLeft = 16;
+                var filler = new View();
+                filler.transparent = true;
+                filler.viewSize(fill(), fill());
+                iconsView.add(filler);
+            }
+            else {
+                titleTextView.paddingLeft = 0;
+                subTitleTextView.paddingLeft = 0;
+            }
 
-    //             var columnLayout = new ColumnLayout();
-    //             columnLayout.align = CENTER;
-    //             columnLayout.padding(4, 0);
+            if (displayDuplicate) {
+                var iconView = new ClickableIconView();
+                iconView.icon = DOCS;
+                iconView.tooltip('Duplicate');
+                iconView.viewSize(w, fill());
+                iconView.pointSize = s;
+                iconView.onClick(this, handleDuplicate);
+                iconsView.add(iconView);
+            }
 
-    //             if (displayUp) {
-    //                 var iconView = new ClickableIconView();
-    //                 iconView.icon = UP_OPEN;
-    //                 iconView.viewSize(w, fill());
-    //                 iconView.pointSize = s;
-    //                 iconView.onClick(this, handleUp);
-    //                 columnLayout.add(iconView);
-    //             }
+            if (displayLock) {
+                var iconView = new ClickableIconView();
+                iconView.autorun(() -> {
+                    iconView.icon = locked ? LOCK : LOCK_OPEN;
+                    iconView.tooltip(locked ? 'Unlock' : 'Lock');
+                });
+                iconView.viewSize(w, fill());
+                iconView.pointSize = s;
+                iconView.onClick(this, handleLock);
+                iconsView.add(iconView);
+            }
 
-    //             if (displayDown) {
-    //                 var iconView = new ClickableIconView();
-    //                 iconView.icon = DOWN_OPEN;
-    //                 iconView.viewSize(w, fill());
-    //                 iconView.pointSize = s;
-    //                 iconView.onClick(this, handleDown);
-    //                 columnLayout.add(iconView);
-    //             }
+            if (displayTrash) {
+                var iconView = new ClickableIconView();
+                iconView.icon = TRASH;
+                iconView.viewSize(w, fill());
+                iconView.pointSize = s;
+                iconView.tooltip('Delete');
+                iconView.onClick(this, handleTrash);
+                iconsView.add(iconView);
+            }
+        }
+        else {
+            titleTextView.paddingLeft = 0;
+            subTitleTextView.paddingLeft = 0;
+        }
 
-    //             iconsView.add(columnLayout);
+        reobserve();
 
-    //             var filler = new View();
-    //             filler.transparent = true;
-    //             filler.viewSize(fill(), fill());
-    //             iconsView.add(filler);
-    //         }
-    //         else {
-    //             titleTextView.paddingLeft = 0;
-    //             subTitleTextView.paddingLeft = 0;
-    //         }
-    //         */
-
-    //         if (displayDuplicate) {
-    //             var iconView = new ClickableIconView();
-    //             iconView.icon = DOCS;
-    //             iconView.tooltip('Duplicate');
-    //             iconView.viewSize(w, fill());
-    //             iconView.pointSize = s;
-    //             iconView.onClick(this, handleDuplicate);
-    //             iconsView.add(iconView);
-    //         }
-
-    //         if (displayLock) {
-    //             var iconView = new ClickableIconView();
-    //             iconView.autorun(() -> {
-    //                 iconView.icon = locked ? LOCK : LOCK_OPEN;
-    //                 iconView.tooltip(locked ? 'Unlock' : 'Lock');
-    //             });
-    //             iconView.viewSize(w, fill());
-    //             iconView.pointSize = s;
-    //             iconView.onClick(this, handleLock);
-    //             iconsView.add(iconView);
-    //         }
-
-    //         if (displayTrash) {
-    //             var iconView = new ClickableIconView();
-    //             iconView.icon = TRASH;
-    //             iconView.viewSize(w, fill());
-    //             iconView.pointSize = s;
-    //             iconView.tooltip('Delete');
-    //             iconView.onClick(this, handleTrash);
-    //             iconsView.add(iconView);
-    //         }
-    //     }
-    //     else {
-    //         titleTextView.paddingLeft = 0;
-    //         subTitleTextView.paddingLeft = 0;
-    //     }
-
-    //     reobserve();
-
-    // }
+    }
 
     function updateStyle() {
 
@@ -430,6 +389,16 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    public function unbindDragDrop() {
+
+        if (dragDrop != null) {
+            dragDrop.destroy();
+            dragDrop = null;
+            dragging = false;
+        }
+
+    }
+
     function cloneForDragDrop():CellView {
 
         var cloned = new CellView();
@@ -476,6 +445,8 @@ class CellView extends LayersLayout implements Observable {
         if (dragging == wasDragging)
             return;
 
+        this.dragging = dragging;
+
         if (dragging) {
             dragAutoScroll = 0;
             draggingCellDragY = 0;
@@ -502,6 +473,7 @@ class CellView extends LayersLayout implements Observable {
 
             app.offUpdate(scrollFromDragIfNeeded);
         }
+
     }
 
     function updateFromDrag() {

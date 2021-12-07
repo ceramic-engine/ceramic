@@ -128,6 +128,8 @@ class Im {
 
     static var _stringPointerValues:IntMap<String> = new IntMap<String>();
 
+    static var _arrayPointerValues:IntMap<Array<Dynamic>> = new IntMap<Array<Dynamic>>();
+
     static var _assetUses:Map<String,Int> = new Map();
 
     static var _pendingChoices:Array<PendingChoice> = [];
@@ -630,6 +632,7 @@ class Im {
         item.kind = LIST;
         item.int0 = Im.readInt(selected);
         item.int1 = item.int0;
+        item.float0 = height;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.any0 = Im.readArray(items);
@@ -2275,6 +2278,19 @@ class Im {
 
     }
 
+    @:noCompletion public static function setArrayAtHandle(handle:Handle, value:Array<Dynamic>):Array<Dynamic> {
+
+        _arrayPointerValues.set(handle, value);
+        return value;
+
+    }
+
+    @:noCompletion public static function arrayAtHandle(handle:Handle):Array<Dynamic> {
+
+        return _arrayPointerValues.get(handle);
+
+    }
+
     inline public static function readInt(intPointer:IntPointer):Int {
 
         return intPointer();
@@ -2451,12 +2467,12 @@ class Im {
             case EConst(CIdent('null')):
                 macro {
                     var handle = elements.Im.handle();
-                    function(?_val:Array<Dynamic>, ?erase:Bool):String {
+                    function(?_val:Array<Dynamic>, ?erase:Bool):Array<Dynamic> {
                         return _val != null || erase ? elements.Im.setArrayAtHandle(handle, _val) : elements.Im.arrayAtHandle(handle);
                     };
                 }
             case _:
-                macro function(?_val:Array<Dynamic>, ?erase:Bool):String {
+                macro function(?_val:Array<Dynamic>, ?erase:Bool):Array<Dynamic> {
                     return _val != null || erase ? $value = _val : $value;
                 };
         }
