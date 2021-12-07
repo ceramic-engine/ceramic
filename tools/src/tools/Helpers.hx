@@ -58,16 +58,6 @@ class Helpers {
             }
         }
 
-        // Add plugin assets paths
-        var pluginsAssetPaths = [];
-        for (plugin in context.plugins) {
-            var path_ = Path.join([plugin.path, 'assets']);
-            if (FileSystem.exists(path_) && FileSystem.isDirectory(path_)) {
-                pluginsAssetPaths.push(path_);
-            }
-        }
-        context.defines.set('ceramic_plugins_assets_paths', Json.stringify(Json.stringify(pluginsAssetPaths)));
-
         // Required for crash dumps
         context.defines.set('HXCPP_CHECK_POINTER', '');
         context.defines.set('safeMode', '');
@@ -85,6 +75,20 @@ class Helpers {
                 }
             }
         }
+
+        // Add extra assets paths (from plugins)
+        var project = loadProject(cwd, args);
+        var extraAssetsPaths = [];
+        if (project != null && project.app != null) {
+            var extraAssets:Array<String> = project.app.assets;
+            if (extraAssets != null) {
+                for (assetPath in extraAssets) {
+                    if (extraAssetsPaths.indexOf(assetPath) == -1)
+                        extraAssetsPaths.push(assetPath);
+                }
+            }
+        }
+        context.defines.set('ceramic_extra_assets_paths', Json.stringify(Json.stringify(extraAssetsPaths)));
 
     }
 
