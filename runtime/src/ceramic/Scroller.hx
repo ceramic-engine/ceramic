@@ -54,6 +54,26 @@ class Scroller extends Visual {
 
     public var dragEnabled:Bool = true;
 
+    /**
+     * If set to a value above zero, scrollX and scrollY will be rounded when scroller is idle.
+     *
+     * ```haxe
+     * roundScrollWhenIddle = 0; // No rounding (default)
+     * roundScrollWhenIddle = 1; // Pixel perfect rounding
+     * roundScrollWhenIddle = 2; // Half-pixel rounding
+     * ```
+     */
+    @editable
+    public var roundScrollWhenIddle(default,set):Int = 1;
+    function set_roundScrollWhenIddle(roundScrollWhenIddle:Int):Int {
+        if (this.roundScrollWhenIddle == roundScrollWhenIddle) return roundScrollWhenIddle;
+        this.roundScrollWhenIddle = roundScrollWhenIddle;
+        if (status == IDLE) {
+            inline roundScrollIfNeeded();
+        }
+        return roundScrollWhenIddle;
+    }
+
     public var status(default,set):ScrollerStatus = IDLE;
 
     function set_status(status:ScrollerStatus):ScrollerStatus {
@@ -65,6 +85,9 @@ class Scroller extends Visual {
         }
         else if (prevStatus == DRAGGING) {
             emitDragEnd();
+        }
+        else if (status == IDLE) {
+            inline roundScrollIfNeeded();
         }
         return status;
     }
@@ -110,7 +133,7 @@ class Scroller extends Visual {
 /// Internal
 
     var prevPointerX:Float = -999999;
-    
+
     var prevPointerY:Float = -999999;
 
 /// Lifecycle
@@ -190,7 +213,7 @@ class Scroller extends Visual {
         }
 
         return false;
-        
+
     }
 
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
@@ -203,7 +226,7 @@ class Scroller extends Visual {
         }
 
         return false;
-        
+
     }
 
 /// Public API
@@ -240,13 +263,13 @@ class Scroller extends Visual {
             return false;
         if (y >= scrollY + height)
             return false;
-        
+
         return true;
 
     }
 
     public function ensureContentPositionIsInBounds(x:Float, y:Float):Void {
-        
+
         var targetScrollX = scrollX;
         var targetScrollY = scrollY;
 
@@ -257,7 +280,7 @@ class Scroller extends Visual {
         else if (x >= targetScrollX + width) {
             targetScrollX = x - width;
         }
-        
+
         // Check bounds
         var maxScrollX = content.width - width;
         if (targetScrollX > maxScrollX) {
@@ -266,7 +289,7 @@ class Scroller extends Visual {
         if (targetScrollX < 0) {
             targetScrollX = 0;
         }
-        
+
         // Compute target scrollY
         if (y < targetScrollY) {
             targetScrollY = y;
@@ -274,7 +297,7 @@ class Scroller extends Visual {
         else if (y >= targetScrollY + height) {
             targetScrollY = y - height;
         }
-        
+
         // Check bounds
         var maxScrollY = content.height - height;
         if (targetScrollY > maxScrollY) {
@@ -323,7 +346,7 @@ class Scroller extends Visual {
     var touchIndex:Int = -1;
 
     public var scrollVelocity(default,null):Velocity = null;
-    
+
     public var momentum(default,null):Float = 0;
 
     var overScrollRelease:Bool = false;
@@ -383,13 +406,13 @@ class Scroller extends Visual {
     function pointerOver(info:TouchInfo) {
 
         pointerOnScroller = true;
-        
+
     }
 
     function pointerOut(info:TouchInfo) {
 
         pointerOnScroller = false;
-        
+
     }
 
     function mouseWheel(x:Float, y:Float):Void {
@@ -530,7 +553,7 @@ class Scroller extends Visual {
 
             // Catch `pointer up` event
             screen.onMultiTouchPointerUp(this, pointerUp);
-            
+
             emitScrollerPointerDown(info);
         }
 
@@ -623,6 +646,23 @@ class Scroller extends Visual {
 
     }
 
+/// Round scroll
+
+    function roundScrollIfNeeded():Void {
+
+        if (roundScrollWhenIddle > 0) {
+            if (roundScrollWhenIddle == 1) {
+                scrollX = Math.round(scrollX);
+                scrollY = Math.round(scrollY);
+            }
+            else {
+                scrollX = Math.round(scrollX * roundScrollWhenIddle) / roundScrollWhenIddle;
+                scrollY = Math.round(scrollY * roundScrollWhenIddle) / roundScrollWhenIddle;
+            }
+        }
+
+    }
+
 /// Update loop
 
     function update(delta:Float):Void {
@@ -678,6 +718,10 @@ class Scroller extends Visual {
 
         updateScrollbar();
 
+        if (status == IDLE) {
+            roundScrollIfNeeded();
+        }
+
     }
 
     function updateScrollbar():Void {
@@ -721,7 +765,7 @@ class Scroller extends Visual {
 
         scrollbarDownX = -1;
         scrollbarDownY = -1;
-        
+
         scrollbar.onPointerDown(this, handleScrollbarDown);
         scrollbar.onPointerUp(this, handleScrollbarUp);
 
@@ -834,7 +878,7 @@ class Scroller extends Visual {
 
                     scrollVelocity.add(pointerX - pointerStart, minusDelta);
                 }
-            
+
             case DRAGGING:
                 if (direction == VERTICAL) {
                     pointerX = pointerStart + (pointerY - pointerStart) * dragFactor;
@@ -872,7 +916,7 @@ class Scroller extends Visual {
                     scrollTransform.changedDirty = true;
                     scrollVelocity.add(pointerX - pointerStart, minusDelta);
                 }
-            
+
             case SCROLLING:
                 var subtract = 0.0;
 
