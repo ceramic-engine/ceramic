@@ -624,7 +624,7 @@ class Im {
 
     }
 
-    public static function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false):Bool {
+    public static function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
 
         var windowData = _currentWindowData;
 
@@ -632,6 +632,7 @@ class Im {
         item.kind = LIST;
         item.int0 = Im.readInt(selected);
         item.int1 = item.int0;
+        item.int2 = Flags.fromValues(sortable, lockable, trashable, duplicable).toInt();
         item.float0 = height;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
@@ -641,7 +642,32 @@ class Im {
 
         windowData.addItem(item);
 
-        return false;
+        if (item.isSameItem(item.previous)) {
+            // Did selected changed from list last frame?
+            var prevSelected = item.previous.int0;
+            var newSelected = item.previous.int1;
+            var selectedChanged = false;
+            if (newSelected != prevSelected) {
+                selectedChanged = true;
+                item.int0 = newSelected;
+                item.int1 = newSelected;
+                Im.writeInt(selected, newSelected);
+            }
+            // Did items changed from list last frame?
+            var prevItems:Array<Dynamic> = item.previous.any0;
+            var newItems:Array<Dynamic> = item.previous.any1;
+            var itemsChanged = false;
+            if (newItems != prevItems) {
+                itemsChanged = true;
+                item.any0 = newItems;
+                item.any1 = newItems;
+                Im.writeArray(items, newItems);
+            }
+
+            return new ListStatus(item.previous);
+        }
+
+        return new ListStatus(item);
 
     }
 

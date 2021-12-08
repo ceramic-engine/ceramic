@@ -3,6 +3,7 @@ package elements;
 import ceramic.Color;
 import ceramic.Equal;
 import ceramic.Filter;
+import ceramic.Flags;
 import ceramic.Pool;
 import ceramic.View;
 import ceramic.ViewSize;
@@ -12,6 +13,7 @@ import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 
 using StringTools;
+using ceramic.Extensions;
 using elements.WindowItem.WindowItemExtensions;
 
 /**
@@ -42,6 +44,8 @@ class WindowItem {
 
     public var int1:Int = 0;
 
+    public var int2:Int = 0;
+
     public var labelPosition:Int = 0;
 
     public var float0:Float = 0;
@@ -71,6 +75,14 @@ class WindowItem {
     public var any0:Any = null;
 
     public var any1:Any = null;
+
+    public var any2:Any = null;
+
+    public var any3:Any = null;
+
+    public var any4:Any = null;
+
+    public var any5:Any = null;
 
     public var visual:Visual = null;
 
@@ -221,6 +233,7 @@ class WindowItem {
         previous = null;
         int0 = 0;
         int1 = 0;
+        int2 = 0;
         labelPosition = 0;
         float0 = 0;
         float1 = 0;
@@ -236,6 +249,10 @@ class WindowItem {
         string4 = null;
         any0 = null;
         any1 = null;
+        any2 = null;
+        any3 = null;
+        any4 = null;
+        any5 = null;
         stringArray0 = null;
         if (visual != null && visual.parent == null) {
             visual.active = false;
@@ -896,27 +913,156 @@ class WindowItem {
         if (list == null) {
             justCreated = true;
             list = new ListView(any0);
-            list.sortable = true;
-            list.lockable = true;
-            list.trashable = true;
-            list.duplicable = true;
         }
-        // TODO
-        // if (button.content != string0) {
-        //     button.content = string0;
-        // }
-        // if (button.enabled != bool0) {
-        //     button.enabled = bool0;
-        // }
-        // button.data = this;
-        // if (justCreated) {
-        //     button.onClick(null, function() {
-        //         var windowItem:WindowItem = button.hasData ? button.data : null;
-        //         if (windowItem != null) {
-        //             windowItem._buttonClick();
-        //         }
-        //     });
-        // }
+        var flags:Flags = int2;
+        list.sortable = flags.bool(0);
+        list.lockable = flags.bool(1);
+        list.trashable = flags.bool(2);
+        list.duplicable = flags.bool(3);
+        list.items = any0;
+        list.data = this;
+        list.selectedIndex = int0;
+        if (justCreated) {
+            list.onSelectedIndexChange(null, (selectedIndex, _) -> {
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    windowItem.int1 = selectedIndex;
+                }
+            });
+            list.onMoveItemAboveItem(null, (itemIndex, otherItemIndex) -> {
+                var items = list.items;
+                var newItems = [];
+                var selectedIndex = list.selectedIndex;
+                var newSelectedIndex = selectedIndex;
+                for (i in 0...items.length) {
+                    if (i != itemIndex) {
+                        if (selectedIndex == i) {
+                            newSelectedIndex = newItems.length;
+                        }
+                        newItems.push(items.unsafeGet(i));
+                        if (i == otherItemIndex) {
+                            if (selectedIndex == itemIndex) {
+                                newSelectedIndex = newItems.length;
+                            }
+                            newItems.push(items.unsafeGet(itemIndex));
+                        }
+                    }
+                }
+                list.selectedIndex = newSelectedIndex;
+                list.items = newItems;
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    windowItem.any1 = newItems;
+                }
+            });
+            list.onMoveItemBelowItem(null, (itemIndex, otherItemIndex) -> {
+                var items = list.items;
+                var newItems = [];
+                var selectedIndex = list.selectedIndex;
+                var newSelectedIndex = selectedIndex;
+                for (i in 0...items.length) {
+                    if (i != itemIndex) {
+                        if (i == otherItemIndex) {
+                            if (selectedIndex == itemIndex) {
+                                newSelectedIndex = newItems.length;
+                            }
+                            newItems.push(items.unsafeGet(itemIndex));
+                        }
+                        if (selectedIndex == i) {
+                            newSelectedIndex = newItems.length;
+                        }
+                        newItems.push(items.unsafeGet(i));
+                    }
+                }
+                list.selectedIndex = newSelectedIndex;
+                list.items = newItems;
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    windowItem.any1 = newItems;
+                }
+            });
+            list.onTrashItem(null, itemIndex -> {
+                var items = list.items;
+                var trashed = items[itemIndex];
+                var newItems = [];
+                var selectedIndex = list.selectedIndex;
+                var newSelectedIndex = selectedIndex;
+                if (selectedIndex == itemIndex) {
+                    newSelectedIndex = -1;
+                }
+                else if (selectedIndex > itemIndex) {
+                    newSelectedIndex = newSelectedIndex - 1;
+                }
+                for (i in 0...items.length) {
+                    if (i != itemIndex) {
+                        newItems.push(items.unsafeGet(i));
+                    }
+                }
+                list.selectedIndex = newSelectedIndex;
+                list.items = newItems;
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    windowItem.any1 = newItems;
+                    var trashedList:Array<Dynamic> = windowItem.any2;
+                    if (trashedList == null) {
+                        trashedList = [];
+                        windowItem.any2 = trashedList;
+                    }
+                    trashedList.push(trashed);
+                }
+            });
+            list.onLockItem(null, itemIndex -> {
+                var items = list.items;
+                var locked = items[itemIndex];
+                var newItems = [];
+                for (i in 0...items.length) {
+                    if (i != itemIndex) {
+                        newItems.push(items.unsafeGet(i));
+                    }
+                }
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    var justLockedList:Array<Dynamic> = windowItem.any3;
+                    if (justLockedList == null) {
+                        justLockedList = [];
+                        windowItem.any3 = justLockedList;
+                    }
+                    justLockedList.push(locked);
+                }
+            });
+            list.onUnlockItem(null, itemIndex -> {
+                var items = list.items;
+                var locked = items[itemIndex];
+                var newItems = [];
+                for (i in 0...items.length) {
+                    if (i != itemIndex) {
+                        newItems.push(items.unsafeGet(i));
+                    }
+                }
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    var justUnlockedList:Array<Dynamic> = windowItem.any4;
+                    if (justUnlockedList == null) {
+                        justUnlockedList = [];
+                        windowItem.any4 = justUnlockedList;
+                    }
+                    justUnlockedList.push(locked);
+                }
+            });
+            list.onDuplicateItem(null, itemIndex -> {
+                var items = list.items;
+                var toDuplicate = items[itemIndex];
+                var windowItem:WindowItem = list.hasData ? list.data : null;
+                if (windowItem != null) {
+                    var toDuplicateList:Array<Dynamic> = windowItem.any5;
+                    if (toDuplicateList == null) {
+                        toDuplicateList = [];
+                        windowItem.any5 = toDuplicateList;
+                    }
+                    toDuplicateList.push(toDuplicate);
+                }
+            });
+        }
         list.viewWidth = ViewSize.fill();
         list.viewHeight = float0;
         return list;

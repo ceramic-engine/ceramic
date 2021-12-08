@@ -88,6 +88,8 @@ class CellView extends LayersLayout implements Observable {
 
     var dragOnItemIndex:Int = -1;
 
+    @observe var clonedForDragging:Bool = false;
+
     @observe var hover:Bool = false;
 
     @observe var appliedHoverItemIndex:Int = -1;
@@ -106,6 +108,7 @@ class CellView extends LayersLayout implements Observable {
 
         borderBottomSize = 1;
         borderPosition = INSIDE;
+        borderDepth = 2;
         transparent = false;
 
         titleTextView = new TextView();
@@ -283,18 +286,24 @@ class CellView extends LayersLayout implements Observable {
             columnLayout.padding(8, 8);
         }
 
+        var selected = this.selected;
         if (selected) {
-            color = theme.lightBackgroundColor;
             transparent = false;
             alpha = 1;
             if (inputStyle) {
+                color = theme.lightBackgroundColor;
                 borderLeftSize = 0;
                 borderRightSize = 0;
             }
             else {
+                color = Color.interpolate(theme.mediumBackgroundColor, theme.selectionBorderColor, 0.1);
                 borderLeftColor = theme.selectionBorderColor;
-                borderLeftSize = 2;
-                borderRightSize = 0;
+                borderRightColor = theme.selectionBorderColor;
+                borderTopColor = theme.selectionBorderColor;
+                borderBottomColor = theme.selectionBorderColor;
+                borderLeftSize = 1;
+                borderRightSize = 1;
+                borderTopSize = 1;
             }
         }
         else if (locked && !inputStyle) {
@@ -302,6 +311,7 @@ class CellView extends LayersLayout implements Observable {
             transparent = false;
             borderLeftSize = 0;
             borderRightSize = 0;
+            borderTopSize = 0;
 
             color = theme.darkBackgroundColor;
         }
@@ -310,6 +320,7 @@ class CellView extends LayersLayout implements Observable {
             transparent = false;
             borderLeftSize = 0;
             borderRightSize = 0;
+            borderTopSize = 0;
 
             if (collectionView == null || !collectionView.scrolling) {
                 if (hover) {
@@ -352,7 +363,9 @@ class CellView extends LayersLayout implements Observable {
         titleTextView.font = theme.mediumFont;
         subTitleTextView.font = theme.mediumFont;
 
-        borderBottomColor = theme.mediumBorderColor;
+        if (!selected) {
+            borderBottomColor = theme.mediumBorderColor;
+        }
 
         if (inputStyle && displaysEmptyValue) {
             titleTextView.text.skewX = 8;
@@ -414,6 +427,7 @@ class CellView extends LayersLayout implements Observable {
         cloned.handleTrash = handleTrash;
         cloned.handleLock = handleLock;
         cloned.handleDuplicate = handleDuplicate;
+        cloned.clonedForDragging = true;
 
         return cloned;
 

@@ -5,6 +5,7 @@ import ceramic.CollectionView;
 import ceramic.CollectionViewDataSource;
 import ceramic.CollectionViewItemFrame;
 import ceramic.Entity;
+import ceramic.Shortcuts.*;
 import ceramic.View;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
@@ -48,6 +49,8 @@ class ListView extends View implements Observable {
 
     @observe public var sortable:Bool = false;
 
+    public var autoCheckLocked:Bool = true;
+
     public function new(items:Array<Dynamic>) {
 
         super();
@@ -62,6 +65,8 @@ class ListView extends View implements Observable {
         dataSource = new ListViewDataSource(this);
 
         autorun(updateFromItems);
+
+        app.onUpdate(this, checkLockedIfNeeded);
 
     }
 
@@ -82,6 +87,53 @@ class ListView extends View implements Observable {
         super.layout();
 
         collectionView.size(width, height);
+
+    }
+
+    function checkLockedIfNeeded(delta:Float) {
+
+        if (!autoCheckLocked)
+            return;
+
+        checkLocked();
+
+    }
+
+    function didEmitLockItem(itemIndex:Int) {
+
+        checkLocked();
+
+    }
+
+    function didEmitUnlockItem(itemIndex:Int) {
+
+        checkLocked();
+
+    }
+
+    function checkLocked() {
+
+        var items = this.items;
+        if (items == null)
+            return;
+
+        var frames = collectionView.frames;
+        for (i in 0...frames.length) {
+            var frame = frames.unsafeGet(i);
+            var view = frame.view;
+            var item = items[i];
+            if (item != null && view != null && !view.destroyed && view is CellView) {
+                var cellView:CellView = cast view;
+                var locked:Bool = false;
+                if (!Std.is(item, String) && Reflect.getProperty(item, 'locked') == true) {
+                    locked = true;
+                }
+                cellView.locked = locked;
+                if (locked && i == selectedIndex) {
+                    selectedIndex = -1;
+                }
+            }
+        }
 
     }
 
