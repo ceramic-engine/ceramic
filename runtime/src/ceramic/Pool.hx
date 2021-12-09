@@ -30,7 +30,7 @@ class Pool<T> {
     }
 
     public function clear():Void {
-        
+
         if (availableItems.length > 0) {
             availableItems = [];
         }

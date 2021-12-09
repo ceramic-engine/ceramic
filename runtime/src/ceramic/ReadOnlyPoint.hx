@@ -10,16 +10,16 @@ abstract ReadOnlyPoint(Point) from Point {
     public var y(get,never):Float;
     inline function get_y():Float return this.y;
 
+    public var z(get,never):Float;
+    inline function get_z():Float return this.z;
+
     public inline function toPoint():Point return this;
 
 /// Print
 
     function toString():String {
 
-        return '' + {
-            x: this.x,
-            y: this.y
-        };
+        return 'ReadOnlyPoint($x, $y, $z)';
 
     }
 
