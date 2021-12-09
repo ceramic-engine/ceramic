@@ -58,20 +58,20 @@ class Scroller extends Visual {
      * If set to a value above zero, scrollX and scrollY will be rounded when scroller is idle.
      *
      * ```haxe
-     * roundScrollWhenIddle = 0; // No rounding (default)
-     * roundScrollWhenIddle = 1; // Pixel perfect rounding
-     * roundScrollWhenIddle = 2; // Half-pixel rounding
+     * roundScrollWhenIdle = 0; // No rounding (default)
+     * roundScrollWhenIdle = 1; // Pixel perfect rounding
+     * roundScrollWhenIdle = 2; // Half-pixel rounding
      * ```
      */
     @editable
-    public var roundScrollWhenIddle(default,set):Int = 1;
-    function set_roundScrollWhenIddle(roundScrollWhenIddle:Int):Int {
-        if (this.roundScrollWhenIddle == roundScrollWhenIddle) return roundScrollWhenIddle;
-        this.roundScrollWhenIddle = roundScrollWhenIddle;
+    public var roundScrollWhenIdle(default,set):Int = 1;
+    function set_roundScrollWhenIdle(roundScrollWhenIdle:Int):Int {
+        if (this.roundScrollWhenIdle == roundScrollWhenIdle) return roundScrollWhenIdle;
+        this.roundScrollWhenIdle = roundScrollWhenIdle;
         if (status == IDLE) {
             inline roundScrollIfNeeded();
         }
-        return roundScrollWhenIddle;
+        return roundScrollWhenIdle;
     }
 
     public var status(default,set):ScrollerStatus = IDLE;
@@ -650,14 +650,14 @@ class Scroller extends Visual {
 
     function roundScrollIfNeeded():Void {
 
-        if (roundScrollWhenIddle > 0) {
-            if (roundScrollWhenIddle == 1) {
+        if (roundScrollWhenIdle > 0) {
+            if (roundScrollWhenIdle == 1) {
                 scrollX = Math.round(scrollX);
                 scrollY = Math.round(scrollY);
             }
             else {
-                scrollX = Math.round(scrollX * roundScrollWhenIddle) / roundScrollWhenIddle;
-                scrollY = Math.round(scrollY * roundScrollWhenIddle) / roundScrollWhenIddle;
+                scrollX = Math.round(scrollX * roundScrollWhenIdle) / roundScrollWhenIdle;
+                scrollY = Math.round(scrollY * roundScrollWhenIdle) / roundScrollWhenIdle;
             }
         }
 
