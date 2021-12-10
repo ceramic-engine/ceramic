@@ -242,7 +242,7 @@ class CollectionView extends ScrollView {
                     var newX = frame.x + frame.width * view.anchorX;
                     var newY = frame.y + frame.height * view.anchorY;
                     view.pos(newX, newY);
-                    view.visible = true;
+                    view.active = true;
                     if (view.parent != contentView) {
                         contentView.add(view);
                     }
@@ -265,12 +265,12 @@ class CollectionView extends ScrollView {
                 if (frame.view != null) {
                     if (!dataSource.collectionViewReleaseItemAtIndex(this, itemIndex, frame.view)) {
                         if (!frame.view.destroyed) {
-                            frame.view.visible = false;
+                            frame.view.active = false;
                             if (autoDestroyItems) frame.view.destroy();
                         }
                     }
                     else {
-                        frame.view.visible = false;
+                        frame.view.active = false;
                         reusableViews.push(frame.view);
                     }
                     frame.view = null;
