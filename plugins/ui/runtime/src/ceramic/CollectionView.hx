@@ -12,6 +12,8 @@ class CollectionView extends ScrollView {
 
     public var autoDestroyItems:Bool = true;
 
+    public var maxReusableViewsCount:Int = 1;
+
     /**
      * Control how children depth is sorted.
      */
@@ -313,7 +315,7 @@ class CollectionView extends ScrollView {
         }
 
         if (autoDestroyItems) {
-            while (reusableViews.length > 0) {
+            while (reusableViews.length > maxReusableViewsCount) {
                 reusableViews.pop().destroy();
             }
         }
