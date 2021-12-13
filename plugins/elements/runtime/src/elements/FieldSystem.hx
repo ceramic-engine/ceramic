@@ -45,9 +45,17 @@ class FieldSystem extends System implements Observable {
 
         var testedVisual:Visual = focusedVisual;
         while (testedVisual != null) {
-            if (Std.isOfType(testedVisual, FieldView)) {
+            if (testedVisual is FieldView) {
                 focusedField = cast testedVisual;
                 break;
+            }
+            else if (testedVisual is RelatedToFieldView) {
+                var relatedToFieldView:RelatedToFieldView = cast testedVisual;
+                var fieldView = relatedToFieldView.relatedFieldView();
+                if (fieldView != null) {
+                    focusedField = fieldView;
+                    break;
+                }
             }
             testedVisual = testedVisual.parent;
         }

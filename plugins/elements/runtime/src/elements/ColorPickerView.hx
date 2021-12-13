@@ -14,7 +14,7 @@ import tracker.Observable;
 
 using ceramic.VisualTransition;
 
-class ColorPickerView extends LayersLayout implements Observable {
+class ColorPickerView extends LayersLayout implements Observable implements RelatedToFieldView {
 
     static final FIELD_ROW_WIDTH = 41.0;
 
@@ -960,6 +960,14 @@ class ColorPickerView extends LayersLayout implements Observable {
 
         if (index != -1)
             context.user.removePaletteColor(index);
+
+    }
+
+/// Related field view
+
+    public function relatedFieldView():FieldView {
+
+        return colorFieldView;
 
     }
 
