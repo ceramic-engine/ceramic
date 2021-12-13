@@ -72,6 +72,8 @@ class Im {
 
     inline static final DEFAULT_LABEL_WIDTH:Float = -49965.0; // ViewSize.percent(35);
 
+    inline static final DEFAULT_SEPARATOR_HEIGHT:Float = 8;
+
     inline static final DEFAULT_LABEL_POSITION:LabelPosition = RIGHT;
 
     inline static final DEFAULT_TEXT_ALIGN:TextAlign = LEFT;
@@ -1326,6 +1328,19 @@ class Im {
 
         var item = WindowItem.get();
         item.kind = SPACE;
+        item.float0 = height;
+        item.row = _inRow ? _currentRowIndex : -1;
+
+        windowData.addItem(item);
+
+    }
+
+    public static function separator(height:Float = DEFAULT_SEPARATOR_HEIGHT):Void {
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.kind = SEPARATOR;
         item.float0 = height;
         item.row = _inRow ? _currentRowIndex : -1;
 

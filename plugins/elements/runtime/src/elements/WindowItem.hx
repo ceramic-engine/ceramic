@@ -163,6 +163,9 @@ class WindowItem {
             case SPACE:
                 return true;
 
+            case SEPARATOR:
+                return true;
+
             case CHECK:
                 return isSimilarLabel(item);
 
@@ -213,6 +216,9 @@ class WindowItem {
 
             case SPACE:
                 return createOrUpdateSpace(view);
+
+            case SEPARATOR:
+                return createOrUpdateSeparator(view);
 
             case VISUAL:
                 return createOrUpdateVisualContainer(view);
@@ -275,6 +281,23 @@ class WindowItem {
         view.viewWidth = ViewSize.fill();
 
         return view;
+
+    }
+
+    function createOrUpdateSeparator(view:View):View {
+
+        var separator:Separator;
+        if (view != null) {
+            separator = cast view;
+        }
+        else {
+            separator = new Separator();
+        }
+
+        separator.viewHeight = float0;
+        separator.viewWidth = ViewSize.fill();
+
+        return separator;
 
     }
 
@@ -384,6 +407,7 @@ class WindowItem {
         }
         field.data = this;
         field.list = stringArray0;
+        field.nullValueText = string1;
         if (justCreated) {
             field.setValue = _selectSetIntValue;
         }
