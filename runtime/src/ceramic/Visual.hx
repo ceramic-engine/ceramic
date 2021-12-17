@@ -2941,6 +2941,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         transform.identity();
         transform.scale(ceramic.App.app.screen.nativeDensity, ceramic.App.app.screen.nativeDensity);
         transform.concat(ceramic.App.app.screen.reverseMatrix);
+        transform.tx = Math.round(transform.tx);
+        transform.ty = Math.round(transform.ty);
+        transform.changedDirty = true;
 
         size(ceramic.App.app.screen.nativeWidth, ceramic.App.app.screen.nativeHeight);
 
