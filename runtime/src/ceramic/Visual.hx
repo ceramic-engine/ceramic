@@ -2075,31 +2075,50 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param y Screen **y** coordinate
      * @return `true` if it hits
      */
-    public function hits(x:Float, y:Float):Bool {
+    public inline extern overload function hits(x:Float, y:Float):Bool {
+        return _hits(x, y, false);
+    }
 
-        // A visuals that renders to texture never hits by default
-        // unless the render texture is managed by a `Filter` instance, re-routing touch
-        if (renderTargetDirty) computeRenderTarget();
-        if (computedRenderTarget != null) {
-            var parent = this.parent;
-            if (parent != null) {
-                do {
-                    if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
-                        var filter:Filter = cast parent;
-                        if (filter.renderTexture == computedRenderTarget) {
-                            if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
-                                return filter.visualInContentHits(this, x, y);
+    /**
+     * Returns true if screen (x, y) screen coordinates hit/intersect this visual visible bounds
+     * @param x Screen **x** coordinate
+     * @param y Screen **y** coordinate
+     * @param ignoreRenderTarget
+     *      If `true`, hit test will be performed like the visual
+     *      doesn't have a render target even if it has in reality
+     * @return `true` if it hits
+     */
+    public inline extern overload function hits(x:Float, y:Float, ignoreRenderTarget:Bool):Bool {
+        return _hits(x, y, ignoreRenderTarget);
+    }
+
+    function _hits(x:Float, y:Float, ignoreRenderTarget:Bool):Bool {
+
+        if (!ignoreRenderTarget) {
+            // A visuals that renders to texture never hits by default
+            // unless the render texture is managed by a `Filter` instance, re-routing touch
+            if (renderTargetDirty) computeRenderTarget();
+            if (computedRenderTarget != null) {
+                var parent = this.parent;
+                if (parent != null) {
+                    do {
+                        if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
+                            var filter:Filter = cast parent;
+                            if (filter.renderTexture == computedRenderTarget) {
+                                if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
+                                    return filter.visualInContentHits(this, x, y);
+                                }
                             }
                         }
+                        parent = parent.parent;
                     }
-                    parent = parent.parent;
+                    while (parent != null);
                 }
-                while (parent != null);
+                return false;
             }
-            return false;
-        }
-        else if (Screen.matchedHitVisual != null && Screen.matchedHitVisual != this) {
-            return false;
+            else if (Screen.matchedHitVisual != null && Screen.matchedHitVisual != this) {
+                return false;
+            }
         }
 
         if (matrixDirty) {
