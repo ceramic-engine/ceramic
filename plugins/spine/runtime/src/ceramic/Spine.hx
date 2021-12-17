@@ -1995,9 +1995,13 @@ class Spine extends Visual {
 
 /// Hit test
 
-    override function hits(x:Float, y:Float):Bool {
+    override function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
         if (hitWithFirstBoundingBox) {
+
+            var testX = matrix.transformX(x, y);
+            var testY = matrix.transformY(x, y);
+
             if (firstBoundingBoxSlotIndex != -1) {
                 var mesh = slotMeshes.getInline(firstBoundingBoxSlotIndex);
                 if (mesh != null) {
@@ -2027,7 +2031,7 @@ class Spine extends Visual {
             }
         }
         else {
-            return super.hits(x, y);
+            return super.hitTest(x, y, matrix);
         }
     }
 
