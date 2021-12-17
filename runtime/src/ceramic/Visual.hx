@@ -42,7 +42,11 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * all computed depth values being too small and risking to create precision issues.
      * It is expected to work best with use of `depthRange = 1` on visuals (default)
      */
-    @:noCompletion inline static final DEPTH_FACTOR:Float = 2000000;
+    #if ceramic_depth_factor
+    @:noCompletion inline static final DEPTH_FACTOR:Float = ceramic.macros.DefinesMacro.getFloatDefine('ceramic_depth_factor');
+    #else
+    @:noCompletion inline static final DEPTH_FACTOR:Float = 1000;
+    #end
 
     /**
      * A garanteed margin between max inner computed depth and container depth range,
