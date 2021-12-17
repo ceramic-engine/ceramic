@@ -649,8 +649,8 @@ class WindowItem {
             var item = field.windowItem();
             var minValue = -999999999; // Allow lower value at this stage because we are typing
             var maxValue = item.float4;
-            var decimals = item.int0;
-            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue, decimals, false);
+            var round = item.int0;
+            SanitizeTextField.setTextValueToFloat(field, textValue, minValue, maxValue, round, false);
         }
 
     }
@@ -660,8 +660,8 @@ class WindowItem {
         final item = field.windowItem();
         var minValue = item.float3;
         var maxValue = item.float4;
-        var decimals = item.int0;
-        item.float1 = SanitizeTextField.setEmptyToFloat(field, minValue, maxValue, decimals);
+        var round = item.int0;
+        item.float1 = SanitizeTextField.setEmptyToFloat(field, minValue, maxValue, round);
 
     }
 
@@ -682,9 +682,9 @@ class WindowItem {
         var item = field.windowItem();
         var minValue = item.float3;
         var maxValue = item.float4;
-        var decimals = item.int0;
-        if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false, decimals)) {
-            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue, decimals, true);
+        var round = item.int0;
+        if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, false, round)) {
+            SanitizeTextField.setTextValueToFloat(field, field.textValue, minValue, maxValue, round, true);
         }
 
     }
@@ -803,7 +803,7 @@ class WindowItem {
 
             field.minValue = float3;
             field.maxValue = float4;
-            field.decimals = int0;
+            field.round = int0;
 
             if (justCreated) {
                 field.setTextValue = _editFloatSetTextValue;
@@ -822,7 +822,7 @@ class WindowItem {
 
             field.minValue = float3;
             field.maxValue = float4;
-            field.decimals = 0;
+            field.round = 1;
 
             if (justCreated) {
                 field.setTextValue = _editIntSetTextValue;

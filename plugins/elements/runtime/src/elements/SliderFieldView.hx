@@ -28,7 +28,7 @@ class SliderFieldView extends BaseTextFieldView {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
-    public var decimals:Int = -1;
+    public var round:Int = -1;
 
 /// Internal properties
 
@@ -114,7 +114,7 @@ class SliderFieldView extends BaseTextFieldView {
             if (emptyValue > maxValue)
                 emptyValue = maxValue;
 
-            emptyValue = applyDecimals(emptyValue);
+            emptyValue = applyRound(emptyValue);
 
             setValue(this, emptyValue);
             updateFromValue();
@@ -243,14 +243,13 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
-    function applyDecimals(value:Float):Float {
+    function applyRound(value:Float):Float {
 
-        if (decimals == 0) {
+        if (round == 1) {
             value = Math.round(value);
         }
-        else if (decimals >= 1) {
-            var power = Math.pow(10, decimals);
-            value = Math.round(value * power) / power;
+        else if (round > 1) {
+            value = Math.round(value * round) / round;
         }
 
         return value;
@@ -302,7 +301,7 @@ class SliderFieldView extends BaseTextFieldView {
         if (newValue > maxValue)
             newValue = maxValue;
 
-        newValue = applyDecimals(newValue);
+        newValue = applyRound(newValue);
 
         setValue(this, newValue);
         updateFromValue();

@@ -946,9 +946,9 @@ class Im {
 
     public static function editFloat(
         #if completion
-        ?title:String, value:FloatPointer, ?placeholder:String, ?minValue:Float, ?maxValue:Float, ?decimals:Int
+        ?title:String, value:FloatPointer, ?placeholder:String, ?minValue:Float, ?maxValue:Float, ?round:Int
         #else
-        ?title:String, value:FloatPointer, ?placeholder:String, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, decimals:Int = -1
+        ?title:String, value:FloatPointer, ?placeholder:String, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, round:Int = 1000
         #end
     ):Bool {
 
@@ -960,7 +960,7 @@ class Im {
         item.float1 = item.float0;
         item.float3 = minValue;
         item.float4 = maxValue;
-        item.int0 = decimals;
+        item.int0 = round;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;
@@ -1021,7 +1021,7 @@ class Im {
     }
 
     public static function slideFloat(
-        ?title:String, value:FloatPointer, minValue:Float, maxValue:Float, decimals:Int = 3
+        ?title:String, value:FloatPointer, minValue:Float, maxValue:Float, round:Int = 1000
     ):Bool {
 
         var windowData = _currentWindowData;
@@ -1032,7 +1032,7 @@ class Im {
         item.float1 = item.float0;
         item.float3 = minValue;
         item.float4 = maxValue;
-        item.int0 = decimals;
+        item.int0 = round;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.string2 = title;

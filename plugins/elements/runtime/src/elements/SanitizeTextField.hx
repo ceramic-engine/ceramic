@@ -52,7 +52,7 @@ class SanitizeTextField {
 
     }
 
-    public static function setTextValueToFloat(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, decimals:Int, finishing:Bool):Void {
+    public static function setTextValueToFloat(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, round:Int, finishing:Bool):Void {
 
         var trimmedValue = textValue.trim();
         if (trimmedValue != '' && trimmedValue != '-') {
@@ -77,12 +77,11 @@ class SanitizeTextField {
                 if (floatValue > maxValue) {
                     floatValue = maxValue;
                 }
-                if (decimals == 0) {
+                if (round == 1) {
                     floatValue = Math.round(floatValue);
                 }
-                else if (decimals >= 1) {
-                    var power = Math.pow(10, decimals);
-                    floatValue = Math.round(floatValue * power) / power;
+                else if (round > 1) {
+                    floatValue = Math.round(floatValue * round) / round;
                 }
                 field.setValue(field, floatValue);
                 if (finishing) {
@@ -100,7 +99,7 @@ class SanitizeTextField {
 
     }
 
-    public static function setEmptyToFloat(field:BaseTextFieldView, minValue:Float, maxValue:Float, decimals:Int):Float {
+    public static function setEmptyToFloat(field:BaseTextFieldView, minValue:Float, maxValue:Float, round:Int):Float {
 
         var value:Float = 0.0;
         if (value < minValue) {
@@ -109,12 +108,11 @@ class SanitizeTextField {
         if (value > maxValue) {
             value = maxValue;
         }
-        if (decimals == 0) {
+        if (round == 1) {
             value = Math.round(value);
         }
-        else if (decimals >= 1) {
-            var power = Math.pow(10, decimals);
-            value = Math.round(value * power) / power;
+        else if (round > 1) {
+            value = Math.round(value * round) / round;
         }
         field.textValue = '' + value;
         return value;
@@ -128,7 +126,7 @@ class SanitizeTextField {
 
     }
 
-    public static function applyFloatOrIntOperationsIfNeeded(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, castToInt:Bool, decimals:Int):Bool {
+    public static function applyFloatOrIntOperationsIfNeeded(field:BaseTextFieldView, textValue:String, minValue:Float, maxValue:Float, castToInt:Bool, round:Int):Bool {
 
         var addIndex = textValue.indexOf('+');
         var subtractIndex = textValue.indexOf('-');
@@ -142,13 +140,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, round, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, before, minValue, maxValue, round, true);
             }
             return true;
         }
@@ -160,13 +158,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, round, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, before, minValue, maxValue, round, true);
             }
             return true;
         }
@@ -178,13 +176,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, round, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, before, minValue, maxValue, round, true);
             }
             return true;
         }
@@ -196,13 +194,13 @@ class SanitizeTextField {
                 if (castToInt)
                     setTextValueToInt(field, ''+result, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, ''+result, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, ''+result, minValue, maxValue, round, true);
             }
             else {
                 if (castToInt)
                     setTextValueToInt(field, before, Std.int(minValue), Std.int(maxValue));
                 else
-                    setTextValueToFloat(field, before, minValue, maxValue, decimals, true);
+                    setTextValueToFloat(field, before, minValue, maxValue, round, true);
             }
             return true;
         }
