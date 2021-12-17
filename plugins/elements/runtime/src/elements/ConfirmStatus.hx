@@ -8,7 +8,7 @@ abstract ConfirmStatus(Int) from Int to Int {
         this = value;
     }
 
-    @:to inline function toBool():Bool {
+    @:to inline public function toBool():Bool {
         return confirmed;
     }
 

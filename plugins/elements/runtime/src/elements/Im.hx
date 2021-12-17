@@ -776,6 +776,7 @@ class Im {
             var newValue = item.previous.int1;
             if (newValue != prevValue) {
                 changed = true;
+                checked = (newValue != 0);
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeBool(value, newValue != 0 ? true : false);
