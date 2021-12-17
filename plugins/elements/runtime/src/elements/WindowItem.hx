@@ -48,6 +48,10 @@ class WindowItem {
 
     public var labelPosition:Int = 0;
 
+    public var disabled:Bool = false;
+
+    public var flex:Int = 1;
+
     public var float0:Float = 0;
 
     public var float1:Float = 0;
@@ -184,52 +188,58 @@ class WindowItem {
 
     public function updateView(view:View):View {
 
-        switch kind {
+        view = switch kind {
 
             case UNKNOWN:
-                return view;
+                view;
 
             case SELECT:
-                return createOrUpdateSelectField(view);
+                createOrUpdateSelectField(view);
 
             case EDIT_TEXT | EDIT_FLOAT | EDIT_INT:
-                return createOrUpdateEditTextField(view);
+                createOrUpdateEditTextField(view);
 
             #if plugin_dialogs
 
             case EDIT_DIR | EDIT_FILE:
-                return createOrUpdateEditTextField(view);
+                createOrUpdateEditTextField(view);
 
             #end
 
             case EDIT_COLOR:
-                return createOrUpdateColorField(view);
+                createOrUpdateColorField(view);
 
             case SLIDE_FLOAT | SLIDE_INT:
-                return createOrUpdateSliderField(view);
+                createOrUpdateSliderField(view);
 
             case TEXT:
-                return createOrUpdateText(view);
+                createOrUpdateText(view);
 
             case BUTTON:
-                return createOrUpdateButton(view);
+                createOrUpdateButton(view);
 
             case SPACE:
-                return createOrUpdateSpace(view);
+                createOrUpdateSpace(view);
 
             case SEPARATOR:
-                return createOrUpdateSeparator(view);
+                createOrUpdateSeparator(view);
 
             case VISUAL:
-                return createOrUpdateVisualContainer(view);
+                createOrUpdateVisualContainer(view);
 
             case CHECK:
-                return createOrUpdateBooleanField(view);
+                createOrUpdateBooleanField(view);
 
             case LIST:
-                return createOrUpdateList(view);
+                createOrUpdateList(view);
 
         }
+
+        if (view != null) {
+            view.flex = flex;
+        }
+
+        return view;
 
     }
 
@@ -241,6 +251,8 @@ class WindowItem {
         int1 = 0;
         int2 = 0;
         labelPosition = 0;
+        disabled = false;
+        flex = 1;
         float0 = 0;
         float1 = 0;
         labelWidth = 0;

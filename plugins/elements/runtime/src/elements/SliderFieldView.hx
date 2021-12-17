@@ -70,6 +70,7 @@ class SliderFieldView extends BaseTextFieldView {
         editText.onStop(this, handleStopEditText);
 
         sliderContainer = new View();
+        sliderContainer.depth = 1;
         sliderContainer.viewSize(fill(), 15);
         sliderContainer.transparent = false;
         add(sliderContainer);

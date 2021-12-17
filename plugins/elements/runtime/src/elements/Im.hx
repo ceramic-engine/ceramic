@@ -72,7 +72,7 @@ class Im {
 
     inline static final DEFAULT_LABEL_WIDTH:Float = -49965.0; // ViewSize.percent(35);
 
-    inline static final DEFAULT_SEPARATOR_HEIGHT:Float = 8;
+    inline static final DEFAULT_SEPARATOR_HEIGHT:Float = 7;
 
     inline static final DEFAULT_LABEL_POSITION:LabelPosition = RIGHT;
 
@@ -113,6 +113,10 @@ class Im {
     static var _labelPosition:LabelPosition = DEFAULT_LABEL_POSITION;
 
     static var _textAlign:TextAlign = DEFAULT_TEXT_ALIGN;
+
+    static var _fieldsDisabled:Bool = false;
+
+    static var _flex:Int = 1;
 
     static var _pointerBaseHandles:Map<String,Int> = new Map();
 
@@ -563,6 +567,18 @@ class Im {
 
     }
 
+    public static function disabled(disabled:Bool):Void {
+
+        _fieldsDisabled = disabled;
+
+    }
+
+    public static function flex(flex:Int):Void {
+
+        _flex = flex;
+
+    }
+
     public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0):Void {
 
         var windowData = _currentWindowData;
@@ -631,6 +647,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = LIST;
         item.int0 = Im.readInt(selected);
         item.int1 = item.int0;
@@ -696,6 +714,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = SELECT;
         item.int0 = Im.readInt(index);
         item.int1 = item.int0;
@@ -735,6 +755,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = CHECK;
         item.int0 = Im.readBool(value) ? 1 : 0;
         item.int1 = item.int0;
@@ -769,6 +791,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_COLOR;
         item.int0 = Im.readInt(value);
         item.int1 = item.int0;
@@ -800,6 +824,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_TEXT;
         item.string0 = Im.readString(value);
         if (item.string0 == null)
@@ -838,6 +864,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_DIR;
         item.string0 = Im.readString(value);
         if (item.string0 == null)
@@ -872,6 +900,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_FILE;
         item.string0 = Im.readString(value);
         if (item.string0 == null)
@@ -915,6 +945,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_INT;
         item.int0 = Im.readInt(value);
         item.int1 = item.int0;
@@ -955,6 +987,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = EDIT_FLOAT;
         item.float0 = Im.readFloat(value);
         item.float1 = item.float0;
@@ -992,6 +1026,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = SLIDE_INT;
         item.int0 = Im.readInt(value);
         item.int1 = item.int0;
@@ -1027,6 +1063,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = SLIDE_FLOAT;
         item.float0 = Im.readFloat(value);
         item.float1 = item.float0;
@@ -1061,6 +1099,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
         item.bool1 = useFilter;
@@ -1139,6 +1179,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
         item.int0 = 1; // 1 == image
@@ -1196,6 +1238,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
         item.int0 = 1000; // 1000 == debugVisual
@@ -1246,6 +1290,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
         item.bool0 = scaleToFit;
         item.bool1 = true; // use filter (render to texture)
@@ -1327,6 +1373,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
         item.kind = SPACE;
         item.float0 = height;
         item.row = _inRow ? _currentRowIndex : -1;
@@ -1340,6 +1387,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
         item.kind = SEPARATOR;
         item.float0 = height;
         item.row = _inRow ? _currentRowIndex : -1;
@@ -1365,6 +1413,8 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = BUTTON;
         item.int0 = 0;
         item.int1 = 0;
@@ -1391,6 +1441,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.flex = _flex;
         item.kind = TEXT;
         item.string0 = value;
         item.string1 = item.string0;

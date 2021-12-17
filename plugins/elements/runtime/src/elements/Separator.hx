@@ -6,7 +6,7 @@ import elements.Context.context;
 
 class Separator extends View {
 
-    public var thickness(default, set):Float = 2;
+    public var thickness(default, set):Float = 1;
     function set_thickness(thickness:Float):Float {
         if (this.thickness != thickness) {
             this.thickness = thickness;
