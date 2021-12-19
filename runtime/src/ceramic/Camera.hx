@@ -106,14 +106,14 @@ class Camera extends Entity {
     public var translateY:Float = 0.0;
 
     /**
-     * Horizontal idle area (percentage between 0 and 1 relative to viewport width)
+     * Horizontal dead zone (percentage between 0 and 1 relative to viewport width)
      */
-    public var idleAreaX:Float = 0.04;
+    public var deadZoneX:Float = 0.04;
 
     /**
-     * Horizontal idle area (percentage between 0 and 1 relative to viewport height)
+     * Horizontal dead zone (percentage between 0 and 1 relative to viewport height)
      */
-    public var idleAreaY:Float = 0.1;
+    public var deadZoneY:Float = 0.1;
 
     /**
      * Horizontal friction
@@ -184,14 +184,14 @@ class Camera extends Entity {
         if (followTarget) {
             var angle = angleTo(x, y, targetX, targetY);
             var distanceX = Math.abs(targetX - x);
-            if (distanceX >= idleAreaX * viewportWidth * invertedZoom) {
-                dx += Math.cos(angle) * (trackCurve * (distanceX - idleAreaX * viewportWidth * invertedZoom)) * speedX;
+            if (distanceX >= deadZoneX * viewportWidth * invertedZoom) {
+                dx += Math.cos(angle) * (trackCurve * (distanceX - deadZoneX * viewportWidth * invertedZoom)) * speedX;
                 if (dx > distanceX)
                     dx = distanceX;
             }
             var distanceY = Math.abs(targetY - y);
-            if (distanceY >= idleAreaY * viewportHeight * invertedZoom) {
-                dy += Math.sin(angle) * (trackCurve * (distanceY - idleAreaY * viewportHeight * invertedZoom)) * speedY;
+            if (distanceY >= deadZoneY * viewportHeight * invertedZoom) {
+                dy += Math.sin(angle) * (trackCurve * (distanceY - deadZoneY * viewportHeight * invertedZoom)) * speedY;
                 if (dy > distanceY)
                     dy = distanceY;
             }
