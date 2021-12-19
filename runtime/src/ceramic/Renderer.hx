@@ -742,7 +742,7 @@ class Renderer extends Entity {
             lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
-            lastRenderTarget = quad.computedRenderTarget;
+            lastRenderTarget = mesh.computedRenderTarget;
             useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
@@ -1063,7 +1063,7 @@ class Renderer extends Entity {
 
         batchMeshVertices();
 
-        // Let backend know we did finish sending quad data
+        // Let backend know we did finish sending mesh data
         draw.endDrawMesh();
 
         // Increase counts
