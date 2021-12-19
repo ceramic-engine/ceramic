@@ -21,8 +21,8 @@ app:
         - spine
         - nape
         - arcade
-        - element
+        - elements
         - ui
-    
+
     libs:
         - spine-hx
