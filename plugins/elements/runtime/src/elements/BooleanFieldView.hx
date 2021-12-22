@@ -27,6 +27,18 @@ class BooleanFieldView extends FieldView {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    @observe public var disabled(default, set):Bool = false;
+    function set_disabled(disabled:Bool):Bool {
+        if (this.disabled != disabled) {
+            this.disabled = disabled;
+            touchable = !disabled;
+            if (disabled && unobservedFocused) {
+                screen.focusedVisual = null;
+            }
+        }
+        return disabled;
+    }
+
 /// Internal properties
 
     public function new() {
@@ -142,7 +154,7 @@ class BooleanFieldView extends FieldView {
 
         if (value) {
             switchSquare.transparent = false;
-            switchSquare.color = theme.mediumTextColor;
+            switchSquare.color = disabled ? theme.darkTextColor : theme.mediumTextColor;
         }
         else {
             switchSquare.transparent = (inputStyle == OVERLAY);
@@ -165,6 +177,9 @@ class BooleanFieldView extends FieldView {
 
             if (focused) {
                 switchContainer.borderColor = theme.focusedFieldBorderColor;
+            }
+            else if (disabled) {
+                switchContainer.borderColor = theme.mediumBorderColor;
             }
             else {
                 switchContainer.borderColor = theme.lightBorderColor;

@@ -29,6 +29,7 @@ class CellCollectionView extends CollectionView implements Observable {
         borderPosition = INSIDE;
         scroller.allowPointerOutside = false;
         scroller.scrollbar = new Scrollbar();
+        filter.textureFilter = NEAREST;
         filter.content.add(scroller);
 
         #if !(ios || android)

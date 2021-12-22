@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.Filter;
 import ceramic.Shortcuts.*;
 import ceramic.System;
 import ceramic.TouchInfo;
@@ -9,6 +10,10 @@ import ceramic.Visual;
 class ImSystem extends System {
 
     @lazy public static var shared = new ImSystem();
+
+    var filter:Filter = null;
+
+    var view:View = null;
 
     public function new() {
 
@@ -22,13 +27,25 @@ class ImSystem extends System {
     @:allow(elements.Im)
     function createView():Void {
 
+        filter = new Filter();
+        filter.textureFilter = NEAREST;
+        filter.bindToNativeScreenSize();
+        filter.depth = 1000;
+        filter.density = screen.nativeDensity;
+        filter.enabled = true;
+
         var view = new View();
         view.transparent = true;
-        view.bindToNativeScreenSize();
         view.depth = 1000;
         view.onLayout(this, _layoutWindows);
         Context.context.view = view;
         screen.onFocusedVisualChange(this, handleFocusedVisualChange);
+        filter.content.add(view);
+
+        view.size(filter.width, filter.height);
+        filter.onResize(this, (width, height) -> {
+            view.size(width, height);
+        });
 
     }
 
@@ -67,6 +84,11 @@ class ImSystem extends System {
     }
 
     override function earlyUpdate(delta:Float):Void {
+
+        if (view != null) {
+            view.size(filter.width, filter.height);
+            filter.density = screen.nativeDensity;
+        }
 
         Im.beginFrame();
 

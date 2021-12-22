@@ -489,6 +489,9 @@ class BaseTextFieldView extends FieldView {
         if (super.usesScanCode(scanCode))
             return true;
 
+        if (editText != null && editText.editing)
+            return true;
+
         if (suggestionsView == null || suggestions == null || suggestions.length == 0)
             return false;
 
@@ -502,6 +505,34 @@ class BaseTextFieldView extends FieldView {
             return true;
         }
         else if (focused && scanCode == ScanCode.ENTER) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    override function usesKeyCode(keyCode:KeyCode):Bool {
+
+        if (super.usesKeyCode(keyCode))
+            return true;
+
+        if (editText != null && editText.editing)
+            return true;
+
+        if (suggestionsView == null || suggestions == null || suggestions.length == 0)
+            return false;
+
+        if (keyCode == KeyCode.ESCAPE) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.DOWN) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.UP) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.ENTER) {
             return true;
         }
 

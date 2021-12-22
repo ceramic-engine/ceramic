@@ -2,8 +2,9 @@ package elements;
 
 import ceramic.TextView;
 import elements.Context.context;
+import tracker.Observable;
 
-class LabelView extends TextView {
+class LabelView extends TextView implements Observable {
 
     @observe public var disabled:Bool = false;
 
@@ -26,7 +27,7 @@ class LabelView extends TextView {
         var theme = context.theme;
 
         if (disabled) {
-            textColor = theme.mediumTextColor;
+            textColor = theme.darkTextColor;
         }
         else {
             textColor = theme.lightTextColor;

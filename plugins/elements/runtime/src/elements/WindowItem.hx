@@ -475,6 +475,8 @@ class WindowItem {
             });
         }
 
+        field.disabled = disabled;
+
         if (labeled != null) {
             labeled.viewWidth = ViewSize.fill();
         }
@@ -530,6 +532,8 @@ class WindowItem {
         if (justCreated || previous.int1 != int0) {
             field.value = int0;
         }
+
+        field.disabled = disabled;
 
         if (labeled != null) {
             labeled.viewWidth = ViewSize.fill();
@@ -850,6 +854,8 @@ class WindowItem {
             }
         }
 
+        field.disabled = disabled;
+
         if (labeled != null) {
             labeled.viewWidth = ViewSize.fill();
         }
@@ -903,6 +909,7 @@ class WindowItem {
             case 1: RIGHT;
             case 2: CENTER;
         };
+        text.disabled = disabled;
         text.viewWidth = ViewSize.fill();
         return text;
 
@@ -931,6 +938,7 @@ class WindowItem {
                 }
             });
         }
+        button.disabled = disabled;
         button.viewWidth = ViewSize.fill();
         return button;
 

@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.KeyCode;
 import ceramic.LinearLayout;
 import ceramic.Point;
 import ceramic.ScanCode;
@@ -142,6 +143,12 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
     public function usesScanCode(scanCode:ScanCode):Bool {
 
         return focused && (scanCode == ESCAPE || scanCode == ENTER);
+
+    }
+
+    public function usesKeyCode(keyCode:KeyCode):Bool {
+
+        return focused && (keyCode == ESCAPE || keyCode == ENTER);
 
     }
 

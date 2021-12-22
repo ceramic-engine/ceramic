@@ -17,6 +17,7 @@ import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.KeyBinding;
+import ceramic.KeyCode;
 import ceramic.LongPress;
 import ceramic.Quad;
 import ceramic.ReadOnlyArray;
@@ -389,6 +390,22 @@ class Im {
         var field = FieldSystem.shared.focusedField;
         if (field != null) {
             return field.usesScanCode(scanCode);
+        }
+
+        return false;
+
+    }
+
+    /**
+     * Returns `true` if there is a currently focused field that uses the given key code
+     * @param keyCode The key code to test
+     * @return `true` if this key code is used
+     */
+    public static function usesKeyCode(keyCode:KeyCode):Bool {
+
+        var field = FieldSystem.shared.focusedField;
+        if (field != null) {
+            return field.usesKeyCode(keyCode);
         }
 
         return false;
@@ -1443,6 +1460,7 @@ class Im {
 
         var item = WindowItem.get();
         item.flex = _flex;
+        item.disabled = _fieldsDisabled;
         item.kind = TEXT;
         item.string0 = value;
         item.string1 = item.string0;

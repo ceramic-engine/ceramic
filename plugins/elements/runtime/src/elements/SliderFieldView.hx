@@ -28,6 +28,21 @@ class SliderFieldView extends BaseTextFieldView {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    @observe public var disabled(default, set):Bool = false;
+    function set_disabled(disabled:Bool):Bool {
+        if (this.disabled != disabled) {
+            this.disabled = disabled;
+            touchable = !disabled;
+            if (editText != null) {
+                editText.disabled = disabled;
+            }
+            if (disabled && unobservedFocused) {
+                screen.focusedVisual = null;
+            }
+        }
+        return disabled;
+    }
+
     public var round:Int = -1;
 
 /// Internal properties
@@ -229,17 +244,26 @@ class SliderFieldView extends BaseTextFieldView {
             sliderContainer.borderDepth = 0;
             sliderContainer.borderColor = theme.darkBorderColor;
         }
+        else if (disabled) {
+            sliderSquare.color = theme.darkerTextColor;
+            sliderContainer.color = theme.darkBackgroundColor;
+            borderColor = theme.mediumBorderColor;
+            sliderContainer.borderSize = 0;
+            textView.textAlpha = 0.5;
+        }
         else if (focused) {
             sliderSquare.color = theme.mediumTextColor;
             sliderContainer.color = theme.lightBackgroundColor;
             borderColor = theme.focusedFieldBorderColor;
             sliderContainer.borderSize = 0;
+            textView.textAlpha = 1;
         }
         else {
             sliderSquare.color = theme.darkTextColor;
             sliderContainer.color = theme.mediumBackgroundColor;
             borderColor = theme.lightBorderColor;
             sliderContainer.borderSize = 0;
+            textView.textAlpha = 1;
         }
 
     }

@@ -174,7 +174,7 @@ class LabeledView<T:View> extends RowLayout implements Observable {
         var theme = context.theme;
 
         if (disabled) {
-            labelText.textColor = theme.mediumTextColor;
+            labelText.textColor = theme.darkTextColor;
         }
         else {
             labelText.textColor = theme.lightTextColor;

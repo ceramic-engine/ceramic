@@ -210,8 +210,8 @@ class Window extends ColumnLayout implements Observable {
 
         if (dragging) {
             pos(
-                windowPosStartX + diffX,
-                windowPosStartY + diffY
+                Math.round(windowPosStartX + diffX),
+                Math.round(windowPosStartY + diffY)
             );
         }
 

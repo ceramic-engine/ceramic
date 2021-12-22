@@ -31,7 +31,17 @@ class Button extends TextView implements Observable implements TabFocusable {
 
     @observe public var inputStyle:InputStyle = DEFAULT;
 
-    @observe public var enabled:Bool = true;
+    @observe public var enabled(default, set):Bool = true;
+    function set_enabled(enabled:Bool):Bool {
+        if (this.enabled != enabled) {
+            this.enabled = enabled;
+            touchable = enabled;
+            if (!enabled && unobservedFocused) {
+                screen.focusedVisual = null;
+            }
+        }
+        return disabled;
+    }
 
     @:noCompletion public var disabled(get, set):Bool;
     function get_disabled():Bool return !enabled;
@@ -187,12 +197,14 @@ class Button extends TextView implements Observable implements TabFocusable {
                 else {
                     borderColor = theme.lightBorderColor;
                 }
+                borderAlpha = 1;
             }
             else {
                 alpha = 0.6;
                 text.alpha = 0.5;
                 color = theme.buttonBackgroundColor;
                 borderColor = theme.lightBorderColor;
+                borderAlpha = 0.5;
             }
         }
 

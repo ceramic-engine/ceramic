@@ -61,6 +61,7 @@ class ColorPickerHSLuvGradientView extends View {
         super();
 
         filter = new Filter();
+        filter.textureFilter = NEAREST;
         add(filter);
 
         transparent = true;
@@ -71,6 +72,7 @@ class ColorPickerHSLuvGradientView extends View {
         colorPointer.depth = 3;
         colorPointer.borderPosition = INSIDE;
         colorPointer.borderSize = 1;
+        colorPointer.roundTranslation = 1;
         filter.content.add(colorPointer);
 
         gradient = new Mesh();
@@ -111,8 +113,8 @@ class ColorPickerHSLuvGradientView extends View {
         updateGradientColors();
         updatePointerFromColor();
 
-        onPointerDown(this, handlePointerDown);
-        onPointerUp(this, handlePointerUp);
+        filter.content.onPointerDown(this, handlePointerDown);
+        filter.content.onPointerUp(this, handlePointerUp);
 
     }
 

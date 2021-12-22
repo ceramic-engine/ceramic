@@ -3,6 +3,7 @@ package elements;
 import ceramic.Color;
 import ceramic.EditText;
 import ceramic.GeometryUtils;
+import ceramic.KeyCode;
 import ceramic.LayersLayout;
 import ceramic.Point;
 import ceramic.Quad;
@@ -37,6 +38,21 @@ class ColorFieldView extends FieldView {
 /// Public properties
 
     @observe public var value:Color = Color.WHITE;
+
+    @observe public var disabled(default, set):Bool = false;
+    function set_disabled(disabled:Bool):Bool {
+        if (this.disabled != disabled) {
+            this.disabled = disabled;
+            touchable = !disabled;
+            if (editText != null) {
+                editText.disabled = disabled;
+            }
+            if (disabled && unobservedFocused) {
+                screen.focusedVisual = null;
+            }
+        }
+        return disabled;
+    }
 
 /// Internal properties
 
@@ -76,7 +92,6 @@ class ColorFieldView extends FieldView {
         container = new RowLayout();
         container.viewSize(fill(), auto());
         container.padding(6, 6, 6, 6);
-        container.borderSize = 1;
         container.borderPosition = INSIDE;
         container.transparent = false;
         add(container);
@@ -410,10 +425,18 @@ class ColorFieldView extends FieldView {
         textPrefixView.font = theme.mediumFont;
 
         if (focused || pickerVisible) {
+            container.borderSize = 1;
             container.borderColor = theme.focusedFieldBorderColor;
+            textView.textAlpha = 1;
+        }
+        else if (disabled) {
+            container.borderSize = 0;
+            textView.textAlpha = 0.5;
         }
         else {
+            container.borderSize = 1;
             container.borderColor = theme.lightBorderColor;
+            textView.textAlpha = 1;
         }
 
     }
@@ -508,10 +531,32 @@ class ColorFieldView extends FieldView {
         if (super.usesScanCode(scanCode))
             return true;
 
+        if (editText != null && editText.editing)
+            return true;
+
         if (!pickerVisible || pickerView == null)
             return false;
 
         if (scanCode == ScanCode.ESCAPE || scanCode == ScanCode.ENTER) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    override function usesKeyCode(keyCode:KeyCode):Bool {
+
+        if (super.usesKeyCode(keyCode))
+            return true;
+
+        if (editText != null && editText.editing)
+            return true;
+
+        if (!pickerVisible || pickerView == null)
+            return false;
+
+        if (keyCode == KeyCode.ESCAPE || keyCode == KeyCode.ENTER) {
             return true;
         }
 

@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.KeyCode;
 import ceramic.Line;
 import ceramic.Point;
 import ceramic.ReadOnlyArray;
@@ -528,6 +529,37 @@ class SelectFieldView extends FieldView {
             return true;
         }
         else if (focused && scanCode == ScanCode.BACKSPACE) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    override function usesKeyCode(keyCode:KeyCode):Bool {
+
+        if (super.usesKeyCode(keyCode))
+            return true;
+
+        if (listView == null || !listView.computedVisible)
+            return false;
+
+        if (keyCode == KeyCode.ESCAPE) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.DOWN) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.UP) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.ENTER) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.SPACE) {
+            return true;
+        }
+        else if (focused && keyCode == KeyCode.BACKSPACE) {
             return true;
         }
 
