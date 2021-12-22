@@ -2201,12 +2201,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             computeMatrix();
         }
 
-        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-        _matrix.invert();
-
-        point.x = _matrix.transformX(x, y);
-        point.y = _matrix.transformY(x, y);
-
         if (handleFilters) {
             // A visuals that renders to texture never hits by default
             // unless the render texture is managed by a `Filter` instance, re-routing touch
@@ -2218,8 +2212,16 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                         if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
                             if (filter.renderTexture == computedRenderTarget) {
-                                filter.screenToVisual(point.x, point.y, point);
-                                break;
+                                filter.screenToVisual(x, y, point);
+
+                                _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
+                                _matrix.invert();
+                                var _x = point.x;
+                                var _y = point.y;
+                                point.x = _matrix.transformX(_x, _y);
+                                point.y = _matrix.transformY(_x, _y);
+
+                                return;
                             }
                         }
                         parent = parent.parent;
@@ -2228,6 +2230,11 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                 }
             }
         }
+
+        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
+        _matrix.invert();
+        point.x = _matrix.transformX(x, y);
+        point.y = _matrix.transformY(x, y);
 
     }
 
@@ -2244,11 +2251,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             computeMatrix();
         }
 
-        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
-
-        point.x = _matrix.transformX(x, y);
-        point.y = _matrix.transformY(x, y);
-
         if (handleFilters) {
             // A visuals that renders to texture never hits by default
             // unless the render texture is managed by a `Filter` instance, re-routing touch
@@ -2260,8 +2262,14 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                         if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
                             if (filter.renderTexture == computedRenderTarget) {
+
+                                _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
+                                point.x = _matrix.transformX(x, y);
+                                point.y = _matrix.transformY(x, y);
+
                                 filter.visualToScreen(point.x, point.y, point);
-                                break;
+
+                                return;
                             }
                         }
                         parent = parent.parent;
@@ -2270,6 +2278,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                 }
             }
         }
+
+        _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
+        point.x = _matrix.transformX(x, y);
+        point.y = _matrix.transformY(x, y);
 
     }
 
