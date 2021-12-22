@@ -40,6 +40,14 @@ class TextView extends View {
         return textColor;
     }
 
+    public var textAlpha(get,set):Float;
+    inline function get_textAlpha():Float return text.alpha;
+    function set_textAlpha(textAlpha:Float):Float {
+        if (this.textAlpha == textAlpha) return textAlpha;
+        text.alpha = textAlpha;
+        return textAlpha;
+    }
+
     public var content(get,set):String;
     inline function get_content():String return text.content;
     function set_content(content:String):String {
@@ -238,7 +246,7 @@ class TextView extends View {
         else {
             text.fitWidth = -1;
         }
-        
+
         switch [verticalAlign, text.align] {
             case [TOP, LEFT]:
                 text.anchor(0, 0);
@@ -300,7 +308,7 @@ class TextView extends View {
             text.anchorX = 0.5;
             text.x = width * 0.5 + paddingLeft - paddingRight;
         }
-        
+
         #if ceramic_debug_layout
         ceramic.Shortcuts.log.popIndent();
         #end
