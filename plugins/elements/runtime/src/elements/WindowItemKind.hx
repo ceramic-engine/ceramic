@@ -40,4 +40,6 @@ enum abstract WindowItemKind(Int) from Int to Int {
 
     var LIST;
 
+    var TABS;
+
 }

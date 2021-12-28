@@ -109,6 +109,12 @@ class Im {
 
     static var _currentRowIndex:Int = -1;
 
+    static var _currentTabBarItem:WindowItem = null;
+
+    static var _inTab:Bool = false;
+
+    static var _currentTabIndex:Int = -1;
+
     static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
 
     static var _labelPosition:LabelPosition = DEFAULT_LABEL_POSITION;
@@ -551,12 +557,98 @@ class Im {
 
     }
 
+    public static function beginTabs(selected:StringPointer):Bool {
+
+        assert(_currentTabBarItem == null, 'Called beginTabs() multiple times! (nested tabs are not supported)');
+
+        var windowData = _currentWindowData;
+
+        var item = WindowItem.get();
+        item.disabled = _fieldsDisabled;
+        item.kind = TABS;
+        item.string0 = Im.readString(selected);
+        item.string1 = item.string0;
+        item.stringArray0 = [];
+        item.stringArray1 = [];
+        item.any0 = selected;
+
+        windowData.addItem(item);
+
+        var selectedChanged = false;
+
+        if (item.isSameItem(item.previous)) {
+            // Did selected changed from list last frame?
+            var prevSelected = item.previous.string0;
+            var newSelected = item.previous.string1;
+            if (newSelected != prevSelected) {
+                selectedChanged = true;
+                item.string0 = newSelected;
+                item.string1 = newSelected;
+                Im.writeString(selected, newSelected);
+            }
+        }
+
+        _currentTabBarItem = item;
+        _currentTabIndex = -1;
+        _inTab = false;
+
+        return selectedChanged;
+
+    }
+
+    public static function endTabs():Void {
+
+        _inTab = false;
+        _currentTabBarItem = null;
+
+    }
+
+    public static inline extern overload function tab(key:String):Bool {
+
+        return _tab(key, null);
+
+    }
+
+    public static inline extern overload function tab(key:String, title:String):Bool {
+
+        return _tab(key, title);
+
+    }
+
+    static function _tab(key:String, title:String):Bool {
+
+        assert(_currentTabBarItem == null, 'Duplicate tab() calls!');
+
+        // Get or create window
+        var id = extractId(key);
+        var title = title != null ? title : extractTitle(key);
+
+        _currentTabBarItem.stringArray0.push(id);
+        _currentTabBarItem.stringArray1.push(title);
+
+        if (_currentTabBarItem.stringArray0.length == 1) {
+            // First tab, set it default if there is no tab selected yet
+            var selected:StringPointer = _currentTabBarItem.any0;
+            var selectedValue = Im.readString(selected);
+            if (selectedValue == null) {
+                selectedValue = id;
+                Im.writeString(selected, selectedValue);
+                _currentTabBarItem.string0 = selectedValue;
+                _currentTabBarItem.string1 = selectedValue;
+            }
+        }
+
+        return id == _currentTabBarItem.string0;
+
+    }
+
     public static function beginRow():Void {
 
         assert(_inRow == false, 'Called beginRow() multiple times! (nested rows are not supported)');
 
         _currentRowIndex++;
         _inRow = true;
+        _flex = 1;
 
     }
 
@@ -1752,6 +1844,8 @@ class Im {
         _currentWindowData = null;
         _currentRowIndex = -1;
         _inRow = false;
+        _currentTabIndex = -1;
+        _inTab = false;
 
     }
 

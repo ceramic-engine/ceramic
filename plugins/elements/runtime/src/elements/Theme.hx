@@ -93,6 +93,18 @@ class Theme extends Model {
 
     @serialize public var buttonFocusedBorderColor:Color = 0x4798EB;
 
+/// Tabs
+
+    @serialize public var tabsBackgroundColor:Color = 0x888888;
+
+    @serialize public var tabsBackgroundAlpha:Float = 0.1;
+
+    @serialize public var tabsHoverBackgroundColor:Color = 0x888888;
+
+    @serialize public var tabsHoverBackgroundAlpha:Float = 0.2;
+
+    @serialize public var tabsBorderColor:Color = 0x636363;
+
 /// Window
 
     @serialize public var windowBackgroundColor:Color = 0x1C1C1C;

@@ -8,6 +8,7 @@ import ceramic.Pool;
 import ceramic.View;
 import ceramic.ViewSize;
 import ceramic.Visual;
+import elements.Context.context;
 import elements.TextFieldView;
 import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
@@ -91,6 +92,8 @@ class WindowItem {
     public var visual:Visual = null;
 
     public var stringArray0:Array<String> = null;
+
+    public var stringArray1:Array<String> = null;
 
     public var row:Int = -1;
 
@@ -176,6 +179,9 @@ class WindowItem {
             case LIST:
                 return isSimilarLabel(item);
 
+            case TABS:
+                return true;
+
         }
 
     }
@@ -233,6 +239,9 @@ class WindowItem {
             case LIST:
                 createOrUpdateList(view);
 
+            case TABS:
+                createOrUpdateTabs(view);
+
         }
 
         if (view != null) {
@@ -272,6 +281,7 @@ class WindowItem {
         any4 = null;
         any5 = null;
         stringArray0 = null;
+        stringArray1 = null;
         if (visual != null && visual.parent == null) {
             visual.active = false;
         }
@@ -1110,6 +1120,44 @@ class WindowItem {
         list.viewWidth = ViewSize.fill();
         list.viewHeight = float0;
         return list;
+
+    }
+
+    function createOrUpdateTabs(view:View):View {
+
+        var tabs:TabsLayout = (view != null ? cast view : null);
+        var justCreated = false;
+        if (tabs == null) {
+            justCreated = true;
+            tabs = new TabsLayout();
+        }
+
+        tabs.data = this;
+
+        if (!Equal.equal(tabs.tabs, stringArray1)) {
+            tabs.tabs = stringArray1;
+        }
+        tabs.selectedIndex = stringArray0.indexOf(string0);
+        tabs.marginX = context.theme.formPadding;
+
+        if (justCreated) {
+
+            tabs.onSelectedIndexChange(null, (index, prevIndex) -> {
+                var windowItem:WindowItem = tabs.hasData ? tabs.data : null;
+                if (windowItem != null) {
+                    if (index >= 0) {
+                        windowItem.string1 = windowItem.stringArray0[index];
+                    }
+                    else {
+                        windowItem.string1 = null;
+                    }
+                }
+            });
+        }
+
+        tabs.viewWidth = ViewSize.fill();
+
+        return tabs;
 
     }
 
