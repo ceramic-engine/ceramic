@@ -51,8 +51,11 @@ import ceramic.SpineData;
 #end
 
 #if macro
+import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import sys.FileSystem;
+import sys.io.File;
 #end
 
 
@@ -597,6 +600,16 @@ class Im {
     }
 
     public static function endTabs():Void {
+
+        assert(_currentTabBarItem == null, 'beginTabs() must be called before endTabs()');
+
+        // Ensure that selected value is valid.
+        // If not, change it to first entry in array
+        // var selectedValue = _currentTabBarItem.string0;
+        // if (_currentTabBarItem.stringArray0.indexOf(selectedValue) == -1) {
+        //     selectedValue = _currentTabBarItem.stringArray0[0];
+        //     _currentTabBarItem.string1 = selectedValue;
+        // }
 
         _inTab = false;
         _currentTabBarItem = null;
@@ -2564,8 +2577,10 @@ class Im {
             // C# target and its quirks...
             return switch value.expr {
                 case EConst(CIdent('null')):
+                    var pos = Context.getPosInfos(Context.currentPos());
+                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                     macro {
-                        var handle = elements.Im.handle();
+                        var handle = elements.Im.handle($v{posInfos});
                         function(?_val:Dynamic):Bool {
                             return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
                         };
@@ -2579,8 +2594,10 @@ class Im {
         else {
             return switch value.expr {
                 case EConst(CIdent('null')):
+                    var pos = Context.getPosInfos(Context.currentPos());
+                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                     macro {
-                        var handle = elements.Im.handle();
+                        var handle = elements.Im.handle($v{posInfos});
                         function(?_val:Bool):Bool {
                             return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
                         };
@@ -2598,8 +2615,10 @@ class Im {
 
         return switch value.expr {
             case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle();
+                    var handle = elements.Im.handle($v{posInfos});
                     function(?_val:Int):Int {
                         return _val != null ? elements.Im.setIntAtHandle(handle, _val) : elements.Im.intAtHandle(handle);
                     };
@@ -2616,8 +2635,10 @@ class Im {
 
         return switch value.expr {
             case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle();
+                    var handle = elements.Im.handle($v{posInfos});
                     function(?_val:Int):Int {
                         return _val != null ? elements.Im.setColorAtHandle(handle, _val) : elements.Im.colorAtHandle(handle);
                     };
@@ -2634,8 +2655,10 @@ class Im {
 
         return switch value.expr {
             case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle();
+                    var handle = elements.Im.handle($v{posInfos});
                     function(?_val:String, ?erase:Bool):String {
                         return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
                     };
@@ -2652,8 +2675,10 @@ class Im {
 
         return switch value.expr {
             case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle();
+                    var handle = elements.Im.handle($v{posInfos});
                     function(?_val:Float):Float {
                         return _val != null ? elements.Im.setFloatAtHandle(handle, _val) : elements.Im.floatAtHandle(handle);
                     };
@@ -2670,8 +2695,10 @@ class Im {
 
         return switch value.expr {
             case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle();
+                    var handle = elements.Im.handle($v{posInfos});
                     function(?_val:Array<Dynamic>, ?erase:Bool):Array<Dynamic> {
                         return _val != null || erase ? elements.Im.setArrayAtHandle(handle, _val) : elements.Im.arrayAtHandle(handle);
                     };
@@ -2683,5 +2710,51 @@ class Im {
         }
 
     }
+
+    #if macro
+
+    static var _fileCache:Map<String,String> = null;
+
+    static function _posInfosFromFileAndChar(file:String, char:Int):haxe.PosInfos {
+
+        if (_fileCache == null) {
+            _fileCache = new Map();
+        }
+
+        if (!Path.isAbsolute(file)) {
+            file = Path.normalize(Path.join([Sys.getCwd(), file]));
+        }
+
+        if (!_fileCache.exists(file)) {
+            var data:String = null;
+            if (FileSystem.exists(file) && !FileSystem.isDirectory(file)) {
+                data = File.getContent(file);
+            }
+            _fileCache.set(file, data);
+        }
+
+        var fileData:String = _fileCache.get(file);
+        if (fileData != null) {
+
+            var line:Int = 1;
+            for (i in 0...char) {
+                if (fileData.charCodeAt(i) == '\n'.code)
+                    line++;
+            }
+
+            return {
+                fileName: file,
+                lineNumber: line,
+                className: null,
+                methodName: null
+            };
+        }
+        else {
+            return null;
+        }
+
+    }
+
+    #end
 
 }
