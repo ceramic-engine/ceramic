@@ -116,14 +116,16 @@ class Camera extends Entity {
     public var deadZoneY:Float = 0.1;
 
     /**
-     * Horizontal friction
+     * Horizontal friction.
+     * More the value is below 1.0, higher is the friction.
      */
-    public var frictionX:Float = 0.69;
+    public var frictionX:Float = 1.0;
 
     /**
-     * Vertical friction
+     * Vertical friction.
+     * More the value is below 1.0, higher is the friction.
      */
-    public var frictionY:Float = 0.69;
+    public var frictionY:Float = 1.0;
 
     /**
      * Content x (top left corner) position
@@ -197,8 +199,8 @@ class Camera extends Entity {
             }
         }
 
-        var frictionX:Float = 1.0;
-        var frictionY:Float = 1.0;
+        var frictionX:Float = this.frictionX;
+        var frictionY:Float = this.frictionY;
         if (clampToContentBounds) {
 
             // "brake" when approaching bounds
