@@ -125,8 +125,6 @@ class ColorPickerPaletteColorView extends View implements Observable {
 
     function handleDraggingChange(dragging:Bool, wasDragging:Bool) {
 
-        trace('dragging change dragging=$dragging wasDragging=$wasDragging');
-
         if (wasDragging && !dragging) {
             emitDrop(this);
         }
