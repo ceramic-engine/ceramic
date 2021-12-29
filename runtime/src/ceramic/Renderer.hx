@@ -146,9 +146,11 @@ class Renderer extends Entity {
         var defaultTexturedShader:backend.Shader = ceramic.App.app.defaultTexturedShader.backendItem;
 
         // Mark auto-rendering render textures as dirty
+        // and mark render textures as 'not used yet'
         var allRenderTextures = ceramic.App.app.renderTextures;
         for (ii in 0...allRenderTextures.length) {
             var renderTexture = allRenderTextures.unsafeGet(ii);
+            renderTexture._usedInRendering = false;
             if (renderTexture.autoRender) {
                 renderTexture.renderDirty = true;
             }
@@ -293,6 +295,13 @@ class Renderer extends Entity {
         }
     #end
 
+        // Mark all textures as rendered (renderDirty = false)
+        var allRenderTextures = ceramic.App.app.renderTextures;
+        for (ii in 0...allRenderTextures.length) {
+            var renderTexture = allRenderTextures.unsafeGet(ii);
+            renderTexture.renderDirty = false;
+        }
+
         // Restore state
         draw.setActiveTexture(0);
         activeTextureSlot = 0;
@@ -379,6 +388,7 @@ class Renderer extends Entity {
         else {
             // Check if state is dirty
             var textureToUseInSameBatch = null;
+            var needsCheckRenderTextureClear = true;
             if (!stateDirty) {
                 var newComputedBlending = computeQuadBlending(quad);
                 stateDirty =
@@ -403,8 +413,15 @@ class Renderer extends Entity {
                         if (quad.texture != null && lastTexture != null) {
                             // Different ceramic textures could use the same backend texture
                             if (!draw.textureBackendItemMatchesId(quad.texture.backendItem, lastTextureId)) {
+                                // Check that we don't draw a dirty render texture
+                                if (isNotRenderedRenderTexture(quad.texture)) {
+                                    needsCheckRenderTextureClear = false;
+                                    flush(draw);
+                                    useRenderTarget(draw, quad.texture.asRenderTexture);
+                                    stateDirty = true;
+                                }
                                 // We could use multiple texture in same batch
-                                if (!canUseTextureInSameBatch(draw, quad.texture)) {
+                                else if (!canUseTextureInSameBatch(draw, quad.texture)) {
     #if ceramic_debug_draw_flush_reason
                                     if (debugDraw) {
                                         log.debug('- dirty: texture not matching');
@@ -417,8 +434,15 @@ class Renderer extends Entity {
                                 }
                             }
                         } else {
+                            // Check that we don't draw a dirty render texture
+                            if (quad.texture != null && isNotRenderedRenderTexture(quad.texture)) {
+                                needsCheckRenderTextureClear = false;
+                                flush(draw);
+                                useRenderTarget(draw, quad.texture.asRenderTexture);
+                                stateDirty = true;
+                            }
                             // We could use multiple texture in same batch
-                            if (!canUseTextureInSameBatch(draw, quad.texture)) {
+                            else if (!canUseTextureInSameBatch(draw, quad.texture)) {
     #if ceramic_debug_draw_flush_reason
                                 if (debugDraw) {
                                     log.debug('- dirty: texture not matching');
@@ -435,6 +459,15 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
+
+                if (needsCheckRenderTextureClear) {
+                    // Check that we don't draw a dirty render texture
+                    if (quad.texture != null && isNotRenderedRenderTexture(quad.texture)) {
+                        flush(draw);
+                        useRenderTarget(draw, quad.texture.asRenderTexture);
+                    }
+                }
+
                 flushAndCleanState();
             }
             else {
@@ -754,6 +787,7 @@ class Renderer extends Entity {
         else {
             // Check if state is dirty
             var textureToUseInSameBatch = null;
+            var needsCheckRenderTextureClear = true;
             if (!stateDirty) {
                 var newComputedBlending = computeMeshBlending(mesh);
                 stateDirty =
@@ -778,8 +812,15 @@ class Renderer extends Entity {
                         if (mesh.texture != null && lastTexture != null) {
                             // Different ceramic textures could use the same backend texture
                             if (!draw.textureBackendItemMatchesId(mesh.texture.backendItem, lastTextureId)) {
+                                // Check that we don't draw a dirty render texture
+                                if (isNotRenderedRenderTexture(mesh.texture)) {
+                                    needsCheckRenderTextureClear = false;
+                                    flush(draw);
+                                    useRenderTarget(draw, mesh.texture.asRenderTexture);
+                                    stateDirty = true;
+                                }
                                 // We could use multiple texture in same batch
-                                if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+                                else if (!canUseTextureInSameBatch(draw, mesh.texture)) {
     #if ceramic_debug_draw_flush_reason
                                     if (debugDraw) {
                                         log.debug('- dirty: texture not matching');
@@ -792,8 +833,15 @@ class Renderer extends Entity {
                                 }
                             }
                         } else {
+                            // Check that we don't draw a dirty render texture
+                            if (mesh.texture != null && isNotRenderedRenderTexture(mesh.texture)) {
+                                needsCheckRenderTextureClear = false;
+                                flush(draw);
+                                useRenderTarget(draw, mesh.texture.asRenderTexture);
+                                stateDirty = true;
+                            }
                             // We could use multiple texture in same batch
-                            if (!canUseTextureInSameBatch(draw, mesh.texture)) {
+                            else if (!canUseTextureInSameBatch(draw, mesh.texture)) {
     #if ceramic_debug_draw_flush_reason
                                 if (debugDraw) {
                                     log.debug('- dirty: texture not matching');
@@ -810,6 +858,15 @@ class Renderer extends Entity {
             }
 
             if (stateDirty) {
+
+                if (needsCheckRenderTextureClear) {
+                    // Check that we don't draw a dirty render texture
+                    if (mesh.texture != null && isNotRenderedRenderTexture(mesh.texture)) {
+                        flush(draw);
+                        useRenderTarget(draw, mesh.texture.asRenderTexture);
+                    }
+                }
+
                 flushAndCleanState();
             }
             else {
@@ -2445,9 +2502,17 @@ class Renderer extends Entity {
 
     }
 
+    inline function isNotRenderedRenderTexture(texture:ceramic.Texture):Bool {
+
+        var renderTexture = texture.asRenderTexture;
+        return (renderTexture != null && renderTexture.renderDirty && !renderTexture._usedInRendering);
+
+    }
+
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
 
         if (renderTarget != null) {
+            renderTarget._usedInRendering = true;
             draw.setRenderTarget(renderTarget);
         }
         else {
