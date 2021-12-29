@@ -392,7 +392,7 @@ class Draw #if !completion implements spec.Draw #end {
 
                 if (renderTarget.clearOnRender || !backendItem.usedAsRenderTarget) {
                     // We force clearing render target if it's the first time we use it.
-                    // This is to prevent a but experienced on iOS (but not necessary exclusive to iOS)
+                    // This is to prevent a bug experienced on iOS (but not necessarily exclusive to iOS)
                     // where first draw is messed up if we don't clear before.
                     backendItem.usedAsRenderTarget = true;
                     untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(0f, 0f, 0f, 0f), 1f)');
