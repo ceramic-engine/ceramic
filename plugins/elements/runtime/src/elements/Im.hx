@@ -2580,7 +2580,7 @@ class Im {
                     var pos = Context.getPosInfos(Context.currentPos());
                     var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                     macro {
-                        var handle = elements.Im.handle($v{posInfos});
+                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                         function(?_val:Dynamic):Bool {
                             return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
                         };
@@ -2597,7 +2597,7 @@ class Im {
                     var pos = Context.getPosInfos(Context.currentPos());
                     var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                     macro {
-                        var handle = elements.Im.handle($v{posInfos});
+                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                         function(?_val:Bool):Bool {
                             return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
                         };
@@ -2618,7 +2618,7 @@ class Im {
                 var pos = Context.getPosInfos(Context.currentPos());
                 var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle($v{posInfos});
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                     function(?_val:Int):Int {
                         return _val != null ? elements.Im.setIntAtHandle(handle, _val) : elements.Im.intAtHandle(handle);
                     };
@@ -2638,7 +2638,7 @@ class Im {
                 var pos = Context.getPosInfos(Context.currentPos());
                 var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle($v{posInfos});
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                     function(?_val:Int):Int {
                         return _val != null ? elements.Im.setColorAtHandle(handle, _val) : elements.Im.colorAtHandle(handle);
                     };
@@ -2658,7 +2658,7 @@ class Im {
                 var pos = Context.getPosInfos(Context.currentPos());
                 var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle($v{posInfos});
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                     function(?_val:String, ?erase:Bool):String {
                         return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
                     };
@@ -2678,7 +2678,7 @@ class Im {
                 var pos = Context.getPosInfos(Context.currentPos());
                 var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle($v{posInfos});
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                     function(?_val:Float):Float {
                         return _val != null ? elements.Im.setFloatAtHandle(handle, _val) : elements.Im.floatAtHandle(handle);
                     };
@@ -2698,7 +2698,7 @@ class Im {
                 var pos = Context.getPosInfos(Context.currentPos());
                 var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
                 macro {
-                    var handle = elements.Im.handle($v{posInfos});
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
                     function(?_val:Array<Dynamic>, ?erase:Bool):Array<Dynamic> {
                         return _val != null || erase ? elements.Im.setArrayAtHandle(handle, _val) : elements.Im.arrayAtHandle(handle);
                     };
