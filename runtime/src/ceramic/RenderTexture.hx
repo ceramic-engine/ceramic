@@ -28,6 +28,9 @@ class RenderTexture extends Texture {
     var _didStampOnce:Bool = false;
     #end
 
+    @:allow(ceramic.Renderer)
+    var _usedInRendering:Bool = false;
+
 /// Lifecycle
 
     public function new(width:Int, height:Int, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -42,6 +45,7 @@ class RenderTexture extends Texture {
         super(backendItem, density #if ceramic_debug_entity_allocs , pos #end);
 
         isRenderTexture = true;
+        asRenderTexture = this;
 
         app.renderTextures.push(this);
 

@@ -21,6 +21,8 @@ class Texture extends Entity {
 
     public var isRenderTexture(default,null):Bool = false;
 
+    public var asRenderTexture(default,null):RenderTexture = null;
+
 /// Properties
 
     /**
