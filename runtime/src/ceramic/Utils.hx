@@ -549,4 +549,43 @@ class Utils {
 
     }
 
+    /**
+     * Given an array of X and Y values, interpolate a new Y value from interpolated X
+     * @param points A list of X and Y values
+     * @param interpolatedX The interpolated X key, used to find a matching interpolated Y
+     * @return Interpolated Y value
+     */
+    public static function yFromInterpolatedX(points:Array<Float>, interpolatedX:Float):Float {
+
+        final len = points.length;
+        final lenMinus1 = (len - 1) * 2;
+
+        assert(len > 1, 'Points array must not be empty');
+
+        var y:Float = 0.0;
+
+        if (interpolatedX < points.unsafeGet(0)) {
+            y = points.unsafeGet(1);
+        }
+        else if (interpolatedX >= points.unsafeGet(lenMinus1)) {
+            final lenMinus1Val = lenMinus1 + 1;
+            y = points.unsafeGet(lenMinus1Val);
+        }
+        else {
+            var i = 0;
+            var iPlus1 = 2;
+            while (interpolatedX > points.unsafeGet(iPlus1)) {
+                i += 2;
+                iPlus1 += 2;
+            }
+            final ratio = (interpolatedX - points.unsafeGet(i)) / (points.unsafeGet(iPlus1) - points.unsafeGet(i));
+            final iVal = i + 1;
+            final iPlus1Val = iPlus1 + 1;
+            y = points.unsafeGet(iVal) + (points.unsafeGet(iPlus1Val) - points.unsafeGet(iVal)) * ratio;
+        }
+
+        return y;
+
+    }
+
 }
