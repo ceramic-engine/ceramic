@@ -162,7 +162,37 @@ class Utils {
 
     }
 
-    public static function printStackTrace():String {
+    public static function println(data:String):Void {
+
+#if web
+        var electronRunner:Dynamic = null;
+        #if !completion
+        #if luxe
+        var mainClazz = Type.resolveClass('Main');
+        electronRunner = Reflect.field(mainClazz, 'electronRunner');
+        #elseif clay
+        electronRunner = backend.ElectronRunner.electronRunner;
+        #end
+        #end
+#end
+
+        #if web
+        if (electronRunner != null) {
+            electronRunner.consoleLog('[error] ' + data);
+        } else {
+            untyped console.log(''+data);
+        }
+        #elseif cs
+        trace(data);
+        #elseif sys
+        Sys.println(''+data);
+        #else
+        trace(data);
+        #end
+
+    }
+
+    public static function printStackTrace(returnOnly:Bool = false):String {
 
         var result = new StringBuf();
 #if web
@@ -170,19 +200,23 @@ class Utils {
 #end
 
         inline function print(data:Dynamic) {
-            #if web
-            if (electronRunner != null) {
-                electronRunner.consoleLog('[error] ' + data);
-            } else {
-                untyped console.log(''+data);
+            if (!returnOnly) {
+                #if web
+                if (electronRunner != null) {
+                    electronRunner.consoleLog('[error] ' + data);
+                } else {
+                    untyped console.log(''+data);
+                }
+                #elseif cs
+                trace(data);
+                #elseif sys
+                Sys.println(''+data);
+                #else
+                trace(data);
+                #end
             }
-            #elseif cs
-            trace(data);
-            #elseif sys
-            Sys.println(''+data);
-            #else
-            trace(data);
-            #end
+            result.add(data);
+            result.addChar('\n'.code);
         }
 
 #if web
