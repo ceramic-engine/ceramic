@@ -154,6 +154,8 @@ class Im {
 
     static var _allowedOwners:Array<Entity> = [];
 
+    static var _usedWindowKeys:Map<String,String> = new Map();
+
     public static function extractId(key:String):String {
 
         return key;
@@ -167,6 +169,8 @@ class Im {
     }
 
     @:noCompletion public static function beginFrame():Void {
+
+        _usedWindowKeys.clear();
 
         while (_beginFrameCallbacks.length > 0) {
             var cb = _beginFrameCallbacks.pop();
@@ -421,19 +425,19 @@ class Im {
 
     }
 
-    public extern inline static overload function begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
+    public extern inline static overload function begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
 
-        return _begin(key, title, width, height);
-
-    }
-
-    public extern inline static overload function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
-
-        return _begin(key, null, width, height);
+        return _begin(key, title, width, height, pos);
 
     }
 
-    static function _begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT):Window {
+    public extern inline static overload function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
+
+        return _begin(key, null, width, height, pos);
+
+    }
+
+    static function _begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
 
         assert(_currentWindowData == null, 'Duplicate begin() calls!');
 
@@ -446,6 +450,10 @@ class Im {
 
         // Get or create window
         var id = extractId(key);
+
+        assert(!_usedWindowKeys.exists(id), 'Duplicate window with identifier: $id / First call ${_usedWindowKeys.get(id)}');
+        _usedWindowKeys.set(id, _posInfosToString(pos));
+
         var title = title != null ? title : extractTitle(key);
         var windowData = context.windowsData.get(id);
         var window = windowData != null ? windowData.window : null;
@@ -601,7 +609,7 @@ class Im {
 
     public static function endTabs():Void {
 
-        assert(_currentTabBarItem == null, 'beginTabs() must be called before endTabs()');
+        assert(_currentTabBarItem != null, 'beginTabs() must be called before endTabs()');
 
         // Ensure that selected value is valid.
         // If not, change it to first entry in array
@@ -630,7 +638,7 @@ class Im {
 
     static function _tab(key:String, title:String):Bool {
 
-        assert(_currentTabBarItem == null, 'Duplicate tab() calls!');
+        assert(_currentTabBarItem != null, 'Duplicate tab() calls!');
 
         // Get or create window
         var id = extractId(key);
@@ -2389,6 +2397,17 @@ class Im {
     }
 
 /// Helpers
+
+    static function _posInfosToString(pos:haxe.PosInfos):String {
+
+        if (pos == null) {
+            return '?';
+        }
+        else {
+            return pos.fileName + ':' + pos.lineNumber;
+        }
+
+    }
 
     public static function handle(#if !completion ?pos:haxe.PosInfos #end):Handle {
 
