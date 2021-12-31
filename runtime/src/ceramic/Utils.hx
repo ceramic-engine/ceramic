@@ -591,8 +591,8 @@ class Utils {
      */
     public static function yFromInterpolatedX(points:Array<Float>, interpolatedX:Float):Float {
 
-        final len = points.length;
-        final lenMinus1 = (len - 1) * 2;
+        final len:Int = points.length;
+        final lenMinus1:Int = len - 2;
 
         assert(len > 1, 'Points array must not be empty');
 
