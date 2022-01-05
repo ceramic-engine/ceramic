@@ -256,6 +256,20 @@ class Input extends Entity {
 
     function willEmitGamepadDisable(gamepadId:Int):Void {
 
+        // Trigger buttons release and axis reset if needed
+        var key = gamepadId * GAMEPAD_STORAGE_SIZE;
+        for (i in 0...GAMEPAD_STORAGE_SIZE) {
+            var k = key + i;
+            var pressed = pressedGamepadButtons.get(k);
+            if (pressed > 0) {
+                emitGamepadUp(gamepadId, i);
+            }
+            var axis = gamepadAxisValues.get(k);
+            if (axis != 0) {
+                emitGamepadAxis(gamepadId, i, axis);
+            }
+        }
+
         // Remove gamepad from active list
         var index = activeGamepads.indexOf(gamepadId);
         if (index != -1) {
