@@ -1,16 +1,16 @@
 package backend;
 
-import clay.Types.WindowEventType;
-import clay.ScanCode;
-import clay.KeyCode;
-import clay.Types.TextEventType;
-import clay.Types.AppEventType;
-import clay.Types.GamepadDeviceEventType;
-import ceramic.IntMap;
-import clay.Types.ModState;
 import ceramic.IntBoolMap;
+import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
 import clay.Clay;
+import clay.KeyCode;
+import clay.ScanCode;
+import clay.Types.AppEventType;
+import clay.Types.GamepadDeviceEventType;
+import clay.Types.ModState;
+import clay.Types.TextEventType;
+import clay.Types.WindowEventType;
 
 @:access(backend.Backend)
 @:access(backend.Screen)
@@ -51,7 +51,7 @@ class ClayEvents extends clay.Events {
     var gamepadPressedValues:IntIntMap = new IntIntMap();
 
     #if !ceramic_no_axis_round
-    var gamepadAxisValues:IntMap<Float> = new IntMap();
+    var gamepadAxisValues:IntFloatMap = new IntFloatMap();
     #end
 
     var handleReady:()->Void;
@@ -161,7 +161,7 @@ class ClayEvents extends clay.Events {
 /// Overrides
 
     override function appEvent(type:AppEventType) {
-        
+
         switch type {
             case UNKNOWN:
             case TERMINATING:
@@ -197,7 +197,7 @@ class ClayEvents extends clay.Events {
 
         mouseX = x / Clay.app.screenDensity;
         mouseY = y / Clay.app.screenDensity;
-        
+
         mouseDownButtons.set(button, true);
         backend.screen.emitMouseDown(button, mouseX, mouseY);
 
@@ -238,7 +238,7 @@ class ClayEvents extends clay.Events {
     #if !(mac || windows || linux)
 
     override function touchDown(x:Float, y:Float, dx:Float, dy:Float, touchId:Int, timestamp:Float) {
-        
+
         var index = 0;
         while (touchIndexes.exists(index)) {
             index++;
@@ -273,7 +273,7 @@ class ClayEvents extends clay.Events {
     }
 
     override function touchMove(x:Float, y:Float, dx:Float, dy:Float, touchId:Int, timestamp:Float) {
-        
+
         if (!touches.exists(touchId)) {
             touchDown(x, y, dx, dy, touchId, timestamp);
         }
@@ -316,7 +316,7 @@ class ClayEvents extends clay.Events {
     }
 
     override function gamepadAxis(id:Int, axisId:Int, value:Float, timestamp:Float) {
-        
+
         #if !(ios || android) // No gamepad on ios & android for now
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
@@ -385,7 +385,7 @@ class ClayEvents extends clay.Events {
     }
 
     override function gamepadUp(id:Int, buttonId:Int, value:Float, timestamp:Float) {
-        
+
         #if !(ios || android)
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
@@ -443,11 +443,11 @@ class ClayEvents extends clay.Events {
         }
 
         #end
-        
+
     }
 
     override function text(text:String, start:Int, length:Int, type:TextEventType, timestamp:Float, windowId:Int) {
-        
+
         if (backend.textInput.inputActive) {
             backend.textInput.handleTextInput(text);
         }
