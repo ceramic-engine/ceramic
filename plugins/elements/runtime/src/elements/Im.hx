@@ -1960,9 +1960,14 @@ class Im {
         if (owner is Component) {
             var component:Component = cast owner;
             var entity = @:privateAccess component.getEntity();
-            if (entity is Visual) {
-                var visual:Visual = cast entity;
-                if (visual.hasIndirectParent(view)) {
+            if (entity != null) {
+                if (entity is Visual) {
+                    var visual:Visual = cast entity;
+                    if (visual.hasIndirectParent(view)) {
+                        return true;
+                    }
+                }
+                if (_allowedOwners.indexOf(entity) != -1) {
                     return true;
                 }
             }
@@ -1973,11 +1978,19 @@ class Im {
             var bindings = keyBinding.bindings;
             if (bindings != null) {
                 var entity = @:privateAccess bindings.getEntity();
-                if (entity is Visual) {
-                    var visual:Visual = cast entity;
-                    if (visual.hasIndirectParent(view)) {
+                if (entity != null) {
+                    if (entity is Visual) {
+                        var visual:Visual = cast entity;
+                        if (visual.hasIndirectParent(view)) {
+                            return true;
+                        }
+                    }
+                    if (_allowedOwners.indexOf(entity) != -1) {
                         return true;
                     }
+                }
+                if (_allowedOwners.indexOf(bindings) != 1) {
+                    return true;
                 }
             }
         }
