@@ -425,6 +425,18 @@ class Im {
 
     }
 
+    public static function usesCmdOrCtrl():Bool {
+
+        return usesScanCode(LMETA) || usesScanCode(RMETA) || usesScanCode(LCTRL) || usesScanCode(RCTRL);
+
+    }
+
+    public static function usesShift():Bool {
+
+        return usesScanCode(LSHIFT) || usesScanCode(RSHIFT);
+
+    }
+
     public extern inline static overload function begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
 
         return _begin(key, title, width, height, pos);
