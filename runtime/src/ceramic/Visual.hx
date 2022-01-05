@@ -2761,21 +2761,24 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             throw 'A visual cannot add itself as child!';
         }
 
-        App.app.hierarchyDirty = true;
+        if (visual.parent != this) {
 
-        if (visual.parent != null) {
-            visual.parent.remove(visual);
-        }
+            App.app.hierarchyDirty = true;
 
-        visual.parent = this;
-        visual.visibilityDirty = true;
-        visual.matrixDirty = true;
-        visual.renderTargetDirty = true;
-        if (children == null) {
-            children = [];
+            if (visual.parent != null) {
+                visual.parent.remove(visual);
+            }
+
+            visual.parent = this;
+            visual.visibilityDirty = true;
+            visual.matrixDirty = true;
+            visual.renderTargetDirty = true;
+            if (children == null) {
+                children = [];
+            }
+            @:privateAccess children.original.push(visual);
+            clipDirty = true;
         }
-        @:privateAccess children.original.push(visual);
-        clipDirty = true;
 
     }
 
