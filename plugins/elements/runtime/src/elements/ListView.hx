@@ -125,7 +125,7 @@ class ListView extends View implements Observable {
             if (item != null && view != null && !view.destroyed && view is CellView) {
                 var cellView:CellView = cast view;
                 var locked:Bool = false;
-                if (!Std.is(item, String) && Reflect.getProperty(item, 'locked') == true) {
+                if (!Std.isOfType(item, String) && Reflect.getProperty(item, 'locked') == true) {
                     locked = true;
                 }
                 cellView.locked = locked;
@@ -202,7 +202,7 @@ class ListViewDataSource implements CollectionViewDataSource {
             if (item == null)
                 return;
 
-            if (Std.is(item, String)) {
+            if (Std.isOfType(item, String)) {
                 cell.title = item;
                 cell.subTitle = null;
                 cell.locked = false;
@@ -299,7 +299,7 @@ class ListViewDataSource implements CollectionViewDataSource {
                 cell.handleLock = function() {
                     var items = listView.items;
                     var item:Dynamic = items != null ? items[cell.itemIndex] : null;
-                    if (item == null || Std.is(item, String))
+                    if (item == null || Std.isOfType(item, String))
                         return;
                     var locked = (item.locked != true);
                     item.locked = locked;
