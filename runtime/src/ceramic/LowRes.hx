@@ -28,6 +28,28 @@ class LowRes extends Layer {
     }
 
     /**
+     * Explicit render?
+     */
+    public var explicitRender(get,set):Bool;
+    inline function get_explicitRender():Bool {
+        return pixelArt.explicitRender;
+    }
+    inline function set_explicitRender(explicitRender:Bool):Bool {
+        return pixelArt.explicitRender = explicitRender;
+    }
+
+    /**
+     * Auto render?
+     */
+    public var autoRender(get,set):Bool;
+    inline function get_autoRender():Bool {
+        return pixelArt.autoRender;
+    }
+    inline function set_autoRender(autoRender:Bool):Bool {
+        return pixelArt.autoRender = autoRender;
+    }
+
+    /**
      * Density value used for supersampled content.
      * A density of 1 means no supersampling (thus no antialiasing).
      * Any value above (2 or more) will increase the supersampled content size and generate antialiasing.
