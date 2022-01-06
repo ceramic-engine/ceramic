@@ -84,7 +84,7 @@ class CollectionView extends ScrollView {
                 var frame = this.frames.unsafeGet(i);
 
                 if (frame.view != null) {
-                    if (autoDestroyItems) frame.view.destroy();
+                    frame.view.destroy();
                 }
             }
         }
