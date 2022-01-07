@@ -69,7 +69,7 @@ class GeometryUtils {
      */
     inline public static function angleTo(x0:Float, y0:Float, x1:Float, y1:Float):Float {
 
-        return Utils.radToDeg(Math.atan2(y1 - y0, x1 - x0)) - 90;
+        return Utils.radToDeg(Math.atan2(y1 - y0, x1 - x0)) + 90;
 
     }
 
