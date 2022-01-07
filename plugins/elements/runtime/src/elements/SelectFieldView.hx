@@ -62,6 +62,8 @@ class SelectFieldView extends FieldView {
 
     var listIsAbove:Bool = false;
 
+    var listVisibleThisFrame:Bool = false;
+
     public function new() {
 
         super();
@@ -150,6 +152,7 @@ class SelectFieldView extends FieldView {
 
         app.onUpdate(this, _ -> updateListVisibility());
         app.onPostUpdate(this, _ -> updateListPosition());
+        app.onFinishDraw(this, updateListVisibleThisFrame);
 
         // If the field is put inside a scrolling layout right after being initialized,
         // check its scroll transform to update position instantly (without loosing a frame)
@@ -442,6 +445,12 @@ class SelectFieldView extends FieldView {
 
     }
 
+    function updateListVisibleThisFrame() {
+
+        listVisibleThisFrame = (listView != null && listView.computedVisible);
+
+    }
+
     function toggleListVisible() {
 
         listVisible = !listVisible;
@@ -510,8 +519,9 @@ class SelectFieldView extends FieldView {
         if (super.usesScanCode(scanCode))
             return true;
 
-        if (listView == null || !listView.computedVisible)
+        if (!listVisibleThisFrame && (listView == null || !listView.computedVisible)) {
             return false;
+        }
 
         if (scanCode == ScanCode.ESCAPE) {
             return true;
@@ -541,8 +551,9 @@ class SelectFieldView extends FieldView {
         if (super.usesKeyCode(keyCode))
             return true;
 
-        if (listView == null || !listView.computedVisible)
+        if (!listVisibleThisFrame && (listView == null || !listView.computedVisible)) {
             return false;
+        }
 
         if (keyCode == KeyCode.ESCAPE) {
             return true;

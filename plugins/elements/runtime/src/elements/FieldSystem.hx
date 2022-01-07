@@ -19,6 +19,8 @@ class FieldSystem extends System implements Observable {
 
     @observe public var focusedField:FieldView = null;
 
+    @observe public var focusedFieldThisFrame(default, null):FieldView = null;
+
 /// Lifecycle
 
     public function new() {
@@ -26,6 +28,26 @@ class FieldSystem extends System implements Observable {
         super();
 
         earlyUpdateOrder = 50;
+
+        focusedFieldThisFrame = focusedField;
+        onFocusedFieldChange(this, handleFocusedFieldChange);
+
+    }
+
+    function handleFocusedFieldChange(focusedField:FieldView, prevFocusedField:FieldView) {
+
+        if (focusedField != null) {
+            focusedFieldThisFrame = focusedField;
+        }
+        else {
+            ceramic.App.app.onceFinishDraw(this, updateFocusedFieldThisFrame);
+        }
+
+    }
+
+    function updateFocusedFieldThisFrame() {
+
+        focusedFieldThisFrame = focusedField;
 
     }
 

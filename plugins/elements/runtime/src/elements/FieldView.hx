@@ -24,6 +24,10 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
 
     }
 
+/// Internal
+
+    var focusedThisFrame:Bool = false;
+
 /// Lifecycle
 
     public function new() {
@@ -34,6 +38,26 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
         direction = HORIZONTAL;
 
         bindPointerEvents();
+
+        focusedThisFrame = focused;
+        onFocusedChange(this, handleFocusedChange);
+
+    }
+
+    function handleFocusedChange(focused:Bool, prevFocused:Bool) {
+
+        if (focused) {
+            focusedThisFrame = true;
+        }
+        else {
+            ceramic.App.app.onceFinishDraw(this, updateFocusedThisFrame);
+        }
+
+    }
+
+    function updateFocusedThisFrame() {
+
+        focusedThisFrame = focused;
 
     }
 
@@ -142,13 +166,13 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
 
     public function usesScanCode(scanCode:ScanCode):Bool {
 
-        return focused && (scanCode == ESCAPE || scanCode == ENTER);
+        return focusedThisFrame && (scanCode == ESCAPE || scanCode == ENTER);
 
     }
 
     public function usesKeyCode(keyCode:KeyCode):Bool {
 
-        return focused && (keyCode == ESCAPE || keyCode == ENTER);
+        return focusedThisFrame && (keyCode == ESCAPE || keyCode == ENTER);
 
     }
 

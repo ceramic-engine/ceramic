@@ -80,6 +80,8 @@ class ColorFieldView extends FieldView {
 
     var updatingFromPicker:Int = 0;
 
+    var editingThisFrame:Bool = false;
+
     public function new() {
 
         super();
@@ -152,6 +154,7 @@ class ColorFieldView extends FieldView {
 
         app.onUpdate(this, _ -> updatePickerVisibility());
         app.onPostUpdate(this, _ -> updatePickerPosition());
+        app.onFinishDraw(this, updateEditingThisFrame);
 
         // If the field is put inside a scrolling layout right after being initialized,
         // check its scroll transform to update position instantly (without loosing a frame)
@@ -292,6 +295,12 @@ class ColorFieldView extends FieldView {
             pickerContainer.layoutDirty = true;
 
         pickerContainer.pos(x, y);
+
+    }
+
+    function updateEditingThisFrame() {
+
+        editingThisFrame = (editText != null && editText.editing);
 
     }
 
@@ -531,7 +540,7 @@ class ColorFieldView extends FieldView {
         if (super.usesScanCode(scanCode))
             return true;
 
-        if (editText != null && editText.editing)
+        if (editingThisFrame || (editText != null && editText.editing))
             return true;
 
         if (!pickerVisible || pickerView == null)
@@ -550,7 +559,7 @@ class ColorFieldView extends FieldView {
         if (super.usesKeyCode(keyCode))
             return true;
 
-        if (editText != null && editText.editing)
+        if (editingThisFrame || (editText != null && editText.editing))
             return true;
 
         if (!pickerVisible || pickerView == null)

@@ -82,6 +82,12 @@ class BaseTextFieldView extends FieldView {
 
     public var clipSuggestions:Bool = false;
 
+/// Internal
+
+    var editingThisFrame:Bool = false;
+
+    var suggestionsVisibleThisFrame:Bool = false;
+
 /// Lifecycle
 
     function new() {
@@ -90,6 +96,7 @@ class BaseTextFieldView extends FieldView {
 
         app.onUpdate(this, _ -> updateSuggestionsVisibility());
         app.onPostUpdate(this, _ -> updateSuggestionsPosition());
+        app.onFinishDraw(this, updateThisFrameFlags);
 
         // If the field is put inside a scrolling layout right after being initialized,
         // check its scroll transform to update position instantly (without loosing a frame)
@@ -122,7 +129,7 @@ class BaseTextFieldView extends FieldView {
 
     var textView:TextView;
 
-    var editText:EditText;
+    var editText:EditText = null;
 
     var cancelAutoComplete:Void->Void = null;
 
@@ -412,6 +419,13 @@ class BaseTextFieldView extends FieldView {
 
     }
 
+    function updateThisFrameFlags() {
+
+        editingThisFrame = editText != null && editText.editing;
+        suggestionsVisibleThisFrame = (suggestionsView != null && suggestionsView.computedVisible);
+
+    }
+
     function updateSuggestionsVisibility() {
 
         if (suggestionsView == null)
@@ -471,7 +485,6 @@ class BaseTextFieldView extends FieldView {
 
         keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.SPACE)], function() {
             if (focused && autocompleteCandidates != null && autocompleteCandidates.length > 0) {
-                trace('autocomplete');
                 updateAutocompleteSuggestions(true);
             }
         });
@@ -489,10 +502,10 @@ class BaseTextFieldView extends FieldView {
         if (super.usesScanCode(scanCode))
             return true;
 
-        if (editText != null && editText.editing)
+        if (editingThisFrame || (editText != null && editText.editing))
             return true;
 
-        if (suggestionsView == null || suggestions == null || suggestions.length == 0)
+        if (!suggestionsVisibleThisFrame && (suggestionsView == null || !suggestionsView.computedVisible))
             return false;
 
         if (scanCode == ScanCode.ESCAPE) {
@@ -517,10 +530,10 @@ class BaseTextFieldView extends FieldView {
         if (super.usesKeyCode(keyCode))
             return true;
 
-        if (editText != null && editText.editing)
+        if (editingThisFrame || (editText != null && editText.editing))
             return true;
 
-        if (suggestionsView == null || suggestions == null || suggestions.length == 0)
+        if (!suggestionsVisibleThisFrame && (suggestionsView == null || !suggestionsView.computedVisible))
             return false;
 
         if (keyCode == KeyCode.ESCAPE) {

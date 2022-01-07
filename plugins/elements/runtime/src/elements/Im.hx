@@ -408,10 +408,18 @@ class Im {
      */
     public static function usesScanCode(scanCode:ScanCode):Bool {
 
-        var field = FieldSystem.shared.focusedField;
+        var field = FieldSystem.shared.focusedFieldThisFrame;
         if (field != null) {
-            return field.usesScanCode(scanCode);
+            if (field.usesScanCode(scanCode))
+                return true;
         }
+
+        var newField = FieldSystem.shared.focusedField;
+        if (newField != null && newField != field) {
+            if (newField.usesScanCode(scanCode))
+                return true;
+        }
+
 
         return false;
 
@@ -424,9 +432,16 @@ class Im {
      */
     public static function usesKeyCode(keyCode:KeyCode):Bool {
 
-        var field = FieldSystem.shared.focusedField;
+        var field = FieldSystem.shared.focusedFieldThisFrame;
         if (field != null) {
-            return field.usesKeyCode(keyCode);
+            if (field.usesKeyCode(keyCode))
+                return true;
+        }
+
+        var newField = FieldSystem.shared.focusedField;
+        if (newField != null && newField != field) {
+            if (newField.usesKeyCode(keyCode))
+                return true;
         }
 
         return false;
