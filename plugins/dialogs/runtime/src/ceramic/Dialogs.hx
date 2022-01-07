@@ -30,7 +30,7 @@ class Dialogs {
             }
         }
         var result:Null<String> = LincDialogs.open(title, lincFilters);
-        if (result != null && result.trim() == '') {
+        if (result == null || result.trim() == '') {
             done(null);
         }
         else {
@@ -46,7 +46,7 @@ class Dialogs {
                 title: title,
                 properties: [
                     'promptToCreate',
-                    'openFile' 
+                    'openFile'
                 ]
             };
             if (filters != null) {
@@ -56,7 +56,7 @@ class Dialogs {
             ceramic.KeyBindings.forceKeysUp();
             if (Std.isOfType(result, Array)) {
                 var first:Null<String> = result[0];
-                if (first != null && first.trim() == '') {
+                if (first == null || first.trim() == '') {
                     done(null);
                 }
                 else {
@@ -65,7 +65,7 @@ class Dialogs {
             }
             else if (Std.isOfType(result, String)) {
                 var resultStr:String = result;
-                if (resultStr != null && resultStr.trim() == '') {
+                if (resultStr == null || resultStr.trim() == '') {
                     done(null);
                 }
                 else {
@@ -91,7 +91,7 @@ class Dialogs {
 
         #if (cpp && (mac || windows || linux))
         var result:Null<String> = LincDialogs.folder(title);
-        if (result != null && result.trim() == '') {
+        if (result == null || result.trim() == '') {
             done(null);
         }
         else {
@@ -108,14 +108,17 @@ class Dialogs {
                 properties: [
                     'createDirectory',
                     'promptToCreate',
-                    'openDirectory' 
+                    'openDirectory'
                 ]
             };
             var result:Dynamic = dialog.showOpenDialogSync(options);
             ceramic.KeyBindings.forceKeysUp();
-            if (Std.isOfType(result, Array)) {
+            if (result == null) {
+                done(null);
+            }
+            else if (Std.isOfType(result, Array)) {
                 var first:Null<String> = result[0];
-                if (first != null && first.trim() == '') {
+                if (first == null || first.trim() == '') {
                     done(null);
                 }
                 else {
@@ -124,12 +127,15 @@ class Dialogs {
             }
             else if (Std.isOfType(result, String)) {
                 var resultStr:String = result;
-                if (resultStr != null && resultStr.trim() == '') {
+                if (resultStr == null || resultStr.trim() == '') {
                     done(null);
                 }
                 else {
                     done(resultStr);
                 }
+            }
+            else {
+                done(null);
             }
         }
         else {
