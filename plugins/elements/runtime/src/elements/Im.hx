@@ -156,6 +156,14 @@ class Im {
 
     static var _usedWindowKeys:Map<String,String> = new Map();
 
+    public static function initIfNeeded():Void {
+
+        if (context.view == null) {
+            ImSystem.shared.createView();
+        }
+
+    }
+
     public static function extractId(key:String):String {
 
         return key;
@@ -2087,6 +2095,8 @@ class Im {
         height:Float = WindowData.DEFAULT_HEIGHT,
         async:Bool, callback:(confirmed:Bool)->Void):ConfirmStatus {
 
+        initIfNeeded();
+
         if (yes == null)
             yes = YES;
 
@@ -2222,6 +2232,8 @@ class Im {
         height:Float = WindowData.DEFAULT_HEIGHT,
         async:Bool, callback:()->Void):InfoStatus {
 
+        initIfNeeded();
+
         if (ok == null)
             ok = OK;
 
@@ -2348,6 +2360,8 @@ class Im {
         width:Float = DIALOG_WIDTH,
         height:Float = WindowData.DEFAULT_HEIGHT,
         async:Bool, callback:(index:Int, text:String)->Void):ChoiceStatus {
+
+        initIfNeeded();
 
         if (height == WindowData.DEFAULT_HEIGHT && choices.length >= 8) {
             height = DIALOG_OVERFLOW_HEIGHT;
