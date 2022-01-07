@@ -23,6 +23,7 @@ app:
         - arcade
         - elements
         - ui
+        - electron
 
     libs:
         - spine-hx
