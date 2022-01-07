@@ -157,6 +157,11 @@ class Camera extends Entity {
      */
     public var viewportHeight:Float = 0;
 
+    /**
+     * A threshold value to stop the camera if its movement is lower than this value
+     */
+    public var movementThreshold:Float = 0.00001;
+
     var hasPrevTransform:Bool = false;
 
     var dx:Float = 0;
@@ -244,9 +249,9 @@ class Camera extends Entity {
         dx *= frictionX;
         dy *= frictionY;
 
-        if (dx > 0.00001 || dx < -0.00001)
+        if (dx > movementThreshold || dx < -movementThreshold)
             x += dx;
-        if (dy > 0.00001 || dy < -0.00001)
+        if (dy > movementThreshold || dy < -movementThreshold)
             y += dy;
 
         dx = 0;
