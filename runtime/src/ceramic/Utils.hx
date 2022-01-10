@@ -622,4 +622,89 @@ class Utils {
 
     }
 
+    public function command(cmd:String, ?args:Array<String>, ?options:{ ?cwd: String, ?detached: Bool }, result:(code:Int, out:String, err:String)->Void):Void {
+
+        if (args == null)
+            args = [];
+
+        #if (sys || node || nodejs || hxnodejs)
+
+        var prevCwd = null;
+        var detached = false;
+        if (options != null) {
+            if (options.cwd != null) {
+                prevCwd = Sys.getCwd();
+                Sys.setCwd(options.cwd);
+            }
+            if (options.detached == true) {
+                detached = true;
+            }
+        }
+        var proc = new sys.io.Process(cmd, args, detached);
+        var out = proc.stdout.readAll().toString();
+        var err = proc.stderr.readAll().toString();
+        var exitCode = proc.exitCode(true);
+        proc.close();
+
+        if (prevCwd != null) {
+            Sys.setCwd(prevCwd);
+        }
+
+        result(exitCode, out, err);
+
+        #elseif (web && ceramic_use_electron)
+
+        var childProcess = PlatformSpecific.nodeRequire('child_process');
+        var opt:Dynamic = {};
+        var detached = false;
+        if (options != null) {
+            if (options.cwd != null) {
+                opt.cwd = options.cwd;
+            }
+            if (options.detached == true) {
+                detached = true;
+            }
+        }
+
+        var proc = childProcess.spawn(cmd, args, opt);
+
+        var out = '';
+        var err = '';
+
+        if (detached)
+            proc.unref();
+
+        proc.stdout.on('data', function(data:Dynamic) {
+            out += data;
+        });
+
+        proc.stderr.on('data', function(data:Dynamic) {
+            err += data;
+        });
+
+        proc.on('exit', function(code:Int) {
+            if (result != null) {
+                var _done = result;
+                result = null;
+                _done(code, out, err);
+            }
+        });
+
+        proc.on('close', function(code:Int) {
+            if (result != null) {
+                var _done = result;
+                result = null;
+                _done(code, out, err);
+            }
+        });
+
+        #else
+
+        // Not implemented
+        result(-1, null, null);
+
+        #end
+
+    }
+
 }
