@@ -112,11 +112,7 @@ class Im {
 
     static var _currentRowIndex:Int = -1;
 
-    static var _currentTabBarItem:WindowItem = null;
-
-    static var _inTab:Bool = false;
-
-    static var _currentTabIndex:Int = -1;
+    static var _currentTabBarItem:Array<WindowItem> = [];
 
     static var _labelWidth:Float = DEFAULT_LABEL_WIDTH;
 
@@ -605,8 +601,6 @@ class Im {
 
     public static function beginTabs(selected:StringPointer):Bool {
 
-        assert(_currentTabBarItem == null, 'Called beginTabs() multiple times! (nested tabs are not supported)');
-
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
@@ -634,9 +628,7 @@ class Im {
             }
         }
 
-        _currentTabBarItem = item;
-        _currentTabIndex = -1;
-        _inTab = false;
+        _currentTabBarItem.push(item);
 
         return selectedChanged;
 
@@ -644,18 +636,9 @@ class Im {
 
     public static function endTabs():Void {
 
-        assert(_currentTabBarItem != null, 'beginTabs() must be called before endTabs()');
+        assert(_currentTabBarItem.length > 0, 'beginTabs() must be called before endTabs()');
 
-        // Ensure that selected value is valid.
-        // If not, change it to first entry in array
-        // var selectedValue = _currentTabBarItem.string0;
-        // if (_currentTabBarItem.stringArray0.indexOf(selectedValue) == -1) {
-        //     selectedValue = _currentTabBarItem.stringArray0[0];
-        //     _currentTabBarItem.string1 = selectedValue;
-        // }
-
-        _inTab = false;
-        _currentTabBarItem = null;
+        _currentTabBarItem.pop();
 
     }
 
@@ -673,28 +656,30 @@ class Im {
 
     static function _tab(key:String, title:String):Bool {
 
-        assert(_currentTabBarItem != null, 'Duplicate tab() calls!');
+        assert(_currentTabBarItem.length > 0, 'tab() must be between beginTabs() and endTabs() calls');
 
         // Get or create window
         var id = extractId(key);
         var title = title != null ? title : extractTitle(key);
 
-        _currentTabBarItem.stringArray0.push(id);
-        _currentTabBarItem.stringArray1.push(title);
+        var tabItem = _currentTabBarItem[_currentTabBarItem.length - 1];
 
-        if (_currentTabBarItem.stringArray0.length == 1) {
+        tabItem.stringArray0.push(id);
+        tabItem.stringArray1.push(title);
+
+        if (tabItem.stringArray0.length == 1) {
             // First tab, set it default if there is no tab selected yet
-            var selected:StringPointer = _currentTabBarItem.any0;
+            var selected:StringPointer = tabItem.any0;
             var selectedValue = Im.readString(selected);
             if (selectedValue == null) {
                 selectedValue = id;
                 Im.writeString(selected, selectedValue);
-                _currentTabBarItem.string0 = selectedValue;
-                _currentTabBarItem.string1 = selectedValue;
+                tabItem.string0 = selectedValue;
+                tabItem.string1 = selectedValue;
             }
         }
 
-        return id == _currentTabBarItem.string0;
+        return id == tabItem.string0;
 
     }
 
@@ -1900,8 +1885,10 @@ class Im {
         _currentWindowData = null;
         _currentRowIndex = -1;
         _inRow = false;
-        _currentTabIndex = -1;
-        _inTab = false;
+
+        while (_currentTabBarItem.length > 0) {
+            _currentTabBarItem.pop();
+        }
 
     }
 
