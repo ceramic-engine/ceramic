@@ -17,6 +17,11 @@ class StateMachineImpl<T> extends StateMachineBase {
     function set_state(state:T):T {
         if (stateDefined && this.state == state) return state;
 
+        // Check that the state is not locked
+        if (locked) {
+            throw 'Changing state is forbidden because `locked` is `true`.';
+        }
+
         // Assign next state value
         nextState = state;
 

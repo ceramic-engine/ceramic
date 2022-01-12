@@ -32,6 +32,11 @@ class StateMachineBase extends Entity implements Observable implements Component
      */
     public var nextStateDefined(default,null):Bool = false;
 
+    /**
+     * If set to `true`, changing state will be forbidden and trigger an error.
+     */
+    public var locked:Bool = false;
+
     var stateInstances:Map<String, State> = null;
 
     var currentStateInstance:State = null;
