@@ -117,6 +117,34 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
+    public function scheduleOnceEnterState(owner:Entity, state:T, callback:()->Void):Void {
+
+        var handler:(state:T, prevState:T)->Void = null;
+        handler = function(newState, _) {
+            if (state == newState) {
+                offStateChange(handler);
+                callback();
+                callback = null;
+            }
+        };
+        onStateChange(owner, handler);
+
+    }
+
+    public function scheduleOnceExitState(owner:Entity, state:T, callback:()->Void):Void {
+
+        var handler:(state:T, prevState:T)->Void = null;
+        handler = function(_, prevState) {
+            if (state == prevState) {
+                offStateChange(handler);
+                callback();
+                callback = null;
+            }
+        };
+        onStateChange(owner, handler);
+
+    }
+
     function _enterState():Void {
 
         // Enter new state object (if any)
