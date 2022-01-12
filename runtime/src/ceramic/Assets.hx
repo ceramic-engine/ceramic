@@ -484,6 +484,19 @@ class Assets extends Entity {
 
     }
 
+    public function countAssetsWithStatus(status:AssetStatus):Int {
+
+        var result = 0;
+        var assets = this.addedAssets;
+        for (i in 0...addedAssets.length) {
+            if (addedAssets.unsafeGet(i).status == status) {
+                result++;
+            }
+        }
+        return result;
+
+    }
+
     public function load(warnIfNothingToLoad:Bool = true, ?pos:haxe.PosInfos):Void {
 
         var total = 0;
