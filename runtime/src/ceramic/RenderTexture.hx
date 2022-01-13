@@ -33,7 +33,7 @@ class RenderTexture extends Texture {
 
 /// Lifecycle
 
-    public function new(width:Int, height:Int, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    public function new(width:Float, height:Float, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         if (density == -1) density = screen.texturesDensity;
 
