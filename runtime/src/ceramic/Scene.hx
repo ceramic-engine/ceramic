@@ -34,6 +34,12 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     public var autoUpdate:Bool = true;
 
     /**
+     * If `autoUpdate` is enabled, setting `autoUpdateWhenInactive` to `true`
+     * will keep updating the scene even when inactive.
+     */
+    public var autoUpdateWhenInactive:Bool = false;
+
+    /**
      * Is this scene paused?
      */
     public var paused:Bool = false;

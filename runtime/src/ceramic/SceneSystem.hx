@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
 using ceramic.Extensions;
 
 /**
@@ -42,10 +44,51 @@ class SceneSystem extends System {
      */
     public var main(default,set):Scene = null;
 
+    /**
+     * If set to `true` (default), any filter assigned to the system will be destroyed
+     * if replaced by another filter, set to null, or if the system is destroyed.
+     */
+    public var autoDestroyFilter:Bool = true;
+
+    /**
+     * Assign a filter to the scene system, that will be used to render root scenes
+     */
+    public var filter(default, set):Filter = null;
+    function set_filter(filter:Filter):Filter {
+        if (this.filter != filter) {
+            var prevFilter = this.filter;
+            if (prevFilter != null) {
+                for (scene in rootScenes) {
+                    if (scene.parent == prevFilter.content) {
+                        prevFilter.remove(scene);
+                        scene.scaleX = 1;
+                        scene.scaleY = 1;
+                    }
+                }
+                if (autoDestroyFilter)
+                    prevFilter.destroy();
+                else
+                    prevFilter.scale(1.0);
+            }
+            this.filter = filter;
+            if (filter != null) {
+                filter.scale(screen.width / filter.width, screen.height / filter.height);
+                filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+                for (scene in rootScenes) {
+                    if (scene.parent != filter.content) {
+                        filter.add(scene);
+                    }
+                }
+            }
+
+        }
+        return filter;
+    }
+
     public var rootScenes(default,null):ReadOnlyMap<String,Scene> = new Map();
 
     function set_main(main:Scene):Scene {
-        
+
         if (this.main != main) {
             this.main = main;
             set('main', main, true, keepAssetsForNextMain);
@@ -87,10 +130,10 @@ class SceneSystem extends System {
                 }
             }
             else {
-    
+
                 if (scene.destroyed)
                     throw 'Cannot assign a destroyed scene as root scene!';
-    
+
                 var prevAssets = null;
                 rootScenes.original.set(name, scene);
                 if (name == 'main') {
@@ -108,7 +151,7 @@ class SceneSystem extends System {
                     }
 
                 });
-                
+
                 if (prevScene != null) {
                     if (keepAssets) {
                         prevAssets = prevScene._assets;
@@ -120,7 +163,7 @@ class SceneSystem extends System {
                         prevScene.destroy();
                         prevScene = null;
                     };
-    
+
                     inline function prevSceneFadeOut() {
                         switch prevScene.status {
                             case READY:
@@ -129,11 +172,11 @@ class SceneSystem extends System {
                                 fadeOutDone();
                         }
                     }
-    
+
                     if (fadeOutWhenNextMainCanFadeIn) {
                         var handleStatusChange = null;
                         switch scene.status {
-    
+
                             case NONE | PRELOAD | LOAD | CREATE:
                                 handleStatusChange = function(current:SceneStatus, previous:SceneStatus) {
                                     switch current {
@@ -144,7 +187,7 @@ class SceneSystem extends System {
                                     }
                                 };
                                 scene.onStatusChange(prevScene, handleStatusChange);
-    
+
                             case FADE_IN | READY | FADE_OUT | DISABLED:
                                 prevSceneFadeOut();
                         }
@@ -153,10 +196,13 @@ class SceneSystem extends System {
                         prevSceneFadeOut();
                     }
                 }
-    
+
                 scene._assets = prevAssets;
                 if (bindToScreenSize) {
                     scene.bindToScreenSize();
+                }
+                if (filter != null) {
+                    filter.content.add(scene);
                 }
                 scene._boot();
             }
@@ -204,7 +250,7 @@ class SceneSystem extends System {
         for (i in 0...len) {
             var scene = _updatingScenes.unsafeGet(i);
 
-            if (!scene.active)
+            if (!scene.active && !scene.autoUpdateWhenInactive)
                 continue;
 
             // Auto-boot scene it's been added to screen
@@ -225,6 +271,12 @@ class SceneSystem extends System {
         // Cleanup array
         for (i in 0...len) {
             _updatingScenes.unsafeSet(i, null);
+        }
+
+        // Update filter (if any)
+        if (filter != null) {
+            filter.scale(screen.width / filter.width, screen.height / filter.height);
+            filter.content.scale(filter.width / screen.width, filter.height / screen.height);
         }
 
     }
