@@ -1,7 +1,7 @@
 package ceramic;
 
-import tracker.Observable;
 import ceramic.Shortcuts.*;
+import tracker.Observable;
 
 #if (!macro && !completion)
 @:autoBuild(ceramic.macros.SceneMacro.build())
@@ -62,7 +62,7 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         if (_assets != null && _assets.hasAnythingToLoad()) {
             // If assets have been added, load them
             _assets.onceComplete(this, _handleAssetsComplete);
-            _assets.load();
+            _assets.load(false);
         }
         else {
             // No asset, can call load() directly
@@ -120,7 +120,7 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
      * Override this method to perform any additional asynchronous loading.
      * `next()` must be called once the loading has finished so that the scene
      * can continue its createialization process.
-     * @param next The callback to call once asynchronous loading is done 
+     * @param next The callback to call once asynchronous loading is done
      */
     function load(next:()->Void):Void {
 
@@ -152,7 +152,7 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     /**
      * Called at every frame, but only after create() has been called and when the scene is not paused
-     * @param delta 
+     * @param delta
      */
     public function update(delta:Float):Void {
 
