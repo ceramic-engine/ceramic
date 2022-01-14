@@ -1886,6 +1886,10 @@ class Im {
         _currentRowIndex = -1;
         _inRow = false;
 
+        _textAlign = DEFAULT_TEXT_ALIGN;
+        _labelWidth = DEFAULT_LABEL_WIDTH;
+        _labelPosition = DEFAULT_LABEL_POSITION;
+
         while (_currentTabBarItem.length > 0) {
             _currentTabBarItem.pop();
         }
