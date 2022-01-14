@@ -627,7 +627,7 @@ class Utils {
         if (args == null)
             args = [];
 
-        #if (sys || node || nodejs || hxnodejs)
+        #if (cs || sys || node || nodejs || hxnodejs)
 
         var prevCwd = null;
         var detached = false;

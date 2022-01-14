@@ -106,8 +106,8 @@ class Files {
 
     }
 
-    #if (cs || sys || node || nodejs)
-    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
+    #if (cs || sys || node || nodejs || hxnodejs)
+    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
 
         var result:Array<String> = [];
 
@@ -117,7 +117,8 @@ class Files {
 
             var path = Path.join([dir, name]);
             if (FileSystem.isDirectory(path)) {
-                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
+                if (recursive)
+                    result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
             } else {
                 result.push(path);
             }
@@ -137,7 +138,7 @@ class Files {
 
     }
     #elseif (web && ceramic_use_electron)
-    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
+    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
 
         var fs = PlatformSpecific.nodeRequire('fs');
         var result:Array<String> = [];
@@ -155,7 +156,8 @@ class Files {
             var stat:Dynamic = fs.lstatSync(path);
             var isDir:Bool = stat != null && stat.isDirectory();
             if (isDir) {
-                result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
+                if (recursive)
+                    result = result.concat(getFlatDirectory(path, excludeSystemFiles, true));
             } else {
                 result.push(path);
             }
@@ -175,7 +177,7 @@ class Files {
 
     }
     #else
-    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true):Array<String> {
+    public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
 
         // Not implemented on this platform
         return [];
