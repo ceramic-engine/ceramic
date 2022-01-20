@@ -43,6 +43,16 @@ class InputMapImpl<T> extends InputMapBase {
 
     var boundGamepadAxisButtons:IntMap<Array<Int>> = new IntMap();
 
+    var indexKeyCodes:Array<Array<KeyCode>> = [];
+
+    var indexScanCodes:Array<Array<ScanCode>> = [];
+
+    var indexGamepadButtons:Array<Array<GamepadButton>> = [];
+
+    var indexGamepadAxis:Array<Array<GamepadAxis>> = [];
+
+    var indexGamepadAxisButtons:Array<Array<GamepadAxis>> = [];
+
     public function new() {
 
         super();
@@ -451,11 +461,128 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    function _recomputePressedKey(index:Int):Void {
+
+        var keyCodes = indexKeyCodes[index];
+        if (keyCodes != null) {
+            for (i in 0...keyCodes.length) {
+                var keyCode = keyCodes.unsafeGet(i);
+                if (input.keyPressed(keyCode, this)) {
+                    pressedKeys[index] = input.keyJustPressed(keyCode, this) ? 1 : 2;
+                    _setPressedKeyKind(index, KEY_CODE);
+                    return;
+                }
+            }
+        }
+
+        var scanCodes = indexScanCodes[index];
+        if (scanCodes != null) {
+            for (i in 0...scanCodes.length) {
+                var scanCode = scanCodes.unsafeGet(i);
+                if (input.scanPressed(scanCode, this)) {
+                    pressedKeys[index] = input.scanJustPressed(scanCode, this) ? 1 : 2;
+                    _setPressedKeyKind(index, SCAN_CODE);
+                    return;
+                }
+            }
+        }
+
+        var gamepadButtons = indexGamepadButtons[index];
+        if (gamepadButtons != null) {
+            for (i in 0...gamepadButtons.length) {
+                var button = gamepadButtons.unsafeGet(i);
+                var gamepads = input.activeGamepads;
+                for (g in 0...gamepads.length) {
+                    var gamepadId = gamepads.unsafeGet(g);
+                    if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
+                        if (input.gamepadPressed(gamepadId, button, this)) {
+                            pressedKeys[index] = input.gamepadJustPressed(gamepadId, button, this) ? 1 : 2;
+                            _setPressedKeyKind(index, GAMEPAD_BUTTON);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        var gamepadAxisButtons = indexGamepadAxisButtons[index];
+        if (gamepadAxisButtons != null) {
+            for (i in 0...gamepadAxisButtons.length) {
+                var axis = gamepadAxisButtons.unsafeGet(i);
+                var axisList = boundGamepadAxisButtons.get(axis);
+                var startValue = 999.0;
+                var v = 0;
+                while (v < axisList.length) {
+                    var valueIndex = axisList.unsafeGet(v);
+                    v++;
+                    if (valueIndex == index) {
+                        startValue = axisList.unsafeGet(v) / 1000.0;
+                        break;
+                    }
+                    v++;
+                }
+                var gamepads = input.activeGamepads;
+                for (g in 0...gamepads.length) {
+                    var gamepadId = gamepads.unsafeGet(g);
+                    if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
+                        var value = input.gamepadAxisValue(gamepadId, axis);
+                        var pressed = false;
+                        if (startValue > 0) {
+                            if (value >= startValue)
+                                pressed = true;
+                        }
+                        else if (startValue < 0) {
+                            if (value <= startValue)
+                                pressed = true;
+                        }
+                        if (pressed) {
+                            pressedKeys[index] = 2;
+                            _setPressedKeyKind(index, GAMEPAD_AXIS);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        pressedKeys[index] = 0;
+
+    }
+
+    function _recomputeAxisValue(index:Int):Void {
+
+        var axisValue:Float = 0.0;
+
+        var gamepadAxis = indexGamepadAxis[index];
+        if (gamepadAxis != null) {
+            for (i in 0...gamepadAxis.length) {
+                var axis = gamepadAxis.unsafeGet(i);
+                var gamepads = input.activeGamepads;
+                var absAxisValue = 0.0;
+                for (g in 0...gamepads.length) {
+                    var gamepadId = gamepads.unsafeGet(g);
+                    if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
+                        var value = input.gamepadAxisValue(gamepadId, axis);
+                        var absValue = value < 0 ? -value : value;
+                        if (absValue > absAxisValue) {
+                            axisValue = value;
+                            absAxisValue = absValue;
+                        }
+                    }
+                }
+            }
+        }
+
+        axisValues[index] = axisValue;
+
+    }
+
 /// Public API
 
     public function bindKeyCode(key:T, keyCode:KeyCode):Void {
 
         var index = indexOfKey(key);
+
         var list = boundKeyCodes.get(keyCode);
         if (list == null) {
             list = [index];
@@ -464,13 +591,24 @@ class InputMapImpl<T> extends InputMapBase {
         else {
             list.push(index);
         }
-        pressedKeys[index] = 0;
+
+        var indexList = indexKeyCodes[index];
+        if (indexList == null) {
+            indexList = [keyCode];
+            indexKeyCodes[index] = indexList;
+        }
+        else {
+            indexList.push(keyCode);
+        }
+
+        _recomputePressedKey(index);
 
     }
 
     public function bindScanCode(key:T, scanCode:ScanCode):Void {
 
         var index = indexOfKey(key);
+
         var list = boundScanCodes.get(scanCode);
         if (list == null) {
             list = [index];
@@ -479,13 +617,24 @@ class InputMapImpl<T> extends InputMapBase {
         else {
             list.push(index);
         }
-        pressedKeys[index] = 0;
+
+        var indexList = indexScanCodes[index];
+        if (indexList == null) {
+            indexList = [scanCode];
+            indexScanCodes[index] = indexList;
+        }
+        else {
+            indexList.push(scanCode);
+        }
+
+        _recomputePressedKey(index);
 
     }
 
     public function bindGamepadButton(key:T, button:GamepadButton):Void {
 
         var index = indexOfKey(key);
+
         var list = boundGamepadButtons.get(button);
         if (list == null) {
             list = [index];
@@ -494,13 +643,24 @@ class InputMapImpl<T> extends InputMapBase {
         else {
             list.push(index);
         }
-        pressedKeys[index] = 0;
+
+        var indexList = indexGamepadButtons[index];
+        if (indexList == null) {
+            indexList = [button];
+            indexGamepadButtons[index] = indexList;
+        }
+        else {
+            indexList.push(button);
+        }
+
+        _recomputePressedKey(index);
 
     }
 
     public function bindGamepadAxis(key:T, axis:GamepadAxis):Void {
 
         var index = indexOfKey(key);
+
         var list = boundGamepadAxis.get(axis);
         if (list == null) {
             list = [index];
@@ -509,13 +669,24 @@ class InputMapImpl<T> extends InputMapBase {
         else {
             list.push(index);
         }
-        axisValues[index] = 0;
+
+        var indexList = indexGamepadAxis[index];
+        if (indexList == null) {
+            indexList = [axis];
+            indexGamepadAxis[index] = indexList;
+        }
+        else {
+            indexList.push(axis);
+        }
+
+        _recomputeAxisValue(index);
 
     }
 
     public function bindGamepadAxisButton(key:T, axis:GamepadAxis, startValue:Float):Void {
 
         var index = indexOfKey(key);
+
         var list = boundGamepadAxisButtons.get(axis);
         if (list == null) {
             list = [index, Math.round(startValue * 1000)];
@@ -525,7 +696,17 @@ class InputMapImpl<T> extends InputMapBase {
             list.push(index);
             list.push(Math.round(startValue * 1000));
         }
-        pressedKeys[index] = 0;
+
+        var indexList = indexGamepadAxisButtons[index];
+        if (indexList == null) {
+            indexList = [axis];
+            indexGamepadAxisButtons[index] = indexList;
+        }
+        else {
+            indexList.push(axis);
+        }
+
+        _recomputePressedKey(index);
 
     }
 
