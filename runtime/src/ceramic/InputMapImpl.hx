@@ -468,8 +468,11 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...keyCodes.length) {
                 var keyCode = keyCodes.unsafeGet(i);
                 if (input.keyPressed(keyCode, this)) {
-                    pressedKeys[index] = input.keyJustPressed(keyCode, this) ? 1 : 2;
+                    var justPressed = input.keyJustPressed(keyCode, this);
+                    pressedKeys[index] = justPressed ? 1 : 2;
                     _setPressedKeyKind(index, KEY_CODE);
+                    if (justPressed)
+                        _scheduleRemoveJustPressed(index);
                     return;
                 }
             }
@@ -480,8 +483,11 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...scanCodes.length) {
                 var scanCode = scanCodes.unsafeGet(i);
                 if (input.scanPressed(scanCode, this)) {
-                    pressedKeys[index] = input.scanJustPressed(scanCode, this) ? 1 : 2;
+                    var justPressed = input.scanJustPressed(scanCode, this);
+                    pressedKeys[index] = justPressed ? 1 : 2;
                     _setPressedKeyKind(index, SCAN_CODE);
+                    if (justPressed)
+                        _scheduleRemoveJustPressed(index);
                     return;
                 }
             }
@@ -496,8 +502,11 @@ class InputMapImpl<T> extends InputMapBase {
                     var gamepadId = gamepads.unsafeGet(g);
                     if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
                         if (input.gamepadPressed(gamepadId, button, this)) {
-                            pressedKeys[index] = input.gamepadJustPressed(gamepadId, button, this) ? 1 : 2;
+                            var justPressed = input.gamepadJustPressed(gamepadId, button, this);
+                            pressedKeys[index] = justPressed ? 1 : 2;
                             _setPressedKeyKind(index, GAMEPAD_BUTTON);
+                            if (justPressed)
+                                _scheduleRemoveJustPressed(index);
                             return;
                         }
                     }
