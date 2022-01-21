@@ -18,6 +18,12 @@ class InputMapImpl<T> extends InputMapBase {
      */
     public var gamepadId:Int = -1;
 
+    /**
+     * If set to `true`, when binding a new key, will check if the related
+     * key was just pressed this frame.
+     */
+    public var checkJustPressedAtBind:Bool = false;
+
     var nextIndex:Int = 0;
 
     var keyToIndex:Map<String,Int> = null;
@@ -468,7 +474,7 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...keyCodes.length) {
                 var keyCode = keyCodes.unsafeGet(i);
                 if (input.keyPressed(keyCode, this)) {
-                    var justPressed = input.keyJustPressed(keyCode, this);
+                    var justPressed = checkJustPressedAtBind ? input.keyJustPressed(keyCode, this) : false;
                     pressedKeys[index] = justPressed ? 1 : 2;
                     _setPressedKeyKind(index, KEY_CODE);
                     if (justPressed)
@@ -483,7 +489,7 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...scanCodes.length) {
                 var scanCode = scanCodes.unsafeGet(i);
                 if (input.scanPressed(scanCode, this)) {
-                    var justPressed = input.scanJustPressed(scanCode, this);
+                    var justPressed = checkJustPressedAtBind ? input.scanJustPressed(scanCode, this) : false;
                     pressedKeys[index] = justPressed ? 1 : 2;
                     _setPressedKeyKind(index, SCAN_CODE);
                     if (justPressed)
@@ -502,7 +508,7 @@ class InputMapImpl<T> extends InputMapBase {
                     var gamepadId = gamepads.unsafeGet(g);
                     if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
                         if (input.gamepadPressed(gamepadId, button, this)) {
-                            var justPressed = input.gamepadJustPressed(gamepadId, button, this);
+                            var justPressed = checkJustPressedAtBind ? input.gamepadJustPressed(gamepadId, button, this) : false;
                             pressedKeys[index] = justPressed ? 1 : 2;
                             _setPressedKeyKind(index, GAMEPAD_BUTTON);
                             if (justPressed)
