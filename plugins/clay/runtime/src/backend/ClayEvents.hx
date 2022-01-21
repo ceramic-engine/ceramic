@@ -56,8 +56,6 @@ class ClayEvents extends clay.Events {
 
     var handleReady:()->Void;
 
-    public var muteResizeEvent:Bool = false;
-
     function new(handleReady:()->Void) {
 
         this.handleReady = handleReady;
@@ -105,13 +103,6 @@ class ClayEvents extends clay.Events {
         lastWidth = Clay.app.screenWidth;
         lastHeight = Clay.app.screenHeight;
 
-        // TODO
-        // Background color
-        //Luxe.renderer.clear_color.rgb(ceramic.App.app.settings.background);
-
-        // Camera size
-        //Luxe.camera.size = new luxe.Vector(Luxe.screen.width * Luxe.screen.device_pixel_ratio, Luxe.screen.height * Luxe.screen.device_pixel_ratio);
-
         handleReady();
 
         backend.emitReady();
@@ -139,9 +130,6 @@ class ClayEvents extends clay.Events {
 /// Internal
 
     function triggerResizeIfNeeded():Void {
-
-        if (muteResizeEvent)
-            return;
 
         var density = Clay.app.screenDensity;
         var width = Clay.app.screenWidth;

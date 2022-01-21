@@ -182,30 +182,12 @@ class Main {
 
             js.Browser.document.body.classList.add('ceramic-invisible');
 
-            /*
-            var forceResize = false;
-            var didForceResizeOnce = false;
-
-            // Hacky resize stuff again.
-            // Sticking with this for now until we find a smarter
-            ceramic.Timer.delay(null, 0.5, () -> {
-                forceResize = true;
-                didForceResizeOnce = true;
-            });
-            */
-
             app.onUpdate(null, function(delta) {
                 var containerEl = js.Browser.document.getElementById(containerElId);
                 if (containerEl != null) {
                     var width:Int = containerEl.offsetWidth;
                     var height:Int = containerEl.offsetHeight;
                     var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
-
-                    /*
-                    if (!didForceResizeOnce && !forceResize) {
-                        appEl.style.visibility = 'hidden';
-                    }
-                    */
 
                     if (lastResizeTime != -1) {
                         if (width != lastNewWidth || height != lastNewHeight) {
@@ -224,21 +206,9 @@ class Main {
                     if (width != containerWidth || height != containerHeight || js.Browser.window.devicePixelRatio != containerPixelRatio) {
                         var onlyDensityChanged = (width == containerWidth && height == containerHeight);
                         var pixelRatioUndefined = containerPixelRatio == 0;
-                        shouldFixSize = (onlyDensityChanged || pixelRatioUndefined);
                         containerWidth = width;
                         containerHeight = height;
                         containerPixelRatio = js.Browser.window.devicePixelRatio;
-
-                        // Super hacky stuff part I: we subtract one pixel in width if only density changed
-                        // This ensure proper resize events are fired and make things work. Yup.
-                        // Real size is provided at next frame
-                        var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
-                        appEl.style.margin = '0 0 0 0';
-                        appEl.style.width = (containerWidth - (shouldFixSize ? 1 : 0)) + 'px';
-                        appEl.style.height = containerHeight + 'px';
-                        appEl.width = Math.round((containerWidth - (shouldFixSize ? 1 : 0)) * js.Browser.window.devicePixelRatio);
-                        appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
-                        events.muteResizeEvent = shouldFixSize;
 
                         // Hide weird intermediate state behind a black overlay.
                         // That's not the best option but let's get away with this for now.
@@ -248,10 +218,6 @@ class Main {
                         }
                         var fn = null;
                         fn = function() {
-                            /*if (!didForceResizeOnce) {
-                                ceramic.Timer.delay(null, 0.1, fn);
-                                return;
-                            }*/
                             if (resizing == 0 && readyToDisplay) {
                                 js.Browser.document.body.classList.remove('ceramic-invisible');
                             }
@@ -262,13 +228,6 @@ class Main {
                         });
 
                         lastResizeTime = ceramic.Timer.now;
-                    }
-                    else if (shouldFixSize) {
-                        // Hacky resize stuff part II
-                        shouldFixSize = false;
-                        events.muteResizeEvent = false;
-                        appEl.style.width = containerWidth + 'px';
-                        appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
                     }
                 }
             });
