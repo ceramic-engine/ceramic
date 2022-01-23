@@ -622,7 +622,7 @@ class Utils {
 
     }
 
-    public function command(cmd:String, ?args:Array<String>, ?options:{ ?cwd: String, ?detached: Bool }, result:(code:Int, out:String, err:String)->Void):Void {
+    public static function command(cmd:String, ?args:Array<String>, ?options:{ ?cwd: String, ?detached: Bool }, result:(code:Int, out:String, err:String)->Void):Void {
 
         if (args == null)
             args = [];
@@ -666,37 +666,19 @@ class Utils {
             }
         }
 
-        var proc = childProcess.spawn(cmd, args, opt);
+        var proc:Dynamic = null;
+        proc = childProcess.execFile(cmd, args, opt, function(err:Dynamic, stdout:Dynamic, stderr:Dynamic) {
 
-        var out = '';
-        var err = '';
+            if (result != null) {
+                var _done = result;
+                result = null;
+                _done(proc.exitCode, Std.string(stdout != null ? stdout : ''), Std.string(stderr != null ? stderr : ''));
+            }
+
+        });
 
         if (detached)
             proc.unref();
-
-        proc.stdout.on('data', function(data:Dynamic) {
-            out += data;
-        });
-
-        proc.stderr.on('data', function(data:Dynamic) {
-            err += data;
-        });
-
-        proc.on('exit', function(code:Int) {
-            if (result != null) {
-                var _done = result;
-                result = null;
-                _done(code, out, err);
-            }
-        });
-
-        proc.on('close', function(code:Int) {
-            if (result != null) {
-                var _done = result;
-                result = null;
-                _done(code, out, err);
-            }
-        });
 
         #else
 
