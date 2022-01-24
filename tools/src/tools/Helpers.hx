@@ -410,6 +410,24 @@ class Helpers {
             File.saveContent(iphoneToolchainPath, iphoneToolchain);
         }
 
+        var macToolchainPath = Path.join([hxcppPath, 'toolchain/mac-toolchain.xml']);
+        var macToolchain = File.getContent(macToolchainPath);
+        var indexOfMacosXVersion = macToolchain.indexOf('<flag value="-mmacosx-version-min=10.10"/>');
+        var indexOfDeploymentTarget = macToolchain.indexOf('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/>');
+        if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
+            print("Patch hxcpp mac toolchain");
+            if (indexOfMacosXVersion == -1) {
+                macToolchain = macToolchain.replace('<flag value="-m64" if="HXCPP_M64"/>', '<flag value="-m64" if="HXCPP_M64"/><flag value="-mmacosx-version-min=10.10"/>');
+            }
+            if (indexOfDeploymentTarget == -1) {
+                macToolchain = macToolchain.replace('<setenv name="MACOSX_DEPLOYMENT_TARGET"', '<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');
+                macToolchain = macToolchain.replace(' unless="MACOSX_DEPLOYMENT_TARGET"/>', ' unless="MACOSX_DEPLOYMENT_TARGET"/>-->');
+                macToolchain = macToolchain.replace(' unless="MACOSX_DEPLOYMENT_TARGET" />', ' unless="MACOSX_DEPLOYMENT_TARGET" />-->');
+                macToolchain = macToolchain.replace('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"', '<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/><!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"');
+            }
+            File.saveContent(macToolchainPath, macToolchain);
+        }
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
             haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
 

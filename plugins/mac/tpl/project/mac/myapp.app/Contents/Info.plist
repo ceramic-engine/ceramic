@@ -56,5 +56,7 @@
     </array>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.10.0</string>
 </dict>
 </plist>

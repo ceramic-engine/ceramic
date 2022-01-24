@@ -58,6 +58,26 @@ function postInstall() {
         fs.writeFileSync(iphoneToolchainPath, iphoneToolchain);
     }
 
+    // Patch hxcpp toolchain on Mac
+    // To ensure binaries are explicitly compatible starting from macos 10.10+
+    var macToolchainPath = path.join(hxcppPath, 'toolchain/mac-toolchain.xml');
+    var macToolchain = '' + fs.readFileSync(macToolchainPath);
+    var indexOfMacosXVersion = macToolchain.indexOf('<flag value="-mmacosx-version-min=10.10"/>');
+    var indexOfDeploymentTarget = macToolchain.indexOf('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/>');
+    if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
+        console.log("Patch hxcpp mac toolchain");
+        if (indexOfMacosXVersion == -1) {
+            macToolchain = macToolchain.split('<flag value="-m64" if="HXCPP_M64"/>').join('<flag value="-m64" if="HXCPP_M64"/><flag value="-mmacosx-version-min=10.10"/>');
+        }
+        if (indexOfDeploymentTarget == -1) {
+            macToolchain = macToolchain.split('<setenv name="MACOSX_DEPLOYMENT_TARGET"').join('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');
+            macToolchain = macToolchain.split(' unless="MACOSX_DEPLOYMENT_TARGET"/>').join(' unless="MACOSX_DEPLOYMENT_TARGET"/>-->');
+            macToolchain = macToolchain.split(' unless="MACOSX_DEPLOYMENT_TARGET" />').join(' unless="MACOSX_DEPLOYMENT_TARGET" />-->');
+            macToolchain = macToolchain.split('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"').join('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/><!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"');
+        }
+        fs.writeFileSync(macToolchainPath, macToolchain);
+    }
+
     // Patch haxe std with ceramic's overrides
     /*var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');
     var overrideHaxeStdDir = path.join(__dirname, '../haxe/std');
