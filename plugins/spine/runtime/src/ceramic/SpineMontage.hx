@@ -379,7 +379,7 @@ class SpineMontage<T> extends Entity implements Component {
     public function useSpine(spine:Spine, bound:Bool = true):Void {
 
         // Will unbind any managed spine if needed
-        spine = null;
+        this.spine = null;
 
         boundToSpineInstance = bound;
         if (boundToSpineInstance) {
