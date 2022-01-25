@@ -1,13 +1,12 @@
 package ceramic;
 
 import ceramic.App;
-import ceramic.Entity;
-import ceramic.Assets;
-import ceramic.AssetOptions;
-import ceramic.AssetId;
 import ceramic.Asset;
+import ceramic.AssetId;
+import ceramic.AssetOptions;
+import ceramic.Assets;
 import ceramic.Either;
-
+import ceramic.Entity;
 import ceramic.Shortcuts.*;
 
 using StringTools;
@@ -16,7 +15,7 @@ using StringTools;
 class TilemapPlugin {
 
 /// Init plugin
-    
+
     static function pluginInit() {
 
         App.oncePreInit(function() {
@@ -29,7 +28,7 @@ class TilemapPlugin {
             // Extend converters
             var convertTilemapData = new ConvertTilemapData();
             ceramic.App.app.converters.set('ceramic.TilemapData', convertTilemapData);
-            
+
         });
 
     }
@@ -68,9 +67,10 @@ class TilemapPlugin {
 
         var nameStr:String = cast name;
         if (nameStr.startsWith('tilemap:')) nameStr = nameStr.substr(8);
-        
-        if (!assets.assetsByKindAndName.exists('tilemap')) return null;
+
+        if (!assets.assetsByKindAndName.exists('tilemap')) return assets.parent != null ? tilemapAsset(assets.parent, name) : null;
         var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(nameStr);
+        if (asset == null) return assets.parent != null ? tilemapAsset(assets.parent, name) : null;
         return asset;
 
     }
@@ -78,7 +78,7 @@ class TilemapPlugin {
     /**
      * Return the tilemap parser instance associated with this `Assets` object.
      * The first time, creates an instance, then reuses it.
-     * @param assets 
+     * @param assets
      * @return TilemapParser
      */
     public static function getTilemapParser(assets:Assets):TilemapParser {
@@ -94,7 +94,7 @@ class TilemapPlugin {
 
     /**
      * Return a string map to read and store raw TSX cached data
-     * @param assets 
+     * @param assets
      * @return Map<String,String>
      */
     public static function getRawTsxCache(assets:Assets):Map<String,String> {
