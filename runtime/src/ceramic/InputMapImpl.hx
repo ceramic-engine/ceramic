@@ -43,6 +43,8 @@ class InputMapImpl<T> extends InputMapBase {
 
     var boundScanCodes:IntMap<Array<Int>> = new IntMap();
 
+    var boundMouseButtons:IntMap<Array<Int>> = new IntMap();
+
     var boundGamepadButtons:IntMap<Array<Int>> = new IntMap();
 
     var boundGamepadAxis:IntMap<Array<Int>> = new IntMap();
@@ -52,6 +54,8 @@ class InputMapImpl<T> extends InputMapBase {
     var indexKeyCodes:Array<Array<KeyCode>> = [];
 
     var indexScanCodes:Array<Array<ScanCode>> = [];
+
+    var indexMouseButtons:Array<Array<Int>> = [];
 
     var indexGamepadButtons:Array<Array<GamepadButton>> = [];
 
@@ -65,6 +69,10 @@ class InputMapImpl<T> extends InputMapBase {
 
         input.onKeyDown(this, _handleKeyDown);
         input.onKeyUp(this, _handleKeyUp);
+
+        screen.onMouseDown(this, _handleMouseDown);
+        screen.onMouseUp(this, _handleMouseUp);
+
         input.onGamepadDown(this, _handleGamepadDown);
         input.onGamepadUp(this, _handleGamepadUp);
         input.onGamepadAxis(this, _handleGamepadAxis);
@@ -266,11 +274,82 @@ class InputMapImpl<T> extends InputMapBase {
 
     function _handleGamepadUp(gamepadId:Int, button:GamepadButton) {
 
+        var toEmit:Array<Int> = null;
+
+        var boundList = boundGamepadButtons.get(button);
+        if (boundList != null) {
+            for (i in 0...boundList.length) {
+                var index = boundList.unsafeGet(i);
+                var prevValue = _pressedKey(index);
+                if (prevValue > 0) {
+                    pressedKeys[index] = -1;
+                    if (toEmit == null)
+                        toEmit = [index];
+                    else if (toEmit.indexOf(index) == -1)
+                        toEmit.push(index);
+                }
+                if (prevValue != 0) {
+                    _scheduleRemoveJustReleased(index);
+                }
+            }
+        }
+
+        if (toEmit != null) {
+            for (i in 0...toEmit.length) {
+                var index = toEmit.unsafeGet(i);
+                var k = keyForIndex(index);
+                emitKeyUp(k);
+            }
+        }
+
+    }
+
+    function _handleMouseDown(buttonId:Int, x:Float, y:Float) {
+
         if (this.gamepadId == -1 || gamepadId == this.gamepadId) {
 
             var toEmit:Array<Int> = null;
 
-            var boundList = boundGamepadButtons.get(button);
+            var boundList = boundMouseButtons.get(buttonId);
+            if (boundList != null) {
+                for (i in 0...boundList.length) {
+                    var index = boundList.unsafeGet(i);
+                    _setPressedKeyKind(index, MOUSE_BUTTON);
+                    var prevValue = _pressedKey(index);
+                    if (prevValue == -1) {
+                        prevValue = 0;
+                    }
+                    if (prevValue != 1)
+                        pressedKeys[index] = prevValue + 1;
+                    if (prevValue <= 0) {
+                        if (toEmit == null)
+                            toEmit = [index];
+                        else if (toEmit.indexOf(index) == -1)
+                            toEmit.push(index);
+                    }
+                    if (prevValue == 0) {
+                        _scheduleRemoveJustPressed(index);
+                    }
+                }
+            }
+
+            if (toEmit != null) {
+                for (i in 0...toEmit.length) {
+                    var index = toEmit.unsafeGet(i);
+                    var k = keyForIndex(index);
+                    emitKeyDown(k);
+                }
+            }
+
+        }
+
+    }
+
+    function _handleMouseUp(buttonId:Int, x:Float, y:Float) {
+
+            var toEmit:Array<Int> = null;
+
+            var boundList = boundMouseButtons.get(buttonId);
             if (boundList != null) {
                 for (i in 0...boundList.length) {
                     var index = boundList.unsafeGet(i);
@@ -295,8 +374,6 @@ class InputMapImpl<T> extends InputMapBase {
                     emitKeyUp(k);
                 }
             }
-
-        }
 
     }
 
@@ -499,6 +576,21 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        var mouseButtons = indexMouseButtons[index];
+        if (mouseButtons != null) {
+            for (i in 0...mouseButtons.length) {
+                var buttonId = mouseButtons.unsafeGet(i);
+                if (screen.mousePressed(buttonId, this)) {
+                    var justPressed = checkJustPressedAtBind ? screen.mouseJustPressed(buttonId, this) : false;
+                    pressedKeys[index] = justPressed ? 1 : 2;
+                    _setPressedKeyKind(index, MOUSE_BUTTON);
+                    if (justPressed)
+                        _scheduleRemoveJustPressed(index);
+                    return;
+                }
+            }
+        }
+
         var gamepadButtons = indexGamepadButtons[index];
         if (gamepadButtons != null) {
             for (i in 0...gamepadButtons.length) {
@@ -646,6 +738,32 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function bindMouseButton(key:T, buttonId:Int):Void {
+
+        var index = indexOfKey(key);
+
+        var list = boundMouseButtons.get(buttonId);
+        if (list == null) {
+            list = [index];
+            boundMouseButtons.set(buttonId, list);
+        }
+        else {
+            list.push(index);
+        }
+
+        var indexList = indexMouseButtons[index];
+        if (indexList == null) {
+            indexList = [buttonId];
+            indexMouseButtons[index] = indexList;
+        }
+        else {
+            indexList.push(buttonId);
+        }
+
+        _recomputePressedKey(index);
+
+    }
+
     public function bindGamepadButton(key:T, button:GamepadButton):Void {
 
         var index = indexOfKey(key);
@@ -743,9 +861,9 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function axisValue(key:T):Bool {
+    public function axisValue(key:T):Float {
 
-        return _pressedKey(indexOfKey(key)) > 0;
+        return axisValues[indexOfKey(key)];
 
     }
 
@@ -759,8 +877,10 @@ enum abstract InputMapKeyKind(Int) from Int to Int {
 
     var SCAN_CODE = 2;
 
-    var GAMEPAD_BUTTON = 3;
+    var MOUSE_BUTTON = 3;
 
-    var GAMEPAD_AXIS = 4;
+    var GAMEPAD_BUTTON = 4;
+
+    var GAMEPAD_AXIS = 5;
 
 }
