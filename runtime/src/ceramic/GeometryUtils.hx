@@ -77,6 +77,27 @@ class GeometryUtils {
     }
 
     /**
+     * Returns the delta between `angle0` and `angle1`, all values being angles in degrees.
+     */
+    public static function angleDelta(angle0:Float, angle1:Float):Float {
+
+        angle0 = inline clampDegrees(angle0);
+        angle1 = inline clampDegrees(angle1);
+
+        // Always choose shortest path (<= 180 degrees)
+        var delta = angle1 - angle0;
+        if (delta > 180) {
+            angle1 -= 360;
+        }
+        else if (delta < -180) {
+            angle1 += 360;
+        }
+
+        return angle1 - angle0;
+
+    }
+
+    /**
      * Clamp an degrees (angle) value between 0 (included) and 360 (excluded)
      */
     public static function clampDegrees(deg:Float):Float {
