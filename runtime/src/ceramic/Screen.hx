@@ -1300,19 +1300,76 @@ class Screen extends Entity implements Observable {
 
     }
 
-    public function mousePressed(buttonId:Int):Bool {
+    #if plugin_elements
+
+    static function _elementsImFocused():Bool {
+
+        var context = elements.Context.context;
+        return (context != null && context.focusedWindow != null);
+
+    }
+
+    #end
+
+    /**
+     * Return `true` if mouse events are currently allowed for the given owner.
+     * This is only useful on very specific cases.
+     */
+    inline public function mouseAllowed(owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) #else true #end;
+
+    }
+
+    public extern inline overload function mousePressed(buttonId:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _mousePressed(buttonId);
+
+    }
+
+    public extern inline overload function mouseJustPressed(buttonId:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _mouseJustPressed(buttonId);
+
+    }
+
+    public extern inline overload function mouseJustReleased(buttonId:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _mouseJustReleased(buttonId);
+
+    }
+
+    public extern inline overload function mousePressed(buttonId:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _mousePressed(buttonId);
+
+    }
+
+    public extern inline overload function mouseJustPressed(buttonId:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _mouseJustPressed(buttonId);
+
+    }
+
+    public extern inline overload function mouseJustReleased(buttonId:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _mouseJustReleased(buttonId);
+
+    }
+
+    function _mousePressed(buttonId:Int):Bool {
 
         return pressedMouseButtons.get(buttonId) > 0;
 
     }
 
-    public function mouseJustPressed(buttonId:Int):Bool {
+    function _mouseJustPressed(buttonId:Int):Bool {
 
         return pressedMouseButtons.get(buttonId) == 1;
 
     }
 
-    public function mouseJustReleased(buttonId:Int):Bool {
+    function _mouseJustReleased(buttonId:Int):Bool {
 
         return pressedMouseButtons.get(buttonId) == -1;
 
@@ -1398,20 +1455,56 @@ class Screen extends Entity implements Observable {
 
     }
 
-    public function touchPressed(touchIndex:Int):Bool {
+    public extern inline overload function touchPressed(touchIndex:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _touchPressed(touchIndex);
+
+    }
+
+    public extern inline overload function touchJustPressed(touchIndex:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _touchJustPressed(touchIndex);
+
+    }
+
+    public extern inline overload function touchJustReleased(touchIndex:Int):Bool {
+
+        return #if plugin_elements !_elementsImFocused() && #end _touchJustReleased(touchIndex);
+
+    }
+
+    public extern inline overload function touchPressed(touchIndex:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _touchPressed(touchIndex);
+
+    }
+
+    public extern inline overload function touchJustPressed(touchIndex:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _touchJustPressed(touchIndex);
+
+    }
+
+    public extern inline overload function touchJustReleased(touchIndex:Int, owner:Entity):Bool {
+
+        return #if plugin_elements (!_elementsImFocused() || elements.Im.filterEventOwner(owner)) && #end _touchJustReleased(touchIndex);
+
+    }
+
+    function _touchPressed(touchIndex:Int):Bool {
 
         return pressedTouches.get(touchIndex) > 0;
 
     }
 
-    public function touchJustPressed(touchIndex:Int):Bool {
+    function _touchJustPressed(touchIndex:Int):Bool {
 
         var state = pressedTouches.get(touchIndex);
         return state == 1 || state == -2;
 
     }
 
-    public function touchJustReleased(touchIndex:Int):Bool {
+    function _touchJustReleased(touchIndex:Int):Bool {
 
         var state = pressedTouches.get(touchIndex);
         return state == -1 || state == -2;
