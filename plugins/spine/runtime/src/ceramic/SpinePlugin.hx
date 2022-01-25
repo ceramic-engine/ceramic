@@ -1,20 +1,17 @@
 package ceramic;
 
 import ceramic.App;
-import ceramic.Entity;
-import ceramic.Assets;
-import ceramic.AssetOptions;
-import ceramic.AssetId;
 import ceramic.Asset;
+import ceramic.AssetId;
+import ceramic.AssetOptions;
+import ceramic.Assets;
+import ceramic.ConvertSpineData;
 import ceramic.Either;
-
+import ceramic.Entity;
+import ceramic.Shortcuts.*;
 import ceramic.SpineAsset;
 import ceramic.SpineData;
-import ceramic.ConvertSpineData;
-
 import spine.Bone;
-
-import ceramic.Shortcuts.*;
 
 using StringTools;
 
@@ -22,7 +19,7 @@ using StringTools;
 class SpinePlugin {
 
 /// Init plugin
-    
+
     static function pluginInit() {
 
         App.oncePreInit(function() {
@@ -55,7 +52,7 @@ class SpinePlugin {
                     ]
                 });
             });
-            
+
         });
 
     }
@@ -96,9 +93,10 @@ class SpinePlugin {
 
         var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
-        
-        if (!assets.assetsByKindAndName.exists('spine')) return null;
+
+        if (!assets.assetsByKindAndName.exists('spine')) return assets.parent != null ? spineAsset(assets.parent, name) : null;
         var asset:SpineAsset = cast assets.assetsByKindAndName.get('spine').get(realName);
+        if (asset == null) return assets.parent != null ? spineAsset(assets.parent, name) : null;
         return asset;
 
     }
