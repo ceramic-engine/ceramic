@@ -71,6 +71,21 @@ class GeometryUtils {
 
         return Utils.radToDeg(Math.atan2(y1 - y0, x1 - x0)) + 90;
 
+    /**
+     * Clamp an degrees (angle) value between 0 (included) and 360 (excluded)
+     */
+    public static function clampDegrees(deg:Float):Float {
+
+        // Clamp between 0-360
+        while (deg < 0) {
+            deg += 360;
+        }
+        while (deg >= 360) {
+            deg -= 360;
+        }
+
+        return deg;
+
     }
 
 }

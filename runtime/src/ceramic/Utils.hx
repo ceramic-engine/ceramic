@@ -337,23 +337,6 @@ class Utils {
     }
 
     /**
-     * Clamp an degrees (angle) value between 0 (included) and 360 (excluded)
-     */
-    inline public static function clampDegrees(deg:Float):Float {
-
-        // Clamp between 0-360
-        while (deg < 0) {
-            deg += 360;
-        }
-        while (deg >= 360) {
-            deg -= 360;
-        }
-
-        return deg;
-
-    }
-
-    /**
      * Java's String.hashCode() method implemented in Haxe.
      * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
      */
