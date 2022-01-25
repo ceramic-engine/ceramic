@@ -471,8 +471,8 @@ class VisualTransition extends Entity implements Component {
             }
             if (rotationChanged) {
                 rotationTween = propsTween;
-                rotationStart = Utils.clampDegrees(rotationCurrent);
-                rotationEnd = Utils.clampDegrees(rotationTarget);
+                rotationStart = GeometryUtils.clampDegrees(rotationCurrent);
+                rotationEnd = GeometryUtils.clampDegrees(rotationTarget);
                 var rotationDelta = rotationEnd - rotationStart;
                 if (rotationDelta > 180) {
                     rotationEnd -= 360;
