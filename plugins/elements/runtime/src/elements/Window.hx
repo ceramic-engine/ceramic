@@ -1,5 +1,6 @@
 package elements;
 
+import ceramic.AntialiasedTriangle;
 import ceramic.Click;
 import ceramic.ColumnLayout;
 import ceramic.DoubleClick;
@@ -10,7 +11,6 @@ import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.TextView;
 import ceramic.TouchInfo;
-import ceramic.Triangle;
 import ceramic.View;
 import elements.Context.context;
 import tracker.Observable;
@@ -65,7 +65,7 @@ class Window extends ColumnLayout implements Observable {
 
     var expandView:View;
 
-    var expandTriangle:Triangle;
+    var expandTriangle:AntialiasedTriangle;
 
     var closeView:View;
 
@@ -95,7 +95,7 @@ class Window extends ColumnLayout implements Observable {
         {
             var triangleW = HEADER_HEIGHT * 0.5;
             var triangleH = HEADER_HEIGHT * 0.4;
-            expandTriangle = new Triangle();
+            expandTriangle = new AntialiasedTriangle();
             expandTriangle.anchor(0.5, 0.5);
             expandTriangle.size(triangleW, triangleH);
             expandTriangle.pos(HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.5);
