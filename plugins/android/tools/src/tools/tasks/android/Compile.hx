@@ -1,8 +1,8 @@
 package tools.tasks.android;
 
-import tools.Helpers.*;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -49,6 +49,9 @@ class Compile extends tools.Task {
             var buildOpenALArgs = [];
             if (!context.colors) {
                 buildOpenALArgs.push('-DHXCPP_NO_COLOR');
+            }
+            if (context.defines.exists('ceramic_android_use_gcc')) {
+                buildOpenALArgs.push('-Dceramic_android_use_gcc');
             }
             switch (arch) {
                 case 'armv7':
