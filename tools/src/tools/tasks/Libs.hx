@@ -100,6 +100,7 @@ class Libs extends tools.Task {
                 else {
                     var installArgs = [libName];
                     if (libVersion != null) installArgs.push(libVersion);
+                    installArgs.push('--quiet');
                     res = haxelib(['install'].concat(installArgs), { cwd: cwd });
                 }
 

@@ -379,7 +379,7 @@ class Helpers {
 
         var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,2,1']);
         if (!FileSystem.exists(hxcppPath)) {
-            haxelib(['install', 'hxcpp', '4.2.1', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxcpp', '4.2.1', '--always', '--quiet'], {cwd: cwd});
         }
         // Patch hxcpp if needed
         var androidClangToolchainPath = Path.join([hxcppPath, 'toolchain/android-toolchain-clang.xml']);
@@ -429,64 +429,64 @@ class Helpers {
         }
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
-            haxelib(['install', 'hxnodejs', '12.1.0', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxnodejs', '12.1.0', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
-            haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,4,0'])))
-            haxelib(['install', 'hscript', '2.4.0', '--always'], {cwd: cwd});
+            haxelib(['install', 'hscript', '2.4.0', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,13'])))
-            haxelib(['install', 'bind', '0.4.13', '--always'], {cwd: cwd});
+            haxelib(['install', 'bind', '0.4.13', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
-            haxelib(['install', 'format', '3.4.2', '--always'], {cwd: cwd});
+            haxelib(['install', 'format', '3.4.2', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '10,0,0'])))
-            haxelib(['install', 'hxnodejs', '10.0.0', '--always'], {cwd: cwd});
+            haxelib(['install', 'hxnodejs', '10.0.0', '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'akifox-asynchttp'])))
-            haxelib(['dev', 'akifox-asynchttp', Path.join([context.ceramicGitDepsPath, 'akifox-asynchttp']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'akifox-asynchttp', Path.join([context.ceramicGitDepsPath, 'akifox-asynchttp']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'tracker'])))
-            haxelib(['dev', 'tracker', Path.join([context.ceramicGitDepsPath, 'tracker']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'tracker', Path.join([context.ceramicGitDepsPath, 'tracker']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'arcade'])))
-            haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'arcade', Path.join([context.ceramicGitDepsPath, 'arcade']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'nape'])))
-            haxelib(['dev', 'nape', Path.join([context.ceramicGitDepsPath, 'nape']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'nape', Path.join([context.ceramicGitDepsPath, 'nape']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'differ'])))
-            haxelib(['dev', 'differ', Path.join([context.ceramicGitDepsPath, 'differ']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'differ', Path.join([context.ceramicGitDepsPath, 'differ']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hsluv'])))
-            haxelib(['dev', 'hsluv', Path.join([context.ceramicGitDepsPath, 'hsluv', 'haxe']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'hsluv', Path.join([context.ceramicGitDepsPath, 'hsluv', 'haxe']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'spine-hx'])))
-            haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'spine-hx', Path.join([context.ceramicGitDepsPath, 'spine-hx']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'polyline'])))
-            haxelib(['dev', 'polyline', Path.join([context.ceramicGitDepsPath, 'polyline']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'polyline', Path.join([context.ceramicGitDepsPath, 'polyline']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'earcut'])))
-            haxelib(['dev', 'earcut', Path.join([context.ceramicGitDepsPath, 'earcut']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'earcut', Path.join([context.ceramicGitDepsPath, 'earcut']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'poly2tri'])))
-            haxelib(['dev', 'poly2tri', Path.join([context.ceramicGitDepsPath, 'poly2tri']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'poly2tri', Path.join([context.ceramicGitDepsPath, 'poly2tri']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'generate'])))
-            haxelib(['dev', 'generate', Path.join([context.ceramicGitDepsPath, 'generate']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'generate', Path.join([context.ceramicGitDepsPath, 'generate']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format-tiled'])))
-            haxelib(['dev', 'format-tiled', Path.join([context.ceramicGitDepsPath, 'format-tiled']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'format-tiled', Path.join([context.ceramicGitDepsPath, 'format-tiled']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'imgui-hx'])))
-            haxelib(['dev', 'imgui-hx', Path.join([context.ceramicGitDepsPath, 'imgui-hx']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'imgui-hx', Path.join([context.ceramicGitDepsPath, 'imgui-hx']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'gif'])))
-            haxelib(['dev', 'gif', Path.join([context.ceramicGitDepsPath, 'gif']), '--always'], {cwd: cwd});
+            haxelib(['dev', 'gif', Path.join([context.ceramicGitDepsPath, 'gif']), '--always', '--quiet'], {cwd: cwd});
 
     }
 

@@ -222,7 +222,7 @@ class Setup extends tools.Task {
             return; // Seems installed already
         }
 
-        haxelib(['install', 'hxcs'], { cwd: cwd });
+        haxelib(['install', 'hxcs', '--quiet'], { cwd: cwd });
 
     }
 
