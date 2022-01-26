@@ -36,6 +36,7 @@ class AntialiasedTriangle extends Mesh {
 
     override function set_color(color:Color):Color {
         if (colors == null) colors = [0, 0, 0, 0, 0, 0];
+        else if (colors.length != 6) colors.setArrayLength(6);
         colors.unsafeSet(0, new AlphaColor(color, 255));
         colors.unsafeSet(1, new AlphaColor(color, 255));
         colors.unsafeSet(2, new AlphaColor(color, 255));
