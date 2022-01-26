@@ -41,17 +41,71 @@ class Web extends tools.Task {
         var electronErrors = extractArgFlag(args, 'electron-errors');
         var didSkipCompilation = extractArgFlag(args, 'did-skip-compilation');
 
+        // Check that project didn't change name
+        var htmlContent = null;
+        var htmlContentChanged = false;
+        var jsName:String = project.app.name;
+        if (FileSystem.exists(webProjectFilePath)) {
+            htmlContent = File.getContent(webProjectFilePath);
+            if (htmlContent.indexOf('<script type="text/javascript" src="./$jsName.js"></script>') == -1) {
+                if (htmlContent.indexOf('<script type="text/javascript" src="./$jsName.min.js"></script>') == -1) {
+
+                    // Resolve previous file name
+                    var lines = htmlContent.split('\n');
+                    var inCeramicApp = false;
+                    var jsTag = '<script type="text/javascript" src="./';
+                    var prevJsName = null;
+                    var prevJsNameFull = null;
+                    for (line in lines) {
+                        if (inCeramicApp) {
+                            var index = line.indexOf(jsTag);
+                            if (index != -1) {
+                                var value = line.substr(index + jsTag.length);
+                                value = value.substr(0, value.indexOf('"'));
+                                prevJsNameFull = value;
+                                if (value.endsWith('.min.js')) {
+                                    value = value.substr(0, value.length - 7);
+                                }
+                                else if (value.endsWith('.js')) {
+                                    value = value.substr(0, value.length - 3);
+                                }
+                                if (value != 'sourceMapSupport') {
+                                    prevJsName = value;
+                                    break;
+                                }
+                            }
+                        }
+                        else if (line.indexOf('<div id="ceramic-app">') != -1) {
+                            inCeramicApp = true;
+                        }
+                    }
+
+                    if (prevJsName != null && prevJsName != jsName) {
+                        if (FileSystem.exists(Path.join([webProjectPath, prevJsName + '.js']))) {
+                            FileSystem.deleteFile(Path.join([webProjectPath, prevJsName + '.js']));
+                        }
+                        if (FileSystem.exists(Path.join([webProjectPath, prevJsName + '.min.js']))) {
+                            FileSystem.deleteFile(Path.join([webProjectPath, prevJsName + '.min.js']));
+                        }
+
+                        htmlContent = htmlContent.replace(jsTag + prevJsNameFull + '"', jsTag + jsName + '.js"');
+                        htmlContentChanged = true;
+                        success('Renamed web project from "$prevJsName" to "$jsName"');
+                    }
+                }
+            }
+        }
+
         // Create web project if needed
         WebProject.createWebProjectIfNeeded(cwd, project);
 
         // Resolve paths and assets
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'web', cwd, context.debug, context.variant);
-        var jsName:String = project.app.name;
         var jsBasePath = Path.join([webProjectPath, jsName]);
 
         // Patch index.html if needed
-        var htmlContent = File.getContent(webProjectFilePath);
-        var htmlContentChanged = false;
+        if (htmlContent == null)
+            htmlContent = File.getContent(webProjectFilePath);
         var sourceMapPath = Path.join([webProjectPath, '$jsName.js.map']);
         var sourceMapSupportPath = Path.join([webProjectPath, 'sourceMapSupport.js']);
         var tplSourceMapSupportPath = Path.join([tplProjectPath, 'sourceMapSupport.js']);
