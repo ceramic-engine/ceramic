@@ -1,12 +1,12 @@
 package tools;
 
+import haxe.Json;
+import haxe.io.Path;
 import npm.Fiber;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
-import haxe.Json;
-import tools.Helpers;
 import tools.Helpers.*;
+import tools.Helpers;
 
 using StringTools;
 
@@ -96,7 +96,7 @@ class Tools {
             }
         }
         context.ceramicVersion = version;
-        
+
         // Compute .ceramic path (global or local)
         var localDotCeramic = Path.join([context.cwd, '.ceramic']);
         if (FileSystem.exists(localDotCeramic) && FileSystem.isDirectory(localDotCeramic)) {
@@ -208,6 +208,24 @@ class Tools {
             }
         }
 
+        // Custom defines
+        index = 0;
+        while (index < args.length) {
+            var arg = args[index];
+            if (arg == '-D') {
+                index++;
+                var name = args[index];
+                var equalIndex = name.indexOf('=');
+                if (equalIndex == -1) {
+                    context.defines.set(name, '');
+                }
+                else {
+                    context.defines.set(name.substr(0, equalIndex), name.substr(equalIndex + 1));
+                }
+            }
+            index++;
+        }
+
         // VSCode
         index = args.indexOf('--vscode-editor');
         if (index != -1) {
@@ -261,7 +279,7 @@ class Tools {
                 fail('Unknown command: $taskName');
             }
         }
-        
+
     }
 
 }
