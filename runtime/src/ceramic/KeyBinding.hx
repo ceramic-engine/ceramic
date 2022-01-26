@@ -112,7 +112,7 @@ class KeyBinding extends Entity {
             #end
 
             if (key.scanCode == scanCode) {
-                if (input.scanJustPressed(key.scanCode) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.scanJustPressed(key.scanCode, bindings) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
@@ -177,7 +177,7 @@ class KeyBinding extends Entity {
         input.onKeyDown(this, function(key:Key) {
 
             if (key.keyCode == keyCode) {
-                if (input.scanJustPressed(key.scanCode) #if web || pressedItems[itemIndex] == 0 #end) {
+                if (input.scanJustPressed(key.scanCode, bindings) #if web || pressedItems[itemIndex] == 0 #end) {
                     pressedItems[itemIndex]++;
 
                     checkStatus();
