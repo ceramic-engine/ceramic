@@ -78,8 +78,8 @@ class VisualContainerView extends View implements Observable {
         if (this.visual != visual || (visual != null && visual.parent != this)) {
             var prevVisual = this.visual;
             if (prevVisual != null && prevVisual != visual) {
-                if (prevVisual.parent == this) {
-                    remove(prevVisual);
+                if (prevVisual.parent == this || (filter != null && prevVisual.parent == filter.content)) {
+                    prevVisual.parent.remove(prevVisual);
                     if (destroyVisualOnRemove) {
                         prevVisual.destroy();
                     }
