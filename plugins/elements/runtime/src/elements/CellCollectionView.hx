@@ -20,6 +20,7 @@ class CellCollectionView extends CollectionView implements Observable {
         super();
 
         filter = new Filter();
+        filter.density = screen.nativeDensity;
         add(filter);
 
         viewSize(fill(), fill());
@@ -40,12 +41,13 @@ class CellCollectionView extends CollectionView implements Observable {
 
         autorun(updateStyle);
 
-        app.onUpdate(this, updateScrollingFlag);
+        app.onUpdate(this, handleUpdate);
 
     }
 
-    function updateScrollingFlag(delta:Float) {
+    function handleUpdate(delta:Float) {
 
+        filter.density = screen.nativeDensity;
         scrolling = (scroller.status != IDLE);
 
     }

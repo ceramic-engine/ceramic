@@ -19,6 +19,7 @@ class ScrollingLayout<T:View> extends ScrollView {
         super();
 
         filter = new Filter();
+        filter.density = screen.nativeDensity;
         add(filter);
 
         this.layoutView = layoutView;
@@ -83,6 +84,8 @@ class ScrollingLayout<T:View> extends ScrollView {
     }
 
     function handlePostUpdate(delta:Float) {
+
+        filter.density = screen.nativeDensity;
 
         if (checkChildrenOfView != null) {
             if (checkChildrenOfView.destroyed) {

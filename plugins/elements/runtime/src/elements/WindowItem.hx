@@ -5,6 +5,7 @@ import ceramic.Equal;
 import ceramic.Filter;
 import ceramic.Flags;
 import ceramic.Pool;
+import ceramic.Shortcuts.*;
 import ceramic.View;
 import ceramic.ViewSize;
 import ceramic.Visual;
@@ -367,6 +368,7 @@ class WindowItem {
             if (container.filter == null) {
                 container.filter = new Filter();
             }
+            container.filter.density = screen.nativeDensity;
         }
         else {
             if (container.filter != null) {

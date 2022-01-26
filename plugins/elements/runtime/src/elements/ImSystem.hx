@@ -34,7 +34,7 @@ class ImSystem extends System {
         filter.density = screen.nativeDensity;
         filter.enabled = true;
 
-        var view = new View();
+        view = new View();
         view.transparent = true;
         view.depth = 1000;
         view.onLayout(this, _layoutWindows);
@@ -87,6 +87,7 @@ class ImSystem extends System {
 
         if (view != null) {
             view.size(filter.width, filter.height);
+
             filter.density = screen.nativeDensity;
         }
 
