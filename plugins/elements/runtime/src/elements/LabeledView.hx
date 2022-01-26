@@ -55,12 +55,14 @@ class LabeledView<T:View> extends RowLayout implements Observable {
                     remove(useContainer ? containerView : view);
                     add(labelText);
                     add(useContainer ? containerView : view);
-                    containerView.align = LEFT;
+                    if (containerView != null)
+                        containerView.align = LEFT;
                     labelText.align = RIGHT;
                 case RIGHT:
                     remove(labelText);
                     add(labelText);
-                    containerView.align = RIGHT;
+                    if (containerView != null)
+                        containerView.align = RIGHT;
                     labelText.align = LEFT;
             }
         }
