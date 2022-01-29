@@ -36,6 +36,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var PINK:Color =        0xFFC0CB;
     public static inline var MAGENTA:Color =     0xFF00FF;
     public static inline var CYAN:Color =        0x00FFFF;
+    public static inline var CORNFLOWERBLUE:Color = 0x6495ed;
 
     public static var colorLookup(default, null):Map<String, Int> = new Map<String, Int>();
 
