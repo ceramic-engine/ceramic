@@ -52,7 +52,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var SALMON:Color =          0xfa8072;
     public static inline var DARKSALMON:Color =      0xe9967a;
     public static inline var LIGHTSALMON:Color =     0xffa07a;
-    public static inline var ORAGNERED:Color =       0xff4500;
+    public static inline var ORANGERED:Color =       0xff4500;
     public static inline var TOMATO:Color =          0xff6347;
     public static inline var DARKORANGE:Color =      0xff8c00;
     public static inline var CORAL:Color =           0xff7f50;
@@ -69,7 +69,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var CHOCOLATE:Color =       0xd2691e;
     public static inline var PERU:Color =            0xcd853f;
     public static inline var TAN:Color =             0xd2b48c;
-    public static inline var DARKOLIVEGREEEN:Color = 0x556b2f;
+    public static inline var DARKOLIVEGREEN:Color = 0x556b2f;
     public static inline var OLIVE:Color =           0x808000;
     public static inline var TEAL:Color =            0x008080;
     public static inline var TURQUOISE:Color =       0x40e0d0;
