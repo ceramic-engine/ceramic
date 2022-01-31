@@ -4,7 +4,7 @@
   "description": "Cross-platform 2D framework written in Haxe",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "../node/node_modules/.bin/node post-install.js",
+    "postinstall": "./node post-install.js",
     "ceramic": "./ceramic"
   },
   "repository": {
