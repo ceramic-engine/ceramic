@@ -1,4 +1,4 @@
-#!./node_modules/.bin/node
+#!../node/node_modules/.bin/node
 
 var spawnSync = require('child_process').spawnSync;
 var download = require('download');

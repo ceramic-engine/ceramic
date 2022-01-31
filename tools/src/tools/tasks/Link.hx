@@ -1,9 +1,9 @@
 package tools.tasks;
 
-import tools.Helpers.*;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
 
 class Link extends tools.Task {
 
@@ -22,7 +22,7 @@ class Link extends tools.Task {
             }
             else {
                 var script = '#!/bin/bash
-${Path.join([context.ceramicToolsPath, 'node_modules/.bin/node'])} ${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
+${Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node'])} ${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
                 File.saveContent('/usr/local/bin/ceramic', script);
                 command('chmod', ['+x', 'ceramic'], { cwd: '/usr/local/bin', mute: true });
             }

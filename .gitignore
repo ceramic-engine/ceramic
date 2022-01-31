@@ -11,6 +11,8 @@
 /tools/sample/.vscode
 /tools/.vscode/tasks.json
 
+/node/node_modules
+
 /editor/node_modules
 /editor/coverage
 /editor/build

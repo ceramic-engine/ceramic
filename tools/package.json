@@ -4,7 +4,7 @@
   "description": "Cross-platform 2D framework written in Haxe",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "node_modules/.bin/node post-install.js",
+    "postinstall": "../node/node_modules/.bin/node post-install.js",
     "ceramic": "./ceramic"
   },
   "repository": {
@@ -39,8 +39,6 @@
     "lockfile": "1.0.4",
     "msdf-bmfont-xml": "github:ceramic-engine/msdf-bmfont-xml",
     "multi-bin-packer": "1.1.3",
-    "node": "10.16.3",
-    "npm": "6.14.6",
     "plist": "3.0.1",
     "rimraf": "^3.0.0",
     "sharp": "0.23.0",

@@ -1,0 +1,14 @@
+{
+  "name": "node-binary",
+  "version": "1.0.0",
+  "description": "A package to install specific versions of node and npm via node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "dependencies": {
+    "node": "10.16.3",
+    "npm": "6.9.0"
+  }
+}

@@ -1,4 +1,4 @@
-#!./node_modules/.bin/node
+#!../node/node_modules/.bin/node
 
 var fs = require('fs');
 var path = require('path');
@@ -40,8 +40,8 @@ while (pathParts.length > 0) {
                 var arg = process.argv[i];
                 args.push(arg);
             }
-    
-            var cmd = path.join(ceramicPath, 'node_modules/.bin/node');
+
+            var cmd = path.join(ceramicPath, '../node/node_modules/.bin/node');
             if (process.platform == 'win32') {
                 cmd = path.join(ceramicPath, 'ceramic.cmd');
             }

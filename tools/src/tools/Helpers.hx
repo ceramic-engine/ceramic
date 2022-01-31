@@ -208,7 +208,7 @@ class Helpers {
         if (Sys.systemName() == 'Windows') {
             return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), actualArgs, { cwd: cwd, mute: mute });
         } else {
-            return command(Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(actualArgs), { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(actualArgs), { cwd: cwd, mute: mute });
         }
 
     }
@@ -357,7 +357,7 @@ class Helpers {
 
     public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
 
-        var node = Path.join([context.ceramicToolsPath, 'node_modules/.bin/node']);
+        var node = Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node']);
         if (Sys.systemName() == 'Windows')
             node += '.cmd';
         return command(node, args, options);
