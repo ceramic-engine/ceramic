@@ -20,9 +20,9 @@ function postInstall() {
     if (!fs.existsSync(haxelibRepoPath)) {
         fs.mkdirSync(haxelibRepoPath);
     }
-    spawnSync(haxelib, ['dev', 'generate', '../git/generate'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcpp', '4.2.1', '--always'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'build.hxml', '--always'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcpp', '4.2.1', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'build.hxml', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
     var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
