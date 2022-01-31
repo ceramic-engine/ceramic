@@ -12,10 +12,9 @@ Ceramic is a cross-platform 2D framework written in Haxe that can export nativel
 Ceramic is _almost_ ready to be used by more developers.
 
 At the moment, it lacks a lot of documentation, but you can already read a few articles:
-- Start with the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://jeremyfa.com/what-is-ceramic-engine/)
-- Then, continue with the [Getting Started with ceramic](https://jeremyfa.com/getting-started-with-ceramic/) guide to create your first project.
-- Find some more info on the [Wiki Page](https://github.com/ceramic-engine/ceramic/wiki).
-- Check the [Ceramic API docs](https://ceramic-engine.com/api/) (still rough, will be improved).
+- Start with the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://ceramic-engine.com/guides/introduction/discover-ceramic/)
+- Then, follow the [Guides](https://ceramic-engine.com/guides/). Start with the Getting Started section, to install Ceramic and create your first project, and continue learning the the additional guides.
+- Check the [Ceramic API docs](https://ceramic-engine.com/api-docs/) (still rough, will be improved iteratively).
 - Take a look at the [Samples repository](https://github.com/ceramic-engine/ceramic-samples/) to see small example projects that demonstrate ceramic features (new samples will be added on a regular basis).
 - Join the **#ceramic** channel on the [Haxe Discord](https://discordapp.com/invite/0uEuWH3spjck73Lo) server.
 
