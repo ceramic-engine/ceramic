@@ -57,6 +57,7 @@ jobs:
           npm ci
           cd ../tools
           ./npm ci
+          ./node post-install.js
           cd ../runner
           ../tools/npm ci
           cd ..
@@ -161,6 +162,7 @@ jobs:
           npm ci
           cd ../tools
           ./npm ci
+          ./node post-install.js
           cd ../runner
           ../tools/npm ci
           cd ..
@@ -256,6 +258,7 @@ jobs:
           npm ci
           cd ../tools
           ./npm ci
+          ./node post-install.js
           cd ../runner
           ../tools/npm ci
           cd ..

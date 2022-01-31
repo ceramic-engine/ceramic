@@ -3,9 +3,7 @@
   "version": "0.10.0",
   "description": "Cross-platform 2D framework written in Haxe",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "./node post-install.js",
-    "ceramic": "./ceramic"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
