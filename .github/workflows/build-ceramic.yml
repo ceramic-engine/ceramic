@@ -52,13 +52,13 @@ jobs:
           echo $NEKOPATH
           echo $HAXEPATH
       - name: Build ceramic
-        working-directory: ./tools
+        working-directory: ./node
         run: |
-          npm install
-          ./npm install
-          ./npm audit fix
+          npm ci
+          cd ../tools
+          ./npm ci
           cd ../runner
-          ../tools/npm install
+          ../tools/npm ci
           cd ..
       - name: Cleanup
         working-directory: .
@@ -75,8 +75,6 @@ jobs:
           Remove-Item './haxelib'
           Remove-Item './neko'
           Remove-Item './ceramic'
-          Remove-Item './ceramic-electron'
-          Remove-Item './ceramic-electron.bat'
           npm uninstall npm
           cd ..
       - name: Run ceramic
@@ -158,13 +156,13 @@ jobs:
           echo 'haxe: '$(haxe --version)
           echo 'haxelib: '$(haxelib version)
       - name: Build ceramic
-        working-directory: ./tools
+        working-directory: ./node
         run: |
-          npm install
-          ./npm install
-          ./npm audit fix
+          npm ci
+          cd ../tools
+          ./npm ci
           cd ../runner
-          ../tools/npm install
+          ../tools/npm ci
           cd ..
       - name: Cleanup
         working-directory: .
@@ -180,8 +178,6 @@ jobs:
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
-          rm -f ./ceramic-electron
-          rm -f ./ceramic-electron.bat
           npm uninstall npm
           cd ..
       - name: Run ceramic
@@ -255,13 +251,13 @@ jobs:
           echo 'haxe: '$(haxe --version)
           echo 'haxelib: '$(haxelib version)
       - name: Build ceramic
-        working-directory: ./tools
+        working-directory: ./node
         run: |
-          npm install
-          ./npm install
-          ./npm audit fix
+          npm ci
+          cd ../tools
+          ./npm ci
           cd ../runner
-          ../tools/npm install
+          ../tools/npm ci
           cd ..
       - name: Cleanup
         working-directory: .
@@ -277,8 +273,6 @@ jobs:
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
-          rm -f ./ceramic-electron
-          rm -f ./ceramic-electron.bat
           npm uninstall npm
           cd ..
       - name: Run ceramic

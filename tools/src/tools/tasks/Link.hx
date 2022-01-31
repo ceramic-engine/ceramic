@@ -17,15 +17,10 @@ class Link extends tools.Task {
 
         if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
             command('rm', ['ceramic'], { cwd: '/usr/local/bin', mute: true });
-            if (isElectron()) {
-                command('ln', ['-s', Path.join([context.ceramicToolsPath, 'ceramic-electron']), 'ceramic'], { cwd: '/usr/local/bin' });
-            }
-            else {
-                var script = '#!/bin/bash
+            var script = '#!/bin/bash
 ${Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node'])} ${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
-                File.saveContent('/usr/local/bin/ceramic', script);
-                command('chmod', ['+x', 'ceramic'], { cwd: '/usr/local/bin', mute: true });
-            }
+            File.saveContent('/usr/local/bin/ceramic', script);
+            command('chmod', ['+x', 'ceramic'], { cwd: '/usr/local/bin', mute: true });
         }
         else if (Sys.systemName() == 'Windows') {
             var haxePath = js.Node.process.env['HAXEPATH'];
@@ -34,7 +29,7 @@ ${Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node'])} ${Pat
             }
             File.saveContent(
                 Path.join([haxePath, 'ceramic.cmd']),
-                "@echo off\r\n" + Path.join([context.ceramicToolsPath, isElectron() ? 'ceramic-electron' : 'ceramic']) + " %*"
+                "@echo off\r\n" + Path.join([context.ceramicToolsPath, 'ceramic']) + " %*"
             );
         }
 
