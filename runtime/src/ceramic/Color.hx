@@ -36,6 +36,52 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var PINK:Color =        0xFFC0CB;
     public static inline var MAGENTA:Color =     0xFF00FF;
     public static inline var CYAN:Color =        0x00FFFF;
+    
+    // Extra colors
+    public static inline var CORNFLOWERBLUE:Color =  0x6495ed;
+    public static inline var MEDIUMVIOLETRED:Color = 0xc71585;
+    public static inline var DEEPPINK:Color =        0xff1493;
+    public static inline var PALEVIOLETRED:Color =   0xdb7093;
+    public static inline var HOTPINK:Color =         0xff69b4;
+    public static inline var LIGHTPINK:Color =       0xffb6c1;
+    public static inline var DARKRED:Color =         0x8b0000;
+    public static inline var FIREBRICK:Color =       0xb22222;
+    public static inline var CRIMSON:Color =         0xdc143c;
+    public static inline var INDIANRED:Color =       0xcd5c5c;
+    public static inline var LIGHTCORAL:Color =      0xf08080;
+    public static inline var SALMON:Color =          0xfa8072;
+    public static inline var DARKSALMON:Color =      0xe9967a;
+    public static inline var LIGHTSALMON:Color =     0xffa07a;
+    public static inline var ORANGERED:Color =       0xff4500;
+    public static inline var TOMATO:Color =          0xff6347;
+    public static inline var DARKORANGE:Color =      0xff8c00;
+    public static inline var CORAL:Color =           0xff7f50;
+    public static inline var DARKKHAKI:Color =       0xbdb76b;
+    public static inline var GOLD:Color =            0xffd700;
+    public static inline var KHAKI:Color =           0xf0e68c;
+    public static inline var PEACHPUFF:Color =       0xffdab9;
+    public static inline var PALEGOLDENROD:Color =   0xeee8aa;
+    public static inline var MOCCASIN:Color =        0xffe4b5;
+    public static inline var PAPAYAWHIP:Color =      0xffefd5;
+    public static inline var LEMONCHIFFON:Color =    0xfffacd;
+    public static inline var LIGHTYELLOW:Color =     0xffffe0;
+    public static inline var SIENNA:Color =          0xa0522d;
+    public static inline var CHOCOLATE:Color =       0xd2691e;
+    public static inline var PERU:Color =            0xcd853f;
+    public static inline var TAN:Color =             0xd2b48c;
+    public static inline var DARKOLIVEGREEN:Color = 0x556b2f;
+    public static inline var OLIVE:Color =           0x808000;
+    public static inline var TEAL:Color =            0x008080;
+    public static inline var TURQUOISE:Color =       0x40e0d0;
+    public static inline var NAVY:Color =            0x000080;
+    public static inline var INDIGO:Color =          0x4b0082;
+    public static inline var ORCHID:Color =          0xda70d6;
+    public static inline var LAVENDER:Color =        0xe6e6fa;
+    public static inline var AZURE:Color =           0xf0ffff;
+    public static inline var IVORY:Color =           0xfffff0;
+    public static inline var DIMGREY:Color =         0x696969;
+    public static inline var SLATEGREY:Color =       0x708090;
+    public static inline var SNOW:Color =            0xfffafa;  
 
     public static var colorLookup(default, null):Map<String, Int> = new Map<String, Int>();
 
