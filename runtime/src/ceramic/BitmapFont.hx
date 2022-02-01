@@ -83,6 +83,12 @@ class BitmapFont extends Entity {
      */
     public var preRenderedPages:Map<Int,Map<Int,Texture>> = null;
 
+    /**
+     * When a page is being pre-rendered, it will be referenced here, until the rendering is finished.
+     * This is needed to prevent parallel renders of the same requested texture, giving us unexpected duplicate textures
+     */
+    var _preRenderingPages:Map<Int,Map<Int,Array<Void->Void>>> = null;
+
     public var asset:Asset;
 
 /// Lifecycle
@@ -193,6 +199,33 @@ class BitmapFont extends Entity {
             preRenderedPages = new Map();
         }
 
+        // If already rendering this page, just wait until finished
+        if (_preRenderingPages != null) {
+            var _renderingForSize = _preRenderingPages.get(pixelsSize);
+            if (_renderingForSize != null) {
+                var _renderingPage = _renderingForSize.get(id);
+                if (_renderingPage != null) {
+                    _renderingPage.push(done);
+                }
+                return;
+            }
+        }
+
+        // Expose rendering callback list
+        if (_preRenderingPages == null)
+            _preRenderingPages = new Map();
+        var _renderingForSize = _preRenderingPages.get(pixelsSize);
+        if (_renderingForSize == null) {
+            _renderingForSize = new Map();
+            _preRenderingPages.set(pixelsSize, _renderingForSize);
+        }
+        var _renderingPage = _renderingForSize.get(id);
+        if (_renderingPage == null) {
+            _renderingPage = [];
+            _renderingForSize.set(id, _renderingPage);
+        }
+
+        // Start rendering
         var renderedForSize = preRenderedPages.get(pixelsSize);
 
         var originalTexture = pages.get(id);
@@ -239,6 +272,13 @@ class BitmapFont extends Entity {
 
             done();
             done = null;
+
+            _renderingForSize.remove(id);
+            while (_renderingPage.length > 0) {
+                var cb = _renderingPage.shift();
+                cb();
+                cb = null;
+            }
 
         });
 
