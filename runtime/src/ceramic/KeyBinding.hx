@@ -32,9 +32,9 @@ class KeyBinding extends Entity {
 
 /// Lifecycle
 
-    private function new(accelerator:Array<KeyAcceleratorItem>, ?bindings:KeyBindings) {
+    private function new(accelerator:Array<KeyAcceleratorItem>, ?bindings:KeyBindings #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         this.accelerator = cast [].concat(accelerator);
         this.bindings = bindings;

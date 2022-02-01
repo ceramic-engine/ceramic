@@ -982,6 +982,10 @@ class App extends Entity {
 
     }
 
+    #if ceramic_debug_num_entities
+    static var _entities:Array<Entity> = [];
+    #end
+
     function runReady():Void {
 
         // Platform specific code (which is not in backend code)
@@ -989,34 +993,71 @@ class App extends Entity {
 
         emitReady();
 
-        #if ceramic_debug_num_visuals
+        #if (ceramic_debug_num_entities || ceramic_debug_num_visuals)
         Timer.interval(this, 5.0, function() {
-            var numVisualsByClass = new Map<String,Int>();
+            var numEntitiesByClass = new Map<String,Int>();
             var usedClasses:Array<String> = [];
-            for (i in 0...visuals.length) {
-                var visual = visuals[i];
-                var clazz = '' + Type.getClass(visual);
-                if (numVisualsByClass.exists(clazz)) {
-                    numVisualsByClass.set(clazz, numVisualsByClass.get(clazz) + 1);
+            var entities = #if ceramic_debug_num_entities _entities #else visuals #end;
+            #if ceramic_debug_entity_allocs
+            var allocDetailedData = new Map<String, {
+                pos:haxe.PosInfos,
+                count:Int
+            }>();
+            var allocDetailedDataList = [];
+            #end
+            for (i in 0...entities.length) {
+                var entity = entities[i];
+                var clazz = Type.getClassName(Type.getClass(entity));
+                if (numEntitiesByClass.exists(clazz)) {
+                    numEntitiesByClass.set(clazz, numEntitiesByClass.get(clazz) + 1);
                 }
                 else {
                     usedClasses.push(clazz);
-                    numVisualsByClass.set(clazz, 1);
+                    numEntitiesByClass.set(clazz, 1);
                 }
                 #if ceramic_debug_entity_allocs
-                /*if (clazz == 'ceramic.Quad') {
-                    var pos = visual.posInfos;
-                    haxe.Log.trace(visual, pos);
-                }*/
+                if (clazz == ceramic.macros.DefinesMacro.getDefine('ceramic_debug_entity_allocs')) {
+                    var pos = entity.posInfos;
+                    if (pos != null) {
+                        var posStr = ''+pos;
+                        var data = allocDetailedData.get(posStr);
+                        if (data == null) {
+                            data = {
+                                pos: pos,
+                                count: 1
+                            };
+                            allocDetailedData.set(posStr, data);
+                            allocDetailedDataList.push(data);
+                        }
+                        else {
+                            data.count++;
+                        }
+                    }
+                }
                 #end
             }
             usedClasses.sort(function(a, b) {
-                return numVisualsByClass.get(a) - numVisualsByClass.get(b);
+                return numEntitiesByClass.get(a) - numEntitiesByClass.get(b);
             });
-            log.success(' - num visuals: ${visuals.length} - ');
+            #if ceramic_debug_num_entities
+            log.success(' - num entities: ${entities.length} - ');
+            #else
+            log.success(' - num visuals: ${entities.length} - ');
+            #end
             for (clazz in usedClasses) {
-                log.success('    $clazz / ${numVisualsByClass.get(clazz)}');
+                log.success('    $clazz / ${numEntitiesByClass.get(clazz)}');
             }
+            #if ceramic_debug_entity_allocs
+            if (allocDetailedDataList.length > 0) {
+                log.info(' - detailed allocs for class: ' + ceramic.macros.DefinesMacro.getDefine('ceramic_debug_entity_allocs'));
+                allocDetailedDataList.sort(function(a, b) {
+                    return a.count - b.count;
+                });
+                for (data in allocDetailedDataList) {
+                    log.info('    ${data.count}', data.pos);
+                }
+            }
+            #end
         });
         #end
 

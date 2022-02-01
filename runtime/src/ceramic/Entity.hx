@@ -162,10 +162,14 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
         // Default implementation
 
+        #if ceramic_debug_num_entities
+        @:privateAccess ceramic.App._entities.push(this);
+        #end
+
         #if ceramic_debug_entity_allocs
         this.posInfos = pos;
 
-        if (!debugEntityAllocsInitialized) {
+        /*if (!debugEntityAllocsInitialized) {
             debugEntityAllocsInitialized = true;
             Timer.interval(null, 5.0, function() {
                 #if cpp
@@ -286,7 +290,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         }
 
         //cpp.vm.Gc.setFinalizer(this, cpp.Function.fromStaticFunction(__finalizeEntity));
-        #end
+        #end*/
 
         #end
 
@@ -318,7 +322,11 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         if (_lifecycleState <= -2) return;
         _lifecycleState = -3; // `Entity.destroy() called` = true
 
-        #if ceramic_debug_entity_allocs
+        #if ceramic_debug_num_entities
+        @:privateAccess ceramic.App._entities.remove(this);
+        #end
+
+        /*#if ceramic_debug_entity_allocs
         var clazz = '' + Type.getClass(this);
         numEntityAliveInMemoryByClass.set(clazz, numEntityAliveInMemoryByClass.get(clazz) - 1);
         if (numEntityDestroyedButInMemoryByClass.exists(clazz)) {
@@ -337,7 +345,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
             destroyedWeakRefs.set(clazz, [weakRef]);
         }
         #end
-        #end
+        #end*/
 
         if (autoruns != null) {
             for (i in 0...autoruns.length) {
@@ -430,7 +438,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         }
 #end
 
-        var _autorun = new Autorun(run, afterRun #if ceramic_debug_entity_allocs , pos #end);
+        var _autorun = new Autorun(run, afterRun #if (ceramic_debug_entity_allocs && tracker_debug_entity_allocs) , pos #end);
         run = null;
         afterRun = null;
 
