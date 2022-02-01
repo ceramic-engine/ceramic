@@ -32,6 +32,13 @@ class KeyBindings extends Entity implements Component {
 
         super.destroy();
 
+        if (bindings != null) {
+            while (bindings.length > 0) {
+                bindings.pop().destroy();
+            }
+            bindings = null;
+        }
+
         instances.splice(instances.indexOf(this), 1);
 
     }
