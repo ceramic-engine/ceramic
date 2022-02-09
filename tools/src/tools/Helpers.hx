@@ -83,8 +83,12 @@ class Helpers {
             var extraAssets:Array<String> = project.app.assets;
             if (extraAssets != null) {
                 for (assetPath in extraAssets) {
-                    if (extraAssetsPaths.indexOf(assetPath) == -1)
+                    if (extraAssetsPaths.indexOf(assetPath) == -1) {
+                        if (!Path.isAbsolute(assetPath)) {
+                            assetPath = Path.join([cwd, assetPath]);
+                        }
                         extraAssetsPaths.push(assetPath);
+                    }
                 }
             }
         }
