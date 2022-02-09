@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.Assert.*;
-
+import ceramic.ReadOnlyArray;
 import tracker.Events;
 
 @:forward
@@ -16,9 +16,9 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
     }
 
     @:arrayAccess public inline function arrayAccess(index:Int) {
-        
+
         return this.getByIndex(index);
-    
+
     }
 
     /**
@@ -29,7 +29,7 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
         this.checkCombined();
         if (this.entriesDirty) this.computeEntries();
 
-        return Extensions.randomElement(this.entries);
+        return Extensions.randomElement(this.entries.original);
 
     }
 
@@ -44,7 +44,7 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
         this.checkCombined();
         if (this.entriesDirty) this.computeEntries();
 
-        return Extensions.randomElementExcept(this.entries, except, unsafe);
+        return Extensions.randomElementExcept(this.entries.original, except, unsafe);
 
     }
 
@@ -60,7 +60,7 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
         this.checkCombined();
         if (this.entriesDirty) this.computeEntries();
 
-        return Extensions.randomElementMatchingValidator(this.entries, validator);
+        return Extensions.randomElementMatchingValidator(this.entries.original, validator);
 
     }
 
@@ -78,7 +78,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     var lastChange:Int = 0;
 
-    var entries:Array<T> = [];
+    public var entries(default, null):ReadOnlyArray<T> = [];
 
     var indexDirty:Bool = true;
 
@@ -90,7 +90,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     var combinedCollections:Array<CollectionImpl<T>> = null;
     var combinedCollectionLastChanges:Array<Int> = null;
-    
+
     public var length(get,never):Int;
     function get_length():Int {
         this.checkCombined();
@@ -105,7 +105,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
 
         for (entry in entries) {
-            this.entries.push(entry);
+            this.entries.original.push(entry);
         }
 
         indexDirty = true;
@@ -120,9 +120,9 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         var len = this.entries.length;
         if (len > 0) {
-            this.entries.splice(0, len);
+            this.entries.original.splice(0, len);
         }
-        
+
         indexDirty = true;
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
@@ -133,7 +133,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
 
-        this.entries.push(entry);
+        this.entries.original.push(entry);
         indexDirty = true;
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
@@ -144,7 +144,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
         assert(combinedCollections == null, 'Cannot remove entries from combined collections');
 
-        this.entries.remove(entry);
+        this.entries.original.remove(entry);
         indexDirty = true;
         lastChange = lastChange > 999999999 ? -999999999 : lastChange + 1;
         _lastCheckedCombined = null;
@@ -246,7 +246,7 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         if (entriesDirty) computeEntries();
 
         byId = new Map();
-        
+
         for (entry in entries) {
             if (!byId.exists(entry.id)) {
                 byId.set(entry.id, entry);
@@ -265,13 +265,13 @@ class CollectionImpl<T:CollectionEntry> implements Events {
         for (i in 0...combinedCollections.length) {
             var collection = combinedCollections[i];
             for (entry in collection) {
-                entries.push(entry);
+                entries.original.push(entry);
             }
             combinedCollectionLastChanges[i] = collection.lastChange;
         }
 
         if (filter != null) {
-            entries = filter(entries);
+            entries = filter(entries.original);
         }
 
         entriesDirty = false;

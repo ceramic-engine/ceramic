@@ -1,17 +1,18 @@
 package ceramic;
 
+import ceramic.ReadOnlyMap;
 import haxe.DynamicAccess;
 
 /**
  * Extract field information from a given class type.
  * This is expected to only work with Entity subclasses marked with @editable, @fieldInfo or @autoFieldInfo
- * or classes using FieldInfoMacro. 
+ * or classes using FieldInfoMacro.
  */
 class FieldInfo {
 
     static var fieldInfoMap:Map<String,Map<String,String>> = new Map();
 
-    public static function types(targetClass:String, recursive:Bool = true):Map<String,String> {
+    public static function types(targetClass:String, recursive:Bool = true):ReadOnlyMap<String,String> {
 
         var info = fieldInfoMap.get(targetClass);
 
@@ -20,7 +21,6 @@ class FieldInfo {
             fieldInfoMap.set(targetClass, info);
 
             var clazz = Type.resolveClass(targetClass);
-            var clazzStr = '' + clazz;
             var firstTry = true;
 
             while (clazz != null) {
@@ -40,11 +40,11 @@ class FieldInfo {
                     break;
 
                 clazz = Type.getSuperClass(clazz);
-                
+
             }
         }
 
-        return info;
+        return cast info;
 
     }
 
@@ -58,7 +58,7 @@ class FieldInfo {
 
     static var editableFieldInfoMap:Map<String,Map<String,{type:String, meta:DynamicAccess<Dynamic>, index:Int}>> = new Map();
 
-    public static function editableFieldInfo(targetClass:String, recursive:Bool = true):Map<String,{type:String, meta:DynamicAccess<Dynamic>, index:Int}> {
+    public static function editableFieldInfo(targetClass:String, recursive:Bool = true):ReadOnlyMap<String,{type:String, meta:DynamicAccess<Dynamic>, index:Int}> {
 
         var info = editableFieldInfoMap.get(targetClass);
 
@@ -69,7 +69,6 @@ class FieldInfo {
             editableFieldInfoMap.set(targetClass, info);
 
             var clazz = Type.resolveClass(targetClass);
-            var clazzStr = '' + clazz;
 
             var toSort = [];
 
@@ -103,7 +102,7 @@ class FieldInfo {
 
                 clazz = Type.getSuperClass(clazz);
                 indexStart -= 10000;
-                
+
             }
 
             toSort.sort((a, b) -> {
@@ -122,7 +121,7 @@ class FieldInfo {
             }
         }
 
-        return info;
+        return cast info;
 
     }
 

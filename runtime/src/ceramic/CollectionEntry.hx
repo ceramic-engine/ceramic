@@ -1,9 +1,10 @@
 package ceramic;
 
 import haxe.DynamicAccess;
+import haxe.rtti.Meta;
 
-using ceramic.Extensions;
 using StringTools;
+using ceramic.Extensions;
 
 @:structInit
 @:keep
@@ -65,6 +66,17 @@ class CollectionEntry {
                 var value:Dynamic = null;
 
                 if (setRawField(key, rawValue)) continue;
+
+                // Skip if field is empty or null
+                if (FieldMeta.hasMeta(clazz, key, 'skipEmpty')) {
+                    if (rawValue == null)
+                        continue;
+                    if (rawValue is String) {
+                        var rawValueStr:String = rawValue;
+                        if (rawValueStr.length == 0)
+                            continue;
+                    }
+                }
 
                 switch (type) {
 
