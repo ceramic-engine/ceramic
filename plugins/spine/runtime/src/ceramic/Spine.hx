@@ -817,7 +817,7 @@ class Spine extends Visual {
     /**
      * Start running an animation available in the skeleton.
      */
-    public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0, trackTime:Float = -1):Void {
+    public function animate(animationName:String, loop:Bool = false, trackIndex:Int = 0, trackTime:Float = -1 #if ceramic_debug_spine_animate , ?pos:haxe.PosInfos #end):Void {
         if (destroyed) return;
 
         var track;
@@ -832,7 +832,7 @@ class Spine extends Visual {
                     track.trackTime = trackTime;
                 }
             } else {
-                log.warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')');
+                log.warning('Animation not found: ' + animationName + ' (skeleton: ' + skeletonData.name + ')' #if ceramic_debug_spine_animate , pos #end);
                 track = state.setEmptyAnimation(trackIndex, 0);
             }
         }
