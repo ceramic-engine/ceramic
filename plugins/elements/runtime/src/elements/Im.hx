@@ -1725,19 +1725,21 @@ class Im {
                 if (!needsContentRebuild) {
                     var prevNumItems = 0;
                     var subviews = form.subviews;
-                    for (i in 0...subviews.length) {
-                        var view = subviews.unsafeGet(i);
-                        if (view is ImRowLayout) {
-                            var rowLayout:ImRowLayout = cast view;
-                            var subviews = rowLayout.subviews;
-                            if (subviews != null) {
-                                for (j in 0...subviews.length) {
-                                    prevNumItems++;
+                    if (subviews != null) {
+                        for (i in 0...subviews.length) {
+                            var view = subviews.unsafeGet(i);
+                            if (view is ImRowLayout) {
+                                var rowLayout:ImRowLayout = cast view;
+                                var subviews = rowLayout.subviews;
+                                if (subviews != null) {
+                                    for (j in 0...subviews.length) {
+                                        prevNumItems++;
+                                    }
                                 }
                             }
-                        }
-                        else {
-                            prevNumItems++;
+                            else {
+                                prevNumItems++;
+                            }
                         }
                     }
                     if (prevNumItems != windowData.numItems) {
