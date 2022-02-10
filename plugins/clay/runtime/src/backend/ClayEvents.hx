@@ -12,6 +12,8 @@ import clay.Types.ModState;
 import clay.Types.TextEventType;
 import clay.Types.WindowEventType;
 
+using StringTools;
+
 @:access(backend.Backend)
 @:access(backend.Screen)
 @:access(backend.Input)
@@ -45,6 +47,10 @@ class ClayEvents extends clay.Events {
 
     var activeGamepads:IntBoolMap = new IntBoolMap();
     var removedGamepads:IntBoolMap = new IntBoolMap();
+
+    #if (web && !ceramic_no_ab_swap)
+    var swapAbGamepads:IntBoolMap = new IntBoolMap();
+    #end
 
     var gamepadAxisToButton:IntIntMap = new IntIntMap();
     var gamepadButtonMapping:IntIntMap = new IntIntMap();
@@ -303,13 +309,34 @@ class ClayEvents extends clay.Events {
 
     }
 
+    function _configureGamepad(id:Int, name:String) {
+
+        #if (web && !ceramic_no_ab_swap)
+        if (name != null) {
+            var lowerName = name.toLowerCase();
+            if (lowerName.indexOf(' vendor: 057e ') != -1 || lowerName.startsWith('057e-')) {
+                // Nintendo controller on web, swap A & B buttons
+                swapAbGamepads.set(id, true);
+            }
+            else {
+                swapAbGamepads.set(id, false);
+            }
+        }
+        else {
+            swapAbGamepads.set(id, false);
+        }
+        #end
+
+    }
+
     override function gamepadAxis(id:Int, axisId:Int, value:Float, timestamp:Float) {
 
         #if !(ios || android) // No gamepad on ios & android for now
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);
-            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            var name = Clay.app.runtime.getGamepadName(id);
+            _configureGamepad(id, name);
             backend.input.emitGamepadEnable(id, name);
         }
 
@@ -355,13 +382,23 @@ class ClayEvents extends clay.Events {
             for (i in 0...GAMEPAD_STORAGE_SIZE) {
                 gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
             }
-            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            var name = Clay.app.runtime.getGamepadName(id);
+            _configureGamepad(id, name);
             backend.input.emitGamepadEnable(id, name);
         }
 
         if (gamepadButtonMapping.exists(buttonId)) {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
+
+        #if (web && !ceramic_no_ab_swap)
+        // Swap A & B button if needed
+        if (buttonId == 0 || buttonId == 1) {
+            if (swapAbGamepads.get(id)) {
+                buttonId = (buttonId == 1) ? 0 : 1;
+            }
+        }
+        #end
 
         if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) != 1) {
             gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 1);
@@ -381,13 +418,23 @@ class ClayEvents extends clay.Events {
             for (i in 0...GAMEPAD_STORAGE_SIZE) {
                 gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
             }
-            var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+            var name = Clay.app.runtime.getGamepadName(id);
+            _configureGamepad(id, name);
             backend.input.emitGamepadEnable(id, name);
         }
 
         if (gamepadButtonMapping.exists(buttonId)) {
             buttonId = gamepadButtonMapping.get(buttonId);
         }
+
+        #if (web && !ceramic_no_ab_swap)
+        // Swap A & B button if needed
+        if (buttonId == 0 || buttonId == 1) {
+            if (swapAbGamepads.get(id)) {
+                buttonId = (buttonId == 1) ? 0 : 1;
+            }
+        }
+        #end
 
         if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) == 1) {
             gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 0);
@@ -425,7 +472,8 @@ class ClayEvents extends clay.Events {
                     gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
                 }
                 removedGamepads.remove(id);
-                var name = #if (linc_sdl && cpp) sdl.SDL.gameControllerNameForIndex(id) #else null #end;
+                var name = Clay.app.runtime.getGamepadName(id);
+                _configureGamepad(id, name);
                 backend.input.emitGamepadEnable(id, name);
             }
         }
