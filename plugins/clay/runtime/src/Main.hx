@@ -274,12 +274,29 @@ class Main {
 
     }
 
+    static var _displayReady:Bool = false;
+    static var _pendingDisplayReadyDone:Void->Void = null;
+
+    static function _appLoaderCheckDisplayReady(done:Void->Void) {
+
+        if (_displayReady) {
+            done();
+        }
+        else {
+            _pendingDisplayReadyDone = done;
+        }
+
+    }
+
     @:allow(backend.ClayEvents)
     static function ready():Void {
 
         app.backend.io.initKeyValueIfNeeded();
 
         #if web
+
+        _displayReady = false;
+        app.loaders.push(_appLoaderCheckDisplayReady);
 
         var ext;
         ext = clay.opengl.GL.gl.getExtension('OES_standard_derivatives');
@@ -300,11 +317,26 @@ class Main {
                 readyToDisplay = true;
                 js.Browser.window.clearInterval(intervalId);
             }
-            if (readyToDisplay && resizing == 0) {
-                js.Browser.document.body.classList.remove('ceramic-invisible');
+            if (readyToDisplay) {
+                if (resizing == 0) {
+                    js.Browser.document.body.classList.remove('ceramic-invisible');
+                }
+                _displayReady = true;
+                if (_pendingDisplayReadyDone != null) {
+                    var done = _pendingDisplayReadyDone;
+                    _pendingDisplayReadyDone = null;
+                    done();
+                    done = null;
+                }
+
             }
         }
         intervalId = js.Browser.window.setInterval(checkSizeReady, 500);
+
+        #else
+
+        _displayReady = true;
+
         #end
 
     }
