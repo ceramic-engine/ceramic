@@ -15,6 +15,9 @@ import js.html.XMLHttpRequest;
 #elseif (cs && unity)
 import unityengine.networking.DownloadHandler;
 import unityengine.networking.UnityWebRequest;
+#elseif tink_http
+import tink.http.Fetch;
+import tink.http.Header;
 #end
 
 #if sys
@@ -434,6 +437,91 @@ class Http implements spec.Http {
                 binaryContent: null,
                 headers: new Map(),
                 error: 'Error: ' + e
+            });
+        }
+
+#elseif tink_http
+
+        var contentType = "application/x-www-form-urlencoded";
+        var httpHeaders = [];
+        if (options.headers != null) {
+            for (key in options.headers.keys()) {
+                if (key.toLowerCase() == 'content-type') {
+                    contentType = options.headers.get(key);
+                } else {
+                    httpHeaders.push(new HeaderField(key, options.headers.get(key)));
+                }
+            }
+        }
+        httpHeaders.unshift(new HeaderField(CONTENT_TYPE, contentType));
+
+        var fetchOptions:FetchOptions = {
+            client: Default,
+            method: cast (options.method != null ? options.method : 'GET'),
+            headers: httpHeaders
+        };
+
+        // Add content
+        if (options.content != null) {
+            fetchOptions.body = options.content;
+        }
+
+        tink.http.Client.fetch(options.url, fetchOptions).all()
+        .handle(function(o) {
+
+            if (done == null) return;
+
+            switch o {
+                case Success(res):
+                    var bytes = res.body.toBytes();
+
+                    var headers = new Map<String,String>();
+                    for (headerField in res.header) {
+                        headers.set(headerField.name, headerField.value);
+                    }
+
+                    var response:HttpResponse = {
+                        status: res.header.statusCode.toInt(),
+                        content: bytes != null ? bytes.toString() : null,
+                        binaryContent: null,
+                        headers: headers,
+                        error: null
+                    };
+
+                    var _done = done;
+                    done = null;
+                    _done(response);
+
+                case Failure(e):
+
+                    var response:HttpResponse = {
+                        status: 404,
+                        content: null,
+                        binaryContent: null,
+                        headers: new Map(),
+                        error: e != null ? e.message + ' (${e.code})' : null
+                    };
+
+                    var _done = done;
+                    done = null;
+                    _done(response);
+            }
+        });
+
+        if (options.timeout != null && options.timeout > 0) {
+            var timeout:Float = options.timeout;
+
+            ceramic.Timer.delay(null, timeout + 1.0, function() {
+                if (done == null) return;
+                var _done = done;
+                done = null;
+                _done({
+                    status: 408,
+                    content: null,
+                    binaryContent: null,
+                    headers: new Map(),
+                    error: null
+                });
             });
         }
 
