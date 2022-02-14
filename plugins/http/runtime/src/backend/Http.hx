@@ -15,7 +15,7 @@ import js.html.XMLHttpRequest;
 #elseif (cs && unity)
 import unityengine.networking.DownloadHandler;
 import unityengine.networking.UnityWebRequest;
-#elseif tink_http
+#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
 import tink.http.Fetch;
 import tink.http.Header;
 #end
@@ -440,7 +440,7 @@ class Http implements spec.Http {
             });
         }
 
-#elseif tink_http
+#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
 
         var contentType = "application/x-www-form-urlencoded";
         var httpHeaders = [];
@@ -456,7 +456,11 @@ class Http implements spec.Http {
         httpHeaders.unshift(new HeaderField(CONTENT_TYPE, contentType));
 
         var fetchOptions:FetchOptions = {
+            #if (ceramic_http_tink_curl_cli || (mac && !ceramic_no_http_tink_curl_cli))
+            client: Curl,
+            #else
             client: Default,
+            #end
             method: cast (options.method != null ? options.method : 'GET'),
             headers: httpHeaders
         };
@@ -466,46 +470,52 @@ class Http implements spec.Http {
             fetchOptions.body = options.content;
         }
 
-        tink.http.Client.fetch(options.url, fetchOptions).all()
-        .handle(function(o) {
+        ceramic.Runner.runInBackground(function() {
 
-            if (done == null) return;
+            tink.http.Client.fetch(options.url, fetchOptions).all()
+            .handle(function(o) {
 
-            switch o {
-                case Success(res):
-                    var bytes = res.body.toBytes();
+                ceramic.Runner.runInMain(function() {
 
-                    var headers = new Map<String,String>();
-                    for (headerField in res.header) {
-                        headers.set(headerField.name, headerField.value);
+                    if (done == null) return;
+
+                    switch o {
+                        case Success(res):
+                            var bytes = res.body.toBytes();
+
+                            var headers = new Map<String,String>();
+                            for (headerField in res.header) {
+                                headers.set(headerField.name, headerField.value);
+                            }
+
+                            var response:HttpResponse = {
+                                status: res.header.statusCode.toInt(),
+                                content: bytes != null ? bytes.toString() : null,
+                                binaryContent: null,
+                                headers: headers,
+                                error: null
+                            };
+
+                            var _done = done;
+                            done = null;
+                            _done(response);
+
+                        case Failure(e):
+
+                            var response:HttpResponse = {
+                                status: 404,
+                                content: null,
+                                binaryContent: null,
+                                headers: new Map(),
+                                error: e != null ? e.message + ' (${e.code})' : null
+                            };
+
+                            var _done = done;
+                            done = null;
+                            _done(response);
                     }
-
-                    var response:HttpResponse = {
-                        status: res.header.statusCode.toInt(),
-                        content: bytes != null ? bytes.toString() : null,
-                        binaryContent: null,
-                        headers: headers,
-                        error: null
-                    };
-
-                    var _done = done;
-                    done = null;
-                    _done(response);
-
-                case Failure(e):
-
-                    var response:HttpResponse = {
-                        status: 404,
-                        content: null,
-                        binaryContent: null,
-                        headers: new Map(),
-                        error: e != null ? e.message + ' (${e.code})' : null
-                    };
-
-                    var _done = done;
-                    done = null;
-                    _done(response);
-            }
+                });
+            });
         });
 
         if (options.timeout != null && options.timeout > 0) {
