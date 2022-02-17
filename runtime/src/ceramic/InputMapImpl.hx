@@ -24,6 +24,11 @@ class InputMapImpl<T> extends InputMapBase {
      */
     public var checkJustPressedAtBind:Bool = false;
 
+    /**
+     * Set to `false` if you want to disable this input map entirely.
+     */
+    public var enabled:Bool = true;
+
     var nextIndex:Int = 0;
 
     var keyToIndex:Map<String,Int> = null;
@@ -171,7 +176,8 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
-                emitKeyDown(k);
+                if (enabled)
+                    emitKeyDown(k);
             }
         }
 
@@ -225,7 +231,8 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
-                emitKeyUp(k);
+                if (enabled)
+                    emitKeyUp(k);
             }
         }
 
@@ -264,7 +271,8 @@ class InputMapImpl<T> extends InputMapBase {
                 for (i in 0...toEmit.length) {
                     var index = toEmit.unsafeGet(i);
                     var k = keyForIndex(index);
-                    emitKeyDown(k);
+                    if (enabled)
+                        emitKeyDown(k);
                 }
             }
 
@@ -298,7 +306,8 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
-                emitKeyUp(k);
+                if (enabled)
+                    emitKeyUp(k);
             }
         }
 
@@ -306,74 +315,79 @@ class InputMapImpl<T> extends InputMapBase {
 
     function _handleMouseDown(buttonId:Int, x:Float, y:Float) {
 
-        if (this.gamepadId == -1 || gamepadId == this.gamepadId) {
+        #if plugin_elements
+        if (elements.Im.hits(x, y)) {
+            // Ignore mouse event if immediate UI is in the way
+            return;
+        }
+        #end
 
-            var toEmit:Array<Int> = null;
+        var toEmit:Array<Int> = null;
 
-            var boundList = boundMouseButtons.get(buttonId);
-            if (boundList != null) {
-                for (i in 0...boundList.length) {
-                    var index = boundList.unsafeGet(i);
-                    _setPressedKeyKind(index, MOUSE_BUTTON);
-                    var prevValue = _pressedKey(index);
-                    if (prevValue == -1) {
-                        prevValue = 0;
-                    }
-                    if (prevValue != 1)
-                        pressedKeys[index] = prevValue + 1;
-                    if (prevValue <= 0) {
-                        if (toEmit == null)
-                            toEmit = [index];
-                        else if (toEmit.indexOf(index) == -1)
-                            toEmit.push(index);
-                    }
-                    if (prevValue == 0) {
-                        _scheduleRemoveJustPressed(index);
-                    }
+        var boundList = boundMouseButtons.get(buttonId);
+        if (boundList != null) {
+            for (i in 0...boundList.length) {
+                var index = boundList.unsafeGet(i);
+                _setPressedKeyKind(index, MOUSE_BUTTON);
+                var prevValue = _pressedKey(index);
+                if (prevValue == -1) {
+                    prevValue = 0;
+                }
+                if (prevValue != 1)
+                    pressedKeys[index] = prevValue + 1;
+                if (prevValue <= 0) {
+                    if (toEmit == null)
+                        toEmit = [index];
+                    else if (toEmit.indexOf(index) == -1)
+                        toEmit.push(index);
+                }
+                if (prevValue == 0) {
+                    _scheduleRemoveJustPressed(index);
                 }
             }
+        }
 
-            if (toEmit != null) {
-                for (i in 0...toEmit.length) {
-                    var index = toEmit.unsafeGet(i);
-                    var k = keyForIndex(index);
+        if (toEmit != null) {
+            for (i in 0...toEmit.length) {
+                var index = toEmit.unsafeGet(i);
+                var k = keyForIndex(index);
+                if (enabled)
                     emitKeyDown(k);
-                }
             }
-
         }
 
     }
 
     function _handleMouseUp(buttonId:Int, x:Float, y:Float) {
 
-            var toEmit:Array<Int> = null;
+        var toEmit:Array<Int> = null;
 
-            var boundList = boundMouseButtons.get(buttonId);
-            if (boundList != null) {
-                for (i in 0...boundList.length) {
-                    var index = boundList.unsafeGet(i);
-                    var prevValue = _pressedKey(index);
-                    if (prevValue > 0) {
-                        pressedKeys[index] = -1;
-                        if (toEmit == null)
-                            toEmit = [index];
-                        else if (toEmit.indexOf(index) == -1)
-                            toEmit.push(index);
-                    }
-                    if (prevValue != 0) {
-                        _scheduleRemoveJustReleased(index);
-                    }
+        var boundList = boundMouseButtons.get(buttonId);
+        if (boundList != null) {
+            for (i in 0...boundList.length) {
+                var index = boundList.unsafeGet(i);
+                var prevValue = _pressedKey(index);
+                if (prevValue > 0) {
+                    pressedKeys[index] = -1;
+                    if (toEmit == null)
+                        toEmit = [index];
+                    else if (toEmit.indexOf(index) == -1)
+                        toEmit.push(index);
+                }
+                if (prevValue != 0) {
+                    _scheduleRemoveJustReleased(index);
                 }
             }
+        }
 
-            if (toEmit != null) {
-                for (i in 0...toEmit.length) {
-                    var index = toEmit.unsafeGet(i);
-                    var k = keyForIndex(index);
+        if (toEmit != null) {
+            for (i in 0...toEmit.length) {
+                var index = toEmit.unsafeGet(i);
+                var k = keyForIndex(index);
+                if (enabled)
                     emitKeyUp(k);
-                }
             }
+        }
 
     }
 
@@ -458,7 +472,8 @@ class InputMapImpl<T> extends InputMapBase {
                 for (i in 0...toEmit.length) {
                     var index = toEmit.unsafeGet(i);
                     var k = keyForIndex(index);
-                    emitAxis(k, value);
+                    if (enabled)
+                        emitAxis(k, value);
                 }
             }
 
@@ -466,7 +481,8 @@ class InputMapImpl<T> extends InputMapBase {
                 for (i in 0...keyDownToEmit.length) {
                     var index = keyDownToEmit.unsafeGet(i);
                     var k = keyForIndex(index);
-                    emitKeyDown(k);
+                    if (enabled)
+                        emitKeyDown(k);
                 }
             }
 
@@ -474,7 +490,8 @@ class InputMapImpl<T> extends InputMapBase {
                 for (i in 0...keyUpToEmit.length) {
                     var index = keyUpToEmit.unsafeGet(i);
                     var k = keyForIndex(index);
-                    emitKeyUp(k);
+                    if (enabled)
+                        emitKeyUp(k);
                 }
             }
 
@@ -845,25 +862,25 @@ class InputMapImpl<T> extends InputMapBase {
 
     public function pressed(key:T):Bool {
 
-        return _pressedKey(indexOfKey(key)) > 0;
+        return enabled && _pressedKey(indexOfKey(key)) > 0;
 
     }
 
     public function justPressed(key:T):Bool {
 
-        return _pressedKey(indexOfKey(key)) == 1;
+        return enabled && _pressedKey(indexOfKey(key)) == 1;
 
     }
 
     public function justReleased(key:T):Bool {
 
-        return _pressedKey(indexOfKey(key)) == -1;
+        return enabled && _pressedKey(indexOfKey(key)) == -1;
 
     }
 
     public function axisValue(key:T):Float {
 
-        return axisValues[indexOfKey(key)];
+        return enabled ? axisValues[indexOfKey(key)] : 0.0;
 
     }
 
