@@ -3,6 +3,8 @@ package ceramic;
 import spine.BlendMode as SpineBlendMode;
 import spine.attachments.RegionAttachment;
 
+using ceramic.Extensions;
+
 class SpineBindVisual {
 
     public static function hideSlot(spine:Spine, slotName:String):Void {
@@ -41,9 +43,13 @@ class SpineBindVisual {
 
         if (options.visual != null) {
 
-            // Keep pre-casted text visual if applicable
             if (Std.isOfType(visual, Text)) {
+                // Keep pre-casted text visual if applicable
                 options.textVisual = cast visual;
+            }
+            else if (visual.asQuad == null && visual.asMesh == null) {
+                // On unknown visual types, do not update color by default
+                options.bindColor = false;
             }
 
             // Add visual into spine object
@@ -70,7 +76,7 @@ class SpineBindVisual {
                         transform = new Transform();
                         visual.transform = transform;
                     }
-                    
+
                     transform.identity();
 
                     if (options.compensateRegionRotation) {
@@ -114,6 +120,13 @@ class SpineBindVisual {
                             info.slot.color.g,
                             info.slot.color.b
                         );
+                    }
+                    else {
+                        visual.setProperty('color', Color.fromRGBFloat(
+                            info.slot.color.r,
+                            info.slot.color.g,
+                            info.slot.color.b
+                        ));
                     }
                 }
 
