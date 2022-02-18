@@ -40,4 +40,14 @@ class SpineMontageAnimation<T> {
      */
     public var next:T = null;
 
+    /**
+     * Begin callback. Called when this animation begins
+     */
+    public var begin:()->Void = null;
+
+    /**
+     * Complete callback. Called when this animation completes
+     */
+    public var complete:()->Void = null;
+
 }

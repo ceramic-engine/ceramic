@@ -103,8 +103,20 @@ class SpineMontage<T> extends Entity implements Component {
             this.currentAnimationInstance = get(animation);
 
             if (this.currentAnimationInstance != null) {
+
+                // Run begin callback (if any)
+                var begin:()->Void = this.currentAnimationInstance.begin;
+                if (begin != null) {
+                    begin();
+                    begin = null;
+                }
+
                 // Emit event
                 emitBeginAnimation(this.animation);
+
+                // Check destroyed state (in case it happened in callback handlers)
+                if (destroyed)
+                    return animation;
             }
             else {
                 log.warning('No configuration found for animation: $animation');
@@ -219,8 +231,19 @@ class SpineMontage<T> extends Entity implements Component {
         var prevAnimation = this.animation;
         var prevNumSetAnimation = this.numSetAnimation;
 
+        // Run complete callback, if any
+        var complete:()->Void = currentAnimationInstance.complete;
+        if (complete != null) {
+            complete();
+            complete = null;
+        }
+
         // Emit a complete event
         emitCompleteAnimation(prevAnimation);
+
+        // Check destroyed state (in case it happened in callback handlers)
+        if (destroyed)
+            return;
 
         // Check that another animation was not explicity set from outside
         if (prevNumSetAnimation == this.numSetAnimation) {
