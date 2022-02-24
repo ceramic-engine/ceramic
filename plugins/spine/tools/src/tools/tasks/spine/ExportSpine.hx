@@ -137,6 +137,7 @@ class ExportSpine extends tools.Task {
             // Create export config
             var exportPath = Path.join([tmpPath, 'spine']);
             spineConfig.project = path;
+            spineConfig.input = path;
             spineConfig.output = exportPath;
 
             // Compute absolute spine project path
