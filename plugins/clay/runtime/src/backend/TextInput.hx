@@ -19,7 +19,7 @@ class TextInput implements spec.TextInput {
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
         #if ceramic_clay_debug_text_input
-        trace('TEXT INPUT START (was active: $inputActive)');
+        trace('TEXT INPUT START (was active: $inputActive) ${ceramic.App.app.frame}');
         #end
 
         if (inputActive) return;
@@ -47,7 +47,7 @@ class TextInput implements spec.TextInput {
     public function stop():Void {
 
         #if ceramic_clay_debug_text_input
-        trace('TEXT INPUT STOP (was active: $inputActive)');
+        trace('TEXT INPUT STOP (was active: $inputActive) ${ceramic.App.app.frame}');
         #end
 
         if (!inputActive) return;
@@ -71,7 +71,7 @@ class TextInput implements spec.TextInput {
     function handleTextInput(text:String) {
 
         #if ceramic_clay_debug_text_input
-        trace('text input: $text ($inputActive)');
+        trace('text input: $text ($inputActive) ${ceramic.App.app.frame}');
         #end
 
         if (text == ' ')
