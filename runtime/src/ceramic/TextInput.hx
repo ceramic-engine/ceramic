@@ -125,8 +125,12 @@ class TextInput implements Events {
     public function appendText(text:String):Void {
 
         // Ignore text input if CTRL is pressed
-        if (lctrlPressed || rctrlPressed)
+        if (lctrlPressed || rctrlPressed) {
+            #if ceramic_debug_text_input
+            trace('skip appendText because lctrlPressed=$lctrlPressed rctrlPressed=$rctrlPressed');
+            #end
             return;
+        }
 
         // Clear selection and add text in place
 
