@@ -18,6 +18,10 @@ class TextInput implements spec.TextInput {
 
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
+        #if ceramic_clay_debug_text_input
+        trace('TEXT INPUT START (was active: $inputActive)');
+        #end
+
         if (inputActive) return;
 
         inputRectX = Std.int(x);
@@ -42,6 +46,10 @@ class TextInput implements spec.TextInput {
 
     public function stop():Void {
 
+        #if ceramic_clay_debug_text_input
+        trace('TEXT INPUT STOP (was active: $inputActive)');
+        #end
+
         if (!inputActive) return;
 
         inputRectX = 0;
@@ -61,6 +69,10 @@ class TextInput implements spec.TextInput {
 /// Internal
 
     function handleTextInput(text:String) {
+
+        #if ceramic_clay_debug_text_input
+        trace('text input: $text ($inputActive)');
+        #end
 
         if (text == ' ')
             return;
