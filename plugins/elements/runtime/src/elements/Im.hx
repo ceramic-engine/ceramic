@@ -1976,7 +1976,8 @@ class Im {
         if (owner is Component) {
             var component:Component = cast owner;
             var entity = @:privateAccess component.getEntity();
-            if (entity != null) {
+            var n = 0;
+            while (entity != null && n < 10) {
                 if (entity is Visual) {
                     var visual:Visual = cast entity;
                     if (visual.hasIndirectParent(view)) {
@@ -1986,6 +1987,14 @@ class Im {
                 if (_allowedOwners.indexOf(entity) != -1) {
                     return true;
                 }
+                if (entity is Component) {
+                    var subComponent:Component = cast entity;
+                    entity = @:privateAccess subComponent.getEntity();
+                }
+                else {
+                    entity = null;
+                }
+                n++;
             }
         }
 
