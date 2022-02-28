@@ -290,9 +290,7 @@ class ClayEvents extends clay.Events {
             scanCode: (scanCode:Int)
         });
 
-        if (backend.textInput.inputActive) {
-            backend.textInput.handleKeyDown(keyCode, scanCode);
-        }
+        backend.textInput.handleKeyDown(keyCode, scanCode);
 
     }
 
@@ -303,9 +301,7 @@ class ClayEvents extends clay.Events {
             scanCode: (scanCode:Int)
         });
 
-        if (backend.textInput.inputActive) {
-            backend.textInput.handleKeyUp(keyCode, scanCode);
-        }
+        backend.textInput.handleKeyUp(keyCode, scanCode);
 
     }
 

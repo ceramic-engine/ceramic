@@ -96,39 +96,42 @@ class TextInput implements spec.TextInput {
         // but it looks more like implementation details that could vary
         // depending on the backend so let's keep it in backend code
 
-        if (scanCode == ScanCode.BACKSPACE) {
-            // Backspace
-            ceramic.App.app.textInput.backspace();
+        if (inputActive) {
+            if (scanCode == ScanCode.BACKSPACE) {
+                // Backspace
+                ceramic.App.app.textInput.backspace();
+            }
+            else if (scanCode == ScanCode.SPACE) {
+                // Space
+                ceramic.App.app.textInput.space();
+            }
+            else if (scanCode == ScanCode.ENTER) {
+                // Enter
+                ceramic.App.app.textInput.enter();
+            }
+            else if (scanCode == ScanCode.ESCAPE) {
+                // Escape
+                ceramic.App.app.textInput.escape();
+            }
+            else if (scanCode == ScanCode.LEFT) {
+                // Left
+                ceramic.App.app.textInput.moveLeft();
+            }
+            else if (scanCode == ScanCode.RIGHT) {
+                // Right
+                ceramic.App.app.textInput.moveRight();
+            }
+            else if (scanCode == ScanCode.UP) {
+                // Up
+                ceramic.App.app.textInput.moveUp();
+            }
+            else if (scanCode == ScanCode.DOWN) {
+                // Down
+                ceramic.App.app.textInput.moveDown();
+            }
         }
-        else if (scanCode == ScanCode.SPACE) {
-            // Space
-            ceramic.App.app.textInput.space();
-        }
-        else if (scanCode == ScanCode.ENTER) {
-            // Enter
-            ceramic.App.app.textInput.enter();
-        }
-        else if (scanCode == ScanCode.ESCAPE) {
-            // Escape
-            ceramic.App.app.textInput.escape();
-        }
-        else if (scanCode == ScanCode.LEFT) {
-            // Left
-            ceramic.App.app.textInput.moveLeft();
-        }
-        else if (scanCode == ScanCode.RIGHT) {
-            // Right
-            ceramic.App.app.textInput.moveRight();
-        }
-        else if (scanCode == ScanCode.UP) {
-            // Up
-            ceramic.App.app.textInput.moveUp();
-        }
-        else if (scanCode == ScanCode.DOWN) {
-            // Down
-            ceramic.App.app.textInput.moveDown();
-        }
-        else if (scanCode == ScanCode.LSHIFT) {
+
+        if (scanCode == ScanCode.LSHIFT) {
             // Left Shift
             ceramic.App.app.textInput.lshiftDown();
         }
