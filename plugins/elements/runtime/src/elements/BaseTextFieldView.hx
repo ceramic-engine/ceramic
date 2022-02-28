@@ -26,6 +26,8 @@ class BaseTextFieldView extends FieldView {
 
     static final MAX_LIST_HEIGHT = 200;
 
+    static final FORCED_SUGGESTION_FULL_LIST_UNDER_COUNT = 10;
+
     static final ITEM_HEIGHT = SelectListView.ITEM_HEIGHT;
 
 /// Hooks
@@ -220,8 +222,36 @@ class BaseTextFieldView extends FieldView {
                 }
             );
             suggestions = [];
-            for (i in 0...rawSuggestions.length) {
-                suggestions.push(rawSuggestions.unsafeGet(i).original);
+            var displayAllCandidates = false;
+            if (rawSuggestions.length > 0) {
+                for (i in 0...rawSuggestions.length) {
+                    suggestions.push(rawSuggestions.unsafeGet(i).original);
+                }
+                if (force && suggestions.length < FORCED_SUGGESTION_FULL_LIST_UNDER_COUNT) {
+                    displayAllCandidates = true;
+                }
+            }
+            else if (force) {
+                displayAllCandidates = true;
+            }
+            if (displayAllCandidates) {
+                suggestions.setArrayLength(0);
+                var scores = new Map<String,Float>();
+                for (i in 0...processedAutocompleteCandidates.length) {
+                    var item = processedAutocompleteCandidates.unsafeGet(i).original;
+                    suggestions.push(item);
+                    scores.set(item, suggestionDeepScore(item, textValue));
+                }
+                suggestions.sort((a, b) -> {
+                    var scoreA = scores.get(a);
+                    var scoreB = scores.get(b);
+                    if (scoreA > scoreB)
+                        return -1;
+                    else if (scoreA < scoreB)
+                        return 1;
+                    else
+                        return 0;
+                });
             }
         }
         else if (force) {
@@ -329,6 +359,20 @@ class BaseTextFieldView extends FieldView {
 
         clearSuggestions();
         focus();
+
+    }
+
+    function suggestionDeepScore(item:String, query:String):Float {
+
+        var score = 0.0;
+        score += Fuzzaldrin.score(item, query);
+        var index = query.lastIndexOf('_');
+        while (index != -1) {
+            query = query.substring(0, index);
+            score += Fuzzaldrin.score(item, query);
+            index = query.lastIndexOf('_');
+        }
+        return score;
 
     }
 
