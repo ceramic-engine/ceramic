@@ -66,6 +66,14 @@ class TextView extends View {
         return pointSize;
     }
 
+    public var minHeight(default,set):Float = 0;
+    function set_minHeight(minHeight:Float):Float {
+        if (this.minHeight == minHeight) return minHeight;
+        this.minHeight = minHeight;
+        layoutDirty = true;
+        return minHeight;
+    }
+
     public var lineHeight(get,set):Float;
     inline function get_lineHeight():Float return text.lineHeight;
     function set_lineHeight(lineHeight:Float):Float {
@@ -209,6 +217,11 @@ class TextView extends View {
         }
         if (shouldComputeHeight) {
             computedHeight += paddingTop + paddingBottom;
+        }
+
+        // Minimum height
+        if (computedHeight < minHeight) {
+            computedHeight = minHeight;
         }
 
         // Round
