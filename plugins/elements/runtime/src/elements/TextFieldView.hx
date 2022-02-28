@@ -75,6 +75,7 @@ class TextFieldView extends BaseTextFieldView {
         add(layers);
 
         textView = new TextView();
+        textView.minHeight = 15;
         textView.viewSize(fill(), auto());
         textView.verticalAlign = CENTER;
         textView.onResize(this, clipText);
@@ -87,6 +88,7 @@ class TextFieldView extends BaseTextFieldView {
         layers.add(textView);
 
         placeholderView = new TextView();
+        placeholderView.minHeight = 15;
         placeholderView.viewSize(fill(), auto());
         placeholderView.verticalAlign = CENTER;
         placeholderView.skewX = 10;

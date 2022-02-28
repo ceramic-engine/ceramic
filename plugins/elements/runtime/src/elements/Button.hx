@@ -133,34 +133,43 @@ class Button extends TextView implements Observable implements TabFocusable {
         textColor = theme.lightTextColor;
 
         if (inputStyle == OVERLAY) {
+            minHeight = 25;
             borderSize = 1;
             borderPosition = INSIDE;
         }
         else {
+            minHeight = 27;
             borderSize = 1;
             borderPosition = INSIDE;
             transparent = false;
-            border.alpha = 1;
+            borderAlpha = 1;
         }
 
         if (inputStyle == OVERLAY) {
-            borderColor = theme.lightTextColor;
             if (enabled) {
-                borderAlpha = 0.2;
                 text.alpha = 1;
                 if (pressed) {
                     transparent = false;
                     color = Color.WHITE;
                     alpha = 0.05;
+                    borderColor = theme.lightTextColor;
                     borderAlpha = 0.33;
+                }
+                else if (focused) {
+                    transparent = true;
+                    borderColor = theme.buttonFocusedBorderColor;
+                    borderAlpha = 1;
                 }
                 else if (hover) {
                     transparent = false;
                     color = Color.WHITE;
                     alpha = 0.025;
+                    borderColor = theme.lightTextColor;
                     borderAlpha = 0.25;
                 }
                 else {
+                    borderColor = theme.lightTextColor;
+                    borderAlpha = 0.2;
                     transparent = true;
                 }
             }

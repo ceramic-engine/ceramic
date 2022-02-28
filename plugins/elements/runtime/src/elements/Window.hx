@@ -228,7 +228,11 @@ class Window extends ColumnLayout implements Observable {
 
         if (prevContentView != contentView) {
             if (prevContentView != null) {
-                prevContentView.destroy();
+                if (contentView == null || !prevContentView.hasIndirectParent(contentView)) {
+                    // We don't destroy previous content view if it's still
+                    // a child of the newly assigned content view.
+                    prevContentView.destroy();
+                }
             }
             prevContentView = contentView;
 

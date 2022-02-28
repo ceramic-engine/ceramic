@@ -308,7 +308,7 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
         rgbRedField = createTextField(setColorFromRGBFields, 0, 256);
         rgbRedField.offset(
             offsetX,
-            rgbLabel.offsetY + rgbLabel.viewHeight + PADDING
+            rgbLabel.offsetY + rgbLabel.viewHeight + PADDING - 1
         );
         add(rgbRedField);
 
@@ -374,7 +374,7 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
         hslHueField = createTextField(setColorFromHSLFieldHue, 0, 360);
         hslHueField.offset(
             offsetX,
-            hslLabel.offsetY + hslLabel.viewHeight + PADDING
+            hslLabel.offsetY + hslLabel.viewHeight + PADDING - 1
         );
         add(hslHueField);
 

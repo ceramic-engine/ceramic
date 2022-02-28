@@ -114,6 +114,7 @@ class SelectFieldView extends FieldView {
         add(filler);*/
 
         textView = new TextView();
+        textView.minHeight = 15;
         textView.viewSize(fill(), auto());
         textView.align = LEFT;
         textView.verticalAlign = CENTER;

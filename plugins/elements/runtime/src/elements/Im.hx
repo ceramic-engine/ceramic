@@ -696,6 +696,7 @@ class Im {
     public static function endRow():Void {
 
         _inRow = false;
+        _flex = 1;
 
     }
 
@@ -1675,6 +1676,44 @@ class Im {
             else {
                 var form = windowData.form;
                 var needsContentRebuild = false;
+                var overflowScroll = windowData.height != ViewSize.auto();
+
+                inline function createScrollingLayout(container:ColumnLayout) {
+                    container.paddingRight = 12;
+                    var scroll = new ScrollingLayout(container, true);
+                    scroll.checkChildrenOfView = form;
+                    var scrollbar = new Scrollbar();
+                    scrollbar.inset(2, 1, 1, 2);
+                    scroll.scroller.scrollbar = scrollbar;
+                    scroll.transparent = true;
+                    scroll.viewSize(ViewSize.fill(), windowData.height);
+                    window.contentView = scroll;
+                }
+
+                if (window.contentView != null) {
+                    if (window.contentView is ScrollingLayout) {
+                        var scroll:ScrollingLayout<ColumnLayout> = cast window.contentView;
+                        if (!overflowScroll) {
+                            // Changed from overflow scroll to no overflow
+                            needsContentRebuild = true;
+                            var container = scroll.layoutView;
+                            if (container.parent != null)
+                                container.parent.remove(container);
+                            window.contentView = container;
+                        }
+                        else {
+                            scroll.viewSize(ViewSize.fill(), windowData.height);
+                        }
+                    }
+                    else {
+                        if (overflowScroll) {
+                            // Changed from no overflow to overflow scroll
+                            needsContentRebuild = true;
+                            var container:ColumnLayout = cast window.contentView;
+                            createScrollingLayout(container);
+                        }
+                    }
+                }
                 if (window.contentView == null) {
 
                     needsContentRebuild = true;
@@ -1690,17 +1729,8 @@ class Im {
                     container.viewSize(ViewSize.auto(), ViewSize.auto());
                     container.add(form);
 
-                    var overflowScroll = windowData.height != ViewSize.auto();
                     if (overflowScroll) {
-                        container.paddingRight = 12;
-                        var scroll = new ScrollingLayout(container, true);
-                        scroll.checkChildrenOfView = form;
-                        var scrollbar = new Scrollbar();
-                        scrollbar.inset(2, 1, 1, 2);
-                        scroll.scroller.scrollbar = scrollbar;
-                        scroll.transparent = true;
-                        scroll.viewSize(ViewSize.fill(), windowData.height);
-                        window.contentView = scroll;
+                        createScrollingLayout(container);
                     }
                     else {
                         window.contentView = container;

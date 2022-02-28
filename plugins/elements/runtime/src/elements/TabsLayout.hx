@@ -45,7 +45,7 @@ class TabsLayout extends RowLayout implements Observable {
 
         super();
 
-        viewHeight = 24;
+        viewHeight = 27;
         transparent = true;
         itemSpacing = -1;
 
@@ -91,7 +91,7 @@ class TabsLayout extends RowLayout implements Observable {
                 tabView.align = CENTER;
                 tabView.verticalAlign = CENTER;
                 tabView.viewHeight = fill();
-                tabView.padding(8);
+                tabView.padding(0, 10);
                 tabView.depth = 1;
                 tabViews.push(tabView);
                 add(tabView);

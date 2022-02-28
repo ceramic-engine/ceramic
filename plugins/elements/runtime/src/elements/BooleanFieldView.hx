@@ -49,7 +49,7 @@ class BooleanFieldView extends FieldView {
         align = RIGHT;
 
         var pad = 7;
-        var w = 25;
+        var w = 27;
 
         switchContainer = new View();
         switchContainer.padding(pad);

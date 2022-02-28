@@ -122,6 +122,7 @@ class ColorFieldView extends FieldView {
         container.add(textPrefixView);
 
         textView = new TextView();
+        textView.minHeight = 15;
         textView.viewSize(54, auto());
         textView.align = LEFT;
         textView.verticalAlign = CENTER;

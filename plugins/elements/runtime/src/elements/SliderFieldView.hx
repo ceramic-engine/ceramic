@@ -65,6 +65,7 @@ class SliderFieldView extends BaseTextFieldView {
         align = LEFT;
 
         textView = new TextView();
+        textView.minHeight = 15;
         textView.viewSize(50, auto());
         textView.verticalAlign = CENTER;
         textView.align = LEFT;

@@ -13,6 +13,7 @@ class LabelView extends TextView implements Observable {
         super();
 
         viewSize(fill(), auto());
+        minHeight = 16;
         align = LEFT;
         verticalAlign = CENTER;
         pointSize = 12;
