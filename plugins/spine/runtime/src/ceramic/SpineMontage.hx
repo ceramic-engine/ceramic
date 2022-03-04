@@ -294,7 +294,8 @@ class SpineMontage<T> extends Entity implements Component {
 
                 // Run animation with requested settings
                 spine.active = true;
-                spine.skin = skin;
+                if (skin != null)
+                    spine.skin = skin;
                 spine.animate(
                     anim,
                     loop,
