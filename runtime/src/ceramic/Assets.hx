@@ -1050,9 +1050,6 @@ class Assets extends Entity {
 
 /// Reload count
 
-
-/// Reloaded count
-
     static function incrementReloadCount(realAssetPath:String) {
 
         if (Assets.reloadCountByRealAssetPath == null)
