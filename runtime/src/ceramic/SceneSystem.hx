@@ -253,6 +253,9 @@ class SceneSystem extends System {
             if (!scene.active && !scene.autoUpdateWhenInactive)
                 continue;
 
+            if (scene.destroyed)
+                continue;
+
             // Auto-boot scene it's been added to screen
             if (scene.status == NONE && scene.parent != null) {
                 scene._boot();
