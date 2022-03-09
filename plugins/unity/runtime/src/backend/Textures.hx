@@ -295,7 +295,7 @@ class Textures implements spec.Textures {
 
     }
 
-    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
+    public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         #if unity_image_conversion
         var unityTexture:Texture2D = (texture:TextureImpl).unityTexture;
@@ -303,7 +303,7 @@ class Textures implements spec.Textures {
         var shouldDestroyTexture = false;
 
         // If exporting a texture loaded from assets, reverse premultiplied alpha
-        if (!id.startsWith('pixels:') && !id.startsWith('screenshot:') && !id.startsWith('render:')) {
+        if (reversePremultiplyAlpha) {
             var pixels = fetchTexturePixels(texture);
             ceramic.PremultiplyAlpha.reversePremultiplyAlpha(pixels);
             texture = createTexture((texture:TextureImpl).width, (texture:TextureImpl).height, pixels);

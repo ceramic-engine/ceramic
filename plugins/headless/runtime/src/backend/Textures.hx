@@ -105,7 +105,7 @@ class Textures implements spec.Textures {
 
     }
 
-    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
+    public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 

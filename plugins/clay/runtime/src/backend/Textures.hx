@@ -357,15 +357,13 @@ class Textures implements spec.Textures {
 
     #if cpp
 
-    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
+    public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         var pixels = fetchTexturePixels(texture);
         var id = (texture:clay.graphics.Texture).id;
 
-        // If exporting a texture loaded from assets, reverse premultiplied alpha
-        if (!id.startsWith('pixels:') && !id.startsWith('screenshot:') && !id.startsWith('render:')) {
+        if (reversePremultiplyAlpha)
             ceramic.PremultiplyAlpha.reversePremultiplyAlpha(pixels);
-        }
 
         var bytes = pixels.toBytes();
 
@@ -411,15 +409,13 @@ class Textures implements spec.Textures {
 
     #elseif web
 
-    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
+    public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         var pixels = fetchTexturePixels(texture);
         var id = (texture:clay.graphics.Texture).id;
 
-        // If exporting a texture loaded from assets, reverse premultiplied alpha
-        if (!id.startsWith('pixels:') && !id.startsWith('screenshot:') && !id.startsWith('render:')) {
+        if (reversePremultiplyAlpha)
             ceramic.PremultiplyAlpha.reversePremultiplyAlpha(pixels);
-        }
 
         clay.Clay.app.assets.pixelsToPngData((texture:clay.graphics.Texture).width, (texture:clay.graphics.Texture).height, pixels, function(data) {
             if (data != null) {
@@ -461,7 +457,7 @@ class Textures implements spec.Textures {
 
     #else
 
-    public function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void {
+    public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 

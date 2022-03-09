@@ -45,7 +45,7 @@ interface Textures {
 
     function getTextureIndex(texture:Texture):Int;
 
-    function textureToPng(texture:Texture, ?path:String, done:(?data:Bytes)->Void):Void;
+    function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void;
 
     function pixelsToPng(width:Int, height:Int, pixels:ceramic.UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void;
 

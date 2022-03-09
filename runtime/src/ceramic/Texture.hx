@@ -152,8 +152,8 @@ class Texture extends Entity {
      * @param path The png file path where to save the image (`'/path/to/image.png'`)
      * @param done Called when the png has been exported
      */
-    inline extern overload public function toPng(path:String, done:()->Void):Void {
-        _toPng(path, (?data) -> {
+    inline extern overload public function toPng(path:String, reversePremultiplyAlpha:Bool = true, done:()->Void):Void {
+        _toPng(path, reversePremultiplyAlpha, (?data) -> {
             done();
         });
     }
@@ -162,15 +162,15 @@ class Texture extends Entity {
      * Export texture to PNG data/bytes
      * @param done Called when the png has been exported, with `data` containing PNG bytes
      */
-    inline extern overload public function toPng(done:(data:Bytes)->Void):Void {
-        _toPng(null, (?data) -> {
+    inline extern overload public function toPng(reversePremultiplyAlpha:Bool = true, done:(data:Bytes)->Void):Void {
+        _toPng(null, reversePremultiplyAlpha, (?data) -> {
             done(data);
         });
     }
 
-    function _toPng(?path:String, done:(?data:Bytes)->Void):Void {
+    function _toPng(?path:String, reversePremultiplyAlpha:Bool = true, done:(?data:Bytes)->Void):Void {
 
-        app.backend.textures.textureToPng(backendItem, path, done);
+        app.backend.textures.textureToPng(backendItem, reversePremultiplyAlpha, path, done);
 
     }
 
