@@ -1,2 +1,7 @@
 plugin:
     name: Tilemap
+
+    runtime:
+        if plugin_tilemap:
+            +generated:
+                - {plugin:cwd}/tpl/generated

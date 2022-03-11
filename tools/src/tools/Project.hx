@@ -1,11 +1,11 @@
 package tools;
 
+import haxe.Json;
+import haxe.io.Path;
 import npm.Yaml;
-import tools.Helpers.*;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
-import haxe.Json;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -105,7 +105,7 @@ class Project {
         catch (e:Dynamic) {
             fail("Error when parsing project YAML: " + e);
         }
-        
+
         fail('Unable to retrieve project kind.');
         return null;
 
@@ -150,7 +150,7 @@ class Project {
         }
 
         app.editable.push('ceramic.Entity');
-        
+
         app.editable.push('ceramic.Visual');
         app.editable.push('ceramic.Layer');
         app.editable.push('ceramic.Fragment');
@@ -275,7 +275,7 @@ class ProjectLoader {
         }
 
         try {
-            
+
             // Update defines from app
             //
             /*var newDefines = new Map<String,String>();
@@ -351,19 +351,31 @@ class ProjectLoader {
                 }
             }
 
+            inline function ensureDefaultConfig() {
+                // Add additional/default config
+                if (app.generated == null) {
+                    app.generated = [];
+                }
+                if (app.libs == null) {
+                    app.libs = [];
+                }
+                if (app.paths == null) {
+                    app.paths = [];
+                }
+                if (app.editable == null) {
+                    app.editable = [];
+                }
+                if (app.hooks == null) {
+                    app.hooks = [];
+                }
+            }
+
+            ensureDefaultConfig();
+
             // Evaluate conditionals
             evaluateConditionals(app, defines, true);
 
-            // Add additional/default config
-            if (app.libs == null) {
-                app.libs = [];
-            }
-            if (app.paths == null) {
-                app.paths = [];
-            }
-            if (app.editable == null) {
-                app.editable = [];
-            }
+            ensureDefaultConfig();
 
             // Add required libs
             for (item in Project.runtimeLibraries) {
@@ -385,14 +397,6 @@ class ProjectLoader {
                         app.libs.push(item);
                     }
                 }
-            }
-
-            if (app.paths == null) {
-                app.paths = [];
-            }
-
-            if (app.hooks == null) {
-                app.hooks = [];
             }
 
             var genPath = Path.join([context.cwd, 'gen']);
@@ -477,7 +481,7 @@ class ProjectLoader {
         }
 
         try {
-            
+
             // Update defines from app
             //
             /*var newDefines = new Map<String,String>();

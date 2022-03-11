@@ -1,15 +1,15 @@
 package tools;
 
-import tools.Context;
-import tools.Helpers;
-import tools.Helpers.*;
 import haxe.io.Path;
+import tools.Context;
+import tools.Helpers.*;
+import tools.Helpers;
 
 @:keep
 class ToolsPlugin {
 
     static function main():Void {
-        
+
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
@@ -33,7 +33,7 @@ class ToolsPlugin {
     public function extendProject(project:Project):Void {
 
         var app = project.app;
-        
+
         if (app.plugins != null && Std.isOfType(app.plugins, Array)) {
             var plugins:Array<String> = app.plugins;
             if (plugins.indexOf('tilemap') != -1) {

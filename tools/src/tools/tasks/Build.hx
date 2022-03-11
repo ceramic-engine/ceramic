@@ -107,6 +107,23 @@ class Build extends tools.Task {
             }
         }
 
+        // Check generated files (plugins)
+        var generatedPaths:Array<String> = project.app.generated;
+        if (generatedPaths != null) {
+            for (generatedTplPath in generatedPaths) {
+                if (FileSystem.exists(generatedTplPath) && FileSystem.isDirectory(generatedTplPath)) {
+                    var generatedFiles = Files.getFlatDirectory(generatedTplPath);
+                    for (file in generatedFiles) {
+                        var sourceFile = Path.join([generatedTplPath, file]);
+                        var destFile = Path.join([projectGenPath, file]);
+                        if (!FileSystem.exists(destFile)) {
+                            Files.copyIfNeeded(sourceFile, destFile);
+                        }
+                    }
+                }
+            }
+        }
+
         // Prevent running two things in parallel
         var isRun = false;
         for (i in 0...args.length) {
