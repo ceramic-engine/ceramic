@@ -25,6 +25,16 @@ class ImageView extends View implements Observable {
      */
     @observe public var image:AssetId<String> = null;
 
+    /**
+     * If set to `true`, the internal quad of the image view
+     * will inherit the view's alpha
+     */
+    public var imageQuadInheritsAlpha(get, set):Bool;
+    inline function get_imageQuadInheritsAlpha():Bool return imageQuad.inheritAlpha;
+    inline function set_imageQuadInheritsAlpha(imageQuadInheritsAlpha:Bool):Bool {
+        return imageQuad.inheritAlpha = imageQuadInheritsAlpha;
+    }
+
 /// Internal
 
     var imageQuad:Quad = null;
