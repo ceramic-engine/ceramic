@@ -1,11 +1,11 @@
 package backend.tools.tasks;
 
 import haxe.io.Path;
+import js.node.ChildProcess;
+import npm.StreamSplitter;
 import sys.FileSystem;
 import tools.Helpers.*;
 import tools.Sync;
-import js.node.ChildProcess;
-import npm.StreamSplitter;
 
 using StringTools;
 
@@ -70,7 +70,7 @@ class Build extends tools.Task {
         else if (action == 'build' || action == 'run') {
             runHooks(cwd, args, project.app.hooks, 'begin build');
         }
-        
+
         // Build
         //
         var cmdArgs = ['build.hxml'];
@@ -79,6 +79,8 @@ class Build extends tools.Task {
 
         //cmdArgs.push('--connect');
         //cmdArgs.push('4061');
+
+        print('Run haxe compiler');
 
         var status = haxeWithChecksAndLogs(cmdArgs, { cwd: hxmlProjectPath });
 
@@ -108,7 +110,7 @@ class Build extends tools.Task {
             }
 
             var status = commandWithChecksAndLogs('node', cmdArgs, { cwd: hxmlProjectPath });
-            
+
             if (status != 0) {
                 fail('Error when running node $action.');
             }
