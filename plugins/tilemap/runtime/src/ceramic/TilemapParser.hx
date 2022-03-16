@@ -1,19 +1,18 @@
 package ceramic;
 
-import format.tmx.Data.TmxImage;
+import ceramic.Shortcuts.*;
 import format.tmx.Data.TmxBaseLayer;
+import format.tmx.Data.TmxImage;
 import format.tmx.Data.TmxLayer;
 import format.tmx.Data.TmxMap;
 import format.tmx.Data.TmxTileset;
 import format.tmx.Reader as TmxReader;
-
 #if (haxe_ver >= 4)
 import haxe.xml.Access as Fast;
 #else
 import haxe.xml.Fast;
 #end
 
-import ceramic.Shortcuts.*;
 
 class TilemapParser {
 
@@ -65,7 +64,7 @@ class TilemapParser {
     public function parseExternalTilesetNames(rawTmxData:String):Array<String> {
 
         var xml = Xml.parse(rawTmxData);
-        
+
         var map:Fast = new Fast(xml).node.map;
 
         var result:Array<String> = [];
@@ -265,10 +264,10 @@ class TilemapParser {
                             layer.tiles = cast [].concat(_layer.data.tiles);
                         }
                         else {
-                            log.warning('TMX tile layer has no tile');
+                            log.warning('TMX tile layer ${_layer.name} has no tile');
                         }
                         tilemapData.layers.push(layer);
-                        
+
                     case LObjectGroup(group):
                     case LImageLayer(layer):
                     case LGroup(group):
