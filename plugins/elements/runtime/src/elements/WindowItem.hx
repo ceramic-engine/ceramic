@@ -995,12 +995,12 @@ class WindowItem {
                         if (selectedIndex == i) {
                             newSelectedIndex = newItems.length;
                         }
-                        newItems.push(items.unsafeGet(i));
+                        newItems.push(items[i]);
                         if (i == otherItemIndex) {
                             if (selectedIndex == itemIndex) {
                                 newSelectedIndex = newItems.length;
                             }
-                            newItems.push(items.unsafeGet(itemIndex));
+                            newItems.push(items[itemIndex]);
                         }
                     }
                 }
@@ -1022,12 +1022,12 @@ class WindowItem {
                             if (selectedIndex == itemIndex) {
                                 newSelectedIndex = newItems.length;
                             }
-                            newItems.push(items.unsafeGet(itemIndex));
+                            newItems.push(items[itemIndex]);
                         }
                         if (selectedIndex == i) {
                             newSelectedIndex = newItems.length;
                         }
-                        newItems.push(items.unsafeGet(i));
+                        newItems.push(items[i]);
                     }
                 }
                 list.selectedIndex = newSelectedIndex;
@@ -1051,7 +1051,7 @@ class WindowItem {
                 }
                 for (i in 0...items.length) {
                     if (i != itemIndex) {
-                        newItems.push(items.unsafeGet(i));
+                        newItems.push(items[i]);
                     }
                 }
                 list.selectedIndex = newSelectedIndex;
@@ -1073,7 +1073,7 @@ class WindowItem {
                 var newItems = [];
                 for (i in 0...items.length) {
                     if (i != itemIndex) {
-                        newItems.push(items.unsafeGet(i));
+                        newItems.push(items[i]);
                     }
                 }
                 var windowItem:WindowItem = list.hasData ? list.data : null;
@@ -1092,7 +1092,7 @@ class WindowItem {
                 var newItems = [];
                 for (i in 0...items.length) {
                     if (i != itemIndex) {
-                        newItems.push(items.unsafeGet(i));
+                        newItems.push(items[i]);
                     }
                 }
                 var windowItem:WindowItem = list.hasData ? list.data : null;

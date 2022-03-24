@@ -50,8 +50,14 @@ class Extensions<T> {
                 array.splice(length, array.length - length);
             }
             else {
+                #if cs
+                var dArray:Array<Dynamic> = array;
+                while (dArray.length < length)
+                    dArray.push(null);
+                #else
                 var dArray:Array<Dynamic> = array;
                 dArray[length - 1] = null;
+                #end
             }
 #end
         }

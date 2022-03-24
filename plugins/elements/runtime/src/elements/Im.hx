@@ -2758,20 +2758,40 @@ class Im {
 
     macro public static function string(?value:ExprOf<String>):Expr {
 
-        return switch value.expr {
-            case EConst(CIdent('null')):
-                var pos = Context.getPosInfos(Context.currentPos());
-                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
-                macro {
-                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
-                    function(?_val:String, ?erase:Bool):String {
-                        return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
+        if (Context.defined('cs')) {
+            // C# target and its quirks...
+            return switch value.expr {
+                case EConst(CIdent('null')):
+                    var pos = Context.getPosInfos(Context.currentPos());
+                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
+                    macro {
+                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
+                        function(?_val:String, ?erase:Dynamic):String {
+                            return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
+                        };
+                    }
+                case _:
+                    macro function(?_val:String, ?erase:Dynamic):String {
+                        return _val != null || erase ? $value = _val : $value;
                     };
-                }
-            case _:
-                macro function(?_val:String, ?erase:Bool):String {
-                    return _val != null || erase ? $value = _val : $value;
-                };
+            }
+        }
+        else {
+            return switch value.expr {
+                case EConst(CIdent('null')):
+                    var pos = Context.getPosInfos(Context.currentPos());
+                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
+                    macro {
+                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
+                        function(?_val:String, ?erase:Bool):String {
+                            return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
+                        };
+                    }
+                case _:
+                    macro function(?_val:String, ?erase:Bool):String {
+                        return _val != null || erase ? $value = _val : $value;
+                    };
+            }
         }
 
     }
