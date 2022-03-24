@@ -53,9 +53,11 @@ class ShaderImpl {
     }
 
     public function setInt(name:String, value:Int):Void {
-        
+
         if (intParams == null)
             intParams = new Map();
+
+        name = sanitizeUniformName(name);
 
         if (!intParams.exists(name) || intParams.get(name) != value) {
             intParams.set(name, value);
@@ -67,10 +69,12 @@ class ShaderImpl {
     }
 
     public function setFloat(name:String, value:Float):Void {
-        
+
         if (floatParams == null)
             floatParams = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         if (!floatParams.exists(name) || floatParams.get(name) != value) {
             floatParams.set(name, value);
             paramsVersion++;
@@ -81,10 +85,12 @@ class ShaderImpl {
     }
 
     public function setColor(name:String, r:Float, g:Float, b:Float, a:Float):Void {
-        
+
         if (colorParams == null)
             colorParams = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         var unityColor = new unityengine.Color(r, g, b, a);
         if (!colorParams.exists(name) || colorParams.get(name) != unityColor) {
             colorParams.set(name, unityColor);
@@ -96,10 +102,12 @@ class ShaderImpl {
     }
 
     public function setVec2(name:String, x:Float, y:Float):Void {
-        
+
         if (vec2Params == null)
             vec2Params = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         var unityVec2 = new unityengine.Vector2(x, y);
         if (!vec2Params.exists(name) || vec2Params.get(name) != unityVec2) {
             vec2Params.set(name, unityVec2);
@@ -111,10 +119,12 @@ class ShaderImpl {
     }
 
     public function setVec3(name:String, x:Float, y:Float, z:Float):Void {
-        
+
         if (vec3Params == null)
             vec3Params = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         var unityVec3 = new unityengine.Vector3(x, y, z);
         if (!vec3Params.exists(name) || vec3Params.get(name) != unityVec3) {
             vec3Params.set(name, unityVec3);
@@ -126,10 +136,12 @@ class ShaderImpl {
     }
 
     public function setVec4(name:String, x:Float, y:Float, z:Float, w:Float):Void {
-        
+
         if (vec4Params == null)
             vec4Params = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         var unityVec4 = new unityengine.Vector4(x, y, z, w);
         if (!vec4Params.exists(name) || vec4Params.get(name) != unityVec4) {
             vec4Params.set(name, unityVec4);
@@ -141,10 +153,12 @@ class ShaderImpl {
     }
 
     public function setFloatArray(name:String, array:Array<Float>):Void {
-        
+
         if (floatArrayParams == null)
             floatArrayParams = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         var nativeArray = new cs.NativeArray<Single>(array.length);
         for (i in 0...array.length) {
             nativeArray[i] = array.unsafeGet(i);
@@ -159,10 +173,12 @@ class ShaderImpl {
     }
 
     public function setTexture(name:String, texture:backend.Texture):Void {
-        
+
         if (textureParams == null)
             textureParams = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         if (!textureParams.exists(name) || textureParams.get(name) != texture) {
             textureParams.set(name, texture);
             paramsVersion++;
@@ -173,10 +189,12 @@ class ShaderImpl {
     }
 
     public function setMat4FromTransform(name:String, transform:ceramic.Transform):Void {
-        
+
         if (mat4Params == null)
             mat4Params = new Map();
-        
+
+        name = sanitizeUniformName(name);
+
         untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
 
         untyped __cs__('
@@ -187,13 +205,24 @@ class ShaderImpl {
         ', transform.a, transform.c, transform.tx, transform.b, transform.d, transform.ty);
 
         var unityMat4:unityengine.Matrix4x4 = untyped __cs__('m');
-        
+
         if (!mat4Params.exists(name) || mat4Params.get(name) != unityMat4) {
             mat4Params.set(name, unityMat4);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
         }
+
+    }
+
+    function sanitizeUniformName(name:String):String {
+
+        // That keyword is reserved
+        // TODO: more exhaustive list of keywords?
+        if (name == 'offset')
+            return 'offset_';
+
+        return name;
 
     }
 
