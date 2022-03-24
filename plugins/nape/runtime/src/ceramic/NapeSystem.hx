@@ -43,8 +43,7 @@ class NapeSystem extends System {
     /**
      * Default space for nape physics
      */
-    public var space(default, null):nape.space.Space = null;
-    
+    public var space(default, null):nape.space.Space = null;   
     
     /**
      * Pause for default space
