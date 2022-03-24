@@ -137,6 +137,9 @@ class UnityCSharp {
         // TODO: fix the actual code!
         content = content.replace('#pragma warning disable ', '#pragma warning disable 618, ');
 
+        // Mute hidden inherited member
+        content = content.replace('#pragma warning disable ', '#pragma warning disable 108, ');
+
         return content;
 
     }
