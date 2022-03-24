@@ -266,9 +266,15 @@ class Textures implements spec.Textures {
 
         switch (filter) {
             case LINEAR:
-                (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    untyped __cs__('((UnityEngine.RenderTexture){0}).filterMode = UnityEngine.FilterMode.Bilinear', (texture:TextureImpl).unityRenderTexture);
             case NEAREST:
-                (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    untyped __cs__('((UnityEngine.RenderTexture){0}).filterMode = UnityEngine.FilterMode.Point', (texture:TextureImpl).unityRenderTexture);
         }
 
     }
