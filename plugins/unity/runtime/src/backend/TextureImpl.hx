@@ -1,5 +1,6 @@
 package backend;
 
+import unityengine.RenderTexture;
 import unityengine.Texture2D;
 
 class TextureImpl {
@@ -14,7 +15,7 @@ class TextureImpl {
 
     public var unityTexture:Texture2D;
 
-    public var unityRenderTexture:Dynamic;
+    public var unityRenderTexture:RenderTexture;
 
     public var path:String;
 
@@ -24,7 +25,7 @@ class TextureImpl {
 
     public var height(default,null):Int;
 
-    public function new(path:String, unityTexture:Texture2D, unityRenderTexture:Dynamic) {
+    public function new(path:String, unityTexture:Texture2D, unityRenderTexture:RenderTexture) {
 
         this.path = path;
         this.unityTexture = unityTexture;
@@ -36,9 +37,9 @@ class TextureImpl {
             this.textureId = unityTexture.GetInstanceID();
         }
         else if (unityRenderTexture != null) {
-            this.width = untyped __cs__('(int)((UnityEngine.RenderTexture){0}).width', unityRenderTexture);
-            this.height = untyped __cs__('(int)((UnityEngine.RenderTexture){0}).height', unityRenderTexture);
-            this.textureId = untyped __cs__('(int)((UnityEngine.RenderTexture){0}).GetInstanceID()', unityRenderTexture);
+            this.width = unityRenderTexture.width;
+            this.height = unityRenderTexture.height;
+            this.textureId = unityRenderTexture.GetInstanceID();
         }
 
     }
