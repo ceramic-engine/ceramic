@@ -95,7 +95,7 @@ class Input implements tracker.Events implements spec.Input {
         // Codes from: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/api/UnityEngine.InputSystem.Key.html
 
         var keyboard = Keyboard.current;
-        if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame)) {
+        if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame || keyboard.anyKey.isPressed)) {
 
             testKey(keyboard, 1, ScanCode.SPACE, KeyCode.SPACE);
 
