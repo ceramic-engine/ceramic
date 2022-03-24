@@ -44,6 +44,12 @@ class NapeSystem extends System {
      * Default space for nape physics
      */
     public var space(default, null):nape.space.Space = null;
+    
+    
+    /**
+     * Pause for default space
+     */
+    public var paused:Bool = false;
 
     public function new() {
 
@@ -99,7 +105,9 @@ class NapeSystem extends System {
 
     inline function updateSpace(space:nape.space.Space, delta:Float):Void {
 
-        space.step(delta);
+         if (!this.paused) {
+             space.step(delta);
+         }  
 
     }
 
