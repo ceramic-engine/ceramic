@@ -2,7 +2,7 @@ package elements;
 
 import tracker.Model;
 
-class PendingChoice extends Model {
+class PendingDialog extends Model {
 
     public var chosenIndex:Int = -1;
 
@@ -26,7 +26,7 @@ class PendingChoice extends Model {
 
     public var callback:(index:Int, text:String)->Void;
 
-    public function new(?key:String, title:String, message:String, choices:Array<String>, cancelable:Bool = false, width:Float = -1, height:Float = -1, async:Bool, callback:(index:Int, text:String)->Void) {
+    public function new(?key:String, title:String, message:String, ?choices:Array<String>, cancelable:Bool = false, width:Float = -1, height:Float = -1, async:Bool, callback:(index:Int, text:String)->Void) {
 
         super();
 

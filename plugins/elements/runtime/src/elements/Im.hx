@@ -144,9 +144,9 @@ class Im {
 
     static var _assetUses:Map<String,Int> = new Map();
 
-    static var _pendingChoices:Array<PendingChoice> = [];
+    static var _pendingDialogs:Array<PendingDialog> = [];
 
-    static var _displayedPendingChoice:PendingChoice = null;
+    static var _displayedPendingDialog:PendingDialog = null;
 
     static var _allowedOwners:Array<Entity> = [];
 
@@ -259,76 +259,76 @@ class Im {
 
     }
 
-    static function displayPendingChoiceIfNeeded():Void {
+    static function displayPendingDialogIfNeeded():Void {
 
-        if (_pendingChoices.length > 0) {
+        if (_pendingDialogs.length > 0) {
 
-            var choice = null;
-            for (i in 0..._pendingChoices.length) {
-                var aChoice = _pendingChoices.unsafeGet(i);
-                if (!aChoice.canceled && aChoice.chosenIndex == -1) {
-                    choice = aChoice;
+            var dialog = null;
+            for (i in 0..._pendingDialogs.length) {
+                var aDialog = _pendingDialogs.unsafeGet(i);
+                if (!aDialog.canceled && aDialog.chosenIndex == -1) {
+                    dialog = aDialog;
                     break;
                 }
             }
 
-            if (choice != null) {
+            if (dialog != null) {
 
-                var needsFocusReset = (_displayedPendingChoice != choice);
-                _displayedPendingChoice = choice;
+                var needsFocusReset = (_displayedPendingDialog != dialog);
+                _displayedPendingDialog = dialog;
 
                 var clickedIndex = -1;
                 var closed = false;
 
                 var window = Im.begin(
-                    'Im.pendingChoice',
-                    choice.title, choice.width
+                    'Im.pendingDialog',
+                    dialog.title, dialog.width
                 );
                 Im.position(screen.nativeWidth * 0.5, screen.nativeHeight * 0.5, 0.5, 0.5);
-                if (Im.overlay() && choice.cancelable) {
+                if (Im.overlay() && dialog.cancelable) {
                     closed = true;
                 }
                 Im.expanded();
                 Im.titleAlign(CENTER);
 
-                if (choice.cancelable && Im.closable()) {
+                if (dialog.cancelable && Im.closable()) {
                     closed = true;
                 }
 
                 Im.textAlign(CENTER);
-                Im.text(choice.message);
+                Im.text(dialog.message);
 
-                if (choice.choices.length == 2) {
+                if (dialog.choices.length == 2) {
                     Im.beginRow();
                 }
 
-                for (i in 0...choice.choices.length) {
-                    var item = choice.choices.unsafeGet(i);
+                for (i in 0...dialog.choices.length) {
+                    var item = dialog.choices.unsafeGet(i);
 
                     if (Im.button(item)) {
                         clickedIndex = i;
                     }
                 }
 
-                if (choice.choices.length == 2) {
+                if (dialog.choices.length == 2) {
                     Im.endRow();
                 }
 
                 Im.end();
 
                 if (clickedIndex != -1) {
-                    choice.callback(clickedIndex, choice.choices[clickedIndex]);
-                    choice.chosenIndex = clickedIndex;
-                    if (choice.async) {
-                        _pendingChoices.remove(choice);
-                        choice.destroy();
+                    dialog.callback(clickedIndex, dialog.choices[clickedIndex]);
+                    dialog.chosenIndex = clickedIndex;
+                    if (dialog.async) {
+                        _pendingDialogs.remove(dialog);
+                        dialog.destroy();
                     }
                 }
                 else if (closed) {
-                    choice.canceled = true;
-                    if (choice.async) {
-                        _pendingChoices.remove(choice);
-                        choice.destroy();
+                    dialog.canceled = true;
+                    if (dialog.async) {
+                        _pendingDialogs.remove(dialog);
+                        dialog.destroy();
                     }
                 }
                 else if (context.focusedWindow != window || needsFocusReset) {
@@ -342,7 +342,7 @@ class Im {
 
     @:noCompletion public static function endFrame():Void {
 
-        displayPendingChoiceIfNeeded();
+        displayPendingDialogIfNeeded();
 
         updateWindowsDepth();
 
@@ -2150,12 +2150,12 @@ class Im {
         if (no == null)
             no = NO;
 
-        var choice:PendingChoice = null;
+        var choice:PendingDialog = null;
 
         if (key != null) {
             key = extractId(key);
-            for (i in 0..._pendingChoices.length) {
-                var existing = _pendingChoices.unsafeGet(i);
+            for (i in 0..._pendingDialogs.length) {
+                var existing = _pendingDialogs.unsafeGet(i);
                 if (existing.key == key) {
                     choice = existing;
                     break;
@@ -2164,7 +2164,7 @@ class Im {
         }
 
         if (choice == null) {
-            choice = new PendingChoice(
+            choice = new PendingDialog(
                 key, title, message, [yes, no], cancelable, width, height, async, function(index, text) {
                     if (choice.chosenIndex != -1 || choice.canceled)
                         return;
@@ -2192,13 +2192,13 @@ class Im {
                     }
 
                     if (choice.async) {
-                        _pendingChoices.remove(choice);
+                        _pendingDialogs.remove(choice);
                         choice.destroy();
                     }
                 }
             });
 
-            _pendingChoices.push(choice);
+            _pendingDialogs.push(choice);
         }
         else {
             choice.title = title;
@@ -2215,7 +2215,7 @@ class Im {
         );
 
         if (!choice.async && status.complete) {
-            _pendingChoices.remove(choice);
+            _pendingDialogs.remove(choice);
             choice.destroy();
         }
 
@@ -2284,12 +2284,12 @@ class Im {
         if (ok == null)
             ok = OK;
 
-        var choice:PendingChoice = null;
+        var choice:PendingDialog = null;
 
         if (key != null) {
             key = extractId(key);
-            for (i in 0..._pendingChoices.length) {
-                var existing = _pendingChoices.unsafeGet(i);
+            for (i in 0..._pendingDialogs.length) {
+                var existing = _pendingDialogs.unsafeGet(i);
                 if (existing.key == key) {
                     choice = existing;
                     break;
@@ -2298,7 +2298,7 @@ class Im {
         }
 
         if (choice == null) {
-            choice = new PendingChoice(
+            choice = new PendingDialog(
                 key, title, message, [ok], cancelable, width, height, async, function(index, text) {
                     if (choice.chosenIndex != -1 || choice.canceled)
                         return;
@@ -2322,13 +2322,13 @@ class Im {
                     callback = null;
 
                     if (choice.async) {
-                        _pendingChoices.remove(choice);
+                        _pendingDialogs.remove(choice);
                         choice.destroy();
                     }
                 }
             });
 
-            _pendingChoices.push(choice);
+            _pendingDialogs.push(choice);
         }
         else {
             choice.title = title;
@@ -2344,7 +2344,7 @@ class Im {
         );
 
         if (!choice.async && status.complete) {
-            _pendingChoices.remove(choice);
+            _pendingDialogs.remove(choice);
             choice.destroy();
         }
 
@@ -2410,16 +2410,18 @@ class Im {
 
         initIfNeeded();
 
+        assert(choices != null, 'Choices array must not be null');
+
         if (height == WindowData.DEFAULT_HEIGHT && choices.length >= 8) {
             height = DIALOG_OVERFLOW_HEIGHT;
         }
 
-        var choice:PendingChoice = null;
+        var choice:PendingDialog = null;
 
         if (key != null) {
             key = extractId(key);
-            for (i in 0..._pendingChoices.length) {
-                var existing = _pendingChoices.unsafeGet(i);
+            for (i in 0..._pendingDialogs.length) {
+                var existing = _pendingDialogs.unsafeGet(i);
                 if (existing.key == key) {
                     choice = existing;
                     break;
@@ -2428,7 +2430,7 @@ class Im {
         }
 
         if (choice == null) {
-            choice = new PendingChoice(
+            choice = new PendingDialog(
                 key, title, message, async ? [].concat(choices) : choices, cancelable, width, height, async, function(index, text) {
                     if (choice.chosenIndex != -1 || choice.canceled)
                         return;
@@ -2452,13 +2454,13 @@ class Im {
                     callback = null;
 
                     if (choice.async) {
-                        _pendingChoices.remove(choice);
+                        _pendingDialogs.remove(choice);
                         choice.destroy();
                     }
                 }
             });
 
-            _pendingChoices.push(choice);
+            _pendingDialogs.push(choice);
         }
         else {
             choice.title = title;
@@ -2474,7 +2476,7 @@ class Im {
         );
 
         if (!choice.async && status.complete) {
-            _pendingChoices.remove(choice);
+            _pendingDialogs.remove(choice);
             choice.destroy();
         }
 
