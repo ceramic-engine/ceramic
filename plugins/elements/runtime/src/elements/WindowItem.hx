@@ -68,6 +68,8 @@ class WindowItem {
 
     public var bool1:Bool = false;
 
+    public var bool2:Bool = false;
+
     public var string0:String = null;
 
     public var string1:String = null;
@@ -270,6 +272,7 @@ class WindowItem {
         float4 = 0;
         bool0 = false;
         bool1 = false;
+        bool2 = false;
         string0 = null;
         string1 = null;
         string2 = null;
@@ -605,6 +608,13 @@ class WindowItem {
         if (kind == EDIT_TEXT) {
             if (justCreated) {
                 field.setValue = _editTextSetValue;
+                field.submit = _editTextSubmit;
+                if (bool2) {
+                    Im._beginFrameCallbacks.push(() -> {
+                        if (!field.destroyed)
+                            field.focus();
+                    });
+                }
             }
             if (string0 != field.textValue) {
                 field.textValue = string0;
@@ -668,6 +678,13 @@ class WindowItem {
     static function _editTextSetValue(field:BaseTextFieldView, value:String):Void {
 
         field.windowItem().string1 = value;
+
+    }
+
+    static function _editTextSubmit(field:BaseTextFieldView):Void {
+
+        ceramic.Shortcuts.log.success('EDIT TEXT SUBMIT');
+        field.windowItem().bool1 = true;
 
     }
 

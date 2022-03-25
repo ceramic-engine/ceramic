@@ -128,6 +128,7 @@ class SelectFieldView extends FieldView {
         textView.text.component('editText', editText);
         editText.onUpdate(this, updateFromEditText);
         editText.onStop(this, handleStopEditText);
+        editText.onSubmit(this, handleEditTextSubmit);
         */
 
         autorun(updateStyle);

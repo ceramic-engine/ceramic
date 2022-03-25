@@ -100,6 +100,7 @@ class Im {
 
     public static var OK:String = 'OK';
 
+    @:allow(elements.WindowItem)
     static var _beginFrameCallbacks:Array<Void->Void> = [];
 
     static var _orderedWindows:Array<Window> = [];
@@ -297,6 +298,12 @@ class Im {
 
                 Im.textAlign(CENTER);
                 Im.text(dialog.message);
+
+                if (dialog.promptPointer != null) {
+                    if (Im.editText(dialog.promptPointer, false, dialog.promptPlaceholder, true).submitted) {
+                        clickedIndex = 0;
+                    }
+                }
 
                 if (dialog.choices.length == 2) {
                     Im.beginRow();
@@ -971,7 +978,7 @@ class Im {
 
     }
 
-    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>):Bool {
+    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>, focused:Bool = false):EditTextStatus {
 
         var windowData = _currentWindowData;
 
@@ -986,6 +993,7 @@ class Im {
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
         item.bool0 = multiline;
+        item.bool2 = focused;
         item.string2 = title;
         item.string3 = placeholder;
         item.stringArray0 = autocompleteCandidates;
@@ -997,15 +1005,19 @@ class Im {
             // Did value changed from field last frame?
             var prevValue = item.previous.string0;
             var newValue = item.previous.string1;
+            var submitted = item.previous.bool1;
             if (newValue != prevValue) {
                 item.string0 = newValue;
                 item.string1 = newValue;
                 Im.writeString(value, newValue);
-                return true;
+                return Flags.fromValues(true, submitted).toInt();
+            }
+            else {
+                return Flags.fromValues(false, submitted).toInt();
             }
         }
 
-        return false;
+        return Flags.fromValues(false, false).toInt();
 
     }
 
@@ -2346,6 +2358,165 @@ class Im {
         if (!choice.async && status.complete) {
             _pendingDialogs.remove(choice);
             choice.destroy();
+        }
+
+        return status;
+
+    }
+
+    public extern inline static overload function prompt(
+        title:String,
+        message:String,
+        value:StringPointer,
+        ?placeholder:String,
+        cancelable:Bool = false,
+        ?ok:String, ?cancel:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        ?key:String):PromptStatus {
+
+        return _prompt(
+            key != null ? key : title,
+            title,
+            message,
+            value,
+            placeholder,
+            cancelable,
+            ok, cancel,
+            width,
+            height,
+            false,
+            null
+        );
+
+    }
+
+    public extern inline static overload function prompt(
+        title:String,
+        message:String,
+        ?placeholder:String,
+        cancelable:Bool = false,
+        ?ok:String, ?cancel:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        callback:(text:String)->Void) {
+
+        _prompt(
+            null,
+            title,
+            message,
+            null,
+            placeholder,
+            cancelable,
+            ok, cancel,
+            width,
+            height,
+            true,
+            callback
+        );
+
+    }
+
+    static function _prompt(
+        key:String,
+        title:String,
+        message:String,
+        value:StringPointer,
+        placeholder:String,
+        cancelable:Bool = false,
+        ?ok:String, ?cancel:String,
+        width:Float = DIALOG_WIDTH,
+        height:Float = WindowData.DEFAULT_HEIGHT,
+        async:Bool, callback:(text:String)->Void):PromptStatus {
+
+        initIfNeeded();
+
+        if (ok == null)
+            ok = OK;
+
+        var prompt:PendingDialog = null;
+
+        if (key != null) {
+            key = extractId(key);
+            for (i in 0..._pendingDialogs.length) {
+                var existing = _pendingDialogs.unsafeGet(i);
+                if (existing.key == key) {
+                    prompt = existing;
+                    break;
+                }
+            }
+        }
+
+        if (prompt == null) {
+            prompt = new PendingDialog(
+                key, title, message, true, value, placeholder, cancelable && cancel != null ? [ok, cancel] : [ok], cancelable, width, height, async, function(index, text) {
+                    if (prompt.chosenIndex != -1 || prompt.canceled)
+                        return;
+
+                    prompt.chosenIndex = index;
+                    if (callback != null) {
+                        var cb = callback;
+                        callback = null;
+                        cb(Im.readString(prompt.promptPointer));
+                    }
+                }
+            );
+
+            input.onKeyDown(prompt, function(key) {
+                if (prompt.chosenIndex != -1 || prompt.canceled)
+                    return;
+
+                if (prompt.cancelable && key.scanCode == ESCAPE) {
+
+                    prompt.canceled = true;
+                    callback = null;
+
+                    if (prompt.async) {
+                        _pendingDialogs.remove(prompt);
+                        prompt.destroy();
+                    }
+                }
+            });
+
+            _pendingDialogs.push(prompt);
+        }
+        else {
+            prompt.title = title;
+            prompt.message = message;
+
+            prompt.promptPlaceholder = placeholder;
+            if (value != null)
+                prompt.promptPointer = value;
+
+            var hasSameChoices = true;
+            if (cancel != null) {
+                if (prompt.choices.length != 2)
+                    hasSameChoices = false;
+                else if (prompt.choices[0] != ok || prompt.choices[1] != cancel)
+                    hasSameChoices = false;
+            }
+            else {
+                if (prompt.choices.length != 1)
+                    hasSameChoices = false;
+                else if (prompt.choices[0] != ok)
+                    hasSameChoices = false;
+            }
+            if (!hasSameChoices) {
+                prompt.choices = [ok, cancel];
+            }
+
+            prompt.cancelable = cancelable;
+            prompt.width = width;
+            prompt.height = height;
+        }
+
+        var status = new PromptStatus(
+            prompt.canceled ? -2 : prompt.chosenIndex
+        );
+
+        if (!prompt.async && status.complete) {
+            _pendingDialogs.remove(prompt);
+            prompt.destroy();
         }
 
         return status;
