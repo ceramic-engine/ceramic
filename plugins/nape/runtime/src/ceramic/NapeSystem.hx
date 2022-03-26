@@ -46,7 +46,7 @@ class NapeSystem extends System {
     public var space(default, null):nape.space.Space = null;
     
     /**
-     * Pause for default space
+     * Pause for all nape spaces
      */
     public var paused:Bool = false;
 
