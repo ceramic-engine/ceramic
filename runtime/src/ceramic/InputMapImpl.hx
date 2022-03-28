@@ -46,11 +46,19 @@ class InputMapImpl<T> extends InputMapBase {
 
     var boundKeyCodes:IntMap<Array<Int>> = new IntMap();
 
+    var boundKeyCodesToAxis:IntMap<Array<InputMapConvertToAxis>> = new IntMap();
+
     var boundScanCodes:IntMap<Array<Int>> = new IntMap();
+
+    var boundScanCodesToAxis:IntMap<Array<InputMapConvertToAxis>> = new IntMap();
 
     var boundMouseButtons:IntMap<Array<Int>> = new IntMap();
 
+    var convertToAxis:Array<Array<InputMapConvertToAxis>> = [];
+
     var boundGamepadButtons:IntMap<Array<Int>> = new IntMap();
+
+    var boundGamepadButtonsToAxis:IntMap<Array<InputMapConvertToAxis>> = new IntMap();
 
     var boundGamepadAxis:IntMap<Array<Int>> = new IntMap();
 
@@ -58,11 +66,17 @@ class InputMapImpl<T> extends InputMapBase {
 
     var indexKeyCodes:Array<Array<KeyCode>> = [];
 
+    var axisIndexKeyCodes:Array<Array<KeyCode>> = [];
+
     var indexScanCodes:Array<Array<ScanCode>> = [];
+
+    var axisIndexScanCodes:Array<Array<ScanCode>> = [];
 
     var indexMouseButtons:Array<Array<Int>> = [];
 
     var indexGamepadButtons:Array<Array<GamepadButton>> = [];
+
+    var axisIndexGamepadButtons:Array<Array<GamepadButton>> = [];
 
     var indexGamepadAxis:Array<Array<GamepadAxis>> = [];
 
@@ -147,9 +161,15 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        // Key code axis
+        var boundListToAxis = boundKeyCodesToAxis.get(keyCode);
+        if (boundListToAxis != null) {
+            _handleAxisConvertersDown(boundListToAxis);
+        }
+
         // Scan code
         var scanCode = key.scanCode;
-        var boundList = boundScanCodes.get(scanCode);
+        boundList = boundScanCodes.get(scanCode);
         if (boundList != null) {
             for (i in 0...boundList.length) {
                 var index = boundList.unsafeGet(i);
@@ -172,10 +192,17 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        // Scan code axis
+        boundListToAxis = boundScanCodesToAxis.get(scanCode);
+        if (boundListToAxis != null) {
+            _handleAxisConvertersDown(boundListToAxis);
+        }
+
         if (toEmit != null) {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
+                _handleConvertedToAxisDown(index);
                 if (enabled)
                     emitKeyDown(k);
             }
@@ -207,6 +234,12 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        // Key code axis
+        var boundListToAxis = boundKeyCodesToAxis.get(keyCode);
+        if (boundListToAxis != null) {
+            _handleAxisConvertersUp(boundListToAxis);
+        }
+
         // Scan code
         var scanCode = key.scanCode;
         boundList = boundScanCodes.get(scanCode);
@@ -227,10 +260,17 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        // Scan code axis
+        boundListToAxis = boundScanCodesToAxis.get(scanCode);
+        if (boundListToAxis != null) {
+            _handleAxisConvertersUp(boundListToAxis);
+        }
+
         if (toEmit != null) {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
+                _handleConvertedToAxisUp(index);
                 if (enabled)
                     emitKeyUp(k);
             }
@@ -267,10 +307,17 @@ class InputMapImpl<T> extends InputMapBase {
                 }
             }
 
+            // Button to axis
+            var boundListToAxis = boundGamepadButtonsToAxis.get(button);
+            if (boundListToAxis != null) {
+                _handleAxisConvertersDown(boundListToAxis);
+            }
+
             if (toEmit != null) {
                 for (i in 0...toEmit.length) {
                     var index = toEmit.unsafeGet(i);
                     var k = keyForIndex(index);
+                    _handleConvertedToAxisDown(index);
                     if (enabled)
                         emitKeyDown(k);
                 }
@@ -282,32 +329,42 @@ class InputMapImpl<T> extends InputMapBase {
 
     function _handleGamepadUp(gamepadId:Int, button:GamepadButton) {
 
-        var toEmit:Array<Int> = null;
+        if (this.gamepadId == -1 || gamepadId == this.gamepadId) {
 
-        var boundList = boundGamepadButtons.get(button);
-        if (boundList != null) {
-            for (i in 0...boundList.length) {
-                var index = boundList.unsafeGet(i);
-                var prevValue = _pressedKey(index);
-                if (prevValue > 0) {
-                    pressedKeys[index] = -1;
-                    if (toEmit == null)
-                        toEmit = [index];
-                    else if (toEmit.indexOf(index) == -1)
-                        toEmit.push(index);
-                }
-                if (prevValue != 0) {
-                    _scheduleRemoveJustReleased(index);
+            var toEmit:Array<Int> = null;
+
+            var boundList = boundGamepadButtons.get(button);
+            if (boundList != null) {
+                for (i in 0...boundList.length) {
+                    var index = boundList.unsafeGet(i);
+                    var prevValue = _pressedKey(index);
+                    if (prevValue > 0) {
+                        pressedKeys[index] = -1;
+                        if (toEmit == null)
+                            toEmit = [index];
+                        else if (toEmit.indexOf(index) == -1)
+                            toEmit.push(index);
+                    }
+                    if (prevValue != 0) {
+                        _scheduleRemoveJustReleased(index);
+                    }
                 }
             }
-        }
 
-        if (toEmit != null) {
-            for (i in 0...toEmit.length) {
-                var index = toEmit.unsafeGet(i);
-                var k = keyForIndex(index);
-                if (enabled)
-                    emitKeyUp(k);
+            // Button to axis
+            var boundListToAxis = boundGamepadButtonsToAxis.get(button);
+            if (boundListToAxis != null) {
+                _handleAxisConvertersUp(boundListToAxis);
+            }
+
+            if (toEmit != null) {
+                for (i in 0...toEmit.length) {
+                    var index = toEmit.unsafeGet(i);
+                    var k = keyForIndex(index);
+                    _handleConvertedToAxisUp(index);
+                    if (enabled)
+                        emitKeyUp(k);
+                }
             }
         }
 
@@ -351,6 +408,7 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
+                _handleConvertedToAxisDown(index);
                 if (enabled)
                     emitKeyDown(k);
             }
@@ -384,6 +442,7 @@ class InputMapImpl<T> extends InputMapBase {
             for (i in 0...toEmit.length) {
                 var index = toEmit.unsafeGet(i);
                 var k = keyForIndex(index);
+                _handleConvertedToAxisUp(index);
                 if (enabled)
                     emitKeyUp(k);
             }
@@ -499,7 +558,62 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    inline function _pressedKey(index:Int):Int {
+    inline function _handleConvertedToAxisUp(index:Int):Void {
+
+        var converters = convertToAxis[index];
+        if (converters != null) {
+            _handleAxisConvertersUp(converters);
+        }
+
+    }
+
+    function _handleConvertedToAxisDown(index:Int):Void {
+
+        var converters = convertToAxis[index];
+        if (converters != null) {
+            _handleAxisConvertersDown(converters);
+        }
+
+    }
+
+    inline function _handleAxisConvertersDown(converters:Array<InputMapConvertToAxis>) {
+
+        for (j in 0...converters.length) {
+            var converter = converters.unsafeGet(j);
+            if (converter != null) {
+                var targetIndex = converter.index;
+                var prevValue = _axisValue(targetIndex);
+                var value = converter.value;
+                if (prevValue != value) {
+                    axisValues[targetIndex] = value;
+                    var k = keyForIndex(targetIndex);
+                    if (enabled)
+                        emitAxis(k, value);
+                }
+            }
+        }
+
+    }
+
+    inline function _handleAxisConvertersUp(converters:Array<InputMapConvertToAxis>) {
+
+        for (j in 0...converters.length) {
+            var converter = converters.unsafeGet(j);
+            if (converter != null) {
+                var targetIndex = converter.index;
+                var prevValue = _axisValue(targetIndex);
+                if (prevValue != 0.0) {
+                    axisValues[targetIndex] = 0.0;
+                    var k = keyForIndex(targetIndex);
+                    if (enabled)
+                        emitAxis(k, 0.0);
+                }
+            }
+        }
+
+    }
+
+    function _pressedKey(index:Int):Int {
 
         var value:Int = 0;
         if (pressedKeys.length > index) {
@@ -697,6 +811,81 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
+        for (i in 0...convertToAxis.length) {
+            var converters = convertToAxis[i];
+            if (converters != null) {
+                for (j in 0...converters.length) {
+                    var converter = converters.unsafeGet(j);
+                    if (converter != null && converter.index == index) {
+                        if (_pressedKey(i) > 0) {
+                            axisValue = converter.value / 1000.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        var indexList = axisIndexKeyCodes[index];
+        if (indexList != null) {
+            for (i in 0...indexList.length) {
+                var keyCode = indexList.unsafeGet(i);
+                if (input.keyPressed(keyCode, this)) {
+                    var converters = boundKeyCodesToAxis.get(keyCode);
+                    if (converters != null) {
+                        for (j in 0...converters.length) {
+                            var converter = converters.unsafeGet(j);
+                            if (converter != null && converter.index == index) {
+                                axisValue = converter.value / 1000.0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        var indexList = axisIndexScanCodes[index];
+        if (indexList != null) {
+            for (i in 0...indexList.length) {
+                var scanCode = indexList.unsafeGet(i);
+                if (input.scanPressed(scanCode, this)) {
+                    var converters = boundScanCodesToAxis.get(scanCode);
+                    if (converters != null) {
+                        for (j in 0...converters.length) {
+                            var converter = converters.unsafeGet(j);
+                            if (converter != null && converter.index == index) {
+                                axisValue = converter.value / 1000.0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        var indexList = axisIndexGamepadButtons[index];
+        if (indexList != null) {
+            for (i in 0...indexList.length) {
+                var button = indexList.unsafeGet(i);
+                var gamepads = input.activeGamepads;
+                for (g in 0...gamepads.length) {
+                    var gamepadId = gamepads.unsafeGet(g);
+                    if (this.gamepadId == -1 || this.gamepadId == gamepadId) {
+                        var pressed = input.gamepadPressed(gamepadId, button, this);
+                        if (pressed) {
+                            var converters = boundGamepadButtonsToAxis.get(button);
+                            if (converters != null) {
+                                for (j in 0...converters.length) {
+                                    var converter = converters.unsafeGet(j);
+                                    if (converter != null && converter.index == index) {
+                                        axisValue = converter.value / 1000.0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         axisValues[index] = axisValue;
 
     }
@@ -729,6 +918,34 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function bindKeyCodeAxis(key:T, keyCode:KeyCode, axisValue:Float):Void {
+
+        var axisIndex = indexOfKey(key);
+
+        var list = boundKeyCodesToAxis.get(keyCode);
+        if (list == null) {
+            list = [];
+            boundKeyCodesToAxis.set(keyCode, list);
+        }
+
+        list.push({
+            index: axisIndex,
+            value: Math.round(axisValue * 1000)
+        });
+
+        var indexList = axisIndexKeyCodes[axisIndex];
+        if (indexList == null) {
+            indexList = [keyCode];
+            axisIndexKeyCodes[axisIndex] = indexList;
+        }
+        else {
+            indexList.push(keyCode);
+        }
+
+        _recomputeAxisValue(axisIndex);
+
+    }
+
     public function bindScanCode(key:T, scanCode:ScanCode):Void {
 
         var index = indexOfKey(key);
@@ -752,6 +969,34 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         _recomputePressedKey(index);
+
+    }
+
+    public function bindScanCodeAxis(key:T, scanCode:ScanCode, axisValue:Float):Void {
+
+        var axisIndex = indexOfKey(key);
+
+        var list = boundScanCodesToAxis.get(scanCode);
+        if (list == null) {
+            list = [];
+            boundScanCodesToAxis.set(scanCode, list);
+        }
+
+        list.push({
+            index: axisIndex,
+            value: Math.round(axisValue * 1000)
+        });
+
+        var indexList = axisIndexScanCodes[axisIndex];
+        if (indexList == null) {
+            indexList = [scanCode];
+            axisIndexScanCodes[axisIndex] = indexList;
+        }
+        else {
+            indexList.push(scanCode);
+        }
+
+        _recomputeAxisValue(axisIndex);
 
     }
 
@@ -804,6 +1049,34 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         _recomputePressedKey(index);
+
+    }
+
+    public function bindGamepadButtonAxis(key:T, button:GamepadButton, axisValue:Float):Void {
+
+        var axisIndex = indexOfKey(key);
+
+        var list = boundGamepadButtonsToAxis.get(button);
+        if (list == null) {
+            list = [];
+            boundGamepadButtonsToAxis.set(button, list);
+        }
+
+        list.push({
+            index: axisIndex,
+            value: Math.round(axisValue * 1000)
+        });
+
+        var indexList = axisIndexGamepadButtons[axisIndex];
+        if (indexList == null) {
+            indexList = [button];
+            axisIndexGamepadButtons[axisIndex] = indexList;
+        }
+        else {
+            indexList.push(button);
+        }
+
+        _recomputeAxisValue(axisIndex);
 
     }
 
@@ -860,6 +1133,24 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function bindConvertedToAxis(key:T, axisKey:T, axisValue:Float):Void {
+
+        var index = indexOfKey(key);
+        var axisIndex = indexOfKey(axisKey);
+
+        if (convertToAxis[index] == null) {
+            convertToAxis[index] = [];
+        }
+
+        convertToAxis[index].push({
+            index: axisIndex,
+            value: Math.round(axisValue * 1000)
+        });
+
+        _recomputeAxisValue(axisIndex);
+
+    }
+
     public function pressed(key:T):Bool {
 
         return enabled && _pressedKey(indexOfKey(key)) > 0;
@@ -899,5 +1190,15 @@ enum abstract InputMapKeyKind(Int) from Int to Int {
     var GAMEPAD_BUTTON = 4;
 
     var GAMEPAD_AXIS = 5;
+
+}
+
+@:structInit
+@:allow(ceramic.InputMapImpl)
+class InputMapConvertToAxis {
+
+    var index:Int;
+
+    var value:Int;
 
 }
