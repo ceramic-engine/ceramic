@@ -109,6 +109,7 @@ class TextFieldView extends BaseTextFieldView {
                 textView.text.component('editText', editText);
                 editText.onUpdate(this, updateFromEditText);
                 editText.onStop(this, handleStopEditText);
+                editText.onSubmit(this, handleEditTextSubmit);
             #if plugin_dialogs
             case DIR(title):
                 editText = null;

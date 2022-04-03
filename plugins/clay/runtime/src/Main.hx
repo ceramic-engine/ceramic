@@ -29,6 +29,14 @@ class Main {
 
     static var resizing:Int = 0;
 
+    static var containerElId:String = null;
+
+    static var containerWidth:Int = 0;
+
+    static var containerHeight:Int = 0;
+
+    static var containerPixelRatio:Float = 0;
+
     #end
 
     public static function main() {
@@ -172,69 +180,15 @@ class Main {
             config.runtime.preventDefaultKeys = [];
         }
 
-        var containerElId:String = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
+        containerElId = app.settings.backend.webParent != null ? app.settings.backend.webParent.id : 'ceramic-app';
         //if (app.settings.resizable) {
 
-            var containerWidth:Int = 0;
-            var containerHeight:Int = 0;
-            var containerPixelRatio:Float = 0;
+            containerWidth = 0;
+            containerHeight = 0;
+            containerPixelRatio = 0;
 
             js.Browser.document.body.classList.add('ceramic-invisible');
-
-            app.onUpdate(null, function(delta) {
-                var containerEl = js.Browser.document.getElementById(containerElId);
-                if (containerEl != null) {
-                    var width:Int = containerEl.offsetWidth;
-                    var height:Int = containerEl.offsetHeight;
-                    var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
-
-                    if (lastResizeTime != -1) {
-                        if (width != lastNewWidth || height != lastNewHeight) {
-                            if (lastNewWidth != -1 || lastNewHeight != -1) {
-                                js.Browser.document.body.classList.add('ceramic-invisible');
-                            }
-                            lastResizeTime = ceramic.Timer.now;
-                            lastNewWidth = width;
-                            lastNewHeight = height;
-                            return;
-                        }
-                    }
-
-                    if (lastResizeTime != -1 && ceramic.Timer.now - lastResizeTime < 0.1) return;
-
-                    if (width != containerWidth || height != containerHeight || js.Browser.window.devicePixelRatio != containerPixelRatio) {
-
-                        containerWidth = width;
-                        containerHeight = height;
-                        containerPixelRatio = js.Browser.window.devicePixelRatio;
-
-                        // Update canvas size
-                        appEl.style.width = containerWidth + 'px';
-                        appEl.style.height = containerHeight + 'px';
-                        appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
-                        appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
-
-                        // Hide weird intermediate state behind a black overlay.
-                        // That's not the best option but let's get away with this for now.
-                        resizing++;
-                        if (lastResizeTime != -1) {
-                            js.Browser.document.body.classList.add('ceramic-invisible');
-                        }
-                        var fn = null;
-                        fn = function() {
-                            if (resizing == 0 && readyToDisplay) {
-                                js.Browser.document.body.classList.remove('ceramic-invisible');
-                            }
-                        };
-                        ceramic.Timer.delay(null, 0.1, () -> {
-                            resizing--;
-                            fn();
-                        });
-
-                        lastResizeTime = ceramic.Timer.now;
-                    }
-                }
-            });
+            js.Browser.window.requestAnimationFrame(_updateContainerSizeIfNeeded);
 
         //}
 
@@ -273,6 +227,76 @@ class Main {
         #end
 
     }
+
+    #if web
+
+    static function _updateContainerSizeIfNeeded(t:Float = 0.016) {
+
+        var containerEl = js.Browser.document.getElementById(containerElId);
+        var appEl:js.html.CanvasElement = cast js.Browser.document.getElementById('app');
+
+        if (containerEl != null && appEl != null) {
+            var width:Int = containerEl.offsetWidth;
+            var height:Int = containerEl.offsetHeight;
+
+            var now = (js.Browser.window.performance.now() / 1000.0);
+
+            if (lastResizeTime != -1) {
+                if (width != lastNewWidth || height != lastNewHeight) {
+                    if (lastNewWidth != -1 || lastNewHeight != -1) {
+                        js.Browser.document.body.classList.add('ceramic-invisible');
+                    }
+                    lastResizeTime = now;
+                    lastNewWidth = width;
+                    lastNewHeight = height;
+                    js.Browser.window.requestAnimationFrame(_updateContainerSizeIfNeeded);
+                    return;
+                }
+            }
+
+            if (lastResizeTime != -1 && now - lastResizeTime < 0.1) {
+                js.Browser.window.requestAnimationFrame(_updateContainerSizeIfNeeded);
+                return;
+            }
+
+            if (width != containerWidth || height != containerHeight || js.Browser.window.devicePixelRatio != containerPixelRatio) {
+
+                containerWidth = width;
+                containerHeight = height;
+                containerPixelRatio = js.Browser.window.devicePixelRatio;
+
+                // Update canvas size
+                appEl.style.width = containerWidth + 'px';
+                appEl.style.height = containerHeight + 'px';
+                appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
+                appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
+
+                // Hide weird intermediate state behind a black overlay.
+                // That's not the best option but let's get away with this for now.
+                resizing++;
+                if (lastResizeTime != -1) {
+                    js.Browser.document.body.classList.add('ceramic-invisible');
+                }
+                var fn = null;
+                fn = function() {
+                    if (resizing == 0 && readyToDisplay) {
+                        js.Browser.document.body.classList.remove('ceramic-invisible');
+                    }
+                };
+                js.Browser.window.setTimeout(() -> {
+                    resizing--;
+                    fn();
+                }, 100);
+
+                lastResizeTime = now;
+            }
+        }
+
+        js.Browser.window.requestAnimationFrame(_updateContainerSizeIfNeeded);
+
+    }
+
+    #end
 
     static var _displayReady:Bool = false;
     static var _pendingDisplayReadyDone:Void->Void = null;
@@ -328,7 +352,6 @@ class Main {
                     done();
                     done = null;
                 }
-
             }
         }
         intervalId = js.Browser.window.setInterval(checkSizeReady, 500);

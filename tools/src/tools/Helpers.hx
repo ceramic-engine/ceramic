@@ -1226,7 +1226,7 @@ class Helpers {
         if (Sys.systemName() == 'Windows') {
 
             var out = command('wmic', ['logicaldisk', 'get', 'name'], { mute: true }).stdout;
-            for (line in ~/[\r\n]+/.split(out)) {
+            for (line in ~/[\r\n]+/g.split(out)) {
                 line = line.trim();
                 if (line.length >= 2 && line.charAt(1) == ':') {
                     var letter = line.charAt(0).toUpperCase();

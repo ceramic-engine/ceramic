@@ -20,6 +20,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     @event function start();
 
+    @event function submit();
+
     @event function stop();
 
 /// Public properties
@@ -285,6 +287,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
     function handleEnter():Void {
 
         if (!multiline) {
+            emitSubmit();
             stopInput();
         }
 

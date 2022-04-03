@@ -51,6 +51,12 @@ class BaseTextFieldView extends FieldView {
 
     }
 
+    public dynamic function submit(field:BaseTextFieldView):Void {
+
+        // Default implementation does nothing
+
+    }
+
 /// Public properties
 
     @observe public var textValue:String = '';
@@ -144,6 +150,14 @@ class BaseTextFieldView extends FieldView {
     var suggestions:Array<String> = null;
 
 /// Internal
+
+    function handleEditTextSubmit() {
+
+        if (focused) {
+            submit(this);
+        }
+
+    }
 
     function updateFromEditText(text:String) {
 

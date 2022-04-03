@@ -2,11 +2,15 @@ package elements;
 
 import tracker.Model;
 
-class PendingChoice extends Model {
+class PendingDialog extends Model {
 
     public var chosenIndex:Int = -1;
 
     public var canceled:Bool = false;
+
+    public var promptPointer:StringPointer;
+
+    public var promptPlaceholder:String;
 
     public var key:String;
 
@@ -26,13 +30,23 @@ class PendingChoice extends Model {
 
     public var callback:(index:Int, text:String)->Void;
 
-    public function new(?key:String, title:String, message:String, choices:Array<String>, cancelable:Bool = false, width:Float = -1, height:Float = -1, async:Bool, callback:(index:Int, text:String)->Void) {
+    var _promptValue:String;
+
+    public function new(?key:String, title:String, message:String, prompt:Bool = false, ?promptPointer:StringPointer, ?promptPlaceholder:String, choices:Array<String>, cancelable:Bool = false, width:Float = -1, height:Float = -1, async:Bool, callback:(index:Int, text:String)->Void) {
 
         super();
 
         this.key = key;
         this.title = title;
         this.message = message;
+        if (prompt) {
+            if (promptPointer == null) {
+                _promptValue = '';
+                promptPointer = Im.string(_promptValue);
+            }
+            this.promptPointer = promptPointer;
+            this.promptPlaceholder = promptPlaceholder;
+        }
         this.choices = choices;
         this.async = async;
         this.callback = callback;

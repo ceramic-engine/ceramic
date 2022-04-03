@@ -222,6 +222,24 @@ class Textures implements spec.Textures {
     public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
 
         var unityTexture = (texture:TextureImpl).unityTexture;
+        var didCreateTemporaryTexture = false;
+
+        if (unityTexture == null) {
+            if ((texture:TextureImpl).unityRenderTexture != null) {
+                didCreateTemporaryTexture = true;
+
+                var unityRenderTexture = (texture:TextureImpl).unityRenderTexture;
+                unityTexture = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', unityRenderTexture.width, unityRenderTexture.height);
+
+                var previousActiveRenderTexture = unityengine.RenderTexture.active;
+                unityengine.RenderTexture.active = unityRenderTexture;
+
+                unityTexture.ReadPixels(new unityengine.Rect(0, 0, unityRenderTexture.width, unityRenderTexture.height), 0, 0, false);
+                unityTexture.Apply(false, false);
+
+                unityengine.RenderTexture.active = previousActiveRenderTexture;
+            }
+        }
 
         untyped __cs__('var rawData = {0}.GetRawTextureData<UnityEngine.Color32>()', unityTexture);
         var width = (texture:TextureImpl).width;
@@ -249,6 +267,10 @@ class Textures implements spec.Textures {
             }
         }
 
+        if (didCreateTemporaryTexture) {
+            untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
+        }
+
         return result;
 
     }
@@ -269,12 +291,12 @@ class Textures implements spec.Textures {
                 if ((texture:TextureImpl).unityTexture != null)
                     (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
                 else if ((texture:TextureImpl).unityRenderTexture != null)
-                    untyped __cs__('((UnityEngine.RenderTexture){0}).filterMode = UnityEngine.FilterMode.Bilinear', (texture:TextureImpl).unityRenderTexture);
+                    (texture:TextureImpl).unityRenderTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Bilinear');
             case NEAREST:
                 if ((texture:TextureImpl).unityTexture != null)
                     (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
                 else if ((texture:TextureImpl).unityRenderTexture != null)
-                    untyped __cs__('((UnityEngine.RenderTexture){0}).filterMode = UnityEngine.FilterMode.Point', (texture:TextureImpl).unityRenderTexture);
+                    (texture:TextureImpl).unityRenderTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
         }
 
     }

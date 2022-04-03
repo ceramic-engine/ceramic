@@ -84,6 +84,7 @@ class SliderFieldView extends BaseTextFieldView {
         textView.text.component('editText', editText);
         editText.onUpdate(this, updateFromEditText);
         editText.onStop(this, handleStopEditText);
+        editText.onSubmit(this, handleEditTextSubmit);
 
         sliderContainer = new View();
         sliderContainer.depth = 1;
