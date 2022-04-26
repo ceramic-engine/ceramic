@@ -448,7 +448,11 @@ class ClayEvents extends clay.Events {
 
     override function gamepadGyro(id:Int, dx:Float, dy:Float, dz:Float, timestamp:Float) {
 
-        #if !(ios || android)
+        #if (web && ceramic_native_bridge)
+
+        // Will use native bridge instead
+
+        #elseif !(ios || android)
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);

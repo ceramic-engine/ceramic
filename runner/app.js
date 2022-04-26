@@ -6,6 +6,8 @@ const fs = require('fs');
 const express = require('express')
 const detect = require('detect-port')
 
+const spawn = require('child_process').spawn;
+
 // Electron
 const electron = require('electron');
 // Module to control application life.
@@ -21,6 +23,7 @@ const appName = 'Ceramic Runner';
 let appUrl = null;
 let appFiles = null;
 let watchFile = null;
+let useNativeBridge = false;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -33,6 +36,9 @@ while (i < argv.length) {
     if (arg == '--watch') {
         i++;
         watchFile = argv[i];
+    }
+    if (arg == '--native-bridge') {
+        useNativeBridge = true;
     }
     i++;
 }
@@ -208,7 +214,7 @@ exports.listenFullscreen = function(enterFullscreen, leaveFullscreen) {
 
 // Create http server
 //
-let port = 49103
+let port = 49103;
 const server = express();
 
 // Enable CORS
@@ -234,12 +240,98 @@ detect(port, (err, _port) => {
         port = _port;
     }
 
+    console.log('Create http server (port: ' + port + ')');
+
     // Dispatch info
-    server.listen(port);
+    var expressServer = server.listen(port);
     appUrl = 'http://localhost:' + port;
-    
+
     exports.serverPort = port;
     exports.appUrl = appUrl;
+
+    if (useNativeBridge) {
+
+        // Websocket server to plug ceramic native bridge
+        //
+
+        const WebSocket = require('ws');
+
+        // Listen to another free port
+        var wsport = 49113;
+        detect(wsport, (err, _wsport) => {
+
+            if (err) {
+                console.error(err);
+            }
+
+            if (wsport != _wsport) {
+                // Other port suggested
+                wsport = _wsport;
+            }
+
+            let _ws = null;
+            const WebSocket = require('ws');
+
+            console.log('Create websocket server to connect native bridge (port: ' + wsport + ')');
+
+            const wss = new WebSocket.Server({
+                port: wsport,
+                perMessageDeflate: false
+            });
+
+            wss.on('connection', function(ws) {
+
+                console.log('Received websocket connection');
+                _ws = ws;
+
+                ws.on('message', function(raw) {
+                    if (mainWindow != null)
+                        mainWindow.webContents.send('ceramic-native-bridge', ''+raw);
+                });
+
+                ws.on('error', function(err) {
+                    _ws = null;
+                    console.error('Websocket error: ' + err);
+                });
+
+                ws.on('close', function() {
+                    _ws = null;
+                    console.log('Websocket connection closed');
+                });
+
+            });
+
+            wss.on('error', function(err) {
+                console.error('Error when creating websocket server: ' + err);
+            });
+
+            exports.ceramicNativeBridgeSend = function(message) {
+                if (_ws != null) {
+                    _ws.send(''+message);
+                }
+            };
+
+        });
+
+        // Start native bridge
+        //
+        var bridgePath = null;
+        if (process.platform == 'darwin') {
+            bridgePath = path.normalize(path.join(__dirname, '../bridge/project/mac/ceramic-native-bridge.app/Contents/MacOS/ceramic-native-bridge'));
+        }
+
+        if (bridgePath != null) {
+            var proc = spawn(bridgePath, ['' + wsport], {
+                stdio: 'inherit'
+            });
+
+            app.on('window-all-closed', function() {
+                // Kill bridge when all windows are closed
+                proc.kill();
+            });
+        }
+
+    }
 
 });
 

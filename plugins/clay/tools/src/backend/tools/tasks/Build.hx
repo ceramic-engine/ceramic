@@ -55,6 +55,7 @@ class Build extends tools.Task {
         var action = null;
         var debug = context.debug;
         var noSkip = extractArgFlag(args, 'no-skip') || context.defines.exists('ceramic_no_skip');
+        var useNativeBridge = extractArgFlag(args, 'native-bridge') || context.defines.exists('ceramic_native_bridge');
         var archs = extractArgValue(args, 'archs');
         var didSkipCompilation = false;
 
@@ -323,6 +324,9 @@ class Build extends tools.Task {
                 if (hotReloadPort != null) {
                     taskArgs.push('--hot-reload-port');
                     taskArgs.push(hotReloadPort);
+                }
+                if (useNativeBridge) {
+                    taskArgs.push('--native-bridge');
                 }
                 // if (watch) taskArgs.push('--watch');
                 task.run(cwd, taskArgs);

@@ -39,6 +39,7 @@ class Web extends tools.Task {
         var doMinify = extractArgFlag(args, 'minify');
         var doHotReload = extractArgFlag(args, 'hot-reload');
         var electronErrors = extractArgFlag(args, 'electron-errors');
+        var useNativeBridge = extractArgFlag(args, 'native-bridge');
         var didSkipCompilation = extractArgFlag(args, 'did-skip-compilation');
 
         // Check that project didn't change name
@@ -208,6 +209,10 @@ class Web extends tools.Task {
             if (doWatch) {
                 cmdArgs.push('--watch');
                 cmdArgs.push(jsName + '.js');
+            }
+
+            if (useNativeBridge) {
+                cmdArgs.push('--native-bridge');
             }
 
             cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
