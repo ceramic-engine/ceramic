@@ -1,0 +1,25 @@
+app:
+    package: ceramic.ceramic-native-bridge
+    name: ceramic-native-bridge
+    displayName: ceramic-native-bridge
+    author: Jeremy Faivre
+    version: '1.0'
+
+    plugins:
+        #- arcade
+        #- nape
+        #- ui
+        #- elements
+
+    libs:
+        - hxWebSockets: git:https://github.com/ceramic-engine/hxWebSockets.git
+        #- somelib
+        #- somelib: someversion
+        #- somelib: git:https://github.com/somelibauthor/somelib.git
+
+    defines:
+        - ceramic_no_skip
+        - clay_sdl_headless
+        #- some_define
+        #- some_define: 'some value'
+

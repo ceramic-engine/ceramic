@@ -1,0 +1,16 @@
+{
+    "window.title": "${activeEditorShort} — ceramic-native-bridge",
+    "haxe.configurations": [
+        [
+            "completion.hxml"
+        ]
+    ],
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "**/out": true
+    },
+    "haxe.executable": "../tools/haxe",
+    "haxelib.executable": "../tools/haxelib"
+}

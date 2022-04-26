@@ -1,0 +1,6 @@
+.DS_Store
+.haxelib
+/out
+/completion.hxml
+node_modules
+project
