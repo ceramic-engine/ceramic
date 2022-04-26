@@ -316,19 +316,62 @@ detect(port, (err, _port) => {
         // Start native bridge
         //
         var bridgePath = null;
+        var platform = null;
         if (process.platform == 'darwin') {
             bridgePath = path.normalize(path.join(__dirname, '../bridge/project/mac/ceramic-native-bridge.app/Contents/MacOS/ceramic-native-bridge'));
+            platform = 'mac';
+        }
+        else if (process.platform == 'win32') {
+            bridgePath = path.normalize(path.join(__dirname, '../bridge/project/windows/ceramic-native-bridge.exe'));
+            platform = 'windows';
+        }
+        else {
+            bridgePath = path.normalize(path.join(__dirname, '../bridge/project/linux/ceramic-native-bridge'));
+            platform = 'linux';
         }
 
         if (bridgePath != null) {
-            var proc = spawn(bridgePath, ['' + wsport], {
-                stdio: 'inherit'
-            });
 
-            app.on('window-all-closed', function() {
-                // Kill bridge when all windows are closed
-                proc.kill();
-            });
+            console.log('bridge path ' + bridgePath);
+
+            function runBridge() {
+
+                var proc = spawn(bridgePath, ['' + wsport], {
+                    stdio: 'inherit'
+                });
+
+                app.on('window-all-closed', function() {
+                    // Kill bridge when all windows are closed
+                    proc.kill();
+                });
+            }
+
+            if (fs.existsSync(bridgePath)) {
+                runBridge();
+            }
+            else {
+                // Need to build native bridge first?
+                console.log('Native bridge not built yet. Building...');
+                var nodeCmd = path.normalize(path.join(__dirname, '../tools/node'));
+                if (process.platform == 'win32') {
+                    nodeCmd += '.cmd';
+                }
+                var ceramicPath = path.normalize(path.join(__dirname, '../tools/ceramic'));
+                var bridgeProjectPath = path.normalize(path.join(__dirname, '../bridge'));
+                var buildProc = spawn(nodeCmd, [ceramicPath, 'clay', 'build', platform, '--setup', '--assets'], {
+                    stdio: 'inherit',
+                    cwd: bridgeProjectPath
+                });
+
+                buildProc.on('close', function(code) {
+                    if (code == 0) {
+                        if (fs.existsSync(bridgePath)) {
+                            console.log('Finished building bridge, run it...')
+                            runBridge();
+                        }
+                    }
+                });
+            }
         }
 
     }
