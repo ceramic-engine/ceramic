@@ -26,6 +26,7 @@ class Input implements tracker.Events implements spec.Input {
     @event function gamepadAxis(gamepadId:Int, axisId:Int, value:Float);
     @event function gamepadDown(gamepadId:Int, buttonId:Int);
     @event function gamepadUp(gamepadId:Int, buttonId:Int);
+    @event function gamepadGyro(gamepadId:Int, dx:Float, dy:Float, dz:Float);
     @event function gamepadEnable(gamepadId:Int, name:String);
     @event function gamepadDisable(gamepadId:Int);
 

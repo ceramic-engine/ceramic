@@ -3,6 +3,7 @@ package backend;
 import ceramic.IntBoolMap;
 import ceramic.IntFloatMap;
 import ceramic.IntIntMap;
+import ceramic.IntMap;
 import clay.Clay;
 import clay.KeyCode;
 import clay.ScanCode;
@@ -58,6 +59,10 @@ class ClayEvents extends clay.Events {
 
     #if !ceramic_no_axis_round
     var gamepadAxisValues:IntFloatMap = new IntFloatMap();
+    #end
+
+    #if !ceramic_no_gyro_round
+    var gamepadGyroValues:IntMap<Array<Float>> = new IntMap();
     #end
 
     var handleReady:()->Void;
@@ -436,6 +441,26 @@ class ClayEvents extends clay.Events {
             gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 0);
             backend.input.emitGamepadUp(id, buttonId);
         }
+
+        #end
+
+    }
+
+    override function gamepadGyro(id:Int, dx:Float, dy:Float, dz:Float, timestamp:Float) {
+
+        #if !(ios || android)
+
+        if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
+            activeGamepads.set(id, true);
+            for (i in 0...GAMEPAD_STORAGE_SIZE) {
+                gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + i, 0);
+            }
+            var name = Clay.app.runtime.getGamepadName(id);
+            _configureGamepad(id, name);
+            backend.input.emitGamepadEnable(id, name);
+        }
+
+        backend.input.emitGamepadGyro(id, dx, dy, dz);
 
         #end
 

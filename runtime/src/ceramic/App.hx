@@ -1090,6 +1090,9 @@ class App extends Entity {
         backend.input.onGamepadUp(this, function(gamepadId, buttonId) {
             beginUpdateCallbacks.push(function() input.emitGamepadUp(gamepadId, buttonId));
         });
+        backend.input.onGamepadGyro(this, function(gamepadId, dx, dy, dz) {
+            beginUpdateCallbacks.push(function() input.emitGamepadGyro(gamepadId, dx, dy, dz));
+        });
         backend.input.onGamepadAxis(this, function(gamepadId, axisId, value) {
             beginUpdateCallbacks.push(function() input.emitGamepadAxis(gamepadId, axisId, value));
         });
@@ -1169,6 +1172,9 @@ class App extends Entity {
 
             // Reset screen deltas
             screen.resetDeltas();
+
+            // Reset input deltas
+            input.resetDeltas();
 
             // Run 'begin update' callbacks, like touch/mouse/key events etc...
             if (beginUpdateCallbacks.length > 0) {

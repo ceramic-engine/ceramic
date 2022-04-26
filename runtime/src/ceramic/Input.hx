@@ -24,6 +24,7 @@ class Input extends Entity {
     @event function gamepadAxis(gamepadId:Int, axis:GamepadAxis, value:Float);
     @event function gamepadDown(gamepadId:Int, button:GamepadButton);
     @event function gamepadUp(gamepadId:Int, button:GamepadButton);
+    @event function gamepadGyro(gamepadId:Int, dx:Float, dy:Float, dz:Float);
     @event function gamepadEnable(gamepadId:Int, name:String);
     @event function gamepadDisable(gamepadId:Int);
 
@@ -35,11 +36,29 @@ class Input extends Entity {
 
     var gamepadAxisValues:IntFloatMap = new IntFloatMap(16, 0.5, false);
 
+    var gamepadGyroDeltas:IntMap<Array<Float>> = new IntMap();
+
+    var gamepadGyroKeys:Array<Int> = [];
+
     public var activeGamepads:ReadOnlyArray<Int> = [];
 
     private function new() {
 
         super();
+
+    }
+
+    function resetDeltas() {
+
+        while (gamepadGyroKeys.length > 0) {
+            var key = gamepadGyroKeys.pop();
+            var deltas = gamepadGyroDeltas.get(key);
+            if (deltas != null) {
+                deltas[0] = 0;
+                deltas[1] = 0;
+                deltas[2] = 0;
+            }
+        }
 
     }
 
@@ -313,6 +332,23 @@ class Input extends Entity {
 
     }
 
+    function willEmitGamepadGyro(gamepadId:Int, dx:Float, dy:Float, dz:Float):Void {
+
+        var key = gamepadId;
+        var deltas = gamepadGyroDeltas.get(key);
+        if (deltas == null) {
+            deltas = [0, 0, 0];
+            gamepadGyroDeltas.set(key, deltas);
+        }
+        if (gamepadGyroKeys.indexOf(key) == -1) {
+            gamepadGyroKeys.push(key);
+        }
+        deltas[0] += dx;
+        deltas[1] += dy;
+        deltas[2] += dz;
+
+    }
+
     public extern inline overload function gamepadPressed(gamepadId:Int, button:GamepadButton):Bool {
 
         return #if plugin_elements !_elementsImFocused() && #end _gamepadPressed(gamepadId, button);
@@ -381,6 +417,39 @@ class Input extends Entity {
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + axis;
         return gamepadAxisValues.get(key);
+
+    }
+
+    public function gamepadGyroDeltaX(gamepadId:Int):Float {
+
+        var key = gamepadId;
+        var deltas = gamepadGyroDeltas.get(key);
+        if (deltas != null) {
+            return deltas[0];
+        }
+        return 0;
+
+    }
+
+    public function gamepadGyroDeltaY(gamepadId:Int):Float {
+
+        var key = gamepadId;
+        var deltas = gamepadGyroDeltas.get(key);
+        if (deltas != null) {
+            return deltas[1];
+        }
+        return 0;
+
+    }
+
+    public function gamepadGyroDeltaZ(gamepadId:Int):Float {
+
+        var key = gamepadId;
+        var deltas = gamepadGyroDeltas.get(key);
+        if (deltas != null) {
+            return deltas[2];
+        }
+        return 0;
 
     }
 
