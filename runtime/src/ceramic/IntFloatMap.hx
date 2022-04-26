@@ -78,7 +78,7 @@ class IntFloatMap {
             // New key, use next free index
             var valuesLen = values.length;
             if (nextFreeIndex >= valuesLen) {
-                resizeValues(values.length * 2);
+                resizeValues(valuesLen * 2);
             }
             values.set(nextFreeIndex, value);
             keys.set(key, nextFreeIndex + RESERVED_GAP);
@@ -142,6 +142,9 @@ class IntFloatMap {
         values = new Vector<Float>(targetSize);
         for (i in 0...prevValues.length) {
             values.set(i, prevValues.get(i));
+        }
+        for (i in prevValues.length...targetSize) {
+            values.set(i, FREE_VALUE);
         }
 
     }
