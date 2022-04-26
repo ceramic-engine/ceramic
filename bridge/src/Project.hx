@@ -14,8 +14,8 @@ class Project extends Entity {
         settings.title = 'Ceramic Native Bridge';
         settings.antialiasing = 0;
         settings.background = Color.BLACK;
-        settings.targetWidth = 640;
-        settings.targetHeight = 480;
+        settings.targetWidth = 64;
+        settings.targetHeight = 48;
         settings.scaling = FIT;
         settings.resizable = false;
 

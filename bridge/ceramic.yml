@@ -1,7 +1,7 @@
 app:
     package: ceramic.ceramic-native-bridge
     name: ceramic-native-bridge
-    displayName: ceramic-native-bridge
+    displayName: Ceramic Native Bridge
     author: Jeremy Faivre
     version: '1.0'
 
