@@ -47,7 +47,7 @@
     "terser": "5.7.1",
     "to-ico": "github:ceramic-engine/to-ico",
     "tree-kill": "1.2.2",
-    "ws": "7.2.3",
+    "ws": "7.4.6",
     "xcode": "2.0.0",
     "yamljs": "0.3.0"
   }
