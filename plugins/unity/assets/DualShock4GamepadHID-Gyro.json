@@ -1,0 +1,102 @@
+{
+    "name": "DualShock4GamepadHID-Gyro",
+    "extend": "DualShock4GamepadHID",
+    "controls": [
+        {
+          "name": "gyro X 13",
+          "layout": "Button",
+          "offset": 13,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "gyro X 14",
+          "layout": "Button",
+          "offset": 14,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "gyro Y 15",
+          "layout": "Button",
+          "offset": 15,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "gyro Y 16",
+          "layout": "Button",
+          "offset": 16,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "gyro Z 17",
+          "layout": "Button",
+          "offset": 17,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "gyro Z 18",
+          "layout": "Button",
+          "offset": 18,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl X 19",
+          "layout": "Button",
+          "offset": 19,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl X 20",
+          "layout": "Button",
+          "offset": 20,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Y 21",
+          "layout": "Button",
+          "offset": 21,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Y 22",
+          "layout": "Button",
+          "offset": 22,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Z 23",
+          "layout": "Button",
+          "offset": 23,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Z 24",
+          "layout": "Button",
+          "offset": 24,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        }
+    ]
+}

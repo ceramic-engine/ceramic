@@ -4,10 +4,13 @@ import ceramic.IntIntMap;
 import ceramic.IntMap;
 import ceramic.Key;
 import ceramic.KeyCode;
+import ceramic.Path;
 import ceramic.ScanCode;
 import ceramic.Shortcuts.*;
+import unityengine.TextAsset;
 import unityengine.inputsystem.Gamepad;
 import unityengine.inputsystem.Keyboard;
+import unityengine.inputsystem.controls.ButtonControl;
 import unityengine.inputsystem.controls.KeyControl;
 
 using ceramic.Extensions;
@@ -33,6 +36,7 @@ class Input implements tracker.Events implements spec.Input {
     public function new() {
 
         initKeyCodesMapping();
+        registerInputSystemOverrides();
 
     }
 
@@ -41,6 +45,25 @@ class Input implements tracker.Events implements spec.Input {
 
         updateKeyboardInput();
         updateGamepadInput();
+
+    }
+
+/// Input system overrides
+
+    function registerInputSystemOverrides() {
+
+        // Read layout from JSON file
+        var layoutPath:String = Path.join([ceramic.App.app.settings.assetsPath, ceramic.Assets.realAssetPath('DualShock4GamepadHID-Gyro.json')]);
+        var layoutFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', layoutPath);
+        if (layoutFile != null) {
+
+            var layout = '' + layoutFile.text;
+            untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', layoutFile);
+            layoutFile = null;
+
+            // Overwrite the default layout
+            untyped __cs__('UnityEngine.InputSystem.InputSystem.RegisterLayoutOverride({0})', layout);
+        }
 
     }
 
@@ -335,6 +358,8 @@ class Input implements tracker.Events implements spec.Input {
 
     var gamepadAxis:IntMap<Single> = new IntMap(16, 0.5, false);
 
+    var gamepadDualShockGyroControls:IntMap<Array<ButtonControl>> = new IntMap(16, 0.5, false);
+
     var unusedGamepads:Array<Gamepad> = [];
 
     function updateGamepadInput() {
@@ -361,6 +386,27 @@ class Input implements tracker.Events implements spec.Input {
                     gamepads.push(gamepad);
                     index = gamepads.length - 1;
                 }
+
+                var isDualShock:Bool = untyped __cs__('({0} is UnityEngine.InputSystem.DualShock.DualShockGamepad)', gamepad);
+                if (isDualShock) {
+                    var gyroControls:Array<ButtonControl> = [];
+                    gyroControls[0] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 13")', gamepad);
+                    if (gyroControls[0] != null) {
+                        gyroControls[1] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 14")', gamepad);
+                        gyroControls[2] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 15")', gamepad);
+                        gyroControls[3] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 16")', gamepad);
+                        gyroControls[4] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 17")', gamepad);
+                        gyroControls[5] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 18")', gamepad);
+                        gamepadDualShockGyroControls.set(index, gyroControls);
+                    }
+                    else {
+                        gamepadDualShockGyroControls.remove(index);
+                    }
+                }
+                else {
+                    gamepadDualShockGyroControls.remove(index);
+                }
+
                 emitGamepadEnable(index, gamepad.displayName);
                 for (n in 0...GAMEPAD_STORAGE_SIZE) {
                     gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + n, 0);
@@ -398,6 +444,14 @@ class Input implements tracker.Events implements spec.Input {
             updateGamepadAxis(index, 2, gamepad.rightStick.x.ReadValue());
             updateGamepadAxis(index, 3, gamepad.rightStick.y.ReadValue() * -1);
 
+            var gyroControls = gamepadDualShockGyroControls.get(index);
+            if (gyroControls != null) {
+                var gyroX = readDualShockGyro(gyroControls[0], gyroControls[1]);
+                var gyroY = readDualShockGyro(gyroControls[2], gyroControls[3]);
+                var gyroZ = readDualShockGyro(gyroControls[4], gyroControls[5]);
+                emitGamepadGyro(index, gyroX, gyroY, gyroZ);
+            }
+
         }
 
         for (i in 0...unusedGamepads.length) {
@@ -406,6 +460,7 @@ class Input implements tracker.Events implements spec.Input {
                 var index = gamepads.indexOf(gamepad);
                 if (index != -1) {
                     gamepads.unsafeSet(index, null);
+                    gamepadDualShockGyroControls.remove(index);
                     for (n in 0...GAMEPAD_STORAGE_SIZE) {
                         if (gamepadPressed.get(index * GAMEPAD_STORAGE_SIZE + n) == 1) {
                             gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + n, 0);
@@ -446,6 +501,20 @@ class Input implements tracker.Events implements spec.Input {
             gamepadAxis.set(index * 5 + axis, value);
             emitGamepadAxis(index, axis, value);
         }
+
+    }
+
+    function readDualShockGyro(gyroControl0:ButtonControl, gyroControl1:ButtonControl):Float {
+
+        untyped __cs__('float gyro0 = {0}.ReadValue()', gyroControl0);
+        untyped __cs__('float gyro1 = {0}.ReadValue()', gyroControl1);
+        untyped __cs__('byte[] gyroBytes = {0, 0}');
+        untyped __cs__('gyroBytes[0] = (byte)(int)(gyro0 * 0xFF)');
+        untyped __cs__('gyroBytes[1] = (byte)(int)(gyro1 * 0xFF)');
+        untyped __cs__('if (!System.BitConverter.IsLittleEndian) System.Array.Reverse(gyroBytes)');
+
+        var gyro:Int = untyped __cs__('(int)System.BitConverter.ToInt16(gyroBytes, 0)');
+        return gyro * 360.0 / 2200000.0;
 
     }
 
