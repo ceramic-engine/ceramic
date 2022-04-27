@@ -464,7 +464,13 @@ class ClayEvents extends clay.Events {
             backend.input.emitGamepadEnable(id, name);
         }
 
-        backend.input.emitGamepadGyro(id, dx, dy, dz);
+        var scale = 360.0 / 1550.0;
+        backend.input.emitGamepadGyro(
+            id,
+            dx * scale,
+            dy * scale,
+            dz * scale
+        );
 
         #end
 
