@@ -7,7 +7,11 @@ class Main {
 
     public static var project:Project = null;
 
-    static var _lastUpdateTime:Float = -1;
+    static var _lastUpdateTime:Float = 0;
+
+    #if unity_urp
+    static var _lastRegularUpdateTime:Float = 0;
+    #end
 
     static var _hasCriticalError:Bool = false;
 
@@ -47,8 +51,12 @@ class Main {
         if (_hasCriticalError)
             return;
 
+        var time:Float = Sys.cpuTime();
+        var delta = (time - _lastRegularUpdateTime);
+        _lastRegularUpdateTime = time;
+
         ceramic.App.app.backend.screen.update();
-        ceramic.App.app.backend.input.update();
+        ceramic.App.app.backend.input.update(delta);
 
     }
 
@@ -78,7 +86,7 @@ class Main {
 
             #if !unity_urp
             ceramic.App.app.backend.screen.update();
-            ceramic.App.app.backend.input.update();
+            ceramic.App.app.backend.input.update(delta);
             #end
 
             // Update

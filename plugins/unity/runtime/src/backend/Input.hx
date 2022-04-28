@@ -41,10 +41,10 @@ class Input implements tracker.Events implements spec.Input {
     }
 
     @:allow(backend.Backend)
-    inline function update():Void {
+    inline function update(delta:Float):Void {
 
         updateKeyboardInput();
-        updateGamepadInput();
+        updateGamepadInput(delta);
 
     }
 
@@ -52,17 +52,19 @@ class Input implements tracker.Events implements spec.Input {
 
     function registerInputSystemOverrides() {
 
-        // Read layout from JSON file
-        var layoutPath:String = Path.join([ceramic.App.app.settings.assetsPath, ceramic.Assets.realAssetPath('DualShock4GamepadHID-Gyro.json')]);
-        var layoutFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', layoutPath);
-        if (layoutFile != null) {
+        for (name in ['DualShock4GamepadHID-Gyro', 'DualSenseGamepadHID-Gyro']) {
+            // Read layout from JSON file
+            var layoutPath:String = Path.join([ceramic.App.app.settings.assetsPath, ceramic.Assets.realAssetPath('$name.json')]);
+            var layoutFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', layoutPath);
+            if (layoutFile != null) {
 
-            var layout = '' + layoutFile.text;
-            untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', layoutFile);
-            layoutFile = null;
+                var layout = '' + layoutFile.text;
+                untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', layoutFile);
+                layoutFile = null;
 
-            // Overwrite the default layout
-            untyped __cs__('UnityEngine.InputSystem.InputSystem.RegisterLayoutOverride({0})', layout);
+                // Overwrite the default layout
+                untyped __cs__('UnityEngine.InputSystem.InputSystem.RegisterLayoutOverride({0})', layout);
+            }
         }
 
     }
@@ -362,7 +364,7 @@ class Input implements tracker.Events implements spec.Input {
 
     var unusedGamepads:Array<Gamepad> = [];
 
-    function updateGamepadInput() {
+    function updateGamepadInput(delta:Float) {
 
         var numPads = Gamepad.all.Count;
 
@@ -390,13 +392,13 @@ class Input implements tracker.Events implements spec.Input {
                 var isDualShock:Bool = untyped __cs__('({0} is UnityEngine.InputSystem.DualShock.DualShockGamepad)', gamepad);
                 if (isDualShock) {
                     var gyroControls:Array<ButtonControl> = [];
-                    gyroControls[0] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 13")', gamepad);
+                    gyroControls[0] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 0")', gamepad);
                     if (gyroControls[0] != null) {
-                        gyroControls[1] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 14")', gamepad);
-                        gyroControls[2] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 15")', gamepad);
-                        gyroControls[3] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 16")', gamepad);
-                        gyroControls[4] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 17")', gamepad);
-                        gyroControls[5] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 18")', gamepad);
+                        gyroControls[1] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro X 1")', gamepad);
+                        gyroControls[2] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 0")', gamepad);
+                        gyroControls[3] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Y 1")', gamepad);
+                        gyroControls[4] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 0")', gamepad);
+                        gyroControls[5] = untyped __cs__('{0}.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gyro Z 1")', gamepad);
                         gamepadDualShockGyroControls.set(index, gyroControls);
                     }
                     else {
@@ -446,9 +448,9 @@ class Input implements tracker.Events implements spec.Input {
 
             var gyroControls = gamepadDualShockGyroControls.get(index);
             if (gyroControls != null) {
-                var gyroX = readDualShockGyro(gyroControls[0], gyroControls[1]);
-                var gyroY = readDualShockGyro(gyroControls[2], gyroControls[3]);
-                var gyroZ = readDualShockGyro(gyroControls[4], gyroControls[5]);
+                var gyroX = readDualShockGyro(gyroControls[0], gyroControls[1]) * delta;
+                var gyroY = readDualShockGyro(gyroControls[2], gyroControls[3]) * delta;
+                var gyroZ = readDualShockGyro(gyroControls[4], gyroControls[5]) * delta;
                 emitGamepadGyro(index, gyroX, gyroY, gyroZ);
             }
 
@@ -514,7 +516,7 @@ class Input implements tracker.Events implements spec.Input {
         untyped __cs__('if (!System.BitConverter.IsLittleEndian) System.Array.Reverse(gyroBytes)');
 
         var gyro:Int = untyped __cs__('(int)System.BitConverter.ToInt16(gyroBytes, 0)');
-        return gyro * 360.0 / 2200000.0;
+        return gyro * 360.0 / 6000.0; // Hardcoded calibration, there's probably a better way...
 
     }
 

@@ -1,33 +1,9 @@
 {
-    "name": "DualShock4GamepadHID-Gyro",
-    "extend": "DualShock4GamepadHID",
+    "name": "DualSenseGamepadHID-Gyro",
+    "extend": "DualSenseGamepadHID",
     "controls": [
         {
           "name": "gyro X 0",
-          "layout": "Button",
-          "offset": 13,
-          "bit": 4294967295,
-          "sizeInBits": 0,
-          "format": "BYTE"
-        },
-        {
-          "name": "gyro X 1",
-          "layout": "Button",
-          "offset": 14,
-          "bit": 4294967295,
-          "sizeInBits": 0,
-          "format": "BYTE"
-        },
-        {
-          "name": "gyro Y 0",
-          "layout": "Button",
-          "offset": 15,
-          "bit": 4294967295,
-          "sizeInBits": 0,
-          "format": "BYTE"
-        },
-        {
-          "name": "gyro Y 1",
           "layout": "Button",
           "offset": 16,
           "bit": 4294967295,
@@ -35,7 +11,7 @@
           "format": "BYTE"
         },
         {
-          "name": "gyro Z 0",
+          "name": "gyro X 1",
           "layout": "Button",
           "offset": 17,
           "bit": 4294967295,
@@ -43,7 +19,7 @@
           "format": "BYTE"
         },
         {
-          "name": "gyro Z 1",
+          "name": "gyro Y 0",
           "layout": "Button",
           "offset": 18,
           "bit": 4294967295,
@@ -51,7 +27,7 @@
           "format": "BYTE"
         },
         {
-          "name": "accl X 0",
+          "name": "gyro Y 1",
           "layout": "Button",
           "offset": 19,
           "bit": 4294967295,
@@ -59,7 +35,7 @@
           "format": "BYTE"
         },
         {
-          "name": "accl X 1",
+          "name": "gyro Z 0",
           "layout": "Button",
           "offset": 20,
           "bit": 4294967295,
@@ -67,7 +43,7 @@
           "format": "BYTE"
         },
         {
-          "name": "accl Y 0",
+          "name": "gyro Z 1",
           "layout": "Button",
           "offset": 21,
           "bit": 4294967295,
@@ -75,7 +51,7 @@
           "format": "BYTE"
         },
         {
-          "name": "accl Y 1",
+          "name": "accl X 0",
           "layout": "Button",
           "offset": 22,
           "bit": 4294967295,
@@ -83,7 +59,7 @@
           "format": "BYTE"
         },
         {
-          "name": "accl Z 0",
+          "name": "accl X 1",
           "layout": "Button",
           "offset": 23,
           "bit": 4294967295,
@@ -91,9 +67,33 @@
           "format": "BYTE"
         },
         {
-          "name": "accl Z 1",
+          "name": "accl Y 0",
           "layout": "Button",
           "offset": 24,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Y 1",
+          "layout": "Button",
+          "offset": 25,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Z 0",
+          "layout": "Button",
+          "offset": 26,
+          "bit": 4294967295,
+          "sizeInBits": 0,
+          "format": "BYTE"
+        },
+        {
+          "name": "accl Z 1",
+          "layout": "Button",
+          "offset": 27,
           "bit": 4294967295,
           "sizeInBits": 0,
           "format": "BYTE"
