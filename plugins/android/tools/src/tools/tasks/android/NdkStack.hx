@@ -1,14 +1,14 @@
 package tools.tasks.android;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.AndroidProject;
-import haxe.io.Path;
 import haxe.Json;
-import sys.FileSystem;
-import sys.io.File;
+import haxe.io.Path;
 import js.node.ChildProcess;
 import npm.StreamSplitter;
+import sys.FileSystem;
+import sys.io.File;
+import tools.AndroidProject;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -49,13 +49,13 @@ class NdkStack extends tools.Task {
 
         // Extract ndk directory
         var localProperties = File.getContent(androidLocalPropertiesFile);
-        var ndkDir = null;
-        var sdkDir = null;
+        var ndkDir = extractArgValue(args, 'ndk-dir');
+        var sdkDir = extractArgValue(args, 'sdk-dir');
         for (line in localProperties.split("\n")) {
-            if (line.trim().startsWith('ndk.dir=')) {
+            if (ndkDir == null && line.trim().startsWith('ndk.dir=')) {
                 ndkDir = line.trim().substring('ndk.dir='.length).trim();
             }
-            if (line.trim().startsWith('sdk.dir=')) {
+            if (sdkDir == null && line.trim().startsWith('sdk.dir=')) {
                 sdkDir = line.trim().substring('sdk.dir='.length).trim();
             }
         }
@@ -77,7 +77,7 @@ class NdkStack extends tools.Task {
             'armeabi-v7a' => true,
             'x86' => true
         ];
-        
+
         try {
             var res = command(adbPath, ['shell', 'getprop', 'ro.product.cpu.abilist'], { mute: true });
             var allAbis = res.stdout.trim().split(',');
