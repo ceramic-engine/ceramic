@@ -66,12 +66,14 @@ class AndroidProject {
                 androidProjectPath
             );
 
+            var packageName = Reflect.field(project.app, 'package').replace('-', '');
+
             // Replace in names
             print('Perform replaces in names');
             var replacementsInNames = new Map<String,String>();
-            replacementsInNames['mycompany.MyApp'] = Reflect.field(project.app, 'package');
-            replacementsInNames['mycompany.myapp'] = Reflect.field(project.app, 'package').toLowerCase();
-            replacementsInNames['mycompany/myapp'] = Reflect.field(project.app, 'package').toLowerCase().replace('.','/');
+            replacementsInNames['mycompany.MyApp'] = packageName;
+            replacementsInNames['mycompany.myapp'] = packageName.toLowerCase();
+            replacementsInNames['mycompany/myapp'] = packageName.toLowerCase().replace('.','/');
             replacementsInNames['MyApp'] = project.app.name;
             Templates.replaceInNames(androidProjectPath, replacementsInNames);
 
@@ -84,8 +86,8 @@ class AndroidProject {
             else if (project.app.author != null) {
                 replacementsInContents['My Company'] = project.app.author;
             }
-            replacementsInContents['mycompany.MyApp'] = Reflect.field(project.app, 'package');
-            replacementsInContents['mycompany.myapp'] = Reflect.field(project.app, 'package').toLowerCase();
+            replacementsInContents['mycompany.MyApp'] = packageName;
+            replacementsInContents['mycompany.myapp'] = packageName.toLowerCase();
             replacementsInContents['MyApp'] = project.app.name;
             replacementsInContents['My App'] = project.app.displayName;
             Templates.replaceInContents(androidProjectPath, replacementsInContents);
@@ -308,7 +310,7 @@ class AndroidProject {
         // Classes included in project root's java dir
         javaSearchPaths.push(androidProjectPath + '/app/src/main/java');
         // Classes included in project main java package dir
-        javaSearchPaths.push(androidProjectPath + '/app/src/main/java/' + Reflect.field(project.app, 'package').toLowerCase().replace('.','/'));
+        javaSearchPaths.push(androidProjectPath + '/app/src/main/java/' + Reflect.field(project.app, 'package').replace('-','').toLowerCase().replace('.','/'));
 
         return javaSearchPaths;
 
