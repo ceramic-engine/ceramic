@@ -89,3 +89,6 @@
 	path = git/gif
 	url = https://github.com/ceramic-engine/gif.git
 	branch = master
+[submodule "git/hxWebSockets"]
+	path = git/hxWebSockets
+	url = https://github.com/ceramic-engine/hxWebSockets.git

@@ -12,7 +12,7 @@ app:
         #- elements
 
     libs:
-        - hxWebSockets: git:https://github.com/ceramic-engine/hxWebSockets.git
+        - hxWebSockets: path:../git/hxWebSockets
         #- somelib
         #- somelib: someversion
         #- somelib: git:https://github.com/somelibauthor/somelib.git
