@@ -18,6 +18,11 @@ class Project extends Entity {
         settings.targetHeight = 48;
         settings.scaling = FIT;
         settings.resizable = false;
+        settings.targetFps = 60;
+
+        #if (linc_sdl && cpp)
+        sdl.SDL.setHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
+        #end
 
         app.onceReady(this, ready);
 
