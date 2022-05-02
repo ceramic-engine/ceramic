@@ -3,7 +3,9 @@ package;
 import ceramic.Color;
 import ceramic.Entity;
 import ceramic.InitSettings;
+import ceramic.IntMap;
 import ceramic.Timer;
+import rtmidi.RtMidiOut;
 
 class Project extends Entity {
 
@@ -42,6 +44,7 @@ class Project extends Entity {
         setupHeartBeat();
 
         bindGamepadsGyro();
+        bindMidi();
 
         #if debug
         trace('Port: $port');
@@ -79,6 +82,36 @@ class Project extends Entity {
         #if debug
         trace('received message: $message');
         #end
+
+        if (message != null) {
+            var index = message.indexOf(' ');
+            if (index != -1) {
+                var event = message.substring(0, index);
+                var data = message.substring(index + 1);
+                switch event {
+
+                    case 'midiOutInit':
+                        var spaceIndex = data.indexOf(' ');
+                        var index = Std.parseInt(data.substring(0, spaceIndex));
+                        var name = data.substring(spaceIndex + 1);
+                        midiOutInit(index, name);
+
+                    case 'midiOutSend':
+                        var parts = data.split(' ');
+                        var index = Std.parseInt(parts[0]);
+                        var a = Std.parseInt(parts[1]);
+                        var b = Std.parseInt(parts[2]);
+                        var c = Std.parseInt(parts[3]);
+                        midiOutSend(index, a, b, c);
+
+                    case 'midiOutDestroy':
+                        var index = Std.parseInt(data);
+                        midiOutDestroy(index);
+
+                    default:
+                }
+            }
+        }
 
     }
 
@@ -162,12 +195,77 @@ class Project extends Entity {
 
     }
 
+/// Gamepad Gyro
+
     function bindGamepadsGyro() {
 
         input.onGamepadGyro(this, function(gamepadId, dx, dy, dz) {
             send('gamepadGyro $gamepadId $dx $dy $dz');
         });
 
+    }
+
+/// Midi
+
+    var midiOuts:IntMap<MidiOutRef> = new IntMap();
+
+    var midiMessage:haxe.io.Bytes = haxe.io.Bytes.alloc(2);
+
+    function bindMidi() {
+
+        // TODO
+
+    }
+
+    function midiOutInit(index:Int, name:String) {
+
+        var rtMidiOut = new RtMidiOut();
+        rtMidiOut.openVirtualPort(name);
+
+        var existing = midiOuts.get(index);
+        if (existing != null) {
+            existing.ref.destroy();
+        }
+
+        midiOuts.set(index, new MidiOutRef(rtMidiOut));
+
+    }
+
+    function midiOutSend(index:Int, a:Int, b:Int, c:Int) {
+
+        var rtMidiOut = midiOuts.get(index);
+
+        if (rtMidiOut != null) {
+
+            midiMessage.set(0, a);
+            midiMessage.set(1, b);
+            midiMessage.set(2, c);
+
+            rtMidiOut.ref.sendMessage(midiMessage.getData());
+        }
+
+    }
+
+    function midiOutDestroy(index:Int) {
+
+        var rtMidiOut = midiOuts.get(index);
+
+        if (rtMidiOut != null) {
+            rtMidiOut.ref.destroy();
+
+            midiOuts.remove(index);
+        }
+
+    }
+
+}
+
+class MidiOutRef {
+
+    public var ref(default, null):RtMidiOut;
+
+    public function new(ref:RtMidiOut) {
+        this.ref = ref;
     }
 
 }

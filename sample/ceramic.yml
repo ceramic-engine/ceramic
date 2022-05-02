@@ -24,6 +24,7 @@ app:
         - elements
         - ui
         - electron
+        - midi
 
     libs:
         - spine-hx
