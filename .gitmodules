@@ -92,3 +92,6 @@
 [submodule "git/hxWebSockets"]
 	path = git/hxWebSockets
 	url = https://github.com/ceramic-engine/hxWebSockets.git
+[submodule "git/linc_rtmidi"]
+	path = git/linc_rtmidi
+	url = https://github.com/ceramic-engine/linc_rtmidi.git
