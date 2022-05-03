@@ -357,18 +357,17 @@ class ClayEvents extends clay.Events {
                 }
             }
         }
-        else {
-            #if !ceramic_no_axis_round
-            var prevValue = gamepadAxisValues.get(id * GAMEPAD_STORAGE_SIZE + axisId);
-            var newValue = Math.round(value * 100.0) / 100.0;
-            if (Math.abs(prevValue - newValue) > 0.01) {
-                gamepadAxisValues.set(id * GAMEPAD_STORAGE_SIZE + axisId, newValue);
-                backend.input.emitGamepadAxis(id, axisId, newValue);
-            }
-            #else
-            backend.input.emitGamepadAxis(id, axisId, event.value);
-            #end
+
+        #if !ceramic_no_axis_round
+        var prevValue = gamepadAxisValues.get(id * GAMEPAD_STORAGE_SIZE + axisId);
+        var newValue = Math.round(value * 100.0) / 100.0;
+        if (Math.abs(prevValue - newValue) > 0.01) {
+            gamepadAxisValues.set(id * GAMEPAD_STORAGE_SIZE + axisId, newValue);
+            backend.input.emitGamepadAxis(id, axisId, newValue);
         }
+        #else
+        backend.input.emitGamepadAxis(id, axisId, event.value);
+        #end
 
         #end
 
