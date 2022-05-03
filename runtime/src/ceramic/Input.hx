@@ -40,6 +40,8 @@ class Input extends Entity {
 
     var gamepadGyroKeys:Array<Int> = [];
 
+    var gamepadNames:IntMap<String> = new IntMap();
+
     public var activeGamepads:ReadOnlyArray<Int> = [];
 
     private function new() {
@@ -271,6 +273,9 @@ class Input extends Entity {
             activeGamepads.original.push(gamepadId);
         }
 
+        // Keep gamepad name
+        gamepadNames.set(gamepadId, name);
+
     }
 
     function willEmitGamepadDisable(gamepadId:Int):Void {
@@ -294,6 +299,9 @@ class Input extends Entity {
         if (index != -1) {
             activeGamepads.original.splice(index, 1);
         }
+
+        // Remove gamepad name
+        gamepadNames.remove(gamepadId);
 
     }
 
@@ -450,6 +458,12 @@ class Input extends Entity {
             return deltas[2];
         }
         return 0;
+
+    }
+
+    public function gamepadName(gamepadId:Int):String {
+
+        return gamepadNames.get(gamepadId);
 
     }
 
