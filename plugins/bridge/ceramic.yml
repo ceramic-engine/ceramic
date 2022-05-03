@@ -1,0 +1,10 @@
+plugin:
+    name: Bridge
+
+    runtime:
+        if plugin_bridge:
+            if web:
+                +paths:
+                  - {plugin:cwd}/runtime/src
+                +defines:
+                    - ceramic_native_bridge

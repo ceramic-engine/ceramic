@@ -25,6 +25,7 @@ app:
         - ui
         - electron
         - midi
+        - bridge
 
     libs:
         - spine-hx

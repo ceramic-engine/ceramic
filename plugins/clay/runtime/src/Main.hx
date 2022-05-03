@@ -130,34 +130,21 @@ class Main {
         project = @:privateAccess new Project(ceramic.App.init());
         app = @:privateAccess ceramic.App.app;
 
-        #if (web && ceramic_native_bridge)
-        if (ElectronRunner.electronRunner != null) {
-            var electron:Dynamic = untyped js.Syntax.code("require('electron')");
+        #if (web && plugin_bridge)
+        ceramic.Bridge.shared.onReceive(null, (event, data) -> {
+            switch event {
 
-            electron.ipcRenderer.on('ceramic-native-bridge', function(e, message:String) {
+                case 'gamepadGyro':
+                    var parts = data.split(' ');
+                    var gamepadId = Std.parseInt(parts[0]);
+                    var dx = Std.parseFloat(parts[1]);
+                    var dy = Std.parseFloat(parts[2]);
+                    var dz = Std.parseFloat(parts[3]);
+                    @:privateAccess app.backend.input.emitGamepadGyro(gamepadId, dx, dy, dz);
 
-                if (message != null) {
-                    var index = message.indexOf(' ');
-                    if (index != -1) {
-                        var event = message.substring(0, index);
-                        var data = message.substring(index + 1);
-                        switch event {
-
-                            case 'gamepadGyro':
-                                var parts = data.split(' ');
-                                var gamepadId = Std.parseInt(parts[0]);
-                                var dx = Std.parseFloat(parts[1]);
-                                var dy = Std.parseFloat(parts[2]);
-                                var dz = Std.parseFloat(parts[3]);
-                                @:privateAccess app.backend.input.emitGamepadGyro(gamepadId, dx, dy, dz);
-
-                            default:
-                        }
-                    }
-                }
-
-            });
-        }
+                default:
+            }
+        });
         #end
 
         #if web
@@ -257,18 +244,6 @@ class Main {
         #end
 
     }
-
-    #if (web && ceramic_native_bridge)
-
-    @:noCompletion public static function nativeBridgeSend(message:String) {
-
-        if (ElectronRunner.electronRunner != null) {
-            ElectronRunner.electronRunner.ceramicNativeBridgeSend(message);
-        }
-
-    }
-
-    #end
 
     #if web
 
