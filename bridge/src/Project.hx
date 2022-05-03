@@ -2,10 +2,11 @@ package;
 
 import ceramic.Color;
 import ceramic.Entity;
+import ceramic.Equal;
 import ceramic.InitSettings;
 import ceramic.IntMap;
+import ceramic.MidiOut;
 import ceramic.Timer;
-import rtmidi.RtMidiOut;
 
 class Project extends Entity {
 
@@ -91,10 +92,20 @@ class Project extends Entity {
                 switch event {
 
                     case 'midiOutInit':
+                        var index = Std.parseInt(data);
+                        midiOutInit(index);
+
+                    case 'midiOutOpenPort':
+                        var spaceIndex = data.indexOf(' ');
+                        var index = Std.parseInt(data.substring(0, spaceIndex));
+                        var port = Std.parseInt(data.substring(spaceIndex + 1));
+                        midiOutOpenPort(index, port);
+
+                    case 'midiOutOpenVirtualPort':
                         var spaceIndex = data.indexOf(' ');
                         var index = Std.parseInt(data.substring(0, spaceIndex));
                         var name = data.substring(spaceIndex + 1);
-                        midiOutInit(index, name);
+                        midiOutOpenVirtualPort(index, name);
 
                     case 'midiOutSend':
                         var parts = data.split(' ');
@@ -207,65 +218,100 @@ class Project extends Entity {
 
 /// Midi
 
-    var midiOuts:IntMap<MidiOutRef> = new IntMap();
+    var midiOuts:IntMap<MidiOut> = new IntMap();
 
-    var midiMessage:haxe.io.Bytes = haxe.io.Bytes.alloc(2);
+    var midiOutsList:Array<Int> = [];
+
+    var midiOutPorts:IntMap<Array<String>> = new IntMap();
 
     function bindMidi() {
 
-        // TODO
+        Timer.interval(this, 1.0, function() {
+
+            for (i in 0...midiOutsList.length) {
+                var index = midiOutsList[i];
+                sendMidiOutPortsIfNeeded(index);
+            }
+
+        });
 
     }
 
-    function midiOutInit(index:Int, name:String) {
+    function sendMidiOutPortsIfNeeded(index:Int) {
 
-        var rtMidiOut = new RtMidiOut();
-        rtMidiOut.openVirtualPort(name);
+        var midiOut = midiOuts.get(index);
+        if (midiOut != null) {
+            var ports:Array<String> = [];
+            var numPorts = midiOut.numPorts();
+            for (port in 0...numPorts) {
+                ports.push(midiOut.portName(port));
+            }
+            var previousPorts = midiOutPorts.get(index);
+            if (!Equal.equal(ports, previousPorts)) {
+                // Ports list changed, send the new list
+                midiOutPorts.set(index, ports);
+                send('midiOutPorts $index ${haxe.Json.stringify(ports)}');
+            }
+        }
+
+    }
+
+    function midiOutInit(index:Int) {
+
+        var midiOut = new MidiOut();
 
         var existing = midiOuts.get(index);
         if (existing != null) {
-            existing.ref.destroy();
+            existing.destroy();
         }
 
-        midiOuts.set(index, new MidiOutRef(rtMidiOut));
+        midiOuts.set(index, midiOut);
+        midiOutsList.push(index);
+
+        sendMidiOutPortsIfNeeded(index);
+
+    }
+
+    function midiOutOpenPort(index:Int, port:Int) {
+
+        var midiOut = midiOuts.get(index);
+
+        if (midiOut != null) {
+            midiOut.openPort(port);
+        }
+
+    }
+
+    function midiOutOpenVirtualPort(index:Int, name:String) {
+
+        var midiOut = midiOuts.get(index);
+
+        if (midiOut != null) {
+            midiOut.openVirtualPort(name);
+        }
 
     }
 
     function midiOutSend(index:Int, a:Int, b:Int, c:Int) {
 
-        var rtMidiOut = midiOuts.get(index);
+        var midiOut = midiOuts.get(index);
 
-        if (rtMidiOut != null) {
-
-            midiMessage.set(0, a);
-            midiMessage.set(1, b);
-            midiMessage.set(2, c);
-
-            rtMidiOut.ref.sendMessage(midiMessage.getData());
+        if (midiOut != null) {
+            midiOut.send(a, b, c);
         }
 
     }
 
     function midiOutDestroy(index:Int) {
 
-        var rtMidiOut = midiOuts.get(index);
+        var midiOut = midiOuts.get(index);
 
-        if (rtMidiOut != null) {
-            rtMidiOut.ref.destroy();
-
+        if (midiOut != null) {
+            midiOut.destroy();
             midiOuts.remove(index);
+            midiOutsList.remove(index);
         }
 
-    }
-
-}
-
-class MidiOutRef {
-
-    public var ref(default, null):RtMidiOut;
-
-    public function new(ref:RtMidiOut) {
-        this.ref = ref;
     }
 
 }
