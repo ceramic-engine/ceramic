@@ -51,6 +51,7 @@ class ClayEvents extends clay.Events {
 
     #if (web && !ceramic_no_ab_swap)
     var swapAbGamepads:IntBoolMap = new IntBoolMap();
+    var swapXyGamepads:IntBoolMap = new IntBoolMap();
     #end
 
     var gamepadAxisToButton:IntIntMap = new IntIntMap();
@@ -316,15 +317,18 @@ class ClayEvents extends clay.Events {
         if (name != null) {
             var lowerName = name.toLowerCase();
             if (lowerName.indexOf(' vendor: 057e ') != -1 || lowerName.startsWith('057e-')) {
-                // Nintendo controller on web, swap A & B buttons
+                // Nintendo controller on web, swap A & B buttons and X & Y buttons
                 swapAbGamepads.set(id, true);
+                swapXyGamepads.set(id, true);
             }
             else {
                 swapAbGamepads.set(id, false);
+                swapXyGamepads.set(id, false);
             }
         }
         else {
             swapAbGamepads.set(id, false);
+            swapXyGamepads.set(id, false);
         }
         #end
 
@@ -400,6 +404,15 @@ class ClayEvents extends clay.Events {
         }
         #end
 
+        #if (web && !ceramic_no_xy_swap)
+        // Swap X & Y button if needed
+        if (buttonId == 2 || buttonId == 3) {
+            if (swapXyGamepads.get(id)) {
+                buttonId = (buttonId == 2) ? 3 : 2;
+            }
+        }
+        #end
+
         if (gamepadPressedValues.get(id * GAMEPAD_STORAGE_SIZE + buttonId) != 1) {
             gamepadPressedValues.set(id * GAMEPAD_STORAGE_SIZE + buttonId, 1);
             backend.input.emitGamepadDown(id, buttonId);
@@ -432,6 +445,15 @@ class ClayEvents extends clay.Events {
         if (buttonId == 0 || buttonId == 1) {
             if (swapAbGamepads.get(id)) {
                 buttonId = (buttonId == 1) ? 0 : 1;
+            }
+        }
+        #end
+
+        #if (web && !ceramic_no_xy_swap)
+        // Swap X & Y button if needed
+        if (buttonId == 2 || buttonId == 3) {
+            if (swapXyGamepads.get(id)) {
+                buttonId = (buttonId == 2) ? 3 : 2;
             }
         }
         #end
