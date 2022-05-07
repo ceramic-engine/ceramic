@@ -1,5 +1,6 @@
 package tools.tasks.spine;
 
+import haxe.DynamicAccess;
 import haxe.Json;
 import haxe.crypto.Md5;
 import haxe.io.Path;
@@ -96,6 +97,7 @@ class ExportSpine extends tools.Task {
         for (rawItem in exportList) {
 
             var spineConfigPath:String = null;
+            var rename:DynamicAccess<String> = null;
 
             var path:String = null;
             if (Std.isOfType(rawItem, String)) {
@@ -105,6 +107,13 @@ class ExportSpine extends tools.Task {
                 if (rawItem.config != null) {
                     print('Use custom config: ' + rawItem.config);
                     spineConfigPath = Path.join([cwd, 'resources/' + rawItem.config]);
+                }
+                if (rawItem.rename != null) {
+                    print('Rename:');
+                    rename = rawItem.rename;
+                    for (key in rename.keys()) {
+                        print('  $key -> ${rename.get(key)}');
+                    }
                 }
             }
 
@@ -186,6 +195,9 @@ class ExportSpine extends tools.Task {
             for (item in Files.getFlatDirectory(exportPath)) {
                 var name = Path.withoutDirectory(Path.withoutExtension(item));
                 if (name.indexOf('@') != -1) name = name.substring(0, name.indexOf('@'));
+
+                if (rename != null && rename.exists(name))
+                    name = rename.get(name);
 
                 var entries = skeletons.get(name);
                 if (entries == null) {
