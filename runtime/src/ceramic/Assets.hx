@@ -502,6 +502,7 @@ class Assets extends Entity {
         var total = 0;
         var pending = 0;
         var allSuccess = true;
+        var addedAssets = [].concat(this.addedAssets);
 
         // Prepare loading
         for (asset in addedAssets) {
