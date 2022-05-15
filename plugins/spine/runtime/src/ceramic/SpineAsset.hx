@@ -76,10 +76,16 @@ class SpineAsset extends Asset {
         //
         var prefix = path + '/';
         var jsonPath = null;
+        var rawAtlasPaths:Array<String> = [];
         for (entry in Assets.all) {
-            if (entry.startsWith(prefix) && entry.toLowerCase().endsWith('.json')) {
-                jsonPath = entry;
-                break;
+            if (entry.startsWith(prefix)) {
+                var lowerCaseEntry = entry.toLowerCase();
+                if (jsonPath == null && lowerCaseEntry.endsWith('.json')) {
+                    jsonPath = entry;
+                }
+                if (lowerCaseEntry.endsWith('.atlas')) {
+                    rawAtlasPaths.push(entry);
+                }
             }
         }
 
@@ -99,7 +105,20 @@ class SpineAsset extends Asset {
         // Retrieve atlas asset
         //
         if (atlasAsset == null) {
-            atlasAsset = new TextAsset(baseName + '.atlas');
+            var atlasPath = null;
+            for (rawAtlasPath in rawAtlasPaths) {
+                if (Assets.assetNameFromPath(rawAtlasPath) == baseName) {
+                    atlasPath = baseName + '.atlas';
+                    break;
+                }
+            }
+            if (atlasPath == null && rawAtlasPaths.length > 0) {
+                atlasPath = Assets.assetNameFromPath(rawAtlasPaths[0]) + '.atlas';
+            }
+            else {
+                atlasPath = baseName + '.atlas';
+            }
+            atlasAsset = new TextAsset(atlasPath);
             atlasAsset.handleTexturesDensityChange = false;
             assets.addAsset(atlasAsset);
             atlasAsset.computePath(['atlas'], false, runtimeAssets);
