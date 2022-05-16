@@ -14,6 +14,15 @@ class BitmapFontParser {
             throw "BitmapFont: fontData is 0 length";
         }
 
+        if (rawFontData.trim().startsWith('<')) {
+            try {
+                rawFontData = convertXmlFontData(rawFontData);
+            }
+            catch (e:Dynamic) {
+                throw "BitmapFont: invalid xml font data specified for parser: " + e;
+            }
+        }
+
         var info:BitmapFontData = {
             face: null,
             chars: new Map(),
@@ -44,6 +53,55 @@ class BitmapFontParser {
         lines = null;
 
         return info;
+
+    }
+
+/// From XML
+
+    static function convertXmlFontData(rawFontData:String):String {
+
+        var result = new StringBuf();
+
+        inline function addValue(attr:String, value:String) {
+            if (attr == 'face' || attr == 'char' || attr == 'file' || value.indexOf(' ') != -1 || value.indexOf('"') != -1 || value.indexOf('=') != -1) {
+                result.add(haxe.Json.stringify(value));
+            }
+            else {
+                result.add(value);
+            }
+        }
+
+        inline function addElementAndAttributes(el:Xml) {
+            result.add(el.nodeName);
+            for (attr in el.attributes()) {
+                var value = el.get(attr);
+                if (value != null) {
+                    result.add(' ');
+                    result.add(attr);
+                    result.add('=');
+                    addValue(attr, value);
+                }
+            }
+            result.add('\n');
+        }
+
+        var xml = Xml.parse(rawFontData).firstElement();
+
+        for (el in xml.elements()) {
+            switch el.nodeName {
+                default:
+                    addElementAndAttributes(el);
+                case 'pages' | 'chars':
+                    if (el.nodeName == 'chars') {
+                        addElementAndAttributes(el);
+                    }
+                    for (subEl in el.elements()) {
+                        addElementAndAttributes(subEl);
+                    }
+            }
+        }
+
+        return result.toString();
 
     }
 
