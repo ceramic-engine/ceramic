@@ -24,6 +24,9 @@ let appUrl = null;
 let appFiles = null;
 let watchFile = null;
 let useNativeBridge = false;
+let screenshotDelay = 0;
+let screenshotPath = null;
+let screenshotThenQuit = false;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -39,6 +42,17 @@ while (i < argv.length) {
     }
     if (arg == '--native-bridge') {
         useNativeBridge = true;
+    }
+    if (arg == '--screenshot') {
+        i++;
+        screenshotPath = argv[i];
+    }
+    if (arg == '--screenshot-delay') {
+        i++;
+        screenshotDelay = parseFloat(argv[i]);
+    }
+    if (arg == '--screenshot-then-quit') {
+        screenshotThenQuit = true;
     }
     i++;
 }
@@ -197,6 +211,22 @@ exports.ceramicSettings = function(settings) {
 
 exports.ceramicReady = function() {
     mainWindow.show();
+
+    // Take screenshot?
+    if (screenshotPath != null) {
+        setTimeout(function() {
+            console.log("Take screenshot at path: " + screenshotPath);
+            mainWindow.webContents.capturePage().then(function(image) {
+                fs.writeFile(screenshotPath, image.toPNG(), function(err) {
+                    if (err)
+                        console.error(err);
+                    if (screenshotThenQuit) {
+                        app.quit();
+                    }
+                });
+            });
+        }, 100 + screenshotDelay * 1000);
+    }
 };
 
 exports.consoleLog = function(str) {

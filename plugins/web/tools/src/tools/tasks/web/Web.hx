@@ -41,6 +41,9 @@ class Web extends tools.Task {
         var electronErrors = extractArgFlag(args, 'electron-errors');
         var useNativeBridge = extractArgFlag(args, 'native-bridge');
         var didSkipCompilation = extractArgFlag(args, 'did-skip-compilation');
+        var screenshotPath = extractArgValue(args, 'screenshot');
+        var screenshotDelay = extractArgValue(args, 'screenshot-delay');
+        var screenshotThenQuit = extractArgFlag(args, 'screenshot-then-quit');
 
         // Check that project didn't change name
         var htmlContent = null;
@@ -101,7 +104,8 @@ class Web extends tools.Task {
         WebProject.createWebProjectIfNeeded(cwd, project);
 
         // Resolve paths and assets
-        var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'web', cwd, context.debug, context.variant);
+        var backendName = context.backend != null ? context.backend.name : 'clay';
+        var outTargetPath = BuildTargetExtensions.outPathWithName(backendName, 'web', cwd, context.debug, context.variant);
         var jsBasePath = Path.join([webProjectPath, jsName]);
 
         // Patch index.html if needed
@@ -213,6 +217,23 @@ class Web extends tools.Task {
 
             if (useNativeBridge) {
                 cmdArgs.push('--native-bridge');
+            }
+
+            if (screenshotPath != null) {
+                if (!Path.isAbsolute(screenshotPath)) {
+                    screenshotPath = Path.join([cwd, screenshotPath]);
+                }
+                cmdArgs.push('--screenshot');
+                cmdArgs.push(screenshotPath);
+
+                if (screenshotDelay != null) {
+                    cmdArgs.push('--screenshot-delay');
+                    cmdArgs.push(screenshotDelay);
+                }
+
+                if (screenshotThenQuit) {
+                    cmdArgs.push('--screenshot-then-quit');
+                }
             }
 
             cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
