@@ -133,13 +133,13 @@ class Pixels {
 
     }
 
-
     /**
      * Set a pixel as `AlphaColor` at `x`,`y` coordinates on the given buffer
      * @param buffer The pixel buffer to write into
      * @param bufferWidth Image width
      * @param x Pixel x position
      * @param y Pixel y position
+     * @param color AlphaColor of the pixel
      */
     public static inline function set(
         buffer:UInt8Array, bufferWidth:Int,
@@ -151,6 +151,27 @@ class Pixels {
         buffer[index + 1] = color.green;
         buffer[index + 2] = color.blue;
         buffer[index + 3] = color.alpha;
+
+    }
+
+    /**
+     * Set a rectangle of pixels as `AlphaColor` at `x`,`y` coordinates and with the specified `width` and `height` on the given buffer
+     * @param buffer The pixel buffer to write into
+     * @param bufferWidth Image width
+     * @param x Rectangle x position
+     * @param y Rectangle y position
+     * @param width Rectangle width
+     * @param height Rectangle height
+     * @param color AlphaColor of the rectangle's pixels
+     */
+     public static inline function setRectangle(
+        buffer:UInt8Array, bufferWidth:Int,
+        x:Int, y:Int, width:Int, height:Int, color:AlphaColor
+    ):Void {
+
+        for (rectangleX in 0...width) for (rectangleY in 0...height) {
+            set(buffer, bufferWidth, x + rectangleX, y + rectangleY, color);
+        }
 
     }
 
