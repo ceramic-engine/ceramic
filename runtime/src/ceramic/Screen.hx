@@ -1177,11 +1177,11 @@ class Screen extends Entity implements Observable {
 
     public function addHitVisual(visual:Visual):Void {
 
-        var wasHitVisual = isHitVisual(visual);
+        var wasHitVisual = visual.isHitVisual;
         hitVisuals.push(visual);
 
         if (!wasHitVisual) {
-            visual.internalFlag(3, true);
+            visual.isHitVisual = true;
         }
 
     }
@@ -1195,7 +1195,7 @@ class Screen extends Entity implements Observable {
         else {
             hitVisuals.splice(index, 1);
             if (hitVisuals.indexOf(visual) == -1) {
-                visual.internalFlag(3, false);
+                visual.isHitVisual = false;
             }
         }
 
@@ -1203,7 +1203,7 @@ class Screen extends Entity implements Observable {
 
     public function isHitVisual(visual:Visual):Bool {
 
-        return visual.internalFlag(3);
+        return visual.isHitVisual;
 
     }
 

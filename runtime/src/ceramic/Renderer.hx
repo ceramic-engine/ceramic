@@ -689,17 +689,35 @@ class Renderer extends Entity {
             //
             uvX = (quad.frameX * texDensity) / texWidthActual;
             uvY = (quad.frameY * texDensity) / texHeightActual;
-            uvW = (quad.frameWidth * texDensity) / texWidthActual;
-            uvH = (quad.frameHeight * texDensity) / texHeightActual;
 
-            //tl
-            draw.putUVs(uvX, uvY);
-            //tr
-            draw.putUVs(uvX + uvW, uvY);
-            //br
-            draw.putUVs(uvX + uvW, uvY + uvH);
-            //bl
-            draw.putUVs(uvX, uvY + uvH);
+            if (quad.rotateFrame) {
+
+                uvW = (quad.frameHeight * texDensity) / texWidthActual;
+                uvH = (quad.frameWidth * texDensity) / texHeightActual;
+
+                //tl
+                draw.putUVs(uvX, uvY + uvH);
+                //tr
+                draw.putUVs(uvX, uvY);
+                //br
+                draw.putUVs(uvX + uvW, uvY);
+                //bl
+                draw.putUVs(uvX + uvW, uvY + uvH);
+            }
+            else {
+
+                uvW = (quad.frameWidth * texDensity) / texWidthActual;
+                uvH = (quad.frameHeight * texDensity) / texHeightActual;
+
+                //tl
+                draw.putUVs(uvX, uvY);
+                //tr
+                draw.putUVs(uvX + uvW, uvY);
+                //br
+                draw.putUVs(uvX + uvW, uvY + uvH);
+                //bl
+                draw.putUVs(uvX, uvY + uvH);
+            }
 
         } else {
             draw.putUVs(0, 0);

@@ -22,7 +22,7 @@ class TextureTilePacker extends Entity {
     var numCols:Int = 0;
 
     var numRows:Int = 0;
-    
+
     var maxPixelTextureWidth:Int = 0;
 
     var maxPixelTextureHeight:Int = 0;
@@ -217,7 +217,7 @@ class TextureTilePacker extends Entity {
         app.onceUpdate(this, function(_) {
             app.onceUpdate(this, function(_) {
                 var didRelease = false;
-            
+
                 // Free up packer areas
                 for (r in packedTile.row...packedTile.row+packedTile.usedRows) {
                     for (c in packedTile.col...packedTile.col+packedTile.usedCols) {

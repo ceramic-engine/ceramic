@@ -1,14 +1,35 @@
 package ceramic;
 
-import tracker.Model;
 import ceramic.Assert.assert;
 import ceramic.Shortcuts.*;
+import tracker.Model;
 
 class SpriteSheet extends Model {
 
     @serialize public var animations:ReadOnlyArray<SpriteSheetAnimation> = [];
 
-    @serialize public var image:SpriteSheetImage = null;
+    @observe public var atlas(default,set):TextureAtlas = null;
+    function set_atlas(atlas:TextureAtlas):TextureAtlas {
+        if (this.atlas == atlas) return atlas;
+        var prevAtlas = this.atlas;
+        if (prevAtlas != null) {
+            if (prevAtlas.asset != null) {
+                prevAtlas.asset.offReplaceAtlas(replaceAtlas);
+            }
+            if (prevAtlas.asset != null) prevAtlas.asset.release();
+            if (implicitAtlas)
+                prevAtlas.destroy();
+        }
+        this.atlas = atlas;
+        implicitAtlas = false;
+        if (this.atlas != null) {
+            if (this.atlas.asset != null) {
+                this.atlas.asset.onReplaceAtlas(this, replaceAtlas);
+            }
+            if (this.atlas.asset != null) this.atlas.asset.retain();
+        }
+        return atlas;
+    }
 
     @serialize public var gridWidth:Int = -1;
 
@@ -20,10 +41,10 @@ class SpriteSheet extends Model {
     }
 
     /**
-     * Internal: `true` if SpriteSheetImage instance was created
+     * Internal: `true` if SpriteSheetAtlas instance was created
      * implicitly from assigning a texture object.
      */
-    var implicitImage:Bool = false;
+    var implicitAtlas:Bool = false;
 
     /**
      * The texture used to display sprites in this spritesheet.
@@ -31,21 +52,51 @@ class SpriteSheet extends Model {
      */
     public var texture(get, set):Texture;
     inline function get_texture():Texture {
-        return image != null ? unobservedImage.texture : null;
+        return atlas != null ? unobservedAtlas.pages[0].texture : null;
     }
     function set_texture(texture:Texture):Texture {
+        var prevAtlas = unobservedAtlas;
+        var wasImplicitAtlas = implicitAtlas;
+
+        var prevTexture = wasImplicitAtlas && prevAtlas != null ? prevAtlas.pages[0].texture : null;
+        if (prevTexture != null) {
+            if (prevTexture.asset != null) {
+                prevTexture.asset.offReplaceTexture(replaceTexture);
+                prevTexture.asset.release();
+            }
+        }
+
         if (texture != null) {
-            if (unobservedImage == null || unobservedImage.texture != texture) {
-                unobservedImage = new SpriteSheetImage();
-                implicitImage = true;
-                unobservedImage.texture = texture;
+            if (texture.asset != null) {
+                texture.asset.onReplaceTexture(this, replaceTexture);
+                texture.asset.retain();
+            }
+            if (unobservedAtlas == null || unobservedAtlas.pages[0].texture != texture) {
+                unobservedAtlas = new TextureAtlas();
+                implicitAtlas = true;
+                unobservedAtlas.pages[0] = {
+                    name: 'page0',
+                    width: texture.width,
+                    height: texture.height,
+                    filter: texture.filter,
+                    texture: texture
+                };
             }
         }
         else {
-            unobservedImage = null;
+            unobservedAtlas = null;
+            implicitAtlas = false;
+        }
+        if (wasImplicitAtlas && prevAtlas != null) {
+            prevAtlas.destroy();
         }
         return texture;
     }
+
+    /**
+     * The reference to the sprite sheet file
+     */
+    @serialize public var source:String = null;
 
 /// Helpers
 
@@ -75,14 +126,14 @@ class SpriteSheet extends Model {
 
         assert(unobservedGridWidth > 0, 'gridWidth ($unobservedGridWidth) must be above zero before adding grid animation');
         assert(unobservedGridHeight > 0, 'gridHeight ($unobservedGridHeight) must be above zero before adding grid animation');
-        assert(unobservedImage != null, 'an image must be defined before adding grid animation');
+        assert(unobservedAtlas != null, 'an atlas/texture must be defined before adding grid animation');
 
         var animation = new SpriteSheetAnimation();
         animation.name = name;
 
         var gridWidth = unobservedGridWidth;
         var gridHeight = unobservedGridHeight;
-        var imageWidth = Math.floor(unobservedImage.width / gridWidth) * gridWidth;
+        var imageWidth = Math.floor(unobservedAtlas.pages[0].width / gridWidth) * gridWidth;
         var cellsByRow = Math.round(imageWidth / gridWidth);
 
         var frames = [];
@@ -92,9 +143,16 @@ class SpriteSheet extends Model {
             var column = i % cellsByRow;
             var row = Math.floor(i / cellsByRow);
 
-            var frame = new SpriteSheetFrame();
+            var frame = new SpriteSheetFrame(unobservedAtlas, name + '#' + i, 0);
             frame.duration = frameDuration;
-            frame.frame(
+            var region = frame.region;
+            region.width = gridWidth;
+            region.height = gridHeight;
+            region.originalWidth = gridWidth;
+            region.originalHeight = gridHeight;
+            region.packedWidth = gridWidth;
+            region.packedHeight = gridHeight;
+            region.frame(
                 column * gridWidth,
                 row * gridHeight,
                 gridWidth,
@@ -111,6 +169,36 @@ class SpriteSheet extends Model {
         addAnimation(animation);
 
         return animation;
+
+    }
+
+/// Internal
+
+    function replaceAtlas(newAtlas:TextureAtlas, prevAtlas:TextureAtlas) {
+
+        this.atlas = newAtlas;
+
+    }
+
+    function replaceTexture(newTexture:Texture, prevTexture:Texture) {
+
+        var atlas = this.atlas;
+        if (implicitAtlas && atlas != null) {
+            // Update animation frames to point to correct texture & atlas
+            atlas.pages[0].texture = newTexture;
+            for (i in 0...animations.length) {
+                var animation = animations.unsafeGet(i);
+                var frames = animation.frames;
+                for (j in 0...frames.length) {
+                    var frame = frames.unsafeGet(j);
+                    var region = frame.region;
+                    if (region.texture == prevTexture) {
+                        region.atlas = atlas;
+                        region.texture = newTexture;
+                    }
+                }
+            }
+        }
 
     }
 

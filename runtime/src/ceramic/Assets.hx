@@ -142,6 +142,7 @@ class Assets extends Entity {
             case 'database': addDatabase(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'fragments': addFragments(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'font': addFont(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'atlas': addAtlas(name, options #if ceramic_debug_entity_allocs , pos #end);
             case 'shader': addShader(name, options #if ceramic_debug_entity_allocs , pos #end);
             default:
                 if (customAssetKinds.exists(kind)) {
@@ -165,6 +166,7 @@ class Assets extends Entity {
         var soundExtensions = info.soundExtensions();
         var shaderExtensions = info.shaderExtensions();
         var fontExtensions = ['fnt'];
+        var atlasExtensions = ['atlas'];
         var databaseExtensions = ['csv'];
         var fragmentsExtensions = ['fragments'];
 
@@ -207,16 +209,6 @@ class Assets extends Entity {
             }
 
             if (!didAdd) {
-                for (i in 0...textExtensions.length) {
-                    if (textExtensions.unsafeGet(i) == assetExtension) {
-                        addText(name);
-                        didAdd = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!didAdd) {
                 for (i in 0...soundExtensions.length) {
                     if (soundExtensions.unsafeGet(i) == assetExtension) {
                         addSound(name);
@@ -240,6 +232,16 @@ class Assets extends Entity {
                 for (i in 0...fontExtensions.length) {
                     if (fontExtensions.unsafeGet(i) == assetExtension) {
                         addFont(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                for (i in 0...atlasExtensions.length) {
+                    if (atlasExtensions.unsafeGet(i) == assetExtension) {
+                        addAtlas(name);
                         didAdd = true;
                         break;
                     }
@@ -281,6 +283,16 @@ class Assets extends Entity {
                         break;
                 }
             }
+
+            if (!didAdd) {
+                for (i in 0...textExtensions.length) {
+                    if (textExtensions.unsafeGet(i) == assetExtension) {
+                        addText(name);
+                        didAdd = true;
+                        break;
+                    }
+                }
+            }
         }
 
     }
@@ -296,6 +308,13 @@ class Assets extends Entity {
 
         if (name.startsWith('font:')) name = name.substr(5);
         addAsset(new FontAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+
+    }
+
+    public function addAtlas(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+
+        if (name.startsWith('atlas:')) name = name.substr(6);
+        addAsset(new AtlasAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
@@ -407,6 +426,10 @@ class Assets extends Entity {
 
     public function fontAsset(name:Either<String,AssetId<String>>):FontAsset {
         return cast asset(name, 'font');
+    }
+
+    public function atlasAsset(name:Either<String,AssetId<String>>):AtlasAsset {
+        return cast asset(name, 'atlas');
     }
 
     public function textAsset(name:Either<String,AssetId<String>>):TextAsset {
@@ -716,6 +739,16 @@ class Assets extends Entity {
 
     }
 
+    public function ensureAtlas(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:AtlasAsset->Void):Void {
+
+        var _name:String = cast name;
+        if (!StringTools.startsWith(_name, 'atlas:')) _name = 'atlas:' + _name;
+        ensure(_name, options, function(asset) {
+            done(Std.isOfType(asset, AtlasAsset) ? cast asset : null);
+        });
+
+    }
+
     public function ensureText(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TextAsset->Void):Void {
 
         var _name:String = cast name;
@@ -781,6 +814,19 @@ class Assets extends Entity {
         if (asset == null) return parent != null ? parent.font(name) : null;
 
         return asset.font;
+
+    }
+
+    public function atlas(name:Either<String,AssetId<String>>):TextureAtlas {
+
+        var realName:String = cast name;
+        if (realName.startsWith('atlas:')) realName = realName.substr(6);
+
+        if (!assetsByKindAndName.exists('atlas')) return parent != null ? parent.atlas(name) : null;
+        var asset:AtlasAsset = cast assetsByKindAndName.get('atlas').get(realName);
+        if (asset == null) return parent != null ? parent.atlas(name) : null;
+
+        return asset.atlas;
 
     }
 

@@ -13,13 +13,16 @@ class TextureTile {
 
     public var frameHeight:Float;
 
-    public function new(texture:Texture, frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float) {
+    public var rotateFrame:Bool;
+
+    public function new(texture:Texture, frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float, rotateFrame:Bool = false) {
 
         this.texture = texture;
         this.frameX = frameX;
         this.frameY = frameY;
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
+        this.rotateFrame = rotateFrame;
 
     }
 

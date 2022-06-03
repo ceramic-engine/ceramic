@@ -9,7 +9,7 @@ class BitmapFont extends Entity {
     /**
      * The map of font texture pages to their id.
      */
-    public var pages:Map<Int,Texture> = new Map();
+    public var pages:IntMap<Texture> = new IntMap(16, 0.5, true);
 
     /**
      * The bitmap font fontData.
@@ -45,9 +45,9 @@ class BitmapFont extends Entity {
     inline function get_baseSize():Float { return fontData.baseSize; }
     inline function set_baseSize(baseSize:Float):Float { return fontData.baseSize = baseSize; }
 
-    public var chars(get,set):Map<Int,BitmapFontCharacter>;
-    inline function get_chars():Map<Int,BitmapFontCharacter> { return fontData.chars; }
-    inline function set_chars(chars:Map<Int,BitmapFontCharacter>):Map<Int,BitmapFontCharacter> { return fontData.chars = chars; }
+    public var chars(get,set):IntMap<BitmapFontCharacter>;
+    inline function get_chars():IntMap<BitmapFontCharacter> { return fontData.chars; }
+    inline function set_chars(chars:IntMap<BitmapFontCharacter>):IntMap<BitmapFontCharacter> { return fontData.chars = chars; }
 
     public var charCount(get,set):Int;
     inline function get_charCount():Int { return fontData.charCount; }
@@ -57,9 +57,9 @@ class BitmapFont extends Entity {
     inline function get_lineHeight():Float { return fontData.lineHeight; }
     inline function set_lineHeight(lineHeight:Float):Float { return fontData.lineHeight = lineHeight; }
 
-    public var kernings(get,set):Map<Int,Map<Int,Float>>;
-    inline function get_kernings():Map<Int,Map<Int,Float>> { return fontData.kernings; }
-    inline function set_kernings(kernings:Map<Int,Map<Int,Float>>):Map<Int,Map<Int,Float>> { return fontData.kernings = kernings; }
+    public var kernings(get,set):IntMap<IntFloatMap>;
+    inline function get_kernings():IntMap<IntFloatMap> { return fontData.kernings; }
+    inline function set_kernings(kernings:IntMap<IntFloatMap>):IntMap<IntFloatMap> { return fontData.kernings = kernings; }
 
     public var msdf(get,never):Bool;
     inline function get_msdf():Bool { return fontData.distanceField != null && fontData.distanceField.fieldType == 'msdf'; }
@@ -134,7 +134,10 @@ class BitmapFont extends Entity {
         if (asset != null) asset.destroy();
 
         if (pages != null) {
-            for (texture in pages) {
+            var iterableKeys = pages.iterableKeys;
+            var len = iterableKeys.length;
+            for (i in 0...len) {
+                var texture = pages.get(iterableKeys.unsafeGet(i));
                 texture.destroy();
             }
             pages = null;
@@ -166,7 +169,7 @@ class BitmapFont extends Entity {
             return true;
 
         var preRenderedForSize = preRenderedPages.get(pixelSize);
-        for (id in pages.keys()) {
+        for (id in pages.iterableKeys) {
             if (!preRenderedForSize.exists(id))
                 return true;
         }
@@ -179,7 +182,7 @@ class BitmapFont extends Entity {
 
         var numPending = 0;
 
-        for (id in pages.keys()) {
+        for (id in pages.iterableKeys) {
             numPending++;
 
             preRenderPage(id, pixelSize, () -> {

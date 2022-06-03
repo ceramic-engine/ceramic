@@ -1,7 +1,7 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
 import ceramic.Path;
+import ceramic.Shortcuts.*;
 import tracker.Observable;
 
 using StringTools;
@@ -124,6 +124,7 @@ class Asset extends Entity implements Observable {
                 case 'sound': app.backend.info.soundExtensions();
                 case 'shader': app.backend.info.shaderExtensions();
                 case 'font': ['fnt'];
+                case 'atlas': ['atlas'];
                 case 'database': ['csv'];
                 case 'fragments': ['fragments'];
                 default: null;
@@ -333,14 +334,26 @@ class Asset extends Entity implements Observable {
 
     public function retain():Void {
 
+        #if ceramic_debug_refcount
+        ceramic.Utils.printStackTrace();
+        log.success('RETAIN ' + this + ' $refCount + 1');
+        #end
         refCount++;
 
     }
 
     public function release():Void {
 
-        if (refCount == 0) log.warning('Called release() on asset ' + this + ' when its refCount is already 0');
-        else refCount--;
+        #if ceramic_debug_refcount
+        ceramic.Utils.printStackTrace();
+        log.success('RELEASE ' + this + ' $refCount - 1');
+        #end
+        if (refCount == 0) {
+            log.warning('Called release() on asset ' + this + ' when its refCount is already 0 (destroyed=${destroyed})');
+        }
+        else {
+            refCount--;
+        }
 
     }
 

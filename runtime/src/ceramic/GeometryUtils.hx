@@ -72,6 +72,8 @@ class GeometryUtils {
         var result = Utils.radToDeg(Math.atan2(y1 - y0, x1 - x0)) + 90;
         if (result < 0)
             result += 360.0;
+        else if (result >= 360.0)
+            result -= 360.0;
         return result;
 
     }

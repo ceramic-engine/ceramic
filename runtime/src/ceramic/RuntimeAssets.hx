@@ -1,13 +1,13 @@
 package ceramic;
 
-import ceramic.PlatformSpecific;
 import ceramic.App.app;
+import ceramic.PlatformSpecific;
 
+using StringTools;
 #if (sys || node || nodejs)
 import sys.FileSystem;
 #end
 
-using StringTools;
 
 /**
  * Runtime utilities to compute asset lists/names from raw (relative) file list.
@@ -93,6 +93,7 @@ class RuntimeAssets {
             case 'sound': app.backend.info.soundExtensions();
             case 'shader': app.backend.info.shaderExtensions();
             case 'font': ['fnt'];
+            case 'atlas': ['atlas'];
             case 'database': ['csv'];
             case 'fragments': ['fragments'];
             default: [];
@@ -124,7 +125,7 @@ class RuntimeAssets {
 
                         baseName = name.substr(0, cast Math.min(baseAtIndex, dotIndex));
                         fieldName = toAssetConstName(baseName);
-                    
+
                         if (fieldName != null && !used.exists(fieldName) && fileExt != null) {
                             used.set(fieldName, baseName);
                         }
@@ -137,7 +138,7 @@ class RuntimeAssets {
         var byBaseName = dir ? assetDirsByBaseName : assetsByBaseName;
         for (fieldName in used.keys()) {
             var value = kind + ':' + used.get(fieldName);
-            
+
             var fieldDoc = [];
             var files = byBaseName.get(used.get(fieldName));
             for (file in files) {

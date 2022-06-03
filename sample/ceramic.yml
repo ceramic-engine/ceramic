@@ -26,6 +26,7 @@ app:
         - electron
         - midi
         - bridge
+        - sprite
 
     libs:
         - spine-hx

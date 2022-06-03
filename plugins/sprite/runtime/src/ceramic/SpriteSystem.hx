@@ -2,7 +2,7 @@ package ceramic;
 
 using ceramic.Extensions;
 
-@:allow(ceramic.Sprite)
+@:allow(ceramic.SpriteBase)
 class SpriteSystem extends System {
 
     /**
@@ -10,9 +10,9 @@ class SpriteSystem extends System {
      */
     @lazy public static var shared = new SpriteSystem();
 
-    var sprites:Array<Sprite<Any>> = [];
+    var sprites:Array<SpriteBase<Any>> = [];
 
-    var _updatingSprites:Array<Sprite<Any>> = [];
+    var _updatingSprites:Array<SpriteBase<Any>> = [];
 
     override function new() {
 

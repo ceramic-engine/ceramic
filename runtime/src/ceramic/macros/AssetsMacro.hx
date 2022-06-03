@@ -56,6 +56,7 @@ class AssetsMacro {
             case 'sound': backendInfo.soundExtensions();
             case 'shader': backendInfo.shaderExtensions();
             case 'font': ['fnt'];
+            case 'atlas': ['atlas'];
             case 'database': ['csv'];
             case 'fragments': ['fragments'];
             default: [];

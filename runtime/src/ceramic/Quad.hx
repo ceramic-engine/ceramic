@@ -1,11 +1,15 @@
 package ceramic;
 
 import ceramic.Assert.*;
+import ceramic.Visual;
 
 @editable({
     implicitSizeUnlessNull: 'texture'
 })
 class Quad extends Visual {
+
+    private inline static final FLAG_TRANSPARENT:Int = 16; // 1 << 4
+    private inline static final FLAG_ROTATE_FRAME:Int = 32; // 1 << 5
 
     static var _matrix = Visual._matrix;
 
@@ -16,12 +20,19 @@ class Quad extends Visual {
 
     /**
      * If set to `true`, this quad will be considered
-     * transparent thus won't be draw on screen. 
+     * transparent thus won't be draw on screen.
      * Children still behave and get drawn as before:
      * they don't inherit this property.
      */
     @editable
-    public var transparent:Bool = false;
+    public var transparent(get,set):Bool;
+    inline function get_transparent():Bool {
+        return flags & FLAG_TRANSPARENT == FLAG_TRANSPARENT;
+    }
+    inline function set_transparent(transparent:Bool):Bool {
+        flags = transparent ? flags | FLAG_TRANSPARENT : flags & ~FLAG_TRANSPARENT;
+        return transparent;
+    }
 
     public var tile(default,set):TextureTile = null;
     function set_tile(tile:TextureTile):TextureTile {
@@ -36,51 +47,43 @@ class Quad extends Visual {
             if (texture != tile.texture) {
                 texture = tile.texture;
             }
-            
+
             frameX = tile.frameX;
             frameY = tile.frameY;
             frameWidth = tile.frameWidth;
             frameHeight = tile.frameHeight;
+
+            rotateFrame = tile.rotateFrame;
         }
 
         return tile;
     }
 
     @editable
-    public var texture(default,set):Texture = null;
+    public var texture(get,set):Texture;
+    inline function get_texture():Texture {
+        return _texture;
+    }
     inline function set_texture(texture:Texture):Texture {
 
-        if (this.texture == texture) return texture;
+        if (_texture != texture) {
+            _set_texture(texture);
+        }
+
+        return texture;
+    }
+    var _texture:Texture = null;
+    function _set_texture(texture:Texture):Void {
 
         assert(texture == null || !texture.destroyed, 'Cannot assign destroyed texture: ' + texture);
 
-        if (this.texture != null) {
+        if (_texture != null) {
             // Unbind previous texture destroy event
-            this.texture.offDestroy(textureDestroyed);
-            if (this.texture.asset != null) this.texture.asset.release();
-
-            // Remove render target texture dependency, if any
-            /*if (this.texture.isRenderTexture) {
-                if (renderTargetDirty) {
-                    computeRenderTarget();
-                }
-                if (computedRenderTarget != null) {
-                    computedRenderTarget.decrementDependingTextureCount(this.texture);
-                }
-            }*/
+            _texture.offDestroy(textureDestroyed);
+            if (_texture.asset != null) _texture.asset.release();
         }
 
-        /*// Add new render target texture dependency, if needed
-        if (texture != null && texture.isRenderTexture) {
-            if (renderTargetDirty) {
-                computeRenderTarget();
-            }
-            if (computedRenderTarget != null) {
-                computedRenderTarget.incrementDependingTextureCount(texture);
-            }
-        }*/
-
-        this.texture = texture;
+        _texture = texture;
 
         // Update frame
         if (texture == null) {
@@ -94,6 +97,10 @@ class Quad extends Visual {
             frameY = tile.frameY;
             frameWidth = tile.frameWidth;
             frameHeight = tile.frameHeight;
+
+            // Ensure we remove the texture if it gets destroyed
+            texture.onDestroy(this, textureDestroyed);
+            if (texture.asset != null) texture.asset.retain();
         }
         else {
             frameX = 0;
@@ -106,7 +113,6 @@ class Quad extends Visual {
             if (texture.asset != null) texture.asset.retain();
         }
 
-        return texture;
     }
 
     public var frameX:Float = -1;
@@ -133,6 +139,15 @@ class Quad extends Visual {
         if (frameHeight != -1) height = frameHeight;
 
         return frameHeight;
+    }
+
+    public var rotateFrame(get,set):Bool;
+    inline function get_rotateFrame():Bool {
+        return flags & FLAG_ROTATE_FRAME == FLAG_ROTATE_FRAME;
+    }
+    inline function set_rotateFrame(rotateFrame:Bool):Bool {
+        flags = rotateFrame ? flags | FLAG_ROTATE_FRAME : flags & ~FLAG_ROTATE_FRAME;
+        return rotateFrame;
     }
 
 /// Lifecycle

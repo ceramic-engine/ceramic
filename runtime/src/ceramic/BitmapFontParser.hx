@@ -25,14 +25,14 @@ class BitmapFontParser {
 
         var info:BitmapFontData = {
             face: null,
-            chars: new Map(),
+            chars: new IntMap(),
             distanceField: null,
             pointSize: 0,
             baseSize: 0,
             charCount: 0,
             lineHeight: 0,
             pages: [],
-            kernings: new Map()
+            kernings: new IntMap()
         };
 
         var lines:Array<String> = rawFontData.replace("\r", '').replace("\t", ' ').split("\n");
@@ -161,7 +161,7 @@ class BitmapFontParser {
 
                 var map = info.kernings.get(first);
                 if (map == null) {
-                    map = new Map();
+                    map = new IntFloatMap();
                     info.kernings.set(first, map);
                 }
 

@@ -21,7 +21,7 @@ class Info #if !completion implements spec.Info #end {
     }
 
     inline public function textExtensions():Array<String> {
-        return ['txt', 'json', 'fnt'];
+        return ['txt', 'json', 'fnt', 'atlas'];
     }
 
     inline public function soundExtensions():Array<String> {

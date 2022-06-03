@@ -115,14 +115,15 @@ class Tileset extends Model {
         }
         else {
             unobservedImage = null;
+            implicitImage = false;
         }
         return texture;
     }
 
     /**
      * A shorthand to set `tileWidth` and `tileHeight`
-     * @param tileWidth 
-     * @param tileHeight 
+     * @param tileWidth
+     * @param tileHeight
      */
     public function tileSize(tileWidth:Int, tileHeight:Int):Void {
         this.tileWidth = tileWidth;

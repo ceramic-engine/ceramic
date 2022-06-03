@@ -14,15 +14,15 @@ class TilesetImage extends Model {
         if (prevTexture != null) {
             if (prevTexture.asset != null) {
                 prevTexture.asset.offReplaceTexture(replaceTexture);
+                prevTexture.asset.release();
             }
-            if (prevTexture.asset != null) prevTexture.asset.release();
         }
         this.texture = texture;
         if (this.texture != null) {
             if (this.texture.asset != null) {
                 this.texture.asset.onReplaceTexture(this, replaceTexture);
+                this.texture.asset.retain();
             }
-            if (this.texture.asset != null) this.texture.asset.retain();
             if (width == -1)
                 width = Std.int(this.texture.width);
             if (height == -1)

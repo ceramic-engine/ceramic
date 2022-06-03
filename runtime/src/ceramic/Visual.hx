@@ -1539,6 +1539,15 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     }
 
+    private inline static final FLAG_NOT_ACTIVE:Int = 1; // 1 << 0
+    private inline static final FLAG_VISIBLE_WHEN_ACTIVE:Int = 2; // 1 << 1
+    private inline static final FLAG_TOUCHABLE_WHEN_ACTIVE:Int = 4; // 1 << 2
+    private inline static final FLAG_IS_HIT_VISUAL:Int = 8; // 1 << 3
+
+    #if plugin_arcade
+    private inline static final FLAG_ARCADE_BODY_ENABLE:Int = 64; // 1 << 6
+    #end
+
     /**
      * Read and write arbitrary boolean flags on this visual.
      * Index should be between 0 (included) and 16 (excluded) or result is undefined.
@@ -1567,33 +1576,33 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public var active(get,set):Bool;
     inline function get_active():Bool {
-        return !flags.bool(0);
+        return flags | FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE;
     }
     function set_active(active:Bool):Bool {
-        if (active == !flags.bool(0)) return active;
-        flags.setBool(0, !active);
+        if (active == (flags | FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE)) return active;
+        flags = active ? flags & ~FLAG_NOT_ACTIVE : flags | FLAG_NOT_ACTIVE;
         if (active) {
-            visible = flags.bool(1);
-            touchable = flags.bool(2);
+            visible = flags | FLAG_VISIBLE_WHEN_ACTIVE == FLAG_VISIBLE_WHEN_ACTIVE;
+            touchable = flags | FLAG_TOUCHABLE_WHEN_ACTIVE == FLAG_TOUCHABLE_WHEN_ACTIVE;
 #if plugin_arcade
             var body = this.body;
             if (body != null) {
-                body.enable = flags.bool(3);
+                body.enable = flags | FLAG_ARCADE_BODY_ENABLE == FLAG_ARCADE_BODY_ENABLE;
             }
 #end
         }
         else {
-            flags.setBool(1, visible);
-            flags.setBool(2, touchable);
+            flags = visible ? flags | FLAG_VISIBLE_WHEN_ACTIVE : flags & ~FLAG_VISIBLE_WHEN_ACTIVE;
+            flags = touchable ? flags | FLAG_TOUCHABLE_WHEN_ACTIVE : flags & ~FLAG_TOUCHABLE_WHEN_ACTIVE;
             visible = false;
             touchable = false;
 #if plugin_arcade
             var body = this.body;
             if (body != null) {
-                flags.setBool(3, body.enable);
+                flags = body.enable ? flags | FLAG_ARCADE_BODY_ENABLE : flags & ~FLAG_ARCADE_BODY_ENABLE;
             }
             else {
-                flags.setBool(3, false);
+                flags = flags & ~FLAG_ARCADE_BODY_ENABLE;
             }
 #end
         }
@@ -2152,6 +2161,17 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             && testY >= 0
             && testY < height;
 
+    }
+
+    private var isHitVisual(get,set):Bool;
+    inline function get_isHitVisual():Bool {
+        // Equivalent to internalFlag(3)
+        return flags & FLAG_IS_HIT_VISUAL == FLAG_IS_HIT_VISUAL;
+    }
+    inline function set_isHitVisual(isHitVisual:Bool):Bool {
+        // Equivalent to internalFlag(3, isHitVisual)
+        flags = isHitVisual ? flags | FLAG_IS_HIT_VISUAL : flags & ~FLAG_IS_HIT_VISUAL;
+        return isHitVisual;
     }
 
     /**
