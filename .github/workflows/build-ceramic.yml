@@ -145,6 +145,8 @@ jobs:
           sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
           sudo ln -s $HAXEPATH/haxe-bin             /usr/local/bin/haxe-bin
           sudo ln -s $HAXEPATH/haxelib-bin          /usr/local/bin/haxelib-bin
+          sudo ln -s $HAXEPATH/haxe                 /usr/local/bin/haxe
+          sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
           sudo ln -s $HAXEPATH/std                  /usr/local/share/haxe/std
           sudo ln -s $NEKOPATH/neko                 /usr/local/bin/neko
           sudo ln -s $NEKOPATH/nekoc                /usr/local/bin/nekoc
@@ -242,6 +244,8 @@ jobs:
           sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
           sudo ln -s $HAXEPATH/haxe-bin             /usr/local/bin/haxe-bin
           sudo ln -s $HAXEPATH/haxelib-bin          /usr/local/bin/haxelib-bin
+          sudo ln -s $HAXEPATH/haxe                 /usr/local/bin/haxe
+          sudo ln -s $HAXEPATH/haxelib              /usr/local/bin/haxelib
           sudo ln -s $HAXEPATH/std                  /usr/local/share/haxe/std
           sudo ln -s $NEKOPATH/neko                 /usr/local/bin/neko
           sudo ln -s $NEKOPATH/nekoc                /usr/local/bin/nekoc
