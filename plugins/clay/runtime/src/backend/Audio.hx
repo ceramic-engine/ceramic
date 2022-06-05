@@ -203,7 +203,6 @@ class Audio implements spec.Audio {
         var isStream = audioResource.data.isStream;
 
         // These options are ignored on streamed sounds
-        // at the moment
         if (isStream) {
             position = 0;
             pitch = 1;
@@ -216,7 +215,7 @@ class Audio implements spec.Audio {
             #if cpp
             if (isStream) {
 
-                // At the moment, looping a stream doesn't seem reliable in luxe/snow/openal.
+                // At the moment, looping a stream doesn't seem reliable if just relying on openal implementation.
                 // When looping a stream, let's manage ourselve the loop by
                 // checking the position and playing again from start.
 
@@ -392,6 +391,10 @@ class Audio implements spec.Audio {
             handle = loopHandles.get(handle);
         }
 
+        // Forbid changing pan of streaming sounds
+        var instance = Clay.app.audio.instanceOf(handle);
+        if (instance != null && instance.source.data.isStream) return;
+
         Clay.app.audio.pan(handle, pan);
 
     }
@@ -420,6 +423,10 @@ class Audio implements spec.Audio {
             if (handle == null || (handle:Int) == -1) return;
         }
 
+        // Forbid changing pitch of streaming sounds
+        var instance = Clay.app.audio.instanceOf(handle);
+        if (instance != null && instance.source.data.isStream) return;
+
         Clay.app.audio.pitch(handle, pitch);
 
     }
@@ -447,6 +454,10 @@ class Audio implements spec.Audio {
             handle = loopHandles.get(handle);
             if (handle == null || (handle:Int) == -1) return;
         }
+
+        // Forbid changing position of streaming sounds
+        var instance = Clay.app.audio.instanceOf(handle);
+        if (instance != null && instance.source.data.isStream) return;
 
         Clay.app.audio.position(handle, position);
 
