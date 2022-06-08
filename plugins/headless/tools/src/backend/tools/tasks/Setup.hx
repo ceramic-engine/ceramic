@@ -3,8 +3,8 @@ package backend.tools.tasks;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Helpers.*;
 import tools.Files;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -44,6 +44,8 @@ class Setup extends tools.Task {
         var hxmlPath = Path.join([targetPath, 'build.hxml']);
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
+
+        var sharedHxml = project.sharedHxml();
 
         // Compute relative ceramicPath
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
@@ -155,7 +157,7 @@ class Setup extends tools.Task {
                 classPaths.push('-cp ' + relativePath);
             }
         }
-    
+
         var finalHxml = [];
 
         finalHxml.push('-main Main');
@@ -166,6 +168,10 @@ class Setup extends tools.Task {
         // finalHxml.push('-D ceramic_render_no_indice');
         finalHxml = finalHxml.concat(classPaths);
         finalHxml = finalHxml.concat(libs);
+
+        if (sharedHxml != null)
+            finalHxml = finalHxml.concat(sharedHxml);
+
         finalHxml = finalHxml.concat(haxeflags);
 
         if (target.name == 'lua') {

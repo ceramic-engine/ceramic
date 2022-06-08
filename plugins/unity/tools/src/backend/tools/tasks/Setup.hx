@@ -46,6 +46,8 @@ class Setup extends tools.Task {
         var force = args.indexOf('--force') != -1;
         //var updateProject = args.indexOf('--update-project') != -1;
 
+        var sharedHxml = project.sharedHxml();
+
         // Compute relative ceramicPath
         var runtimePath = Path.normalize(Path.join([ceramicPath, '../runtime']));
         var runtimePathRelative = getRelativePath(runtimePath, targetPath);
@@ -169,6 +171,10 @@ class Setup extends tools.Task {
         finalHxml.push('-cp ' + Path.join([backendRuntimePathRelative, 'src']));
         finalHxml = finalHxml.concat(classPaths);
         finalHxml = finalHxml.concat(libs);
+
+        if (sharedHxml != null)
+            finalHxml = finalHxml.concat(sharedHxml);
+
         finalHxml = finalHxml.concat(haxeflags);
 
         if (target.name == 'unity') {

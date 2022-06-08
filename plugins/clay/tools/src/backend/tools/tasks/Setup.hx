@@ -46,6 +46,8 @@ class Setup extends tools.Task {
         var backendName = 'clay';
         var ceramicPath = context.ceramicToolsPath;
 
+        var sharedHxml = project.sharedHxml();
+
         var outPath = Path.join([cwd, 'out']);
         var targetPath = target.outPath(backendName, cwd, context.debug, variant);
         var hxmlPath = Path.join([targetPath, 'project.hxml']);
@@ -211,7 +213,7 @@ $targetFlags
 -D no-console
 ' + classPathsHxml + '-cp ' + Path.join([runtimePathRelative, 'src']) + '
 -cp ' + Path.join([backendRuntimePathRelative, 'src']) + '
--cp ' + '../../../src' + '
+-cp ' + '../../../src' + '${sharedHxml != null && sharedHxml.length > 0 ? '\n' + sharedHxml.join('\n') : ''}
 ${libsHxml.join('\n')}
 -lib clay
 -D clay_app_id=' + Json.stringify(project.app.name) + '

@@ -237,6 +237,22 @@ class Project {
 
 /// Utilities
 
+    public function sharedHxml():Array<String> {
+
+        if (app != null) {
+
+            return [
+                // Needed to workaround some edge case on type resolution in StateMachineMacro
+                // in case the state machine is created inside a `components` package.
+                '--remap components_:components'
+            ];
+
+        }
+
+        return [];
+
+    }
+
 }
 
 /** Parsing/loading code to read ceramic project format. */

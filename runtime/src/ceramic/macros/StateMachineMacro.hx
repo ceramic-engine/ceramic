@@ -55,7 +55,7 @@ class StateMachineMacro {
             case TInst(_, [TEnum(t, params)]):
 
                 return createStaticStateMachine(currentPos, t, params, null, null);
-            
+
             case TInst(_, [TAbstract(t, params), TInst(entityT, entityParams)]):
 
                 var abstractType = t.get();
@@ -63,7 +63,7 @@ class StateMachineMacro {
                     createStaticStateMachine(currentPos, null, null, t, params);
                     return createStaticStateMachine(currentPos, null, null, t, params, entityT, entityParams);
                 }
-            
+
             case TInst(_, [TAbstract(t, params)]):
 
                 var abstractType = t.get();
@@ -142,6 +142,60 @@ class StateMachineMacro {
 
     }
 
+    static function sanitizePack(pack:Array<String>):Array<String> {
+        if (pack == null || pack.length < 0)
+            return pack;
+        if (pack.length > 0 && pack[0] == 'components') {
+            pack = [].concat(pack);
+            pack[0] = 'components_';
+        }
+        return pack;
+    }
+
+    static function extractEnumType(type:haxe.macro.Type.Ref<haxe.macro.Type.EnumType>) {
+
+        if (type == null || type.get() == null)
+            return null;
+        var enumType = type.get();
+        enumType.pack = sanitizePack(enumType.pack);
+        return enumType;
+
+    }
+
+    static function extractAbstractType(type:haxe.macro.Type.Ref<haxe.macro.Type.AbstractType>) {
+
+        if (type == null || type.get() == null)
+            return null;
+        var abstractType = type.get();
+        abstractType.pack = sanitizePack(abstractType.pack);
+        return abstractType;
+
+    }
+
+    static function extractClassType(type:haxe.macro.Type.Ref<haxe.macro.Type.ClassType>) {
+
+        if (type == null || type.get() == null)
+            return null;
+        var classType = type.get();
+        classType.pack = sanitizePack(classType.pack);
+        return classType;
+
+    }
+
+    static function sanitizeComplexType(complexType:haxe.macro.ComplexType) {
+
+        if (complexType == null)
+            return null;
+        switch complexType {
+            case TPath(p):
+                p.pack = sanitizePack(p.pack);
+                return TPath(p);
+            default:
+                return complexType;
+        }
+
+    }
+
     static function createStaticStateMachine(
         currentPos:Position,
         t:haxe.macro.Type.Ref<haxe.macro.Type.EnumType>,
@@ -154,14 +208,14 @@ class StateMachineMacro {
 
         // Enum-based implementation (type-safe state machine)
 
-        var enumType = t != null ? t.get() : null;
-        var enumComplexType = enumType != null ? TypeTools.toComplexType(TEnum(t, params)) : null;
+        var enumType = extractEnumType(t);
+        var enumComplexType = sanitizeComplexType(enumType != null ? TypeTools.toComplexType(TEnum(t, params)) : null);
 
-        var abstractType = abstractT != null ? abstractT.get() : null;
-        var abstractComplexType = abstractType != null ? TypeTools.toComplexType(TAbstract(abstractT, abstractParams)) : null;
+        var abstractType = extractAbstractType(abstractT);
+        var abstractComplexType = sanitizeComplexType(abstractType != null ? TypeTools.toComplexType(TAbstract(abstractT, abstractParams)) : null);
 
-        var entityType = entityT != null ? entityT.get() : null;
-        var entityComplexType = entityType != null ? TypeTools.toComplexType(TInst(entityT, entityParams)) : null;
+        var entityType = extractClassType(entityT);
+        var entityComplexType = sanitizeComplexType(entityType != null ? TypeTools.toComplexType(TInst(entityT, entityParams)) : null);
 
         var type:haxe.macro.Type = enumType != null ? TEnum(t, params) : TAbstract(abstractT, abstractParams);
         var typePathStr = '' + type;
@@ -223,9 +277,9 @@ class StateMachineMacro {
             }
 
             var fields:Array<Field> = [];
-            
+
             if (entityComplexType == null) {
-                
+
                 if (enumType != null) {
 
                     // Enum type
@@ -273,7 +327,7 @@ class StateMachineMacro {
                     // A bit hacky, but I didn't find a simpler way to get this information
                     // TODO make it cleaner?
                     var isInt = false;//('' + abstractType.type) == 'TAbstract(Int,[])';
-                    
+
                     var exprList = [];
                     exprList.push('{');
                     if (isInt) {
@@ -334,7 +388,7 @@ class StateMachineMacro {
                     doc: '',
                     meta: []
                 });
-                
+
                 fields.push({
                     pos: currentPos,
                     name: 'set',
@@ -586,7 +640,7 @@ class StateMachineMacro {
                 enumValues = usedNamesWithEnumValues.get(fetchedParent.name);
                 abstractValues = usedNamesWithAbstractValues.get(fetchedParent.name);
             }
-            
+
             if (entityComplexType == null) {
                 entityComplexType = entityTypes.get(fetchedParent.name);
             }
@@ -655,13 +709,13 @@ class StateMachineMacro {
                             var parent = parentHold != null ? parentHold.t : null;
                             var numParents = 0;
                             while (parent != null) {
-                    
+
                                 var fetchedParent = parent.get();
-                    
+
                                 for (field in fetchedParent.fields.get()) {
                                     entityFieldsByName.set(field.name, true);
                                 }
-                    
+
                                 parentHold = fetchedParent.superClass;
                                 parent = parentHold != null ? parentHold.t : null;
                                 numParents++;
@@ -705,7 +759,7 @@ class StateMachineMacro {
             updateExprs.push('switch state {');
             exitExprs.push('switch state {');
         }
-        
+
         enterExprs.push('default:');
         updateExprs.push('default:');
         exitExprs.push('default:');
@@ -764,10 +818,10 @@ class StateMachineMacro {
                 args: [],
                 ret: macro :Void,
                 expr: macro {
-                    
+
                     // Call hook method from state (if any)
                     ${enterSwitchExpr};
-                    
+
                     // Enter new state object (if any)
                     currentStateInstance = get(state);
                     if (currentStateInstance != null) {
@@ -794,7 +848,7 @@ class StateMachineMacro {
                     var state = this.state;
 
                     if (paused || !stateDefined) return;
-                    
+
                     // Call hook method from state (if any)
                     ${updateSwitchExpr};
 
@@ -815,7 +869,7 @@ class StateMachineMacro {
                 args: [],
                 ret: macro :Void,
                 expr: macro {
-                    
+
                     // Call hook method from state (if any)
                     ${exitSwitchExpr};
 
