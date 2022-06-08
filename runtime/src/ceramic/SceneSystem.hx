@@ -60,7 +60,7 @@ class SceneSystem extends System {
             if (prevFilter != null) {
                 for (scene in rootScenes) {
                     if (scene.parent == prevFilter.content) {
-                        prevFilter.remove(scene);
+                        prevFilter.content.remove(scene);
                         scene.scaleX = 1;
                         scene.scaleY = 1;
                     }
@@ -76,7 +76,7 @@ class SceneSystem extends System {
                 filter.content.scale(filter.width / screen.width, filter.height / screen.height);
                 for (scene in rootScenes) {
                     if (scene.parent != filter.content) {
-                        filter.add(scene);
+                        filter.content.add(scene);
                     }
                 }
             }
