@@ -9,7 +9,16 @@ class TextureAtlasPage {
 
     public var height:Float = 0;
 
-    public var filter:TextureFilter = LINEAR;
+    public var filter(default, set):TextureFilter = LINEAR;
+    function set_filter(filter:TextureFilter):TextureFilter {
+        if (this.filter != filter) {
+            this.filter = filter;
+            if (texture != null) {
+                texture.filter = filter;
+            }
+        }
+        return filter;
+    }
 
     public var texture(default, set):Texture = null;
 
