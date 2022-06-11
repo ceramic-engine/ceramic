@@ -116,4 +116,19 @@ class GeometryUtils {
 
     }
 
+    /**
+     * Set the given result's `x` and `y` values so that it's a vector representing
+     * a direction matching the angle (in degrees)
+     * @param angle The angle to compute the direction from
+     * @param result The vector (a `Point` object) receiving the result
+     */
+    public static function angleDirection(angle:Float, result:Point):Point {
+
+        var phi = Utils.degToRad((angle - 90));
+        result.x = Math.cos(phi);
+        result.y = Math.sin(phi);
+        return result;
+
+    }
+
 }
