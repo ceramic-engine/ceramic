@@ -1576,18 +1576,18 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public var active(get,set):Bool;
     inline function get_active():Bool {
-        return flags | FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE;
+        return flags & FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE;
     }
     function set_active(active:Bool):Bool {
-        if (active == (flags | FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE)) return active;
+        if (active == (flags & FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE)) return active;
         flags = active ? flags & ~FLAG_NOT_ACTIVE : flags | FLAG_NOT_ACTIVE;
         if (active) {
-            visible = flags | FLAG_VISIBLE_WHEN_ACTIVE == FLAG_VISIBLE_WHEN_ACTIVE;
-            touchable = flags | FLAG_TOUCHABLE_WHEN_ACTIVE == FLAG_TOUCHABLE_WHEN_ACTIVE;
+            visible = flags & FLAG_VISIBLE_WHEN_ACTIVE == FLAG_VISIBLE_WHEN_ACTIVE;
+            touchable = flags & FLAG_TOUCHABLE_WHEN_ACTIVE == FLAG_TOUCHABLE_WHEN_ACTIVE;
 #if plugin_arcade
             var body = this.body;
             if (body != null) {
-                body.enable = flags | FLAG_ARCADE_BODY_ENABLE == FLAG_ARCADE_BODY_ENABLE;
+                body.enable = flags & FLAG_ARCADE_BODY_ENABLE == FLAG_ARCADE_BODY_ENABLE;
             }
 #end
         }
