@@ -8,7 +8,7 @@ interface Draw {
 
     function swap():Void;
 
-    function initBuffers(#if ceramic_render_no_indice maxVerts:Int #end):Void;
+    function initBuffers():Void;
 
     function beginRender():Void;
 
@@ -21,7 +21,7 @@ interface Draw {
     function enableBlending():Void;
 
     function disableBlending():Void;
-    
+
     function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void;
 
     function getActiveTexture():Int;
@@ -53,8 +53,6 @@ interface Draw {
     function drawWithStencilTest():Void;
 
     function drawWithoutStencilTest():Void;
-
-#if !ceramic_render_no_indice
 
     function getNumPos():Int;
 
@@ -93,25 +91,5 @@ interface Draw {
     function hasAnythingToFlush():Bool;
 
     function flush():Void;
-
-#else
-
-    function maxPosFloats():Int;
-
-    function flush(posFloats:Int, uvFloats:Int, colorFloats:Int):Void;
-
-    function getPosList():backend.ArrayBuffer;
-
-    function putInPosList(posList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
-    function getUvList():backend.ArrayBuffer;
-
-    function putInUvList(uvList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
-    function getColorList():backend.ArrayBuffer;
-
-    function putInColorList(colorList:backend.ArrayBuffer, index:Int, value:Float):Void;
-
-#end
 
 }
