@@ -3,7 +3,6 @@ package ceramic;
 import ceramic.Assert.assert;
 import ceramic.Shortcuts.*;
 import ceramic.UInt8Array;
-import clay.buffers.Uint8Array;
 import gif.GifEncoder;
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
@@ -36,9 +35,9 @@ class GifCapture extends Entity {
 
     var pendingPath:String = null;
 
-    var pendingPixelsList:Array<Uint8Array> = null;
+    var pendingPixelsList:Array<UInt8Array> = null;
 
-    var mixedPixels:Uint8Array = null;
+    var mixedPixels:UInt8Array = null;
 
     var middleFactor:Float = 1;
 
@@ -75,7 +74,7 @@ class GifCapture extends Entity {
         width = Std.int(screen.nativeWidth * screen.nativeDensity);
         height = Std.int(screen.nativeHeight * screen.nativeDensity);
 
-        mixedPixels = new Uint8Array(width * height * 3);
+        mixedPixels = new UInt8Array(width * height * 3);
 
         encoder = new GifEncoder(
             width, height,
