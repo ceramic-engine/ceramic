@@ -8,7 +8,7 @@
   },
   "private": true,
   "dependencies": {
-    "node": "10.16.3",
-    "npm": "6.9.0"
+    "node": "14.19.1",
+    "npm": "8.12.1"
   }
 }
