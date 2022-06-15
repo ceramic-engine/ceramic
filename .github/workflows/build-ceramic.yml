@@ -41,7 +41,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '10.16.3'
+          node-version: '14.19.1'
+      - name: Setup NPM
+        working-directory: .
+        run: |
+          npm install -g npm@8.12.1
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -67,16 +71,13 @@ jobs:
           Remove-Item 'git/haxe-binary/linux' -Recurse
           Remove-Item 'git/haxe-binary/mac' -Recurse
           cd tools
-          Remove-Item './npm.cmd'
           Remove-Item './npm'
-          Remove-Item './npx.cmd'
           Remove-Item './npx'
           Remove-Item './node'
           Remove-Item './haxe'
           Remove-Item './haxelib'
           Remove-Item './neko'
           Remove-Item './ceramic'
-          npm uninstall npm
           cd ..
       - name: Run ceramic
         working-directory: ./tools
@@ -129,7 +130,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '10.16.3'
+          node-version: '14.19.1'
+      - name: Setup NPM
+        working-directory: .
+        run: |
+          sudo npm install -g npm@8.12.1
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -174,14 +179,11 @@ jobs:
           rm -rf git/haxe-binary/windows
           cd tools
           rm -f ./npm.cmd
-          rm -f ./npm
           rm -f ./npx.cmd
-          rm -f ./npx
           rm -f ./node.cmd
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
-          npm uninstall npm
           cd ..
       - name: Run ceramic
         working-directory: ./tools
@@ -226,7 +228,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '10.16.3'
+          node-version: '14.19.1'
+      - name: Setup NPM
+        working-directory: .
+        run: |
+          sudo npm install -g npm@8.12.1
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -271,14 +277,11 @@ jobs:
           rm -rf git/haxe-binary/windows
           cd tools
           rm -f ./npm.cmd
-          rm -f ./npm
           rm -f ./npx.cmd
-          rm -f ./npx
           rm -f ./node.cmd
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
-          npm uninstall npm
           cd ..
       - name: Run ceramic
         working-directory: ./tools
