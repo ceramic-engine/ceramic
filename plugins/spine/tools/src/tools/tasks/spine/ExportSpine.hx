@@ -191,9 +191,30 @@ class ExportSpine extends tools.Task {
             // Move files to assets directory
             //
             var skeletons:Map<String,Array<String>> = new Map();
+            var flatExportList = Files.getFlatDirectory(exportPath);
+            var atlasPages = new Map<String,Array<String>>();
 
-            for (item in Files.getFlatDirectory(exportPath)) {
+            for (item in flatExportList) {
+                var isAtlas = RE_ATLAS.match(item);
+                if (isAtlas) {
+                    atlasPages.set(item, extractImageNames(File.getContent(Path.join([exportPath, item]))));
+                }
+            }
+
+            for (item in flatExportList) {
+
                 var name = Path.withoutDirectory(Path.withoutExtension(item));
+
+                if (RE_PNG.match(item)) {
+                    var pngFileName = Path.withoutDirectory(item);
+                    for (atlasName => pages in atlasPages) {
+                        if (pages.indexOf(pngFileName) != -1) {
+                            name = Path.withoutDirectory(Path.withoutExtension(atlasName));
+                            break;
+                        }
+                    }
+                }
+
                 if (name.indexOf('@') != -1) name = name.substring(0, name.indexOf('@'));
 
                 if (rename != null && rename.exists(name))
@@ -403,9 +424,17 @@ class ExportSpine extends tools.Task {
 
         var lines = inAtlas.replace("\r",'').split("\n");
         var newLines = [];
+        var previousIsBlank = true;
         for (line in lines) {
-            if (RE_PNG.match(line)) {
+            if (previousIsBlank && RE_PNG.match(line)) {
                 line = convertName(line);
+                previousIsBlank = false;
+            }
+            else if (line.trim().length == 0) {
+                previousIsBlank = true;
+            }
+            else {
+                previousIsBlank = false;
             }
             newLines.push(line);
         }
@@ -414,8 +443,31 @@ class ExportSpine extends tools.Task {
 
     }
 
+    function extractImageNames(atlas:String) {
+
+        var lines = atlas.replace("\r",'').split("\n");
+        var result = [];
+        var previousIsBlank = true;
+        for (line in lines) {
+            if (previousIsBlank && RE_PNG.match(line)) {
+                result.push(line.trim());
+                previousIsBlank = false;
+            }
+            else if (line.trim().length == 0) {
+                previousIsBlank = true;
+            }
+            else {
+                previousIsBlank = false;
+            }
+        }
+
+        return result;
+
+    }
+
     static var RE_AT_NX = ~/@([0-9]+(?:\.[0-9]+)?)x(_?[0-9]+)?$/;
     static var RE_SCALE_SUFFIX = ~/^([0-9]+(\.[0-9]+)?(\/|\\))/;
     static var RE_PNG = ~/\.(png|PNG)$/;
+    static var RE_ATLAS = ~/\.(atlas|ATLAS)$/;
 
 }
