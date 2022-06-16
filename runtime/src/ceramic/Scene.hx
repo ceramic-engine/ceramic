@@ -25,6 +25,11 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     }
 
     /**
+     * Whether this scene is a root scene
+     */
+    public var isRootScene(default, null):Bool = false;
+
+    /**
      * Set to `false` if you want to disable auto update on this scene object.
      * If auto update is disabled, you become responsible to explicitly call
      * `update(delta)` at every frame yourself. Use this if you want to have control over
@@ -133,7 +138,8 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         // Override in subclasses
 
         // Default: there is nothing asynchronous to load, just call next()
-        next();
+        if (!destroyed)
+            next();
 
     }
 
@@ -201,8 +207,11 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         status = FADE_IN;
         _fadeIn(() -> {
             status = READY;
-            ready();
-            done();
+
+            if (!destroyed) {
+                ready();
+                done();
+            }
         });
 
     }
@@ -218,7 +227,10 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         status = FADE_OUT;
         _fadeOut(() -> {
             status = DISABLED;
-            done();
+
+            if (!destroyed) {
+                done();
+            }
         });
 
     }

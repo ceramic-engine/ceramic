@@ -65,6 +65,28 @@ class SceneSystem extends System {
                         scene.scaleY = 1;
                     }
                 }
+                // Remove any child that is a scene from this previous filter content
+                if (prevFilter.content.children != null) {
+                    var toRemove = null;
+                    for (i in 0...prevFilter.content.children.length) {
+                        var child = prevFilter.content.children.unsafeGet(i);
+                        if (child is Scene) {
+                            var childScene:Scene = cast child;
+                            if (childScene.isRootScene) {
+                                if (toRemove == null)
+                                    toRemove = [];
+                                toRemove.push(childScene);
+                            }
+                        }
+                    }
+                    if (toRemove != null) {
+                        for (i in 0...toRemove.length) {
+                            var childScene = toRemove.unsafeGet(i);
+                            prevFilter.content.remove(childScene);
+                            childScene.active = false;
+                        }
+                    }
+                }
                 if (autoDestroyFilter)
                     prevFilter.destroy();
                 else
@@ -133,6 +155,8 @@ class SceneSystem extends System {
 
                 if (scene.destroyed)
                     throw 'Cannot assign a destroyed scene as root scene!';
+
+                scene.isRootScene = true;
 
                 var prevAssets = null;
                 rootScenes.original.set(name, scene);
