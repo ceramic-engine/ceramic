@@ -99,6 +99,9 @@ class ImSystem extends System {
 
         Im.endFrame();
 
+        if (filter != null)
+            filter.active = (Im._numUsedWindows > 0);
+
     }
 
 /// Internal

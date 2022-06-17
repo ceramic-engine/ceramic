@@ -153,6 +153,9 @@ class Im {
 
     static var _usedWindowKeys:Map<String,String> = new Map();
 
+    @:allow(elements.ImSystem)
+    static var _numUsedWindows:Int = 0;
+
     public static function initIfNeeded():Void {
 
         if (context.view == null) {
@@ -176,6 +179,7 @@ class Im {
     @:noCompletion public static function beginFrame():Void {
 
         _usedWindowKeys.clear();
+        _numUsedWindows = 0;
 
         while (_beginFrameCallbacks.length > 0) {
             var cb = _beginFrameCallbacks.pop();
@@ -491,6 +495,7 @@ class Im {
 
         assert(!_usedWindowKeys.exists(id), 'Duplicate window with identifier: $id / First call ${_usedWindowKeys.get(id)}');
         _usedWindowKeys.set(id, _posInfosToString(pos));
+        _numUsedWindows++;
 
         var title = title != null ? title : extractTitle(key);
         var windowData = context.windowsData.get(id);
