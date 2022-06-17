@@ -1458,17 +1458,17 @@ class App extends Entity {
                     if (visual.clipDirty) {
                         visual.computeClip();
                     }
-                }
 
-                if (visual.computedRenderTarget != null) {
-                    if (visual.asQuad != null) {
-                        if (visual.asQuad.texture != null) {
-                            visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                    if (visual.computedRenderTarget != null) {
+                        if (visual.asQuad != null) {
+                            if (visual.asQuad.texture != null) {
+                                visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                            }
                         }
-                    }
-                    else if (visual.asMesh != null) {
-                        if (visual.asMesh.texture != null) {
-                            visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                        else if (visual.asMesh != null) {
+                            if (visual.asMesh.texture != null) {
+                                visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                            }
                         }
                     }
                 }

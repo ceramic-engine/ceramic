@@ -1,11 +1,11 @@
 package backend;
 
-import clay.buffers.Uint16Array;
 import clay.Clay;
-import clay.opengl.GL;
-import clay.graphics.Graphics;
-import clay.buffers.Float32Array;
 import clay.buffers.ArrayBufferView;
+import clay.buffers.Float32Array;
+import clay.buffers.Uint16Array;
+import clay.graphics.Graphics;
+import clay.opengl.GL;
 
 using ceramic.Extensions;
 
@@ -69,7 +69,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _viewUvsBufferViewArray:Array<ArrayBufferView> = [];
     static var _viewColorsBufferViewArray:Array<ArrayBufferView> = [];
     static var _viewIndicesBufferViewArray:Array<ArrayBufferView> = [];
-    
+
     static var _viewPosBufferView:ArrayBufferView;
     static var _viewUvsBufferView:ArrayBufferView;
     static var _viewColorsBufferView:ArrayBufferView;
@@ -120,7 +120,7 @@ class Draw #if !completion implements spec.Draw #end {
     ]);
 
     static var _modelViewTransform = new ceramic.Transform();
-    
+
     static var _renderTargetTransform = new ceramic.Transform();
 
     static var _blackTransparentColor = new ceramic.AlphaColor(ceramic.Color.BLACK, 0);
@@ -263,7 +263,7 @@ class Draw #if !completion implements spec.Draw #end {
             _currentRenderTarget = renderTarget;
             if (renderTarget != null) {
                 var renderTexture:clay.graphics.RenderTexture = cast renderTarget.backendItem;
-                
+
                 Graphics.setRenderTarget(renderTexture.renderTarget);
 
                 updateProjectionMatrix(
@@ -296,9 +296,9 @@ class Draw #if !completion implements spec.Draw #end {
                         _blackTransparentColor.alphaFloat
                     );
                 }
-                
+
             } else {
-                
+
                 Graphics.setRenderTarget(null);
 
                 updateProjectionMatrix(
@@ -322,7 +322,7 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function useShader(shader:backend.Shader):Void {
-        
+
         _activeShader = shader;
 
         (shader:ShaderImpl).uniforms.setMatrix4('projectionMatrix', _projectionMatrix);
@@ -339,7 +339,7 @@ class Draw #if !completion implements spec.Draw #end {
             _vertexSize = 4;
 
         _maxVerts = Std.int(Math.floor(MAX_VERTS_SIZE / _vertexSize));
-        
+
         (shader:ShaderImpl).activate();
 
         if (_numPos == 0) {
@@ -415,7 +415,7 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function beginDrawingInStencilBuffer():Void {
-        
+
         _drawingInStencilBuffer = true;
 
         // This part is not provided by clay because too specific for now
@@ -435,7 +435,7 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
-        
+
         _drawingInStencilBuffer = false;
 
     }
@@ -686,19 +686,19 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
-        
+
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
-        
+
         return _maxVerts - _numPos;
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
-        
+
         return MAX_INDICES - _numIndices;
 
     }

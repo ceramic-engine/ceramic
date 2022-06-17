@@ -5,6 +5,10 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+#if !ceramic_no_rendertexture_initial_clear
+import ceramic.Quad;
+#end
+
 @:allow(ceramic.App)
 class RenderTexture extends Texture {
 
@@ -17,9 +21,9 @@ class RenderTexture extends Texture {
     public var renderDirty:Bool = false;
 
     #if ceramic_rendertexture_priority_use_haxe_map
-    public var dependingTextures:Map<Int,Int> = null;
+    @:noCompletion public var dependingTextures:Map<Int,Int> = null;
     #else
-    public var dependingTextures:IntIntMap = null;
+    @:noCompletion public var dependingTextures:IntIntMap = null;
     #end
 
     public var priority(default, null):Float = 0;
@@ -30,6 +34,23 @@ class RenderTexture extends Texture {
 
     @:allow(ceramic.Renderer)
     var _usedInRendering:Bool = false;
+
+    @:allow(ceramic.Renderer)
+    var _renderedOnce(default, set):Bool = false;
+    function set__renderedOnce(_renderedOnce:Bool):Bool {
+        this._renderedOnce = _renderedOnce;
+        #if !ceramic_no_rendertexture_initial_clear
+        if (_renderedOnce && _initialClearQuad != null) {
+            _initialClearQuad.destroy();
+            _initialClearQuad = null;
+        }
+        #end
+        return _renderedOnce;
+    }
+
+    #if !ceramic_no_rendertexture_initial_clear
+    var _initialClearQuad:Quad = null;
+    #end
 
 /// Lifecycle
 
@@ -49,11 +70,28 @@ class RenderTexture extends Texture {
 
         app.renderTextures.push(this);
 
+        #if !ceramic_no_rendertexture_initial_clear
+        // We use an empty quad just to trigger an initial draw from the renderer
+        // and ensure that this render texture is cleared properly and looks transparent by default.
+        // Done only once per render texture. The quad is destroyed right after.
+        _initialClearQuad = new Quad();
+        _initialClearQuad.pos(0, 0);
+        _initialClearQuad.size(0, 0);
+        _initialClearQuad.transparent = false;
+        _initialClearQuad.renderTarget = this;
+        renderDirty = true;
+        #end
+
     }
 
     override function destroy() {
 
         super.destroy();
+
+        if (_initialClearQuad != null) {
+            _initialClearQuad.destroy();
+            _initialClearQuad = null;
+        }
 
         app.renderTextures.remove(this);
 
