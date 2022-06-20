@@ -461,6 +461,26 @@ class Input extends Entity {
 
     }
 
+    /**
+     * Starts a controller rumble.
+     * 
+     * @param gamepadId 0 - 4
+     * @param duration in Seconds 
+     * @param lowFrequency 0.0 - 1.0
+     * @param highFrequency 0.0 - 1.0
+     */
+     public function startGamepadRumble(gamepadId:Int, duration:Float, lowFrequency:Float, highFrequency:Float) {
+
+        ceramic.App.app.backend.input.startGamepadRumble(gamepadId, leftAmount, highFrequency, duration);
+
+    }
+
+    public function stopGamepadRumble(gamepadId:Int) {
+
+        ceramic.App.app.backend.input.stopGamepadRumble(gamepadId);
+
+    }
+
     public function gamepadName(gamepadId:Int):String {
 
         return gamepadNames.get(gamepadId);

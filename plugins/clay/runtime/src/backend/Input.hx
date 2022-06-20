@@ -12,6 +12,18 @@ class Input implements tracker.Events implements spec.Input {
     @event function gamepadEnable(gamepadId:Int, name:String);
     @event function gamepadDisable(gamepadId:Int);
 
+    public function startGamepadRumble(gamepadId:Int, lowFrequency:Float, highFrequency:Float, duration:Float):Void {
+
+        Clay.app.runtime.startGamepadRumble(gamepadId, lowFrequency, highFrequency, duration);
+
+    };
+
+    public function stopGamepadRumble(gamepadId:Int): Void {
+
+        Clay.app.runtime.stopGamepadRumble(gamepadId);
+
+    };
+
     public function new() {
 
     }
