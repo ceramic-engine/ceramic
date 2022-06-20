@@ -1878,6 +1878,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         clear();
 
+        // Ensure this visual won't be rendered anymore
+        visibilityDirty = false;
+        computedVisibile = false;
+
     }
 
     /**
@@ -2325,26 +2329,34 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     function computeVisibility() {
 
-        if (parent != null && parent.visibilityDirty) {
-            parent.computeVisibility();
+        if (destroyed) {
+
+            computedVisible = false;
+
         }
+        else {
 
-        computedVisible = visible;
-        computedAlpha = alpha;
+            if (parent != null && parent.visibilityDirty) {
+                parent.computeVisibility();
+            }
 
-        if (computedVisible) {
+            computedVisible = visible;
+            computedAlpha = alpha;
 
-            if (parent != null) {
-                if (!parent.computedVisible && (parent.inheritAlpha || !parent.visible || (parent.parent != null && !parent.parent.computedVisible))) {
+            if (computedVisible) {
+
+                if (parent != null) {
+                    if (!parent.computedVisible && (parent.inheritAlpha || !parent.visible || (parent.parent != null && !parent.parent.computedVisible))) {
+                        computedVisible = false;
+                    }
+                    if (inheritAlpha) computedAlpha *= parent.computedAlpha;
+                }
+
+                if (computedAlpha == 0 && blending != Blending.SET) {
                     computedVisible = false;
                 }
-                if (inheritAlpha) computedAlpha *= parent.computedAlpha;
-            }
 
-            if (computedAlpha == 0 && blending != Blending.SET) {
-                computedVisible = false;
             }
-
         }
 
         visibilityDirty = false;
