@@ -520,4 +520,15 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    public function startGamepadRumble(gamepadId:Int, lowFrequency:Float, highFrequency:Float, duration:Float):Void {
+
+        // TODO: Implement me
+
+    };
+
+    public function stopGamepadRumble(gamepadId:Int): Void {
+
+        // TODO: Implement me
+
+    };
 }

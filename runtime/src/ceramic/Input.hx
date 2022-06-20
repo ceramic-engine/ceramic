@@ -463,18 +463,15 @@ class Input extends Entity {
 
     /**
      * Starts a controller rumble.
-     * Due to web api restrictions the implementation slightly differs for the web target.
-     * Left/Right is Weak/Strong rubmle instead of left and right controller side rumble.
      * 
      * @param gamepadId 0 - 4
-     * @param durationMs 
-     * @param leftAmount 0.0 - 1.0
-     * @param rightAmount 0.0 - 1.0
+     * @param duration in Seconds 
+     * @param lowFrequency 0.0 - 1.0
+     * @param highFrequency 0.0 - 1.0
      */
-     public function startGamepadRumble(gamepadId:Int, durationMs:Int, leftAmount:Float, ?rightAmount: Null<Float>) {
+     public function startGamepadRumble(gamepadId:Int, duration:Float, lowFrequency:Float, highFrequency:Float) {
 
-        if (rightAmount == null) rightAmount = leftAmount;
-        ceramic.App.app.backend.input.startGamepadRumble(gamepadId, leftAmount, rightAmount, durationMs);
+        ceramic.App.app.backend.input.startGamepadRumble(gamepadId, leftAmount, highFrequency, duration);
 
     }
 
