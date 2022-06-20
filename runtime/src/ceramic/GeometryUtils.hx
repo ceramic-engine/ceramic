@@ -65,6 +65,20 @@ class GeometryUtils {
     }
 
     /**
+     * Returns the square of the distance between point (x1, y1) and point (x2, y2)
+     * It is expected to be used to simply compare two different distances when you
+     * don't need the actual distance value (that needs sqrt call).
+     */
+    public static inline function squareDistance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
+
+        var dx:Float = x2 - x1;
+        var dy:Float = y2 - y1;
+
+        return dx * dx + dy * dy;
+
+    }
+
+    /**
      * Returns the angle between (x0, y0) and (x1, y1) in degrees.
      */
     public static function angleTo(x0:Float, y0:Float, x1:Float, y1:Float):Float {
