@@ -464,7 +464,7 @@ class Input extends Entity {
     /**
      * Starts a controller rumble.
      * Due to web api restrictions the implementation slightly differs for the web target.
-     * Left is a weak and right a strong runbmle instead of left and right side rumble.
+     * Left/Right is Weak/Strong rubmle instead of left and right controller side rumble.
      * 
      * @param gamepadId 0 - 4
      * @param durationMs 
