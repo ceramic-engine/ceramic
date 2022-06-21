@@ -1,5 +1,7 @@
 package backend;
 
+import clay.Clay;
+
 class Input implements tracker.Events implements spec.Input {
 
     @event function keyDown(key:ceramic.Key);
