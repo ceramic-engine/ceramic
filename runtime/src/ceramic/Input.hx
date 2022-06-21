@@ -469,7 +469,7 @@ class Input extends Entity {
      * @param lowFrequency 0.0 - 1.0
      * @param highFrequency 0.0 - 1.0
      */
-     public function startGamepadRumble(gamepadId:Int, duration:Float, lowFrequency:Float, highFrequency:Float) {
+    public function startGamepadRumble(gamepadId:Int, duration:Float, lowFrequency:Float, highFrequency:Float) {
 
         ceramic.App.app.backend.input.startGamepadRumble(gamepadId, lowFrequency, highFrequency, duration);
 
