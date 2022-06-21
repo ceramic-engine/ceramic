@@ -463,11 +463,10 @@ class Input extends Entity {
 
     /**
      * Starts a controller rumble.
-     *
-     * @param gamepadId 0 - 4
-     * @param duration in Seconds
-     * @param lowFrequency 0.0 - 1.0
-     * @param highFrequency 0.0 - 1.0
+     * @param gamepadId The id of the gamepad getting rumble
+     * @param duration The duration, in seconds
+     * @param lowFrequency Low frequency: value between 0 and 1
+     * @param highFrequency High frequency: value between 0 and 1
      */
     public function startGamepadRumble(gamepadId:Int, duration:Float, lowFrequency:Float, highFrequency:Float) {
 
