@@ -1880,7 +1880,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         // Ensure this visual won't be rendered anymore
         visibilityDirty = false;
-        computedVisibile = false;
+        computedVisible = false;
 
     }
 
