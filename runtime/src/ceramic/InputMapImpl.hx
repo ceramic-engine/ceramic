@@ -965,7 +965,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindKeyCodeFromAxis(key:T, keyCode:KeyCode):Void {
+    public function unbindAxisFromKeyCode(key:T, keyCode:KeyCode):Void {
 
         var axisIndex = indexOfKey(key);
         var list = _boundKeyCodesToAxis.get(keyCode);
@@ -1064,7 +1064,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindScanCodeFromAxis(key:T, scanCode:ScanCode):Void {
+    public function unbindAxisFromScanCode(key:T, scanCode:ScanCode):Void {
 
         var axisIndex = indexOfKey(key);
         var list = _boundScanCodesToAxes.get(scanCode);
@@ -1210,7 +1210,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindGamepadButtonFromAxis(key:T, button:GamepadButton):Void {
+    public function unbindGamepadAxisFromButton(key:T, button:GamepadButton):Void {
 
         var axisIndex = indexOfKey(key);
         var list = _boundGamepadButtonsToAxes.get(button);
@@ -1309,7 +1309,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindGamepadAxisFromButton(key:T, axis:GamepadAxis):Void {
+    public function unbindGamepadButtonFromAxis(key:T, axis:GamepadAxis):Void {
 
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
