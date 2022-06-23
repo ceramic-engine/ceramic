@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+import ceramic.ReadOnlyArray;
+
 using ceramic.Extensions;
 
 class InputMapImpl<T> extends InputMapBase {
@@ -918,6 +920,23 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function getBoundKeyCodes(key:T):ReadOnlyArray<KeyCode> {
+
+        var index = indexOfKey(key);
+        return indexKeyCodes[index];
+
+    }
+
+    public function unbindKeyCode(key:T, keyCode:KeyCode):Void {
+
+        var index = indexOfKey(key);
+        var list = boundKeyCodes.get(keyCode);
+        if (list != null) list.remove(index);
+
+        var indexList = indexKeyCodes[index];
+        if (indexList != null) indexList.remove(keyCode);
+    }
+
     public function bindKeyCodeAxis(key:T, keyCode:KeyCode, axisValue:Float):Void {
 
         var axisIndex = indexOfKey(key);
@@ -946,6 +965,30 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function getBoundKeyCodeAxis(key:T):ReadOnlyArray<KeyCode> {
+
+        var axisIndex = indexOfKey(key);
+        return axisIndexKeyCodes[axisIndex];
+
+    }
+
+    public function unbindKeyCodeAxis(key:T, keyCode:KeyCode):Void {
+
+        var axisIndex = indexOfKey(key);
+        var list = boundKeyCodesToAxis.get(keyCode);
+        if (list != null) {
+            for (axisPair in list) {
+                if (axisPair.index == axisIndex) {
+                    list.remove(axisPair);
+                }
+            }
+        }
+
+        var indexList = axisIndexKeyCodes[axisIndex];
+        if (indexList != null) indexList.remove(keyCode);
+
+    }
+
     public function bindScanCode(key:T, scanCode:ScanCode):Void {
 
         var index = indexOfKey(key);
@@ -970,6 +1013,23 @@ class InputMapImpl<T> extends InputMapBase {
 
         _recomputePressedKey(index);
 
+    }
+
+    public function getBoundScanCodes(key:T):ReadOnlyArray<ScanCode> {
+
+        var index = indexOfKey(key);
+        return indexScanCodes[index];
+
+    }
+
+    public function unbindScanCode(key:T, scanCode:ScanCode):Void {
+
+        var index = indexOfKey(key);
+        var list = boundScanCodes.get(scanCode);
+        if (list != null) list.remove(index);
+
+        var indexList = indexScanCodes[index];
+        if (indexList != null) indexList.remove(scanCode);
     }
 
     public function bindScanCodeAxis(key:T, scanCode:ScanCode, axisValue:Float):Void {
@@ -1000,6 +1060,30 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function getBoundScanCodeAxis(key:T):ReadOnlyArray<ScanCode> {
+
+        var axisIndex = indexOfKey(key);
+        return axisIndexScanCodes[axisIndex];
+
+    }
+
+    public function unbindScanCodeAxis(key:T, scanCode:ScanCode):Void {
+
+        var axisIndex = indexOfKey(key);
+        var list = boundScanCodesToAxis.get(scanCode);
+        if (list != null) {
+            for (axisPair in list) {
+                if (axisPair.index == axisIndex) {
+                    list.remove(axisPair);
+                }
+            }
+        }
+
+        var indexList = axisIndexScanCodes[axisIndex];
+        if (indexList != null) indexList.remove(scanCode);
+
+    }
+
     public function bindMouseButton(key:T, buttonId:Int):Void {
 
         var index = indexOfKey(key);
@@ -1026,6 +1110,23 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function getBoundMouseButtons(key:T):ReadOnlyArray<Int> {
+
+        var index = indexOfKey(key);
+        return indexMouseButtons[index];
+
+    }
+
+    public function unbindMouseButton(key:T, buttonId:Int):Void {
+
+        var index = indexOfKey(key);
+        var list = boundMouseButtons.get(buttonId);
+        if (list != null) list.remove(index);
+
+        var indexList = indexMouseButtons[index];
+        if (indexList != null) indexList.remove(buttonId);
+    }
+
     public function bindGamepadButton(key:T, button:GamepadButton):Void {
 
         var index = indexOfKey(key);
@@ -1050,6 +1151,23 @@ class InputMapImpl<T> extends InputMapBase {
 
         _recomputePressedKey(index);
 
+    }
+
+    public function getBoundGamepadButtons(key:T):ReadOnlyArray<GamepadButton> {
+
+        var index = indexOfKey(key);
+        return indexGamepadButtons[index];
+
+    }
+
+    public function unbindGamepadButton(key:T, button:GamepadButton):Void {
+
+        var index = indexOfKey(key);
+        var list = boundGamepadButtons.get(button);
+        if (list != null) list.remove(index);
+
+        var indexList = indexGamepadButtons[index];
+        if (indexList != null) indexList.remove(button);
     }
 
     public function bindGamepadButtonAxis(key:T, button:GamepadButton, axisValue:Float):Void {
@@ -1080,6 +1198,29 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    public function getGamepadButtonAxis(key:T):ReadOnlyArray<GamepadButton> {
+
+        var axisIndex = indexOfKey(key);
+        return axisIndexGamepadButtons[axisIndex];
+
+    }
+
+    public function unbindGamepadButtonAxis(key:T, button:GamepadButton):Void {
+
+        var axisIndex = indexOfKey(key);
+        var list = boundGamepadButtonsToAxis.get(button);
+        if (list != null) {
+            for (axisPair in list) {
+                if (axisPair.index == axisIndex) {
+                    list.remove(axisPair);
+                }
+            }
+        }
+
+        var indexList = axisIndexGamepadButtons[axisIndex];
+        if (indexList != null) indexList.remove(button);
+    }
+
     public function bindGamepadAxis(key:T, axis:GamepadAxis):Void {
 
         var index = indexOfKey(key);
@@ -1103,6 +1244,24 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         _recomputeAxisValue(index);
+
+    }
+
+    public function getBoundGamepadAxis(key:T):ReadOnlyArray<GamepadAxis> {
+
+        var axisIndex = indexOfKey(key);
+        return indexGamepadAxis[axisIndex];
+
+    }
+
+    public function unbindGamepadAxis(key:T, axis:GamepadAxis):Void {
+
+        var axisIndex = indexOfKey(key);
+        var list = boundGamepadAxis.get(axis);
+        if (list != null) list.remove(axisIndex);
+
+        var indexList = indexGamepadAxis[axisIndex];
+        if (indexList != null) indexList.remove(axis);
 
     }
 
@@ -1130,6 +1289,24 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         _recomputePressedKey(index);
+
+    }
+
+    public function getBoundGamepadAxisButtons(key:T):ReadOnlyArray<GamepadAxis> {
+
+        var index = indexOfKey(key);
+        return indexGamepadAxisButtons[index];
+
+    }
+
+    public function unbindGamepadAxisButton(key:T, axis:GamepadAxis):Void {
+
+        var axisIndex = indexOfKey(key);
+        var list = boundGamepadAxisButtons.get(axis);
+        if (list != null) list.remove(axisIndex);
+
+        var indexList = indexGamepadAxisButtons[axisIndex];
+        if (indexList != null) indexList.remove(axis);
 
     }
 
