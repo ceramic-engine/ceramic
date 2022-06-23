@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.App;
 import ceramic.KeyCode;
 import ceramic.Entity;
 import ceramic.GamepadAxis;
@@ -72,10 +73,11 @@ class InputMapRebinder<T> extends Entity {
 	}
 
 	private function cancel():Void {
-		app.input.offKeyDown(keyDownListener);
-		app.input.offGamepadDown(gamepadButtonListener);
-		app.input.offGamepadAxis(gamepadAxisListener);
-		app.input.offGamepadAxis(gamepadAxisToButtonListener);
+		App.app.input.offKeyDown(keyDownListener);
+		App.app.input.offKeyDown(keyDownListener);
+		App.app.input.offGamepadDown(gamepadButtonListener);
+		App.app.input.offGamepadAxis(gamepadAxisListener);
+		App.app.input.offGamepadAxis(gamepadAxisToButtonListener);
 	}
 
 	@event function beforeRebindAny(inputMap:InputMap<T>, action:T);
@@ -100,16 +102,16 @@ class InputMapRebinder<T> extends Entity {
 
 	public function rebind(inputMap:InputMap<T>, action:T, removeExisting:Bool = true):Void {
 		keyDownListener = (key:Key) -> {
-			if (Key.keyCode == cancelKeyCode) return cancel();
+			if (key.keyCode == cancelKeyCode) return cancel();
 			if (keyCondition != null && !keyCondition(action, key)) return cancel();
-			rebindKey(inputMap, action, Key, removeExisting);
+			rebindKey(inputMap, action, key, removeExisting);
 		};
 
 		gamepadButtonListener = (gamepadId:Int, button:GamepadButton) -> {
 			if (inputMap.gamepadId != -1 && inputMap.gamepadId != gamepadId) return;
 			if (button == cancelButton) return cancel();
 			if (gamepadButtonCondition != null && !gamepadButtonCondition(action, gamepadId, button)) return cancel();
-			rebindGamepadButton(inputMap, Action, button, removeExisting);
+			rebindGamepadButton(inputMap, action, button, removeExisting);
 		};
 
 		gamepadAxisListener = (gamepadId:Int, axis:GamepadAxis, value:Float) -> {
@@ -124,10 +126,10 @@ class InputMapRebinder<T> extends Entity {
 			rebindGamepadAxisToButton(inputMap, action, axis, value, removeExisting);
 		};
 
-		app.input.onKeyDown(this, keyDownListener);
-		app.input.onGamepadDown(this, gamepadButtonListener);
-		app.input.onGamepadAxis(this, gamepadAxisListener);
-		app.input.onGamepadAxis(this, gamepadAxisToButtonListener);
+		App.app.input.onKeyDown(this, keyDownListener);
+		App.app.input.onGamepadDown(this, gamepadButtonListener);
+		App.app.input.onGamepadAxis(this, gamepadAxisListener);
+		App.app.input.onGamepadAxis(this, gamepadAxisToButtonListener);
 	}
 
 	private function removeKey(inputMap:InputMap<T>, action:T):Void {
