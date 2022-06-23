@@ -45,6 +45,14 @@ class PersistentData {
 
     }
 
+    inline public function clear():Void {
+
+        for (key in internalData.keys()) {
+            internalData.remove(key);
+        }
+
+    }
+
     inline public function exists(key:String):Bool {
 
         return internalData.exists(key);
