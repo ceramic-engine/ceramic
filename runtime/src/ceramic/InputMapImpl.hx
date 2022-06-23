@@ -41,6 +41,8 @@ class InputMapImpl<T> extends InputMapBase {
 
     var axisValues:Array<Float> = [];
 
+    static final EMPTY_ARRAY:ReadOnlyArray<Int> = [];
+
     /**
      * A way to know from which the pressed key comes from
      */
@@ -915,9 +917,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var index = indexOfKey(key);
         var keyCodes = _indexedKeyCodes[index];
-        if (keyCodes == null) {
-            return [];
-        }
+        if (keyCodes == null) return cast EMPTY_ARRAY;
         return keyCodes;
 
     }
@@ -966,10 +966,19 @@ class InputMapImpl<T> extends InputMapBase {
 
         var axisIndex = indexOfKey(key);
         var keyCodes = _indexedKeyCodesToAxes[axisIndex];
-        if (keyCodes == null) {
-            return [];
-        }
+        if (keyCodes == null) return cast EMPTY_ARRAY;
         return keyCodes;
+
+    }
+
+    public function getKeyCodeToAxisValue(key:T, keyCode:KeyCode): Null<Float> {
+
+        var index = indexOfKey(key);
+        var list = _boundKeyCodesToAxes.get(keyCode);
+        if (list == null) return null;
+
+        var item = list.unsafeGet(index);
+        return item.value / 1000.0;
 
     }
 
@@ -1022,9 +1031,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var index = indexOfKey(key);
         var scanCodes = _indexedScanCodes[index];
-        if (scanCodes == null) {
-            return [];
-        }
+        if (scanCodes == null) return cast EMPTY_ARRAY;
         return scanCodes;
 
     }
@@ -1073,10 +1080,19 @@ class InputMapImpl<T> extends InputMapBase {
 
         var axisIndex = indexOfKey(key);
         var scanCodes = _indexedScanCodesToAxes[axisIndex];
-        if (scanCodes == null) {
-            return [];
-        }
+        if (scanCodes == null) return cast EMPTY_ARRAY;
         return scanCodes;
+
+    }
+
+    public function getScanCodeToAxisValue(key:T, scanCode:ScanCode): Null<Float> {
+
+        var index = indexOfKey(key);
+        var list = _boundScanCodesToAxes.get(scanCode);
+        if (list == null) return null;
+
+        var item = list.unsafeGet(index);
+        return item.value / 1000.0;
 
     }
 
@@ -1129,9 +1145,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var index = indexOfKey(key);
         var buttons = _indexedMouseButtons[index];
-        if (buttons == null) {
-            return [];
-        }
+        if (buttons == null) return cast EMPTY_ARRAY;
         return buttons;
 
     }
@@ -1179,9 +1193,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var index = indexOfKey(key);
         var buttons = _indexedGamepadButtons[index];
-        if (buttons == null) {
-            return [];
-        }
+        if (buttons == null) return cast EMPTY_ARRAY;
         return buttons;
 
     }
@@ -1231,10 +1243,19 @@ class InputMapImpl<T> extends InputMapBase {
 
         var axisIndex = indexOfKey(key);
         var buttons = _indexedGamepadButtonsToAxes[axisIndex];
-        if (buttons == null) {
-            return [];
-        }
+        if (buttons == null) return cast EMPTY_ARRAY;
         return buttons;
+
+    }
+
+    public function getGamepadButtonToAxisValue(key:T, button:GamepadButton): Null<Float> {
+
+        var index = indexOfKey(key);
+        var list = _boundGamepadButtonsToAxes.get(button);
+        if (list == null) return null;
+
+        var item = list.unsafeGet(index);
+        return item.value / 1000.0;
 
     }
 
@@ -1287,9 +1308,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var axisIndex = indexOfKey(key);
         var axes = _indexedGamepadAxis[axisIndex];
-        if (axes == null) {
-            return [];
-        }
+        if (axes == null) return cast EMPTY_ARRAY;
         return axes;
 
     }
@@ -1338,10 +1357,17 @@ class InputMapImpl<T> extends InputMapBase {
 
         var index = indexOfKey(key);
         var axes = _indexedGamepadAxesToButtons[index];
-        if (axes == null) {
-            return [];
-        }
+        if (axes == null) return cast EMPTY_ARRAY;
         return axes;
+
+    }
+
+    public function getGamepadAxesToButtonStartValue(key:T, axis:GamepadAxis): Null<Float> {
+
+        var index = indexOfKey(key);
+        var list = _boundGamepadAxesToButtons.get(axis);
+        if (list == null) return null;
+        return list[index] / 1000.0;
 
     }
 
