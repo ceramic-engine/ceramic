@@ -49,8 +49,8 @@ class InputMapImpl<T> extends InputMapBase {
     var _boundKeyCodes:IntMap<Array<Int>> = new IntMap();
     var _indexedKeyCodes:Array<Array<KeyCode>> = [];
 
-    var _boundKeyCodesToAxis:IntMap<Array<InputMapConvertToAxis>> = new IntMap();
-    var _indexdKeyCodesToAxis:Array<Array<KeyCode>> = [];
+    var _boundKeyCodesToAxes:IntMap<Array<InputMapConvertToAxis>> = new IntMap();
+    var _indexedKeyCodesToAxes:Array<Array<KeyCode>> = [];
 
     var _boundScanCodes:IntMap<Array<Int>> = new IntMap();
     var _indexedScanCodes:Array<Array<ScanCode>> = [];
@@ -155,7 +155,7 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         // Key code axis
-        var boundListToAxis = _boundKeyCodesToAxis.get(keyCode);
+        var boundListToAxis = _boundKeyCodesToAxes.get(keyCode);
         if (boundListToAxis != null) {
             _handleAxisConvertersDown(boundListToAxis);
         }
@@ -228,7 +228,7 @@ class InputMapImpl<T> extends InputMapBase {
         }
 
         // Key code axis
-        var boundListToAxis = _boundKeyCodesToAxis.get(keyCode);
+        var boundListToAxis = _boundKeyCodesToAxes.get(keyCode);
         if (boundListToAxis != null) {
             _handleAxisConvertersUp(boundListToAxis);
         }
@@ -818,12 +818,12 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
-        var indexList = _indexdKeyCodesToAxis[index];
+        var indexList = _indexedKeyCodesToAxes[index];
         if (indexList != null) {
             for (i in 0...indexList.length) {
                 var keyCode = indexList.unsafeGet(i);
                 if (input.keyPressed(keyCode, this)) {
-                    var converters = _boundKeyCodesToAxis.get(keyCode);
+                    var converters = _boundKeyCodesToAxes.get(keyCode);
                     if (converters != null) {
                         for (j in 0...converters.length) {
                             var converter = converters.unsafeGet(j);
@@ -934,10 +934,10 @@ class InputMapImpl<T> extends InputMapBase {
 
         var axisIndex = indexOfKey(key);
 
-        var list = _boundKeyCodesToAxis.get(keyCode);
+        var list = _boundKeyCodesToAxes.get(keyCode);
         if (list == null) {
             list = [];
-            _boundKeyCodesToAxis.set(keyCode, list);
+            _boundKeyCodesToAxes.set(keyCode, list);
         }
 
         list.push({
@@ -945,10 +945,10 @@ class InputMapImpl<T> extends InputMapBase {
             value: Math.round(axisValue * 1000)
         });
 
-        var indexList = _indexdKeyCodesToAxis[axisIndex];
+        var indexList = _indexedKeyCodesToAxes[axisIndex];
         if (indexList == null) {
             indexList = [keyCode];
-            _indexdKeyCodesToAxis[axisIndex] = indexList;
+            _indexedKeyCodesToAxes[axisIndex] = indexList;
         }
         else {
             indexList.push(keyCode);
@@ -961,14 +961,14 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundKeyCodeToAxis(key:T):ReadOnlyArray<KeyCode> {
 
         var axisIndex = indexOfKey(key);
-        return _indexdKeyCodesToAxis[axisIndex];
+        return _indexedKeyCodesToAxes[axisIndex];
 
     }
 
-    public function unbindAxisFromKeyCode(key:T, keyCode:KeyCode):Void {
+    public function unbindKeyCodeToAxis(key:T, keyCode:KeyCode):Void {
 
         var axisIndex = indexOfKey(key);
-        var list = _boundKeyCodesToAxis.get(keyCode);
+        var list = _boundKeyCodesToAxes.get(keyCode);
         if (list != null) {
             for (axisPair in list) {
                 if (axisPair.index == axisIndex) {
@@ -977,7 +977,7 @@ class InputMapImpl<T> extends InputMapBase {
             }
         }
 
-        var indexList = _indexdKeyCodesToAxis[axisIndex];
+        var indexList = _indexedKeyCodesToAxes[axisIndex];
         if (indexList != null) indexList.remove(keyCode);
 
         _recomputeAxisValue(axisIndex);
@@ -1064,7 +1064,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindAxisFromScanCode(key:T, scanCode:ScanCode):Void {
+    public function unbindScanCodeToAxis(key:T, scanCode:ScanCode):Void {
 
         var axisIndex = indexOfKey(key);
         var list = _boundScanCodesToAxes.get(scanCode);
@@ -1210,7 +1210,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindGamepadAxisFromButton(key:T, button:GamepadButton):Void {
+    public function unbindGamepadButtonToAxis(key:T, button:GamepadButton):Void {
 
         var axisIndex = indexOfKey(key);
         var list = _boundGamepadButtonsToAxes.get(button);
@@ -1309,7 +1309,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function unbindGamepadButtonFromAxis(key:T, axis:GamepadAxis):Void {
+    public function unbindGamepadAxisToButton(key:T, axis:GamepadAxis):Void {
 
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
