@@ -914,7 +914,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundKeyCodes(key:T):ReadOnlyArray<KeyCode> {
 
         var index = indexOfKey(key);
-        return _indexedKeyCodes[index];
+        var keyCodes = _indexedKeyCodes[index];
+        if (keyCodes == null) {
+            return [];
+        }
+        return keyCodes;
 
     }
 
@@ -961,7 +965,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundKeyCodesToAxis(key:T):ReadOnlyArray<KeyCode> {
 
         var axisIndex = indexOfKey(key);
-        return _indexedKeyCodesToAxes[axisIndex];
+        var keyCodes = _indexedKeyCodesToAxes[axisIndex];
+        if (keyCodes == null) {
+            return [];
+        }
+        return keyCodes;
 
     }
 
@@ -1013,7 +1021,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundScanCodes(key:T):ReadOnlyArray<ScanCode> {
 
         var index = indexOfKey(key);
-        return _indexedScanCodes[index];
+        var scanCodes = _indexedScanCodes[index];
+        if (scanCodes == null) {
+            return [];
+        }
+        return scanCodes;
 
     }
 
@@ -1060,7 +1072,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundScanCodesToAxis(key:T):ReadOnlyArray<ScanCode> {
 
         var axisIndex = indexOfKey(key);
-        return _indexedScanCodesToAxes[axisIndex];
+        var scanCodes = _indexedScanCodesToAxes[axisIndex];
+        if (scanCodes == null) {
+            return [];
+        }
+        return scanCodes;
 
     }
 
@@ -1112,7 +1128,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundMouseButtons(key:T):ReadOnlyArray<Int> {
 
         var index = indexOfKey(key);
-        return _indexedMouseButtons[index];
+        var buttons = _indexedMouseButtons[index];
+        if (buttons == null) {
+            return [];
+        }
+        return buttons;
 
     }
 
@@ -1158,7 +1178,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundGamepadButtons(key:T):ReadOnlyArray<GamepadButton> {
 
         var index = indexOfKey(key);
-        return _indexedGamepadButtons[index];
+        var buttons = _indexedGamepadButtons[index];
+        if (buttons == null) {
+            return [];
+        }
+        return buttons;
 
     }
 
@@ -1206,7 +1230,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundGamepadButtonsToAxis(key:T):ReadOnlyArray<GamepadButton> {
 
         var axisIndex = indexOfKey(key);
-        return _indexedGamepadButtonsToAxes[axisIndex];
+        var buttons = _indexedGamepadButtonsToAxes[axisIndex];
+        if (buttons == null) {
+            return [];
+        }
+        return buttons;
 
     }
 
@@ -1258,7 +1286,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundGamepadAxes(key:T):ReadOnlyArray<GamepadAxis> {
 
         var axisIndex = indexOfKey(key);
-        return _indexedGamepadAxis[axisIndex];
+        var axes = _indexedGamepadAxis[axisIndex];
+        if (axes == null) {
+            return [];
+        }
+        return axes;
 
     }
 
@@ -1305,7 +1337,11 @@ class InputMapImpl<T> extends InputMapBase {
     public function boundGamepadAxesToButton(key:T):ReadOnlyArray<GamepadAxis> {
 
         var index = indexOfKey(key);
-        return _indexedGamepadAxesToButtons[index];
+        var axes = _indexedGamepadAxesToButtons[index];
+        if (axes == null) {
+            return [];
+        }
+        return axes;
 
     }
 
