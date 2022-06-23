@@ -958,7 +958,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function boundKeyCodeToAxis(key:T):ReadOnlyArray<KeyCode> {
+    public function boundKeyCodesToAxis(key:T):ReadOnlyArray<KeyCode> {
 
         var axisIndex = indexOfKey(key);
         return _indexedKeyCodesToAxes[axisIndex];
@@ -1203,7 +1203,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function boundGamepadButtonToAxis(key:T):ReadOnlyArray<GamepadButton> {
+    public function boundGamepadButtonsToAxis(key:T):ReadOnlyArray<GamepadButton> {
 
         var axisIndex = indexOfKey(key);
         return _indexedGamepadButtonsToAxes[axisIndex];
