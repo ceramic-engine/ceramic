@@ -8,209 +8,359 @@ import ceramic.GamepadButton;
 import ceramic.Key;
 import ceramic.InputMap;
 
-typedef RebindKeyCondition<T> = (action:T, key:Key) -> Bool;
-typedef RebindGamepadButtonCondition<T> = (action:T, gamepadId:Int, button:GamepadButton) -> Bool;
-typedef RebindGamepadAxisCondition<T> = (action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool;
-typedef RebindGamepadAxisToButtonCondition<T> = (action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool;
-
 class InputMapRebinder<T> extends Entity {
-	public var axisToButtonDeadZone(default, set):Float = 0.25;
 
-	private function set_axisToButtonDeadZone(value:Float):Float {
-		axisToButtonDeadZone = value;
-		return axisToButtonDeadZone;
-	}
+    public var axisToButtonDeadZone(default, set):Float = 0.25;
 
-	public var cancelButton(default, set):GamepadButton = GamepadButton.SELECT;
+    private function set_axisToButtonDeadZone(value:Float):Float {
 
-	private function set_cancelButton(button:GamepadButton):GamepadButton {
-		cancelButton = button;
-		return cancelButton;
-	}
+        axisToButtonDeadZone = value;
 
-	public var cancelKeyCode(default, set):KeyCode = KeyCode.ESCAPE;
+        return axisToButtonDeadZone;
 
-	private function set_cancelKeyCode(keyCode:KeyCode):KeyCode {
-		cancelKeyCode = keyCode;
-		return cancelKeyCode;
-	}
+    }
 
-	public var keyCondition(default, set):RebindKeyCondition<T>;
+    public var cancelButton(default, set):GamepadButton = GamepadButton.SELECT;
 
-	public function set_keyCondition(condition:RebindKeyCondition<T>):RebindKeyCondition<T> {
-		keyCondition = condition;
-		return keyCondition;
-	}
+    private function set_cancelButton(button:GamepadButton):GamepadButton {
 
-	public var gamepadButtonCondition(default, set):RebindGamepadButtonCondition<T>;
+        cancelButton = button;
 
-	public function set_gamepadButtonCondition(condition:RebindGamepadButtonCondition<T>):RebindGamepadButtonCondition<T> {
-		gamepadButtonCondition = condition;
-		return gamepadButtonCondition;
-	}
+        return cancelButton;
 
-	public var gamepadAxisCondition(default, set):RebindGamepadAxisCondition<T>;
+    }
 
-	public function set_gamepadAxisCondition(condition:RebindGamepadAxisCondition<T>):RebindGamepadAxisCondition<T> {
-		gamepadAxisCondition = condition;
-		return gamepadAxisCondition;
-	}
+    public var cancelKeyCode(default, set):KeyCode = KeyCode.ESCAPE;
 
-	public var gamepadAxisToButtonCondition(default, set):RebindGamepadAxisToButtonCondition<T>;
+    private function set_cancelKeyCode(keyCode:KeyCode):KeyCode {
 
-	public function set_gamepadAxisToButtonCondition(condition:RebindGamepadAxisToButtonCondition<T>):RebindGamepadAxisToButtonCondition<T> {
-		gamepadAxisToButtonCondition = condition;
-		return gamepadAxisToButtonCondition;
-	}
+        cancelKeyCode = keyCode;
 
-	private var keyDownListener:(key:Key) -> Void;
-	private var gamepadButtonListener:(gamepadId:Int, button:GamepadButton) -> Void;
-	private var gamepadAxisListener:(gamepadId:Int, axis:GamepadAxis, value:Float) -> Void;
-	private var gamepadAxisToButtonListener:(gamepadId:Int, axis:GamepadAxis, value:Float) -> Void;
+        return cancelKeyCode;
 
-	public function new() {
-		super();
-	}
+    }
 
-	private function cancel():Void {
-		App.app.input.offKeyDown(keyDownListener);
-		App.app.input.offKeyDown(keyDownListener);
-		App.app.input.offGamepadDown(gamepadButtonListener);
-		App.app.input.offGamepadAxis(gamepadAxisListener);
-		App.app.input.offGamepadAxis(gamepadAxisToButtonListener);
-	}
+    public var keyCondition(default, set):(action:T, key:Key) -> Bool;
 
-	@event function beforeRebindAny(inputMap:InputMap<T>, action:T);
+    public function set_keyCondition(condition:(action:T, key:Key) -> Bool):(action:T, key:Key) -> Bool {
 
-	@event function afterRebindAny(inputMap:InputMap<T>, action:T);
+        keyCondition = condition;
 
-	@event function beforeRebindKey(inputMap:InputMap<T>, action:T, key:Key);
+        return keyCondition;
 
-	@event function afterRebindKey(inputMap:InputMap<T>, action:T, key:Key);
+    }
 
-	@event function beforeRebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton);
+    public var gamepadButtonCondition(default, set):(action:T, gamepadId:Int, button:GamepadButton) -> Bool;
 
-	@event function afterRebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton);
+    public function set_gamepadButtonCondition(condition:(action:T, gamepadId:Int, button:GamepadButton) -> Bool):(action:T, gamepadId:Int, button:GamepadButton) -> Bool {
 
-	@event function beforeRebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis);
+        gamepadButtonCondition = condition;
 
-	@event function afterRebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis);
+        return gamepadButtonCondition;
 
-	@event function beforeRebindGamepadAxisToButton(InputMap:InputMap<T>, action:T, axis:GamepadAxis);
+    }
 
-	@event function afterRebindGamepadAxisToButton(InputMap:InputMap<T>, action:T, axis:GamepadAxis);
+    public var gamepadAxisCondition(default, set):(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool;
 
-	public function rebind(inputMap:InputMap<T>, action:T, removeExisting:Bool = true):Void {
-		keyDownListener = (key:Key) -> {
-			if (key.keyCode == cancelKeyCode) return cancel();
-			if (keyCondition != null && !keyCondition(action, key)) return cancel();
-			rebindKey(inputMap, action, key, removeExisting);
-		};
+    public function set_gamepadAxisCondition(condition:(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool):(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool {
 
-		gamepadButtonListener = (gamepadId:Int, button:GamepadButton) -> {
-			if (inputMap.gamepadId != -1 && inputMap.gamepadId != gamepadId) return;
-			if (button == cancelButton) return cancel();
-			if (gamepadButtonCondition != null && !gamepadButtonCondition(action, gamepadId, button)) return cancel();
-			rebindGamepadButton(inputMap, action, button, removeExisting);
-		};
+        gamepadAxisCondition = condition;
 
-		gamepadAxisListener = (gamepadId:Int, axis:GamepadAxis, value:Float) -> {
-			if (inputMap.gamepadId != -1 && inputMap.gamepadId != gamepadId) return;
-			if (gamepadAxisCondition != null && !gamepadAxisCondition(action, gamepadId, axis, value)) return cancel();
-			rebindGamepadAxis(inputMap, action, axis, value, removeExisting);
-		};
+        return gamepadAxisCondition;
 
-		gamepadAxisToButtonListener = (gamepadId:Int, axis:GamepadAxis, value:Float) -> {
-			if (inputMap.gamepadId != -1 && inputMap.gamepadId != gamepadId) return;
-			if (gamepadAxisToButtonCondition != null && !gamepadAxisToButtonCondition(action, gamepadId, axis, value)) return cancel();
-			rebindGamepadAxisToButton(inputMap, action, axis, value, removeExisting);
-		};
+    }
 
-		App.app.input.onKeyDown(this, keyDownListener);
-		App.app.input.onGamepadDown(this, gamepadButtonListener);
-		App.app.input.onGamepadAxis(this, gamepadAxisListener);
-		App.app.input.onGamepadAxis(this, gamepadAxisToButtonListener);
-	}
+    public var gamepadAxisToButtonCondition(default, set):(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool;
 
-	private function removeKey(inputMap:InputMap<T>, action:T):Void {
-		var keys = inputMap.boundKeyCodes(action);
-		if (keys == null) return;
-		for (key in keys) {
-			inputMap.unbindKeyCode(action, key);
-		}
-	}
+    public function set_gamepadAxisToButtonCondition(condition:(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool):(action:T, gamepadId:Int, axis:GamepadAxis, value:Float) -> Bool {
 
-	private function rebindKey(inputMap:InputMap<T>, action:T, key:Key, removeExisting:Bool = true):Void {
-		if (removeExisting) removeKey(inputMap, action);
+        gamepadAxisToButtonCondition = condition;
 
-		emitBeforeRebindAny(inputMap, action);
-		emitBeforeRebindKey(inputMap, action, key);
-		inputMap.bindKeyCode(action, key.keyCode);
-		emitAfterRebindKey(inputMap, action, key);
-		emitAfterRebindAny(inputMap, action);
-		cancel();
-	}
+        return gamepadAxisToButtonCondition;
 
-	private function removeGamepadButton(inputMap:InputMap<T>, action:T):Void {
-		var buttons = inputMap.boundGamepadButtons(action);
-		if (buttons == null) return;
-		for (button in buttons) {
-			inputMap.unbindGamepadButton(action, button);
-		}
-	}
+    }
 
-	private function rebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton, removeExisting:Bool = true):Void {
-		if (removeExisting) removeGamepadButton(inputMap, action);
+    private var keyDownListener:(key:Key) -> Void;
 
-		emitBeforeRebindAny(inputMap, action);
-		emitBeforeRebindGamepadButton(inputMap, action, button);
-		inputMap.bindGamepadButton(action, button);
-		emitAfterRebindGamepadButton(inputMap, action, button);
-		emitAfterRebindAny(inputMap, action);
-		cancel();
-	}
+    private var gamepadButtonListener:(gamepadId:Int, button:GamepadButton) -> Void;
 
-	private function removeGamepadAxis(inputMap:InputMap<T>, action:T):Void {
-		var axes = inputMap.boundGamepadAxes(action);
-		if (axes == null) return;
-		for (axis in axes) {
-			inputMap.unbindGamepadAxis(action, axis);
-		}
-	}
+    private var gamepadAxisListener:(gamepadId:Int, axis:GamepadAxis, value:Float) -> Void;
 
-	private function rebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis, value:Float, removeExisting:Bool):Void {
-		if (removeExisting) removeGamepadAxis(inputMap, action);
+    private var gamepadAxisToButtonListener:(gamepadId:Int, axis:GamepadAxis, value:Float) -> Void;
 
-		emitBeforeRebindAny(inputMap, action);
-		emitBeforeRebindGamepadAxis(inputMap, action, axis);
-		inputMap.bindGamepadAxis(action, axis);
-		emitAfterRebindGamepadAxis(inputMap, action, axis);
-		emitAfterRebindAny(inputMap, action);
-		cancel();
-	}
+    public function new() {
+        super();
+    }
 
-	private function removeGamepadButtonFromAxis(inputMap:InputMap<T>, action:T):Void {
-		var buttons = inputMap.boundGamepadButtonsToAxis(action);
-		if (buttons == null) return;
-		for (button in buttons) {
-			inputMap.unbindGamepadButtonToAxis(action, button);
-		}
-	}
+    private function cancel():Void {
 
-	private function rebindGamepadAxisToButton(inputMap:InputMap<T>, action:T, axis:GamepadAxis, value:Float, removeExisting:Bool):Void {
-		if (removeExisting) removeGamepadButtonFromAxis(inputMap, action);
+        App.app.input.offKeyDown(keyDownListener);
+        App.app.input.offGamepadDown(gamepadButtonListener);
+        App.app.input.offGamepadAxis(gamepadAxisListener);
+        App.app.input.offGamepadAxis(gamepadAxisToButtonListener);
 
-		emitBeforeRebindAny(inputMap, action);
-		emitBeforeRebindGamepadAxisToButton(inputMap, action, axis);
+    }
 
-		if (value < 0) {
-			inputMap.bindGamepadAxisToButton(action, axis, -axisToButtonDeadZone);
-		} else {
-			inputMap.bindGamepadAxisToButton(action, axis, axisToButtonDeadZone);
-		}
+    @event function beforeRebindAny(inputMap:InputMap<T>, action:T);
 
-		emitAfterRebindGamepadAxisToButton(inputMap, action, axis);
-		emitAfterRebindAny(inputMap, action);
-		cancel();
-	}
+    @event function afterRebindAny(inputMap:InputMap<T>, action:T);
+
+    public function rebind(inputMap:InputMap<T>, action:T, removeExisting:Bool = true):Void {
+
+        registerKeyListener(inputMap, action, removeExisting);
+        registerGamepadButtonListener(inputMap, action, removeExisting);
+        registerGamepadAxisListener(inputMap, action, removeExisting);
+        registerGamepadAxisToButtonListener(inputMap, action, removeExisting);
+        
+    }
+
+    private function isMatchingGamepad(inputMap:InputMap<T>, gamepadId:Int):Bool {
+
+        if (inputMap.gamepadId == -1) {
+            return true;
+        }
+
+        return inputMap.gamepadId == gamepadId;
+
+    }
+    
+    @event function beforeRebindKey(inputMap:InputMap<T>, action:T, key:Key);
+
+    @event function afterRebindKey(inputMap:InputMap<T>, action:T, key:Key);
+
+    private function registerKeyListener(inputMap:InputMap<T>, action:T, removeExisting:Bool = true): Void {
+        keyDownListener = (key:Key) -> {
+
+            if (key.keyCode == cancelKeyCode) {
+                return cancel();
+            }
+
+            if (keyCondition != null) {
+                if (!keyCondition(action, key)) {
+                    return;
+                }
+            }
+
+            rebindKey(inputMap, action, key, removeExisting);
+
+        };
+
+        App.app.input.onKeyDown(this, keyDownListener);
+    }
+
+    private function removeKey(inputMap:InputMap<T>, action:T):Void {
+
+        var keys = inputMap.boundKeyCodes(action);
+
+        if (keys == null) {
+            return;
+        }
+
+        for (key in keys) {
+            inputMap.unbindKeyCode(action, key);
+        }
+
+    }
+
+    private function rebindKey(inputMap:InputMap<T>, action:T, key:Key, removeExisting:Bool = true):Void {
+
+        if (removeExisting) {
+            removeKey(inputMap, action);
+        }
+
+        emitBeforeRebindAny(inputMap, action);
+        emitBeforeRebindKey(inputMap, action, key);
+
+        inputMap.bindKeyCode(action, key.keyCode);
+
+        emitAfterRebindKey(inputMap, action, key);
+        emitAfterRebindAny(inputMap, action);
+
+        cancel();
+
+    }
+
+    @event function beforeRebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton);
+
+    @event function afterRebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton);
+
+    private function registerGamepadButtonListener(inputMap:InputMap<T>, action:T, removeExisting:Bool = true): Void {
+
+        gamepadButtonListener = (gamepadId:Int, button:GamepadButton) -> {
+
+            if (!isMatchingGamepad(inputMap, gamepadId)) {
+                return;
+            }
+
+            if (button == cancelButton) {
+                return cancel();
+            }
+
+            if (gamepadButtonCondition != null) {
+                if (!gamepadButtonCondition(action, gamepadId, button)) {
+                    return;
+                }
+            }
+
+            rebindGamepadButton(inputMap, action, button, removeExisting);
+
+        };
+
+        App.app.input.onGamepadDown(this, gamepadButtonListener);
+
+    }
+
+    private function removeGamepadButton(inputMap:InputMap<T>, action:T):Void {
+
+        var buttons = inputMap.boundGamepadButtons(action);
+
+        if (buttons == null) {
+            return;
+        }
+
+        for (button in buttons) {
+            inputMap.unbindGamepadButton(action, button);
+        }
+
+    }
+
+    private function rebindGamepadButton(inputMap:InputMap<T>, action:T, button:GamepadButton, removeExisting:Bool = true):Void {
+
+        if (removeExisting) {
+            removeGamepadButton(inputMap, action);
+        }
+
+        emitBeforeRebindAny(inputMap, action);
+        emitBeforeRebindGamepadButton(inputMap, action, button);
+
+        inputMap.bindGamepadButton(action, button);
+
+        emitAfterRebindGamepadButton(inputMap, action, button);
+        emitAfterRebindAny(inputMap, action);
+
+        cancel();
+
+    }
+
+    @event function beforeRebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis);
+
+    @event function afterRebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis);
+
+    private function registerGamepadAxisListener(inputMap:InputMap<T>, action:T, removeExisting:Bool = true): Void {
+        
+        gamepadAxisListener = (gamepadId:Int, axis:GamepadAxis, value:Float) -> {
+
+            if (!isMatchingGamepad(inputMap, gamepadId)) {
+                return;
+            }
+
+            if (gamepadAxisCondition != null) {
+                if (!gamepadAxisCondition(action, gamepadId, axis, value)) {
+                    return;
+                }
+            }
+
+            rebindGamepadAxis(inputMap, action, axis, value, removeExisting);
+
+        };
+
+        App.app.input.onGamepadAxis(this, gamepadAxisListener);
+        
+    }
+
+    private function removeGamepadAxis(inputMap:InputMap<T>, action:T):Void {
+
+        var axes = inputMap.boundGamepadAxes(action);
+
+        if (axes == null) {
+            return;
+        }
+
+        for (axis in axes) {
+            inputMap.unbindGamepadAxis(action, axis);
+        }
+
+    }
+
+    private function rebindGamepadAxis(inputMap:InputMap<T>, action:T, axis:GamepadAxis, value:Float, removeExisting:Bool):Void {
+
+        if (removeExisting) {
+            removeGamepadAxis(inputMap, action);
+        }
+
+        emitBeforeRebindAny(inputMap, action);
+        emitBeforeRebindGamepadAxis(inputMap, action, axis);
+
+        inputMap.bindGamepadAxis(action, axis);
+
+        emitAfterRebindGamepadAxis(inputMap, action, axis);
+        emitAfterRebindAny(inputMap, action);
+
+        cancel();
+
+    }
+    
+    @event function beforeRebindGamepadAxisToButton(InputMap:InputMap<T>, action:T, axis:GamepadAxis);
+
+    @event function afterRebindGamepadAxisToButton(InputMap:InputMap<T>, action:T, axis:GamepadAxis);
+
+    private function registerGamepadAxisToButtonListener(inputMap:InputMap<T>, action:T, removeExisting:Bool = true): Void {
+        
+        gamepadAxisToButtonListener = (gamepadId:Int, axis:GamepadAxis, value:Float) -> {
+
+            if (!isMatchingGamepad(inputMap, gamepadId)) {
+                return;
+            }
+
+            if (gamepadAxisToButtonCondition != null) {
+                if (!gamepadAxisToButtonCondition(action, gamepadId, axis, value)) {
+                    return;
+                }
+            }
+
+            rebindGamepadAxisToButton(inputMap, action, axis, value, removeExisting);
+
+        };
+        
+        App.app.input.onGamepadAxis(this, gamepadAxisToButtonListener);
+
+    }
+
+    private function removeGamepadAxisToButton(inputMap:InputMap<T>, action:T):Void {
+
+        var buttons = inputMap.boundGamepadButtonsToAxis(action);
+
+        if (buttons == null) {
+            return;
+        }
+
+        for (button in buttons) {
+            inputMap.unbindGamepadButtonToAxis(action, button);
+        }
+
+    }
+
+    private function rebindGamepadAxisToButton(inputMap:InputMap<T>, action:T, axis:GamepadAxis, value:Float, removeExisting:Bool):Void {
+
+        if (removeExisting) {
+            removeGamepadAxisToButton(inputMap, action);
+        }
+
+        emitBeforeRebindAny(inputMap, action);
+        emitBeforeRebindGamepadAxisToButton(inputMap, action, axis);
+
+        if (value < 0) {
+            inputMap.bindGamepadAxisToButton(action, axis, -axisToButtonDeadZone);
+        }
+        else {
+            inputMap.bindGamepadAxisToButton(action, axis, axisToButtonDeadZone);
+        }
+
+        emitAfterRebindGamepadAxisToButton(inputMap, action, axis);
+        emitAfterRebindAny(inputMap, action);
+
+        cancel();
+
+    }
+
 }
