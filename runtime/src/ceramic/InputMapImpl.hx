@@ -1367,15 +1367,38 @@ class InputMapImpl<T> extends InputMapBase {
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
         if (list == null) return null;
-        return list[index] / 1000.0;
 
+        var i = 0;
+        var len = list.length;
+        while (i < len) {
+            var itemIndex = list.unsafeGet(i);
+            i++;
+            if (index == itemIndex) {
+                return list.unsafeGet(i) / 1000.0;
+            }
+            i++;
+        }
+
+        return null;
     }
 
     public function unbindGamepadAxisToButton(key:T, axis:GamepadAxis):Void {
 
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
-        if (list != null) list.remove(index);
+
+        if (list != null) {
+            var i = 0;
+            var len = list.length;
+            while (i < len) {
+                var itemIndex = list.unsafeGet(i);
+                if (index == itemIndex) {
+                    _boundGamepadAxesToButtons.set(axis, list.slice(i, i + 2));
+                }
+                i++;
+                i++;
+            }
+        }
 
         var indexList = _indexedGamepadAxesToButtons[index];
         if (indexList != null) indexList.remove(axis);
