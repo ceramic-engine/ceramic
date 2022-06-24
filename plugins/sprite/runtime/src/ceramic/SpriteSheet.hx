@@ -117,12 +117,11 @@ class SpriteSheet extends Model {
     /**
      * This can be used to configure animations on simple grid spritesheets.
      * @param name Name of the animation to add
-     * @param start Start cell of the animation
-     * @param end End cell of the animation
+     * @param cells Cell array of the animation
      * @param frameDuration Duration of a single frame
      * @return SpriteSheetAnimation the resulting animation instance
      */
-    public function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
+    public function addGridAnimation(name:String, cells:Array<Int>, frameDuration:Float):SpriteSheetAnimation {
 
         assert(unobservedGridWidth > 0, 'gridWidth ($unobservedGridWidth) must be above zero before adding grid animation');
         assert(unobservedGridHeight > 0, 'gridHeight ($unobservedGridHeight) must be above zero before adding grid animation');
@@ -137,8 +136,7 @@ class SpriteSheet extends Model {
         var cellsByRow = Math.round(imageWidth / gridWidth);
 
         var frames = [];
-        var i = start;
-        while (i <= end) {
+        for (i in cells) {
 
             var column = i % cellsByRow;
             var row = Math.floor(i / cellsByRow);
@@ -160,8 +158,6 @@ class SpriteSheet extends Model {
             );
 
             frames.push(frame);
-
-            i++;
         }
 
         animation.frames = frames;
