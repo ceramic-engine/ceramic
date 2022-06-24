@@ -352,7 +352,8 @@ class InputMapRebinder<T> extends Entity {
         if (value < 0) {
             inputMap.bindGamepadAxisToButton(action, axis, -axisToButtonDeadZone);
         }
-        else {
+
+        if (value > 0) {
             inputMap.bindGamepadAxisToButton(action, axis, axisToButtonDeadZone);
         }
 

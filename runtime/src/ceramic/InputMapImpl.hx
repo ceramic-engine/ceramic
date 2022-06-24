@@ -971,11 +971,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getKeyCodeToAxisValue(key:T, keyCode:KeyCode): Null<Float> {
+    public function getKeyCodeToAxisValue(key:T, keyCode:KeyCode): Float {
 
         var index = indexOfKey(key);
         var list = _boundKeyCodesToAxes.get(keyCode);
-        if (list == null) return null;
+        if (list == null) return 0;
 
         var item = list.unsafeGet(index);
         return item.value / 1000.0;
@@ -1085,11 +1085,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getScanCodeToAxisValue(key:T, scanCode:ScanCode): Null<Float> {
+    public function getScanCodeToAxisValue(key:T, scanCode:ScanCode): Float {
 
         var index = indexOfKey(key);
         var list = _boundScanCodesToAxes.get(scanCode);
-        if (list == null) return null;
+        if (list == null) return 0;
 
         var item = list.unsafeGet(index);
         return item.value / 1000.0;
@@ -1248,11 +1248,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getGamepadButtonToAxisValue(key:T, button:GamepadButton): Null<Float> {
+    public function getGamepadButtonToAxisValue(key:T, button:GamepadButton): Float {
 
         var index = indexOfKey(key);
         var list = _boundGamepadButtonsToAxes.get(button);
-        if (list == null) return null;
+        if (list == null) return 0;
 
         var item = list.unsafeGet(index);
         return item.value / 1000.0;
@@ -1362,11 +1362,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getGamepadAxesToButtonStartValue(key:T, axis:GamepadAxis): Null<Float> {
+    public function getGamepadAxesToButtonStartValue(key:T, axis:GamepadAxis): Float {
 
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
-        if (list == null) return null;
+        if (list == null) return 0;
 
         var i = 0;
         var len = list.length;
@@ -1379,7 +1379,7 @@ class InputMapImpl<T> extends InputMapBase {
             i++;
         }
 
-        return null;
+        return 0;
     }
 
     public function unbindGamepadAxisToButton(key:T, axis:GamepadAxis):Void {
@@ -1395,8 +1395,7 @@ class InputMapImpl<T> extends InputMapBase {
                 if (index == itemIndex) {
                     _boundGamepadAxesToButtons.set(axis, list.slice(i, i + 2));
                 }
-                i++;
-                i++;
+                i += 2;
             }
         }
 
