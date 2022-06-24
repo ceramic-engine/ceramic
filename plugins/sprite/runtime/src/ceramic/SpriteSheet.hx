@@ -124,7 +124,7 @@ class SpriteSheet extends Model {
      * @param frameDuration Duration of a single frame
      * @return SpriteSheetAnimation the resulting animation instance
      */
-     public extern inline overload function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
+    public extern inline overload function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
 
         return _addGridAnimation(name, cellsFromStartEnd(start, end), frameDuration);
 
