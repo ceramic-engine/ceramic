@@ -4,6 +4,8 @@ import ceramic.Assert.assert;
 import ceramic.Shortcuts.*;
 import tracker.Model;
 
+using ceramic.Extensions;
+
 class SpriteSheet extends Model {
 
     @serialize public var animations:ReadOnlyArray<SpriteSheetAnimation> = [];
@@ -122,7 +124,26 @@ class SpriteSheet extends Model {
      * @param frameDuration Duration of a single frame
      * @return SpriteSheetAnimation the resulting animation instance
      */
-    public function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
+     public extern inline overload function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
+
+        return _addGridAnimation(name, cellsFromStartEnd(start, end), frameDuration);
+
+    }
+
+    /**
+     * This can be used to configure animations on simple grid spritesheets.
+     * @param name Name of the animation to add
+     * @param cells Cell array of the animation
+     * @param frameDuration Duration of a single frame
+     * @return SpriteSheetAnimation the resulting animation instance
+     */
+    public extern inline overload function addGridAnimation(name:String, cells:Array<Int>, frameDuration:Float):SpriteSheetAnimation {
+
+        return _addGridAnimation(name, cells, frameDuration);
+
+    }
+
+    private function _addGridAnimation(name:String, cells:Array<Int>, frameDuration:Float):SpriteSheetAnimation {
 
         assert(unobservedGridWidth > 0, 'gridWidth ($unobservedGridWidth) must be above zero before adding grid animation');
         assert(unobservedGridHeight > 0, 'gridHeight ($unobservedGridHeight) must be above zero before adding grid animation');
@@ -137,9 +158,9 @@ class SpriteSheet extends Model {
         var cellsByRow = Math.round(imageWidth / gridWidth);
 
         var frames = [];
-        var i = start;
-        while (i <= end) {
+        for (n in 0...cells.length) {
 
+            var i = cells.unsafeGet(n);
             var column = i % cellsByRow;
             var row = Math.floor(i / cellsByRow);
 
@@ -160,8 +181,6 @@ class SpriteSheet extends Model {
             );
 
             frames.push(frame);
-
-            i++;
         }
 
         animation.frames = frames;
@@ -173,6 +192,21 @@ class SpriteSheet extends Model {
     }
 
 /// Internal
+
+    function cellsFromStartEnd(start:Int, end:Int):Array<Int> {
+
+        var cells:Array<Int> = [];
+
+        var i = start;
+        do {
+            cells.push(i);
+            i++;
+        }
+        while (i <= end);
+
+        return cells;
+
+    }
 
     function replaceAtlas(newAtlas:TextureAtlas, prevAtlas:TextureAtlas) {
 
