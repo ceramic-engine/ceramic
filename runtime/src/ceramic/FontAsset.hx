@@ -81,7 +81,7 @@ class FontAsset extends Asset {
                     for (page in fontData.pages) {
 
                         var pageFile = page.file;
-                        if (relativeFontPath != '') {
+                        if (relativeFontPath != '.') {
                             pageFile = Path.join([relativeFontPath, pageFile]);
                         }
 

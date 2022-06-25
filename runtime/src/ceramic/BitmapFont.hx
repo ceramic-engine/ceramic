@@ -113,7 +113,7 @@ class BitmapFont extends Entity {
 
         for (pageInfo in fontData.pages) {
             var pageFile = pageInfo.file;
-            if (fontData.path != '') {
+            if (fontData.path != '.') {
                 pageFile = Path.join([fontData.path, pageInfo.file]);
             }
 
