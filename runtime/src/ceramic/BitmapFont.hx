@@ -3,7 +3,7 @@ package ceramic;
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/phoenix/BitmapFont.hx)
 
 using ceramic.Extensions;
-import ceramic.Path;
+using ceramic.Path;
 
 class BitmapFont extends Entity {
 

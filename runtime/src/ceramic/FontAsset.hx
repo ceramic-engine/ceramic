@@ -1,7 +1,8 @@
 package ceramic;
 
 import ceramic.Shortcuts.*;
-import ceramic.Path;
+
+using ceramic.Path;
 
 class FontAsset extends Asset {
 
@@ -65,8 +66,9 @@ class FontAsset extends Asset {
         assets.addAsset(asset);
         assets.onceComplete(this, function(success) {
 
-            var relativeFontPath = Path.directory(path);
             var text = asset.text;
+            var relativeFontPath = Path.directory(path);
+            if (relativeFontPath == '') relativeFontPath = '.';
 
             if (text != null) {
 
@@ -81,7 +83,7 @@ class FontAsset extends Asset {
                     for (page in fontData.pages) {
 
                         var pageFile = page.file;
-                        if (relativeFontPath != '.') {
+                        if (relativeFontPath != '') {
                             pageFile = Path.join([relativeFontPath, pageFile]);
                         }
 
