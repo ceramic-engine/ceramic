@@ -54,6 +54,11 @@ class FontAsset extends Asset {
 
         log.info('Load font $path');
 
+        var mainFontPathInfo = Assets.decodePath(path);
+        var relativeFontPath = mainFontPathInfo.name.split('/');
+        relativeFontPath.pop(); // remove file name
+        var relativeFontPath = relativeFontPath.join('/');
+
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
@@ -69,6 +74,7 @@ class FontAsset extends Asset {
 
                 try {
                     fontData = BitmapFontParser.parse(text);
+                    fontData.path = relativeFontPath;
 
                     // Load pages
                     var pages = new Map();
@@ -76,7 +82,12 @@ class FontAsset extends Asset {
 
                     for (page in fontData.pages) {
 
-                        var pathInfo = Assets.decodePath(page.file);
+                        var pageFile = page.file;
+                        if (relativeFontPath != '') {
+                            pageFile = '${relativeFontPath}/${pageFile}';
+                        }
+
+                        var pathInfo = Assets.decodePath(pageFile);
                         var asset = new ImageAsset(pathInfo.name);
 
                         // Because it is handled at font level

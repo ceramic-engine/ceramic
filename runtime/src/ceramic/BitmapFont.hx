@@ -111,7 +111,13 @@ class BitmapFont extends Entity {
         }
 
         for (pageInfo in fontData.pages) {
-            var texture = pages.get(pageInfo.file);
+            var pageFile = pageInfo.file;
+            if (fontData.path != '') {
+                pageFile = '${fontData.path}/${pageInfo.file}';
+            }
+
+            var texture = pages.get(pageFile);
+            
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
             }
