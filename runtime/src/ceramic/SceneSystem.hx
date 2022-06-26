@@ -101,8 +101,7 @@ class SceneSystem extends System {
             this.filter = filter;
             if (filter != null) {
                 if (autoScaleFilter) {
-                    filter.scale(screen.width / filter.width, screen.height / filter.height);
-                    filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+                    scaleFilter();
                 }
                 for (scene in rootScenes) {
                     if (scene.parent != filter.content) {
@@ -113,6 +112,13 @@ class SceneSystem extends System {
 
         }
         return filter;
+    }
+
+    function scaleFilter() {
+
+        filter.scale(screen.width / filter.width, screen.height / filter.height);
+        filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+
     }
 
     public var rootScenes(default,null):ReadOnlyMap<String,Scene> = new Map();
@@ -310,8 +316,7 @@ class SceneSystem extends System {
 
         // Update filter (if any)
         if (autoScaleFilter && filter != null) {
-            filter.scale(screen.width / filter.width, screen.height / filter.height);
-            filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+            scaleFilter();
         }
 
     }
