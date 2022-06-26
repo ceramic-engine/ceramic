@@ -153,6 +153,8 @@ class Im {
 
     static var _usedWindowKeys:Map<String,String> = new Map();
 
+    static var _changeChecks:Array<Bool> = [];
+
     @:allow(elements.ImSystem)
     static var _numUsedWindows:Int = 0;
 
@@ -352,6 +354,10 @@ class Im {
     }
 
     @:noCompletion public static function endFrame():Void {
+
+        assert(_changeChecks.length == 0, 'Called beginChangeCheck() without calling endChangeCheck()');
+        while (_changeChecks.length > 0)
+            _changeChecks.pop();
 
         displayPendingDialogIfNeeded();
 
@@ -712,6 +718,28 @@ class Im {
 
     }
 
+    public static function beginChangeCheck():Void {
+
+        _changeChecks.push(false);
+
+    }
+
+    public static function endChangeCheck():Bool {
+
+        assert(_changeChecks.length > 0, 'beginChangeCheck() must be called before endChangeCheck()');
+
+        return _changeChecks.pop();
+
+    }
+
+    static function _markChanged():Void {
+
+        for (i in 0..._changeChecks.length) {
+            _changeChecks.unsafeSet(i, true);
+        }
+
+    }
+
     public static function labelPosition(labelPosition:LabelPosition = DEFAULT_LABEL_POSITION):Void {
 
         _labelPosition = labelPosition;
@@ -798,6 +826,7 @@ class Im {
             if (isOpen != null) {
                 Im.writeBool(isOpen, false);
             }
+            _markChanged();
             return true;
         }
 
@@ -847,10 +876,16 @@ class Im {
                 Im.writeArray(items, newItems);
             }
 
-            return new ListStatus(item.previous);
+            var status = new ListStatus(item.previous);
+            if (status.itemsChanged || status.selectedChanged)
+                _markChanged();
+            return status;
         }
 
-        return new ListStatus(item);
+        var status = new ListStatus(item);
+        if (status.itemsChanged || status.selectedChanged)
+            _markChanged();
+        return status;
 
     }
 
@@ -861,6 +896,7 @@ class Im {
         if (_select(title, Im.int(index), list, nullValueText)) {
             Im.writeString(value, list[index]);
             changed = true;
+            _markChanged();
         }
         return changed;
 
@@ -899,6 +935,7 @@ class Im {
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeInt(index, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -943,6 +980,7 @@ class Im {
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeBool(value, newValue != 0 ? true : false);
+                _markChanged();
             }
         }
 
@@ -975,6 +1013,7 @@ class Im {
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeInt(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1015,6 +1054,7 @@ class Im {
                 item.string0 = newValue;
                 item.string1 = newValue;
                 Im.writeString(value, newValue);
+                _markChanged();
                 return Flags.fromValues(true, submitted).toInt();
             }
             else {
@@ -1056,6 +1096,7 @@ class Im {
                 item.string0 = newValue;
                 item.string1 = newValue;
                 Im.writeString(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1093,6 +1134,7 @@ class Im {
                 item.string0 = newValue;
                 item.string1 = newValue;
                 Im.writeString(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1137,6 +1179,7 @@ class Im {
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeInt(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1180,6 +1223,7 @@ class Im {
                 item.float0 = newValue;
                 item.float1 = newValue;
                 Im.writeFloat(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1217,6 +1261,7 @@ class Im {
                 item.int0 = newValue;
                 item.int1 = newValue;
                 Im.writeInt(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1255,6 +1300,7 @@ class Im {
                 item.float0 = newValue;
                 item.float1 = newValue;
                 Im.writeFloat(value, newValue);
+                _markChanged();
                 return true;
             }
         }
@@ -1597,6 +1643,7 @@ class Im {
         if (enabled && item.isSameItem(item.previous)) {
             var justClicked = (item.previous.int1 == 1);
             if (justClicked) {
+                _markChanged();
                 return true;
             }
         }
