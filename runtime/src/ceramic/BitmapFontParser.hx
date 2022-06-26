@@ -24,6 +24,7 @@ class BitmapFontParser {
         }
 
         var info:BitmapFontData = {
+            path: '.',
             face: null,
             chars: new IntMap(),
             distanceField: null,

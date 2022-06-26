@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using ceramic.Path;
+
 class FontAsset extends Asset {
 
 /// Events
@@ -54,6 +56,7 @@ class FontAsset extends Asset {
 
         log.info('Load font $path');
 
+
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
@@ -64,11 +67,14 @@ class FontAsset extends Asset {
         assets.onceComplete(this, function(success) {
 
             var text = asset.text;
+            var relativeFontPath = Path.directory(path);
+            if (relativeFontPath == '') relativeFontPath = '.';
 
             if (text != null) {
 
                 try {
                     fontData = BitmapFontParser.parse(text);
+                    fontData.path = relativeFontPath;
 
                     // Load pages
                     var pages = new Map();
@@ -76,7 +82,12 @@ class FontAsset extends Asset {
 
                     for (page in fontData.pages) {
 
-                        var pathInfo = Assets.decodePath(page.file);
+                        var pageFile = page.file;
+                        if (relativeFontPath != '') {
+                            pageFile = Path.join([relativeFontPath, pageFile]);
+                        }
+
+                        var pathInfo = Assets.decodePath(pageFile);
                         var asset = new ImageAsset(pathInfo.name);
 
                         // Because it is handled at font level
