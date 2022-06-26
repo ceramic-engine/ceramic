@@ -127,7 +127,7 @@ class SceneSystem extends System {
 
         if (this.main != main) {
             this.main = main;
-            set('main', main, true, keepAssetsForNextMain);
+            set('main', main, bindMainToScreenSize, keepAssetsForNextMain);
         }
 
         return main;
