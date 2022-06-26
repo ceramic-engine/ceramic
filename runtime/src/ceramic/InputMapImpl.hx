@@ -1,8 +1,7 @@
 package ceramic;
 
-import ceramic.Shortcuts.*;
-
 import ceramic.ReadOnlyArray;
+import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
@@ -932,6 +931,7 @@ class InputMapImpl<T> extends InputMapBase {
         if (indexList != null) indexList.remove(keyCode);
 
         _recomputePressedKey(index);
+
     }
 
     public function bindKeyCodeToAxis(key:T, keyCode:KeyCode, axisValue:Float):Void {
@@ -971,7 +971,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getKeyCodeToAxisValue(key:T, keyCode:KeyCode): Float {
+    public function boundKeyCodeToAxisValue(key:T, keyCode:KeyCode): Float {
 
         var index = indexOfKey(key);
         var list = _boundKeyCodesToAxes.get(keyCode);
@@ -1085,7 +1085,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getScanCodeToAxisValue(key:T, scanCode:ScanCode): Float {
+    public function boundScanCodeToAxisValue(key:T, scanCode:ScanCode): Float {
 
         var index = indexOfKey(key);
         var list = _boundScanCodesToAxes.get(scanCode);
@@ -1158,7 +1158,7 @@ class InputMapImpl<T> extends InputMapBase {
 
         var indexList = _indexedMouseButtons[index];
         if (indexList != null) indexList.remove(buttonId);
-        
+
         _recomputePressedKey(index);
 
     }
@@ -1248,7 +1248,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getGamepadButtonToAxisValue(key:T, button:GamepadButton): Float {
+    public function boundGamepadButtonToAxisValue(key:T, button:GamepadButton): Float {
 
         var index = indexOfKey(key);
         var list = _boundGamepadButtonsToAxes.get(button);
@@ -1362,7 +1362,7 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
-    public function getGamepadAxesToButtonStartValue(key:T, axis:GamepadAxis): Float {
+    public function boundGamepadAxisToButtonStartValue(key:T, axis:GamepadAxis): Float {
 
         var index = indexOfKey(key);
         var list = _boundGamepadAxesToButtons.get(axis);
@@ -1394,6 +1394,7 @@ class InputMapImpl<T> extends InputMapBase {
                 var itemIndex = list.unsafeGet(i);
                 if (index == itemIndex) {
                     _boundGamepadAxesToButtons.set(axis, list.slice(i, i + 2));
+                    break;
                 }
                 i += 2;
             }
