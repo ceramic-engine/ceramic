@@ -51,6 +51,12 @@ class SceneSystem extends System {
     public var autoDestroyFilter:Bool = true;
 
     /**
+     * If set to `true` (default), a filter assigned to the system will
+     * be auto-scaled to fit screen size.
+     */
+    public var autoScaleFilter:Bool = true;
+
+    /**
      * Assign a filter to the scene system, that will be used to render root scenes
      */
     public var filter(default, set):Filter = null;
@@ -94,8 +100,10 @@ class SceneSystem extends System {
             }
             this.filter = filter;
             if (filter != null) {
-                filter.scale(screen.width / filter.width, screen.height / filter.height);
-                filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+                if (autoScaleFilter) {
+                    filter.scale(screen.width / filter.width, screen.height / filter.height);
+                    filter.content.scale(filter.width / screen.width, filter.height / screen.height);
+                }
                 for (scene in rootScenes) {
                     if (scene.parent != filter.content) {
                         filter.content.add(scene);
@@ -301,7 +309,7 @@ class SceneSystem extends System {
         }
 
         // Update filter (if any)
-        if (filter != null) {
+        if (autoScaleFilter && filter != null) {
             filter.scale(screen.width / filter.width, screen.height / filter.height);
             filter.content.scale(filter.width / screen.width, filter.height / screen.height);
         }
