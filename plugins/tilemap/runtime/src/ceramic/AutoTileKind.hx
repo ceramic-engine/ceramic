@@ -12,9 +12,10 @@ enum abstract AutoTileKind(Int) from Int to Int {
     var EDGE_CORNER_32 = 1;
 
     /**
-     * Auto tiling using expanded EDGE_CORNER_32 tiles.
-     * All valid pre-rendered combinations of 16 edges tiles and 16 edges corners.
+     * Auto tiling using 48 tiles.
+     * In contrary of `EDGE_CORNER_32` auto-tiling, there is no need to overlap
+     * multiple tiles as the 48 pre-rendered tiles should cover every case.
      */
-    var EDGE_CORNER_32_EXPANDED = 2;
+    var EXPANDED_48 = 2;
 
 }

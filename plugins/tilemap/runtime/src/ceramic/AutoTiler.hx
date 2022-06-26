@@ -9,13 +9,13 @@ class AutoTiler extends Entity implements Component {
     public var kinds(default, null):ReadOnlyArray<AutoTileKind>;
 
     public var gids(default, null):ReadOnlyArray<Int>;
-    
+
     var gidMap:IntIntMap;
 
     public function new(kinds:Array<AutoTileKind>, gids:Array<Int>) {
 
         super();
-        
+
         this.kinds = kinds;
         this.gids = gids;
 
@@ -69,7 +69,7 @@ class AutoTiler extends Entity implements Component {
                 // Matching autotile rule
                 var kind:AutoTileKind = rawKind;
                 switch kind {
-                    case EDGE_CORNER_32 | EDGE_CORNER_32_EXPANDED:
+                    case EDGE_CORNER_32 | EXPANDED_48:
 
                         // Create mask from surrounding tiles
                         // bits: 0 = any other tile / 1 = same tile
@@ -194,7 +194,7 @@ class AutoTiler extends Entity implements Component {
                                 cornerTile.gid = gid + 16 + cornerMask;
                                 computedTiles[i + numTiles] = cornerTile;
                             }
-    
+
                             // Add extra tile on top if it already existed
                             // but offset it with gid
                             if (extraTile != 0) {
@@ -231,7 +231,7 @@ class AutoTiler extends Entity implements Component {
                             else {
                                 tile.gid = gid + finalIndex;
                             }
-    
+
                             // Add extra tile on top if it already existed
                             // but offset it with gid
                             if (extraTile != 0) {
@@ -250,11 +250,11 @@ class AutoTiler extends Entity implements Component {
                 col = 0;
                 row++;
             }
-            
+
             // Increment extra i
             extraI++;
         }
-            
+
         // Update computed tiles
         layerData.computedTiles = computedTiles;
 
@@ -271,7 +271,7 @@ class AutoTiler extends Entity implements Component {
                     var edges:Flags = j;
                     var corners:Flags = i;
                     var result:Flags = 0;
-    
+
                     result.setBool(0, edges.bool(0));
                     result.setBool(1, edges.bool(1));
                     result.setBool(2, edges.bool(2));
@@ -324,7 +324,7 @@ class AutoTiler extends Entity implements Component {
         corners.setBool(1, flags.bool(5));
         corners.setBool(2, flags.bool(6));
         corners.setBool(3, flags.bool(7));
-        
+
         if (corners == 15) {
             if (!flags.bool(0) || !flags.bool(1) || !flags.bool(2) || !flags.bool(3)) {
                 return false;
