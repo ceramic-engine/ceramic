@@ -3,6 +3,7 @@ package ceramic;
 @:structInit
 class BitmapFontData {
     public var face:String;
+    public var path:String;
     public var pointSize:Float;
     public var baseSize:Float;
     public var chars:IntMap<BitmapFontCharacter>;

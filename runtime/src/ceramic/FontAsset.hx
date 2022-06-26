@@ -1,8 +1,7 @@
 package ceramic;
 
+import ceramic.Path;
 import ceramic.Shortcuts.*;
-
-using ceramic.Path;
 
 class FontAsset extends Asset {
 

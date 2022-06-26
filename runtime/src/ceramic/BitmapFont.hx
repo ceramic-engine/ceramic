@@ -2,8 +2,9 @@ package ceramic;
 
 // Substantial portion taken from luxe (https://github.com/underscorediscovery/luxe/blob/4c891772f54b4769c72515146bedde9206a7b986/phoenix/BitmapFont.hx)
 
+import ceramic.Path;
+
 using ceramic.Extensions;
-using ceramic.Path;
 
 class BitmapFont extends Entity {
 
@@ -113,12 +114,12 @@ class BitmapFont extends Entity {
 
         for (pageInfo in fontData.pages) {
             var pageFile = pageInfo.file;
-            if (fontData.path != '.') {
+            if (fontData.path != null && fontData.path.length > 0 && fontData.path != '.') {
                 pageFile = Path.join([fontData.path, pageInfo.file]);
             }
 
             var texture = pages.get(pageFile);
-            
+
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
             }
