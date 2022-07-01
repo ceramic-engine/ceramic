@@ -492,6 +492,109 @@ class Renderer extends Entity {
 
             var numPos = draw.getNumPos();
 
+            #if ceramic_render_flip_vertices
+
+            //br
+            var n8 = matTX + matA * w + matC * h;
+            var n9 = matTY + matB * w + matD * h;
+
+            if (hasTextureSlot) {
+                draw.putPosAndTextureSlot(
+                    n8,
+                    n9,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    n8,
+                    n9,
+                    z
+                );
+            }
+            if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putFloatAttribute(l, 0.0);
+                }
+                draw.endFloatAttributes();
+            }
+
+            //bl
+            if (hasTextureSlot) {
+                draw.putPosAndTextureSlot(
+                    matTX + matC * h,
+                    matTY + matD * h,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX + matC * h,
+                    matTY + matD * h,
+                    z
+                );
+            }
+            if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putFloatAttribute(l, 0.0);
+                }
+                draw.endFloatAttributes();
+            }
+
+            //tl
+            if (hasTextureSlot) {
+                draw.putPosAndTextureSlot(
+                    matTX,
+                    matTY,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX,
+                    matTY,
+                    z
+                );
+            }
+            if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putFloatAttribute(l, 0.0);
+                }
+                draw.endFloatAttributes();
+            }
+
+            //tr
+            if (hasTextureSlot) {
+                draw.putPosAndTextureSlot(
+                    matTX + matA * w,
+                    matTY + matB * w,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX + matA * w,
+                    matTY + matB * w,
+                    z
+                );
+            }
+            if (hasCustomAttributes) {
+                draw.beginFloatAttributes();
+                for (l in 0...customFloatAttributesSize) {
+                    draw.putFloatAttribute(l, 0.0);
+                }
+                draw.endFloatAttributes();
+            }
+
+            #else
+
             //tl
             if (hasTextureSlot) {
                 draw.putPosAndTextureSlot(
@@ -591,6 +694,8 @@ class Renderer extends Entity {
                 draw.endFloatAttributes();
             }
 
+            #end
+
             draw.putIndice(numPos);
             draw.putIndice(numPos + 1);
             draw.putIndice(numPos + 2);
@@ -673,6 +778,16 @@ class Renderer extends Entity {
                 uvW = (quad.frameHeight * texDensity) / texWidthActual;
                 uvH = (quad.frameWidth * texDensity) / texHeightActual;
 
+                #if ceramic_render_flip_vertices
+                //br
+                draw.putUVs(uvX + uvW, uvY);
+                //bl
+                draw.putUVs(uvX + uvW, uvY + uvH);
+                //tl
+                draw.putUVs(uvX, uvY + uvH);
+                //tr
+                draw.putUVs(uvX, uvY);
+                #else
                 //tl
                 draw.putUVs(uvX, uvY + uvH);
                 //tr
@@ -681,12 +796,23 @@ class Renderer extends Entity {
                 draw.putUVs(uvX + uvW, uvY);
                 //bl
                 draw.putUVs(uvX + uvW, uvY + uvH);
+                #end
             }
             else {
 
                 uvW = (quad.frameWidth * texDensity) / texWidthActual;
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
 
+                #if ceramic_render_flip_vertices
+                //br
+                draw.putUVs(uvX + uvW, uvY + uvH);
+                //bl
+                draw.putUVs(uvX, uvY + uvH);
+                //tl
+                draw.putUVs(uvX, uvY);
+                //tr
+                draw.putUVs(uvX + uvW, uvY);
+                #else
                 //tl
                 draw.putUVs(uvX, uvY);
                 //tr
@@ -695,6 +821,7 @@ class Renderer extends Entity {
                 draw.putUVs(uvX + uvW, uvY + uvH);
                 //bl
                 draw.putUVs(uvX, uvY + uvH);
+                #end
             }
 
         } else {
