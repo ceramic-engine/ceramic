@@ -492,7 +492,12 @@ class Renderer extends Entity {
 
             var numPos = draw.getNumPos();
 
-            #if ceramic_render_flip_vertices
+            #if !ceramic_render_no_flip_quad_vertices
+
+            // We send bottom-right and bottom-left vertices first,
+            // then top-left and top-right vertices, because before we did this,
+            // we had a bug in web target (windows only) where in some rare situations
+            // a gap would be visible between the two triangles.
 
             //br
             var n8 = matTX + matA * w + matC * h;
@@ -778,7 +783,7 @@ class Renderer extends Entity {
                 uvW = (quad.frameHeight * texDensity) / texWidthActual;
                 uvH = (quad.frameWidth * texDensity) / texHeightActual;
 
-                #if ceramic_render_flip_vertices
+                #if !ceramic_render_no_flip_quad_vertices
                 //br
                 draw.putUVs(uvX + uvW, uvY);
                 //bl
@@ -803,7 +808,7 @@ class Renderer extends Entity {
                 uvW = (quad.frameWidth * texDensity) / texWidthActual;
                 uvH = (quad.frameHeight * texDensity) / texHeightActual;
 
-                #if ceramic_render_flip_vertices
+                #if !ceramic_render_no_flip_quad_vertices
                 //br
                 draw.putUVs(uvX + uvW, uvY + uvH);
                 //bl
