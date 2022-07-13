@@ -95,3 +95,6 @@
 [submodule "git/linc_rtmidi"]
 	path = git/linc_rtmidi
 	url = https://github.com/ceramic-engine/linc_rtmidi.git
+[submodule "git/linc_soloud"]
+	path = git/linc_soloud
+	url = https://github.com/jeremyfa/linc_soloud.git
