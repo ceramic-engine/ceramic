@@ -1058,6 +1058,12 @@ class Assets extends Entity {
 
     }
 
+    inline public static function getAssetsPath():String {
+
+        return PlatformSpecific.getAssetsPath();
+
+    }
+
     public static function assetNameFromPath(path:String):String {
 
         for (name in Assets.allByName.keys()) {
