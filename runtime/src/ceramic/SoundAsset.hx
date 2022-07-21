@@ -42,15 +42,7 @@ class SoundAsset extends Asset {
         }
 
         // Add reload count if any
-        var backendPath = path;
-        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
-        var assetReloadedCount = Assets.getReloadCount(realPath);
-        if (app.backend.texts.supportsHotReloadPath() && assetReloadedCount > 0) {
-            realPath += '?hot=' + assetReloadedCount;
-            backendPath += '?hot=' + assetReloadedCount;
-        }
-
-        log.info('Load sound $backendPath');
+        var remainingPaths = [].concat(allPaths);
 
         function handleBackendResponse(audio:backend.AudioResource) {
 
@@ -82,22 +74,44 @@ class SoundAsset extends Asset {
 
         }
 
-        var ext = ceramic.Path.extension(realPath);
-        if (ext != null)
-            ext = ext.toLowerCase();
+        function doLoad(path:String) {
 
-        app.backend.audio.load(realPath, loadOptions, function(audio) {
-
-            if (audio != null || ext == 'wav') {
-                handleBackendResponse(audio);
-            }
-            else {
-                log.warning('Failed to load $backendPath. Try ${Path.withoutExtension(backendPath) + '.wav'}...');
-                realPath = Path.withoutExtension(realPath) + '.wav';
-                app.backend.audio.load(realPath, { stream: options.stream }, handleBackendResponse);
+            var backendPath = path;
+            var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+            var assetReloadedCount = Assets.getReloadCount(realPath);
+            if (app.backend.texts.supportsHotReloadPath() && assetReloadedCount > 0) {
+                realPath += '?hot=' + assetReloadedCount;
+                backendPath += '?hot=' + assetReloadedCount;
             }
 
-        });
+            log.info('Load sound $backendPath');
+
+            var ext = ceramic.Path.extension(realPath);
+            if (ext != null)
+                ext = ext.toLowerCase();
+
+            app.backend.audio.load(realPath, loadOptions, function(audio) {
+
+                if (audio != null || remainingPaths.length == 0) {
+                    handleBackendResponse(audio);
+                }
+                else {
+                    var nextPath = remainingPaths.shift();
+                    log.warning('Failed to load $path. Try $nextPath...');
+                    doLoad(nextPath);
+                }
+
+            });
+
+        }
+
+        if (remainingPaths.length > 0)
+            doLoad(remainingPaths.shift());
+        else {
+            status = BROKEN;
+            log.error('Failed to load audio at path: $path');
+            emitComplete(false);
+        }
 
     }
 

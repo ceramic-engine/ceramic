@@ -12,7 +12,17 @@ using StringTools;
 
 class Setup extends tools.Task {
 
-    public static final requiredLibs:ReadOnlyArray<String> = ['clay', 'linc_ogg', 'linc_openal', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp'];
+    public static var requiredLibs(get,never):ReadOnlyArray<String>;
+    static function get_requiredLibs():ReadOnlyArray<String> {
+        var _requiredLibs:Array<String> = ['clay', 'linc_ogg', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp'];
+        if (context.defines.exists('ceramic_use_openal')) {
+            _requiredLibs.push('linc_openal');
+        }
+        else {
+            _requiredLibs.push('linc_soloud');
+        }
+        return cast _requiredLibs;
+    }
 
 /// Properties
 
@@ -186,7 +196,14 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-lib linc_ogg';
             targetFlags += '\n' + '-lib linc_stb';
             targetFlags += '\n' + '-lib linc_timestamp';
-            targetFlags += '\n' + '-lib linc_openal';
+            if (context.defines.exists('ceramic_use_openal')) {
+                targetFlags += '\n' + '-D clay_openal';
+                targetFlags += '\n' + '-lib linc_openal';
+            }
+            else {
+                targetFlags += '\n' + '-D clay_soloud';
+                targetFlags += '\n' + '-lib linc_soloud';
+            }
             targetFlags += '\n' + '-D hxcpp_static_std';
             targetFlags += '\n' + '-D clay_native';
             targetFlags += '\n' + '-D clay_sdl';

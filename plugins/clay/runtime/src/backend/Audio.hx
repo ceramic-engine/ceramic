@@ -212,7 +212,7 @@ class Audio implements spec.Audio {
         var handle:AudioHandle = null;
         if (loop) {
 
-            #if cpp
+            #if (cpp && ceramic_use_openal)
             if (isStream) {
 
                 // At the moment, looping a stream doesn't seem reliable if just relying on openal implementation.
@@ -270,7 +270,7 @@ class Audio implements spec.Audio {
             } else {
             #end
                 handle = Clay.app.audio.loop(audioResource, volume, false);
-            #if cpp
+            #if (cpp && ceramic_use_openal)
             }
             #end
 

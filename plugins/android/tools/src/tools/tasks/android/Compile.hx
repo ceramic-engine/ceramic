@@ -43,46 +43,49 @@ class Compile extends tools.Task {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
 
-            // Android OpenAL built separately (because of LGPL license, we want to build
-            // it separately and link it dynamically at runtime)
-            var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
-            var buildOpenALArgs = [];
-            if (!context.colors) {
-                buildOpenALArgs.push('-DHXCPP_NO_COLOR');
-            }
-            if (context.defines.exists('ceramic_android_use_gcc')) {
-                buildOpenALArgs.push('-Dceramic_android_use_gcc');
-            }
-            switch (arch) {
-                case 'armv7':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
-                        {cwd: openALAndroidPath});
-                    Files.copyIfNeeded(
-                        Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
-                        Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
-                    );
-                case 'arm64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
-                        {cwd: openALAndroidPath});
-                    Files.copyIfNeeded(
-                        Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
-                        Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
-                    );
-                case 'x86' | 'i386':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'].concat(buildOpenALArgs),
-                        {cwd: openALAndroidPath});
-                    Files.copyIfNeeded(
-                        Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
-                        Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
-                    );
-                case 'x86_64':
-                    haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
-                        {cwd: openALAndroidPath});
-                    Files.copyIfNeeded(
-                        Path.join([openALAndroidPath, 'lib/Android/libopenal-x86_64.so']),
-                        Path.join([openALAndroidPath, 'lib/Android/x86_64/libopenal.so'])
-                    );
-                default:
+            if (context.defines.exists('ceramic_use_openal')) {
+
+                // Android OpenAL built separately (because of LGPL license, we want to build
+                // it separately and link it dynamically at runtime)
+                var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
+                var buildOpenALArgs = [];
+                if (!context.colors) {
+                    buildOpenALArgs.push('-DHXCPP_NO_COLOR');
+                }
+                if (context.defines.exists('ceramic_android_use_gcc')) {
+                    buildOpenALArgs.push('-Dceramic_android_use_gcc');
+                }
+                switch (arch) {
+                    case 'armv7':
+                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
+                            {cwd: openALAndroidPath});
+                        Files.copyIfNeeded(
+                            Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
+                            Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
+                        );
+                    case 'arm64':
+                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
+                            {cwd: openALAndroidPath});
+                        Files.copyIfNeeded(
+                            Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
+                            Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
+                        );
+                    case 'x86' | 'i386':
+                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'].concat(buildOpenALArgs),
+                            {cwd: openALAndroidPath});
+                        Files.copyIfNeeded(
+                            Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
+                            Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
+                        );
+                    case 'x86_64':
+                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
+                            {cwd: openALAndroidPath});
+                        Files.copyIfNeeded(
+                            Path.join([openALAndroidPath, 'lib/Android/libopenal-x86_64.so']),
+                            Path.join([openALAndroidPath, 'lib/Android/x86_64/libopenal.so'])
+                        );
+                    default:
+                }
             }
 
             switch (arch) {
@@ -119,8 +122,10 @@ class Compile extends tools.Task {
             AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
         //}
 
-        // Copy OpenAL binaries if needed
-        AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
+        if (context.defines.exists('ceramic_use_openal')) {
+            // Copy OpenAL binaries if needed
+            AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
+        }
 
         // Copy main binaries if needed
         AndroidProject.copyMainBinariesIfNeeded(cwd, project, archs);
