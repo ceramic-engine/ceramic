@@ -122,6 +122,10 @@ class Compile extends tools.Task {
             // Copy OpenAL binaries if needed
             AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
         }
+        else {
+            // Remove OpenAL binaries if needed
+            AndroidProject.removeOpenALBinariesIfNeeded(cwd, project, archs);
+        }
 
         // Copy main binaries if needed
         AndroidProject.copyMainBinariesIfNeeded(cwd, project, archs);

@@ -210,6 +210,38 @@ class AndroidProject {
 
     }
 
+    public static function removeOpenALBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
+
+        // Remove OpenAL binaries if they where there
+
+        var targetFile:String;
+
+        if (archs.contains('armv7')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libopenal.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('arm64')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libopenal.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('x86')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86/libopenal.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('x86_64')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86_64/libopenal.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+    }
+
     public static function copySharedLibCppBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
 
         // Copy shared lib c++ binaries if they have changed or weren't copied before
