@@ -102,10 +102,6 @@ class Compile extends tools.Task {
                     continue;
             }
 
-            // Needed to prevent 'cannot locate symbol __atomic_store_1' unsatisfiedlinkerror
-            // (hxcpp clang toolchain has been patched by ceramic to handle this define)
-            hxcppArgs.push('-DHXCPP_LIB_ATOMIC');
-
             print('Compile C++ for arch $arch');
 
             if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {

@@ -390,7 +390,6 @@ class Helpers {
         var androidClangToolchain = File.getContent(androidClangToolchainPath);
         var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
         var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
-        var indexOfLibAtomic = androidClangToolchain.indexOf('name="-latomic"');
         var indexOfPlatform16 = androidClangToolchain.indexOf('<set name="PLATFORM_NUMBER" value="16" />');
         if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfLibAtomic == -1 || indexOfPlatform16 != -1) {
             print("Patch hxcpp android-clang toolchain");
@@ -398,8 +397,6 @@ class Helpers {
                 androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
             if (indexOfStaticLibcpp != -1)
                 androidClangToolchain = androidClangToolchain.replace('="-static-libstdc++" />', '="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
-            if (indexOfLibAtomic == -1)
-                androidClangToolchain = androidClangToolchain.replace('</linker>', '  <lib name="-latomic" if="HXCPP_LIB_ATOMIC" />\n</linker>');
             if (indexOfPlatform16 != -1)
                 androidClangToolchain = androidClangToolchain.replace('<set name="PLATFORM_NUMBER" value="16" />', '<set name="PLATFORM_NUMBER" value="21" />');
             File.saveContent(androidClangToolchainPath, androidClangToolchain);
