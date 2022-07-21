@@ -31,7 +31,7 @@ function postInstall() {
     var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
     var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
     var indexOfPlatform16 = androidClangToolchain.indexOf('<set name="PLATFORM_NUMBER" value="16" />');
-    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfLibAtomic == -1 || indexOfPlatform16 != -1) {
+    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfPlatform16 != -1) {
         console.log("Patch hxcpp android-clang toolchain");
         if (indexOfOptimFlag == -1)
             androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
