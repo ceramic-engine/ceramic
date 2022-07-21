@@ -181,6 +181,7 @@ class Textures implements spec.Textures {
             }
             else if (id.startsWith('render:')) {
                 untyped __cs__('((UnityEngine.RenderTexture){0}).Release()', (texture:TextureImpl).unityRenderTexture);
+                untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityRenderTexture);
             }
             else {
                 untyped __cs__('UnityEngine.Resources.UnloadAsset({0})', (texture:TextureImpl).unityTexture);
