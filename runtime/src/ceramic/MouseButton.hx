@@ -8,26 +8,26 @@ package ceramic;
     /**
      * No mouse buttons
      */
-    var NONE = 0;
+    var NONE = -1;
     /**
      * Left mouse button
      */
-    var LEFT = 1;
+    var LEFT = 0;
     /**
      * Middle mouse button
      */
-    var MIDDLE = 2;
+    var MIDDLE = 1;
     /**
      * Right mouse button
      */
-    var RIGHT = 3;
+    var RIGHT = 2;
     /**
-     * Extra button pressed (4)
+     * Extra button pressed
      */
-    var EXTRA1 = 4;
+    var EXTRA1 = 3;
     /**
-     * Extra button pressed (5)
+     * Extra button pressed
      */
-    var EXTRA2 = 5;
+    var EXTRA2 = 4;
 
 }
