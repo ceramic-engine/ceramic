@@ -212,7 +212,7 @@ class AndroidProject {
 
     public static function removeOpenALBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
 
-        // Remove OpenAL binaries if they where there
+        // Remove OpenAL binaries if they were there before
 
         var targetFile:String;
 
@@ -276,6 +276,99 @@ class AndroidProject {
             if (FileSystem.exists(builtFile)) {
                 targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86_64/libc++_shared.so']);
                 Files.copyIfNeeded(builtFile, targetFile);
+            }
+        }
+
+    }
+
+    public static function removeSharedLibCppBinariesIfNeeded(cwd:String, project:Project, archs:Array<String>) {
+
+        // Remove shared lib c++ binaries if they were copied before
+
+        var targetFile:String;
+
+        if (archs.contains('armv7')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/armeabi-v7a/libc++_shared.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('arm64')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/arm64-v8a/libc++_shared.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('x86')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86/libc++_shared.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+        if (archs.contains('x86_64')) {
+            targetFile = Path.join([cwd, 'project/android/app/src/main/jniLibs/x86_64/libc++_shared.so']);
+            if (FileSystem.exists(targetFile))
+                FileSystem.deleteFile(targetFile);
+        }
+
+    }
+
+    static var RE_SHARED_OBJECT = ~/^"([^"]+)",?$/;
+
+    public static function setSharedObjectEnabled(cwd:String, project:Project, lib:String, enabled:Bool):Void {
+
+        var androidProjectPath = Path.join([cwd, 'project/android']);
+        var appActivityPath = Path.join([androidProjectPath, 'app/src/main/java', Reflect.field(project.app, 'package').replace('-','').toLowerCase().replace('.','/'), 'AppActivity.java']);
+
+        if (FileSystem.exists(appActivityPath)) {
+            var java = File.getContent(appActivityPath);
+            var lines = java.split("\n");
+            var result = [];
+            var inGetLibraries = false;
+            var inReturnNewString = false;
+            var finishedPatching = false;
+            for (line in lines) {
+                var trimmedLine = line.trim();
+                if (finishedPatching) {
+                    result.push(line);
+                }
+                else if (inReturnNewString && RE_SHARED_OBJECT.match(trimmedLine)) {
+                    var lineLib = RE_SHARED_OBJECT.matched(1);
+                    if (lineLib != lib)
+                        result.push(line);
+                }
+                else if (inReturnNewString && trimmedLine.indexOf('}') != -1) {
+                    finishedPatching = true;
+                    result.push(line);
+                }
+                else if (inReturnNewString) {
+                    result.push(line);
+                }
+                else if (inGetLibraries && trimmedLine == 'return new String[] {') {
+                    inReturnNewString = true;
+                    result.push(line);
+                }
+                else if (trimmedLine == 'protected String[] getLibraries() {') {
+                    inGetLibraries = true;
+                    result.push(line);
+                    if (enabled)
+                        result.push('                "$lib",');
+                }
+                else {
+                    result.push(line);
+                }
+            }
+
+            // Did patch?
+            if (inReturnNewString) {
+                var newJava = result.join("\n");
+                if (newJava != java) {
+                    if (enabled)
+                        print('Update AppActivity.java: add $lib');
+                    else
+                        print('Update AppActivity.java: remove $lib');
+                    File.saveContent(appActivityPath, newJava);
+                }
             }
         }
 

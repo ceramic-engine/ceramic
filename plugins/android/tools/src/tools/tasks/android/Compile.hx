@@ -84,6 +84,10 @@ class Compile extends tools.Task {
                     default:
                 }
             }
+            else {
+                // When not using OpenAL, we can statically link with libc++
+                hxcppArgs.push('-DHXCPP_LIBCPP_STATIC');
+            }
 
             switch (arch) {
                 case 'armv7':
@@ -115,15 +119,23 @@ class Compile extends tools.Task {
         if (context.defines.exists('ceramic_use_openal')) {
             // Copy Shared libc++ binaries if needed
             AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
-        //}
+            AndroidProject.setSharedObjectEnabled(cwd, project, 'c++_shared', true);
+        }
+        else {
+            // Remove Shared libc++ binaries if needed
+            AndroidProject.removeSharedLibCppBinariesIfNeeded(cwd, project, archs);
+            AndroidProject.setSharedObjectEnabled(cwd, project, 'c++_shared', false);
+        }
 
         if (context.defines.exists('ceramic_use_openal')) {
             // Copy OpenAL binaries if needed
             AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
+            AndroidProject.setSharedObjectEnabled(cwd, project, 'openal', true);
         }
         else {
             // Remove OpenAL binaries if needed
             AndroidProject.removeOpenALBinariesIfNeeded(cwd, project, archs);
+            AndroidProject.setSharedObjectEnabled(cwd, project, 'openal', false);
         }
 
         // Copy main binaries if needed

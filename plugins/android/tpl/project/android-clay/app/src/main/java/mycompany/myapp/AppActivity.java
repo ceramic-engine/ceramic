@@ -36,8 +36,6 @@ public class AppActivity extends clay.ClayActivity {
     protected String[] getLibraries() {
 
         return new String[] {
-            "c++_shared",
-            "openal",
             "MyApp"
         };
 
