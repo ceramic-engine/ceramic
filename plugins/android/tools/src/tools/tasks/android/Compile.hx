@@ -52,9 +52,6 @@ class Compile extends tools.Task {
                 if (!context.colors) {
                     buildOpenALArgs.push('-DHXCPP_NO_COLOR');
                 }
-                if (context.defines.exists('ceramic_android_use_gcc')) {
-                    buildOpenALArgs.push('-Dceramic_android_use_gcc');
-                }
                 switch (arch) {
                     case 'armv7':
                         haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
@@ -112,8 +109,10 @@ class Compile extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
-        // If not using GCC, we copy libc++_shared.so, which is recommended practice
-        //if (!context.defines.exists('ceramic_android_use_gcc')) {
+        // If using separate binary for openal, we copy libc++_shared.so,
+        // which is recommended practice to make both ceramic app and
+        // openal binaries share the same c++ library
+        if (context.defines.exists('ceramic_use_openal')) {
             // Copy Shared libc++ binaries if needed
             AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
         //}
