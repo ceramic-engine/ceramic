@@ -31,7 +31,7 @@ class Info #if !completion implements spec.Info #end {
     }
 
     inline public function soundExtensions():Array<String> {
-        return ['ogg', 'wav'];
+        return ['ogg', 'mp3', 'wav'];
     }
 
     inline public function shaderExtensions():Array<String> {
