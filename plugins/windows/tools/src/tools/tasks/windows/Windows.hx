@@ -1,17 +1,16 @@
 package tools.tasks.windows;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Colors;
-import tools.Files;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
+import js.node.ChildProcess;
+import js.node.Os;
+import npm.StreamSplitter;
 import sys.FileSystem;
 import sys.io.File;
-
-import js.node.Os;
-import js.node.ChildProcess;
-import npm.StreamSplitter;
+import tools.Colors;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -54,18 +53,26 @@ class Windows extends tools.Task {
             FileSystem.deleteFile(appIconPath);
         }
 
-        // Copy openal32.dll for correct architecture
-        if (context.defines.exists('HXCPP_M32')) {
-            Files.copyIfNeeded(
-                Path.join([pluginPath, 'resources', 'libs', 'x86', 'openal32.dll']),
-                Path.join([windowsProjectPath, 'openal32.dll'])
-            );
+        if (context.defines.exists('ceramic_use_openal')) {
+            // Copy openal32.dll for correct architecture
+            if (context.defines.exists('HXCPP_M32')) {
+                Files.copyIfNeeded(
+                    Path.join([pluginPath, 'resources', 'libs', 'x86', 'openal32.dll']),
+                    Path.join([windowsProjectPath, 'openal32.dll'])
+                );
+            }
+            else {
+                Files.copyIfNeeded(
+                    Path.join([pluginPath, 'resources', 'libs', 'x86_64', 'openal32.dll']),
+                    Path.join([windowsProjectPath, 'openal32.dll'])
+                );
+            }
         }
         else {
-            Files.copyIfNeeded(
-                Path.join([pluginPath, 'resources', 'libs', 'x86_64', 'openal32.dll']),
-                Path.join([windowsProjectPath, 'openal32.dll'])
-            );
+            // Remove openal32.dll if it was there before
+            if (FileSystem.exists(Path.join([windowsProjectPath, 'openal32.dll']))) {
+                FileSystem.deleteFile(Path.join([windowsProjectPath, 'openal32.dll']));
+            }
         }
 
         // Stop if not running
