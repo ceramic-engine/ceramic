@@ -31,6 +31,11 @@ class Asset extends Entity implements Observable {
     public var path(default,set):String;
 
     /**
+     * All paths related to this asset
+     */
+    public var allPaths(default,null):Array<String>;
+
+    /**
      * Asset target density. Some assets depend on current screen density,
      * like bitmap fonts, textures. Default is 1.0
      */
@@ -144,6 +149,7 @@ class Asset extends Entity implements Observable {
         //
         var targetDensity = screen.texturesDensity;
         var path = null;
+        var allPaths = [];
         var bestPathInfo = null;
 
         var byName:Map<String,Array<String>> = dir ?
@@ -188,17 +194,17 @@ class Asset extends Entity implements Observable {
                         var pathInfo = Assets.decodePath(item);
 
                         if (pathInfo.extension == ext) {
-                            var diff = Math.abs(targetDensity - pathInfo.density);
-                            if (diff < bestDensityDiff) {
-                                bestDensityDiff = diff;
-                                bestDensity = pathInfo.density;
-                                path = pathInfo.path;
-                                bestPathInfo = pathInfo;
+                            if (path == null) {
+                                var diff = Math.abs(targetDensity - pathInfo.density);
+                                if (diff < bestDensityDiff) {
+                                    bestDensityDiff = diff;
+                                    bestDensity = pathInfo.density;
+                                    path = pathInfo.path;
+                                    bestPathInfo = pathInfo;
+                                }
                             }
+                            allPaths.push(pathInfo.path);
                         }
-                    }
-                    if (path != null) {
-                        break;
                     }
                 }
             }
@@ -208,6 +214,7 @@ class Asset extends Entity implements Observable {
             path = name;
         }
 
+        this.allPaths = allPaths;
         this.path = path; // sets density
 
         // Set additional options
