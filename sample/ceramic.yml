@@ -27,6 +27,3 @@ app:
         - midi
         - bridge
         - sprite
-
-    libs:
-        - spine-hx
