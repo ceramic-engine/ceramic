@@ -347,12 +347,12 @@ class AndroidProject {
                 else if (inGetLibraries && trimmedLine == 'return new String[] {') {
                     inReturnNewString = true;
                     result.push(line);
+                    if (enabled)
+                        result.push('            "$lib",');
                 }
                 else if (trimmedLine == 'protected String[] getLibraries() {') {
                     inGetLibraries = true;
                     result.push(line);
-                    if (enabled)
-                        result.push('                "$lib",');
                 }
                 else {
                     result.push(line);

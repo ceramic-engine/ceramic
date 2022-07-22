@@ -1,12 +1,11 @@
 package tools.tasks.android;
 
-import tools.Helpers.*;
 import haxe.io.Path;
+import js.node.ChildProcess;
 import sys.FileSystem;
 import sys.io.File;
 import tools.AndroidProject;
-
-import js.node.ChildProcess;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -33,8 +32,14 @@ class ExportAPK extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
-        // Update build number
-        AndroidProject.updateBuildNumber(cwd, project);
+        var doUpdateBuildNumber = extractArgFlag(args, 'update-build-number');
+        if (doUpdateBuildNumber) {
+            // Update build number
+            AndroidProject.updateBuildNumber(cwd, project);
+        }
+
+        // Copy java files if needed
+        AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
         // Reset build path
         var buildPath = Path.join([androidProjectPath, 'app/build']);
