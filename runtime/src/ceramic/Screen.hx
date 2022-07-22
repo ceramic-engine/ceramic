@@ -374,7 +374,7 @@ class Screen extends Entity implements Observable {
                     y: y1,
                     hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                 };
-                prepareMultiTouchPointerMove(info);
+                prepareMultiTouchPointerMove(info, true);
 
                 emitMouseMove(x1, y1);
                 emitMultiTouchPointerMove(info);
@@ -457,7 +457,7 @@ class Screen extends Entity implements Observable {
                     y: y1,
                     hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                 };
-                prepareMultiTouchPointerMove(info);
+                prepareMultiTouchPointerMove(info, false);
 
                 emitTouchMove(touchIndex, x1, y1);
                 emitMultiTouchPointerMove(info);
@@ -867,9 +867,9 @@ class Screen extends Entity implements Observable {
 
     }
 
-    inline function prepareMultiTouchPointerMove(info:TouchInfo):Void {
+    inline function prepareMultiTouchPointerMove(info:TouchInfo, isMouse:Bool):Void {
 
-        if (info.buttonId != -1) {
+        if (isMouse) {
             // Mouse
             mouseX = info.x;
             mouseY = info.y;
