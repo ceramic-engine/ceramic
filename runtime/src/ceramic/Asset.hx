@@ -181,6 +181,8 @@ class Asset extends Entity implements Observable {
                 }
             }
 
+            var resolvedPath = false;
+
             if (byName.exists(name)) {
 
                 var list = byName.get(name);
@@ -194,7 +196,7 @@ class Asset extends Entity implements Observable {
                         var pathInfo = Assets.decodePath(item);
 
                         if (pathInfo.extension == ext) {
-                            if (path == null) {
+                            if (!resolvedPath) {
                                 var diff = Math.abs(targetDensity - pathInfo.density);
                                 if (diff < bestDensityDiff) {
                                     bestDensityDiff = diff;
@@ -205,6 +207,10 @@ class Asset extends Entity implements Observable {
                             }
                             allPaths.push(pathInfo.path);
                         }
+                    }
+
+                    if (path != null) {
+                        resolvedPath = true;
                     }
                 }
             }
